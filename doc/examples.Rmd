@@ -80,9 +80,6 @@ biopsy_meta = tbl(con,"biopsy_metadata") %>% select(-patient_id) %>% select(-pat
 all_meta = left_join(sample_meta,biopsy_meta,by="biopsy_id")
 # IMPORTANT: the dbplyr package uses mysql queries under the hood to lazily retrieve the datat you need for each table on-the-fly. To properly use the efficiency of indexing and joins in MySQL, don't convert your tables into data frames until you're done all the necessary joins. 
 
-# for working with the metadata when querying mutations, you'll need another join. 
-# left join the metadata to the mutations. Somewhat confusingly, the join is on columns with different names. To deal with this, use: by = c("Tumor_Sample_Barcode" = "sample_id")
-
 
 ```
 
@@ -164,4 +161,14 @@ maf_obj = read.maf(all_ssms)
 lollipopPlot(maf_obj,gene="CCND3")
 ```
 
+```{r get_big_maf,width="100%", fig.dim=c(8,5)}
+maf_data = get_coding_ssm(limit_cohort=c("BL_Adult","BL_Pediatric","BL_ICGC"))
+maf_metadata = get_gambl_metadata() %>% select(sample_id,cohort,sex)
+colnames(maf_metadata)[1] = "Tumor_Sample_Barcode"
+
+maf = read.maf(maf_data,clinicalData = maf_metadata)
+
+oncoplot(maf,clinicalFeatures = c("sex","cohort"),sortByAnnotation = TRUE,genesToIgnore = c("TTN"))
+
+```
 
