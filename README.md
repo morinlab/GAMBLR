@@ -14,3 +14,18 @@ It is extremely important that you ensure the file has the right unix group (`mo
 ```
 -rwxr-x--- 1 rmorin morinlab 54 Mar 31 08:41 /home/rmorin/.my.cnf
 ```
+
+To confirm your connection works, connect to the database using the mysql client (installed on gphost03) using the following command:
+
+```
+mysql gambl_test
+```
+
+If you see a mysql prompt then you are ready to go. You can also see what tables are available and run queries here if you like. 
+
+```
+show tables; 
+#don't forget the semicolon!
+```
+
+Instead of writing your own queries, it's more likely that you will want to use the dbplyr package and the convenience functions provided in GAMBLR. Adding new functionality is highly encouraged. 
