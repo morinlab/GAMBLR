@@ -15,7 +15,8 @@ get_manta_sv(
   chromosome,
   start,
   end,
-  region
+  region,
+  with_chr_prefix = FALSE
 )
 }
 \arguments{
@@ -34,6 +35,8 @@ get_manta_sv(
 \item{end}{End coordinate of the range you are restricting to}
 
 \item{region}{Region formatted like chrX:1234-5678 instead of specifying chromosome, start and end separately}
+
+\item{with_chr_prefix}{Prepend all chromosome names with chr (required by some downstream analyses)}
 
 \item{pair_status}{Use to restrict results (if desired) to matched or unmatched results (default is to return all)}
 }

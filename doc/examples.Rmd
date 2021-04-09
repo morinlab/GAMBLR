@@ -13,39 +13,127 @@ knitr::opts_chunk$set(
   comment = "#>"
 )
 ```
+If you haven't already, clone the github repo:
+`git clone git@github.com:morinlab/GAMBLR.git`
+Run this vignette using the base directory of the GAMBLR repository as your working directory. See the Readme in the repository for more tips on getting set up.
 
-Load the GAMBLR package and other packages required by these examples. 
 ```{r setup,warning=FALSE,message=FALSE}
+# Load the GAMBLR package and other packages required by these examples. 
 library(GAMBLR)
 require(tidyverse)
 require(maftools)
+require(circlize)
 ```
 
+
+The key level-1 GAMBL outputs are making their way into a MySQL (a.k.a. MariaDB) database. The most intuitive way to query the data is using the dbplyr R package. The initial connection and a method to determine what each table contains is shown below. 
+
+```{r connect_show_tables,message=FALSE,warning=FALSE}
+con <- DBI::dbConnect(RMariaDB::MariaDB(), dbname = "gambl_test")
+# use DBI function to list the tables
+all_table_names = DBI::dbListTables(con)
+print(all_table_names)
+# peek at the contents of each table. 
+for(table_name in all_table_names){
+  table_db <- tbl(con, table_name)
+  print(table_name)
+  
+}
+
+```
 
 Get the metadata, automagically joining both tables and dropping normals and RNA-seq samples. 
-```{r metadata}
+```{r metadata,message=FALSE,warning=FALSE}
 
-my_meta = get_gambl_metadata()
+my_metadata = get_gambl_metadata()
 
-#reduce to some of the more useful metadata fields
+# reduce to some of the more useful metadata fields
 
-my_meta = my_meta %>% select(sample_id,biopsy_id,myc_ba,cohort,pathology)
+my_metadata = my_metadata %>% select(sample_id,biopsy_id,myc_ba,cohort,pathology)
 
-print(head(my_meta))
+print(head(my_metadata))
 
 ```
 
-Obtain all SV breakpoints (called by Manta) within a specific region of the genome
 
-```{r manta}
+The largest tables in the database are those that contain mutations from MAF files. The tables are simply all the rows and columns from a given merged MAF file. There will likely be four MAF-derived tables in this database, one for each reference build for "GAMBL" and the complete "GAMBL + ICGC". Although the names may change, currently the tables are implicitly GAMBL-only unless they contain "icgc" in their name. For example, maf_slms3_hg19_icgc contains all hg19 (grch37/hs37d5) mutations from GAMBL and icgc_dart/external cases.
 
-myc_locus_sv = get_manta_sv(region="8:128723128-128774067",pass=FALSE) 
+```{r mutation_totals, out.width="75%"}
+hg19_maf = tbl(con,"maf_slms3_hg19_icgc")
+mutation_counts = hg19_maf %>% group_by(Tumor_Sample_Barcode) %>% tally()
+print(head(mutation_counts))
 
-#we can override default that requires SV to meet the Manta "Pass" filtering criterion
+mutation_counts  %>% ggplot() + geom_histogram(aes(x=n),bins=100) + xlim(c(10,25000))
+
+```
+
+Here's a histogram of the total number of mutations per genome across all GAMBL cases. Pretty hard to interpret this without metadata. There are two metadata tables. Often we need to join them both to get all the information we want. 
+
+```{r join_metadata}
+sample_meta = tbl(con,"sample_metadata") %>% filter(seq_type == "genome" & tissue_status == "tumour")
+#if we only care about genomes, we can drop/filter anything that isn't a tumour genome
+#The key for joining this table to the mutation information is to use sample_id. Think of this as equivalent to a library_id. It will differ depending on what assay was done to the sample. 
+
+biopsy_meta = tbl(con,"biopsy_metadata") %>% select(-patient_id) %>% select(-pathology) %>% select(-time_point) %>% select(-EBV_status_inf)
+# this table is keyed on biopsy_id. One biopsy can have more than one sample_id. This table must be joined to the sample table using biopsy_id. Because of some redundancy in columns between the two tables, I've dropped all redundant columns with the exception of biopsy_id.
+
+all_meta = left_join(sample_meta,biopsy_meta,by="biopsy_id")
+# IMPORTANT: the dbplyr package uses mysql queries under the hood to lazily retrieve the datat you need for each table on-the-fly. To properly use the efficiency of indexing and joins in MySQL, don't convert your tables into data frames until you're done all the necessary joins. 
+
+# for working with the metadata when querying mutations, you'll need another join. 
+# left join the metadata to the mutations. Somewhat confusingly, the join is on columns with different names. To deal with this, use: by = c("Tumor_Sample_Barcode" = "sample_id")
+
+
+```
+
+Obtain all SV breakpoints (called by Manta) within a specific region of the genome and visualize them. 
+
+```{r manta,out.width="80%"}
+
+myc_locus_sv = get_manta_sv(region="8:128723128-128774067",pass=FALSE,with_chr_prefix=TRUE) 
+
+# we can override default that requires SV to meet the Manta "Pass" filtering criterion
+# here we are also asking for the chromosomes to be named with a chr prefix (for circlize compatability)
+
+bed1 = myc_locus_sv %>% select(CHROM_A,START_A,END_A,tumour_sample_id)
+bed2 = myc_locus_sv %>% select(CHROM_B,START_B,END_B,tumour_sample_id)
+colnames(bed1)=c("chrom","start","end","sample_id")
+colnames(bed2)=c("chrom","start","end","sample_id")
+
+myc_locus_sv = myc_locus_sv %>% select(tumour_sample_id,CHROM_A,START_A,CHROM_B,START_B,STRAND_A,STRAND_B,VAF_tumour)
 
 print(head(myc_locus_sv))
 
+circos.initializeWithIdeogram()
+circos.genomicLink(bed1, bed2,col = rand_color(nrow(bed1),transparency=0.5))
+
 ```
+
+Working with all mutations from a sample. 
+
+```{r rainfall_plots,out.width="100%", fig.dim=c(8,3)}
+# we can also query the database to get a MAF per patient for patient-centric visualizations. 
+# note that here I'm not restricting to only coding variants
+example_dlbcl = hg19_maf %>% filter(Tumor_Sample_Barcode == "HTMCP-01-06-00422-01A-01D")
+example_dlbcl_df = example_dlbcl %>% as.data.frame()
+example_dlbcl_maf = read.maf(example_dlbcl_df)
+rainfallPlot(example_dlbcl_maf)
+```
+
+You probably will be more interested in visualizing all mutations across a given cohort (or every genome). This can only be done in relatively small regions. Here's a way to visualize the non-coding mutation pattern across a region of interest.
+
+```{r rainbow_plot_ashm, out.width="100%", fig.dim=c(8,3)}
+
+# set up some coordinates to annotate in your plot (optional)
+mybed = data.frame(start=c(128806578,128805652,128748315), end=c(128806992,128809822,128748880), name=c("TSS","enhancer","MYC-e1"))
+
+# get the mutations within a region of interest
+my_mutations = get_ssm_by_region(region="chr8:128,743,606-128,820,015")
+
+
+ashm_rainbow_plot(mutations_maf=my_mutations,metadata=my_metadata,bed=mybed)
+```
+
 
 Get all CN segments that overlap with a gene of interest and annotate them using the metadata. 
 ```{r get_seg_data}
@@ -55,7 +143,7 @@ print(head(my_segments))
 
 deleted_segments = my_segments %>% filter(log.ratio<0) #use some lower value if you want to be more stringent
 
-annotated_segments = left_join(deleted_segments,my_meta,by=c("ID" = "sample_id"))
+annotated_segments = left_join(deleted_segments,my_metadata,by=c("ID" = "sample_id"))
 
 annotated_segments %>% pull(cohort) %>% table()
 
@@ -64,13 +152,13 @@ annotated_segments %>% pull(cohort) %>% table()
 
 Retrieve all somatic mutations in a given gene and visualize them using MAFtools.
 
-```{r ssms_and_maftools}
+```{r ssms_and_maftools,out.width="100%", fig.dim=c(8,3)}
 
 all_ssms = get_ssm_by_gene(gene_symbol=c("CCND3"),coding_only = TRUE)
 
 all_ssms = all_ssms %>% as.data.frame()
 
-#make a MAFtools object and plot a lollipop plot
+# make a MAFtools object and plot a lollipop plot
 
 maf_obj = read.maf(all_ssms)
 lollipopPlot(maf_obj,gene="CCND3")
