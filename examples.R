@@ -1,5 +1,13 @@
+package_path = "/projects/rmorin/projects/gambl-repos/gambl-rmorin/src/GAMBLR"
+setwd(package_path)
+devtools::install()
+#set your working directory back to where you want to work
+setwd("/projects/rmorin/projects/gambl-repos/gambl-rmorin")
 library(GAMBLR)
-#This code relies on a MySQL database at the GSC and will only work on that network, and only after you have configured your database connection (via ~/.my.cnf )
+
+# This code relies on a MySQL database at the GSC and will only work on that network, and only after you have configured your database connection (via ~/.my.cnf )
+# See the Readme for more details
+
 
 #get the metadata
 my_meta = get_gambl_metadata()

@@ -2,6 +2,98 @@
 require("dbplyr")
 require("tidyverse")
 
+#' Get GAMBL metadata
+#'
+#' @param db The GAMBL database name
+#' @param seq_type_filter Filtering criteria (default: all genomes)
+#' @param tissue_status_filter Filtering criteria (default: only tumour genomes)
+#'
+#' @return A data frame with metadata for each biopsy in GAMBL
+#' @export
+#'
+#' @examples
+#' #basic usage
+#' my_metadata = get_gambl_metadata()
+get_gambl_metadata = function(db="gambl_test",seq_type_filter = "genome",tissue_status_filter="tumour"){
+  con <- DBI::dbConnect(RMariaDB::MariaDB(), dbname = db)
+  sample_meta = tbl(con,"sample_metadata") %>% filter(seq_type == seq_type_filter & tissue_status == tissue_status_filter)
+  #if we only care about genomes, we can drop/filter anything that isn't a tumour genome
+  #The key for joining this table to the mutation information is to use sample_id. Think of this as equivalent to a library_id. It will differ depending on what assay was done to the sample.
+  biopsy_meta = tbl(con,"biopsy_metadata") %>% select(-patient_id) %>% select(-pathology) %>% select(-time_point) %>% select(-EBV_status_inf) #drop duplicated columns
+  all_meta = left_join(sample_meta,biopsy_meta,by="biopsy_id") %>% as.data.frame()
+
+  #add some derivative columns that simplify and consolidate some of the others (DLBCL-specific)
+  all_meta = all_meta %>% mutate(lymphgen = case_when(
+    pathology != "DLBCL" ~ pathology,
+    str_detect(lymphgen_cnv_noA53,"/") ~ "COMPOSITE",
+    TRUE ~ lymphgen_cnv_noA53
+  ))
+
+  all_meta = all_meta %>% mutate(consensus_coo_dhitsig = case_when(
+    pathology != "DLBCL" ~ pathology,
+    COO_consensus == "ABC" ~ COO_consensus,
+    DLBCL90_dhitsig_call == "POS" ~ "DHITsigPos",
+    DLBCL90_dhitsig_call == "NEG" ~ "DHITsigNeg",
+    DHITsig_PRPS_class == "DHITsigPos" ~ "DHITsigPos",
+    DHITsig_PRPS_class == "DHITsigNeg" ~ "DHITsigNeg",
+    DHITsig_PRPS_class == "UNCLASS" ~ "DHITsigPos",
+    TRUE ~ "NA"
+  ))
+
+  return(all_meta)
+}
+
+#' Retrieve Manta SVs from the database and filter
+#'
+#' @param db The GAMBL database name
+#' @param table_name The table we are querying
+#' @param min_vaf The minimum tumour VAF for a SV to be returned
+#' @param min_score The lowest Manta somatic score for a SV to be returned
+#' @param pair_status Use to restrict results (if desired) to matched or unmatched results (default is to return all)
+#' @param chromosome The chromosome you are restricting to
+#' @param start Start coordinate of the range you are restricting to
+#' @param end End coordinate of the range you are restricting to
+#' @param region Region formatted like chrX:1234-5678 instead of specifying chromosome, start and end separately
+#'
+#' @return A data frame in a bedpe-like format with additional columns that allow filtering of high-confidence SVs
+#' @export
+#'
+#' @examples
+#' #lazily get every SV in the table with default quality filters
+#' all_sv = get_manta_sv()
+#' #get all SVs for a single sample
+#' some_sv = get_manta_sv(sample_id="94-15772_tumorA")
+#' #get the SVs in a region around MYC
+#' myc_locus_sv = get_manta_sv(region="8:128723128-128774067")
+get_manta_sv = function(db="gambl_test",table_name="bedpe_manta_hg19",min_vaf=0.1,min_score=40,pass=TRUE,pairing_status,sample_id,chromosome,start,end,region){
+  if(!missing(region)){
+    region = gsub(",","",region)
+    #format is chr6:37060224-37151701
+    split_chunks = unlist(strsplit(region,":"))
+    chromosome = split_chunks[1]
+    startend = unlist(strsplit(split_chunks[2],"-"))
+    start=startend[1]
+    end=startend[2]
+  }
+  con <- DBI::dbConnect(RMariaDB::MariaDB(), dbname = db)
+  if(!missing(region) || !missing(chromosome)){
+    all_sv = tbl(con,table_name) %>%
+      filter((CHROM_A == chromosome & START_A >= start & START_A <= end) | (CHROM_B == chromosome & START_B >= start & START_B <= end)) %>%
+      filter(VAF_tumour >= min_vaf & SOMATIC_SCORE >= min_score)
+  }else{
+    all_sv = tbl(con,table_name) %>% filter(VAF_tumour >= min_vaf & SOMATIC_SCORE >= min_score)
+  }
+  if(pass){
+    all_sv = all_sv %>% filter(FILTER == "PASS")
+  }
+  if(!missing(pairing_status)){
+    all_sv = all_sv %>% filter(pair_status == pairing_status)
+  }
+  if(!missing(sample_id)){
+    all_sv = all_sv %>% filter(tumour_sample_id == sample_id)
+  }
+  return(as.data.frame(all_sv))
+}
 
 #' Retrieve all copy number segments from the GAMBL database that overlap with a single genomic coordinate range
 #'
@@ -102,6 +194,7 @@ get_ssm_by_region = function(db="gambl_test",table_name="maf_slms3_hg19_icgc",ch
   return(as.data.frame(muts_region))
 }
 
+#TODO migrate viz/plotting functions that don't directly rely on the database to a separate file
 #' Make a rainbow plot of all mutations in a region, ordered and coloured by metadata
 #'
 #' @param db The GAMBL database name
@@ -138,43 +231,3 @@ ashm_rainbow_plot = function(db="gambl_test",table_name="maf_slms3_hg19_icgc",mu
   return(p)
 }
 
-#' Get GAMBL metadata
-#'
-#' @param db The GAMBL database name
-#' @param seq_type_filter Filtering criteria (default: all genomes)
-#' @param tissue_status_filter Filtering criteria (default: only tumour genomes)
-#'
-#' @return A data frame with metadata for each biopsy in GAMBL
-#' @export
-#'
-#' @examples
-#' #basic usage
-#' my_metadata = get_gambl_metadata()
-get_gambl_metadata = function(db="gambl_test",seq_type_filter = "genome",tissue_status_filter="tumour"){
-  con <- DBI::dbConnect(RMariaDB::MariaDB(), dbname = db)
-  sample_meta = tbl(con,"sample_metadata") %>% filter(seq_type == seq_type_filter & tissue_status == tissue_status_filter)
-  #if we only care about genomes, we can drop/filter anything that isn't a tumour genome
-  #The key for joining this table to the mutation information is to use sample_id. Think of this as equivalent to a library_id. It will differ depending on what assay was done to the sample.
-  biopsy_meta = tbl(con,"biopsy_metadata") %>% select(-patient_id) %>% select(-pathology) %>% select(-time_point) %>% select(-EBV_status_inf) #drop duplicated columns
-  all_meta = left_join(sample_meta,biopsy_meta,by="biopsy_id") %>% as.data.frame()
-
-  #add some derivative columns that simplify and consolidate some of the others (DLBCL-specific)
-  all_meta = all_meta %>% mutate(lymphgen = case_when(
-    pathology != "DLBCL" ~ pathology,
-    str_detect(lymphgen_cnv_noA53,"/") ~ "COMPOSITE",
-    TRUE ~ lymphgen_cnv_noA53
-  ))
-
-  all_meta = all_meta %>% mutate(consensus_coo_dhitsig = case_when(
-    pathology != "DLBCL" ~ pathology,
-    COO_consensus == "ABC" ~ COO_consensus,
-    DLBCL90_dhitsig_call == "POS" ~ "DHITsigPos",
-    DLBCL90_dhitsig_call == "NEG" ~ "DHITsigNeg",
-    DHITsig_PRPS_class == "DHITsigPos" ~ "DHITsigPos",
-    DHITsig_PRPS_class == "DHITsigNeg" ~ "DHITsigNeg",
-    DHITsig_PRPS_class == "UNCLASS" ~ "DHITsigPos",
-    TRUE ~ "NA"
-  ))
-
-  return(all_meta)
-}

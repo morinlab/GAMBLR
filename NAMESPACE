@@ -3,5 +3,6 @@
 export(ashm_rainbow_plot)
 export(get_cn_segments)
 export(get_gambl_metadata)
+export(get_manta_sv)
 export(get_ssm_by_gene)
 export(get_ssm_by_region)
