@@ -8,6 +8,7 @@ get_coding_ssm(
   db = "gambl_test",
   table_name = "maf_slms3_hg19_icgc",
   limit_cohort,
+  exclude_cohort,
   limit_pathology,
   basic_columns = TRUE
 )
@@ -17,7 +18,9 @@ get_coding_ssm(
 
 \item{table_name}{The table we are querying}
 
-\item{limit_cohort}{Supply this to restrict mutations to one cohort}
+\item{limit_cohort}{Supply this to restrict mutations to one or more cohorts in a list}
+
+\item{exclude_cohort}{Supply this to exclude mutations from one or more cohorts in a list}
 
 \item{limit_pathology}{Supply this to restrict mutations to one pathology}
 

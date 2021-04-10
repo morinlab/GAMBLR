@@ -1,0 +1,38 @@
+---
+title: "cbioportal"
+output: rmarkdown::html_vignette
+vignette: >
+  %\VignetteIndexEntry{cbioportal}
+  %\VignetteEngine{knitr::rmarkdown}
+  %\VignetteEncoding{UTF-8}
+---
+
+```{r, include = FALSE}
+knitr::opts_chunk$set(
+  collapse = TRUE,
+  comment = "#>"
+)
+```
+
+```{r setup}
+library(GAMBLR)
+require(tidyverse)
+```
+
+This will demonstrate the steps involved in creating the files required to set up a cBioPortal instance with GAMBL data
+```{r setup_study}
+#using all defaults, we only need to supply a base directory where the files will be written
+base_directory= "/projects/rmorin/projects/gambl-repos/gambl-rmorin/test_cbioportal/"
+patients_included = setup_study(out_dir=base_directory)
+#at each step, we need to consolidate the list of patients that have been included for the master case lists used by cBioPortal
+dir(base_directory)
+
+```
+
+```{r finalize_study}
+
+finalize_study(out_dir = base_directory, sample_ids = patients_included)
+dir(base_directory)
+
+```
+

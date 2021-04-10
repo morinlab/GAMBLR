@@ -43,6 +43,45 @@ get_gambl_metadata = function(db="gambl_test",seq_type_filter = "genome",tissue_
   return(all_meta)
 }
 
+#' Get the patient-centric clinical metadata
+#'
+#' @param db
+#' @param time_unit Return follow-up times in one of three time units: year, month or day
+#' @param censor_cbioportal Optionally request the censoring to be encoded in the specific style required by cBioPortal
+#'
+#' @return Data frame with one row for each patient_id
+#' @export
+#'
+#' @examples
+#' outcome_df = get_gambl_outcomes()
+get_gambl_outcomes = function(db="gambl_test",time_unit="year",censor_cbioportal=FALSE){
+  con <- DBI::dbConnect(RMariaDB::MariaDB(), dbname = db)
+  all_outcome = tbl(con,"outcome_metadata") %>% as.data.frame()
+  if(time_unit == "month"){
+    all_outcome = all_outcome %>% mutate(OS_MONTHS=OS_YEARS * 12)
+    all_outcome = all_outcome %>% mutate(PFS_MONTHS=PFS_YEARS * 12)
+    all_outcome = all_outcome %>% mutate(TTP_MONTHS=TTP_YEARS * 12)
+    all_outcome = all_outcome %>% mutate(DSS_MONTHS=DSS_YEARS * 12)
+    all_outcome = all_outcome %>% select(-c("OS_YEARS","PFS_YEARS","TTP_YEARS","DSS_YEARS"))
+  }else if(time_unit == "day"){
+    all_outcome = all_outcome %>% mutate(OS_DAYS=OS_YEARS * 365)
+    all_outcome = all_outcome %>% mutate(PFS_DAYS=PFS_YEARS * 365)
+    all_outcome = all_outcome %>% mutate(TTP_DAYS=TTP_YEARS * 365)
+    all_outcome = all_outcome %>% mutate(DSS_DAYS=DSS_YEARS * 365)
+    all_outcome = all_outcome %>% select(-c("OS_YEARS","PFS_YEARS","TTP_YEARS","DSS_YEARS"))
+  }
+  #if necessary, convert the censoring into the cBioPortal format for OS and PFS
+  if(censor_cbioportal){
+    all_outcome$OS_STATUS = as.character(all_outcome$CODE_OS)
+    all_outcome = all_outcome %>% mutate(OS_STATUS = case_when(OS_STATUS=="0" ~ "0:LIVING",OS_STATUS=="1"~"1:DECEASED"))
+    all_outcome$DFS_STATUS = as.character(all_outcome$CODE_PFS)
+    all_outcome = all_outcome %>% mutate(DFS_STATUS = case_when(DFS_STATUS=="0" ~ "0:DiseaseFree",DFS_STATUS=="1"~"1:Recurred/Progressed"))
+    all_outcome = all_outcome %>% mutate(all_outcome,DFS_MONTHS=PFS_MONTHS)
+  }
+  DBI::dbDisconnect(con)
+  return(all_outcome)
+}
+
 #' Retrieve Manta SVs from the database and filter
 #'
 #' @param db The GAMBL database name
@@ -242,7 +281,8 @@ get_ssm_by_region = function(db="gambl_test",table_name="maf_slms3_hg19_icgc",ch
 #'
 #' @param db The GAMBL database name
 #' @param table_name The table we are querying
-#' @param limit_cohort Supply this to restrict mutations to one cohort
+#' @param limit_cohort Supply this to restrict mutations to one or more cohorts in a list
+#' @param exclude_cohort  Supply this to exclude mutations from one or more cohorts in a list
 #' @param limit_pathology Supply this to restrict mutations to one pathology
 #' @param basic_columns Set to TRUE to override the default behaviour of returning only the first 45 columns of MAF data
 #'
@@ -252,7 +292,7 @@ get_ssm_by_region = function(db="gambl_test",table_name="maf_slms3_hg19_icgc",ch
 #' @examples
 #' #basic usage
 #' maf_data = get_coding_ssm(limit_cohort=c("BL_Adult","BL_Pediatric","BL_ICGC"))
-get_coding_ssm = function(db="gambl_test",table_name="maf_slms3_hg19_icgc",limit_cohort,limit_pathology,basic_columns=TRUE){
+get_coding_ssm = function(db="gambl_test",table_name="maf_slms3_hg19_icgc",limit_cohort,exclude_cohort,limit_pathology,basic_columns=TRUE){
   con <- DBI::dbConnect(RMariaDB::MariaDB(), dbname = db)
   coding_class = c("Frame_Shift_Del","Frame_Shift_Ins","In_Frame_Del","In_Frame_Ins","Missense_Mutation","Nonsense_Mutation","Nonstop_Mutation","Silent","Splice_Region","Splice_Site","Targeted_Region","Translation_Start_Site")
   sample_meta = tbl(con,"sample_metadata") %>% filter(seq_type == "genome" & tissue_status == "tumour")
@@ -262,6 +302,9 @@ get_coding_ssm = function(db="gambl_test",table_name="maf_slms3_hg19_icgc",limit
   #do all remaining filtering on the metadata then add the remaining sample_id to the query
   if(!missing(limit_cohort)){
     all_meta = all_meta %>% filter(cohort %in% limit_cohort)
+  }
+  if(!missing(exclude_cohort)){
+    all_meta = all_meta %>% filter(!cohort %in% exclude_cohort)
   }
   if(!missing(limit_pathology)){
     all_meta = all_meta %>% filter(pathology %in% limit_pathology)
