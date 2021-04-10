@@ -8,7 +8,8 @@ get_coding_ssm(
   db = "gambl_test",
   table_name = "maf_slms3_hg19_icgc",
   limit_cohort,
-  limit_pathology
+  limit_pathology,
+  basic_columns = TRUE
 )
 }
 \arguments{
@@ -19,6 +20,8 @@ get_coding_ssm(
 \item{limit_cohort}{Supply this to restrict mutations to one cohort}
 
 \item{limit_pathology}{Supply this to restrict mutations to one pathology}
+
+\item{basic_columns}{Set to TRUE to override the default behaviour of returning only the first 45 columns of MAF data}
 }
 \value{
 A data frame containing all the MAF data columns (one row per mutation)

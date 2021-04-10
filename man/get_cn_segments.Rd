@@ -10,7 +10,8 @@ get_cn_segments(
   chromosome = NULL,
   qstart = NULL,
   qend = NULL,
-  region = ""
+  region = "",
+  with_chr_prefix = FALSE
 )
 }
 \arguments{
@@ -21,6 +22,8 @@ get_cn_segments(
 \item{chromosome}{The chromosome you are restricting to}
 
 \item{region}{Region formatted like chrX:1234-5678 instead of specifying chromosome, start and end separately}
+
+\item{with_chr_prefix}{Prepend all chromosome names with chr (required by some downstream analyses)}
 
 \item{start}{Start coordinate of the range you are restricting to}
 
@@ -33,8 +36,10 @@ A data frame containing all the MAF data columns (one row per mutation)
 Retrieve all copy number segments from the GAMBL database that overlap with a single genomic coordinate range
 }
 \examples{
-#basic usage
+# basic usage
 my_segments=get_cn_segments(region="chr8:128,723,128-128,774,067")
-#specifying chromosome, start and end individually
-my_segments=get_cn_segments(chromosome="8",start=128723128,end=128774067)
+# specifying chromosome, start and end individually
+my_segments=get_cn_segments(chromosome="8",qstart=128723128,qend=128774067)
+# Asking for chromosome names to have a chr prefix (default is un-prefixed)
+prefixed_segments = get_cn_segments(get_cn_segments(chromosome="12",qstart=122456912,qend=122464036,with_chr_prefix = TRUE))
 }

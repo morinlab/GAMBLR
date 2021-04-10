@@ -51,8 +51,8 @@ get_gambl_metadata = function(db="gambl_test",seq_type_filter = "genome",tissue_
 #' @param min_score The lowest Manta somatic score for a SV to be returned
 #' @param pair_status Use to restrict results (if desired) to matched or unmatched results (default is to return all)
 #' @param chromosome The chromosome you are restricting to
-#' @param start Start coordinate of the range you are restricting to
-#' @param end End coordinate of the range you are restricting to
+#' @param qstart Query start coordinate of the range you are restricting to
+#' @param qend Query end coordinate of the range you are restricting to
 #' @param region Region formatted like chrX:1234-5678 instead of specifying chromosome, start and end separately
 #' @param with_chr_prefix Prepend all chromosome names with chr (required by some downstream analyses)
 #'
@@ -66,20 +66,25 @@ get_gambl_metadata = function(db="gambl_test",seq_type_filter = "genome",tissue_
 #' some_sv = get_manta_sv(sample_id="94-15772_tumorA")
 #' #get the SVs in a region around MYC
 #' myc_locus_sv = get_manta_sv(region="8:128723128-128774067")
-get_manta_sv = function(db="gambl_test",table_name="bedpe_manta_hg19",min_vaf=0.1,min_score=40,pass=TRUE,pairing_status,sample_id,chromosome,start,end,region,with_chr_prefix=FALSE){
-  if(!missing(region)){
-    region = gsub(",","",region)
-    #format is chr6:37060224-37151701
-    split_chunks = unlist(strsplit(region,":"))
-    chromosome = split_chunks[1]
-    startend = unlist(strsplit(split_chunks[2],"-"))
-    start=startend[1]
-    end=startend[2]
+get_manta_sv = function(db="gambl_test",table_name="bedpe_manta_hg19",min_vaf=0.1,min_score=40,pass=TRUE,pairing_status,sample_id,chromosome,qstart,qend,region,with_chr_prefix=FALSE){
+
+    if(!missing(region)){
+      region = gsub(",","",region)
+      #format is chr6:37060224-37151701
+      split_chunks = unlist(strsplit(region,":"))
+      chromosome = split_chunks[1]
+      startend = unlist(strsplit(split_chunks[2],"-"))
+      qstart=startend[1]
+      qend=startend[2]
+    }
+  #this table stores chromosomes with un-prefixed names. Convert to prefixed chromosome if necessary
+  if(grepl("chr",chromosome)){
+    chromosome = gsub("chr","",chromosome)
   }
   con <- DBI::dbConnect(RMariaDB::MariaDB(), dbname = db)
   if(!missing(region) || !missing(chromosome)){
     all_sv = tbl(con,table_name) %>%
-      filter((CHROM_A == chromosome & START_A >= start & START_A <= end) | (CHROM_B == chromosome & START_B >= start & START_B <= end)) %>%
+      filter((CHROM_A == chromosome & START_A >= qstart & START_A <= qend) | (CHROM_B == chromosome & START_B >= qstart & START_B <= qend)) %>%
       filter(VAF_tumour >= min_vaf & SOMATIC_SCORE >= min_score)
   }else{
     all_sv = tbl(con,table_name) %>% filter(VAF_tumour >= min_vaf & SOMATIC_SCORE >= min_score)
@@ -119,35 +124,46 @@ get_manta_sv = function(db="gambl_test",table_name="bedpe_manta_hg19",min_vaf=0.
 #' @param start Start coordinate of the range you are restricting to
 #' @param end End coordinate of the range you are restricting to
 #' @param region Region formatted like chrX:1234-5678 instead of specifying chromosome, start and end separately
+#' @param with_chr_prefix Prepend all chromosome names with chr (required by some downstream analyses)
 #'
 #' @return A data frame containing all the MAF data columns (one row per mutation)
 #' @export
 #'
 #' @examples
-#' #basic usage
+#' # basic usage
 #' my_segments=get_cn_segments(region="chr8:128,723,128-128,774,067")
-#' #specifying chromosome, start and end individually
-#' my_segments=get_cn_segments(chromosome="8",start=128723128,end=128774067)
-get_cn_segments = function(db="gambl_test",table_name="seg_battenberg_hg19",chromosome=NULL,qstart=NULL,qend=NULL,region=""){
+#' # specifying chromosome, start and end individually
+#' my_segments=get_cn_segments(chromosome="8",qstart=128723128,qend=128774067)
+#' # Asking for chromosome names to have a chr prefix (default is un-prefixed)
+#' prefixed_segments = get_cn_segments(get_cn_segments(chromosome="12",qstart=122456912,qend=122464036,with_chr_prefix = TRUE))
+get_cn_segments = function(db="gambl_test",table_name="seg_battenberg_hg19",chromosome=NULL,qstart=NULL,qend=NULL,region="",with_chr_prefix=FALSE){
   if(!region==""){
     region = gsub(",","",region)
     #format is chr6:37060224-37151701
     split_chunks = unlist(strsplit(region,":"))
     chromosome = split_chunks[1]
     startend = unlist(strsplit(split_chunks[2],"-"))
-    start=startend[1]
-    end=startend[2]
+    qstart=startend[1]
+    qend=startend[2]
   }
-  #chr prefix the chromosome. This isn't yet standardized so it's just a workaround for now.
+  #chr prefix the query chromosome to match how it's stored in the table.
+  # This isn't yet standardized in the db so it's just a workaround "for now".
+  con <- DBI::dbConnect(RMariaDB::MariaDB(), dbname = db)
+
   if(grepl("chr",chromosome)){
 
   }else{
     chromosome = paste0("chr",chromosome)
   }
-  con <- DBI::dbConnect(RMariaDB::MariaDB(), dbname = db)
+  #remove the prefix if this is false (or leave as is otherwise)
+
+  #TODO improve this query to allow for partial overlaps
   all_segs = tbl(con,table_name) %>%
     filter(chrom == chromosome & start <= qstart & end >= qend) %>%
     as.data.frame()
+  if(! with_chr_prefix){
+    all_segs = all_segs %>% mutate(chrom = gsub("chr","",chrom))
+  }
   DBI::dbDisconnect(con)
   return(all_segs)
 }
@@ -183,10 +199,11 @@ get_ssm_by_gene = function(db="gambl_test",table_name="maf_slms3_hg19_icgc",gene
 #'
 #' @param db The GAMBL database name
 #' @param table_name The table we are querying
-#' @param chromosome The chromosome you are restricting to
-#' @param start Start coordinate of the range you are restricting to
-#' @param end End coordinate of the range you are restricting to
+#' @param chromosome The chromosome you are restricting to (with or without a chr prefix)
+#' @param qstart Query start coordinate of the range you are restricting to
+#' @param qend Query end coordinate of the range you are restricting to
 #' @param region Region formatted like chrX:1234-5678 instead of specifying chromosome, start and end separately
+#' @param basic_columns Set to TRUE to override the default behaviour of returning only the first 45 columns of MAF data
 #'
 #' @return A data frame containing all the MAF data columns (one row per mutation)
 #' @export
@@ -195,22 +212,28 @@ get_ssm_by_gene = function(db="gambl_test",table_name="maf_slms3_hg19_icgc",gene
 #' #basic usage
 #' my_mutations=get_ssm_by_region(region="chr8:128,723,128-128,774,067")
 #' #specifying chromosome, start and end individually
-#' my_mutations=get_ssm_by_region(chromosome="8",start=128723128,end=128774067)
-get_ssm_by_region = function(db="gambl_test",table_name="maf_slms3_hg19_icgc",chromosome=NULL,start=NULL,end=NULL,region=""){
+#' my_mutations=get_ssm_by_region(chromosome="8",qstart=128723128,qend=128774067)
+get_ssm_by_region = function(db="gambl_test",table_name="maf_slms3_hg19_icgc",chromosome,qstart,qend,region="",basic_columns=TRUE){
   if(!region==""){
     region = gsub(",","",region)
     #format is chr6:37060224-37151701
     split_chunks = unlist(strsplit(region,":"))
     chromosome = split_chunks[1]
-    chromosome = gsub("chr","",chromosome)
+
     startend = unlist(strsplit(split_chunks[2],"-"))
-    start=startend[1]
-    end=startend[2]
+    qstart=startend[1]
+    qend=startend[2]
   }
+  chromosome = gsub("chr","",chromosome)
+
   con <- DBI::dbConnect(RMariaDB::MariaDB(), dbname = db)
   muts_region = tbl(con,table_name) %>%
-    filter(Chromosome == chromosome & Start_Position > start & Start_Position < end)
+    filter(Chromosome == chromosome & Start_Position > qstart & Start_Position < qend)
+
   muts_region = as.data.frame(muts_region)
+  if(basic_columns){
+    muts_region = muts_region[,c(1:45)]
+  }
   DBI::dbDisconnect(con)
   return(muts_region)
 }
@@ -221,6 +244,7 @@ get_ssm_by_region = function(db="gambl_test",table_name="maf_slms3_hg19_icgc",ch
 #' @param table_name The table we are querying
 #' @param limit_cohort Supply this to restrict mutations to one cohort
 #' @param limit_pathology Supply this to restrict mutations to one pathology
+#' @param basic_columns Set to TRUE to override the default behaviour of returning only the first 45 columns of MAF data
 #'
 #' @return A data frame containing all the MAF data columns (one row per mutation)
 #' @export
@@ -228,7 +252,7 @@ get_ssm_by_region = function(db="gambl_test",table_name="maf_slms3_hg19_icgc",ch
 #' @examples
 #' #basic usage
 #' maf_data = get_coding_ssm(limit_cohort=c("BL_Adult","BL_Pediatric","BL_ICGC"))
-get_coding_ssm = function(db="gambl_test",table_name="maf_slms3_hg19_icgc",limit_cohort,limit_pathology){
+get_coding_ssm = function(db="gambl_test",table_name="maf_slms3_hg19_icgc",limit_cohort,limit_pathology,basic_columns=TRUE){
   con <- DBI::dbConnect(RMariaDB::MariaDB(), dbname = db)
   coding_class = c("Frame_Shift_Del","Frame_Shift_Ins","In_Frame_Del","In_Frame_Ins","Missense_Mutation","Nonsense_Mutation","Nonstop_Mutation","Silent","Splice_Region","Splice_Site","Targeted_Region","Translation_Start_Site")
   sample_meta = tbl(con,"sample_metadata") %>% filter(seq_type == "genome" & tissue_status == "tumour")
@@ -247,6 +271,9 @@ get_coding_ssm = function(db="gambl_test",table_name="maf_slms3_hg19_icgc",limit
     filter(Variant_Classification %in% coding_class & Tumor_Sample_Barcode %in% sample_ids)
 
   muts = as.data.frame(muts)
+  if(basic_columns){
+    muts = muts[,c(1:45)]
+  }
   DBI::dbDisconnect(con)
   return(muts)
 }

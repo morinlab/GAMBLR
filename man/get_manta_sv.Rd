@@ -13,8 +13,8 @@ get_manta_sv(
   pairing_status,
   sample_id,
   chromosome,
-  start,
-  end,
+  qstart,
+  qend,
   region,
   with_chr_prefix = FALSE
 )
@@ -30,9 +30,9 @@ get_manta_sv(
 
 \item{chromosome}{The chromosome you are restricting to}
 
-\item{start}{Start coordinate of the range you are restricting to}
+\item{qstart}{Query start coordinate of the range you are restricting to}
 
-\item{end}{End coordinate of the range you are restricting to}
+\item{qend}{Query end coordinate of the range you are restricting to}
 
 \item{region}{Region formatted like chrX:1234-5678 instead of specifying chromosome, start and end separately}
 

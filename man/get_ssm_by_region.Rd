@@ -7,10 +7,11 @@
 get_ssm_by_region(
   db = "gambl_test",
   table_name = "maf_slms3_hg19_icgc",
-  chromosome = NULL,
-  start = NULL,
-  end = NULL,
-  region = ""
+  chromosome,
+  qstart,
+  qend,
+  region = "",
+  basic_columns = TRUE
 )
 }
 \arguments{
@@ -20,11 +21,13 @@ get_ssm_by_region(
 
 \item{chromosome}{The chromosome you are restricting to}
 
-\item{start}{Start coordinate of the range you are restricting to}
+\item{qstart}{Query start coordinate of the range you are restricting to}
 
-\item{end}{End coordinate of the range you are restricting to}
+\item{qend}{Query end coordinate of the range you are restricting to}
 
 \item{region}{Region formatted like chrX:1234-5678 instead of specifying chromosome, start and end separately}
+
+\item{basic_columns}{Set to TRUE to override the default behaviour of returning only the first 45 columns of MAF data}
 }
 \value{
 A data frame containing all the MAF data columns (one row per mutation)
@@ -36,5 +39,5 @@ Retrieve all SSMs from the GAMBL database within a single genomic coordinate ran
 #basic usage
 my_mutations=get_ssm_by_region(region="chr8:128,723,128-128,774,067")
 #specifying chromosome, start and end individually
-my_mutations=get_ssm_by_region(chromosome="8",start=128723128,end=128774067)
+my_mutations=get_ssm_by_region(chromosome="8",qtart=128723128,qend=128774067)
 }

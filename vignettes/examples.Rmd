@@ -40,6 +40,7 @@ for(table_name in all_table_names){
   
 }
 
+
 ```
 
 Get the metadata, automagically joining both tables and dropping normals and RNA-seq samples. 
@@ -109,12 +110,13 @@ circos.genomicLink(bed1, bed2,col = rand_color(nrow(bed1),transparency=0.5))
 Working with all mutations from a sample. 
 
 ```{r rainfall_plots,out.width="100%", fig.dim=c(8,3)}
-# we can also query the database to get a MAF per patient for patient-centric visualizations. 
+# we can also directly query the database to get a MAF per patient for patient-centric visualizations. # this is not using the GAMBLR functions but shows an example of how unsupported queries can be accomplished. Beware queries that will return many thousands of variants. Thes will be slow and may fail if they're too greedy 
 # note that here I'm not restricting to only coding variants
 example_dlbcl = hg19_maf %>% filter(Tumor_Sample_Barcode == "HTMCP-01-06-00422-01A-01D")
 example_dlbcl_df = example_dlbcl %>% as.data.frame()
 example_dlbcl_maf = read.maf(example_dlbcl_df)
 rainfallPlot(example_dlbcl_maf)
+DBI::dbDisconnect(con)
 ```
 
 You probably will be more interested in visualizing all mutations across a given cohort (or every genome). This can only be done in relatively small regions. Here's a way to visualize the non-coding mutation pattern across a region of interest.
@@ -125,8 +127,8 @@ You probably will be more interested in visualizing all mutations across a given
 mybed = data.frame(start=c(128806578,128805652,128748315), end=c(128806992,128809822,128748880), name=c("TSS","enhancer","MYC-e1"))
 
 # get the mutations within a region of interest
-my_mutations = get_ssm_by_region(region="chr8:128,743,606-128,820,015")
-
+# note that we can specify the query chromosome with or without a chr prefix and it will be handled elegantly
+my_mutations = get_ssm_by_region(chromosome="chr8",qstart=128743606,qend=128820015)
 
 ashm_rainbow_plot(mutations_maf=my_mutations,metadata=my_metadata,bed=mybed)
 ```
