@@ -12,65 +12,94 @@ require("data.table")
 #' @param genome_build Which reference genome these SVs are from
 #'
 #' @return A data frame with annotated SVs (gene symbol and entrez ID)
-#' @export 
+#' @export
 #'
-#' @examples 
+#' @examples
 #' # Basic usage
 #' annotated_sv = annotate_sv(sv_df)
-annotate_sv = function(sv_data,genome_build="grch37"){
-  bedpe1 = sv_data %>% select("CHROM_A","START_A","END_A","tumour_sample_id")
-  bedpe2 = sv_data %>% select("CHROM_B","START_B","END_B","tumour_sample_id")
-  
-  colnames(bedpe1)[c(1:3)]= c("chrom","start","end")
-  colnames(bedpe2)[c(1:3)]= c("chrom","start","end")
+annotate_sv = function(sv_data,genome_build="grch37",with_chr_prefix=FALSE,collapse_redundant=FALSE,return_as="bedpe"){
+  bedpe1 = sv_data %>% select("CHROM_A","START_A","END_A","tumour_sample_id","SOMATIC_SCORE","STRAND_A")
+  bedpe2 = sv_data %>% select("CHROM_B","START_B","END_B","tumour_sample_id","SOMATIC_SCORE","STRAND_B")
+
+  colnames(bedpe1)= c("chrom","start","end","tumour_sample_id","score","strand1")
+  colnames(bedpe2)= c("chrom","start","end","tumour_sample_id","score","strand2")
   if(genome_build == "grch37" || genome_build == "hg19"){
     oncogene_regions = grch37_oncogene
     ig_regions = grch37_partners
   }
   y = as.data.table(oncogene_regions)
-  
+
   setkey(y, chrom, start, end)
   #use foverlaps to get oncogene SVs
-  
+
   a = as.data.table(bedpe1)
-  a.onco = foverlaps(a, y, type="any") #oncogene-annotated bedpe for the first breakpoints
+  a.onco = foverlaps(a, y, type="any",mult="first") #oncogene-annotated bedpe for the first breakpoints
   b = as.data.table(bedpe2)
-  b.onco = foverlaps(b, y, type="any") #oncogene-annotated bedpe for the first breakpoints
-  
+  b.onco = foverlaps(b, y, type="any",mult="first") #oncogene-annotated bedpe for the first breakpoints
+
   #insist oncogene breakpoints are anchored in an IG or superenhancer region (currently just IG or BCL6)
   #other end of breakpoint
-  
-  a.onco.break = a.onco[which(!is.na(a.onco$start)),c("chrom","i.start","i.end","tumour_sample_id","gene","entrez")]
-  b.onco.break = b.onco[which(!is.na(b.onco$start)),c("chrom","i.start","i.end","tumour_sample_id","gene","entrez")]
-  
+
+  a.onco.break = a.onco[which(!is.na(a.onco$start)),c("chrom","i.start","i.end","tumour_sample_id","gene","entrez","score","strand1")]
+  b.onco.break = b.onco[which(!is.na(b.onco$start)),c("chrom","i.start","i.end","tumour_sample_id","gene","entrez","score","strand2")]
+
   a.partner = b[which(!is.na(a.onco$start)),]
   b.partner = a[which(!is.na(b.onco$start)),]
-  
+
   y = as.data.table(ig_regions)
   #y = as.data.table(ig_regions.hg19)
   setkey(y, chrom, start, end)
-  
-  a.ig = foverlaps(a.partner, y, type="any",mult="first") 
-  
-  b.ig = foverlaps(b.partner, y, type="any",mult="first") 
-  
-  a.ig = a.ig[,c("chrom","i.start","i.end","gene")]
-  b.ig = b.ig[,c("chrom","i.start","i.end","gene")]
 
+  a.ig = foverlaps(a.partner, y, type="any",mult="first")
+
+  b.ig = foverlaps(b.partner, y, type="any",mult="first")
+
+  a.ig = a.ig[,c("chrom","i.start","i.end","strand2","gene")]
+  b.ig = b.ig[,c("chrom","i.start","i.end","strand1","gene")]
   a.annotated.both = cbind(a.onco.break,a.ig)
-  colnames(a.annotated.both) = c("chrom1","start1","end1","tumour_sample_id","gene","entrez","chrom2","start2","end2","partner")
+  colnames(a.annotated.both) = c("chrom1","start1","end1","tumour_sample_id","gene","entrez","score","strand1","chrom2","start2","end2","strand2","partner")
+  #colnames(a.annotated.both) = c("chrom1","start1","end1","tumour_sample_id","gene","entrez","score","strand1","chrom2","ig.start","ig.end","partner","e2","start2","end2","tsid","garbage","strand2")
   b.annotated.both = cbind(b.onco.break,b.ig)
-  colnames(b.annotated.both) = c("chrom1","start1","end1","tumour_sample_id","gene","entrez","chrom2","start2","end2","partner")
-  
+  colnames(b.annotated.both) = c("chrom2","start2","end2","tumour_sample_id","gene","entrez","score","strand2","chrom1","start1","end1","strand1","partner")
+  #colnames(b.annotated.both) = c("chrom2","start2","end2","tumour_sample_id","gene","entrez","score","strand2","chrom1","ig.start","ig.end","partner","e2","start1","end1","tsid","garbage","strand1")
   all.annotated = rbind(a.annotated.both,b.annotated.both)
   all.annotated$fusion = pull(unite(all.annotated,fusion,partner,gene,sep="-"),fusion)
   all.annotated = dplyr::filter(all.annotated,fusion != "BCL6-BCL6")
-  
+
   #TODO: need a better system for cataloguing and using these
-  blacklist = c(60565248,30303126,187728894,101357565,101359747,161734970,69400840,65217851,187728889)
-  
+  blacklist = c(60565248,30303126,187728894,101357565,101359747,161734970,69400840,65217851,187728889,188305164)
+
   all.annotated  = dplyr::filter(all.annotated,!start1 %in% blacklist)
   all.annotated  = dplyr::filter(all.annotated,!start2 %in% blacklist)
-  all.annotated = distinct(all.annotated,tumour_sample_id,fusion,.keep_all = TRUE)
+  all.annotated = filter(all.annotated,!is.na(partner))
+
+  if(return_as=="bedpe"){
+    all.annotated$name= "."
+    all.annotated = select(all.annotated,chrom1,start1,end1,chrom2,start2,end2,name,score,strand1,strand2,tumour_sample_id,gene,partner,fusion)
+  }else if(return_as == "bed"){
+    #lose the linkage but add a name that somewhat retains it
+    if(!grepl("chr",all.annotated$chrom1)){
+      all.annotated = all.annotated %>% mutate(chrom1 = paste0("chr",chrom1))
+      all.annotated = all.annotated %>% mutate(chrom2 = paste0("chr",chrom2))
+    }
+    bed1 = mutate(all.annotated,name=paste(tumour_sample_id,fusion,sep="_")) %>% select(chrom1,start1,end1,name,score,strand1)
+    bed2 = mutate(all.annotated,name=paste(tumour_sample_id,fusion,sep="_")) %>% select(chrom2,start2,end2,name,score,strand2)
+    colnames(bed1)=c("chrom","start","end","name","score","strand")
+    colnames(bed2)=c("chrom","start","end","name","score","strand")
+    return(arrange(rbind(bed1,bed2),name))
+  }else{
+        if(collapse_redundant){
+      all.annotated = distinct(all.annotated,tumour_sample_id,fusion,.keep_all = TRUE)
+    }
+
+  }
+  if(with_chr_prefix){
+    #add the prefix if necessary
+    if(!grepl("chr",all.annotated$chrom1)){
+      all.annotated = all.annotated %>% mutate(chrom1 = paste0("chr",chrom1))
+      all.annotated = all.annotated %>% mutate(chrom2 = paste0("chr",chrom2))
+    }
+  }
   return(all.annotated)
 }
+

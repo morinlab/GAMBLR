@@ -29,9 +29,14 @@ dir(base_directory)
 
 ```
 
-```{r finalize_study}
+```{r annotate_fusions}
+fusion_patients = setup_fusions(out_dir = base_directory)
 
-finalize_study(out_dir = base_directory, sample_ids = patients_included)
+```
+
+```{r finalize_study}
+all_patients = unique(c(fusion_patients,patients_included))
+finalize_study(out_dir = base_directory, sample_ids = all_patients)
 dir(base_directory)
 
 ```

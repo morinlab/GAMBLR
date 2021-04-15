@@ -17,6 +17,10 @@ Suggests:
     knitr,
     rmarkdown,
     testthat
+Imports:
+    tidyverse,
+    data.table,
+    rtracklayer
 VignetteBuilder: knitr
 Depends: 
     R (>= 2.10)

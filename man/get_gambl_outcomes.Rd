@@ -6,8 +6,10 @@
 \usage{
 get_gambl_outcomes(
   db = "gambl_test",
+  patient_ids,
   time_unit = "year",
-  censor_cbioportal = FALSE
+  censor_cbioportal = FALSE,
+  complete_missing = FALSE
 )
 }
 \arguments{

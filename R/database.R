@@ -14,9 +14,9 @@ require("tidyverse")
 #' @examples
 #' #basic usage
 #' my_metadata = get_gambl_metadata()
-get_gambl_metadata = function(db="gambl_test",seq_type_filter = "genome",tissue_status_filter="tumour"){
+get_gambl_metadata = function(db="gambl_test",seq_type_filter = "genome",tissue_status_filter=c("tumour")){
   con <- DBI::dbConnect(RMariaDB::MariaDB(), dbname = db)
-  sample_meta = tbl(con,"sample_metadata") %>% filter(seq_type == seq_type_filter & tissue_status == tissue_status_filter)
+  sample_meta = tbl(con,"sample_metadata") %>% filter(seq_type == seq_type_filter & tissue_status %in% tissue_status_filter)
   #if we only care about genomes, we can drop/filter anything that isn't a tumour genome
   #The key for joining this table to the mutation information is to use sample_id. Think of this as equivalent to a library_id. It will differ depending on what assay was done to the sample.
   biopsy_meta = tbl(con,"biopsy_metadata") %>% select(-patient_id) %>% select(-pathology) %>% select(-time_point) %>% select(-EBV_status_inf) #drop duplicated columns
@@ -54,9 +54,16 @@ get_gambl_metadata = function(db="gambl_test",seq_type_filter = "genome",tissue_
 #'
 #' @examples
 #' outcome_df = get_gambl_outcomes()
-get_gambl_outcomes = function(db="gambl_test",time_unit="year",censor_cbioportal=FALSE){
+get_gambl_outcomes = function(db="gambl_test",patient_ids,time_unit="year",censor_cbioportal=FALSE,complete_missing=FALSE){
   con <- DBI::dbConnect(RMariaDB::MariaDB(), dbname = db)
   all_outcome = tbl(con,"outcome_metadata") %>% as.data.frame()
+  if(!missing(patient_ids)){
+    all_outcome = all_outcome %>% filter(patient_id %in% patient_ids)
+    if(complete_missing){
+      #add NA values and censored outcomes for all missing patient_ids
+      all_outcome = all_outcome %>% complete(patient_id= patient_ids,fill=list(OS_YEARS=0,PFS_years=0,TTP_YEARS=0,DSS_YEARS=0,CODE_OS=0,CODE_PFS=0,CODE_DSS=0,CODE_TTP=0))
+    }
+  }
   if(time_unit == "month"){
     all_outcome = all_outcome %>% mutate(OS_MONTHS=OS_YEARS * 12)
     all_outcome = all_outcome %>% mutate(PFS_MONTHS=PFS_YEARS * 12)
@@ -117,11 +124,12 @@ get_manta_sv = function(db="gambl_test",table_name="bedpe_manta_hg19",min_vaf=0.
       qend=startend[2]
     }
   #this table stores chromosomes with un-prefixed names. Convert to prefixed chromosome if necessary
-  if(grepl("chr",chromosome)){
-    chromosome = gsub("chr","",chromosome)
-  }
+
   con <- DBI::dbConnect(RMariaDB::MariaDB(), dbname = db)
   if(!missing(region) || !missing(chromosome)){
+    if(grepl("chr",chromosome)){
+      chromosome = gsub("chr","",chromosome)
+    }
     all_sv = tbl(con,table_name) %>%
       filter((CHROM_A == chromosome & START_A >= qstart & START_A <= qend) | (CHROM_B == chromosome & START_B >= qstart & START_B <= qend)) %>%
       filter(VAF_tumour >= min_vaf & SOMATIC_SCORE >= min_score)
@@ -153,6 +161,78 @@ get_manta_sv = function(db="gambl_test",table_name="bedpe_manta_hg19",min_vaf=0.
   }
   DBI::dbDisconnect(con)
   return(all_sv)
+}
+
+#' Retrieve the nearest SV to a specified SV in a given patient
+#'
+#' @param db The GAMBL database name
+#' @param table_name The table we are querying
+#' @param min_vaf The minimum tumour VAF for a SV to be returned
+#' @param min_score The lowest Manta somatic score for a SV to be returned
+#' @param pair_status Use to restrict results (if desired) to matched or unmatched results (default is to return all)
+#' @param sv_data A single row of a data frame returned by a function such as get_manta_sv
+#' @param with_chr_prefix Prepend all chromosome names with chr (required by some downstream analyses)
+#'
+#' @return A data frame in a bedpe-like format with additional columns that allow filtering of high-confidence SVs
+#' @export
+#'
+#' @examples
+fetch_next_sv = function(db="gambl_test",table_name="bedpe_manta_hg19",min_vaf=0.1,min_score=40,pass=TRUE,sv_data,with_chr_prefix=FALSE,in_from){
+  con <- DBI::dbConnect(RMariaDB::MariaDB(), dbname = db)
+  #in from B, out from A
+  if(in_from == "A"){
+    #search for the nearest SV in the positive direction if the strand of the breakpoint is +, otherwise search in the negative direction.
+    #Logic is reversed if from == A
+    chromosome = sv_data$CHROM_B #searching from the "right" end of the SV
+
+    sample = sv_data$tumour_sample_id
+    all_sv = tbl(con,table_name) %>% filter(tumour_sample_id == sample) %>% filter(VAF_tumour >= min_vaf & SOMATIC_SCORE >= min_score) %>% as.data.frame()
+    DBI::dbDisconnect(con)
+
+    if(sv_data$STRAND_B=="+"){
+      #get the next nearest SV with coordinate greater than this one
+      qstart = sv_data$START_B
+      all_sv_A = all_sv %>% filter(CHROM_A == chromosome & START_A > qstart & STRAND_A == "+") %>% arrange(START_A) %>% head(1)
+      all_sv_B = all_sv %>% filter(CHROM_B == chromosome & START_B > qstart & STRAND_B == "+") %>% arrange(START_B) %>% head(1)
+      print(all_sv_A)
+      print(all_sv_B)
+      #the only strand compatible with this is the same strand for A
+
+    }else{
+      qstart = sv_data$START_B
+      all_sv_A = all_sv %>% filter(CHROM_A == chromosome & START_A < qstart & STRAND_A == "-") %>% arrange(START_A) %>% tail(1)
+      all_sv_B = all_sv %>% filter(CHROM_B == chromosome & START_B < qstart & STRAND_B == "-") %>% arrange(START_B) %>% tail(1)
+      print(all_sv_A)
+      print(all_sv_B)
+      closest = which.min(c(all_sv_A$START_A,all_sv_B$START_B))
+    }
+  }else{ #in_from == B
+    chromosome = sv_data$CHROM_A #searching from the "left" end of the SV
+    if(sv_data$STRAND_A=="+"){
+      #get the next nearest SV with coordinate greater than this one
+      qstart = sv_data$START_A
+      all_sv_A = all_sv %>% filter(CHROM_A == chromosome & START_A > qstart & STRAND_A == "+") %>% arrange(START_A) %>% head(1)
+      all_sv_B = all_sv %>% filter(CHROM_B == chromosome & START_B > qstart & STRAND_B == "+") %>% arrange(START_B) %>% head(1)
+      print(all_sv_A)
+      print(all_sv_B)
+      closest = which.min(c(all_sv_A$START_A,all_sv_B$START_B))
+    }else{
+      qstart = sv_data$START_A
+      all_sv_A = all_sv %>% filter(CHROM_A == chromosome & START_A < qstart & STRAND_A == "-") %>% arrange(START_A) %>% tail(1)
+      all_sv_B = all_sv %>% filter(CHROM_B == chromosome & START_B < qstart & STRAND_B == "-") %>% arrange(START_B) %>% tail(1)
+      print(all_sv_A)
+      print(all_sv_B)
+      closest = which.min(c(all_sv_A$START_A,all_sv_B$START_B))
+    }
+  }
+  if(closest == 1){
+    print("closest was 1")
+    return(list(sv=all_sv_A,other_end="B"))
+  }else{
+    print("closest was 2")
+    return(list(sv=all_sv_B,other_end="A"))
+  }
+
 }
 
 #' Retrieve all copy number segments from the GAMBL database that overlap with a single genomic coordinate range
@@ -296,8 +376,10 @@ get_coding_ssm = function(db="gambl_test",table_name="maf_slms3_hg19_icgc",limit
   con <- DBI::dbConnect(RMariaDB::MariaDB(), dbname = db)
   coding_class = c("Frame_Shift_Del","Frame_Shift_Ins","In_Frame_Del","In_Frame_Ins","Missense_Mutation","Nonsense_Mutation","Nonstop_Mutation","Silent","Splice_Region","Splice_Site","Targeted_Region","Translation_Start_Site")
   sample_meta = tbl(con,"sample_metadata") %>% filter(seq_type == "genome" & tissue_status == "tumour")
-  biopsy_meta = tbl(con,"biopsy_metadata") %>% select(-patient_id) %>% select(-pathology) %>% select(-time_point) %>% select(-EBV_status_inf) #drop duplicated columns
-  all_meta = left_join(sample_meta,biopsy_meta,by="biopsy_id") %>% as.data.frame()
+  biopsy_meta = tbl(con,"biopsy_metadata") %>% select(-patient_id) %>%
+    select(-pathology) %>% select(-time_point) %>% select(-EBV_status_inf) #drop duplicated columns
+    all_meta = left_join(sample_meta,biopsy_meta,by="biopsy_id") %>%
+    as.data.frame()
 
   #do all remaining filtering on the metadata then add the remaining sample_id to the query
   if(!missing(limit_cohort)){
@@ -311,9 +393,9 @@ get_coding_ssm = function(db="gambl_test",table_name="maf_slms3_hg19_icgc",limit
   }
   sample_ids = pull(all_meta,sample_id)
   muts = tbl(con,table_name) %>%
-    filter(Variant_Classification %in% coding_class & Tumor_Sample_Barcode %in% sample_ids)
+    filter(Variant_Classification %in% coding_class & Tumor_Sample_Barcode %in% sample_ids) %>%
+    arrange(Tumor_Sample_Barcode) %>% as.data.frame()
 
-  muts = as.data.frame(muts)
   if(basic_columns){
     muts = muts[,c(1:45)]
   }
@@ -358,4 +440,6 @@ ashm_rainbow_plot = function(db="gambl_test",table_name="maf_slms3_hg19_icgc",mu
   }
   return(p)
 }
+
+
 

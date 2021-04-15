@@ -4,7 +4,13 @@
 \alias{annotate_sv}
 \title{Annotate a data frame of SV breakpoints after retrieval from the database}
 \usage{
-annotate_sv(sv_data, genome_build = "grch37")
+annotate_sv(
+  sv_data,
+  genome_build = "grch37",
+  with_chr_prefix = FALSE,
+  collapse_redundant = FALSE,
+  return_as = "bedpe"
+)
 }
 \arguments{
 \item{sv_data}{A data frame of SVs. This should be the output of get_manta_sv.}
