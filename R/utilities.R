@@ -248,9 +248,9 @@ collate_sv_results = function(sample_table,tool="manta",oncogenes=c("MYC","BCL2"
 
 #' Title
 #'
-#' @param classification
+#' @param classification (optionally request only colours for pathology or lymphgen)
 #'
-#' @return
+#' @return A named vector of colour codes for lymphgen classes and pathology
 #' @export
 #'
 #' @examples

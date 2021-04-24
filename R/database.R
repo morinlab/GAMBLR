@@ -540,7 +540,7 @@ ashm_multi_rainbow_plot = function(regions_bed,regions_to_display,exclude_classi
     p = muts_anno %>%
       ggplot() + geom_point(aes(x=start,y=sample_id,colour=classification),alpha=0.4,size=0.6) +
                     theme(axis.text.y=element_blank()) +
-    facet_wrap(~region_name,scales="free_x") + guides(color = guide_legend(reverse = TRUE))
+    facet_wrap(~region_name,scales="free_x") + guides(color = guide_legend(reverse = TRUE,override.aes = list(size = 3)))
 
     print(p)
   }else{
@@ -548,7 +548,7 @@ ashm_multi_rainbow_plot = function(regions_bed,regions_to_display,exclude_classi
   p = muts_anno %>%
     ggplot() + geom_point(aes(x=start,y=sample_id,colour=classification),alpha=0.4,size=0.6) +
     theme(axis.text.y=element_blank()) + scale_colour_manual(values=custom_colours) +
-    facet_wrap(~region_name,scales="free_x") + guides(color = guide_legend(reverse = TRUE))
+    facet_wrap(~region_name,scales="free_x") + guides(color = guide_legend(reverse = TRUE,override.aes = list(size = 3)))
   print(p)
   }
 }
