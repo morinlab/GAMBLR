@@ -2,16 +2,23 @@
 % Please edit documentation in R/utilities.R
 \name{get_bams}
 \alias{get_bams}
-\title{Title}
+\title{Get full paths for bam files for a sample or patient}
 \usage{
 get_bams(sample, patient)
 }
 \arguments{
-\item{patient}{}
+\item{sample}{Either provide sample_id or patient_id}
+
+\item{patient}{Either provide sample_id or patient_id}
 }
 \value{
-
+A list that contains the genome_build and an igv-friendly build (igv_build), a list of bam file paths for tumour, normal and mrna data
 }
 \description{
-Title
+Get full paths for bam files for a sample or patient
+}
+\examples{
+this_sv = annotated_sv \%>\% filter(partner=="HIST1H2BK") \%>\% head(1)
+#arbitrarily grab a SV
+bam_details = get_bams(sample=this_sv$tumour_sample_id)
 }

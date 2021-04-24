@@ -2,7 +2,7 @@
 % Please edit documentation in R/utilities.R
 \name{read_merge_manta_with_liftover}
 \alias{read_merge_manta_with_liftover}
-\title{Title}
+\title{This is a helper function that is not meant to be used routinely}
 \usage{
 read_merge_manta_with_liftover(
   bedpe_paths = c(),
@@ -17,5 +17,5 @@ read_merge_manta_with_liftover(
 
 }
 \description{
-Title
+This is a helper function that is not meant to be used routinely
 }

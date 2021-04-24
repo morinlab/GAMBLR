@@ -71,7 +71,8 @@ annotate_sv = function(sv_data,genome_build="grch37",with_chr_prefix=FALSE,colla
 
   all.annotated  = dplyr::filter(all.annotated,!start1 %in% blacklist)
   all.annotated  = dplyr::filter(all.annotated,!start2 %in% blacklist)
-  all.annotated = filter(all.annotated,!is.na(partner))
+
+  #all.annotated = filter(all.annotated,!is.na(partner))
 
   if(return_as=="bedpe"){
     all.annotated$name= "."

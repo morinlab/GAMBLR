@@ -7,7 +7,7 @@
 get_gambl_metadata(
   db = "gambl_test",
   seq_type_filter = "genome",
-  tissue_status_filter = "tumour"
+  tissue_status_filter = c("tumour")
 )
 }
 \arguments{

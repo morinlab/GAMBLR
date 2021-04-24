@@ -2,16 +2,23 @@
 % Please edit documentation in R/utilities.R
 \name{liftover_bedpe}
 \alias{liftover_bedpe}
-\title{Title}
+\title{Use liftOver to convert a bedpe file between the two main genome builds (grch37/hg38)}
 \usage{
 liftover_bedpe(bedpe_file, bedpe_df, target_build = "grch37")
 }
 \arguments{
-\item{target_build}{}
+\item{bedpe_file}{Either specify the path to a bedpe file}
+
+\item{bedpe_df}{Or specify the bedpe data in a data frame}
+
+\item{target_build}{Specify which build the data should be lifted to (must be one of hg19, grch37, hg38, grch38)}
 }
 \value{
-
+Data frame containing original bedpe data with new coordinates
 }
 \description{
-Title
+Use liftOver to convert a bedpe file between the two main genome builds (grch37/hg38)
+}
+\examples{
+hg38_sv = lifover_bedpe(bedpe_df=hg19_sv,target_build="hg38")
 }

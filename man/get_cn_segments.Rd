@@ -7,10 +7,10 @@
 get_cn_segments(
   db = "gambl_test",
   table_name = "seg_battenberg_hg19",
-  chromosome = NULL,
-  qstart = NULL,
-  qend = NULL,
-  region = "",
+  chromosome,
+  qstart,
+  qend,
+  region,
   with_chr_prefix = FALSE
 )
 }

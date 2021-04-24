@@ -11,7 +11,8 @@ get_ssm_by_region(
   qstart,
   qend,
   region = "",
-  basic_columns = TRUE
+  basic_columns = TRUE,
+  streamlined
 )
 }
 \arguments{
