@@ -29,3 +29,23 @@ show tables;
 ```
 
 Instead of writing your own queries, it's more likely that you will want to use the dbplyr package and the convenience functions provided in GAMBLR. Adding new functionality is highly encouraged. 
+
+## Installation
+
+Clone the repo to your home directory (not your gambl working directory)
+
+```
+git clone git@github.com:morinlab/GAMBLR.git
+```
+
+In Rstudio (on a gphost), set your working directory to the place you just cloned the repo. 
+
+```
+setwd("~/GAMBLR")
+```
+
+Install the package:
+
+```
+devtools::install()
+```
