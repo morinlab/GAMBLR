@@ -44,8 +44,17 @@ In Rstudio (on a gphost), set your working directory to the place you just clone
 setwd("~/GAMBLR")
 ```
 
-Install the package:
+Install the package in R by running the following command (requires the devtools package)
 
 ```
 devtools::install()
+```
+
+I need to fix the dependencies to be auto-loaded. When you load the package it's a good plan to also load the dependencies (and install any that are missing).
+```
+library(GAMBLR)
+library(dbplyr)
+library(tidyverse)
+library(data.table)
+
 ```
