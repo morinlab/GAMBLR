@@ -6,7 +6,7 @@
 <meta http-equiv="X-UA-Compatible" content="IE=edge">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
-<title>Retrieve all SSMs from the GAMBL database within a single genomic coordinate range — get_ssm_by_region • GAMBLR</title>
+<title>Finish setting up a new cBioPortal instance or updating an existing portal data set — finalize_study • GAMBLR</title>
 
 
 <!-- jquery -->
@@ -39,8 +39,8 @@
 
 
 
-<meta property="og:title" content="Retrieve all SSMs from the GAMBL database within a single genomic coordinate range — get_ssm_by_region" />
-<meta property="og:description" content="Retrieve all SSMs from the GAMBL database within a single genomic coordinate range" />
+<meta property="og:title" content="Finish setting up a new cBioPortal instance or updating an existing portal data set — finalize_study" />
+<meta property="og:description" content="Finish setting up a new cBioPortal instance or updating an existing portal data set" />
 
 
 
@@ -118,69 +118,64 @@
 <div class="row">
   <div class="col-md-9 contents">
     <div class="page-header">
-    <h1>Retrieve all SSMs from the GAMBL database within a single genomic coordinate range</h1>
+    <h1>Finish setting up a new cBioPortal instance or updating an existing portal data set</h1>
     
-    <div class="hidden name"><code>get_ssm_by_region.Rd</code></div>
+    <div class="hidden name"><code>finalize_study.Rd</code></div>
     </div>
 
     <div class="ref-description">
-    <p>Retrieve all SSMs from the GAMBL database within a single genomic coordinate range</p>
+    <p>Finish setting up a new cBioPortal instance or updating an existing portal data set</p>
     </div>
 
-    <pre class="usage"><span class='fu'>get_ssm_by_region</span><span class='op'>(</span>
-  db <span class='op'>=</span> <span class='st'>"gambl_test"</span>,
-  table_name <span class='op'>=</span> <span class='st'>"maf_slms3_hg19_icgc"</span>,
-  <span class='va'>chromosome</span>,
-  <span class='va'>qstart</span>,
-  <span class='va'>qend</span>,
-  region <span class='op'>=</span> <span class='st'>""</span>,
-  basic_columns <span class='op'>=</span> <span class='cn'>TRUE</span>,
-  <span class='va'>streamlined</span>
+    <pre class="usage"><span class='fu'>finalize_study</span><span class='op'>(</span>
+  short_name <span class='op'>=</span> <span class='st'>"GAMBL"</span>,
+  include_icgc_data <span class='op'>=</span> <span class='cn'>FALSE</span>,
+  human_friendly_name <span class='op'>=</span> <span class='st'>"GAMBL data"</span>,
+  project_name <span class='op'>=</span> <span class='st'>"gambl_minus_icgc"</span>,
+  description <span class='op'>=</span> <span class='st'>"GAMBL data without ICGC"</span>,
+  cancer_type <span class='op'>=</span> <span class='st'>"mixed"</span>,
+  <span class='va'>out_dir</span>,
+  overwrite <span class='op'>=</span> <span class='cn'>FALSE</span>,
+  <span class='va'>sample_ids</span>
 <span class='op'>)</span></pre>
 
     <h2 class="hasAnchor" id="arguments"><a class="anchor" href="#arguments"></a>Arguments</h2>
     <table class="ref-arguments">
     <colgroup><col class="name" /><col class="desc" /></colgroup>
     <tr>
-      <th>db</th>
-      <td><p>The GAMBL database name</p></td>
+      <th>short_name</th>
+      <td><p>a concise name for your portal project</p></td>
     </tr>
     <tr>
-      <th>table_name</th>
-      <td><p>The table we are querying</p></td>
+      <th>include_icgc_data</th>
+      <td><p>whether or not you want ICGC and other external data included</p></td>
     </tr>
     <tr>
-      <th>chromosome</th>
-      <td><p>The chromosome you are restricting to (with or without a chr prefix)</p></td>
+      <th>human_friendly_name</th>
+      <td><p>a slightly more verbose name for your project</p></td>
     </tr>
     <tr>
-      <th>qstart</th>
-      <td><p>Query start coordinate of the range you are restricting to</p></td>
+      <th>project_name</th>
+      <td><p>unique ID for your project</p></td>
     </tr>
     <tr>
-      <th>qend</th>
-      <td><p>Query end coordinate of the range you are restricting to</p></td>
+      <th>description</th>
+      <td><p>A verbose description of your data set</p></td>
     </tr>
     <tr>
-      <th>region</th>
-      <td><p>Region formatted like chrX:1234-5678 instead of specifying chromosome, start and end separately</p></td>
+      <th>out_dir</th>
+      <td><p>The full path to the base directory where the files are being created</p></td>
     </tr>
     <tr>
-      <th>basic_columns</th>
-      <td><p>Set to TRUE to override the default behaviour of returning only the first 45 columns of MAF data</p></td>
+      <th>sample_ids</th>
+      <td><p>A vector of all the sample_id that were included in any of the data files for cbioportal</p></td>
     </tr>
     </table>
 
     <h2 class="hasAnchor" id="value"><a class="anchor" href="#value"></a>Value</h2>
 
-    <p>A data frame containing all the MAF data columns (one row per mutation)</p>
+    <p>nothing</p>
 
-    <h2 class="hasAnchor" id="examples"><a class="anchor" href="#examples"></a>Examples</h2>
-    <pre class="examples"><div class='input'><span class='co'>#basic usage</span>
-<span class='va'>my_mutations</span><span class='op'>=</span><span class='fu'>get_ssm_by_region</span><span class='op'>(</span>region<span class='op'>=</span><span class='st'>"chr8:128,723,128-128,774,067"</span><span class='op'>)</span>
-</div><div class='output co'>#&gt; <span class='error'>Error in tbl(con, table_name) %&gt;% filter(Chromosome == chromosome &amp; Start_Position &gt;     qstart &amp; Start_Position &lt; qend): could not find function "%&gt;%"</span></div><div class='input'><span class='co'>#specifying chromosome, start and end individually</span>
-<span class='va'>my_mutations</span><span class='op'>=</span><span class='fu'>get_ssm_by_region</span><span class='op'>(</span>chromosome<span class='op'>=</span><span class='st'>"8"</span>,qstart<span class='op'>=</span><span class='fl'>128723128</span>,qend<span class='op'>=</span><span class='fl'>128774067</span><span class='op'>)</span>
-</div><div class='output co'>#&gt; <span class='error'>Error in tbl(con, table_name) %&gt;% filter(Chromosome == chromosome &amp; Start_Position &gt;     qstart &amp; Start_Position &lt; qend): could not find function "%&gt;%"</span></div></pre>
   </div>
   <div class="col-md-3 hidden-xs hidden-sm" id="pkgdown-sidebar">
     <nav id="toc" data-toggle="toc" class="sticky-top">

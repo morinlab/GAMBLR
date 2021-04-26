@@ -7,7 +7,8 @@
 get_gambl_metadata(
   db = "gambl_test",
   seq_type_filter = "genome",
-  tissue_status_filter = c("tumour")
+  tissue_status_filter = c("tumour"),
+  case_set
 )
 }
 \arguments{
@@ -16,6 +17,9 @@ get_gambl_metadata(
 \item{seq_type_filter}{Filtering criteria (default: all genomes)}
 
 \item{tissue_status_filter}{Filtering criteria (default: only tumour genomes)}
+
+\item{case_set}{optional short name for a pre-defined set of cases avoiding any
+embargoed cases (current options: 'BLGSP-study', 'FL-DLBCL-study')}
 }
 \value{
 A data frame with metadata for each biopsy in GAMBL
@@ -24,6 +28,10 @@ A data frame with metadata for each biopsy in GAMBL
 Get GAMBL metadata
 }
 \examples{
-#basic usage
+# basic usage
 my_metadata = get_gambl_metadata()
+# use pre-defined custom sample sets
+only_blgsp_metadata = get_gambl_metadata(case_set="BLGSP-study")
+# override default filters and request metadata for samples other than tumour genomes, e.g. also get the normals
+only_normal_metadata = get_gambl_metadata(tissue_status_filter = c('tumour','normal'))
 }

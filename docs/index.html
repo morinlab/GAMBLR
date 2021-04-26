@@ -54,6 +54,9 @@
   </a>
   <ul class="dropdown-menu" role="menu">
 <li>
+      <a href="articles/cbioportal.html">cbioportal</a>
+    </li>
+    <li>
       <a href="articles/examples.html">GAMBLR - working with GAMBL data painlessly in R</a>
     </li>
   </ul>
@@ -87,6 +90,22 @@
 <pre><code>show tables; 
 #don't forget the semicolon!</code></pre>
 <p>Instead of writing your own queries, it’s more likely that you will want to use the dbplyr package and the convenience functions provided in GAMBLR. Adding new functionality is highly encouraged.</p>
+</div>
+<div id="installation" class="section level2">
+<h2 class="hasAnchor">
+<a href="#installation" class="anchor"></a>Installation</h2>
+<p>Clone the repo to your home directory (not your gambl working directory)</p>
+<pre><code>git clone git@github.com:morinlab/GAMBLR.git</code></pre>
+<p>In Rstudio (on a gphost), set your working directory to the place you just cloned the repo.</p>
+<pre><code><a href="https://rdrr.io/r/base/getwd.html">setwd("~/GAMBLR")</a></code></pre>
+<p>Install the package in R by running the following command (requires the devtools package)</p>
+<pre><code><a href="https://devtools.r-lib.org//reference/install.html">devtools::install()</a></code></pre>
+<p>I need to fix the dependencies to be auto-loaded. When you load the package it’s a good plan to also load the dependencies (and install any that are missing).</p>
+<pre><code><a href="https://rdrr.io/r/base/library.html">library(GAMBLR)
+library(dbplyr)
+library(tidyverse)
+library(data.table)
+</a></code></pre>
 </div>
 </div>
   </div>

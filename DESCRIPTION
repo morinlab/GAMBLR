@@ -1,6 +1,6 @@
 Package: GAMBLR
-Title: What the Package Does (One Line, Title Case)
-Version: 0.0.0.9000
+Title: Database, mining, manipulation and convenience functions for working with GAMBL results
+Version: 0.0.0.9500
 Authors@R: 
     person(given = "Ryan",
            family = "Morin",
@@ -20,6 +20,12 @@ Suggests:
 Imports:
     tidyverse,
     data.table,
+    RMariaDB,
+    DBI,
+    maftools,
+    ggbeeswarm,
+    SRAdb,
+    circlize,
     rtracklayer
 VignetteBuilder: knitr
 Depends: 

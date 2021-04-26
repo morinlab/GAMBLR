@@ -95,6 +95,9 @@
   </a>
   <ul class="dropdown-menu" role="menu">
     <li>
+      <a href="../articles/cbioportal.html">cbioportal</a>
+    </li>
+    <li>
       <a href="../articles/examples.html">GAMBLR - working with GAMBL data painlessly in R</a>
     </li>
   </ul>
@@ -127,10 +130,11 @@
     <pre class="usage"><span class='fu'>get_cn_segments</span><span class='op'>(</span>
   db <span class='op'>=</span> <span class='st'>"gambl_test"</span>,
   table_name <span class='op'>=</span> <span class='st'>"seg_battenberg_hg19"</span>,
-  chromosome <span class='op'>=</span> <span class='cn'>NULL</span>,
-  qstart <span class='op'>=</span> <span class='cn'>NULL</span>,
-  qend <span class='op'>=</span> <span class='cn'>NULL</span>,
-  region <span class='op'>=</span> <span class='st'>""</span>
+  <span class='va'>chromosome</span>,
+  <span class='va'>qstart</span>,
+  <span class='va'>qend</span>,
+  <span class='va'>region</span>,
+  with_chr_prefix <span class='op'>=</span> <span class='cn'>FALSE</span>
 <span class='op'>)</span></pre>
 
     <h2 class="hasAnchor" id="arguments"><a class="anchor" href="#arguments"></a>Arguments</h2>
@@ -153,6 +157,10 @@
       <td><p>Region formatted like chrX:1234-5678 instead of specifying chromosome, start and end separately</p></td>
     </tr>
     <tr>
+      <th>with_chr_prefix</th>
+      <td><p>Prepend all chromosome names with chr (required by some downstream analyses)</p></td>
+    </tr>
+    <tr>
       <th>start</th>
       <td><p>Start coordinate of the range you are restricting to</p></td>
     </tr>
@@ -167,11 +175,13 @@
     <p>A data frame containing all the MAF data columns (one row per mutation)</p>
 
     <h2 class="hasAnchor" id="examples"><a class="anchor" href="#examples"></a>Examples</h2>
-    <pre class="examples"><div class='input'><span class='co'>#basic usage</span>
+    <pre class="examples"><div class='input'><span class='co'># basic usage</span>
 <span class='va'>my_segments</span><span class='op'>=</span><span class='fu'>get_cn_segments</span><span class='op'>(</span>region<span class='op'>=</span><span class='st'>"chr8:128,723,128-128,774,067"</span><span class='op'>)</span>
-</div><div class='output co'>#&gt; <span class='error'>Error in tbl(con, table_name) %&gt;% filter(chrom == chromosome &amp; start &lt;=     qstart &amp; end &gt;= qend) %&gt;% as.data.frame(): could not find function "%&gt;%"</span></div><div class='input'><span class='co'>#specifying chromosome, start and end individually</span>
-<span class='va'>my_segments</span><span class='op'>=</span><span class='fu'>get_cn_segments</span><span class='op'>(</span>chromosome<span class='op'>=</span><span class='st'>"8"</span>,start<span class='op'>=</span><span class='fl'>128723128</span>,end<span class='op'>=</span><span class='fl'>128774067</span><span class='op'>)</span>
-</div><div class='output co'>#&gt; <span class='error'>Error in get_cn_segments(chromosome = "8", start = 128723128, end = 128774067): unused arguments (start = 128723128, end = 128774067)</span></div></pre>
+</div><div class='output co'>#&gt; <span class='error'>Error in tbl(con, table_name) %&gt;% filter((chrom == chromosome &amp; start &lt;=     qstart &amp; end &gt;= qend) | (chrom == chromosome &amp; start &gt;= qstart &amp;     end &lt;= qend)) %&gt;% as.data.frame(): could not find function "%&gt;%"</span></div><div class='input'><span class='co'># specifying chromosome, start and end individually</span>
+<span class='va'>my_segments</span><span class='op'>=</span><span class='fu'>get_cn_segments</span><span class='op'>(</span>chromosome<span class='op'>=</span><span class='st'>"8"</span>,qstart<span class='op'>=</span><span class='fl'>128723128</span>,qend<span class='op'>=</span><span class='fl'>128774067</span><span class='op'>)</span>
+</div><div class='output co'>#&gt; <span class='error'>Error in tbl(con, table_name) %&gt;% filter((chrom == chromosome &amp; start &lt;=     qstart &amp; end &gt;= qend) | (chrom == chromosome &amp; start &gt;= qstart &amp;     end &lt;= qend)) %&gt;% as.data.frame(): could not find function "%&gt;%"</span></div><div class='input'><span class='co'># Asking for chromosome names to have a chr prefix (default is un-prefixed)</span>
+<span class='va'>prefixed_segments</span> <span class='op'>=</span> <span class='fu'>get_cn_segments</span><span class='op'>(</span><span class='fu'>get_cn_segments</span><span class='op'>(</span>chromosome<span class='op'>=</span><span class='st'>"12"</span>,qstart<span class='op'>=</span><span class='fl'>122456912</span>,qend<span class='op'>=</span><span class='fl'>122464036</span>,with_chr_prefix <span class='op'>=</span> <span class='cn'>TRUE</span><span class='op'>)</span><span class='op'>)</span>
+</div><div class='output co'>#&gt; <span class='error'>Error in tbl(con, table_name) %&gt;% filter((chrom == chromosome &amp; start &lt;=     qstart &amp; end &gt;= qend) | (chrom == chromosome &amp; start &gt;= qstart &amp;     end &lt;= qend)) %&gt;% as.data.frame(): could not find function "%&gt;%"</span></div></pre>
   </div>
   <div class="col-md-3 hidden-xs hidden-sm" id="pkgdown-sidebar">
     <nav id="toc" data-toggle="toc" class="sticky-top">

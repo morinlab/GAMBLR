@@ -7,10 +7,10 @@
 get_gambl_colours(classification = "lymphgen")
 }
 \arguments{
-\item{classification}{}
+\item{classification}{(optionally request only colours for pathology, lymphgen or copy_number)}
 }
 \value{
-
+A named vector of colour codes for lymphgen classes and pathology
 }
 \description{
 Title

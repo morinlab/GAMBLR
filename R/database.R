@@ -1,20 +1,25 @@
 
-require("dbplyr")
-require("tidyverse")
-
 #' Get GAMBL metadata
 #'
 #' @param db The GAMBL database name
 #' @param seq_type_filter Filtering criteria (default: all genomes)
 #' @param tissue_status_filter Filtering criteria (default: only tumour genomes)
+#' @param case_set optional short name for a pre-defined set of cases avoiding any
+#' embargoed cases (current options: 'BLGSP-study', 'FL-DLBCL-study')
 #'
 #' @return A data frame with metadata for each biopsy in GAMBL
 #' @export
+#' @import tidyverse DBI RMariaDB
 #'
 #' @examples
-#' #basic usage
+#' # basic usage
 #' my_metadata = get_gambl_metadata()
-get_gambl_metadata = function(db="gambl_test",seq_type_filter = "genome",tissue_status_filter=c("tumour")){
+#' # use pre-defined custom sample sets
+#' only_blgsp_metadata = get_gambl_metadata(case_set="BLGSP-study")
+#' # override default filters and request metadata for samples other than tumour genomes, e.g. also get the normals
+#' only_normal_metadata = get_gambl_metadata(tissue_status_filter = c('tumour','normal'))
+get_gambl_metadata = function(db="gambl_test",seq_type_filter = "genome",
+                              tissue_status_filter=c("tumour"), case_set){
   con <- DBI::dbConnect(RMariaDB::MariaDB(), dbname = db)
   sample_meta = tbl(con,"sample_metadata") %>% filter(seq_type == seq_type_filter & tissue_status %in% tissue_status_filter)
   #if we only care about genomes, we can drop/filter anything that isn't a tumour genome
@@ -22,7 +27,19 @@ get_gambl_metadata = function(db="gambl_test",seq_type_filter = "genome",tissue_
   biopsy_meta = tbl(con,"biopsy_metadata") %>% select(-patient_id) %>% select(-pathology) %>% select(-time_point) %>% select(-EBV_status_inf) #drop duplicated columns
   all_meta = left_join(sample_meta,biopsy_meta,by="biopsy_id") %>% as.data.frame()
   all_meta[all_meta$pathology=="B-cell unclassified","pathology"] = "HGBL"  #TODO fix this in the metadata
-
+  if(!missing(case_set)){
+    if(case_set == "FL-DLBCL-study"){
+      #get FL cases and DLBCL cases not in special/embargoed cohorts
+      all_meta = all_meta %>% filter(pathology %in% c("FL","DLBCL")) %>% filter(!cohort %in% c("DLBCL_ctDNA","DLBCL_BLGSP","LLMPP_P01","DLBCL_LSARP_Trios"))
+    }
+    if(case_set == "BLGSP-study"){
+      #get BL cases minus duplicates (i.e. drop benchmarking cases)
+      all_meta = all_meta %>% filter(cohort %in% c("BL_Adult","BL_cell_lines","BL_ICGC","BLGSP_Bcell_UNC","BL_Pediatric"))
+    }else if(case_set == "GAMBL-all"){
+      #get all GAMBL but remove FFPE benchmarking cases and ctDNA
+      all_meta = all_meta %>% filter(!cohort %in% c("FFPE_Benchmarking","DLBCL_ctDNA"))
+    }
+  }
   #add some derivative columns that simplify and consolidate some of the others (DLBCL-specific)
   all_meta = all_meta %>% mutate(lymphgen = case_when(
     pathology != "DLBCL" ~ pathology,
@@ -74,12 +91,13 @@ get_gambl_metadata = function(db="gambl_test",seq_type_filter = "genome",tissue_
 
 #' Get the patient-centric clinical metadata
 #'
-#' @param db
+#' @param db optional. Specify a different database (changing this is not recommended)
 #' @param time_unit Return follow-up times in one of three time units: year, month or day
 #' @param censor_cbioportal Optionally request the censoring to be encoded in the specific style required by cBioPortal
 #'
 #' @return Data frame with one row for each patient_id
 #' @export
+#' @import tidyverse RMariaDB DBI
 #'
 #' @examples
 #' outcome_df = get_gambl_outcomes()
@@ -133,6 +151,7 @@ get_gambl_outcomes = function(db="gambl_test",patient_ids,time_unit="year",censo
 #'
 #' @return A data frame in a bedpe-like format with additional columns that allow filtering of high-confidence SVs
 #' @export
+#' @import DBI RMariaDB tidyverse
 #'
 #' @examples
 #' #lazily get every SV in the table with default quality filters
@@ -204,6 +223,7 @@ get_manta_sv = function(db="gambl_test",table_name="bedpe_manta_hg19",min_vaf=0.
 #'
 #' @return A data frame in a bedpe-like format with additional columns that allow filtering of high-confidence SVs
 #' @export
+#' @import tidyverse DBI RMariaDB
 #'
 #' @examples
 fetch_next_sv = function(db="gambl_test",table_name="bedpe_manta_hg19",min_vaf=0.1,min_score=40,pass=TRUE,sv_data,with_chr_prefix=FALSE,in_from){
@@ -276,6 +296,7 @@ fetch_next_sv = function(db="gambl_test",table_name="bedpe_manta_hg19",min_vaf=0
 #'
 #' @return A data frame containing all the MAF data columns (one row per mutation)
 #' @export
+#' @import tidyverse DBI RMariaDB
 #'
 #' @examples
 #' # basic usage
@@ -327,6 +348,7 @@ get_cn_segments = function(db="gambl_test",table_name="seg_battenberg_hg19",chro
 #'
 #' @return MAF-format data frame of mutations in query gene
 #' @export
+#' @import tidyverse DBI RMariaDB
 #'
 #' @examples
 #' #basic usage
@@ -356,6 +378,7 @@ get_ssm_by_gene = function(db="gambl_test",table_name="maf_slms3_hg19_icgc",gene
 #'
 #' @return A data frame containing all the MAF data columns (one row per mutation)
 #' @export
+#' @import tidyverse DBI RMariaDB
 #'
 #' @examples
 #' #basic usage
@@ -400,6 +423,7 @@ get_ssm_by_region = function(db="gambl_test",table_name="maf_slms3_hg19_icgc",ch
 #'
 #' @return A data frame containing all the MAF data columns (one row per mutation)
 #' @export
+#' @import tidyverse DBI RMariaDB
 #'
 #' @examples
 #' #basic usage
@@ -426,7 +450,7 @@ get_coding_ssm = function(db="gambl_test",table_name="maf_slms3_hg19_icgc",limit
   sample_ids = pull(all_meta,sample_id)
   muts = tbl(con,table_name) %>%
     filter(Variant_Classification %in% coding_class & Tumor_Sample_Barcode %in% sample_ids) %>%
-    arrange(Tumor_Sample_Barcode) %>% as.data.frame()
+   as.data.frame()
 
   if(basic_columns){
     muts = muts[,c(1:45)]
@@ -448,6 +472,7 @@ get_coding_ssm = function(db="gambl_test",table_name="maf_slms3_hg19_icgc",limit
 #'
 #' @return ggplot2 object
 #' @export
+#' @import tidyverse DBI RMariaDB
 #'
 #' @examples
 #' # basic usage
@@ -478,12 +503,13 @@ ashm_rainbow_plot = function(db="gambl_test",table_name="maf_slms3_hg19_icgc",mu
 #' @param regions_bed Bed file with chromosome coordinates, should contain columns chr, start, end, name (with these exact names)
 #' @param regions_to_display Optional vector of names from default regions_bed to use
 #' @param metadata A metadata file already subsetted and arranged on the order you want the samples vertically displayed
-#' @param classification_column
-#' @param db
-#' @param table_name
+#' @param classification_column optional. Override default column for assigning the labels used for colouring in the figure.
+#' @param db optional. Specify a different database (changing this is not recommended)
+#' @param table_name optional. Specify a different table to query (changing this is not recommended)
 #'
-#' @return
+#' @return nothing
 #' @export
+#' @import tidyverse DBI RMariaDB
 #'
 #' @examples
 ashm_multi_rainbow_plot = function(regions_bed,regions_to_display,exclude_classifications,metadata,custom_colours,classification_column="lymphgen",db="gambl_test",table_name="maf_slms3_hg19_icgc"){
@@ -550,6 +576,51 @@ ashm_multi_rainbow_plot = function(regions_bed,regions_to_display,exclude_classi
     theme(axis.text.y=element_blank()) + scale_colour_manual(values=custom_colours) +
     facet_wrap(~region_name,scales="free_x") + guides(color = guide_legend(reverse = TRUE,override.aes = list(size = 3)))
   print(p)
+  }
+}
+
+#' Title
+#'
+#' @param this_sample
+#' @param just_segments
+#'
+#' @return nothing
+#' @export
+#' @import tidyverse DBI RMariaDB
+#'
+#' @examples
+copy_number_vaf_plot = function(this_sample,just_segments=FALSE,coding_only=FALSE){
+  chrom_order=factor(c(1:22,"X"))
+  cn_colours = get_gambl_colours(classification = "copy_number")
+  maf_and_seg = assign_cn_to_ssm(this_sample=this_sample,coding_only=coding_only)
+  vaf_cn_maf = maf_and_seg[["maf"]]
+  vaf_cn_maf = mutate(vaf_cn_maf,CN=as.character(CN))
+  if(just_segments){
+    #I realized this is ugly
+    cn_seg = maf_and_seg[["seg"]]
+    cn_seg = mutate(cn_seg,CN_segment = as.numeric(CN),CN = as.character(CN))
+    ggplot(cn_seg) +
+      geom_segment(data=cn_seg,aes(x=Start_Position,xend=End_Position,y=CN_segment,yend=CN_segment)) +
+      facet_wrap(~factor(Chromosome,levels=chrom_order),scales="free_x") +
+      scale_colour_manual(values = copy_number_colours) +
+      theme_minimal() + guides(color = guide_legend(reverse = TRUE,override.aes = list(size = 3)))
+  }else{
+    if(coding_only){
+      mutate(vaf_cn_maf,vaf=t_alt_count/(t_ref_count+t_alt_count)) %>% ggplot() +
+        geom_point(aes(x=Start_Position,y=vaf,colour=CN),alpha=0.6,size=2) +
+        scale_colour_manual(values = copy_number_colours) +
+        facet_wrap(~factor(Chromosome,levels=chrom_order),scales="free_x") +
+        theme_minimal() + guides(color = guide_legend(reverse = TRUE,override.aes = list(size = 3)))
+
+    }else{
+
+      mutate(vaf_cn_maf,vaf=t_alt_count/(t_ref_count+t_alt_count)) %>% ggplot() +
+         geom_point(aes(x=Start_Position,y=vaf,colour=CN),alpha=0.6,size=0.2) +
+         scale_colour_manual(values = copy_number_colours) +
+         facet_wrap(~factor(Chromosome,levels=chrom_order),scales="free_x") +
+         theme_minimal() + guides(color = guide_legend(reverse = TRUE,override.aes = list(size = 3)))
+
+    }
   }
 }
 

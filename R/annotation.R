@@ -1,6 +1,3 @@
-require("dbplyr")
-require("tidyverse")
-require("data.table")
 
 #functions for custom annotation of mutations such as SV, CNV
 
@@ -13,6 +10,8 @@ require("data.table")
 #'
 #' @return A data frame with annotated SVs (gene symbol and entrez ID)
 #' @export
+#' @import tidyverse
+#' @import data.table
 #'
 #' @examples
 #' # Basic usage

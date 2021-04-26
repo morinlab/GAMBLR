@@ -6,7 +6,7 @@
 <meta http-equiv="X-UA-Compatible" content="IE=edge">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
-<title>Retrieve all SSMs from the GAMBL database within a single genomic coordinate range — get_ssm_by_region • GAMBLR</title>
+<title>Load bams and generate an IGV screenshot for one or more regions — make_igv_snapshot • GAMBLR</title>
 
 
 <!-- jquery -->
@@ -39,8 +39,8 @@
 
 
 
-<meta property="og:title" content="Retrieve all SSMs from the GAMBL database within a single genomic coordinate range — get_ssm_by_region" />
-<meta property="og:description" content="Retrieve all SSMs from the GAMBL database within a single genomic coordinate range" />
+<meta property="og:title" content="Load bams and generate an IGV screenshot for one or more regions — make_igv_snapshot" />
+<meta property="og:description" content="Load bams and generate an IGV screenshot for one or more regions" />
 
 
 
@@ -118,69 +118,93 @@
 <div class="row">
   <div class="col-md-9 contents">
     <div class="page-header">
-    <h1>Retrieve all SSMs from the GAMBL database within a single genomic coordinate range</h1>
+    <h1>Load bams and generate an IGV screenshot for one or more regions</h1>
     
-    <div class="hidden name"><code>get_ssm_by_region.Rd</code></div>
+    <div class="hidden name"><code>make_igv_snapshot.Rd</code></div>
     </div>
 
     <div class="ref-description">
-    <p>Retrieve all SSMs from the GAMBL database within a single genomic coordinate range</p>
+    <p>Load bams and generate an IGV screenshot for one or more regions</p>
     </div>
 
-    <pre class="usage"><span class='fu'>get_ssm_by_region</span><span class='op'>(</span>
-  db <span class='op'>=</span> <span class='st'>"gambl_test"</span>,
-  table_name <span class='op'>=</span> <span class='st'>"maf_slms3_hg19_icgc"</span>,
-  <span class='va'>chromosome</span>,
-  <span class='va'>qstart</span>,
-  <span class='va'>qend</span>,
-  region <span class='op'>=</span> <span class='st'>""</span>,
-  basic_columns <span class='op'>=</span> <span class='cn'>TRUE</span>,
-  <span class='va'>streamlined</span>
+    <pre class="usage"><span class='fu'>make_igv_snapshot</span><span class='op'>(</span>
+  <span class='va'>bams</span>,
+  <span class='va'>genome_build</span>,
+  <span class='va'>region</span>,
+  padding <span class='op'>=</span> <span class='fl'>200</span>,
+  <span class='va'>chrom</span>,
+  <span class='va'>start</span>,
+  <span class='va'>end</span>,
+  <span class='va'>sample_id</span>,
+  out_path <span class='op'>=</span> <span class='st'>"/tmp/"</span>,
+  igv_port <span class='op'>=</span> <span class='fl'>60506</span>
 <span class='op'>)</span></pre>
 
     <h2 class="hasAnchor" id="arguments"><a class="anchor" href="#arguments"></a>Arguments</h2>
     <table class="ref-arguments">
     <colgroup><col class="name" /><col class="desc" /></colgroup>
     <tr>
-      <th>db</th>
-      <td><p>The GAMBL database name</p></td>
+      <th>bams</th>
+      <td><p>Character vector containing the full path to one or more bam files</p></td>
     </tr>
     <tr>
-      <th>table_name</th>
-      <td><p>The table we are querying</p></td>
-    </tr>
-    <tr>
-      <th>chromosome</th>
-      <td><p>The chromosome you are restricting to (with or without a chr prefix)</p></td>
-    </tr>
-    <tr>
-      <th>qstart</th>
-      <td><p>Query start coordinate of the range you are restricting to</p></td>
-    </tr>
-    <tr>
-      <th>qend</th>
-      <td><p>Query end coordinate of the range you are restricting to</p></td>
+      <th>genome_build</th>
+      <td><p>String specifying the genome build for the bam files provided</p></td>
     </tr>
     <tr>
       <th>region</th>
-      <td><p>Region formatted like chrX:1234-5678 instead of specifying chromosome, start and end separately</p></td>
+      <td><p>Optionally specify the region as a single string (e.g. "chr1:1234-1235")</p></td>
     </tr>
     <tr>
-      <th>basic_columns</th>
-      <td><p>Set to TRUE to override the default behaviour of returning only the first 45 columns of MAF data</p></td>
+      <th>padding</th>
+      <td><p>Optionally specify a positive value to broaden the region around the specified position</p></td>
+    </tr>
+    <tr>
+      <th>chrom</th>
+      <td><p>Optionally specify the region by specifying the chromosome, start and end (see below)</p></td>
+    </tr>
+    <tr>
+      <th>start</th>
+      <td><p>Optionally specify the region by specifying the start</p></td>
+    </tr>
+    <tr>
+      <th>end</th>
+      <td><p>Optionally specify the region by specifying the end</p></td>
+    </tr>
+    <tr>
+      <th>sample_id</th>
+      <td><p>Specify the sample_id or any other string you want embedded in the file name</p></td>
+    </tr>
+    <tr>
+      <th>out_path</th>
+      <td><p>Specify the output directory where the snapshot will be written</p></td>
+    </tr>
+    <tr>
+      <th>igv_port</th>
+      <td><p>Specify the port IGV is listening on</p></td>
+    </tr>
+    <tr>
+      <th>region_bed</th>
+      <td><p>Optionally specify regions in bed format (column order is assumed)</p></td>
     </tr>
     </table>
 
     <h2 class="hasAnchor" id="value"><a class="anchor" href="#value"></a>Value</h2>
 
-    <p>A data frame containing all the MAF data columns (one row per mutation)</p>
+    
+
+
 
     <h2 class="hasAnchor" id="examples"><a class="anchor" href="#examples"></a>Examples</h2>
-    <pre class="examples"><div class='input'><span class='co'>#basic usage</span>
-<span class='va'>my_mutations</span><span class='op'>=</span><span class='fu'>get_ssm_by_region</span><span class='op'>(</span>region<span class='op'>=</span><span class='st'>"chr8:128,723,128-128,774,067"</span><span class='op'>)</span>
-</div><div class='output co'>#&gt; <span class='error'>Error in tbl(con, table_name) %&gt;% filter(Chromosome == chromosome &amp; Start_Position &gt;     qstart &amp; Start_Position &lt; qend): could not find function "%&gt;%"</span></div><div class='input'><span class='co'>#specifying chromosome, start and end individually</span>
-<span class='va'>my_mutations</span><span class='op'>=</span><span class='fu'>get_ssm_by_region</span><span class='op'>(</span>chromosome<span class='op'>=</span><span class='st'>"8"</span>,qstart<span class='op'>=</span><span class='fl'>128723128</span>,qend<span class='op'>=</span><span class='fl'>128774067</span><span class='op'>)</span>
-</div><div class='output co'>#&gt; <span class='error'>Error in tbl(con, table_name) %&gt;% filter(Chromosome == chromosome &amp; Start_Position &gt;     qstart &amp; Start_Position &lt; qend): could not find function "%&gt;%"</span></div></pre>
+    <pre class="examples"><div class='input'><span class='co'>#IMPORTANT: you must be running IGV on the host that is running R and you need to have it listening on a port</span>
+<span class='co'># The simplest scenario is to run this command on a terminal (if using a Mac), assuming you are using R on gphost10 and you have a ssh config that routes gp10 to that host</span>
+<span class='co'># ssh -X gp10</span>
+<span class='co'># then launch IGV (e.e. from a conda installation):</span>
+<span class='co'># conda activate igv; igv &amp;</span>
+<span class='va'>this_sv</span> <span class='op'>=</span> <span class='va'>annotated_sv</span> <span class='op'>%&gt;%</span> <span class='fu'><a href='https://rdrr.io/r/stats/filter.html'>filter</a></span><span class='op'>(</span><span class='va'>gene</span><span class='op'>==</span><span class='st'>"ETV6"</span><span class='op'>)</span>
+</div><div class='output co'>#&gt; <span class='error'>Error in annotated_sv %&gt;% filter(gene == "ETV6"): could not find function "%&gt;%"</span></div><div class='input'><span class='va'>tumour_bam</span> <span class='op'>=</span> <span class='fu'>get_bam_path</span><span class='op'>(</span>sample<span class='op'>=</span><span class='va'>this_sv</span><span class='op'>$</span><span class='va'>tumour_sample_id</span><span class='op'>)</span>
+</div><div class='output co'>#&gt; <span class='error'>Error in get_bam_path(sample = this_sv$tumour_sample_id): could not find function "get_bam_path"</span></div><div class='input'><span class='fu'>make_igv_snapshot</span><span class='op'>(</span>chrom<span class='op'>=</span><span class='va'>this_sv</span><span class='op'>$</span><span class='va'>chrom2</span>, start<span class='op'>=</span><span class='va'>this_sv</span><span class='op'>$</span><span class='va'>start2</span>, end<span class='op'>=</span><span class='va'>this_sv</span><span class='op'>$</span><span class='va'>end2</span>, sample_id<span class='op'>=</span><span class='va'>this_sv</span><span class='op'>$</span><span class='va'>tumour_sample_id</span>,out_path<span class='op'>=</span><span class='st'>"~/IGV_snapshots/"</span><span class='op'>)</span>
+</div><div class='output co'>#&gt; <span class='error'>Error in IGVsocket(port = igv_port): could not find function "IGVsocket"</span></div></pre>
   </div>
   <div class="col-md-3 hidden-xs hidden-sm" id="pkgdown-sidebar">
     <nav id="toc" data-toggle="toc" class="sticky-top">

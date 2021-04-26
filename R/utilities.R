@@ -1,14 +1,9 @@
-require(tidyverse)
-require(rtracklayer)
-require(SRAdb)
-
-
-
 
 #' Title
 #'
 #' @return A table keyed on biopsy_id that contains a bunch of per-sample results from GAMBL
 #' @export
+#' @import tidyverse
 #'
 #' @examples
 collate_results = function(sample_table,write_to_file=FALSE){
@@ -24,7 +19,7 @@ collate_results = function(sample_table,write_to_file=FALSE){
   sample_table = collate_ashm_results(sample_table=sample_table)
   sample_table = collate_nfkbiz_results(sample_table=sample_table)
   sample_table = collate_sbs_results(sample_table=sample_table)
-
+  sample_table = collate_derived_results(sample_table=sample_table)
   if(write_to_file){
     output_file = "/projects/rmorin/projects/gambl-repos/gambl-rmorin/data/metadata/gambl_sample_results.tsv"
     write_tsv(sample_table,file=output_file)
@@ -35,10 +30,28 @@ collate_results = function(sample_table,write_to_file=FALSE){
 #' Title
 #'
 #' @param sample_table
+#'
+#' @return
+#' @export
+#' @import tidyverse
+#'
+#' @examples
+collate_derived_results = function(sample_table,database_name="gambl_test"){
+  con <- dbConnect(RMariaDB::MariaDB(), dbname = database_name)
+  derived_tbl = tbl(con,"derived_data") %>% as.data.frame()
+  derived_tbl = derived_tbl %>% select(where( ~!all(is.na(.x)))) #drop the columns that are completely empty
+  sample_table = left_join(sample_table,derived_tbl)
+  return(sample_table)
+}
+
+#' Title
+#'
+#' @param sample_table
 #' @param path_to_files
 #'
 #' @return
 #' @export
+#' @import tidyverse
 #'
 #' @examples
 collate_curated_sv_results = function(sample_table,path_to_files="icgc_dart/derived_and_curated_metadata/"){
@@ -53,6 +66,57 @@ collate_curated_sv_results = function(sample_table,path_to_files="icgc_dart/deri
   return(sample_table)
 }
 
+#' Annotate mutations with their copy number information
+#'
+#' @param this_sample Sample ID of the sample you want to annotate
+#' @param tool_name Copy number caller to use for annotation
+#' @param database_name
+#' @param coding_only
+#'
+#' @return A data frame (MAF-like format) with two extra columns:
+#' log.ratio is the log ratio from the seg file (NA when no overlap was found)
+#' CN is the rounded absolute copy number estimate of the region based on log.ratio (NA when no overlap was found)
+#' @export
+#' @import tidyverse
+#'
+#' @examples
+assign_cn_to_ssm = function(this_sample,tool_name="battenberg",database_name="gambl_test",table_name="maf_slms3_hg19_icgc",coding_only=FALSE){
+  #get all the segments for a sample and filter the small ones then assign CN value from the segment to all SSMs in that region
+  con <- dbConnect(RMariaDB::MariaDB(), dbname = database_name)
+  coding_class = c("Frame_Shift_Del","Frame_Shift_Ins","In_Frame_Del","In_Frame_Ins","Missense_Mutation","Nonsense_Mutation","Nonstop_Mutation","Splice_Region","Splice_Site","Targeted_Region","Translation_Start_Site")
+
+  maf_sample <- tbl(con, table_name) %>%
+    filter(Tumor_Sample_Barcode == this_sample) %>%
+    as.data.frame()
+  if(coding_only){
+    maf_sample = filter(maf_sample,Variant_Classification %in% coding_class)
+  }
+  if(tool_name == "battenberg"){
+    seg_sample = tbl(con,"seg_battenberg_hg19") %>%
+      filter(ID == this_sample) %>%
+      as.data.table() %>% mutate(size=end - start) %>%
+      filter(size > 100) %>%
+      mutate(chrom = gsub("chr","",chrom)) %>%
+      rename(Chromosome=chrom,Start_Position=start,End_Position=end)
+    setkey(seg_sample, Chromosome, Start_Position, End_Position)
+    a = as.data.table(maf_sample)
+    a.seg = foverlaps(a, seg_sample, type="any")
+    a$log.ratio = a.seg$log.ratio
+    #a$LOH = factor(a.seg$LOH_flag)
+    a = mutate(a,CN=round(2*2^log.ratio))
+    seg_sample = mutate(seg_sample,CN=round(2*2^log.ratio))
+    #seg_sample$LOH_flag = factor(seg_sample$LOH_flag)
+    #mutate(a,vaf=t_alt_count/(t_ref_count+t_alt_count)) %>% ggplot() +
+    #  geom_point(aes(x=Start_Position,y=vaf,colour=CN),size=0.1)  +
+      #geom_segment(data=seg_sample,aes(x=Start_Position,xend=End_Position,y=CN,yend=CN,colour=LOH_flag)) +
+    #  facet_wrap(~Chromosome,scales="free_x")
+    return(list(maf=a,seg=seg_sample))
+    DBI::dbDisconnect(con)
+  }else{
+    print("ERROR: missing a required argument")
+  }
+}
+
 #' Title
 #'
 #' @param sample_table
@@ -62,6 +126,7 @@ collate_curated_sv_results = function(sample_table,path_to_files="icgc_dart/deri
 #'
 #' @return
 #' @export
+#' @import tidyverse
 #'
 #' @examples
 populate_tool_results = function(database_name="gambl_test",sample_table,tool="battenberg",base_directory_gambl,base_directory_other){
@@ -74,11 +139,16 @@ populate_tool_results = function(database_name="gambl_test",sample_table,tool="b
 
       fv = field_value[i]
       sid = sample_id[i]
-      update_q = paste0("UPDATE derived_data set ",field_name," = ", fv, " WHERE sample_id = \"", sid,"\";")
-      print(update_q)
+      if(is.numeric(fv)){
+        update_q = paste0("UPDATE derived_data set ",field_name," = ", fv, " WHERE sample_id = \"", sid,"\";")
+        print(update_q)
+      }else{
+        #need to add quotes to the value also
+        update_q = paste0("UPDATE derived_data set ",field_name," = \"", fv, "\" WHERE sample_id = \"", sid,"\";")
+        print(update_q)
+      }
       dbExecute(con, update_q)
     }
-
   }
   #check if we're missing sample_ids from sample_table
   sample_ids = pull(sample_table,sample_id)
@@ -91,7 +161,92 @@ populate_tool_results = function(database_name="gambl_test",sample_table,tool="b
       dbExecute(con, insert_q)
     }
   }
+  if(tool=="QC"){
+    #flag any cases with QC issues raised
+    collated = collate_results()
+    qc_issues = select(collated,sample_id,QC_flag) %>% filter(!is.na(QC_flag)) %>% mutate(flagged="yes")
+    generic_update(sample_id=qc_issues$sample_id,field_name = "QC_issue",field_value = qc_issues$QC_flag)
+  }
+  if(tool == "sequenza"){
+    parse_sequenza = function(sequenza_files){
+      seq_data=sequenza_files %>%
+        map(read_tsv) %>% #read each file into a list of tibbles
+        map(head,1) %>% #just keep the first line
+        reduce(rbind) %>% #rbind the elements all back into one
+        rename(sequenza_cellularity=cellularity,sequenza_ploidy=ploidy) #change the column names
+      return(seq_data)
+    }
 
+    seq_files_gambl_hg38 = fetch_output_files(genome_build="hg38",base_path = "gambl/sequenza_current",results_dir="02-sequenza",tool_name="sequenza")
+    sequenza_results = parse_sequenza(seq_files_gambl_hg38$full_path)
+    generic_update(sample_id=seq_files_gambl_hg38$tumour_sample_id,field_name="sequenza_purity",field_value=sequenza_results$sequenza_cellularity)
+    generic_update(sample_id=seq_files_gambl_hg38$tumour_sample_id,field_name="sequenza_ploidy",field_value=sequenza_results$sequenza_ploidy)
+
+
+    seq_files_gambl = fetch_output_files(genome_build="grch37",base_path = "gambl/sequenza_current",results_dir="02-sequenza",tool_name="sequenza")
+    sequenza_results = parse_sequenza(seq_files_gambl$full_path)
+    generic_update(sample_id=seq_files_gambl$tumour_sample_id,field_name="sequenza_purity",field_value=sequenza_results$sequenza_cellularity)
+    generic_update(sample_id=seq_files_gambl$tumour_sample_id,field_name="sequenza_ploidy",field_value=sequenza_results$sequenza_ploidy)
+
+
+    seq_files_gambl_hg38 = fetch_output_files(genome_build="hg38",base_path = "icgc_dart/sequenza_current",results_dir="02-sequenza",tool_name="sequenza")
+    sequenza_results = parse_sequenza(seq_files_gambl_hg38$full_path)
+    generic_update(sample_id=seq_files_gambl_hg38$tumour_sample_id,field_name="sequenza_ploidy",field_value=sequenza_results$sequenza_ploidy)
+
+    seq_files_gambl_grch37 = fetch_output_files(genome_build="hs37d5",base_path = "icgc_dart/sequenza_current",results_dir="02-sequenza",tool_name="sequenza")
+    sequenza_results = parse_sequenza(seq_files_gambl_grch37$full_path)
+    generic_update(sample_id=seq_files_gambl_grch37$tumour_sample_id,field_name="sequenza_ploidy",field_value=sequenza_results$sequenza_ploidy)
+
+
+  }
+  if(tool == "slms3"){
+    gambl_mut_maf <- tbl(con, "maf_slms3_hg19_icgc")
+    #additional bookkeeping: set matched/unmatched information in the analysis table based on the matched normal ID
+    gambl_mutation_normals = gambl_mut_maf %>% select(Tumor_Sample_Barcode) %>%
+      group_by(Tumor_Sample_Barcode) %>% as.data.frame()
+    gambl_meta_normals = get_gambl_metadata(tissue_status_filter=c('tumour','normal')) %>%
+      select(patient_id,sample_id,tissue_status) %>%
+      pivot_wider(id_cols=patient_id,names_from=tissue_status,values_from=sample_id)
+    #the above has tumour and normal as separate columns for all paired samples.
+
+    gambl_normals = mutate(gambl_normals,slms3_pairing_status= case_when(
+
+    ))
+    #just use the mutation table to get summary counts per sample and add to the derived table for convenience
+
+    #update for gambl cases then do the same for icgc, then repeat for coding changes
+    gambl_counts = gambl_mut_maf %>% select(Tumor_Sample_Barcode) %>%
+      group_by(Tumor_Sample_Barcode) %>% tally() %>% as.data.frame()
+    generic_update(sample_id=gambl_counts$Tumor_Sample_Barcode,field_name="slms3_ssm_total",field_value=gambl_counts$n)
+
+    #gambl_vafs = gambl_maf %>% group_by(Tumor_Sample_Barcode) %>% mutate(vaf=mean(t_alt_count/(t_ref_count + t_alt_count))) %>%
+    #  select(Tumor_Sample_Barcode, vaf) %>%
+    #  as.data.frame()
+    vaf_q = "select Tumor_Sample_Barcode, avg(t_alt_count/(t_ref_count + t_alt_count)) as vaf from maf_slms3_hg19_icgc group by Tumor_Sample_Barcode"
+
+    vaf_tbl = dbGetQuery(con,vaf_q)
+
+    #update all vafs at once
+    generic_update(sample_id=vaf_tbl$Tumor_Sample_Barcode,field_name="slms3_mean_vaf",field_value=vaf_tbl$vaf)
+
+    coding_class = c("Frame_Shift_Del","Frame_Shift_Ins","In_Frame_Del","In_Frame_Ins","Missense_Mutation","Nonsense_Mutation","Nonstop_Mutation","Splice_Region","Splice_Site","Targeted_Region","Translation_Start_Site")
+
+    #this is where things get SLOW! It seems the most efficient here to do this query per sample.
+    for(sam in gambl_counts$Tumor_Sample_Barcode){
+    #for(sam in some){
+      #check here to see if there's a non-null value and skip if possible
+      check_q = paste0("select count(*) as n from derived_data where sample_id = \"",sam,"\" and slms3_ssm_coding is not NULL;")
+      num = dbGetQuery(con,check_q) %>% pull(n)
+      print(paste(sam,num))
+      if(num == 0){
+        print(paste("working on:",sam))
+        coding_num = gambl_mut_maf %>% filter(Tumor_Sample_Barcode == sam & Variant_Classification %in% coding_class) %>% count() %>% pull(n)
+        generic_update(sample_id=sam,field_name="slms3_ssm_coding",field_value=coding_num)
+      }else{
+        print(paste0("skipping ", sam))
+      }
+    }
+  }
   if(tool == "battenberg"){
     # parse purity and ploidy values from copy number caller and add to database
     parse_batt = function(batt_file){
@@ -142,6 +297,7 @@ collate_extra_metadata= function(sample_table,file_path){
 #'
 #' @return
 #' @export
+#' @import tidyverse
 #'
 #' @examples
 collate_sbs_results = function(sample_table,file_path){
@@ -169,6 +325,7 @@ collate_sbs_results = function(sample_table,file_path){
 #'
 #' @return
 #' @export
+#' @import tidyverse
 #'
 #' @examples
 collate_nfkbiz_results = function(sample_table){
@@ -188,6 +345,7 @@ collate_nfkbiz_results = function(sample_table){
 #'
 #' @return
 #' @export
+#' @import tidyverse
 #'
 #' @examples
 collate_ashm_results = function(sample_table){
@@ -217,6 +375,7 @@ collate_ashm_results = function(sample_table){
 #'
 #' @return
 #' @export
+#' @import tidyverse
 #'
 #' @examples
 collate_sv_results = function(sample_table,tool="manta",oncogenes=c("MYC","BCL2","BCL6","CCND1","IRF4")){
@@ -248,10 +407,11 @@ collate_sv_results = function(sample_table,tool="manta",oncogenes=c("MYC","BCL2"
 
 #' Title
 #'
-#' @param classification (optionally request only colours for pathology or lymphgen)
+#' @param classification (optionally request only colours for pathology, lymphgen or copy_number)
 #'
 #' @return A named vector of colour codes for lymphgen classes and pathology
 #' @export
+#' @import tidyverse
 #'
 #' @examples
 get_gambl_colours = function(classification="lymphgen"){
@@ -264,7 +424,16 @@ get_gambl_colours = function(classification="lymphgen"){
     "COMPOSITE" = "#7E8083",
     "Other" = "#55B55E"
   )
+  copy_number_colours=c(
+    "5"="#67001F",
+    "4"="#B2182B",
+    "3"="#D6604D",
+    "2"="#ede4c7",
+    "1"="#92C5DE",
+    "0"="#4393C3"
+  )
   pathology_colours = c(
+    "DLBCL"="#479450",
     "B-ALL"="#C1C64B",
     "BL"="#926CAD",
     "FL"="#EA8368",
@@ -277,8 +446,18 @@ get_gambl_colours = function(classification="lymphgen"){
     "DLBCL-BL-like"="#34C7F4",
     "HGBL"="#B23F52"
   )
-  all_colours=c(lymphgen_colours,pathology_colours)
-  return(all_colours)
+  if(classification == "copy_number"){
+    print("copy number colours")
+    return(copy_number_colours)
+  }
+  if(classification == "pathology"){
+    print("pathology colours")
+    return(pathology_colours)
+  }
+  else{
+    all_colours=c(lymphgen_colours,pathology_colours)
+    return(all_colours)
+  }
 }
 
 #' Get full paths for bam files for a sample or patient
@@ -288,6 +467,7 @@ get_gambl_colours = function(classification="lymphgen"){
 #'
 #' @return A list that contains the genome_build and an igv-friendly build (igv_build), a list of bam file paths for tumour, normal and mrna data
 #' @export
+#' @import tidyverse
 #'
 #' @examples
 #' this_sv = annotated_sv %>% filter(partner=="HIST1H2BK") %>% head(1)
@@ -341,6 +521,7 @@ get_bams = function(sample,patient){
 #'
 #' @return
 #' @export
+#' @import tidyverse SRAdb
 #'
 #' @examples
 #' #IMPORTANT: you must be running IGV on the host that is running R and you need to have it listening on a port
@@ -376,6 +557,7 @@ make_igv_snapshot = function(bams,genome_build,region,padding=200,chrom,start,en
 #'
 #' @return Data frame containing original bedpe data with new coordinates
 #' @export
+#' @import tidyverse
 #'
 #' @examples
 #' hg38_sv = lifover_bedpe(bedpe_df=hg19_sv,target_build="hg38")
@@ -422,6 +604,7 @@ liftover_bedpe = function(bedpe_file,bedpe_df,target_build="grch37"){
 #' @param out_dir
 #'
 #' @return
+#' @import tidyverse
 #'
 #' @examples
 read_merge_manta_with_liftover = function(bedpe_paths=c(),pattern="--matched",out_dir){
@@ -492,6 +675,7 @@ read_merge_manta_with_liftover = function(bedpe_paths=c(),pattern="--matched",ou
 #'
 #' @return A data frame with one row per file and sample IDs parsed from the file name along with other GAMBL wildcards
 #' @export
+#' @import tidyverse
 #'
 #' @examples
 fetch_output_files = function(tool_name,base_path,results_dir="99-outputs",seq_type="genome",genome_build="hg38",search_pattern="cellularity_ploidy.txt"){
@@ -500,8 +684,7 @@ fetch_output_files = function(tool_name,base_path,results_dir="99-outputs",seq_t
     base_path = paste0(project_base,base_path)
   }
   results_path = paste0(base_path,"/",results_dir,"/",seq_type,"--",genome_build,"/")
-  print(paste0("using results in: ",results_path))
-  print("THIS CAN BE SLOW!")
+
   #path may contain either directories or files named after the sample pair
   dir_listing = dir(results_path,pattern="--")
   #start a data frame for tidy collation of details
@@ -510,16 +693,23 @@ fetch_output_files = function(tool_name,base_path,results_dir="99-outputs",seq_t
   #find file with search_pattern per directory and handle any missing files. This is a bit slow.
   #unnested_df = unnested_df %>% head() %>% mutate(output_file = dir(paste0(results_path,short_path),pattern=search_pattern))
   #This still fails when a matching file isn't found. No clue why this doesn't work
-  unnested_df = unnested_df  %>% mutate(full_path=paste0(results_path,short_path))
-  named=pull(unnested_df,full_path)
-
-  found_files=  tibble(filename=lapply(named,function(x){dir(x,pattern=search_pattern)[1]})) %>%
-    unnest_longer(filename)
-
-
-  new_df = cbind(unnested_df,found_files) %>% filter(!is.na(filename))
-  new_df = mutate(new_df,full_path=paste0(full_path,"/",filename))
-
+  if(tool_name=="sequenza"){
+    print(paste0("using results in: ",results_path))
+    print("THIS CAN BE SLOW!")
+    unnested_df = unnested_df  %>% mutate(full_path=paste0(results_path,short_path,"/filtered/sequenza_alternative_solutions.txt"))
+    named=pull(unnested_df,full_path)
+    found_files=  tibble(filename=lapply(named,file.exists)) %>%
+      unnest_longer(filename)
+    new_df = cbind(unnested_df,found_files) %>% filter(found_files==TRUE)
+    print(head(new_df))
+  }else{
+    print(paste0("using results in: ",results_path))
+    print("THIS CAN BE SLOW!")
+    unnested_df = unnested_df  %>% mutate(full_path=paste0(results_path,short_path))
+    named=pull(unnested_df,full_path)
+    found_files=  tibble(filename=lapply(named,function(x){dir(x,pattern=search_pattern)[1]})) %>%
+      unnest_longer(filename)
+  }
   return(new_df)
 }
 

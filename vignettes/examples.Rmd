@@ -56,6 +56,19 @@ my_metadata = my_metadata %>% select(sample_id,biopsy_id,myc_ba,cohort,pathology
 
 print(head(my_metadata))
 
+#An important feature for reproducibility is that we all use the same exact subset of samples when performing various level-3 analyses for a study. This function effectively "locks in" a set of cases for a study based on some filters it applies automatically based on a study set identifier. For retrieving the metadata for all BLGSP cases with WGS data, you can use the following:
+
+blgsp_metadata = get_gambl_metadata(case_set="BLGSP-study")
+
+#as you can see this spans several cohorts and doesn't even just include BL pathology (for complex reasons)
+
+blgsp_metadata %>% pull(cohort) %>% table()
+
+#If you want the sample_id (i.e. the Tumor_Sample_Barcode) for all these cases, for example to subset a MAF file, you can extract them into a vector:
+
+blgsp_sample_ids = pull(blgsp_metadata,sample_id)
+length(blgsp_sample_ids)
+
 ```
 
 
@@ -116,7 +129,7 @@ unannotated_sv = get_manta_sv()
 #in this example, let's just look at the SVs annotated as likely driving BCL6 expression
 annotated_sv = annotate_sv(unannotated_sv,with_chr_prefix = TRUE) %>% 
     filter(!is.na(partner)) %>% 
-    select(-entrez) %>% 
+    #select(-entrez) %>% 
   filter(gene=="BCL6") %>% 
   as.data.frame()
 
@@ -134,6 +147,7 @@ colnames(bed1)=c("chrom","start","end","sample_id","fusion")
 colnames(bed2)=c("chrom","start","end","sample_id","fusion")
 
 #circos.initializeWithIdeogram()
+circos.clear()
 circos.initializeWithIdeogram(plotType = NULL,chromosome.index = paste0("chr", c(1:22,"X")))
 
 circos.genomicLabels(partner_label, labels.column = 4, side = "outside", cex=0.4,col='black')
@@ -222,6 +236,15 @@ my_mutations = get_ssm_by_region(chromosome="chr8",qstart=128743606,qend=1288200
 ashm_rainbow_plot(mutations_maf=my_mutations,metadata=my_metadata,bed=mybed)
 ```
 
+A more advanced and fairly automatic plotting function for exploring multiple aSHM regions at once. 
+
+```{r more_ashm_plotting}
+# Handy function that provides a vector of colours for giving points for different pathology/subgroups reproducible and distinguishable colours
+lymphgen_colours = get_gambl_colours(classification="lymphgen")
+# This package comes with some custom (curated) data such as the regions recurrently affected by hypermutation in B-NHLs
+ashm_multi_rainbow_plot(regions_to_display=c("BCL2-TSS","MYC-TSS","SGK1-TSS","IGL"),custom_colours = lymphgen_colours)
+
+```
 
 Get all CN segments that overlap with a gene of interest and annotate them using the metadata. 
 ```{r get_seg_data}
@@ -255,7 +278,7 @@ lollipopPlot(maf_obj,gene="CCND3")
 We can also extract a MAF-like data frame for a set of samples using any combination of cohorts or pathology to subset the data. 
 
 ```{r get_big_maf,width="100%", fig.dim=c(8,5)}
-maf_data = get_coding_ssm(limit_cohort=c("BL_Adult","BL_Pediatric","BL_ICGC"))
+maf_data = get_coding_ssm(limit_cohort=c("BL_Pediatric","BL_ICGC"))
 maf_metadata = get_gambl_metadata() %>% select(sample_id,cohort,sex)
 colnames(maf_metadata)[1] = "Tumor_Sample_Barcode"
 
@@ -267,29 +290,29 @@ oncoplot(maf,clinicalFeatures = c("sex","cohort"),sortByAnnotation = TRUE,genesT
 
 Commonly, we will want to generate visualizations that only show genes deemed relevant for a given malignancy (and above some frequency threshold). There is a lymphoma_genes data frame bundled with this package that allows us a quick way to get a list of genes that are recurrently mutated in that disease. This list is quite long for most because it includes anything mutated at a frequency of at least (roughly) 0.5% in GAMBL. 
 
-```{r tabulate_genes}
-BL_genes_all = lymphoma_genes %>% filter(BL==TRUE) %>% pull(Gene)
-print(BL_genes_all)
+#```{r tabulate_genes}
+#BL_genes_all = lymphoma_genes %>% filter(BL==TRUE) %>% pull(Gene)
+#print(BL_genes_all)
 
 #determine what frequency each gene is mutated in across the extracted data set
 
-n = maf_data %>% select(Tumor_Sample_Barcode) %>% unique() %>% count()
+#n = maf_data %>% select(Tumor_Sample_Barcode) %>% unique() %>% count()
 
-gene_sample_mut_freq = maf_data %>% filter(Hugo_Symbol %in% BL_genes_all) %>% 
-  select(Hugo_Symbol, Tumor_Sample_Barcode) %>% unique() %>% 
-  group_by(Hugo_Symbol) %>% tally() %>% 
-  mutate(frequency= 100 * n / 222)
+#gene_sample_mut_freq = maf_data %>% dplyr::filter(Hugo_Symbol %in% BL_genes_all) %>% 
+#  dplyr::select(Hugo_Symbol, Tumor_Sample_Barcode) %>% unique() %>% 
+#  dplyr::group_by(Hugo_Symbol) %>% dplyr::tally() %>% 
+#  dplyr::mutate(frequency= 100 * n / 222)
 
 #which genes are mutated in at least 10% of patients?
-gene_sample_mut_freq %>% filter(frequency >=10)
+#gene_sample_mut_freq %>% filter(frequency >=10)
 
-top_BL_genes = gene_sample_mut_freq %>% filter(frequency >=10) %>% pull(Hugo_Symbol)
+#top_BL_genes = gene_sample_mut_freq %>% dplyr::filter(frequency >=10) %>% dplyr::pull(Hugo_Symbol)
 
-oncoplot(maf,clinicalFeatures = c("sex","cohort"),sortByAnnotation = TRUE,genes=top_BL_genes)
+#maftools::oncoplot(maf,clinicalFeatures = c("sex","cohort"),sortByAnnotation = TRUE,genes=top_BL_genes)
 
-```
+#```
 
-```{r igv}
+#```{r igv}
 # WARNING: this code chunk will fail unless you have IGV running and listening on port 60506
 # The simplest scenario is to run this command on a terminal (if using a Mac), assuming you are using R on gphost10 and you have a ssh config that routes gp10 to that host. 
 # Stretch goal/TODO: get this working with a headless igv
@@ -297,19 +320,19 @@ oncoplot(maf,clinicalFeatures = c("sex","cohort"),sortByAnnotation = TRUE,genes=
 # then launch IGV (e.e. from a conda installation):
 # conda activate igv; igv &
 #hg19/grch37 example 
-this_sv = annotated_sv %>% filter(partner=="HIST1H2BK") %>% head(1)
-bam_details = get_bams(sample=this_sv$tumour_sample_id)
-snapshot_home = "/home/rmorin/IGV_snapshots/"
-snapshot = make_igv_snapshot(chrom=this_sv$chrom2, start=this_sv$start2, 
-                             end=this_sv$end2,
-                             sample_id=this_sv$tumour_sample_id,
-                             genome_build=bam_details$igv_build,
-                             bams = c(bam_details$tumour_bams,bam_details$normal_genome_bams),
-                             out_path=snapshot_home)
+#this_sv = annotated_sv %>% filter(partner=="HIST1H2BK") %>% head(1)
+#bam_details = get_bams(sample=this_sv$tumour_sample_id)
+#snapshot_home = "/home/rmorin/IGV_snapshots/"
+#snapshot = make_igv_snapshot(chrom=this_sv$chrom2, start=this_sv$start2, 
+#                             end=this_sv$end2,
+#                             sample_id=this_sv$tumour_sample_id,
+#                             genome_build=bam_details$igv_build,
+#                             bams = #c(bam_details$tumour_bams,bam_details$normal_genome_bams),
+#                             out_path=snapshot_home)
 
-library(imager)
+#library(imager)
 
-snapshot_image = imager::load.image(snapshot)
-plot(snapshot_image,axes = FALSE)
-```
+#snapshot_image = imager::load.image(snapshot)
+#plot(snapshot_image,axes = FALSE)
+#```
 

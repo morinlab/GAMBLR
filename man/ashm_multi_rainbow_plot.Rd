@@ -22,10 +22,14 @@ ashm_multi_rainbow_plot(
 
 \item{metadata}{A metadata file already subsetted and arranged on the order you want the samples vertically displayed}
 
-\item{table_name}{}
+\item{classification_column}{optional. Override default column for assigning the labels used for colouring in the figure.}
+
+\item{db}{optional. Specify a different database (changing this is not recommended)}
+
+\item{table_name}{optional. Specify a different table to query (changing this is not recommended)}
 }
 \value{
-
+nothing
 }
 \description{
 Title

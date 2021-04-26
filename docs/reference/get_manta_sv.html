@@ -95,6 +95,9 @@
   </a>
   <ul class="dropdown-menu" role="menu">
     <li>
+      <a href="../articles/cbioportal.html">cbioportal</a>
+    </li>
+    <li>
       <a href="../articles/examples.html">GAMBLR - working with GAMBL data painlessly in R</a>
     </li>
   </ul>
@@ -133,9 +136,10 @@
   <span class='va'>pairing_status</span>,
   <span class='va'>sample_id</span>,
   <span class='va'>chromosome</span>,
-  <span class='va'>start</span>,
-  <span class='va'>end</span>,
-  <span class='va'>region</span>
+  <span class='va'>qstart</span>,
+  <span class='va'>qend</span>,
+  <span class='va'>region</span>,
+  with_chr_prefix <span class='op'>=</span> <span class='cn'>FALSE</span>
 <span class='op'>)</span></pre>
 
     <h2 class="hasAnchor" id="arguments"><a class="anchor" href="#arguments"></a>Arguments</h2>
@@ -162,16 +166,20 @@
       <td><p>The chromosome you are restricting to</p></td>
     </tr>
     <tr>
-      <th>start</th>
-      <td><p>Start coordinate of the range you are restricting to</p></td>
+      <th>qstart</th>
+      <td><p>Query start coordinate of the range you are restricting to</p></td>
     </tr>
     <tr>
-      <th>end</th>
-      <td><p>End coordinate of the range you are restricting to</p></td>
+      <th>qend</th>
+      <td><p>Query end coordinate of the range you are restricting to</p></td>
     </tr>
     <tr>
       <th>region</th>
       <td><p>Region formatted like chrX:1234-5678 instead of specifying chromosome, start and end separately</p></td>
+    </tr>
+    <tr>
+      <th>with_chr_prefix</th>
+      <td><p>Prepend all chromosome names with chr (required by some downstream analyses)</p></td>
     </tr>
     <tr>
       <th>pair_status</th>
@@ -190,7 +198,7 @@
 <span class='va'>some_sv</span> <span class='op'>=</span> <span class='fu'>get_manta_sv</span><span class='op'>(</span>sample_id<span class='op'>=</span><span class='st'>"94-15772_tumorA"</span><span class='op'>)</span>
 </div><div class='output co'>#&gt; <span class='error'>Error in tbl(con, table_name) %&gt;% filter(VAF_tumour &gt;= min_vaf &amp; SOMATIC_SCORE &gt;=     min_score): could not find function "%&gt;%"</span></div><div class='input'><span class='co'>#get the SVs in a region around MYC</span>
 <span class='va'>myc_locus_sv</span> <span class='op'>=</span> <span class='fu'>get_manta_sv</span><span class='op'>(</span>region<span class='op'>=</span><span class='st'>"8:128723128-128774067"</span><span class='op'>)</span>
-</div><div class='output co'>#&gt; <span class='error'>Error in tbl(con, table_name) %&gt;% filter((CHROM_A == chromosome &amp; START_A &gt;=     start &amp; START_A &lt;= end) | (CHROM_B == chromosome &amp; START_B &gt;=     start &amp; START_B &lt;= end)) %&gt;% filter(VAF_tumour &gt;= min_vaf &amp;     SOMATIC_SCORE &gt;= min_score): could not find function "%&gt;%"</span></div></pre>
+</div><div class='output co'>#&gt; <span class='error'>Error in tbl(con, table_name) %&gt;% filter((CHROM_A == chromosome &amp; START_A &gt;=     qstart &amp; START_A &lt;= qend) | (CHROM_B == chromosome &amp; START_B &gt;=     qstart &amp; START_B &lt;= qend)) %&gt;% filter(VAF_tumour &gt;= min_vaf &amp;     SOMATIC_SCORE &gt;= min_score): could not find function "%&gt;%"</span></div></pre>
   </div>
   <div class="col-md-3 hidden-xs hidden-sm" id="pkgdown-sidebar">
     <nav id="toc" data-toggle="toc" class="sticky-top">
