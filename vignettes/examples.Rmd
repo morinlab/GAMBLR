@@ -25,6 +25,8 @@ require(maftools)
 require(circlize)
 require(data.table)
 require(rtracklayer)
+require(RMariaDB)
+require(DBI)
 ```
 
 
@@ -222,7 +224,28 @@ rainfallPlot(example_dlbcl_maf)
 DBI::dbDisconnect(con)
 ```
 
-You probably will be more interested in visualizing all mutations across a given cohort (or every genome). This can only be done in relatively small regions. Here's a way to visualize the non-coding mutation pattern across a region of interest.
+What if you want to view the copy number landscape of a single patient and the VAF of somatic mutations in different copy number states? This can sometimes help you scrutinize whether the copy number fit looks reasonable. 
+
+```{r copy_number_and_vaf}
+#use the same sample as the previous example
+my_sample = "HTMCP-01-06-00422-01A-01D"
+
+copy_number_vaf_plot(this_sample=my_sample)
+
+#what if we want to focus on putative driver mutations? You can restrict this plot just to coding mutations and label genes of your choice.
+
+#use the built in lymphoma gene list and subset for BL or DLBCL
+
+my_genes=lymphoma_genes %>% filter(BL==TRUE | DLBCL == TRUE) %>% pull(Gene)
+
+copy_number_vaf_plot(this_sample=my_sample,coding_only = TRUE,genes_to_label = my_genes)
+
+
+
+```
+
+You may also be interested in visualizing all mutations across a given cohort (or every genome). This can only be done in relatively small regions. Here's a way to visualize the non-coding mutation pattern across a region of interest.
+
 
 ```{r rainbow_plot_ashm, out.width="100%", fig.dim=c(8,3)}
 
@@ -278,14 +301,16 @@ lollipopPlot(maf_obj,gene="CCND3")
 We can also extract a MAF-like data frame for a set of samples using any combination of cohorts or pathology to subset the data. 
 
 ```{r get_big_maf,width="100%", fig.dim=c(8,5)}
-maf_data = get_coding_ssm(limit_cohort=c("BL_Pediatric","BL_ICGC"))
-maf_metadata = get_gambl_metadata() %>% select(sample_id,cohort,sex)
-colnames(maf_metadata)[1] = "Tumor_Sample_Barcode"
-
+# load the master merged MAF (coding only). It's usually more efficient to do this than to try to add filters to this query. Instead, just filter the data afterward
+maf_data = get_coding_ssm() 
+maf_metadata = get_gambl_metadata() %>% dplyr::rename("Tumor_Sample_Barcode"="sample_id")
 maf = read.maf(maf_data,clinicalData = maf_metadata)
-
-oncoplot(maf,clinicalFeatures = c("sex","cohort"),sortByAnnotation = TRUE,genesToIgnore = c("TTN","LILRB1"))
-
+# subset metadata, for example, to only BLGSP samples
+blgsp_metadata = get_gambl_metadata(case_set="BLGSP-study")
+# subset maf
+blgsp_maf <- subsetMaf(maf, tsb=blgsp_sample_ids)
+# perform analysis for subset maf
+oncoplot(blgsp_maf,clinicalFeatures = c("sex","cohort"),sortByAnnotation = TRUE,genesToIgnore = c("TTN","LILRB1"))
 ```
 
 Commonly, we will want to generate visualizations that only show genes deemed relevant for a given malignancy (and above some frequency threshold). There is a lymphoma_genes data frame bundled with this package that allows us a quick way to get a list of genes that are recurrently mutated in that disease. This list is quite long for most because it includes anything mutated at a frequency of at least (roughly) 0.5% in GAMBL. 

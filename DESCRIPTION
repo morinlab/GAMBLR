@@ -25,6 +25,7 @@ Imports:
     maftools,
     ggbeeswarm,
     SRAdb,
+    GenomeInfoDb,
     circlize,
     rtracklayer
 VignetteBuilder: knitr

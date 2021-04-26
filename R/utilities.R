@@ -59,7 +59,7 @@ collate_curated_sv_results = function(sample_table,path_to_files="icgc_dart/deri
   manual_files = dir(paste0(project_base,path_to_files),pattern=".tsv")
   for(f in manual_files){
     full = paste0(project_base,"icgc_dart/derived_and_curated_metadata/",f)
-    this_data = read_tsv(full)
+    this_data = read_tsv(full,comment = "#")
     #TO DO: fix this so it will join on biopsy_id or sample_id depending on which one is present
     sample_table = left_join(sample_table,this_data)
   }
@@ -77,7 +77,7 @@ collate_curated_sv_results = function(sample_table,path_to_files="icgc_dart/deri
 #' log.ratio is the log ratio from the seg file (NA when no overlap was found)
 #' CN is the rounded absolute copy number estimate of the region based on log.ratio (NA when no overlap was found)
 #' @export
-#' @import tidyverse
+#' @import tidyverse data.table RMariaDB DBI dbplyr
 #'
 #' @examples
 assign_cn_to_ssm = function(this_sample,tool_name="battenberg",database_name="gambl_test",table_name="maf_slms3_hg19_icgc",coding_only=FALSE){
@@ -95,9 +95,9 @@ assign_cn_to_ssm = function(this_sample,tool_name="battenberg",database_name="ga
     seg_sample = tbl(con,"seg_battenberg_hg19") %>%
       filter(ID == this_sample) %>%
       as.data.table() %>% mutate(size=end - start) %>%
-      filter(size > 100) %>%
+      dplyr::filter(size > 100) %>%
       mutate(chrom = gsub("chr","",chrom)) %>%
-      rename(Chromosome=chrom,Start_Position=start,End_Position=end)
+      dplyr::rename(Chromosome=chrom,Start_Position=start,End_Position=end)
     setkey(seg_sample, Chromosome, Start_Position, End_Position)
     a = as.data.table(maf_sample)
     a.seg = foverlaps(a, seg_sample, type="any")

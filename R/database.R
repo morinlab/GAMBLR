@@ -579,17 +579,19 @@ ashm_multi_rainbow_plot = function(regions_bed,regions_to_display,exclude_classi
   }
 }
 
-#' Title
+#' Create a genome-wide copy number plot for one sample and (optionally) display mutation VAF
 #'
 #' @param this_sample
 #' @param just_segments
+#' @param genes_to_label optional. Provide a list of genes to label (if mutated). Can only be used with coding_only (see below)
+#' @param coding_only optional. Set to TRUE to restrict to plotting only coding mutations
 #'
 #' @return nothing
 #' @export
 #' @import tidyverse DBI RMariaDB
 #'
 #' @examples
-copy_number_vaf_plot = function(this_sample,just_segments=FALSE,coding_only=FALSE){
+copy_number_vaf_plot = function(this_sample,just_segments=FALSE,coding_only=FALSE,genes_to_label){
   chrom_order=factor(c(1:22,"X"))
   cn_colours = get_gambl_colours(classification = "copy_number")
   maf_and_seg = assign_cn_to_ssm(this_sample=this_sample,coding_only=coding_only)
@@ -606,20 +608,33 @@ copy_number_vaf_plot = function(this_sample,just_segments=FALSE,coding_only=FALS
       theme_minimal() + guides(color = guide_legend(reverse = TRUE,override.aes = list(size = 3)))
   }else{
     if(coding_only){
-      mutate(vaf_cn_maf,vaf=t_alt_count/(t_ref_count+t_alt_count)) %>% ggplot() +
-        geom_point(aes(x=Start_Position,y=vaf,colour=CN),alpha=0.6,size=2) +
-        scale_colour_manual(values = copy_number_colours) +
-        facet_wrap(~factor(Chromosome,levels=chrom_order),scales="free_x") +
-        theme_minimal() + guides(color = guide_legend(reverse = TRUE,override.aes = list(size = 3)))
+      if(missing(genes_to_label)){
+        p = mutate(vaf_cn_maf,vaf=t_alt_count/(t_ref_count+t_alt_count)) %>% ggplot() +
+          geom_point(aes(x=Start_Position,y=vaf,colour=CN),alpha=0.6,size=2) +
+          scale_colour_manual(values = copy_number_colours) +
+          facet_wrap(~factor(Chromosome,levels=chrom_order),scales="free_x") +
+          theme_minimal() + guides(color = guide_legend(reverse = TRUE,override.aes = list(size = 3)))
+        p
+      }else{
+        #label any mutations that intersect with our gene list
+        plot_genes = vaf_cn_maf %>% filter(Hugo_Symbol %in% my_genes)
 
+        p = mutate(vaf_cn_maf,vaf=t_alt_count/(t_ref_count+t_alt_count)) %>% ggplot() +
+          geom_point(aes(x=Start_Position,y=vaf,colour=CN),size=2) +
+          geom_text(data=plot_genes,aes(x=Start_Position,y=0.8,label=Hugo_Symbol),size=3,angle=90) +
+          scale_colour_manual(values = copy_number_colours) +
+          facet_wrap(~factor(Chromosome,levels=chrom_order),scales="free_x") + ylim(c(0,1)) +
+          theme_minimal() + guides(color = guide_legend(reverse = TRUE,override.aes = list(size = 3)))
+        p
+      }
     }else{
 
-      mutate(vaf_cn_maf,vaf=t_alt_count/(t_ref_count+t_alt_count)) %>% ggplot() +
+      p = mutate(vaf_cn_maf,vaf=t_alt_count/(t_ref_count+t_alt_count)) %>% ggplot() +
          geom_point(aes(x=Start_Position,y=vaf,colour=CN),alpha=0.6,size=0.2) +
          scale_colour_manual(values = copy_number_colours) +
          facet_wrap(~factor(Chromosome,levels=chrom_order),scales="free_x") +
          theme_minimal() + guides(color = guide_legend(reverse = TRUE,override.aes = list(size = 3)))
-
+      p
     }
   }
 }

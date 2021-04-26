@@ -2,16 +2,23 @@
 % Please edit documentation in R/database.R
 \name{copy_number_vaf_plot}
 \alias{copy_number_vaf_plot}
-\title{Title}
+\title{Create a genome-wide copy number plot for one sample and (optionally) display mutation VAF}
 \usage{
-copy_number_vaf_plot(this_sample, just_segments = FALSE, coding_only = FALSE)
+copy_number_vaf_plot(
+  this_sample,
+  just_segments = FALSE,
+  coding_only = FALSE,
+  genes_to_label
+)
 }
 \arguments{
-\item{just_segments}{}
+\item{coding_only}{optional. Set to TRUE to restrict to plotting only coding mutations}
+
+\item{genes_to_label}{optional. Provide a list of genes to label (if mutated). Can only be used with coding_only (see below)}
 }
 \value{
 nothing
 }
 \description{
-Title
+Create a genome-wide copy number plot for one sample and (optionally) display mutation VAF
 }
