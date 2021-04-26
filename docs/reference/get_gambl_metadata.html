@@ -72,7 +72,7 @@
       </button>
       <span class="navbar-brand">
         <a class="navbar-link" href="../index.html">GAMBLR</a>
-        <span class="version label label-default" data-toggle="tooltip" data-placement="bottom" title="Released version">0.0.0.9000</span>
+        <span class="version label label-default" data-toggle="tooltip" data-placement="bottom" title="Released version">0.0.0.9500</span>
       </span>
     </div>
 
@@ -94,9 +94,6 @@
     <span class="caret"></span>
   </a>
   <ul class="dropdown-menu" role="menu">
-    <li>
-      <a href="../articles/cbioportal.html">cbioportal</a>
-    </li>
     <li>
       <a href="../articles/examples.html">GAMBLR - working with GAMBL data painlessly in R</a>
     </li>
@@ -130,7 +127,8 @@
     <pre class="usage"><span class='fu'>get_gambl_metadata</span><span class='op'>(</span>
   db <span class='op'>=</span> <span class='st'>"gambl_test"</span>,
   seq_type_filter <span class='op'>=</span> <span class='st'>"genome"</span>,
-  tissue_status_filter <span class='op'>=</span> <span class='fu'><a href='https://rdrr.io/r/base/c.html'>c</a></span><span class='op'>(</span><span class='st'>"tumour"</span><span class='op'>)</span>
+  tissue_status_filter <span class='op'>=</span> <span class='fu'><a href='https://rdrr.io/r/base/c.html'>c</a></span><span class='op'>(</span><span class='st'>"tumour"</span><span class='op'>)</span>,
+  <span class='va'>case_set</span>
 <span class='op'>)</span></pre>
 
     <h2 class="hasAnchor" id="arguments"><a class="anchor" href="#arguments"></a>Arguments</h2>
@@ -148,6 +146,11 @@
       <th>tissue_status_filter</th>
       <td><p>Filtering criteria (default: only tumour genomes)</p></td>
     </tr>
+    <tr>
+      <th>case_set</th>
+      <td><p>optional short name for a pre-defined set of cases avoiding any
+embargoed cases (current options: 'BLGSP-study', 'FL-DLBCL-study')</p></td>
+    </tr>
     </table>
 
     <h2 class="hasAnchor" id="value"><a class="anchor" href="#value"></a>Value</h2>
@@ -155,9 +158,13 @@
     <p>A data frame with metadata for each biopsy in GAMBL</p>
 
     <h2 class="hasAnchor" id="examples"><a class="anchor" href="#examples"></a>Examples</h2>
-    <pre class="examples"><div class='input'><span class='co'>#basic usage</span>
+    <pre class="examples"><div class='input'><span class='co'># basic usage</span>
 <span class='va'>my_metadata</span> <span class='op'>=</span> <span class='fu'>get_gambl_metadata</span><span class='op'>(</span><span class='op'>)</span>
-</div><div class='output co'>#&gt; <span class='error'>Error in tbl(con, "sample_metadata") %&gt;% filter(seq_type == seq_type_filter &amp;     tissue_status %in% tissue_status_filter): could not find function "%&gt;%"</span></div></pre>
+</div><div class='output co'>#&gt; <span class='error'>Error in tbl(con, "sample_metadata"): could not find function "tbl"</span></div><div class='input'><span class='co'># use pre-defined custom sample sets</span>
+<span class='va'>only_blgsp_metadata</span> <span class='op'>=</span> <span class='fu'>get_gambl_metadata</span><span class='op'>(</span>case_set<span class='op'>=</span><span class='st'>"BLGSP-study"</span><span class='op'>)</span>
+</div><div class='output co'>#&gt; <span class='error'>Error in tbl(con, "sample_metadata"): could not find function "tbl"</span></div><div class='input'><span class='co'># override default filters and request metadata for samples other than tumour genomes, e.g. also get the normals</span>
+<span class='va'>only_normal_metadata</span> <span class='op'>=</span> <span class='fu'>get_gambl_metadata</span><span class='op'>(</span>tissue_status_filter <span class='op'>=</span> <span class='fu'><a href='https://rdrr.io/r/base/c.html'>c</a></span><span class='op'>(</span><span class='st'>'tumour'</span>,<span class='st'>'normal'</span><span class='op'>)</span><span class='op'>)</span>
+</div><div class='output co'>#&gt; <span class='error'>Error in tbl(con, "sample_metadata"): could not find function "tbl"</span></div></pre>
   </div>
   <div class="col-md-3 hidden-xs hidden-sm" id="pkgdown-sidebar">
     <nav id="toc" data-toggle="toc" class="sticky-top">

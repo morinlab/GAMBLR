@@ -72,7 +72,7 @@
       </button>
       <span class="navbar-brand">
         <a class="navbar-link" href="../index.html">GAMBLR</a>
-        <span class="version label label-default" data-toggle="tooltip" data-placement="bottom" title="Released version">0.0.0.9000</span>
+        <span class="version label label-default" data-toggle="tooltip" data-placement="bottom" title="Released version">0.0.0.9500</span>
       </span>
     </div>
 
@@ -94,9 +94,6 @@
     <span class="caret"></span>
   </a>
   <ul class="dropdown-menu" role="menu">
-    <li>
-      <a href="../articles/cbioportal.html">cbioportal</a>
-    </li>
     <li>
       <a href="../articles/examples.html">GAMBLR - working with GAMBL data painlessly in R</a>
     </li>
@@ -178,9 +175,9 @@
     <h2 class="hasAnchor" id="examples"><a class="anchor" href="#examples"></a>Examples</h2>
     <pre class="examples"><div class='input'><span class='co'>#basic usage</span>
 <span class='va'>my_mutations</span><span class='op'>=</span><span class='fu'>get_ssm_by_region</span><span class='op'>(</span>region<span class='op'>=</span><span class='st'>"chr8:128,723,128-128,774,067"</span><span class='op'>)</span>
-</div><div class='output co'>#&gt; <span class='error'>Error in tbl(con, table_name) %&gt;% filter(Chromosome == chromosome &amp; Start_Position &gt;     qstart &amp; Start_Position &lt; qend): could not find function "%&gt;%"</span></div><div class='input'><span class='co'>#specifying chromosome, start and end individually</span>
+</div><div class='output co'>#&gt; <span class='error'>Error in tbl(con, table_name): could not find function "tbl"</span></div><div class='input'><span class='co'>#specifying chromosome, start and end individually</span>
 <span class='va'>my_mutations</span><span class='op'>=</span><span class='fu'>get_ssm_by_region</span><span class='op'>(</span>chromosome<span class='op'>=</span><span class='st'>"8"</span>,qstart<span class='op'>=</span><span class='fl'>128723128</span>,qend<span class='op'>=</span><span class='fl'>128774067</span><span class='op'>)</span>
-</div><div class='output co'>#&gt; <span class='error'>Error in tbl(con, table_name) %&gt;% filter(Chromosome == chromosome &amp; Start_Position &gt;     qstart &amp; Start_Position &lt; qend): could not find function "%&gt;%"</span></div></pre>
+</div><div class='output co'>#&gt; <span class='error'>Error in tbl(con, table_name): could not find function "tbl"</span></div></pre>
   </div>
   <div class="col-md-3 hidden-xs hidden-sm" id="pkgdown-sidebar">
     <nav id="toc" data-toggle="toc" class="sticky-top">

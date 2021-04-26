@@ -72,7 +72,7 @@
       </button>
       <span class="navbar-brand">
         <a class="navbar-link" href="../index.html">GAMBLR</a>
-        <span class="version label label-default" data-toggle="tooltip" data-placement="bottom" title="Released version">0.0.0.9000</span>
+        <span class="version label label-default" data-toggle="tooltip" data-placement="bottom" title="Released version">0.0.0.9500</span>
       </span>
     </div>
 
@@ -94,9 +94,6 @@
     <span class="caret"></span>
   </a>
   <ul class="dropdown-menu" role="menu">
-    <li>
-      <a href="../articles/cbioportal.html">cbioportal</a>
-    </li>
     <li>
       <a href="../articles/examples.html">GAMBLR - working with GAMBL data painlessly in R</a>
     </li>
@@ -204,7 +201,8 @@
 <span class='va'>this_sv</span> <span class='op'>=</span> <span class='va'>annotated_sv</span> <span class='op'>%&gt;%</span> <span class='fu'><a href='https://rdrr.io/r/stats/filter.html'>filter</a></span><span class='op'>(</span><span class='va'>gene</span><span class='op'>==</span><span class='st'>"ETV6"</span><span class='op'>)</span>
 </div><div class='output co'>#&gt; <span class='error'>Error in annotated_sv %&gt;% filter(gene == "ETV6"): could not find function "%&gt;%"</span></div><div class='input'><span class='va'>tumour_bam</span> <span class='op'>=</span> <span class='fu'>get_bam_path</span><span class='op'>(</span>sample<span class='op'>=</span><span class='va'>this_sv</span><span class='op'>$</span><span class='va'>tumour_sample_id</span><span class='op'>)</span>
 </div><div class='output co'>#&gt; <span class='error'>Error in get_bam_path(sample = this_sv$tumour_sample_id): could not find function "get_bam_path"</span></div><div class='input'><span class='fu'>make_igv_snapshot</span><span class='op'>(</span>chrom<span class='op'>=</span><span class='va'>this_sv</span><span class='op'>$</span><span class='va'>chrom2</span>, start<span class='op'>=</span><span class='va'>this_sv</span><span class='op'>$</span><span class='va'>start2</span>, end<span class='op'>=</span><span class='va'>this_sv</span><span class='op'>$</span><span class='va'>end2</span>, sample_id<span class='op'>=</span><span class='va'>this_sv</span><span class='op'>$</span><span class='va'>tumour_sample_id</span>,out_path<span class='op'>=</span><span class='st'>"~/IGV_snapshots/"</span><span class='op'>)</span>
-</div><div class='output co'>#&gt; <span class='error'>Error in IGVsocket(port = igv_port): could not find function "IGVsocket"</span></div></pre>
+</div><div class='output co'>#&gt; Socket connection # 19 to on port 60506 
+#&gt; [1] "new \n"</div><div class='output co'>#&gt; <span class='error'>Error in paste0(chrom, ":", start - padding, "-", end + padding): object 'this_sv' not found</span></div></pre>
   </div>
   <div class="col-md-3 hidden-xs hidden-sm" id="pkgdown-sidebar">
     <nav id="toc" data-toggle="toc" class="sticky-top">

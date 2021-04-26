@@ -604,14 +604,14 @@ copy_number_vaf_plot = function(this_sample,just_segments=FALSE,coding_only=FALS
     ggplot(cn_seg) +
       geom_segment(data=cn_seg,aes(x=Start_Position,xend=End_Position,y=CN_segment,yend=CN_segment)) +
       facet_wrap(~factor(Chromosome,levels=chrom_order),scales="free_x") +
-      scale_colour_manual(values = copy_number_colours) +
+      scale_colour_manual(values = cn_colours) +
       theme_minimal() + guides(color = guide_legend(reverse = TRUE,override.aes = list(size = 3)))
   }else{
     if(coding_only){
       if(missing(genes_to_label)){
         p = mutate(vaf_cn_maf,vaf=t_alt_count/(t_ref_count+t_alt_count)) %>% ggplot() +
           geom_point(aes(x=Start_Position,y=vaf,colour=CN),alpha=0.6,size=2) +
-          scale_colour_manual(values = copy_number_colours) +
+          scale_colour_manual(values = cn_colours) +
           facet_wrap(~factor(Chromosome,levels=chrom_order),scales="free_x") +
           theme_minimal() + guides(color = guide_legend(reverse = TRUE,override.aes = list(size = 3)))
         p
@@ -622,7 +622,7 @@ copy_number_vaf_plot = function(this_sample,just_segments=FALSE,coding_only=FALS
         p = mutate(vaf_cn_maf,vaf=t_alt_count/(t_ref_count+t_alt_count)) %>% ggplot() +
           geom_point(aes(x=Start_Position,y=vaf,colour=CN),size=2) +
           geom_text(data=plot_genes,aes(x=Start_Position,y=0.8,label=Hugo_Symbol),size=3,angle=90) +
-          scale_colour_manual(values = copy_number_colours) +
+          scale_colour_manual(values = cn_colours) +
           facet_wrap(~factor(Chromosome,levels=chrom_order),scales="free_x") + ylim(c(0,1)) +
           theme_minimal() + guides(color = guide_legend(reverse = TRUE,override.aes = list(size = 3)))
         p
@@ -631,7 +631,7 @@ copy_number_vaf_plot = function(this_sample,just_segments=FALSE,coding_only=FALS
 
       p = mutate(vaf_cn_maf,vaf=t_alt_count/(t_ref_count+t_alt_count)) %>% ggplot() +
          geom_point(aes(x=Start_Position,y=vaf,colour=CN),alpha=0.6,size=0.2) +
-         scale_colour_manual(values = copy_number_colours) +
+         scale_colour_manual(values = cn_colours) +
          facet_wrap(~factor(Chromosome,levels=chrom_order),scales="free_x") +
          theme_minimal() + guides(color = guide_legend(reverse = TRUE,override.aes = list(size = 3)))
       p
