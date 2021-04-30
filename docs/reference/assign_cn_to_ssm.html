@@ -151,10 +151,14 @@
 
     <h2 class="hasAnchor" id="value"><a class="anchor" href="#value"></a>Value</h2>
 
-    <p>A data frame (MAF-like format) with two extra columns:
+    <p>A list containing a data frame (MAF-like format) with two extra columns:
 log.ratio is the log ratio from the seg file (NA when no overlap was found)
+as well as the segmented copy number data with the same copy number information
 CN is the rounded absolute copy number estimate of the region based on log.ratio (NA when no overlap was found)</p>
 
+    <h2 class="hasAnchor" id="examples"><a class="anchor" href="#examples"></a>Examples</h2>
+    <pre class="examples"><div class='input'><span class='va'>cn_list</span> <span class='op'>=</span> <span class='fu'>assign_cn_to_ssm</span><span class='op'>(</span>this_sample<span class='op'>=</span><span class='st'>"HTMCP-01-06-00422-01A-01D"</span>,coding_only<span class='op'>=</span><span class='cn'>TRUE</span><span class='op'>)</span>
+</div><div class='output co'>#&gt; <span class='error'>Error in mutate(a, CN = round(2 * 2^log.ratio)): could not find function "mutate"</span></div></pre>
   </div>
   <div class="col-md-3 hidden-xs hidden-sm" id="pkgdown-sidebar">
     <nav id="toc" data-toggle="toc" class="sticky-top">

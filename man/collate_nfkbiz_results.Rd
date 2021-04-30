@@ -2,7 +2,7 @@
 % Please edit documentation in R/utilities.R
 \name{collate_nfkbiz_results}
 \alias{collate_nfkbiz_results}
-\title{Title}
+\title{Determine which cases have NFKBIZ UTR mutations}
 \usage{
 collate_nfkbiz_results(sample_table)
 }
@@ -10,5 +10,5 @@ collate_nfkbiz_results(sample_table)
 
 }
 \description{
-Title
+Determine which cases have NFKBIZ UTR mutations
 }

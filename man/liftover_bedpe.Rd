@@ -20,5 +20,6 @@ Data frame containing original bedpe data with new coordinates
 Use liftOver to convert a bedpe file between the two main genome builds (grch37/hg38)
 }
 \examples{
-hg38_sv = lifover_bedpe(bedpe_df=hg19_sv,target_build="hg38")
+hg19_sv = get_manta_sv() \%>\% head(100)
+hg38_sv = liftover_bedpe(bedpe_df=hg19_sv,target_build="hg38")
 }

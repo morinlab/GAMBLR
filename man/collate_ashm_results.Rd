@@ -2,7 +2,7 @@
 % Please edit documentation in R/utilities.R
 \name{collate_ashm_results}
 \alias{collate_ashm_results}
-\title{Title}
+\title{Determine the hypermutation status of a few genes}
 \usage{
 collate_ashm_results(sample_table)
 }
@@ -10,5 +10,5 @@ collate_ashm_results(sample_table)
 
 }
 \description{
-Title
+Determine the hypermutation status of a few genes
 }

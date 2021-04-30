@@ -9,7 +9,7 @@
 #'
 #' @return A data frame with metadata for each biopsy in GAMBL
 #' @export
-#' @import tidyverse DBI RMariaDB
+#' @import tidyverse DBI RMariaDB dbplyr
 #'
 #' @examples
 #' # basic usage
@@ -19,36 +19,40 @@
 #' # override default filters and request metadata for samples other than tumour genomes, e.g. also get the normals
 #' only_normal_metadata = get_gambl_metadata(tissue_status_filter = c('tumour','normal'))
 get_gambl_metadata = function(db="gambl_test",seq_type_filter = "genome",
-                              tissue_status_filter=c("tumour"), case_set){
+                              tissue_status_filter=c("tumour"), case_set, remove_benchmarking = TRUE){
   con <- DBI::dbConnect(RMariaDB::MariaDB(), dbname = db)
-  sample_meta = tbl(con,"sample_metadata") %>% filter(seq_type == seq_type_filter & tissue_status %in% tissue_status_filter)
+  sample_meta = dplyr::tbl(con,"sample_metadata") %>% filter(seq_type == seq_type_filter & tissue_status %in% tissue_status_filter)
+
   #if we only care about genomes, we can drop/filter anything that isn't a tumour genome
   #The key for joining this table to the mutation information is to use sample_id. Think of this as equivalent to a library_id. It will differ depending on what assay was done to the sample.
-  biopsy_meta = tbl(con,"biopsy_metadata") %>% select(-patient_id) %>% select(-pathology) %>% select(-time_point) %>% select(-EBV_status_inf) #drop duplicated columns
-  all_meta = left_join(sample_meta,biopsy_meta,by="biopsy_id") %>% as.data.frame()
+  biopsy_meta = dplyr::tbl(con,"biopsy_metadata") %>% select(-patient_id) %>% select(-pathology) %>% select(-time_point) %>% select(-EBV_status_inf) #drop duplicated columns
+  all_meta = dplyr::left_join(sample_meta,biopsy_meta,by="biopsy_id") %>% as.data.frame()
   all_meta[all_meta$pathology=="B-cell unclassified","pathology"] = "HGBL"  #TODO fix this in the metadata
+  if(remove_benchmarking){
+    all_meta = all_meta %>% filter(cohort != "FFPE_Benchmarking")
+  }
   if(!missing(case_set)){
     if(case_set == "FL-DLBCL-study"){
       #get FL cases and DLBCL cases not in special/embargoed cohorts
-      all_meta = all_meta %>% filter(pathology %in% c("FL","DLBCL")) %>% filter(!cohort %in% c("DLBCL_ctDNA","DLBCL_BLGSP","LLMPP_P01","DLBCL_LSARP_Trios"))
+      all_meta = all_meta %>% dplyr::filter(pathology %in% c("FL","DLBCL")) %>% filter(!cohort %in% c("DLBCL_ctDNA","DLBCL_BLGSP","LLMPP_P01","DLBCL_LSARP_Trios"))
     }
     if(case_set == "BLGSP-study"){
       #get BL cases minus duplicates (i.e. drop benchmarking cases)
-      all_meta = all_meta %>% filter(cohort %in% c("BL_Adult","BL_cell_lines","BL_ICGC","BLGSP_Bcell_UNC","BL_Pediatric"))
+      all_meta = all_meta %>% dplyr::filter(cohort %in% c("BL_Adult","BL_cell_lines","BL_ICGC","BLGSP_Bcell_UNC","BL_Pediatric") |(cohort=="LLMPP_P01" & pathology == "BL"))
     }else if(case_set == "GAMBL-all"){
       #get all GAMBL but remove FFPE benchmarking cases and ctDNA
-      all_meta = all_meta %>% filter(!cohort %in% c("FFPE_Benchmarking","DLBCL_ctDNA"))
+      all_meta = all_meta %>% dplyr::filter(!cohort %in% c("FFPE_Benchmarking","DLBCL_ctDNA"))
     }
   }
   #add some derivative columns that simplify and consolidate some of the others (DLBCL-specific)
-  all_meta = all_meta %>% mutate(lymphgen = case_when(
+  all_meta = all_meta %>% dplyr::mutate(lymphgen = case_when(
     pathology != "DLBCL" ~ pathology,
     str_detect(lymphgen_cnv_noA53,"/") ~ "COMPOSITE",
     TRUE ~ lymphgen_cnv_noA53
   ))
 
 
-  all_meta = all_meta %>% mutate(consensus_coo_dhitsig = case_when(
+  all_meta = all_meta %>% dplyr::mutate(consensus_coo_dhitsig = case_when(
     pathology != "DLBCL" ~ pathology,
     COO_consensus == "ABC" ~ COO_consensus,
     DLBCL90_dhitsig_call == "POS" ~ "DHITsigPos",
@@ -59,7 +63,7 @@ get_gambl_metadata = function(db="gambl_test",seq_type_filter = "genome",
     TRUE ~ "NA"
   ))
   #assign a rank to each pathology for consistent and sensible ordering
-  all_meta = all_meta %>% mutate(pathology_rank = case_when(
+  all_meta = all_meta %>% dplyr::mutate(pathology_rank = case_when(
     pathology == "B-ALL" ~ 0,
     pathology == "CLL" ~ 1,
     pathology == "MCL" ~ 4,
@@ -74,7 +78,7 @@ get_gambl_metadata = function(db="gambl_test",seq_type_filter = "genome",
     pathology == "MM" ~ 33,
     TRUE ~ 35
   ))
-  all_meta = all_meta %>% mutate(lymphgen_rank = case_when(
+  all_meta = all_meta %>% dplyr::mutate(lymphgen_rank = case_when(
     pathology != "DLBCL" ~ pathology_rank,
     lymphgen == "Other" ~ 16,
     lymphgen == "COMPOSITE" ~ 17,
@@ -97,13 +101,13 @@ get_gambl_metadata = function(db="gambl_test",seq_type_filter = "genome",
 #'
 #' @return Data frame with one row for each patient_id
 #' @export
-#' @import tidyverse RMariaDB DBI
+#' @import tidyverse RMariaDB DBI dbplyr
 #'
 #' @examples
 #' outcome_df = get_gambl_outcomes()
 get_gambl_outcomes = function(db="gambl_test",patient_ids,time_unit="year",censor_cbioportal=FALSE,complete_missing=FALSE){
   con <- DBI::dbConnect(RMariaDB::MariaDB(), dbname = db)
-  all_outcome = tbl(con,"outcome_metadata") %>% as.data.frame()
+  all_outcome = dplyr::tbl(con,"outcome_metadata") %>% as.data.frame()
   if(!missing(patient_ids)){
     all_outcome = all_outcome %>% filter(patient_id %in% patient_ids)
     if(complete_missing){
@@ -151,7 +155,7 @@ get_gambl_outcomes = function(db="gambl_test",patient_ids,time_unit="year",censo
 #'
 #' @return A data frame in a bedpe-like format with additional columns that allow filtering of high-confidence SVs
 #' @export
-#' @import DBI RMariaDB tidyverse
+#' @import DBI RMariaDB tidyverse dbplyr
 #'
 #' @examples
 #' #lazily get every SV in the table with default quality filters
@@ -178,30 +182,30 @@ get_manta_sv = function(db="gambl_test",table_name="bedpe_manta_hg19",min_vaf=0.
     if(grepl("chr",chromosome)){
       chromosome = gsub("chr","",chromosome)
     }
-    all_sv = tbl(con,table_name) %>%
-      filter((CHROM_A == chromosome & START_A >= qstart & START_A <= qend) | (CHROM_B == chromosome & START_B >= qstart & START_B <= qend)) %>%
-      filter(VAF_tumour >= min_vaf & SOMATIC_SCORE >= min_score)
+    all_sv = dplyr::tbl(con,table_name) %>%
+      dplyr::filter((CHROM_A == chromosome & START_A >= qstart & START_A <= qend) | (CHROM_B == chromosome & START_B >= qstart & START_B <= qend)) %>%
+      dplyr::filter(VAF_tumour >= min_vaf & SOMATIC_SCORE >= min_score)
   }else{
-    all_sv = tbl(con,table_name) %>% filter(VAF_tumour >= min_vaf & SOMATIC_SCORE >= min_score)
+    all_sv = dplyr::tbl(con,table_name) %>% dplyr::filter(VAF_tumour >= min_vaf & SOMATIC_SCORE >= min_score)
   }
   if(pass){
-    all_sv = all_sv %>% filter(FILTER == "PASS")
+    all_sv = all_sv %>% dplyr::filter(FILTER == "PASS")
   }
   if(!missing(pairing_status)){
-    all_sv = all_sv %>% filter(pair_status == pairing_status)
+    all_sv = all_sv %>% dplyr::filter(pair_status == pairing_status)
   }
   if(!missing(sample_id)){
-    all_sv = all_sv %>% filter(tumour_sample_id == sample_id)
+    all_sv = all_sv %>% dplyr::filter(tumour_sample_id == sample_id)
   }
   all_sv = as.data.frame(all_sv)
   if(with_chr_prefix){
     #add chr prefix only if it's missing
 
-    all_sv = all_sv %>% mutate(CHROM_A = case_when(
+    all_sv = all_sv %>% dplyr::mutate(CHROM_A = case_when(
       str_detect(CHROM_A,"chr") ~ CHROM_A,
       TRUE ~ paste0("chr",CHROM_A)
     ))
-    all_sv = all_sv %>% mutate(CHROM_B = case_when(
+    all_sv = all_sv %>% dplyr::mutate(CHROM_B = case_when(
       str_detect(CHROM_B,"chr") ~ CHROM_B,
       TRUE ~ paste0("chr",CHROM_B)
     ))
@@ -304,7 +308,7 @@ fetch_next_sv = function(db="gambl_test",table_name="bedpe_manta_hg19",min_vaf=0
 #' # specifying chromosome, start and end individually
 #' my_segments=get_cn_segments(chromosome="8",qstart=128723128,qend=128774067)
 #' # Asking for chromosome names to have a chr prefix (default is un-prefixed)
-#' prefixed_segments = get_cn_segments(get_cn_segments(chromosome="12",qstart=122456912,qend=122464036,with_chr_prefix = TRUE))
+#' prefixed_segments = get_cn_segments(chromosome="12",qstart=122456912,qend=122464036,with_chr_prefix = TRUE)
 get_cn_segments = function(db="gambl_test",table_name="seg_battenberg_hg19",chromosome,qstart,qend,region,with_chr_prefix=FALSE){
   if(!missing(region)){
     region = gsub(",","",region)
@@ -327,12 +331,12 @@ get_cn_segments = function(db="gambl_test",table_name="seg_battenberg_hg19",chro
   #remove the prefix if this is false (or leave as is otherwise)
 
   #TODO improve this query to allow for partial overlaps
-  all_segs = tbl(con,table_name) %>%
+  all_segs = dplyr::tbl(con,table_name) %>%
     filter((chrom == chromosome & start <= qstart & end >= qend) |
              (chrom == chromosome & start >= qstart & end <= qend)) %>%
     as.data.frame()
   if(! with_chr_prefix){
-    all_segs = all_segs %>% mutate(chrom = gsub("chr","",chrom))
+    all_segs = all_segs %>% dplyr::mutate(chrom = gsub("chr","",chrom))
   }
   DBI::dbDisconnect(con)
   return(all_segs)
@@ -348,7 +352,7 @@ get_cn_segments = function(db="gambl_test",table_name="seg_battenberg_hg19",chro
 #'
 #' @return MAF-format data frame of mutations in query gene
 #' @export
-#' @import tidyverse DBI RMariaDB
+#' @import tidyverse DBI RMariaDB dbplyr
 #'
 #' @examples
 #' #basic usage
@@ -356,10 +360,10 @@ get_cn_segments = function(db="gambl_test",table_name="seg_battenberg_hg19",chro
 get_ssm_by_gene = function(db="gambl_test",table_name="maf_slms3_hg19_icgc",gene_symbol,coding_only=FALSE){
   coding_class = c("Frame_Shift_Del","Frame_Shift_Ins","In_Frame_Del","In_Frame_Ins","Missense_Mutation","Nonsense_Mutation","Nonstop_Mutation","Silent","Splice_Region","Splice_Site","Targeted_Region","Translation_Start_Site")
   con <- DBI::dbConnect(RMariaDB::MariaDB(), dbname = db)
-  muts_gene = tbl(con,table_name) %>%
-    filter(Hugo_Symbol %in% gene_symbol)
+  muts_gene = dplyr::tbl(con,table_name) %>%
+    dplyr::filter(Hugo_Symbol %in% gene_symbol)
   if(coding_only){
-    muts_gene = muts_gene %>% filter(Variant_Classification %in% coding_class)
+    muts_gene = muts_gene %>% dplyr::filter(Variant_Classification %in% coding_class)
   }
   muts_gene = as.data.frame(muts_gene)
   DBI::dbDisconnect(con)
@@ -378,14 +382,14 @@ get_ssm_by_gene = function(db="gambl_test",table_name="maf_slms3_hg19_icgc",gene
 #'
 #' @return A data frame containing all the MAF data columns (one row per mutation)
 #' @export
-#' @import tidyverse DBI RMariaDB
+#' @import tidyverse DBI RMariaDB dbplyr
 #'
 #' @examples
 #' #basic usage
 #' my_mutations=get_ssm_by_region(region="chr8:128,723,128-128,774,067")
 #' #specifying chromosome, start and end individually
 #' my_mutations=get_ssm_by_region(chromosome="8",qstart=128723128,qend=128774067)
-get_ssm_by_region = function(db="gambl_test",table_name="maf_slms3_hg19_icgc",chromosome,qstart,qend,region="",basic_columns=TRUE,streamlined){
+get_ssm_by_region = function(db="gambl_test",table_name="maf_slms3_hg19_icgc",chromosome,qstart,qend,region="",basic_columns=TRUE,streamlined,maf_data){
   if(!region==""){
     region = gsub(",","",region)
     #format is chr6:37060224-37151701
@@ -393,22 +397,35 @@ get_ssm_by_region = function(db="gambl_test",table_name="maf_slms3_hg19_icgc",ch
     chromosome = split_chunks[1]
 
     startend = unlist(strsplit(split_chunks[2],"-"))
-    qstart=startend[1]
-    qend=startend[2]
+    qstart=as.numeric(startend[1])
+    qend=as.numeric(startend[2])
+    print(class(qstart))
+    print(class(qend))
   }
   chromosome = gsub("chr","",chromosome)
+  if(missing(maf_data)){
+    con <- DBI::dbConnect(RMariaDB::MariaDB(), dbname = db)
+    muts_region = dplyr::tbl(con,table_name) %>%
+      dplyr::filter(Chromosome == chromosome & Start_Position > qstart & Start_Position < qend)
+    muts_region = as.data.frame(muts_region)
+  }else{
+    print(paste0("filtering based on Chromosome == ",chromosome," Start_Position >", qstart, "& Start_Position < ", qend))
+    muts_region = dplyr::filter(maf_data,Chromosome == chromosome & Start_Position > qstart & Start_Position < qend)
+    test = muts_region[,c(1:7)]
+    print(head(test))
+    muts_region = dplyr::filter(maf_data,Chromosome == chromosome & Start_Position > qstart & Start_Position < qend)
+    test = muts_region[,c(1:7)]
+    print(head(test))
+  }
 
-  con <- DBI::dbConnect(RMariaDB::MariaDB(), dbname = db)
-  muts_region = tbl(con,table_name) %>%
-    filter(Chromosome == chromosome & Start_Position > qstart & Start_Position < qend)
-
-  muts_region = as.data.frame(muts_region)
   if(!missing(streamlined)){
-    muts_region = muts_region %>% select(Start_Position,Tumor_Sample_Barcode)
+    muts_region = muts_region %>% dplyr::select(Start_Position,Tumor_Sample_Barcode)
   }else if(basic_columns){
     muts_region = muts_region[,c(1:45)]
   }
-  DBI::dbDisconnect(con)
+  if(missing(maf_data)){
+    DBI::dbDisconnect(con)
+  }
   return(muts_region)
 }
 
@@ -423,16 +440,16 @@ get_ssm_by_region = function(db="gambl_test",table_name="maf_slms3_hg19_icgc",ch
 #'
 #' @return A data frame containing all the MAF data columns (one row per mutation)
 #' @export
-#' @import tidyverse DBI RMariaDB
+#' @import tidyverse DBI RMariaDB dbplyr
 #'
 #' @examples
 #' #basic usage
-#' maf_data = get_coding_ssm(limit_cohort=c("BL_Adult","BL_Pediatric","BL_ICGC"))
+#' maf_data = get_coding_ssm(limit_cohort=c("BL_ICGC"))
 get_coding_ssm = function(db="gambl_test",table_name="maf_slms3_hg19_icgc",limit_cohort,exclude_cohort,limit_pathology,basic_columns=TRUE){
   con <- DBI::dbConnect(RMariaDB::MariaDB(), dbname = db)
   coding_class = c("Frame_Shift_Del","Frame_Shift_Ins","In_Frame_Del","In_Frame_Ins","Missense_Mutation","Nonsense_Mutation","Nonstop_Mutation","Silent","Splice_Region","Splice_Site","Targeted_Region","Translation_Start_Site")
-  sample_meta = tbl(con,"sample_metadata") %>% filter(seq_type == "genome" & tissue_status == "tumour")
-  biopsy_meta = tbl(con,"biopsy_metadata") %>% select(-patient_id) %>%
+  sample_meta = dplyr::tbl(con,"sample_metadata") %>% filter(seq_type == "genome" & tissue_status == "tumour")
+  biopsy_meta = dplyr::tbl(con,"biopsy_metadata") %>% select(-patient_id) %>%
     select(-pathology) %>% select(-time_point) %>% select(-EBV_status_inf) #drop duplicated columns
     all_meta = left_join(sample_meta,biopsy_meta,by="biopsy_id") %>%
     as.data.frame()
@@ -472,33 +489,92 @@ get_coding_ssm = function(db="gambl_test",table_name="maf_slms3_hg19_icgc",limit
 #'
 #' @return ggplot2 object
 #' @export
-#' @import tidyverse DBI RMariaDB
+#' @import tidyverse DBI RMariaDB dbplyr
 #'
 #' @examples
 #' # basic usage
-#' ashm_rainbow_plot(mutations_maf=my_mutations,metadata=my_metadata)
+#' ashm_rainbow_plot(mutations_maf=get_ssm_by_region(region="chr8:128806578-128806992"),metadata=get_gambl_metadata())
 #' # advanced usages
 #' mybed = data.frame(start=c(128806578,128805652,128748315), end=c(128806992,128809822,128748880), name=c("TSS","enhancer","MYC-e1"))
 #' ashm_rainbow_plot(mutations_maf=my_mutations,metadata=my_metadata,bed=mybed)
-ashm_rainbow_plot = function(db="gambl_test",table_name="maf_slms3_hg19_icgc",mutations_maf,metadata,classification_column="pathology",bed){
-  mutation_positions = mutations_maf %>%
-    select(Tumor_Sample_Barcode,Start_Position) %>% as.data.frame()
-  muts_anno = left_join(mutation_positions,metadata,by=c("Tumor_Sample_Barcode" = "sample_id"))
-  ordering = metadata$sample_id[order(metadata[,classification_column])]
-  muts_anno$sample_id = factor(muts_anno$Tumor_Sample_Barcode,levels=ordering)
-  muts_anno$classification = muts_anno[,classification_column]
+ashm_rainbow_plot = function(db="gambl_test",table_name="maf_slms3_hg19_icgc",mutations_maf,
+                             metadata,exclude_classifications,drop_unmutated=FALSE,
+                             classification_column,
+                             bed,region,custom_colours,hide_ids=TRUE){
+  if(!missing(region)){
 
-  p = ggplot(muts_anno) + geom_point(aes(x=Start_Position,y=sample_id,colour=classification),alpha=0.4) + theme(axis.text.y=element_blank())
-  if(missing(bed)){
-    p
+    region = gsub(",","",region)
+    split_chunks = unlist(strsplit(region,":"))
+    chromosome = split_chunks[1]
+
+    startend = unlist(strsplit(split_chunks[2],"-"))
+    qstart=as.numeric(startend[1])
+    qend=as.numeric(startend[2])
+
+    if(missing(mutations_maf)){
+      mutations_maf = get_ssm_by_region(region=region,streamlined = TRUE)
+    }else{
+      #ensure it only contains mutations in the region specified
+      mutations_maf = get_ssm_by_region(region=region,streamlined = TRUE,maf_data = mutations_maf)
+    }
+
+  }
+  if(!missing(classification_column)){
+    meta_arranged = arrange(metadata,pathology_rank,lymphgen) #fix this to use the actual column
+    if(!missing(exclude_classifications)){
+      meta_arranged = filter(meta_arranged,!get(classification_column) %in% exclude_classifications)
+    }
   }else{
-    height = length(unique(muts_anno$Tumor_Sample_Barcode))
-    p = p + geom_rect(data=bed, aes(xmin = start, xmax = end, ymin = 0, ymax = height+30),alpha=0.1) + geom_text(data=bed,aes(x = start, y= height,label=name),size = 3,angle=90)
+    classification_column = "lymphgen"
+    meta_arranged = metadata
+  }
+
+
+  mutation_positions = mutations_maf %>%
+    dplyr::select(Tumor_Sample_Barcode,Start_Position) %>% as.data.frame()
+  mutated_cases = pull(mutation_positions,Tumor_Sample_Barcode) %>% unique()
+  if(drop_unmutated){
+    meta_arranged = meta_arranged %>% filter(sample_id %in% mutated_cases)
+  }
+  #add a fake mutation at the start position for each sample to ensure every sample shows up
+  fake_mutations = data.frame(Tumor_Sample_Barcode=pull(metadata,sample_id),Start_Position=qstart-1000)
+  mutation_positions = rbind(mutation_positions,fake_mutations)
+
+  meta_arranged$classification = factor(meta_arranged[,classification_column],levels=unique(meta_arranged[,classification_column]))
+
+  muts_anno = dplyr::left_join(mutation_positions,meta_arranged,by=c("Tumor_Sample_Barcode" = "sample_id"))
+
+
+  muts_anno$sample_id = factor(muts_anno$Tumor_Sample_Barcode,levels=unique(meta_arranged$sample_id))
+  #
+
+  if(missing(custom_colours)){
+    p = ggplot(muts_anno) +
+      geom_point(aes(x=Start_Position,y=sample_id,colour=classification),alpha=0.4)
+  }else{
+    p = ggplot(muts_anno) + geom_point(aes(x=Start_Position,y=sample_id,colour=classification),alpha=0.4) +
+      scale_colour_manual(values=custom_colours)
+  }
+  if(missing(bed)){
+    p +
+      guides(color = guide_legend(reverse = TRUE,override.aes = list(size = 3)))
+  }else{
+    bed = bed %>% mutate(size = end - start) %>% mutate(midpoint = start + size/2)
+    height = length(unique(meta_arranged$sample_id)) + 8
+    p = p + geom_rect(data=bed, aes(xmin = start, xmax = end, ymin = 0, ymax = height+5),alpha=0.1) +
+      geom_text(data=bed,aes(x = midpoint , y= height ,label=name),size = 2.5,angle=90) +
+      guides(color = guide_legend(reverse = TRUE,override.aes = list(size = 3)))
+
+  }
+  if(hide_ids){
+    p= p + theme(axis.text.y=element_blank())
+  }else{
+    p = p + theme(axis.text.y = element_text(size = 5))
   }
   return(p)
 }
 
-#' Title
+#' Generate a colourful multi-panel overview of hypermutation in regions of interest across many samples
 #'
 #' @param regions_bed Bed file with chromosome coordinates, should contain columns chr, start, end, name (with these exact names)
 #' @param regions_to_display Optional vector of names from default regions_bed to use
@@ -512,7 +588,7 @@ ashm_rainbow_plot = function(db="gambl_test",table_name="maf_slms3_hg19_icgc",mu
 #' @import tidyverse DBI RMariaDB
 #'
 #' @examples
-ashm_multi_rainbow_plot = function(regions_bed,regions_to_display,exclude_classifications,metadata,custom_colours,classification_column="lymphgen",db="gambl_test",table_name="maf_slms3_hg19_icgc"){
+ashm_multi_rainbow_plot = function(regions_bed,regions_to_display,exclude_classifications,metadata,custom_colours,classification_column="lymphgen",db="gambl_test",table_name="maf_slms3_hg19_icgc",maf_data){
   #get the mutations for each region and combine
   #regions_bed should contain chr, start, end, name (with these exact names)
   if(missing(metadata)){
@@ -533,12 +609,21 @@ ashm_multi_rainbow_plot = function(regions_bed,regions_to_display,exclude_classi
   }
 
   names=pull(regions_bed,name)
-  names = c(names,"CCND1","FOXP1-TSS1","FOXP1-TSS2","FOXP1-TSS3","FOXP1-TSS4","FOXP1-TSS5","BCL6","IGH","IGL","IGK","PVT1","BCL2") #add some additional regions of interest
+  names = c(names,"NFKBIZ-UTR","MAF","PAX5","WHSC1","CCND1",
+            "FOXP1-TSS1","FOXP1-TSS2","FOXP1-TSS3","FOXP1-TSS4","FOXP1-TSS5","BCL6","IGH","IGL","IGK","PVT1","BCL2") #add some additional regions of interest
   regions = pull(regions_bed,regions)
-  regions = c(regions,"chr11:69451233-69460334","chr3:71623481-71641671","chr3:71532613-71559445","chr3:71343345-71363145","chr3:71167050-71193679","chr3:71105715-71118362",
-              "chr3:187406804-188522799","chr14:106144562-106344765","chr22:23217074-23250428","chr2:89073691-89320640","chr8:128774985-128876311","chr18:60982124-60990180")
-
-  region_mafs = lapply(regions,function(x){get_ssm_by_region(region=x,streamlined = TRUE)})
+  regions = c(regions,"chr3:101578214-101578365","chr16:79627745-79634622","chr9:36898851-37448583","chr4:1867076-1977887","chr11:69451233-69460334","chr3:71623481-71641671","chr3:71532613-71559445","chr3:71343345-71363145","chr3:71167050-71193679","chr3:71105715-71118362",
+              "chr3:187406804-188522799","chr14:106144562-106344765","chr22:23217074-23250428","chr2:89073691-89320640",
+              "chr8:128774985-128876311","chr18:60982124-60990180")
+  regions_bed = data.frame(regions=regions,names=names)
+  regions_bed = filter(regions_bed,names %in% regions_to_display)
+  regions = pull(regions_bed,regions)
+  names=pull(regions_bed,names)
+  if(missing(maf_data)){
+    region_mafs = lapply(regions,function(x){get_ssm_by_region(region=x,streamlined = TRUE)})
+  }else{
+    region_mafs = lapply(regions,function(x){get_ssm_by_region(region=x,streamlined=TRUE,maf_data=maf_data)})
+  }
   tibbled_data = tibble(region_mafs, region_name = names)
   unnested_df = tibbled_data %>% unnest_longer(region_mafs)
   unlisted_df = mutate(unnested_df,start=region_mafs$Start_Position,sample_id=region_mafs$Tumor_Sample_Barcode) %>%
@@ -585,16 +670,17 @@ ashm_multi_rainbow_plot = function(regions_bed,regions_to_display,exclude_classi
 #' @param just_segments
 #' @param genes_to_label optional. Provide a list of genes to label (if mutated). Can only be used with coding_only (see below)
 #' @param coding_only optional. Set to TRUE to restrict to plotting only coding mutations
+#' @param from_flatfile
 #'
 #' @return nothing
 #' @export
 #' @import tidyverse DBI RMariaDB
 #'
 #' @examples
-copy_number_vaf_plot = function(this_sample,just_segments=FALSE,coding_only=FALSE,genes_to_label){
+copy_number_vaf_plot = function(this_sample,just_segments=FALSE,coding_only=FALSE,genes_to_label,from_flatfile=FALSE){
   chrom_order=factor(c(1:22,"X"))
   cn_colours = get_gambl_colours(classification = "copy_number")
-  maf_and_seg = assign_cn_to_ssm(this_sample=this_sample,coding_only=coding_only)
+  maf_and_seg = assign_cn_to_ssm(this_sample=this_sample,coding_only=coding_only,from_flatfile=from_flatfile)
   vaf_cn_maf = maf_and_seg[["maf"]]
   vaf_cn_maf = mutate(vaf_cn_maf,CN=as.character(CN))
   if(just_segments){

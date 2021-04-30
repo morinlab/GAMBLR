@@ -4,13 +4,12 @@
 \alias{collate_curated_sv_results}
 \title{Title}
 \usage{
-collate_curated_sv_results(
-  sample_table,
-  path_to_files = "icgc_dart/derived_and_curated_metadata/"
-)
+collate_curated_sv_results(sample_table)
 }
 \arguments{
-\item{path_to_files}{}
+\item{sample_table}{A data frame with sample_id as the first column}
+
+\item{path_to_files}{Full local (base) path to the home of GAMBL outputs}
 }
 \value{
 

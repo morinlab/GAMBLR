@@ -25,5 +25,6 @@ Annotate a data frame of SV breakpoints after retrieval from the database
 }
 \examples{
 # Basic usage
+sv_df = get_manta_sv()
 annotated_sv = annotate_sv(sv_df)
 }

@@ -2,16 +2,18 @@
 % Please edit documentation in R/utilities.R
 \name{collate_sbs_results}
 \alias{collate_sbs_results}
-\title{Title}
+\title{Bring in the results from mutational signature analysis}
 \usage{
 collate_sbs_results(sample_table, file_path)
 }
 \arguments{
+\item{sample_table}{A data frame with sample_id as the first column}
+
 \item{file_path}{}
 }
 \value{
 
 }
 \description{
-Title
+Bring in the results from mutational signature analysis
 }

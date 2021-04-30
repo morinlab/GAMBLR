@@ -14,6 +14,8 @@ fetch_output_files(
 )
 }
 \arguments{
+\item{base_path}{Either the full or relative path to where all the results directories are for the tool e.g. "gambl/sequenza_current"}
+
 \item{search_pattern}{}
 }
 \value{

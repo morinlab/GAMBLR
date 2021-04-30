@@ -4,26 +4,24 @@
 \alias{assign_cn_to_ssm}
 \title{Annotate mutations with their copy number information}
 \usage{
-assign_cn_to_ssm(
-  this_sample,
-  tool_name = "battenberg",
-  database_name = "gambl_test",
-  table_name = "maf_slms3_hg19_icgc",
-  coding_only = FALSE
-)
+assign_cn_to_ssm(this_sample, coding_only = FALSE, from_flatfile = FALSE)
 }
 \arguments{
 \item{this_sample}{Sample ID of the sample you want to annotate}
 
-\item{tool_name}{Copy number caller to use for annotation}
+\item{coding_only}{Optional. set to TRUE to rescrict to only coding variants}
 
-\item{coding_only}{}
+\item{from_flatfile}{Optional. instead of the database, load the data from a local MAF and seg file}
 }
 \value{
-A data frame (MAF-like format) with two extra columns:
+A list containing a data frame (MAF-like format) with two extra columns:
 log.ratio is the log ratio from the seg file (NA when no overlap was found)
+as well as the segmented copy number data with the same copy number information
 CN is the rounded absolute copy number estimate of the region based on log.ratio (NA when no overlap was found)
 }
 \description{
 Annotate mutations with their copy number information
+}
+\examples{
+cn_list = assign_cn_to_ssm(this_sample="HTMCP-01-06-00422-01A-01D",coding_only=TRUE)
 }

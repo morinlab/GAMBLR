@@ -12,7 +12,8 @@ get_ssm_by_region(
   qend,
   region = "",
   basic_columns = TRUE,
-  streamlined
+  streamlined,
+  maf_data
 )
 }
 \arguments{

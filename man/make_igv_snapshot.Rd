@@ -52,7 +52,7 @@ Load bams and generate an IGV screenshot for one or more regions
 # ssh -X gp10
 # then launch IGV (e.e. from a conda installation):
 # conda activate igv; igv &
-this_sv = annotated_sv \%>\% filter(gene=="ETV6")
-tumour_bam = get_bam_path(sample=this_sv$tumour_sample_id)
-make_igv_snapshot(chrom=this_sv$chrom2, start=this_sv$start2, end=this_sv$end2, sample_id=this_sv$tumour_sample_id,out_path="~/IGV_snapshots/")
+# this_sv = annotated_sv \%>\% filter(gene=="ETV6")
+# tumour_bam = get_bams(sample=this_sv$tumour_sample_id)
+# make_igv_snapshot(chrom=this_sv$chrom2, start=this_sv$start2, end=this_sv$end2, sample_id=this_sv$tumour_sample_id,out_path="~/IGV_snapshots/")
 }

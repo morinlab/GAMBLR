@@ -1,4 +1,6 @@
 chr_name	hg19_start	hg19_end	gene	region	regulatory_comment
+chr3	101546669	101547704	NFKBIZ	TSS-1	active_promoter
+chr3	101568239	101569274	NFKBIZ	TSS-2	active_promoter
 chr3	186783199	186784291	ST6GAL1	intronic	strong_enhancer
 chr3	186739628	186740875	ST6GAL1	TSS	active_promoter
 chr18	60982728	60988342	BCL2	TSS	active_promoter

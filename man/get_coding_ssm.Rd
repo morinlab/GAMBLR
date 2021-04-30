@@ -34,5 +34,5 @@ Retrieve all coding SSMs from the GAMBL database in MAF-like format
 }
 \examples{
 #basic usage
-maf_data = get_coding_ssm(limit_cohort=c("BL_Adult","BL_Pediatric","BL_ICGC"))
+maf_data = get_coding_ssm(limit_cohort=c("BL_ICGC"))
 }

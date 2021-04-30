@@ -2,7 +2,7 @@
 % Please edit documentation in R/utilities.R
 \name{collate_sv_results}
 \alias{collate_sv_results}
-\title{Title}
+\title{Determine and summarize which cases have specific oncogene SVs}
 \usage{
 collate_sv_results(
   sample_table,
@@ -11,11 +11,13 @@ collate_sv_results(
 )
 }
 \arguments{
+\item{sample_table}{A data frame with sample_id as the first column}
+
 \item{oncogenes}{}
 }
 \value{
 
 }
 \description{
-Title
+Determine and summarize which cases have specific oncogene SVs
 }

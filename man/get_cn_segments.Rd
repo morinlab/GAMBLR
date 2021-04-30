@@ -41,5 +41,5 @@ my_segments=get_cn_segments(region="chr8:128,723,128-128,774,067")
 # specifying chromosome, start and end individually
 my_segments=get_cn_segments(chromosome="8",qstart=128723128,qend=128774067)
 # Asking for chromosome names to have a chr prefix (default is un-prefixed)
-prefixed_segments = get_cn_segments(get_cn_segments(chromosome="12",qstart=122456912,qend=122464036,with_chr_prefix = TRUE))
+prefixed_segments = get_cn_segments(chromosome="12",qstart=122456912,qend=122464036,with_chr_prefix = TRUE)
 }

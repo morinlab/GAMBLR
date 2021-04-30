@@ -1,16 +1,18 @@
 
-#' Title
+
+
+#' Bring together all derived sample-level results from many GAMBL pipelines
 #'
 #' @return A table keyed on biopsy_id that contains a bunch of per-sample results from GAMBL
 #' @export
-#' @import tidyverse
+#' @import tidyverse config
 #'
 #' @examples
 collate_results = function(sample_table,write_to_file=FALSE){
   # important: if you are collating results from anything but WGS (e.g RNA-seq libraries) be sure to use biopsy ID as the key in your join
   # the sample_id should probably not even be in this file if we want this to be biopsy-centric
   if(missing(sample_table)){
-    sample_table = get_gambl_metadata() %>% select(sample_id,patient_id,biopsy_id)
+    sample_table = get_gambl_metadata() %>% dplyr::select(sample_id,patient_id,biopsy_id)
   }
   #edit this function and add a new function to load any additional results into the main summary table
 
@@ -21,44 +23,51 @@ collate_results = function(sample_table,write_to_file=FALSE){
   sample_table = collate_sbs_results(sample_table=sample_table)
   sample_table = collate_derived_results(sample_table=sample_table)
   if(write_to_file){
-    output_file = "/projects/rmorin/projects/gambl-repos/gambl-rmorin/data/metadata/gambl_sample_results.tsv"
+    output_file = config::get("table_flatfiles")$derived
+    output_base = config::get("repo_base")
+    output_file = paste0(output_base,output_file)
     write_tsv(sample_table,file=output_file)
   }
   return(sample_table)
 }
 
-#' Title
+#' Extract derived results stored in the database (these are usually slower to derive on the fly)
 #'
-#' @param sample_table
+#' @param sample_table A data frame with sample_id as the first column
 #'
-#' @return
+#' @return Data frame with one row per sample. Contains the contents of the derived_data table in the database
 #' @export
-#' @import tidyverse
+#' @import tidyverse DBI RMariaDB dbplyr
 #'
 #' @examples
-collate_derived_results = function(sample_table,database_name="gambl_test"){
-  con <- dbConnect(RMariaDB::MariaDB(), dbname = database_name)
-  derived_tbl = tbl(con,"derived_data") %>% as.data.frame()
-  derived_tbl = derived_tbl %>% select(where( ~!all(is.na(.x)))) #drop the columns that are completely empty
-  sample_table = left_join(sample_table,derived_tbl)
+collate_derived_results = function(sample_table){
+
+  database_name = config::get("database_name")
+
+  con <- DBI::dbConnect(RMariaDB::MariaDB(), dbname = database_name)
+  derived_tbl = dplyr::tbl(con,"derived_data") %>% as.data.frame()
+  derived_tbl = derived_tbl %>% dplyr::select(where( ~!all(is.na(.x)))) #drop the columns that are completely empty
+  sample_table = dplyr::left_join(sample_table,derived_tbl)
   return(sample_table)
 }
 
 #' Title
 #'
-#' @param sample_table
-#' @param path_to_files
+#' @param sample_table A data frame with sample_id as the first column
+#' @param path_to_files Full local (base) path to the home of GAMBL outputs
 #'
 #' @return
 #' @export
 #' @import tidyverse
 #'
 #' @examples
-collate_curated_sv_results = function(sample_table,path_to_files="icgc_dart/derived_and_curated_metadata/"){
-  project_base = "/projects/nhl_meta_analysis_scratch/gambl/results_local/"
+collate_curated_sv_results = function(sample_table){
+  path_to_files = config::get("derived_and_curated")
+  project_base = config::get("project_base")
+  #  "/projects/nhl_meta_analysis_scratch/gambl/results_local/"
   manual_files = dir(paste0(project_base,path_to_files),pattern=".tsv")
   for(f in manual_files){
-    full = paste0(project_base,"icgc_dart/derived_and_curated_metadata/",f)
+    full = paste0(project_base,path_to_files,f)
     this_data = read_tsv(full,comment = "#")
     #TO DO: fix this so it will join on biopsy_id or sample_id depending on which one is present
     sample_table = left_join(sample_table,this_data)
@@ -69,74 +78,208 @@ collate_curated_sv_results = function(sample_table,path_to_files="icgc_dart/deri
 #' Annotate mutations with their copy number information
 #'
 #' @param this_sample Sample ID of the sample you want to annotate
-#' @param tool_name Copy number caller to use for annotation
-#' @param database_name
-#' @param coding_only
+#' @param coding_only Optional. set to TRUE to rescrict to only coding variants
+#' @param from_flatfile Optional. instead of the database, load the data from a local MAF and seg file
 #'
-#' @return A data frame (MAF-like format) with two extra columns:
+#' @return A list containing a data frame (MAF-like format) with two extra columns:
 #' log.ratio is the log ratio from the seg file (NA when no overlap was found)
+#' as well as the segmented copy number data with the same copy number information
 #' CN is the rounded absolute copy number estimate of the region based on log.ratio (NA when no overlap was found)
 #' @export
 #' @import tidyverse data.table RMariaDB DBI dbplyr
 #'
 #' @examples
-assign_cn_to_ssm = function(this_sample,tool_name="battenberg",database_name="gambl_test",table_name="maf_slms3_hg19_icgc",coding_only=FALSE){
-  #get all the segments for a sample and filter the small ones then assign CN value from the segment to all SSMs in that region
-  con <- dbConnect(RMariaDB::MariaDB(), dbname = database_name)
-  coding_class = c("Frame_Shift_Del","Frame_Shift_Ins","In_Frame_Del","In_Frame_Ins","Missense_Mutation","Nonsense_Mutation","Nonstop_Mutation","Splice_Region","Splice_Site","Targeted_Region","Translation_Start_Site")
+#' cn_list = assign_cn_to_ssm(this_sample="HTMCP-01-06-00422-01A-01D",coding_only=TRUE)
+assign_cn_to_ssm = function(this_sample,coding_only=FALSE,from_flatfile=FALSE){
 
-  maf_sample <- tbl(con, table_name) %>%
-    filter(Tumor_Sample_Barcode == this_sample) %>%
-    as.data.frame()
+  database_name = config::get("database_name")
+  project_base = config::get("project_base")
+  tool_name=config::get("copy_number_tool")
+
+
+  #project_base = "/projects/nhl_meta_analysis_scratch/gambl/results_local/"
+  coding_class = c("Frame_Shift_Del","Frame_Shift_Ins","In_Frame_Del","In_Frame_Ins","Missense_Mutation","Nonsense_Mutation","Nonstop_Mutation","Splice_Region","Splice_Site","Targeted_Region","Translation_Start_Site")
+  if(from_flatfile){
+    #get the genome_build for this sample
+    bam_info = get_bams(this_sample)
+    genome_build = bam_info$genome_build
+    unix_group = bam_info$unix_group
+    #maf path for a single file is easy to predict. This really should be generalized for all tools
+    slms3_path = paste0(project_base,unix_group,"/","slms-3_vcf2maf_current/99-outputs/genome--",genome_build,"/")
+    this_sample_mafs = dir(slms3_path,pattern=paste0(this_sample,"--"))
+    #use the lifted or native?
+    this_sample_maf = this_sample_mafs[grep("converted",this_sample_mafs,invert=T)]
+    this_sample_maf = paste0(slms3_path,this_sample_maf)
+    if(length(this_sample_maf)>1){
+      print("WARNING: more than one MAF found for this sample. This shouldn't happen!")
+      this_sample_maf = this_sample_maf[1]
+    }
+    #now we can load it
+    maf_sample = fread_maf(this_sample_maf)
+
+  }else{
+    #get all the segments for a sample and filter the small ones then assign CN value from the segment to all SSMs in that region
+    con <- dbConnect(RMariaDB::MariaDB(), dbname = database_name)
+    maf_sample <- dplyr::tbl(con, table_name) %>%
+      dplyr::filter(Tumor_Sample_Barcode == this_sample) %>%
+      as.data.frame()
+  }
   if(coding_only){
-    maf_sample = filter(maf_sample,Variant_Classification %in% coding_class)
+    maf_sample = dplyr::filter(maf_sample,Variant_Classification %in% coding_class)
   }
   if(tool_name == "battenberg"){
-    seg_sample = tbl(con,"seg_battenberg_hg19") %>%
-      filter(ID == this_sample) %>%
-      as.data.table() %>% mutate(size=end - start) %>%
+    if(from_flatfile){
+      battenberg_files = fetch_output_files(genome_build=genome_build,base_path = "gambl/battenberg_current",tool_name="battenberg",search_pattern = ".igv.seg")
+      battenberg_file = filter(battenberg_files,tumour_sample_id==this_sample) %>% pull(full_path) %>% as.character()
+      if(length(battenberg_file)>1){
+        print("WARNING: more than one SEG found for this sample. This shouldn't happen!")
+        battenberg_file = battenberg_file[1]
+      }
+      seg_sample = read_tsv(battenberg_file) %>% as.data.table() %>% dplyr::mutate(size=end - start) %>%
+        dplyr::filter(size > 100) %>%
+        dplyr::mutate(chrom = gsub("chr","",chrom)) %>%
+        dplyr::rename(Chromosome=chrom,Start_Position=start,End_Position=end)
+    }else{
+      seg_sample = dplyr::tbl(con,"seg_battenberg_hg19") %>%
+      dplyr::filter(ID == this_sample) %>%
+      data.table::as.data.table() %>% dplyr::mutate(size=end - start) %>%
       dplyr::filter(size > 100) %>%
-      mutate(chrom = gsub("chr","",chrom)) %>%
+      dplyr::mutate(chrom = gsub("chr","",chrom)) %>%
       dplyr::rename(Chromosome=chrom,Start_Position=start,End_Position=end)
-    setkey(seg_sample, Chromosome, Start_Position, End_Position)
-    a = as.data.table(maf_sample)
-    a.seg = foverlaps(a, seg_sample, type="any")
+    }
+    data.table::setkey(seg_sample, Chromosome, Start_Position, End_Position)
+    a = data.table::as.data.table(maf_sample)
+    a.seg = data.table::foverlaps(a, seg_sample, type="any")
     a$log.ratio = a.seg$log.ratio
     #a$LOH = factor(a.seg$LOH_flag)
-    a = mutate(a,CN=round(2*2^log.ratio))
-    seg_sample = mutate(seg_sample,CN=round(2*2^log.ratio))
-    #seg_sample$LOH_flag = factor(seg_sample$LOH_flag)
-    #mutate(a,vaf=t_alt_count/(t_ref_count+t_alt_count)) %>% ggplot() +
-    #  geom_point(aes(x=Start_Position,y=vaf,colour=CN),size=0.1)  +
-      #geom_segment(data=seg_sample,aes(x=Start_Position,xend=End_Position,y=CN,yend=CN,colour=LOH_flag)) +
-    #  facet_wrap(~Chromosome,scales="free_x")
+    a = dplyr::mutate(a,CN=round(2*2^log.ratio))
+    seg_sample = dplyr::mutate(seg_sample,CN=round(2*2^log.ratio))
+    seg_sample$LOH_flag = factor(seg_sample$LOH_flag)
+    mutate(a,vaf=t_alt_count/(t_ref_count+t_alt_count)) %>% ggplot() +
+      #geom_point(aes(x=Start_Position,y=vaf,colour=CN),size=0.1)  +
+      geom_segment(data=seg_sample,aes(x=Start_Position,xend=End_Position,y=CN,yend=CN,colour=LOH_flag)) +
+      facet_wrap(~Chromosome,scales="free_x")
     return(list(maf=a,seg=seg_sample))
-    DBI::dbDisconnect(con)
+    if(!from_flatfile){
+      DBI::dbDisconnect(con)
+    }
   }else{
     print("ERROR: missing a required argument")
   }
 }
 
+
+
 #' Title
 #'
-#' @param sample_table
-#' @param tool
-#' @param base_directory_gambl
-#' @param base_directory_other
+#' @param table_name
+#' @param connection
+#' @param file_path
 #'
 #' @return
 #' @export
-#' @import tidyverse
 #'
 #' @examples
-populate_tool_results = function(database_name="gambl_test",sample_table,tool="battenberg",base_directory_gambl,base_directory_other){
-  library(RMariaDB)
-  library(DBI)
+refresh_full_table = function(table_name,connection,file_path){
+  table_data = read_tsv(file_path)
+  dbWriteTable(con,table_name,table_data,overwrite=TRUE)
+  print(paste("POPULATING table:",table_name,"USING path:",file_path))
+}
+
+
+#' Title
+#'
+#' @return
+#' @export
+#'
+#' @examples
+referesh_metadata_tables = function(){
+  #e.g. for biopsy_metadata
+  #biopsy_table = config::get("tables")$biopsies
+  #metadata_files = config::get("table_flatfiles")$biopsies
+  cfg = config::get("tables")
+  database_name = config::get("database_name")
+  metadata_tables = tibble(key=names(cfg),table=cfg) %>% unnest_auto("table")
+  cfg = config::get("table_flatfiles")
+  metadata_files = tibble(key=names(cfg),file=cfg) %>% unnest_auto("file")
+  all_metadata_info = left_join(metadata_tables,metadata_files)
+  base_path = config::get("repo_base")
+  all_metadata_info = all_metadata_info %>% mutate(file=paste0(base_path,file))
+  con <- dbConnect(RMariaDB::MariaDB(), dbname = database_name)
+  tables = pull(all_metadata_info,table)
+  files = pull(all_metadata_info,file)
+  #lazily use a for loop for this
+  for(i in c(1:length(files))){
+    refresh_full_table(tables[i],con,files[i])
+  }
+}
+
+#' Title
+#'
+#' @param file_paths A vector of full file paths, e.g. the output of dir
+#' @param tool_name The tool or pipeline that generated the files (should be the same for all)
+#' @param output_type The file type to distinguish different output file types from the same pipeline (e.g. seg, maf, ploidy)
+#' @param tool_version Optional: provide the version of the pipeline or tool
+#' @param unix_group The unix group (should be the same for all)
+#' @param sample_ids A vector of sample_id the same length and in the same order as the file paths
+#'
+#' @return
+#' @export
+#'
+#' @examples
+assemble_file_details = function(file_paths,tool_name,unix_group,sample_ids,output_type="ploidy",is_production="yes"){
+  #the gambl_files table contains
+  #sample_id, unix_group, tool_name, tool_version, seq_type, genome_build, is_production, output_type, is_lifted_over, pairing_status
+  # is_production, output_type, file_path, file_timestamp
+
+  files_df = tibble(sample_id = sample_ids,unix_group=unix_group,tool_name=tool_name,output_type=output_type,is_production=is_production,
+                    file_timestamp = lapply(file_paths,function(x){as.character(file.mtime(x))}),
+                    file_path=file_paths) %>% unnest_longer(file_timestamp)
+
+
+  #date_info = file.mtime(file_path)
+  con <- dbConnect(RMariaDB::MariaDB(), dbname = database_name)
+  dbWriteTable(con,"gambl_files",files_df,append=TRUE)
+}
+
+#' Populate the database with the per-sample summarized results of various tools
+#'
+#' @param sample_table A data frame with sample_id as the first column
+#' @param tool Name of the tool to get the results for
+#' @param base_directory_gambl
+#' @param base_directory_other
+#'
+#' @return Nothing
+#' @export
+#' @import tidyverse DBI
+#'
+#' @examples
+populate_tool_results = function(sample_table){
+  copy_number_tool = unlist(strsplit(config::get("copy_number_tool"),","))
+  database_name = config::get("database_name")
+  ssm_tool = config::get("ssm_tool")
+  genome_build = unlist(strsplit(config::get("genome_builds"),","))
+  for(gb in genome_buid){
+    populate_each_tool_result(copy_number_tool,database_name,genome_build)
+    populate_each_tool_result(ssm_tool,database_name,genome_build)
+  }
+}
+
+#' Title
+#'
+#' @param tool
+#' @param genome_build
+#' @param database_name
+#'
+#' @return
+#' @export
+#'
+#' @examples
+populate_each_tool_result = function(tool,genome_build,database_name){
   con <- dbConnect(RMariaDB::MariaDB(), dbname = database_name)
   generic_update = function(field_name,sample_id,field_value){
     #note: we'll need to handle strings differently here once we start adding them
     for(i in c(1:length(field_value))){
-
       fv = field_value[i]
       sid = sample_id[i]
       if(is.numeric(fv)){
@@ -151,12 +294,14 @@ populate_tool_results = function(database_name="gambl_test",sample_table,tool="b
     }
   }
   #check if we're missing sample_ids from sample_table
+  sample_table = config::get("tables")$samples
+  derived_table = config::get("tables")$derived
   sample_ids = pull(sample_table,sample_id)
   for(id in sample_ids){
-    check_q = paste0("select count(*) from derived_data where sample_id = \"",id,"\";")
+    check_q = paste0("select count(*) from ",derived_table, " where sample_id = \"",id,"\";")
     num = dbGetQuery(con,check_q)
     if(num ==0){
-      insert_q = paste0("insert into derived_data (sample_id) values(\"",id,"\");")
+      insert_q = paste0("insert into ", derived_table, " (sample_id) values(\"",id,"\");")
       print(insert_q)
       dbExecute(con, insert_q)
     }
@@ -164,7 +309,7 @@ populate_tool_results = function(database_name="gambl_test",sample_table,tool="b
   if(tool=="QC"){
     #flag any cases with QC issues raised
     collated = collate_results()
-    qc_issues = select(collated,sample_id,QC_flag) %>% filter(!is.na(QC_flag)) %>% mutate(flagged="yes")
+    qc_issues = select(collated,sample_id,QC_flag) %>% filter(!is.na(QC_flag)) %>% dplyr::mutate(flagged="yes")
     generic_update(sample_id=qc_issues$sample_id,field_name = "QC_issue",field_value = qc_issues$QC_flag)
   }
   if(tool == "sequenza"){
@@ -247,7 +392,7 @@ populate_tool_results = function(database_name="gambl_test",sample_table,tool="b
       }
     }
   }
-  if(tool == "battenberg"){
+  if(tool == "battenberg-ploidy"){
     # parse purity and ploidy values from copy number caller and add to database
     parse_batt = function(batt_file){
       batt_data =  batt_file %>%
@@ -290,9 +435,9 @@ collate_extra_metadata= function(sample_table,file_path){
   sample_table = left_join(sample_table,extra_df,by=c("sample_id"="biopsy_id"))
 }
 
-#' Title
+#' Bring in the results from mutational signature analysis
 #'
-#' @param sample_table
+#' @param sample_table A data frame with sample_id as the first column
 #' @param file_path
 #'
 #' @return
@@ -321,7 +466,7 @@ collate_sbs_results = function(sample_table,file_path){
   return(sample_table)
 }
 
-#' Title
+#' Determine which cases have NFKBIZ UTR mutations
 #'
 #' @return
 #' @export
@@ -341,7 +486,7 @@ collate_nfkbiz_results = function(sample_table){
   return(sample_table)
 }
 
-#' Title
+#' Determine the hypermutation status of a few genes
 #'
 #' @return
 #' @export
@@ -367,9 +512,9 @@ collate_ashm_results = function(sample_table){
   sample_table = left_join(sample_table,tallied)
 }
 
-#' Title
+#' Determine and summarize which cases have specific oncogene SVs
 #'
-#' @param sample_table
+#' @param sample_table A data frame with sample_id as the first column
 #' @param tool
 #' @param oncogenes
 #'
@@ -405,7 +550,7 @@ collate_sv_results = function(sample_table,tool="manta",oncogenes=c("MYC","BCL2"
   return(out_table)
 }
 
-#' Title
+#' Get some colour schemes for annotating figures
 #'
 #' @param classification (optionally request only colours for pathology, lymphgen or copy_number)
 #'
@@ -425,6 +570,9 @@ get_gambl_colours = function(classification="lymphgen"){
     "Other" = "#55B55E"
   )
   copy_number_colours=c(
+    "8"="#380015",
+    "7"="#380015",
+    "6"="#380015",
     "5"="#67001F",
     "4"="#B2182B",
     "3"="#D6604D",
@@ -470,9 +618,10 @@ get_gambl_colours = function(classification="lymphgen"){
 #' @import tidyverse
 #'
 #' @examples
-#' this_sv = annotated_sv %>% filter(partner=="HIST1H2BK") %>% head(1)
-#' #arbitrarily grab a SV
-#' bam_details = get_bams(sample=this_sv$tumour_sample_id)
+#'
+#' this_sv = filter(annotate_sv(get_manta_sv()),partner=="HIST1H2BK")
+#' #arbitrarily grab one SV
+#' bam_details = get_bams(sample=this_sv[1,"tumour_sample_id"])
 get_bams = function(sample,patient){
   meta = get_gambl_metadata(tissue_status_filter = c("tumour","normal"))
   meta_mrna = get_gambl_metadata(seq_type_filter = "mrna")
@@ -491,6 +640,8 @@ get_bams = function(sample,patient){
   tumour_genome_bams = filter(meta_patient,seq_type == "genome" & tissue_status == "tumour") %>% pull(data_path)
   bam_details = list(igv_build=igv_build, genome_build=build, tumour_bams=tumour_genome_bams)
   normal_genome_bams = filter(meta_patient,seq_type == "genome" & tissue_status == "normal") %>% pull(data_path)
+  unix_group = filter(meta_patient,seq_type == "genome" & tissue_status == "tumour") %>% pull(unix_group) %>% unique()
+  bam_details$unix_group = unix_group
   if(length(normal_genome_bams)){
     bam_details$normal_genome_bams = normal_genome_bams
   }
@@ -529,9 +680,9 @@ get_bams = function(sample,patient){
 #' # ssh -X gp10
 #' # then launch IGV (e.e. from a conda installation):
 #' # conda activate igv; igv &
-#' this_sv = annotated_sv %>% filter(gene=="ETV6")
-#' tumour_bam = get_bam_path(sample=this_sv$tumour_sample_id)
-#' make_igv_snapshot(chrom=this_sv$chrom2, start=this_sv$start2, end=this_sv$end2, sample_id=this_sv$tumour_sample_id,out_path="~/IGV_snapshots/")
+#' # this_sv = annotated_sv %>% filter(gene=="ETV6")
+#' # tumour_bam = get_bams(sample=this_sv$tumour_sample_id)
+#' # make_igv_snapshot(chrom=this_sv$chrom2, start=this_sv$start2, end=this_sv$end2, sample_id=this_sv$tumour_sample_id,out_path="~/IGV_snapshots/")
 make_igv_snapshot = function(bams,genome_build,region,padding=200,chrom,start,end,sample_id,out_path="/tmp/",igv_port=60506){
   sock= IGVsocket(port = igv_port)
   IGVclear(sock)
@@ -560,7 +711,8 @@ make_igv_snapshot = function(bams,genome_build,region,padding=200,chrom,start,en
 #' @import tidyverse
 #'
 #' @examples
-#' hg38_sv = lifover_bedpe(bedpe_df=hg19_sv,target_build="hg38")
+#' hg19_sv = get_manta_sv() %>% head(100)
+#' hg38_sv = liftover_bedpe(bedpe_df=hg19_sv,target_build="hg38")
 liftover_bedpe = function(bedpe_file,bedpe_df,target_build="grch37"){
   if(!missing(bedpe_file)){
     original_bedpe = read_tsv(bedpe_file,comment = "##",col_types="cddcddccccccccccccccccc")
@@ -572,7 +724,7 @@ liftover_bedpe = function(bedpe_file,bedpe_df,target_build="grch37"){
     #add chr prefix
     original_bedpe = original_bedpe %>% mutate(CHROM_A = paste0("chr",CHROM_A)) %>% mutate(CHROM_B = paste0("chr",CHROM_B))
   }
-  char_vec = original_bedpe %>% unite(united,sep="\t") %>% pull(united)
+  char_vec = original_bedpe %>% tidyr::unite(united,sep="\t") %>% dplyr::pull(united)
   bedpe_obj <- rtracklayer::import(text=char_vec,format="bedpe")
   this_patient = colnames(original_bedpe)[23]
   this_normal = colnames(original_bedpe)[22]
@@ -667,7 +819,7 @@ read_merge_manta_with_liftover = function(bedpe_paths=c(),pattern="--matched",ou
 #' Title
 #'
 #' @param tool_name
-#' @param base_path
+#' @param base_path Either the full or relative path to where all the results directories are for the tool e.g. "gambl/sequenza_current"
 #' @param results_dir
 #' @param seq_type
 #' @param genome_build
@@ -680,11 +832,12 @@ read_merge_manta_with_liftover = function(bedpe_paths=c(),pattern="--matched",ou
 #' @examples
 fetch_output_files = function(tool_name,base_path,results_dir="99-outputs",seq_type="genome",genome_build="hg38",search_pattern="cellularity_ploidy.txt"){
   if(!grepl("^/",base_path)){
-    project_base = "/projects/nhl_meta_analysis_scratch/gambl/results_local/"
+    project_base = config::get("project_base")
+    #project_base = "/projects/nhl_meta_analysis_scratch/gambl/results_local/"
     base_path = paste0(project_base,base_path)
   }
-  results_path = paste0(base_path,"/",results_dir,"/",seq_type,"--",genome_build,"/")
 
+  print(paste0("using results in: ",results_path))
   #path may contain either directories or files named after the sample pair
   dir_listing = dir(results_path,pattern="--")
   #start a data frame for tidy collation of details
@@ -694,7 +847,7 @@ fetch_output_files = function(tool_name,base_path,results_dir="99-outputs",seq_t
   #unnested_df = unnested_df %>% head() %>% mutate(output_file = dir(paste0(results_path,short_path),pattern=search_pattern))
   #This still fails when a matching file isn't found. No clue why this doesn't work
   if(tool_name=="sequenza"){
-    print(paste0("using results in: ",results_path))
+    results_path = paste0(base_path,"/",results_dir,"/",seq_type,"--",genome_build,"/")
     print("THIS CAN BE SLOW!")
     unnested_df = unnested_df  %>% mutate(full_path=paste0(results_path,short_path,"/filtered/sequenza_alternative_solutions.txt"))
     named=pull(unnested_df,full_path)
@@ -702,8 +855,18 @@ fetch_output_files = function(tool_name,base_path,results_dir="99-outputs",seq_t
       unnest_longer(filename)
     new_df = cbind(unnested_df,found_files) %>% filter(found_files==TRUE)
     print(head(new_df))
-  }else{
-    print(paste0("using results in: ",results_path))
+  }else if(tool_name == "battenberg"){
+    results_path = paste0(base_path,"/",results_dir,"/seg/",seq_type,"--",genome_build,"/")
+    all_files = dir(results_path,pattern=search_pattern)
+    #extract tumour and normal ID
+    all_tumours = unlist(lapply(all_files,function(x){tumour=unlist(strsplit(x,"--"))[1]}))
+    all_normals = unlist(lapply(all_files,function(x){tumour=unlist(strsplit(x,"--"))[2]}))
+
+    all_files = unlist(lapply(all_files,function(x){paste0(results_path,x)}))
+    new_df= data.frame(tumour_sample_id=all_tumours,normal_sample_id=all_normals,full_path=all_files)
+    new_df = mutate(new_df,normal_sample_id = gsub(normal_sample_id,pattern = "_subclones.igv.seg",replacement = ""))
+  }else if(tool_name == "battenberg_ploidy"){
+    results_path = paste0(base_path,"/",results_dir,"/",seq_type,"--",genome_build,"/")
     print("THIS CAN BE SLOW!")
     unnested_df = unnested_df  %>% mutate(full_path=paste0(results_path,short_path))
     named=pull(unnested_df,full_path)
@@ -713,3 +876,272 @@ fetch_output_files = function(tool_name,base_path,results_dir="99-outputs",seq_t
   return(new_df)
 }
 
+
+
+#' Title
+#'
+#' @param maf_file_path
+#'
+#' @return a data table containing MAF data from a MAF file
+#' @export
+#'
+#' @examples
+fread_maf = function(maf_file_path){
+  maf_dt = data.table::fread(
+    file = maf_file_path,
+    sep = "\t",
+    stringsAsFactors = FALSE,
+    verbose = FALSE,
+    data.table = TRUE,
+    showProgress = TRUE,
+    header = TRUE,
+    fill = TRUE,
+    skip = "Hugo_Symbol",
+    quote = ""
+  )
+  return(maf_dt)
+}
+
+
+
+#' Title
+#'
+#' @param mafs
+#' @param sample_id
+#' @param genes
+#' @param show_noncoding
+#' @param detail
+#'
+#' @return
+#' @export
+#' @import tidyverse
+#'
+#' @examples
+plot_multi_timepoint = function(mafs,sample_id,genes,show_noncoding=FALSE,detail){
+  tp = c("A","B","C")
+  title = paste(sample_id,detail,sep="\n")
+  i = 1
+  for (i in c(1:length(mafs))){
+    maf_file = mafs[i]
+    time_point=tp[i]
+    print(paste(maf_file,time_point))
+  }
+  if(length(mafs)==2){
+    A.maf = fread_maf(mafs[1])
+    B.maf = fread_maf(mafs[2])
+
+    A.maf = A.maf %>% dplyr::select(c(Hugo_Symbol,Chromosome,Start_Position,End_Position,Variant_Classification,Tumor_Sample_Barcode,HGVSp_Short,t_ref_count,t_alt_count))  %>%
+      mutate(VAF=t_alt_count/(t_ref_count+t_alt_count)) %>% mutate(time_point=1) %>% mutate(coord=paste(Chromosome,Start_Position,sep=":"))
+    B.maf = B.maf %>% dplyr::select(c(Hugo_Symbol,Chromosome,Start_Position,End_Position,Variant_Classification,Tumor_Sample_Barcode,HGVSp_Short,t_ref_count,t_alt_count))  %>%
+      mutate(VAF=t_alt_count/(t_ref_count+t_alt_count)) %>% mutate(time_point=2) %>% mutate(coord=paste(Chromosome,Start_Position,sep=":"))
+    all.maf=rbind(A.maf,B.maf)
+    if(show_noncoding){
+      coding.maf = subset_regions(all.maf,shm_regions)
+    }
+    else{
+      coding.maf = filter(all.maf,!Variant_Classification %in% c("Silent","RNA","IGR","Intron","5'Flank","3'Flank","5'UTR"))
+      #keep certain 3' UTR mutations, toss the rest
+      coding.maf = filter(coding.maf,(Variant_Classification == "3'UTR" & Hugo_Symbol == "NFKBIZ") | (Variant_Classification != "3'UTR"))
+    }
+    A.rows = which(coding.maf$time_point==1)
+    A.zero.coords = pull(unique(coding.maf[which(coding.maf$time_point==1 & VAF == 0), "coord"]))
+    A.zero = filter(coding.maf,coord %in% A.zero.coords)
+
+    B.rows = which(coding.maf$time_point==2)
+    B.zero.coords = pull(unique(coding.maf[which(coding.maf$time_point==2 & VAF == 0), "coord"]))
+    B.zero = filter(coding.maf,coord %in% B.zero.coords)
+    coding.maf$category = "trunk"
+    coding.maf[which(coord %in% A.zero.coords),"category"]="not-A"
+    coding.maf[which(coord %in% B.zero.coords),"category"]="not-B"
+
+
+
+    #actually this is changed in eitehr direction, not just gained
+    just_gained_lg_all = filter(coding.maf, Hugo_Symbol %in% genes & category != "trunk" )
+    #just_gained_lg = filter(coding.maf, Hugo_Symbol %in% genes & category != "trunk" & time_point !=2) %>%
+    #  mutate(time_point = time_point +0.4)
+
+    just_gained_lg = filter(coding.maf, Hugo_Symbol %in% genes & category != "trunk" & time_point == 2 & VAF > 0) %>%
+      mutate(time_point = time_point +0.4)
+    print(just_gained_lg)
+    just_trunk = filter(coding.maf, Hugo_Symbol %in% genes & category == "trunk" & time_point ==1) %>%
+      mutate(time_point = time_point-0.4)
+    ggplot(coding.maf,aes(x=time_point,y=VAF,group=coord,colour=category)) +
+      geom_point() + geom_line(alpha=0.5) +
+      geom_text_repel(data=just_gained_lg,aes(label=Hugo_Symbol),size=4,segment.linetype=0) +
+      geom_text_repel(data=just_trunk,aes(label=Hugo_Symbol),size=4,segment.linetype=0) +
+      ggtitle(title) +
+      theme_minimal()
+    return(TRUE)
+  }
+  if(length(mafs)==3){
+    A.maf = fread_maf(mafs[1])
+    B.maf = fread_maf(mafs[2])
+    C.maf = fread_maf(mafs[3])
+    A.maf = A.maf %>% dplyr::select(c(Hugo_Symbol,Chromosome,Start_Position,End_Position,Variant_Classification,Tumor_Sample_Barcode,HGVSp_Short,t_ref_count,t_alt_count))  %>%
+      mutate(VAF=t_alt_count/(t_ref_count+t_alt_count)) %>% mutate(time_point=1) %>% mutate(coord=paste(Chromosome,Start_Position,sep=":"))
+    B.maf = B.maf %>% dplyr::select(c(Hugo_Symbol,Chromosome,Start_Position,End_Position,Variant_Classification,Tumor_Sample_Barcode,HGVSp_Short,t_ref_count,t_alt_count))  %>%
+      mutate(VAF=t_alt_count/(t_ref_count+t_alt_count)) %>% mutate(time_point=2) %>% mutate(coord=paste(Chromosome,Start_Position,sep=":"))
+    C.maf = C.maf %>% dplyr::select(c(Hugo_Symbol,Chromosome,Start_Position,End_Position,Variant_Classification,Tumor_Sample_Barcode,HGVSp_Short,t_ref_count,t_alt_count))  %>%
+      mutate(VAF=t_alt_count/(t_ref_count+t_alt_count)) %>% mutate(time_point=3) %>% mutate(coord=paste(Chromosome,Start_Position,sep=":"))
+    all.maf=rbind(A.maf,B.maf,C.maf)
+    if(show_noncoding){
+      coding.maf = subset_regions(all.maf,shm_regions)
+    }
+    else{
+      coding.maf = filter(all.maf,!Variant_Classification %in% c("Silent","RNA","IGR","Intron","5'Flank","3'Flank","5'UTR"))
+      #keep certain 3' UTR mutations, toss the rest
+      coding.maf = filter(coding.maf,(Variant_Classification == "3'UTR" & Hugo_Symbol == "NFKBIZ") | (Variant_Classification != "3'UTR"))
+    }
+
+    A.rows = which(coding.maf$time_point==1)
+    A.zero.coords = pull(unique(coding.maf[which(coding.maf$time_point==1 & VAF == 0), "coord"]))
+    A.zero = filter(coding.maf,coord %in% A.zero.coords)
+
+    B.rows = which(coding.maf$time_point==2)
+    B.zero.coords = pull(unique(coding.maf[which(coding.maf$time_point==2 & VAF == 0), "coord"]))
+    B.zero = filter(coding.maf,coord %in% B.zero.coords)
+
+    C.rows = which(coding.maf$time_point==3)
+    C.zero.coords = pull(unique(coding.maf[which(coding.maf$time_point==3 & VAF == 0), "coord"]))
+    C.zero = filter(coding.maf,coord %in% C.zero.coords)
+
+    coding.maf$category = "trunk"
+    coding.maf[which(coord %in% A.zero.coords),"category"]="not-A"
+    coding.maf[which(coord %in% B.zero.coords),"category"]="not-B"
+    coding.maf[which(coord %in% C.zero.coords),"category"]="not-C"
+
+    just_gained_lg_all = filter(coding.maf, Hugo_Symbol %in% lg & category != "trunk" )
+    just_gained_lg = filter(coding.maf, Hugo_Symbol %in% lg & category != "trunk" & time_point ==3) %>%
+      mutate(time_point = time_point +0.4)
+
+    just_trunk = filter(coding.maf, Hugo_Symbol %in% lg & category == "trunk" & time_point ==1) %>%
+      mutate(time_point = time_point-0.4)
+    ggplot(coding.maf,aes(x=time_point,y=VAF,group=coord,colour=category)) +
+      geom_point() + geom_line(alpha=0.3) +
+      geom_text_repel(data=just_gained_lg,aes(label=Hugo_Symbol),size=4,segment.linetype=0) +
+      geom_text_repel(data=just_trunk,aes(label=Hugo_Symbol),size=4,segment.linetype=0) +
+      ggtitle(title) +
+      theme_minimal()
+    return(TRUE)
+  }
+  return(FALSE)
+}
+
+#' Title
+#'
+#' @param hugo_symbols
+#' @param tidy_expression_data
+#' @param metadata
+#' @param join_with
+#'
+#' @return
+#' @export
+#'
+#' @examples
+get_gene_expression = function(database_name,hugo_symbols,tidy_expression_data,metadata,join_with="mrna"){
+  if(missing(database_name)){
+    database_name = config::get("database_name")
+  }
+  if(missing(metadata)){
+    if(join_with=="mrna"){
+      metadata = get_gambl_metadata(seq_type_filter = "mrna")
+    }else{
+      metadata = get_gambl_metadata()
+    }
+  }
+  metadata = metadata %>% select(sample_id)
+  if(missing(hugo_symbols)){
+    print("ERROR: supply at least one gene symbol")
+  }
+  #load the tidy expression data from the database
+  con <- DBI::dbConnect(RMariaDB::MariaDB(), dbname = database_name)
+  tidy_expression_data = tbl(con,"expression_vst_hg38")
+
+  gene_expression_df = tidy_expression_data %>%
+    filter(Hugo_Symbol %in% hugo_symbols) %>% as.data.frame()
+
+
+  if(join_with=="mrna"){
+    #join to metadata
+    gene_expression_df = select(gene_expression_df,-genome_sample_id,-biopsy_id)
+    expression_wider = pivot_wider(gene_expression_df,names_from=Hugo_Symbol,values_from=expression)
+    expression_wider = left_join(metadata,expression_wider,by=c("sample_id"="mrna_sample_id"))
+  }else{
+    expression_wider = select(gene_expression_df,-mrna_sample_id,-biopsy_id) %>%
+      pivot_wider(names_from=Hugo_Symbol,values_from=expression)
+    expression_wider = left_join(metadata,expression_wider,by=c("sample_id"="genome_sample_id"))
+  }
+  return(expression_wider)
+}
+
+#Not meant to be used routinely
+#' Title
+#'
+#' @return
+#' @export
+#'
+#' @examples
+tidy_gene_expression = function(){
+  #read in the full matrix
+  ex_matrix_file=config::get("ex_matrix_file")
+  ex_matrix_full = read_tsv(ex_matrix_file)
+
+  ex_tidy = pivot_longer(ex_matrix_full,-Hugo_Symbol,names_to="sample_id",values_to="expression")
+  ex_tidy_nfkbiz = filter(ex_tidy,Hugo_Symbol=="NFKBIZ")
+  all_samples = pull(ex_tidy_nfkbiz,sample_id) %>% unique
+  #retrieve the full list of sample_id for RNA-seq libraries that have data in this matrix
+
+  #pull the full metadata for all RNA-seq samples in GAMBL
+  #under the hood this is a join of the sample and biopsy tables but subset for RNA-seq
+  rna_meta = get_gambl_metadata(seq_type_filter = "mrna")
+  #subset to just the ones in the matrix and keep only the relevant rows
+  rm_dupes = c("08-15460_tumorA","05-32150_tumorA") #toss two duplicated cases AND FFPE_Benchmarking
+  #rna_meta[which(rna_meta$sample_id %in% rm_dupes,"cohort"]= "FFPE_Benchmarking"
+  rna_meta_existing = rna_meta %>% filter(sample_id %in% all_samples) %>% select(sample_id,patient_id,biopsy_id,protocol)
+
+
+  selected_libraries = rna_meta_existing %>%
+  group_by(biopsy_id) %>%
+    # Take the biopsy_id with the longest string length (e.g PolyA vs. Ribodepletion)
+    slice_max(str_length(protocol), n = 1,with_ties=FALSE) %>%
+    ungroup()
+
+
+  #set the canonical library per biopsy_id by picking the ribominus for cases with more than one
+  #duplicated = rna_meta_existing %>% group_by(biopsy_id) %>% tally() %>% filter(n>1) %>% select(biopsy_id)
+  #singleton = rna_meta_existing %>% group_by(biopsy_id) %>% tally() %>% filter(n==1) %>% select(-n)
+
+  #selected_duplicated = left_join(duplicated,rna_meta_existing,by="biopsy_id") %>%
+  #  arrange(desc(protocol)) %>% arrange(biopsy_id) %>% group_by(biopsy_id) %>% filter(row_number()==1) %>% ungroup()
+  #selected_singleton = left_join(singleton,rna_meta_existing,by="biopsy_id") %>% ungroup()
+  #selected_all=rbind(selected_duplicated,selected_singleton)
+  #put everything back together
+  #at this point I have 1206 sample_ids
+  ex_tidy = ex_tidy %>% rename(mrna_sample_id = sample_id)
+
+  ex_tidy = ex_tidy %>% filter(mrna_sample_id %in% selected_libraries$sample_id)
+  rna_meta = rna_meta %>% select(sample_id,biopsy_id)
+  ex_tidy_final = left_join(ex_tidy,rna_meta,by=c("mrna_sample_id"="sample_id"))
+  #this still has the mrna sample ID. Need to add the tumour_sample_id from this biopsy (where available)
+  genome_meta = get_gambl_metadata() %>% select(biopsy_id,sample_id,patient_id,ffpe_or_frozen) %>% rename("genome_sample_id" = "sample_id")
+  #this gets the metadata in the same format but restricted to genome samples
+  #REMOVE ANNOYING DUPLICATE GENOMES!
+  duplicated_cases = genome_meta %>% group_by(biopsy_id) %>% tally() %>% filter(n>1)
+
+  selected_genomes = genome_meta %>%
+    group_by(biopsy_id) %>%
+    # Take the biopsy_id with the longest string length (e.g frozen)
+    slice_max(str_length(ffpe_or_frozen), n = 1,with_ties=FALSE) %>%
+    ungroup() %>% select(-patient_id,-ffpe_or_frozen)
+
+  #join to genome metadata based on biopsy_id (should be the same for RNA-seq and tumour genomes)
+  ex_tidy_genome = left_join(ex_tidy_final,selected_genomes,by="biopsy_id")
+
+  ex_tidy_genome = select(ex_tidy_genome,Hugo_Symbol,mrna_sample_id,expression,biopsy_id,genome_sample_id)
+  #write the data back out for use by others and loading into the database.
+  tidy_expression_file = config::get("tidy_expression_file")
+  write_tsv(ex_tidy_genome,file=tidy_expression_file)
+
+
+}

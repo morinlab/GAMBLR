@@ -2,7 +2,7 @@
 % Please edit documentation in R/database.R
 \name{ashm_multi_rainbow_plot}
 \alias{ashm_multi_rainbow_plot}
-\title{Title}
+\title{Generate a colourful multi-panel overview of hypermutation in regions of interest across many samples}
 \usage{
 ashm_multi_rainbow_plot(
   regions_bed,
@@ -12,7 +12,8 @@ ashm_multi_rainbow_plot(
   custom_colours,
   classification_column = "lymphgen",
   db = "gambl_test",
-  table_name = "maf_slms3_hg19_icgc"
+  table_name = "maf_slms3_hg19_icgc",
+  maf_data
 )
 }
 \arguments{
@@ -32,5 +33,5 @@ ashm_multi_rainbow_plot(
 nothing
 }
 \description{
-Title
+Generate a colourful multi-panel overview of hypermutation in regions of interest across many samples
 }

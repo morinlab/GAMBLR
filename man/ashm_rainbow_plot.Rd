@@ -9,8 +9,13 @@ ashm_rainbow_plot(
   table_name = "maf_slms3_hg19_icgc",
   mutations_maf,
   metadata,
-  classification_column = "pathology",
-  bed
+  exclude_classifications,
+  drop_unmutated = FALSE,
+  classification_column,
+  bed,
+  region,
+  custom_colours,
+  hide_ids = TRUE
 )
 }
 \arguments{
@@ -34,7 +39,7 @@ Make a rainbow plot of all mutations in a region, ordered and coloured by metada
 }
 \examples{
 # basic usage
-ashm_rainbow_plot(mutations_maf=my_mutations,metadata=my_metadata)
+ashm_rainbow_plot(mutations_maf=get_ssm_by_region(region="chr8:128806578-128806992"),metadata=get_gambl_metadata())
 # advanced usages
 mybed = data.frame(start=c(128806578,128805652,128748315), end=c(128806992,128809822,128748880), name=c("TSS","enhancer","MYC-e1"))
 ashm_rainbow_plot(mutations_maf=my_mutations,metadata=my_metadata,bed=mybed)

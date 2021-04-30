@@ -2,16 +2,16 @@
 % Please edit documentation in R/utilities.R
 \name{collate_derived_results}
 \alias{collate_derived_results}
-\title{Title}
+\title{Extract derived results stored in the database (these are usually slower to derive on the fly)}
 \usage{
-collate_derived_results(sample_table, database_name = "gambl_test")
+collate_derived_results(sample_table)
 }
 \arguments{
-\item{sample_table}{}
+\item{sample_table}{A data frame with sample_id as the first column}
 }
 \value{
-
+Data frame with one row per sample. Contains the contents of the derived_data table in the database
 }
 \description{
-Title
+Extract derived results stored in the database (these are usually slower to derive on the fly)
 }

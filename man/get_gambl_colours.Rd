@@ -2,7 +2,7 @@
 % Please edit documentation in R/utilities.R
 \name{get_gambl_colours}
 \alias{get_gambl_colours}
-\title{Title}
+\title{Get some colour schemes for annotating figures}
 \usage{
 get_gambl_colours(classification = "lymphgen")
 }
@@ -13,5 +13,5 @@ get_gambl_colours(classification = "lymphgen")
 A named vector of colour codes for lymphgen classes and pathology
 }
 \description{
-Title
+Get some colour schemes for annotating figures
 }

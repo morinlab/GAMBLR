@@ -18,7 +18,8 @@ A list that contains the genome_build and an igv-friendly build (igv_build), a l
 Get full paths for bam files for a sample or patient
 }
 \examples{
-this_sv = annotated_sv \%>\% filter(partner=="HIST1H2BK") \%>\% head(1)
-#arbitrarily grab a SV
-bam_details = get_bams(sample=this_sv$tumour_sample_id)
+
+this_sv = filter(annotate_sv(get_manta_sv()),partner=="HIST1H2BK")
+#arbitrarily grab one SV
+bam_details = get_bams(sample=this_sv[1,"tumour_sample_id"])
 }

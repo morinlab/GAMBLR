@@ -21,3 +21,12 @@ lymphoma_genes = system.file("extdata","lymphoma_genes.tsv",package="GAMBLR") %>
 usethis::use_data(lymphoma_genes, overwrite = TRUE)
 
 
+wright_genes_with_weights = system.file("extdata","WrightGenesWithWeights.txt",package="GAMBLR") %>%
+  read.table(sep="\t",header=1) %>% rename(Ensembl_ID=EnsemblGeneID,Hugo_Symbol=GeneName)
+
+usethis::use_data(wright_genes_with_weights, overwrite = TRUE)
+
+dhitsig_genes_with_weights = system.file("extdata","DHITsigGenesWithWeights.txt",package="GAMBLR") %>%
+  read.table(sep="\t",header=1) %>% rename(Ensembl_ID=ensembl_gene_id,Hugo_Symbol=GeneName)
+usethis::use_data(dhitsig_genes_with_weights, overwrite = TRUE)
+
