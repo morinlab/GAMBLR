@@ -5,8 +5,6 @@
 \title{Retrieve Manta SVs from the database and filter}
 \usage{
 get_manta_sv(
-  db = "gambl_test",
-  table_name = "bedpe_manta_hg19",
   min_vaf = 0.1,
   min_score = 40,
   pass = TRUE,
@@ -20,10 +18,6 @@ get_manta_sv(
 )
 }
 \arguments{
-\item{db}{The GAMBL database name}
-
-\item{table_name}{The table we are querying}
-
 \item{min_vaf}{The minimum tumour VAF for a SV to be returned}
 
 \item{min_score}{The lowest Manta somatic score for a SV to be returned}
@@ -37,6 +31,8 @@ get_manta_sv(
 \item{region}{Region formatted like chrX:1234-5678 instead of specifying chromosome, start and end separately}
 
 \item{with_chr_prefix}{Prepend all chromosome names with chr (required by some downstream analyses)}
+
+\item{table_name}{The table we are querying}
 
 \item{pair_status}{Use to restrict results (if desired) to matched or unmatched results (default is to return all)}
 }

@@ -5,8 +5,6 @@
 \title{Retrieve all coding SSMs from the GAMBL database in MAF-like format}
 \usage{
 get_coding_ssm(
-  db = "gambl_test",
-  table_name = "maf_slms3_hg19_icgc",
   limit_cohort,
   exclude_cohort,
   limit_pathology,
@@ -14,10 +12,6 @@ get_coding_ssm(
 )
 }
 \arguments{
-\item{db}{The GAMBL database name}
-
-\item{table_name}{The table we are querying}
-
 \item{limit_cohort}{Supply this to restrict mutations to one or more cohorts in a list}
 
 \item{exclude_cohort}{Supply this to exclude mutations from one or more cohorts in a list}

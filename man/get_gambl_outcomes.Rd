@@ -5,7 +5,6 @@
 \title{Get the patient-centric clinical metadata}
 \usage{
 get_gambl_outcomes(
-  db = "gambl_test",
   patient_ids,
   time_unit = "year",
   censor_cbioportal = FALSE,
@@ -13,8 +12,6 @@ get_gambl_outcomes(
 )
 }
 \arguments{
-\item{db}{optional. Specify a different database (changing this is not recommended)}
-
 \item{time_unit}{Return follow-up times in one of three time units: year, month or day}
 
 \item{censor_cbioportal}{Optionally request the censoring to be encoded in the specific style required by cBioPortal}

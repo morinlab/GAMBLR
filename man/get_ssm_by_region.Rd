@@ -5,8 +5,6 @@
 \title{Retrieve all SSMs from the GAMBL database within a single genomic coordinate range}
 \usage{
 get_ssm_by_region(
-  db = "gambl_test",
-  table_name = "maf_slms3_hg19_icgc",
   chromosome,
   qstart,
   qend,
@@ -17,10 +15,6 @@ get_ssm_by_region(
 )
 }
 \arguments{
-\item{db}{The GAMBL database name}
-
-\item{table_name}{The table we are querying}
-
 \item{chromosome}{The chromosome you are restricting to (with or without a chr prefix)}
 
 \item{qstart}{Query start coordinate of the range you are restricting to}

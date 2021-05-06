@@ -5,7 +5,6 @@
 \title{Get GAMBL metadata}
 \usage{
 get_gambl_metadata(
-  db = "gambl_test",
   seq_type_filter = "genome",
   tissue_status_filter = c("tumour"),
   case_set,
@@ -13,8 +12,6 @@ get_gambl_metadata(
 )
 }
 \arguments{
-\item{db}{The GAMBL database name}
-
 \item{seq_type_filter}{Filtering criteria (default: all genomes)}
 
 \item{tissue_status_filter}{Filtering criteria (default: only tumour genomes)}

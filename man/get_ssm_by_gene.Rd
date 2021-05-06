@@ -4,18 +4,9 @@
 \alias{get_ssm_by_gene}
 \title{Get all somatic mutations for a given gene or list of genes and optionally restrict to coding variants}
 \usage{
-get_ssm_by_gene(
-  db = "gambl_test",
-  table_name = "maf_slms3_hg19_icgc",
-  gene_symbol,
-  coding_only = FALSE
-)
+get_ssm_by_gene(gene_symbol, coding_only = FALSE)
 }
 \arguments{
-\item{db}{The GAMBL database name}
-
-\item{table_name}{The table you are querying}
-
 \item{gene_symbol}{Character vector of gene symbols}
 }
 \value{

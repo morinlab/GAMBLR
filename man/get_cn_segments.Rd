@@ -4,21 +4,9 @@
 \alias{get_cn_segments}
 \title{Retrieve all copy number segments from the GAMBL database that overlap with a single genomic coordinate range}
 \usage{
-get_cn_segments(
-  db = "gambl_test",
-  table_name = "seg_battenberg_hg19",
-  chromosome,
-  qstart,
-  qend,
-  region,
-  with_chr_prefix = FALSE
-)
+get_cn_segments(chromosome, qstart, qend, region, with_chr_prefix = FALSE)
 }
 \arguments{
-\item{db}{The GAMBL database name}
-
-\item{table_name}{The table we are querying}
-
 \item{chromosome}{The chromosome you are restricting to}
 
 \item{region}{Region formatted like chrX:1234-5678 instead of specifying chromosome, start and end separately}
