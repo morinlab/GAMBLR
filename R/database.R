@@ -4,7 +4,7 @@
 #' @param seq_type_filter Filtering criteria (default: all genomes)
 #' @param tissue_status_filter Filtering criteria (default: only tumour genomes)
 #' @param case_set optional short name for a pre-defined set of cases avoiding any
-#' embargoed cases (current options: 'BLGSP-study', 'FL-DLBCL-study')
+#' embargoed cases (current options: 'BLGSP-study', 'FL-DLBCL-study', 'DLBCL-unembargoed)
 #'
 #' @return A data frame with metadata for each biopsy in GAMBL
 #' @export
@@ -18,15 +18,26 @@
 #' # override default filters and request metadata for samples other than tumour genomes, e.g. also get the normals
 #' only_normal_metadata = get_gambl_metadata(tissue_status_filter = c('tumour','normal'))
 get_gambl_metadata = function(seq_type_filter = "genome",
-                              tissue_status_filter=c("tumour"), case_set, remove_benchmarking = TRUE){
+                              tissue_status_filter=c("tumour"), case_set, remove_benchmarking = TRUE, with_outcomes=FALSE){
   db=config::get("database_name")
   con <- DBI::dbConnect(RMariaDB::MariaDB(), dbname = db)
-  sample_meta = dplyr::tbl(con,"sample_metadata") %>% filter(seq_type == seq_type_filter & tissue_status %in% tissue_status_filter)
+  sample_meta = dplyr::tbl(con,"sample_metadata")
+  sample_meta_normal_genomes =  sample_meta %>% filter(seq_type == "genome" & tissue_status=="normal") %>%
+    select(patient_id,sample_id) %>% as.data.frame() %>% rename("normal_sample_id"="sample_id")
+
+  sample_meta = sample_meta %>% filter(seq_type == seq_type_filter & tissue_status %in% tissue_status_filter)
 
   #if we only care about genomes, we can drop/filter anything that isn't a tumour genome
   #The key for joining this table to the mutation information is to use sample_id. Think of this as equivalent to a library_id. It will differ depending on what assay was done to the sample.
   biopsy_meta = dplyr::tbl(con,"biopsy_metadata") %>% select(-patient_id) %>% select(-pathology) %>% select(-time_point) %>% select(-EBV_status_inf) #drop duplicated columns
   all_meta = dplyr::left_join(sample_meta,biopsy_meta,by="biopsy_id") %>% as.data.frame()
+  if(seq_type_filter == "genome" & length(tissue_status_filter) == 1 & tissue_status_filter[1] == "tumour"){
+    #join back the matched normal genome
+    all_meta = left_join(all_meta,sample_meta_normal_genomes,by="patient_id")
+    all_meta = all_meta %>% mutate(pairing_status=case_when(is.na(normal_sample_id)~"unmatched",TRUE~"matched"))
+  }
+
+
   #all_meta[all_meta$pathology=="B-cell unclassified","pathology"] = "HGBL"  #TODO fix this in the metadata
   if(remove_benchmarking){
     all_meta = all_meta %>% filter(cohort != "FFPE_Benchmarking")
@@ -35,6 +46,10 @@ get_gambl_metadata = function(seq_type_filter = "genome",
     if(case_set == "FL-DLBCL-study"){
       #get FL cases and DLBCL cases not in special/embargoed cohorts
       all_meta = all_meta %>% dplyr::filter(pathology %in% c("FL","DLBCL")) %>% filter(!cohort %in% c("DLBCL_ctDNA","DLBCL_BLGSP","LLMPP_P01","DLBCL_LSARP_Trios"))
+    }
+    if(case_set == "DLBCL-unembargoed"){
+      #get DLBCL cases not in special/embargoed cohorts
+      all_meta = all_meta %>% dplyr::filter(pathology %in% c("DLBCL")) %>% filter(!cohort %in% c("DLBCL_ctDNA","DLBCL_BLGSP","LLMPP_P01","DLBCL_LSARP_Trios","DLBCL_HTMCP"))
     }
     if(case_set == "BLGSP-study"){
       #get BL cases minus duplicates (i.e. drop benchmarking cases)
@@ -54,7 +69,7 @@ get_gambl_metadata = function(seq_type_filter = "genome",
     TRUE ~ lymphgen_cnv_noA53
   ))
 
-
+  all_meta = mutate(all_meta,Tumor_Sample_Barcode=sample_id) #duplicate for convenience
   all_meta = all_meta %>% dplyr::mutate(consensus_coo_dhitsig = case_when(
     pathology != "DLBCL" ~ pathology,
     COO_consensus == "ABC" ~ COO_consensus,
@@ -93,6 +108,12 @@ get_gambl_metadata = function(seq_type_filter = "genome",
     lymphgen == "MCD" ~ 22,
     TRUE ~ 50
   ))
+  if(with_outcomes){
+    outcome_table = get_gambl_outcomes() %>% select(-sex)
+    all_meta = left_join(all_meta,outcome_table,by="patient_id") %>%
+      mutate(age_group = case_when(cohort=="BL_Adult"~"Adult_BL",cohort=="BL_Pediatric" | cohort == "BL_ICGC" ~ "BL_Pediatric", TRUE ~ "Other"))
+
+  }
   DBI::dbDisconnect(con)
   return(all_meta)
 }
@@ -302,7 +323,7 @@ append_to_table = function(table_name,data_df){
 #' @examples
 #' #basic usage
 #' get_ssm_by_gene(gene_symbol=c("EZH2"),coding_only=TRUE)
-get_ssm_by_gene = function(gene_symbol,coding_only=FALSE){
+get_ssm_by_gene = function(gene_symbol,coding_only=FALSE,rename_splice_region=TRUE){
   table_name = config::get("results_tables")$ssm
   db=config::get("database_name")
   coding_class = c("Frame_Shift_Del","Frame_Shift_Ins","In_Frame_Del","In_Frame_Ins","Missense_Mutation","Nonsense_Mutation","Nonstop_Mutation","Silent","Splice_Region","Splice_Site","Targeted_Region","Translation_Start_Site")
@@ -313,6 +334,11 @@ get_ssm_by_gene = function(gene_symbol,coding_only=FALSE){
     muts_gene = muts_gene %>% dplyr::filter(Variant_Classification %in% coding_class)
   }
   muts_gene = as.data.frame(muts_gene)
+  if(rename_splice_region){
+    muts_gene = muts_gene %>% mutate(Variant_Classification = case_when(
+      Variant_Classification == "Splice_Region" ~ "Splice_Site",
+      TRUE ~ Variant_Classification))
+  }
   DBI::dbDisconnect(con)
   return(muts_gene)
 }
@@ -346,8 +372,8 @@ get_ssm_by_region = function(chromosome,qstart,qend,region="",basic_columns=TRUE
     startend = unlist(strsplit(split_chunks[2],"-"))
     qstart=as.numeric(startend[1])
     qend=as.numeric(startend[2])
-    print(class(qstart))
-    print(class(qend))
+    #print(class(qstart))
+    #print(class(qend))
   }
   chromosome = gsub("chr","",chromosome)
   if(missing(maf_data)){
@@ -412,9 +438,8 @@ get_coding_ssm = function(limit_cohort,exclude_cohort,limit_pathology,basic_colu
     all_meta = all_meta %>% filter(pathology %in% limit_pathology)
   }
   sample_ids = pull(all_meta,sample_id)
-  muts = tbl(con,table_name) %>%
-    filter(Variant_Classification %in% coding_class & Tumor_Sample_Barcode %in% sample_ids) %>%
-   as.data.frame()
+  muts = tbl(con,table_name) %>% filter(Variant_Classification %in% coding_class) %>% as.data.frame()
+  muts = muts %>% filter(Tumor_Sample_Barcode %in% sample_ids)
 
   if(basic_columns){
     muts = muts[,c(1:45)]

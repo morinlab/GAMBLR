@@ -90,11 +90,11 @@ collate_curated_sv_results = function(sample_table){
 #'
 #' @examples
 #' cn_list = assign_cn_to_ssm(this_sample="HTMCP-01-06-00422-01A-01D",coding_only=TRUE)
-assign_cn_to_ssm = function(this_sample,coding_only=FALSE,from_flatfile=FALSE){
+assign_cn_to_ssm = function(this_sample,coding_only=FALSE,from_flatfile=FALSE,use_augmented_maf=FALSE){
 
   database_name = config::get("database_name")
   project_base = config::get("project_base")
-  tool_name=config::get("copy_number_tool")
+  tool_name=config::get("analyses")$matched$copy_number
 
 
   #project_base = "/projects/nhl_meta_analysis_scratch/gambl/results_local/"
@@ -105,11 +105,19 @@ assign_cn_to_ssm = function(this_sample,coding_only=FALSE,from_flatfile=FALSE){
     genome_build = bam_info$genome_build
     unix_group = bam_info$unix_group
     #maf path for a single file is easy to predict. This really should be generalized for all tools
-    slms3_path = paste0(project_base,unix_group,"/","slms-3_vcf2maf_current/99-outputs/genome--",genome_build,"/")
-    this_sample_mafs = dir(slms3_path,pattern=paste0(this_sample,"--"))
-    #use the lifted or native?
-    this_sample_maf = this_sample_mafs[grep("converted",this_sample_mafs,invert=T)]
-    this_sample_maf = paste0(slms3_path,this_sample_maf)
+    if(use_augmented_maf==TRUE){
+      #results/gambl/rainstorm_circos/genome--grch37/01-augment_ssm/13-38657_tumorA--13-38657_normal--matched_slms-3.final_augmented.maf
+      maf_path = paste0(project_base,unix_group,"/","rainstorm_circos/genome--",genome_build,"/01-augment_ssm/")
+      this_sample_maf = dir(maf_path,pattern=paste0(this_sample,"--"))
+      this_sample_maf = grep(".maf",this_sample_maf,value=T)
+      this_sample_maf=paste0(maf_path,this_sample_maf)
+    }else{
+      slms3_path = paste0(project_base,unix_group,"/","slms-3_vcf2maf_current/99-outputs/genome--",genome_build,"/")
+      this_sample_mafs = dir(slms3_path,pattern=paste0(this_sample,"--"))
+      #use the lifted or native?
+      this_sample_maf = this_sample_mafs[grep("converted",this_sample_mafs,invert=T)]
+      this_sample_maf = paste0(slms3_path,this_sample_maf)
+    }
     if(length(this_sample_maf)>1){
       print("WARNING: more than one MAF found for this sample. This shouldn't happen!")
       this_sample_maf = this_sample_maf[1]
@@ -129,7 +137,7 @@ assign_cn_to_ssm = function(this_sample,coding_only=FALSE,from_flatfile=FALSE){
   }
   if(tool_name == "battenberg"){
     if(from_flatfile){
-      battenberg_files = fetch_output_files(genome_build=genome_build,base_path = "gambl/battenberg_current",tool_name="battenberg",search_pattern = ".igv.seg")
+      battenberg_files = fetch_output_files(build=genome_build,base_path = "gambl/battenberg_current",tool="battenberg",search_pattern = ".igv.seg")
       battenberg_file = filter(battenberg_files,tumour_sample_id==this_sample) %>% pull(full_path) %>% as.character()
       if(length(battenberg_file)>1){
         print("WARNING: more than one SEG found for this sample. This shouldn't happen!")
