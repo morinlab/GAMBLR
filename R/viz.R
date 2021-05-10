@@ -101,12 +101,20 @@ ashm_multi_rainbow_plot = function(regions_bed,regions_to_display,exclude_classi
 #' @import tidyverse DBI RMariaDB
 #'
 #' @examples
-copy_number_vaf_plot = function(this_sample,just_segments=FALSE,coding_only=FALSE,genes_to_label,from_flatfile=FALSE,use_augmented_maf=FALSE){
+copy_number_vaf_plot = function(this_sample,just_segments=FALSE,coding_only=FALSE,one_chrom,
+                                genes_to_label,from_flatfile=FALSE,use_augmented_maf=FALSE){
   chrom_order=factor(c(1:22,"X"))
   cn_colours = get_gambl_colours(classification = "copy_number")
   maf_and_seg = assign_cn_to_ssm(this_sample=this_sample,coding_only=coding_only,from_flatfile=from_flatfile,use_augmented_maf=use_augmented_maf)
   vaf_cn_maf = maf_and_seg[["maf"]]
-  vaf_cn_maf = mutate(vaf_cn_maf,CN=as.character(CN))
+  vaf_cn_maf = mutate(vaf_cn_maf,CN=case_when(LOH == "1" & CN == 2 ~ "nLOH",
+                                              TRUE ~ as.character(CN)))
+  if(!missing(one_chrom)){
+    vaf_cn_maf = filter(vaf_cn_maf,Chromosome == one_chrom)
+  }
+  #vaf_cn_maf = mutate(vaf_cn_maf,CN=as.character(CN))
+  #use_neut_loh=TRUE
+
   if(just_segments){
     #I realized this is ugly
     cn_seg = maf_and_seg[["seg"]]

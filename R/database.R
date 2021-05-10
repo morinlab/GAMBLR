@@ -36,8 +36,6 @@ get_gambl_metadata = function(seq_type_filter = "genome",
     all_meta = left_join(all_meta,sample_meta_normal_genomes,by="patient_id")
     all_meta = all_meta %>% mutate(pairing_status=case_when(is.na(normal_sample_id)~"unmatched",TRUE~"matched"))
   }
-
-
   #all_meta[all_meta$pathology=="B-cell unclassified","pathology"] = "HGBL"  #TODO fix this in the metadata
   if(remove_benchmarking){
     all_meta = all_meta %>% dplyr::filter(cohort != "FFPE_Benchmarking")
@@ -45,11 +43,28 @@ get_gambl_metadata = function(seq_type_filter = "genome",
   if(!missing(case_set)){
     if(case_set == "FL-DLBCL-study"){
       #get FL cases and DLBCL cases not in special/embargoed cohorts
-      all_meta = all_meta %>% dplyr::filter(pathology %in% c("FL","DLBCL")) %>% filter(!cohort %in% c("DLBCL_ctDNA","DLBCL_BLGSP","LLMPP_P01","DLBCL_LSARP_Trios"))
+      all_meta = all_meta %>% dplyr::filter(pathology %in% c("FL","DLBCL")) %>%
+        dplyr::filter(!cohort %in% c("DLBCL_ctDNA","DLBCL_BLGSP","LLMPP_P01","DLBCL_LSARP_Trios")) %>%
+        group_by(patient_id) %>% arrange(patient_id,pathology)  %>% dplyr::slice(1) %>% dplyr::ungroup()
+    }
+    if(case_set == "FL-study"){
+      #get FL cases and DLBCL cases not in special/embargoed cohorts
+      all_meta = all_meta %>% dplyr::filter(pathology %in% c("FL","DLBCL")) %>%
+        dplyr::filter(!cohort %in% c("DLBCL_ctDNA","DLBCL_BLGSP","LLMPP_P01","DLBCL_LSARP_Trios")) %>%
+        group_by(patient_id) %>% arrange(patient_id,pathology)  %>% dplyr::slice(1) %>% dplyr::ungroup() %>%
+        dplyr::filter(pathology == "FL")
+    }
+    if(case_set == "DLBCL-study"){
+      #get FL cases and DLBCL cases not in special/embargoed cohorts
+      all_meta = all_meta %>% dplyr::filter(pathology %in% c("FL","DLBCL")) %>%
+        dplyr::filter(!cohort %in% c("DLBCL_ctDNA","DLBCL_BLGSP","LLMPP_P01","DLBCL_LSARP_Trios")) %>%
+        group_by(patient_id) %>% arrange(patient_id,pathology)  %>% dplyr::slice(1) %>% dplyr::ungroup() %>%
+        dplyr::filter(pathology == "DLBCL")
     }
     if(case_set == "DLBCL-unembargoed"){
       #get DLBCL cases not in special/embargoed cohorts
-      all_meta = all_meta %>% dplyr::filter(pathology %in% c("DLBCL")) %>% filter(!cohort %in% c("DLBCL_ctDNA","DLBCL_BLGSP","LLMPP_P01","DLBCL_LSARP_Trios","DLBCL_HTMCP"))
+      all_meta = all_meta %>% dplyr::filter(pathology %in% c("DLBCL")) %>%
+        dplyr::filter(!cohort %in% c("DLBCL_ctDNA","DLBCL_BLGSP","LLMPP_P01","DLBCL_LSARP_Trios","DLBCL_HTMCP"))
     }
     if(case_set == "BLGSP-study"){
       #get BL cases minus duplicates (i.e. drop benchmarking cases)
@@ -134,7 +149,7 @@ get_gambl_outcomes = function(patient_ids,time_unit="year",censor_cbioportal=FAL
   con <- DBI::dbConnect(RMariaDB::MariaDB(), dbname = db)
   all_outcome = dplyr::tbl(con,"outcome_metadata") %>% as.data.frame()
   if(!missing(patient_ids)){
-    all_outcome = all_outcome %>% filter(patient_id %in% patient_ids)
+    all_outcome = all_outcome %>% dplyr::filter(patient_id %in% patient_ids)
     if(complete_missing){
       #add NA values and censored outcomes for all missing patient_ids
       all_outcome = all_outcome %>% complete(patient_id= patient_ids,fill=list(OS_YEARS=0,PFS_years=0,TTP_YEARS=0,DSS_YEARS=0,CODE_OS=0,CODE_PFS=0,CODE_DSS=0,CODE_TTP=0))
@@ -285,7 +300,7 @@ get_cn_segments = function(chromosome,qstart,qend,region,with_chr_prefix=FALSE){
 
   #TODO improve this query to allow for partial overlaps
   all_segs = dplyr::tbl(con,table_name) %>%
-    filter((chrom == chromosome & start <= qstart & end >= qend) |
+    dplyr::filter((chrom == chromosome & start <= qstart & end >= qend) |
              (chrom == chromosome & start >= qstart & end <= qend)) %>%
     as.data.frame()
   if(! with_chr_prefix){
@@ -421,25 +436,27 @@ get_coding_ssm = function(limit_cohort,exclude_cohort,limit_pathology,basic_colu
   db=config::get("database_name")
   con <- DBI::dbConnect(RMariaDB::MariaDB(), dbname = db)
   coding_class = c("Frame_Shift_Del","Frame_Shift_Ins","In_Frame_Del","In_Frame_Ins","Missense_Mutation","Nonsense_Mutation","Nonstop_Mutation","Silent","Splice_Region","Splice_Site","Targeted_Region","Translation_Start_Site")
-  sample_meta = dplyr::tbl(con,"sample_metadata") %>% filter(seq_type == "genome" & tissue_status == "tumour")
-  biopsy_meta = dplyr::tbl(con,"biopsy_metadata") %>% select(-patient_id) %>%
+  sample_meta = dplyr::tbl(con,"sample_metadata") %>% dplyr::filter(seq_type == "genome" & tissue_status == "tumour")
+  biopsy_meta = dplyr::tbl(con,"biopsy_metadata") %>% dplyr::select(-patient_id) %>%
     select(-pathology) %>% select(-time_point) %>% select(-EBV_status_inf) #drop duplicated columns
     all_meta = left_join(sample_meta,biopsy_meta,by="biopsy_id") %>%
     as.data.frame()
 
   #do all remaining filtering on the metadata then add the remaining sample_id to the query
   if(!missing(limit_cohort)){
-    all_meta = all_meta %>% filter(cohort %in% limit_cohort)
+    all_meta = all_meta %>% dplyr::filter(cohort %in% limit_cohort)
   }
   if(!missing(exclude_cohort)){
-    all_meta = all_meta %>% filter(!cohort %in% exclude_cohort)
+    all_meta = all_meta %>% dplyr::filter(!cohort %in% exclude_cohort)
   }
   if(!missing(limit_pathology)){
-    all_meta = all_meta %>% filter(pathology %in% limit_pathology)
+    all_meta = all_meta %>% dplyr::filter(pathology %in% limit_pathology)
   }
   sample_ids = pull(all_meta,sample_id)
-  muts = tbl(con,table_name) %>% filter(Variant_Classification %in% coding_class) %>% as.data.frame()
-  muts = muts %>% filter(Tumor_Sample_Barcode %in% sample_ids)
+  muts = tbl(con,table_name) %>%
+    dplyr::filter(Variant_Classification %in% coding_class) %>% as.data.frame()
+  muts = muts %>%
+    dplyr::filter(Tumor_Sample_Barcode %in% sample_ids)
 
   if(basic_columns){
     muts = muts[,c(1:45)]
@@ -478,7 +495,7 @@ get_gene_expression = function(hugo_symbols,tidy_expression_data,metadata,join_w
   tidy_expression_data = tbl(con,"expression_vst_hg38")
 
   gene_expression_df = tidy_expression_data %>%
-    filter(Hugo_Symbol %in% hugo_symbols) %>% as.data.frame()
+    dplyr::filter(Hugo_Symbol %in% hugo_symbols) %>% as.data.frame()
 
 
   if(join_with=="mrna"){
@@ -488,7 +505,7 @@ get_gene_expression = function(hugo_symbols,tidy_expression_data,metadata,join_w
     expression_wider = left_join(metadata,expression_wider,by=c("sample_id"="mrna_sample_id"))
   }else{
     expression_wider = select(gene_expression_df,-mrna_sample_id,-biopsy_id) %>%
-      filter(genome_sample_id !="NA") %>%
+      dplyr::filter(genome_sample_id !="NA") %>%
       pivot_wider(names_from=Hugo_Symbol,values_from=expression)
     expression_wider = left_join(metadata,expression_wider,by=c("sample_id"="genome_sample_id"))
   }

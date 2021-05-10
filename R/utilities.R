@@ -90,7 +90,8 @@ collate_curated_sv_results = function(sample_table){
 #'
 #' @examples
 #' cn_list = assign_cn_to_ssm(this_sample="HTMCP-01-06-00422-01A-01D",coding_only=TRUE)
-assign_cn_to_ssm = function(this_sample,coding_only=FALSE,from_flatfile=FALSE,use_augmented_maf=FALSE){
+assign_cn_to_ssm = function(this_sample,coding_only=FALSE,from_flatfile=FALSE,
+                            use_augmented_maf=FALSE){
 
   database_name = config::get("database_name")
   project_base = config::get("project_base")
@@ -138,7 +139,8 @@ assign_cn_to_ssm = function(this_sample,coding_only=FALSE,from_flatfile=FALSE,us
   if(tool_name == "battenberg"){
     if(from_flatfile){
       battenberg_files = fetch_output_files(build=genome_build,base_path = "gambl/battenberg_current",tool="battenberg",search_pattern = ".igv.seg")
-      battenberg_file = filter(battenberg_files,tumour_sample_id==this_sample) %>% pull(full_path) %>% as.character()
+      battenberg_file = dplyr::filter(battenberg_files,tumour_sample_id==this_sample) %>%
+        dplyr::pull(full_path) %>% as.character()
       if(length(battenberg_file)>1){
         print("WARNING: more than one SEG found for this sample. This shouldn't happen!")
         battenberg_file = battenberg_file[1]
@@ -159,7 +161,7 @@ assign_cn_to_ssm = function(this_sample,coding_only=FALSE,from_flatfile=FALSE,us
     a = data.table::as.data.table(maf_sample)
     a.seg = data.table::foverlaps(a, seg_sample, type="any")
     a$log.ratio = a.seg$log.ratio
-    #a$LOH = factor(a.seg$LOH_flag)
+    a$LOH = factor(a.seg$LOH_flag)
     a = dplyr::mutate(a,CN=round(2*2^log.ratio))
     seg_sample = dplyr::mutate(seg_sample,CN=round(2*2^log.ratio))
     seg_sample$LOH_flag = factor(seg_sample$LOH_flag)
@@ -228,7 +230,8 @@ sanity_check_metadata = function(){
   all_metadata_df = all_metadata_info %>% column_to_rownames(var = "key")
   #all samples with different seq_type and protocol must have a unique sample_id
   sample_df = read_tsv(all_metadata_df["samples","file"])
-  tumour_samples = sample_df %>% select(patient_id,sample_id,biopsy_id,seq_type,protocol) %>% filter(!is.na(biopsy_id))
+  tumour_samples = sample_df %>% select(patient_id,sample_id,biopsy_id,seq_type,protocol) %>%
+    dplyr::filter(!is.na(biopsy_id))
   n_samp_bio = tumour_samples %>% count() %>% pull(n)
   #2876 unique samples
   #check for any multiplicity of sample_id
@@ -340,13 +343,13 @@ collate_sv_results = function(sample_table,tool="manta",oncogenes=c("MYC","BCL2"
   if(tool=="manta"){
     all_svs = get_manta_sv()
   }
-  annotated_svs = annotate_sv(all_svs) %>% filter(!is.na(partner))
+  annotated_svs = annotate_sv(all_svs) %>% dplyr::filter(!is.na(partner))
   if(missing(sample_table)){
-    sample_table = get_gambl_metadata() %>% select(sample_id,patient_id,biopsy_id)
+    sample_table = get_gambl_metadata() %>% dplyr::select(sample_id,patient_id,biopsy_id)
   }
   multiout <- function(df, annotated, tool, oncogene_name) {
-    some_fusions = filter(annotated,gene==all_of(oncogene_name)) %>%
-      group_by(tumour_sample_id) %>% arrange(partner) %>% filter(row_number()==1)
+    some_fusions = dplyr::filter(annotated,gene==all_of(oncogene_name)) %>%
+      group_by(tumour_sample_id) %>% arrange(partner) %>% dplyr::filter(row_number()==1)
     df = mutate(df, "{tool}_{oncogene_name}_sv" := case_when(
       sample_id %in% some_fusions$tumour_sample_id ~ "POS",
       TRUE ~ "NEG"
@@ -383,6 +386,7 @@ get_gambl_colours = function(classification="lymphgen"){
     "Other" = "#55B55E"
   )
   copy_number_colours=c(
+    "nLOH"="#E026D7",
     "8"="#380015",
     "7"="#380015",
     "6"="#380015",
@@ -440,20 +444,23 @@ get_bams = function(sample,patient){
   meta_mrna = get_gambl_metadata(seq_type_filter = "mrna")
   #get all samples for this patient
   if(missing(patient)){
-    patient = meta %>% filter(sample_id==sample) %>% pull(patient_id)
+    patient = meta %>% dplyr::filter(sample_id==sample) %>% dplyr::pull(patient_id)
   }
-  meta_patient = meta %>% filter(patient_id == patient)
-  meta_mrna_patient = meta_mrna %>% filter(patient_id == patient)
-  build = pull(meta_patient,genome_build) %>% head(1)
+  meta_patient = meta %>% dplyr::filter(patient_id == patient)
+  meta_mrna_patient = meta_mrna %>% dplyr::filter(patient_id == patient)
+  build = dplyr::pull(meta_patient,genome_build) %>% head(1)
   if(build == "hs37d5"){
     igv_build = "hg19"
   }else{
     igv_build = build
   }
-  tumour_genome_bams = filter(meta_patient,seq_type == "genome" & tissue_status == "tumour") %>% pull(data_path)
+  tumour_genome_bams = dplyr::filter(meta_patient,seq_type == "genome" & tissue_status == "tumour") %>%
+    dplyr::pull(data_path)
   bam_details = list(igv_build=igv_build, genome_build=build, tumour_bams=tumour_genome_bams)
-  normal_genome_bams = filter(meta_patient,seq_type == "genome" & tissue_status == "normal") %>% pull(data_path)
-  unix_group = filter(meta_patient,seq_type == "genome" & tissue_status == "tumour") %>% pull(unix_group) %>% unique()
+  normal_genome_bams = dplyr::filter(meta_patient,seq_type == "genome" & tissue_status == "normal") %>%
+    dplyr::pull(data_path)
+  unix_group = dplyr::filter(meta_patient,seq_type == "genome" & tissue_status == "tumour") %>%
+    dplyr::pull(unix_group) %>% unique()
   bam_details$unix_group = unix_group
   if(length(normal_genome_bams)){
     bam_details$normal_genome_bams = normal_genome_bams
@@ -461,7 +468,7 @@ get_bams = function(sample,patient){
   if(length(normal_genome_bams)){
     bam_details$normal_genome_bams = normal_genome_bams
   }
-  rnaseq_bams = filter(meta_mrna_patient,seq_type == "mrna") %>% pull(data_path)
+  rnaseq_bams = dplyr::filter(meta_mrna_patient,seq_type == "mrna") %>% dplyr::pull(data_path)
   if(length(rnaseq_bams)){
     bam_details$rnaseq_bams = rnaseq_bams
   }

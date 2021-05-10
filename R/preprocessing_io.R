@@ -74,7 +74,8 @@ populate_each_tool_result = function(tool,genome_builds,unix_groups){
   if(tool=="QC"){
     #flag any cases with QC issues raised
     collated = collate_results()
-    qc_issues = select(collated,sample_id,QC_flag) %>% filter(!is.na(QC_flag)) %>% dplyr::mutate(flagged="yes")
+    qc_issues = dplyr::select(collated,sample_id,QC_flag) %>%
+      dplyr::filter(!is.na(QC_flag)) %>% dplyr::mutate(flagged="yes")
     generic_update(sample_id=qc_issues$sample_id,field_name = "QC_issue",field_value = qc_issues$QC_flag)
   }
   if(tool == "sequenza"){
@@ -163,7 +164,9 @@ populate_each_tool_result = function(tool,genome_builds,unix_groups){
       print(paste(sam,num))
       if(num == 0){
         print(paste("working on:",sam))
-        coding_num = gambl_mut_maf %>% filter(Tumor_Sample_Barcode == sam & Variant_Classification %in% coding_class) %>% count() %>% pull(n)
+        coding_num = gambl_mut_maf %>%
+          dplyr::filter(Tumor_Sample_Barcode == sam & Variant_Classification %in% coding_class) %>%
+          dplyr::count() %>% dplyr::pull(n)
         generic_update(sample_id=sam,field_name="slms3_ssm_coding",field_value=coding_num)
       }else{
         print(paste0("skipping ", sam))
@@ -174,15 +177,15 @@ populate_each_tool_result = function(tool,genome_builds,unix_groups){
     # parse purity and ploidy values from copy number caller and add to database
     parse_batt = function(batt_file){
       batt_data =  batt_file %>%
-        map(read_tsv) %>%
-        reduce(rbind) %>%
-        rename(battenberg_cellularity=cellularity,battenberg_ploidy=ploidy,battenberg_psi=psi)
+        purrr::map(read_tsv) %>%
+        purrr::reduce(rbind) %>%
+        dplyr::rename(battenberg_cellularity=cellularity,battenberg_ploidy=ploidy,battenberg_psi=psi)
       return(batt_data)
     }
     files_gambl_hg38 = fetch_output_files(genome_build="hg38",base_path = "gambl/battenberg_current",results_dir="02-battenberg")
     #table column structure is as follows:
     # {tool}_{variable} e.g. battenberg_ploidy and battenberg_purity
-    results_table = files_gambl_hg38 %>% mutate(parse_batt(full_path))
+    results_table = files_gambl_hg38 %>% dplyr::mutate(parse_batt(full_path))
     generic_update(sample_id=results_table$tumour_sample_id,field_name="battenberg_psi",field_value=results_table$battenberg_psi)
     generic_update(sample_id=results_table$tumour_sample_id,field_name="battenberg_ploidy",field_value=results_table$battenberg_ploidy)
     generic_update(sample_id=results_table$tumour_sample_id,field_name="battenberg_purity",field_value=results_table$battenberg_cellularity)
@@ -194,13 +197,13 @@ populate_each_tool_result = function(tool,genome_builds,unix_groups){
     generic_update(sample_id=results_table$tumour_sample_id,field_name="battenberg_purity",field_value=results_table$battenberg_cellularity)
 
     files_icgc_hg38 = fetch_output_files(genome_build="hg38",base_path = "icgc_dart/battenberg_current",results_dir="02-battenberg")
-    results_table = files_icgc_hg38 %>% mutate(parse_batt(full_path))
+    results_table = files_icgc_hg38 %>% dplyr::mutate(parse_batt(full_path))
     generic_update(sample_id=results_table$tumour_sample_id,field_name="battenberg_psi",field_value=results_table$battenberg_psi)
     generic_update(sample_id=results_table$tumour_sample_id,field_name="battenberg_ploidy",field_value=results_table$battenberg_ploidy)
     generic_update(sample_id=results_table$tumour_sample_id,field_name="battenberg_purity",field_value=results_table$battenberg_cellularity)
     #note special genome build for icgc
     files_icgc_grch37 = fetch_output_files(genome_build="hs37d5",base_path = "icgc_dart/battenberg_current",results_dir="02-battenberg")
-    results_table = files_icgc_grch37 %>% mutate(parse_batt(full_path))
+    results_table = files_icgc_grch37 %>% dplyr::demutate(parse_batt(full_path))
     generic_update(sample_id=results_table$tumour_sample_id,field_name="battenberg_psi",field_value=results_table$battenberg_psi)
     generic_update(sample_id=results_table$tumour_sample_id,field_name="battenberg_ploidy",field_value=results_table$battenberg_ploidy)
     generic_update(sample_id=results_table$tumour_sample_id,field_name="battenberg_purity",field_value=results_table$battenberg_cellularity)
