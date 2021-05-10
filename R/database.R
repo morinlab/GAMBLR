@@ -22,10 +22,10 @@ get_gambl_metadata = function(seq_type_filter = "genome",
   db=config::get("database_name")
   con <- DBI::dbConnect(RMariaDB::MariaDB(), dbname = db)
   sample_meta = dplyr::tbl(con,"sample_metadata")
-  sample_meta_normal_genomes =  sample_meta %>% filter(seq_type == "genome" & tissue_status=="normal") %>%
-    select(patient_id,sample_id) %>% as.data.frame() %>% rename("normal_sample_id"="sample_id")
+  sample_meta_normal_genomes =  sample_meta %>% dplyr::filter(seq_type == "genome" & tissue_status=="normal") %>%
+    dplyr::select(patient_id,sample_id) %>% as.data.frame() %>% dplyr::rename("normal_sample_id"="sample_id")
 
-  sample_meta = sample_meta %>% filter(seq_type == seq_type_filter & tissue_status %in% tissue_status_filter)
+  sample_meta = sample_meta %>% dplyr::filter(seq_type == seq_type_filter & tissue_status %in% tissue_status_filter)
 
   #if we only care about genomes, we can drop/filter anything that isn't a tumour genome
   #The key for joining this table to the mutation information is to use sample_id. Think of this as equivalent to a library_id. It will differ depending on what assay was done to the sample.
@@ -40,7 +40,7 @@ get_gambl_metadata = function(seq_type_filter = "genome",
 
   #all_meta[all_meta$pathology=="B-cell unclassified","pathology"] = "HGBL"  #TODO fix this in the metadata
   if(remove_benchmarking){
-    all_meta = all_meta %>% filter(cohort != "FFPE_Benchmarking")
+    all_meta = all_meta %>% dplyr::filter(cohort != "FFPE_Benchmarking")
   }
   if(!missing(case_set)){
     if(case_set == "FL-DLBCL-study"){
