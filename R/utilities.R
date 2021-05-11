@@ -409,14 +409,14 @@ get_gambl_colours = function(classification="lymphgen"){
     "COMFL"="#8BBC98",
     "PBL" = "#E058C0",
     "DLBCL-BL-like"="#34C7F4",
-    "HGBL"="#B23F52"
+    "HGBL"="#B23F52",
+    "SCBC"="#8c9c90",
+    "UNSPECIFIED"="#cfba7c"
   )
   if(classification == "copy_number"){
-    print("copy number colours")
     return(copy_number_colours)
   }
   if(classification == "pathology"){
-    print("pathology colours")
     return(pathology_colours)
   }
   else{
