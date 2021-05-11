@@ -17,6 +17,7 @@ Suggests:
     knitr,
     rmarkdown,
     testthat
+biocViews:
 Imports:
     tidyverse,
     data.table,
