@@ -20,6 +20,16 @@ lymphoma_genes = system.file("extdata","lymphoma_genes.tsv",package="GAMBLR") %>
 
 usethis::use_data(lymphoma_genes, overwrite = TRUE)
 
+grch37_lymphoma_genes_bed = system.file("extdata","lymphoma_genes.grch37.bed",package="GAMBLR") %>%
+  read_tsv()
+
+usethis::use_data(grch37_lymphoma_genes_bed, overwrite = TRUE)
+
+hg38_lymphoma_genes_bed = system.file("extdata","lymphoma_genes.hg38.bed",package="GAMBLR") %>%
+  read_tsv()
+
+usethis::use_data(hg38_lymphoma_genes_bed, overwrite = TRUE)
+
 
 wright_genes_with_weights = system.file("extdata","WrightGenesWithWeights.txt",package="GAMBLR") %>%
   read.table(sep="\t",header=1) %>% rename(Ensembl_ID=EnsemblGeneID,Hugo_Symbol=GeneName)
