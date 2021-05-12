@@ -127,9 +127,11 @@ assign_cn_to_ssm = function(this_sample,coding_only=FALSE,from_flatfile=FALSE,
     maf_sample = fread_maf(this_sample_maf)
 
   }else{
+
     #get all the segments for a sample and filter the small ones then assign CN value from the segment to all SSMs in that region
     con <- dbConnect(RMariaDB::MariaDB(), dbname = database_name)
-    maf_sample <- dplyr::tbl(con, table_name) %>%
+    maf_table = config::get("results_tables")$ssm
+    maf_sample <- dplyr::tbl(con, maf_table) %>%
       dplyr::filter(Tumor_Sample_Barcode == this_sample) %>%
       as.data.frame()
   }
@@ -150,7 +152,8 @@ assign_cn_to_ssm = function(this_sample,coding_only=FALSE,from_flatfile=FALSE,
         dplyr::mutate(chrom = gsub("chr","",chrom)) %>%
         dplyr::rename(Chromosome=chrom,Start_Position=start,End_Position=end)
     }else{
-      seg_sample = dplyr::tbl(con,"seg_battenberg_hg19") %>%
+      seg_table = config::get("results_tables")$copy_number
+      seg_sample = dplyr::tbl(con,seg_table) %>%
       dplyr::filter(ID == this_sample) %>%
       data.table::as.data.table() %>% dplyr::mutate(size=end - start) %>%
       dplyr::filter(size > 100) %>%
