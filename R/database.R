@@ -257,6 +257,53 @@ get_manta_sv = function(min_vaf=0.1,min_score=40,pass=TRUE,pairing_status,sample
   return(all_sv)
 }
 
+#' Get a copy number matrix for all samples based on segmented data in database
+#'
+#' @param regions_list A list of regions in the format chrom:start-end
+#' @param regions_bed A bed file with one row for each region you want to determine the CN state from
+#' @param region_names
+#'
+#' @return
+#' @export
+#'
+#' @examples
+#' #basic usage, generic lymphoma gene list
+#' cn_matrix = get_cn_states(regions_bed=grch37_lymphoma_genes_bed)
+get_cn_states = function(regions_list,regions_bed,region_names){
+  #retrieve the CN value for this region for every segment that overlaps it
+  bed2region=function(x){
+    paste0(x[1],":",as.numeric(x[2]),"-",as.numeric(x[3]))
+  }
+  if(missing(regions_list)){
+    if(!missing(regions_bed)){
+      regions= apply(regions_bed,1,bed2region)
+    }else{
+      warning("You must supply either regions_list or regions_df")
+    }
+  }
+  region_segs = lapply(regions,function(x){get_cn_segments(region=x,streamlined=TRUE)})
+  if(missing(region_names)){
+    region_names = regions
+  }
+
+  tibbled_data = tibble(region_segs, region_name = region_names)
+
+
+  unnested_df = tibbled_data %>% unnest_longer(region_segs)
+  seg_df = data.frame(ID=unnested_df$region_segs$ID,CN=unnested_df$region_segs$CN,region_name=unnested_df$region_name)
+  #arbitrarily take the first segment for each region/ID combination
+  seg_df = seg_df %>% group_by(ID,region_name) %>% slice(1) %>% rename("sample_id"="ID")
+
+  #fill in any sample/region combinations with missing data as diploid
+  meta_arranged = get_gambl_metadata() %>% select(sample_id,pathology,lymphgen) %>% arrange(pathology,lymphgen)
+
+  eg = expand_grid(sample_id=pull(meta_arranged,sample_id),region_name=as.character(unique(seg_df$region_name)))
+  all_cn = left_join(eg,seg_df,by=c("sample_id"="sample_id","region_name"="region_name")) %>%
+    mutate(CN=replace_na(CN,2))
+  cn_matrix = pivot_wider(all_cn,id_cols="sample_id",names_from="region_name",values_from = "CN") %>%
+    column_to_rownames("sample_id")
+  return(cn_matrix)
+}
 
 #' Retrieve all copy number segments from the GAMBL database that overlap with a single genomic coordinate range
 #'
@@ -277,7 +324,7 @@ get_manta_sv = function(min_vaf=0.1,min_score=40,pass=TRUE,pairing_status,sample
 #' my_segments=get_cn_segments(chromosome="8",qstart=128723128,qend=128774067)
 #' # Asking for chromosome names to have a chr prefix (default is un-prefixed)
 #' prefixed_segments = get_cn_segments(chromosome="12",qstart=122456912,qend=122464036,with_chr_prefix = TRUE)
-get_cn_segments = function(chromosome,qstart,qend,region,with_chr_prefix=FALSE){
+get_cn_segments = function(chromosome,qstart,qend,region,with_chr_prefix=FALSE,streamlined=FALSE){
   db = config::get("database_name")
   table_name = config::get("results_tables")$copy_number
   if(!missing(region)){
@@ -305,8 +352,13 @@ get_cn_segments = function(chromosome,qstart,qend,region,with_chr_prefix=FALSE){
     dplyr::filter((chrom == chromosome & start <= qstart & end >= qend) |
              (chrom == chromosome & start >= qstart & end <= qend)) %>%
     as.data.frame()
+  all_segs = dplyr::mutate(all_segs,CN=round(2*2^log.ratio))
+
   if(! with_chr_prefix){
     all_segs = all_segs %>% dplyr::mutate(chrom = gsub("chr","",chrom))
+  }
+  if(streamlined){
+    all_segs = select(all_segs,ID,CN)
   }
   DBI::dbDisconnect(con)
   return(all_segs)
