@@ -1,4 +1,10 @@
 chr_name	hg19_start	hg19_end	gene	region	regulatory_comment
+chr3	71626341	71635648	FOXP1	TSS-1	active_promoter
+chr3	71550753	71551478	FOXP1	intron-1a	intronic
+chr3	71503103	71504870	FOXP1	intron-1b	intronic
+chr3	71350633	71357665	FOXP1	TSS-2	active_promoter
+chr3	71176427	71180960	FOXP1	TSS-3	active_promoter
+chr3	71104986	71119518	FOXP1	TSS-4	active_promoter
 chr3	101546669	101547704	NFKBIZ	TSS-1	active_promoter
 chr3	101568239	101569274	NFKBIZ	TSS-2	active_promoter
 chr3	186783199	186784291	ST6GAL1	intronic	strong_enhancer

@@ -410,8 +410,18 @@ get_ssm_by_regions = function(regions_list,regions_bed,streamlined=FALSE){
   region_mafs = lapply(regions,function(x){get_ssm_by_region(region=x,streamlined = streamlined)})
   tibbled_data = tibble(region_mafs, region_name = regions)
   unnested_df = tibbled_data %>% unnest_longer(region_mafs)
+  if(streamlined){
+
   unlisted_df = mutate(unnested_df,start=region_mafs$Start_Position,sample_id=region_mafs$Tumor_Sample_Barcode) %>%
     select(start,sample_id,region_name)
+  }else{
+    unlisted_df = mutate(unnested_df,
+                         chromosome=region_mafs$Chromosome,
+                         start=region_mafs$Start_Position,
+                         end=region_mafs$End_Position,
+                         sample_id=region_mafs$Tumor_Sample_Barcode) %>%
+      select(chromosome,start,end,sample_id)
+  }
   #need to unlist but not using unlist
   #region_maf = reduce(region_mafs,rbind)
 

@@ -1,6 +1,37 @@
 
-maf_to_custom_track = function(maf_data){
+#' Title
+#'
+#' @param maf_data
+#' @param output_file
+#'
+#' @return
+#' @export
+#'
+#' @examples
+maf_to_custom_track = function(maf_data,output_file){
+  #browser position chr7:127471196-127495720
+  #browser hide all
+  #track name="ItemRGBDemo" description="Item RGB demonstration" visibility=2 itemRgb="On"
+  #chr7    127471196  127472363  Pos1  0  +  127471196  127472363  255,0,0
 
+  #reduce to a bed-like format
+  maf_data = select(maf_data,Chromosome,Start_Position,End_Position,Tumor_Sample_Barcode)
+  colnames(maf_data)=c("chrom","start","end","sample_id")
+  if(!grepl("chr",maf_data[,1])){
+    #add chr
+    maf_data[,1] = unlist(lapply(maf_data[,1],function(x){paste0("chr",x)}))
+  }
+  lymphgen_cols=get_gambl_colours("lymphgen")
+  colour_df = data.frame(lymphgen=names(lymphgen_cols),colour=lymphgen_cols)
+  rgb_df = data.frame(t(col2rgb(lymphgen_cols))) %>%
+    mutate(lymphgen=names(lymphgen_cols)) %>%
+    unite(col="rgb",red,green,blue,sep = ",")
+  meta=get_gambl_metadata() %>% select(sample_id,lymphgen)
+  samples_coloured = left_join(meta, rgb_df)
+  maf_bed = maf_data %>% mutate(score=0,strand="+",end=end+1,start1=start,end1=end)
+  maf_coloured = left_join(maf_bed,samples_coloured,by="sample_id") %>% select(-lymphgen) %>% filter(!is.na(rgb))
+  cat('track name="GAMBL mutations" description="Mutations from GAMBL" visibility=2 itemRgb="On"\n',file=output_file)
+  tabular = write.table(maf_coloured,file=output_file,quote=F,sep="\t",row.names=F,col.names = F,append=TRUE)
 }
 
 
