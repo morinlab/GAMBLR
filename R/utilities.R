@@ -1,4 +1,7 @@
 
+maf_to_custom_track = function(maf_data){
+
+}
 
 
 #' Bring together all derived sample-level results from many GAMBL pipelines

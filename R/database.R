@@ -1,4 +1,6 @@
 
+
+
 #' Get GAMBL metadata
 #'
 #' @param seq_type_filter Filtering criteria (default: all genomes)
@@ -326,6 +328,32 @@ append_to_table = function(table_name,data_df){
   dbWriteTable(con,table_name,table_data,append=TRUE)
 }
 
+#' Title
+#'
+#' @param regions_bed
+#'
+#' @return
+#' @export
+#'
+#' @examples
+get_ashm_count_matrix = function(regions_bed){
+  if(missing(regions_bed)){
+    regions_bed=grch37_ashm_regions
+  }
+  ashm_maf=get_ssm_by_regions(regions_bed=regions_bed,streamlined=TRUE)
+
+  ashm_counted = ashm_maf %>% group_by(sample_id,region_name) %>% tally()
+
+  all_meta = get_gambl_metadata() %>% select(sample_id)
+
+  #fill out all combinations so we can get the cases with zero mutations
+  eg = expand_grid(sample_id=pull(meta_arranged,sample_id),region_name=unique(ashm_counted$region_name))
+  all_counts = left_join(eg,ashm_counted) %>% mutate(n=replace_na(n,0))
+
+  all_counts_wide = pivot_wider(all_counts,id_cols = sample_id,names_from=region_name,values_from=n) %>%
+    column_to_rownames(var="sample_id")
+  return(all_counts_wide)
+}
 
 #' Get all somatic mutations for a given gene or list of genes and optionally restrict to coding variants
 #'
@@ -358,6 +386,38 @@ get_ssm_by_gene = function(gene_symbol,coding_only=FALSE,rename_splice_region=TR
   return(muts_gene)
 }
 
+#' Title
+#'
+#' @param regions_list
+#' @param regions_bed
+#' @param streamlined
+#'
+#' @return
+#' @export
+#'
+#' @examples
+get_ssm_by_regions = function(regions_list,regions_bed,streamlined=FALSE){
+  bed2region=function(x){
+    paste0(x[1],":",as.numeric(x[2]),"-",as.numeric(x[3]))
+  }
+  if(missing(regions_list)){
+    if(!missing(regions_bed)){
+      regions= apply(regions_bed,1,bed2region)
+    }else{
+      warning("You must supply either regions_list or regions_df")
+    }
+  }
+  region_mafs = lapply(regions,function(x){get_ssm_by_region(region=x,streamlined = streamlined)})
+  tibbled_data = tibble(region_mafs, region_name = regions)
+  unnested_df = tibbled_data %>% unnest_longer(region_mafs)
+  unlisted_df = mutate(unnested_df,start=region_mafs$Start_Position,sample_id=region_mafs$Tumor_Sample_Barcode) %>%
+    select(start,sample_id,region_name)
+  #need to unlist but not using unlist
+  #region_maf = reduce(region_mafs,rbind)
+
+  return(unlisted_df)
+}
+
 #' Retrieve all SSMs from the GAMBL database within a single genomic coordinate range
 #'
 #' @param chromosome The chromosome you are restricting to (with or without a chr prefix)
@@ -375,7 +435,7 @@ get_ssm_by_gene = function(gene_symbol,coding_only=FALSE,rename_splice_region=TR
 #' my_mutations=get_ssm_by_region(region="chr8:128,723,128-128,774,067")
 #' #specifying chromosome, start and end individually
 #' my_mutations=get_ssm_by_region(chromosome="8",qstart=128723128,qend=128774067)
-get_ssm_by_region = function(chromosome,qstart,qend,region="",basic_columns=TRUE,streamlined,maf_data){
+get_ssm_by_region = function(chromosome,qstart,qend,region="",basic_columns=TRUE,streamlined=FALSE,maf_data){
   table_name = config::get("results_tables")$ssm
   db=config::get("database_name")
   if(!region==""){
@@ -406,7 +466,7 @@ get_ssm_by_region = function(chromosome,qstart,qend,region="",basic_columns=TRUE
     print(head(test))
   }
 
-  if(!missing(streamlined)){
+  if(streamlined){
     muts_region = muts_region %>% dplyr::select(Start_Position,Tumor_Sample_Barcode)
   }else if(basic_columns){
     muts_region = muts_region[,c(1:45)]
