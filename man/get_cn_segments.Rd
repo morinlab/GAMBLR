@@ -4,7 +4,14 @@
 \alias{get_cn_segments}
 \title{Retrieve all copy number segments from the GAMBL database that overlap with a single genomic coordinate range}
 \usage{
-get_cn_segments(chromosome, qstart, qend, region, with_chr_prefix = FALSE)
+get_cn_segments(
+  chromosome,
+  qstart,
+  qend,
+  region,
+  with_chr_prefix = FALSE,
+  streamlined = FALSE
+)
 }
 \arguments{
 \item{chromosome}{The chromosome you are restricting to}

@@ -8,8 +8,10 @@ copy_number_vaf_plot(
   this_sample,
   just_segments = FALSE,
   coding_only = FALSE,
+  one_chrom,
   genes_to_label,
-  from_flatfile = FALSE
+  from_flatfile = FALSE,
+  use_augmented_maf = FALSE
 )
 }
 \arguments{

@@ -8,7 +8,8 @@ get_gambl_metadata(
   seq_type_filter = "genome",
   tissue_status_filter = c("tumour"),
   case_set,
-  remove_benchmarking = TRUE
+  remove_benchmarking = TRUE,
+  with_outcomes = FALSE
 )
 }
 \arguments{
@@ -17,7 +18,7 @@ get_gambl_metadata(
 \item{tissue_status_filter}{Filtering criteria (default: only tumour genomes)}
 
 \item{case_set}{optional short name for a pre-defined set of cases avoiding any
-embargoed cases (current options: 'BLGSP-study', 'FL-DLBCL-study')}
+embargoed cases (current options: 'BLGSP-study', 'FL-DLBCL-study', 'DLBCL-unembargoed)}
 }
 \value{
 A data frame with metadata for each biopsy in GAMBL

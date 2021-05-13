@@ -4,7 +4,7 @@
 \alias{get_ssm_by_gene}
 \title{Get all somatic mutations for a given gene or list of genes and optionally restrict to coding variants}
 \usage{
-get_ssm_by_gene(gene_symbol, coding_only = FALSE)
+get_ssm_by_gene(gene_symbol, coding_only = FALSE, rename_splice_region = TRUE)
 }
 \arguments{
 \item{gene_symbol}{Character vector of gene symbols}

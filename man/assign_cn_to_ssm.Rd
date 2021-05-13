@@ -4,7 +4,12 @@
 \alias{assign_cn_to_ssm}
 \title{Annotate mutations with their copy number information}
 \usage{
-assign_cn_to_ssm(this_sample, coding_only = FALSE, from_flatfile = FALSE)
+assign_cn_to_ssm(
+  this_sample,
+  coding_only = FALSE,
+  from_flatfile = FALSE,
+  use_augmented_maf = FALSE
+)
 }
 \arguments{
 \item{this_sample}{Sample ID of the sample you want to annotate}
