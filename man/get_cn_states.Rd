@@ -22,4 +22,5 @@ Get a copy number matrix for all samples based on segmented data in database
 \examples{
 #basic usage, generic lymphoma gene list
 cn_matrix = get_cn_states(regions_bed=grch37_lymphoma_genes_bed)
+single_gene_cn = get_cn_states(regions_list=c(this_region),region_names = c("FCGR2B"))
 }

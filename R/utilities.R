@@ -1,13 +1,14 @@
 
-#' Title
+#' Convert a maf-formatted data frame into a bed custom track file for UCSC
 #'
-#' @param maf_data
-#' @param output_file
+#' @param maf_data Either a maf loaded from disk or from the database using a get_ssm function
+#' @param output_file Name for your new bed file that can be uploaded as a custom track to UCSC
 #'
-#' @return
+#' @return Nothing
 #' @export
 #'
 #' @examples
+#' maf_to_custom_track(my_maf_data,"/home/rmorin/private/some_mutations.bed")
 maf_to_custom_track = function(maf_data,output_file){
   #browser position chr7:127471196-127495720
   #browser hide all
@@ -85,12 +86,11 @@ collate_derived_results = function(sample_table){
   return(sample_table)
 }
 
-#' Title
+#' Collate all SV calls from the genome data and summarize for main oncogenes of interest per sample
 #'
 #' @param sample_table A data frame with sample_id as the first column
-#' @param path_to_files Full local (base) path to the home of GAMBL outputs
 #'
-#' @return
+#' @return The sample table with additional columns
 #' @export
 #' @import tidyverse
 #'

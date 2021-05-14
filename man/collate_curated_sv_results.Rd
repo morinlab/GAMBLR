@@ -2,18 +2,16 @@
 % Please edit documentation in R/utilities.R
 \name{collate_curated_sv_results}
 \alias{collate_curated_sv_results}
-\title{Title}
+\title{Collate all SV calls from the genome data and summarize for main oncogenes of interest per sample}
 \usage{
 collate_curated_sv_results(sample_table)
 }
 \arguments{
 \item{sample_table}{A data frame with sample_id as the first column}
-
-\item{path_to_files}{Full local (base) path to the home of GAMBL outputs}
 }
 \value{
-
+The sample table with additional columns
 }
 \description{
-Title
+Collate all SV calls from the genome data and summarize for main oncogenes of interest per sample
 }

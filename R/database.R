@@ -31,7 +31,7 @@ get_gambl_metadata = function(seq_type_filter = "genome",
 
   #if we only care about genomes, we can drop/filter anything that isn't a tumour genome
   #The key for joining this table to the mutation information is to use sample_id. Think of this as equivalent to a library_id. It will differ depending on what assay was done to the sample.
-  biopsy_meta = dplyr::tbl(con,"biopsy_metadata") %>% select(-patient_id) %>% select(-pathology) %>% select(-time_point) %>% select(-EBV_status_inf) #drop duplicated columns
+  biopsy_meta = dplyr::tbl(con,"biopsy_metadata") %>% dplyr::select(-patient_id) %>% dplyr::select(-pathology) %>% dplyr::select(-time_point) %>% dplyr::select(-EBV_status_inf) #drop duplicated columns
   all_meta = dplyr::left_join(sample_meta,biopsy_meta,by="biopsy_id") %>% as.data.frame()
   if(seq_type_filter == "genome" & length(tissue_status_filter) == 1 & tissue_status_filter[1] == "tumour"){
     #join back the matched normal genome
@@ -126,7 +126,7 @@ get_gambl_metadata = function(seq_type_filter = "genome",
     TRUE ~ 50
   ))
   if(with_outcomes){
-    outcome_table = get_gambl_outcomes() %>% select(-sex)
+    outcome_table = get_gambl_outcomes() %>% dplyr::select(-sex)
     all_meta = left_join(all_meta,outcome_table,by="patient_id") %>%
       mutate(age_group = case_when(cohort=="BL_Adult"~"Adult_BL",cohort=="BL_Pediatric" | cohort == "BL_ICGC" ~ "BL_Pediatric", TRUE ~ "Other"))
 
@@ -162,13 +162,13 @@ get_gambl_outcomes = function(patient_ids,time_unit="year",censor_cbioportal=FAL
     all_outcome = all_outcome %>% mutate(PFS_MONTHS=PFS_YEARS * 12)
     all_outcome = all_outcome %>% mutate(TTP_MONTHS=TTP_YEARS * 12)
     all_outcome = all_outcome %>% mutate(DSS_MONTHS=DSS_YEARS * 12)
-    all_outcome = all_outcome %>% select(-c("OS_YEARS","PFS_YEARS","TTP_YEARS","DSS_YEARS"))
+    all_outcome = all_outcome %>% dplyr::select(-c("OS_YEARS","PFS_YEARS","TTP_YEARS","DSS_YEARS"))
   }else if(time_unit == "day"){
     all_outcome = all_outcome %>% mutate(OS_DAYS=OS_YEARS * 365)
     all_outcome = all_outcome %>% mutate(PFS_DAYS=PFS_YEARS * 365)
     all_outcome = all_outcome %>% mutate(TTP_DAYS=TTP_YEARS * 365)
     all_outcome = all_outcome %>% mutate(DSS_DAYS=DSS_YEARS * 365)
-    all_outcome = all_outcome %>% select(-c("OS_YEARS","PFS_YEARS","TTP_YEARS","DSS_YEARS"))
+    all_outcome = all_outcome %>% dplyr::select(-c("OS_YEARS","PFS_YEARS","TTP_YEARS","DSS_YEARS"))
   }
   #if necessary, convert the censoring into the cBioPortal format for OS and PFS
   if(censor_cbioportal){
@@ -264,11 +264,13 @@ get_manta_sv = function(min_vaf=0.1,min_score=40,pass=TRUE,pairing_status,sample
 #' @param region_names
 #'
 #' @return
+#' @import tidyverse
 #' @export
 #'
 #' @examples
 #' #basic usage, generic lymphoma gene list
 #' cn_matrix = get_cn_states(regions_bed=grch37_lymphoma_genes_bed)
+#' single_gene_cn = get_cn_states(regions_list=c(this_region),region_names = c("FCGR2B"))
 get_cn_states = function(regions_list,regions_bed,region_names){
   #retrieve the CN value for this region for every segment that overlaps it
   bed2region=function(x){
@@ -280,6 +282,8 @@ get_cn_states = function(regions_list,regions_bed,region_names){
     }else{
       warning("You must supply either regions_list or regions_df")
     }
+  }else{
+    regions = regions_list
   }
   region_segs = lapply(regions,function(x){get_cn_segments(region=x,streamlined=TRUE)})
   if(missing(region_names)){
@@ -292,10 +296,10 @@ get_cn_states = function(regions_list,regions_bed,region_names){
   unnested_df = tibbled_data %>% unnest_longer(region_segs)
   seg_df = data.frame(ID=unnested_df$region_segs$ID,CN=unnested_df$region_segs$CN,region_name=unnested_df$region_name)
   #arbitrarily take the first segment for each region/ID combination
-  seg_df = seg_df %>% group_by(ID,region_name) %>% slice(1) %>% rename("sample_id"="ID")
+  seg_df = seg_df %>% group_by(ID,region_name) %>% slice(1) %>% dplyr::rename("sample_id"="ID")
 
   #fill in any sample/region combinations with missing data as diploid
-  meta_arranged = get_gambl_metadata() %>% select(sample_id,pathology,lymphgen) %>% arrange(pathology,lymphgen)
+  meta_arranged = get_gambl_metadata() %>% dplyr::select(sample_id,pathology,lymphgen) %>% arrange(pathology,lymphgen)
 
   eg = expand_grid(sample_id=pull(meta_arranged,sample_id),region_name=as.character(unique(seg_df$region_name)))
   all_cn = left_join(eg,seg_df,by=c("sample_id"="sample_id","region_name"="region_name")) %>%
@@ -358,7 +362,7 @@ get_cn_segments = function(chromosome,qstart,qend,region,with_chr_prefix=FALSE,s
     all_segs = all_segs %>% dplyr::mutate(chrom = gsub("chr","",chrom))
   }
   if(streamlined){
-    all_segs = select(all_segs,ID,CN)
+    all_segs = dplyr::select(all_segs,ID,CN)
   }
   DBI::dbDisconnect(con)
   return(all_segs)
@@ -396,7 +400,7 @@ get_ashm_count_matrix = function(regions_bed){
 
   ashm_counted = ashm_maf %>% group_by(sample_id,region_name) %>% tally()
 
-  all_meta = get_gambl_metadata() %>% select(sample_id)
+  all_meta = get_gambl_metadata() %>% dplyr::select(sample_id)
 
   #fill out all combinations so we can get the cases with zero mutations
   eg = expand_grid(sample_id=pull(meta_arranged,sample_id),region_name=unique(ashm_counted$region_name))
@@ -465,14 +469,14 @@ get_ssm_by_regions = function(regions_list,regions_bed,streamlined=FALSE){
   if(streamlined){
 
   unlisted_df = mutate(unnested_df,start=region_mafs$Start_Position,sample_id=region_mafs$Tumor_Sample_Barcode) %>%
-    select(start,sample_id,region_name)
+    dplyr::select(start,sample_id,region_name)
   }else{
     unlisted_df = mutate(unnested_df,
                          chromosome=region_mafs$Chromosome,
                          start=region_mafs$Start_Position,
                          end=region_mafs$End_Position,
                          sample_id=region_mafs$Tumor_Sample_Barcode) %>%
-      select(chromosome,start,end,sample_id)
+      dplyr::select(chromosome,start,end,sample_id)
   }
   #need to unlist but not using unlist
   #region_maf = reduce(region_mafs,rbind)
@@ -560,7 +564,7 @@ get_coding_ssm = function(limit_cohort,exclude_cohort,limit_pathology,basic_colu
   coding_class = c("Frame_Shift_Del","Frame_Shift_Ins","In_Frame_Del","In_Frame_Ins","Missense_Mutation","Nonsense_Mutation","Nonstop_Mutation","Silent","Splice_Region","Splice_Site","Targeted_Region","Translation_Start_Site")
   sample_meta = dplyr::tbl(con,"sample_metadata") %>% dplyr::filter(seq_type == "genome" & tissue_status == "tumour")
   biopsy_meta = dplyr::tbl(con,"biopsy_metadata") %>% dplyr::select(-patient_id) %>%
-    select(-pathology) %>% select(-time_point) %>% select(-EBV_status_inf) #drop duplicated columns
+    dplyr::select(-pathology) %>% dplyr::select(-time_point) %>% dplyr::select(-EBV_status_inf) #drop duplicated columns
     all_meta = left_join(sample_meta,biopsy_meta,by="biopsy_id") %>%
     as.data.frame()
 
@@ -587,7 +591,41 @@ get_coding_ssm = function(limit_cohort,exclude_cohort,limit_pathology,basic_colu
   return(muts)
 }
 
-#' Title
+#' Get the copy number and expression for a single gene
+#'
+#' @param hugo_symbol
+#' @param ensembl_gene_id
+#'
+#' @return
+#' @import tidyverse
+#' @export
+#'
+#' @examples
+get_gene_cn_and_expression = function(gene_symbol,ensembl_id){
+
+    if(!missing(gene_symbol)){
+      this_row = grch37_gene_coordinates %>% dplyr::filter(hugo_symbol==gene_symbol)
+      this_region = paste0(this_row$chromosome,":",this_row$start,"-",this_row$end)
+      gene_name=gene_symbol
+    }else{
+      this_row = grch37_gene_coordinates %>% dplyr::filter(ensembl_gene_id==ensembl_id)
+      this_region = paste0(this_row$chromosome,":",this_row$start,"-",this_row$end)
+      gene_name=ensembl_id
+      gene_symbol = pull(this_row,hugo_symbol)
+    }
+
+  gene_cn = get_cn_states(regions_list=c(this_region),region_names = c(gene_name))
+  colnames(gene_cn)[1] = paste(colnames(gene_cn)[1],"CN",sep="_")
+  gene_cn = gene_cn %>% rownames_to_column("sample_id")
+  gene_exp = get_gene_expression(hugo_symbols = c(gene_symbol),join_with="genome")
+  exp_copy = left_join(gene_cn,gene_exp,by="sample_id")
+  all_meta = get_gambl_metadata()
+  exp_copy_meta = left_join(all_meta,exp_copy,by="sample_id")
+  return(exp_copy_meta)
+}
+
+
+#' Get the expression for one or more genes for all GAMBL samples
 #'
 #' @param hugo_symbols
 #' @param tidy_expression_data
@@ -608,7 +646,7 @@ get_gene_expression = function(hugo_symbols,tidy_expression_data,metadata,join_w
       metadata = get_gambl_metadata()
     }
   }
-  metadata = metadata %>% select(sample_id)
+  metadata = metadata %>% dplyr::select(sample_id)
   if(missing(hugo_symbols)){
     print("ERROR: supply at least one gene symbol")
   }
@@ -622,11 +660,11 @@ get_gene_expression = function(hugo_symbols,tidy_expression_data,metadata,join_w
 
   if(join_with=="mrna"){
     #join to metadata
-    gene_expression_df = select(gene_expression_df,-genome_sample_id,-biopsy_id)
+    gene_expression_df = dplyr::select(gene_expression_df,-genome_sample_id,-biopsy_id)
     expression_wider = pivot_wider(gene_expression_df,names_from=Hugo_Symbol,values_from=expression)
     expression_wider = left_join(metadata,expression_wider,by=c("sample_id"="mrna_sample_id"))
   }else{
-    expression_wider = select(gene_expression_df,-mrna_sample_id,-biopsy_id) %>%
+    expression_wider = dplyr::select(gene_expression_df,-mrna_sample_id,-biopsy_id) %>%
       dplyr::filter(genome_sample_id !="NA") %>%
       pivot_wider(names_from=Hugo_Symbol,values_from=expression)
     expression_wider = left_join(metadata,expression_wider,by=c("sample_id"="genome_sample_id"))

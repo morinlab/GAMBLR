@@ -2,7 +2,7 @@
 % Please edit documentation in R/database.R
 \name{get_gene_expression}
 \alias{get_gene_expression}
-\title{Title}
+\title{Get the expression for one or more genes for all GAMBL samples}
 \usage{
 get_gene_expression(
   hugo_symbols,
@@ -18,5 +18,5 @@ get_gene_expression(
 
 }
 \description{
-Title
+Get the expression for one or more genes for all GAMBL samples
 }
