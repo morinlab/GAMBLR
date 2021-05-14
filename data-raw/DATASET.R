@@ -1,9 +1,9 @@
 ## code to prepare `DATASET` dataset goes here
 
-grch37_gene_coordinates = system.file("extdata", "grch37_gene_coordinates.tsv", package = "GAMBLR") %>%
+grch37_all_gene_coordinates = system.file("extdata", "grch37_gene_coordinates.tsv", package = "GAMBLR") %>%
   read_tsv()
 
-usethis::use_data(grch37_gene_coordinates, overwrite = TRUE)
+usethis::use_data(grch37_all_gene_coordinates, overwrite = TRUE)
 
 grch37_oncogene = system.file("extdata", "oncogene_regions.grch37.tsv", package = "GAMBLR") %>%
   read_tsv(col_types="ciici")
