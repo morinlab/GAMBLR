@@ -29,6 +29,7 @@ default:
         ssm: "maf_slms3_hg19_icgc"
         copy_number: "seg_battenberg_hg19"
         sv: "bedpe_manta_hg19"
+        copy_number_unmatched: "seg_controlfreec_hg19"
 
     results_filatfiles:
         sv: "icgc_dart/cbioportal-1.0/01-filtered-manta/genome-grch37/all_merged_sv_info.tsv"

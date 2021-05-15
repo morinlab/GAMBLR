@@ -331,6 +331,7 @@ get_cn_states = function(regions_list,regions_bed,region_names){
 get_cn_segments = function(chromosome,qstart,qend,region,with_chr_prefix=FALSE,streamlined=FALSE){
   db = config::get("database_name")
   table_name = config::get("results_tables")$copy_number
+  table_name_unmatched = config::get("results_tables")$copy_number_unmatched
   if(!missing(region)){
     region = gsub(",","",region)
     #format is chr6:37060224-37151701
@@ -352,10 +353,21 @@ get_cn_segments = function(chromosome,qstart,qend,region,with_chr_prefix=FALSE,s
   #remove the prefix if this is false (or leave as is otherwise)
 
   #TODO improve this query to allow for partial overlaps
-  all_segs = dplyr::tbl(con,table_name) %>%
+  all_segs_matched = dplyr::tbl(con,table_name) %>%
     dplyr::filter((chrom == chromosome & start <= qstart & end >= qend) |
              (chrom == chromosome & start >= qstart & end <= qend)) %>%
     as.data.frame()
+
+  # get controlfreec segments for samples with missing battenberg results like unpaired
+  all_segs_unmatched = dplyr::tbl(con,table_name_unmatched) %>%
+    dplyr::filter((chrom == chromosome & start <= qstart & end >= qend) |
+             (chrom == chromosome & start >= qstart & end <= qend)) %>%
+              as.data.frame() %>%
+              dplyr::filter(! ID %in% all_segs_matched$ID)
+
+  all_segs = rbind(all_segs_matched,
+                  all_segs_unmatched)
+
   all_segs = dplyr::mutate(all_segs,CN=round(2*2^log.ratio))
 
   if(! with_chr_prefix){
