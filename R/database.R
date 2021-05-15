@@ -356,14 +356,16 @@ get_cn_segments = function(chromosome,qstart,qend,region,with_chr_prefix=FALSE,s
   all_segs_matched = dplyr::tbl(con,table_name) %>%
     dplyr::filter((chrom == chromosome & start <= qstart & end >= qend) |
              (chrom == chromosome & start >= qstart & end <= qend)) %>%
-    as.data.frame()
+    as.data.frame() %>%
+    dplyr::mutate(method="battenberg")
 
   # get controlfreec segments for samples with missing battenberg results like unpaired
   all_segs_unmatched = dplyr::tbl(con,table_name_unmatched) %>%
     dplyr::filter((chrom == chromosome & start <= qstart & end >= qend) |
              (chrom == chromosome & start >= qstart & end <= qend)) %>%
               as.data.frame() %>%
-              dplyr::filter(! ID %in% all_segs_matched$ID)
+              dplyr::filter(! ID %in% all_segs_matched$ID)  %>%
+    dplyr::mutate(method="controlfreec")
 
   all_segs = rbind(all_segs_matched,
                   all_segs_unmatched)
