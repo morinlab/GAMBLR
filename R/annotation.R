@@ -23,6 +23,10 @@ annotate_sv = function(sv_data,genome_build="grch37",with_chr_prefix=FALSE,colla
 
   colnames(bedpe1)= c("chrom","start","end","tumour_sample_id","score","strand1")
   colnames(bedpe2)= c("chrom","start","end","tumour_sample_id","score","strand2")
+  if(grepl("chr",bedpe1$chrom)){
+    bedpe1 = dplyr::mutate(bedpe1,chrom = str_replace(chrom,"chr",""))
+    bedpe2 = dplyr::mutate(bedpe2,chrom = str_replace(chrom,"chr",""))
+  }
   if(genome_build == "grch37" || genome_build == "hg19"){
     oncogene_regions = grch37_oncogene
     ig_regions = grch37_partners

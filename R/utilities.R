@@ -16,7 +16,7 @@ maf_to_custom_track = function(maf_data,output_file){
   #chr7    127471196  127472363  Pos1  0  +  127471196  127472363  255,0,0
 
   #reduce to a bed-like format
-  maf_data = select(maf_data,Chromosome,Start_Position,End_Position,Tumor_Sample_Barcode)
+  maf_data = dplyr::select(maf_data,Chromosome,Start_Position,End_Position,Tumor_Sample_Barcode)
   colnames(maf_data)=c("chrom","start","end","sample_id")
   if(!grepl("chr",maf_data[,1])){
     #add chr
@@ -27,10 +27,10 @@ maf_to_custom_track = function(maf_data,output_file){
   rgb_df = data.frame(t(col2rgb(lymphgen_cols))) %>%
     mutate(lymphgen=names(lymphgen_cols)) %>%
     unite(col="rgb",red,green,blue,sep = ",")
-  meta=get_gambl_metadata() %>% select(sample_id,lymphgen)
+  meta=get_gambl_metadata() %>% dplyr::select(sample_id,lymphgen)
   samples_coloured = left_join(meta, rgb_df)
   maf_bed = maf_data %>% mutate(score=0,strand="+",end=end+1,start1=start,end1=end)
-  maf_coloured = left_join(maf_bed,samples_coloured,by="sample_id") %>% select(-lymphgen) %>% filter(!is.na(rgb))
+  maf_coloured = left_join(maf_bed,samples_coloured,by="sample_id") %>% dplyr::select(-lymphgen) %>% filter(!is.na(rgb))
   cat('track name="GAMBL mutations" description="Mutations from GAMBL" visibility=2 itemRgb="On"\n',file=output_file)
   tabular = write.table(maf_coloured,file=output_file,quote=F,sep="\t",row.names=F,col.names = F,append=TRUE)
 }
@@ -55,7 +55,7 @@ collate_results = function(sample_table,write_to_file=FALSE){
   sample_table = collate_curated_sv_results(sample_table=sample_table)
   sample_table = collate_ashm_results(sample_table=sample_table)
   sample_table = collate_nfkbiz_results(sample_table=sample_table)
-  sample_table = collate_sbs_results(sample_table=sample_table)
+  #sample_table = collate_sbs_results(sample_table=sample_table)
   sample_table = collate_derived_results(sample_table=sample_table)
   if(write_to_file){
     output_file = config::get("table_flatfiles")$derived
@@ -267,12 +267,12 @@ sanity_check_metadata = function(){
   all_metadata_df = all_metadata_info %>% column_to_rownames(var = "key")
   #all samples with different seq_type and protocol must have a unique sample_id
   sample_df = read_tsv(all_metadata_df["samples","file"])
-  tumour_samples = sample_df %>% select(patient_id,sample_id,biopsy_id,seq_type,protocol) %>%
+  tumour_samples = sample_df %>% dplyr::select(patient_id,sample_id,biopsy_id,seq_type,protocol) %>%
     dplyr::filter(!is.na(biopsy_id))
   n_samp_bio = tumour_samples %>% count() %>% pull(n)
   #2876 unique samples
   #check for any multiplicity of sample_id
-  n_samp = tumour_samples %>% select(-biopsy_id) %>% unique() %>% count() %>% pull(n)
+  n_samp = tumour_samples %>% dplyr::select(-biopsy_id) %>% unique() %>% count() %>% pull(n)
   #should be the same number as above
   if(!n_samp == n_samp_bio){
     print("ERROR! some biopsies appear to have the same sample_id/protocol combination")
@@ -328,7 +328,7 @@ collate_sbs_results = function(sample_table,file_path){
 #' @examples
 collate_nfkbiz_results = function(sample_table){
   if(missing(sample_table)){
-    sample_table = get_gambl_metadata() %>% select(sample_id,patient_id,biopsy_id)
+    sample_table = get_gambl_metadata() %>% dplyr::select(sample_id,patient_id,biopsy_id)
   }
   this_region="chr3:101578214-101578365"
   nfkbiz_ssm = get_ssm_by_region(region=this_region) %>% pull(Tumor_Sample_Barcode) %>% unique
@@ -348,7 +348,7 @@ collate_nfkbiz_results = function(sample_table){
 #' @examples
 collate_ashm_results = function(sample_table){
   if(missing(sample_table)){
-    sample_table = get_gambl_metadata() %>% select(sample_id,patient_id,biopsy_id)
+    sample_table = get_gambl_metadata() %>% dplyr::select(sample_id,patient_id,biopsy_id)
   }
   #just annotate BCL2, MYC and CCND1 hypermutation
   regions_df = data.frame(name=c("CCND1","BCL2","MYC"),
@@ -357,12 +357,14 @@ collate_ashm_results = function(sample_table){
   tibbled_data = tibble(region_mafs, region_name = regions_df$name)
   unnested_df = tibbled_data %>% unnest_longer(region_mafs)
   unlisted_df = mutate(unnested_df,start=region_mafs$Start_Position,sample_id=region_mafs$Tumor_Sample_Barcode) %>%
-    select(start,sample_id,region_name)
+    dplyr::select(start,sample_id,region_name)
   tallied = unlisted_df %>% group_by(sample_id,region_name) %>%
     tally() %>%
     pivot_wider(values_from=n,names_from=region_name,values_fill=0,names_prefix="ashm_")
 
   sample_table = left_join(sample_table,tallied)
+  sample_table = mutate(sample_table,across(everything(), ~replace_na(.x, 0)))
+
 }
 
 #' Determine and summarize which cases have specific oncogene SVs
@@ -391,7 +393,8 @@ collate_sv_results = function(sample_table,tool="manta",oncogenes=c("MYC","BCL2"
       sample_id %in% some_fusions$tumour_sample_id ~ "POS",
       TRUE ~ "NEG"
     ))
-    some_fusions = some_fusions %>% select(tumour_sample_id,partner)  %>% mutate("{tool}_{oncogene_name}_partner" := partner) %>% select(-partner)
+    some_fusions = some_fusions %>% dplyr::select(tumour_sample_id,partner)  %>% mutate("{tool}_{oncogene_name}_partner" := partner) %>%
+      dplyr::select(-partner)
     df = left_join(df,some_fusions,by=c("sample_id"="tumour_sample_id"))
     return(df)
   }
@@ -424,6 +427,13 @@ get_gambl_colours = function(classification="lymphgen"){
   )
   copy_number_colours=c(
     "nLOH"="#E026D7",
+    "14"="#380015",
+    "15"="#380015",
+    "13"="#380015",
+    "12"="#380015",
+    "11"="#380015",
+    "10"="#380015",
+    "9"="#380015",
     "8"="#380015",
     "7"="#380015",
     "6"="#380015",

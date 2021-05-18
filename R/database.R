@@ -45,27 +45,36 @@ get_gambl_metadata = function(seq_type_filter = "genome",
   if(!missing(case_set)){
     if(case_set == "FL-DLBCL-study"){
       #get FL cases and DLBCL cases not in special/embargoed cohorts
-      all_meta = all_meta %>% dplyr::filter(pathology %in% c("FL","DLBCL")) %>%
-        dplyr::filter(!cohort %in% c("DLBCL_ctDNA","DLBCL_BLGSP","LLMPP_P01","DLBCL_LSARP_Trios")) %>%
-        group_by(patient_id) %>% arrange(patient_id,pathology)  %>% dplyr::slice(1) %>% dplyr::ungroup()
+      fl_meta = all_meta %>% dplyr::filter(consensus_pathology %in% c("FL","DLBCL","COM")) %>%
+        dplyr::filter(!cohort %in% c("DLBCL_ctDNA","DLBCL_BLGSP","LLMPP_P01","DLBCL_LSARP_Trios","DLBCL_HTMCP")) %>%
+        group_by(patient_id) %>%
+        mutate(FL = sum(pathology == "FL"), DLBCL = sum(pathology == "DLBCL")) %>%
+        mutate(transformed = ifelse(FL > 0 & DLBCL > 0, TRUE, FALSE))  %>%
+        mutate(analysis_cohort=case_when(consensus_pathology=="FL" & transformed==TRUE ~ "tFL",
+                                         consensus_pathology=="DLBCL" & transformed==TRUE ~ "ignore",
+                                         TRUE ~ "FL")) %>%
+        filter(cohort=="FL_Kridel") %>%
+        filter((analysis_cohort == "FL" & time_point == "A")|(analysis_cohort =="tFL"))
+
+      #dlbcl_meta =
     }
     if(case_set == "FL-study"){
       #get FL cases and DLBCL cases not in special/embargoed cohorts
-      all_meta = all_meta %>% dplyr::filter(pathology %in% c("FL","DLBCL")) %>%
+      all_meta = all_meta %>% dplyr::filter(consensus_pathology %in% c("FL","DLBCL")) %>%
         dplyr::filter(!cohort %in% c("DLBCL_ctDNA","DLBCL_BLGSP","LLMPP_P01","DLBCL_LSARP_Trios")) %>%
         group_by(patient_id) %>% arrange(patient_id,pathology)  %>% dplyr::slice(1) %>% dplyr::ungroup() %>%
         dplyr::filter(pathology == "FL")
     }
     if(case_set == "DLBCL-study"){
       #get FL cases and DLBCL cases not in special/embargoed cohorts
-      all_meta = all_meta %>% dplyr::filter(pathology %in% c("FL","DLBCL")) %>%
+      all_meta = all_meta %>% dplyr::filter(consensus_pathology %in% c("FL","DLBCL")) %>%
         dplyr::filter(!cohort %in% c("DLBCL_ctDNA","DLBCL_BLGSP","LLMPP_P01","DLBCL_LSARP_Trios")) %>%
         group_by(patient_id) %>% arrange(patient_id,pathology)  %>% dplyr::slice(1) %>% dplyr::ungroup() %>%
-        dplyr::filter(pathology == "DLBCL")
+        dplyr::filter(consensus_pathology %in% c("DLBCL","FL"))
     }
     if(case_set == "DLBCL-unembargoed"){
       #get DLBCL cases not in special/embargoed cohorts
-      all_meta = all_meta %>% dplyr::filter(pathology %in% c("DLBCL")) %>%
+      all_meta = all_meta %>% dplyr::filter(consensus_pathology %in% c("DLBCL","COM")) %>%
         dplyr::filter(!cohort %in% c("DLBCL_ctDNA","DLBCL_BLGSP","LLMPP_P01","DLBCL_LSARP_Trios","DLBCL_HTMCP"))
     }
     if(case_set == "BLGSP-study"){
@@ -85,7 +94,14 @@ get_gambl_metadata = function(seq_type_filter = "genome",
     str_detect(lymphgen_cnv_noA53,"/") ~ "COMPOSITE",
     TRUE ~ lymphgen_cnv_noA53
   ))
-
+  all_meta = add_icgc_metadata(all_meta) %>% select(-COO_consensus) %>%
+    rename("COO_consensus"="COO_final") %>%
+    mutate(consensus_pathology=case_when(
+      ICGC_PATH == "FL-DLBCL" ~ "COM",
+      ICGC_PATH == "DH-BL" ~ pathology,
+      ICGC_PATH == "FL" | ICGC_PATH== "DLBCL" ~ ICGC_PATH,
+      TRUE ~ pathology
+    ))
   all_meta = mutate(all_meta,Tumor_Sample_Barcode=sample_id) #duplicate for convenience
   all_meta = all_meta %>% dplyr::mutate(consensus_coo_dhitsig = case_when(
     pathology != "DLBCL" ~ pathology,
@@ -97,6 +113,8 @@ get_gambl_metadata = function(seq_type_filter = "genome",
     DHITsig_PRPS_class == "UNCLASS" ~ "DHITsigPos",
     TRUE ~ "NA"
   ))
+
+
   #assign a rank to each pathology for consistent and sensible ordering
   all_meta = all_meta %>% dplyr::mutate(pathology_rank = case_when(
     pathology == "B-ALL" ~ 0,
@@ -134,6 +152,51 @@ get_gambl_metadata = function(seq_type_filter = "genome",
   DBI::dbDisconnect(con)
   return(all_meta)
 }
+
+#' Layer on ICGC metadata from a supplemental table to fill in missing COO
+#'
+#' @param incoming_metadata
+#'
+#' @return
+#' @export
+#'
+#' @examples
+add_icgc_metadata = function(incoming_metadata){
+  icgc_publ = read_csv("/projects/rmorin/projects/gambl-repos/gambl-rmorin/data/metadata/raw_metadata/MALY_DE_tableS1.csv")
+  icgc_publ = icgc_publ[,c(1:20)]
+  #fix commas as decimals
+  icgc_publ = mutate(icgc_publ,purity = str_replace(purity,",","."))
+  icgc_publ = mutate(icgc_publ,sex=str_to_upper(sex))
+
+  icgc_raw = read_tsv("/projects/rmorin/projects/gambl-repos/gambl-rmorin/data/metadata/raw_metadata/ICGC_MALY_seq_md.tsv")
+
+  # %>% select(-compression,-bam_available,-read_length,-time_point,-unix_group,-ffpe_or_frozen) %>% rename("sex_gambl"="sex")
+  icgc_raw = icgc_raw %>% select(-compression,-bam_available,-read_length,-time_point,-unix_group,-ffpe_or_frozen,-link_name)  %>%
+    filter(tissue_status %in% c("tumor","tumour"))
+
+  icgc_all = left_join(icgc_raw,icgc_publ,by="ICGC_ID") %>%
+    select(-tissue_status,-seq_type,-protocol,-seq_source_type,-data_path,-genome_build,-RNA_available) %>%
+    select(sample_id,ICGC_ID, pathology.x,pathology.y,COO,molecular_BL,MYC_sv,BCL2_sv,BCL6_sv) %>%
+    rename("ICGC_MYC_sv"="MYC_sv") %>%
+    rename("ICGC_BCL2_sv"="BCL2_sv") %>%
+    rename("ICGC_BCL6_sv"="BCL6_sv") %>%
+    rename("detailed_pathology"="pathology.x") %>%
+    rename("ICGC_PATH"="pathology.y")
+
+
+
+  #join with all metadata to fill in blanks
+  #all_meta=get_gambl_metadata()
+  rejoined = left_join(incoming_metadata,icgc_all,by="sample_id") %>%
+    mutate(COO_final=case_when(
+      !is.na(COO_consensus) ~ COO_consensus,
+      COO != "n.a." & COO != "TypeIII" ~ COO,
+      TRUE ~ "NA"
+    )
+    ) %>% select(-COO)
+  return(rejoined)
+}
+
 
 #' Get the patient-centric clinical metadata
 #'

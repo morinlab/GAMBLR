@@ -98,10 +98,17 @@ populate_each_tool_result = function(tool,genome_builds,unix_groups){
     #generic_update(sample_id=seq_files_gambl$tumour_sample_id,field_name="sequenza_purity",field_value=sequenza_results$sequenza_cellularity)
     #generic_update(sample_id=seq_files_gambl$tumour_sample_id,field_name="sequenza_ploidy",field_value=sequenza_results$sequenza_ploidy)
 
-    seq_files_gambl = fetch_output_files(genome_build=genome_build,base_path = "gambl/sequenza_current",results_dir="02-sequenza",tool_name="sequenza")
-    sequenza_results = parse_sequenza(seq_files_gambl$full_path)
-    generic_update(sample_id=seq_files_gambl$tumour_sample_id,field_name="sequenza_purity",field_value=sequenza_results$sequenza_cellularity)
-    generic_update(sample_id=seq_files_gambl$tumour_sample_id,field_name="sequenza_ploidy",field_value=sequenza_results$sequenza_ploidy)
+    for(unix_group in unix_groups){
+      for(genome_build in genome_builds){
+        seq_files_gambl = fetch_output_files(build=genome_build,unix_group=unix_group,
+                                         base_path = paste0(unix_group,"/sequenza_current"),
+                                         results_dir="02-sequenza",tool="sequenza")
+        sequenza_results = parse_sequenza(seq_files_gambl$full_path)
+
+        generic_update(sample_id=seq_files_gambl$tumour_sample_id,field_name="sequenza_purity",field_value=sequenza_results$sequenza_cellularity)
+        generic_update(sample_id=seq_files_gambl$tumour_sample_id,field_name="sequenza_ploidy",field_value=sequenza_results$sequenza_ploidy)
+      }
+    }
 
 
     #seq_files_gambl_hg38 = fetch_output_files(genome_build="hg38",base_path = "icgc_dart/sequenza_current",results_dir="02-sequenza",tool_name="sequenza")
@@ -173,7 +180,7 @@ populate_each_tool_result = function(tool,genome_builds,unix_groups){
       }
     }
   }
-  if(tool == "battenberg-ploidy"){
+  if(tool == "battenberg_ploidy"){
     # parse purity and ploidy values from copy number caller and add to database
     parse_batt = function(batt_file){
       batt_data =  batt_file %>%
@@ -182,31 +189,39 @@ populate_each_tool_result = function(tool,genome_builds,unix_groups){
         dplyr::rename(battenberg_cellularity=cellularity,battenberg_ploidy=ploidy,battenberg_psi=psi)
       return(batt_data)
     }
-    files_gambl_hg38 = fetch_output_files(genome_build="hg38",base_path = "gambl/battenberg_current",results_dir="02-battenberg")
+
+
+    for(unix_group in unix_groups){
+      for(genome_build in genome_builds){
+        files = fetch_output_files(build=genome_build,unix_group=unix_group,
+                                             base_path = paste0(unix_group,"/battenberg_current"),
+                                             results_dir="02-battenberg",tool="battenberg_ploidy")
+        print(head(files))
+        results_table = files %>% mutate(parse_batt(full_path))
+        generic_update(sample_id=results_table$tumour_sample_id,field_name="battenberg_psi",field_value=results_table$battenberg_psi)
+        generic_update(sample_id=results_table$tumour_sample_id,field_name="battenberg_ploidy",field_value=results_table$battenberg_ploidy)
+        generic_update(sample_id=results_table$tumour_sample_id,field_name="battenberg_purity",field_value=results_table$battenberg_cellularity)
+        #results_table = files %>% dplyr::mutate(parse_batt(full_path))
+        #sequenza_results = parse_sequenza(seq_files_gambl$full_path)
+
+        #generic_update(sample_id=seq_files_gambl$tumour_sample_id,field_name="sequenza_purity",field_value=sequenza_results$sequenza_cellularity)
+        #generic_update(sample_id=seq_files_gambl$tumour_sample_id,field_name="sequenza_ploidy",field_value=sequenza_results$sequenza_ploidy)
+      }
+    }
+
+
+    #files_gambl_hg38 = fetch_output_files(genome_build="hg38",base_path = "gambl/battenberg_current",results_dir="02-battenberg")
     #table column structure is as follows:
     # {tool}_{variable} e.g. battenberg_ploidy and battenberg_purity
-    results_table = files_gambl_hg38 %>% dplyr::mutate(parse_batt(full_path))
-    generic_update(sample_id=results_table$tumour_sample_id,field_name="battenberg_psi",field_value=results_table$battenberg_psi)
-    generic_update(sample_id=results_table$tumour_sample_id,field_name="battenberg_ploidy",field_value=results_table$battenberg_ploidy)
-    generic_update(sample_id=results_table$tumour_sample_id,field_name="battenberg_purity",field_value=results_table$battenberg_cellularity)
 
-    files_gambl_grch37 = fetch_output_files(genome_build="grch37",base_path = "gambl/battenberg_current",results_dir="02-battenberg")
-    results_table = files_gambl_grch37 %>% mutate(parse_batt(full_path))
-    generic_update(sample_id=results_table$tumour_sample_id,field_name="battenberg_psi",field_value=results_table$battenberg_psi)
-    generic_update(sample_id=results_table$tumour_sample_id,field_name="battenberg_ploidy",field_value=results_table$battenberg_ploidy)
-    generic_update(sample_id=results_table$tumour_sample_id,field_name="battenberg_purity",field_value=results_table$battenberg_cellularity)
 
-    files_icgc_hg38 = fetch_output_files(genome_build="hg38",base_path = "icgc_dart/battenberg_current",results_dir="02-battenberg")
-    results_table = files_icgc_hg38 %>% dplyr::mutate(parse_batt(full_path))
-    generic_update(sample_id=results_table$tumour_sample_id,field_name="battenberg_psi",field_value=results_table$battenberg_psi)
-    generic_update(sample_id=results_table$tumour_sample_id,field_name="battenberg_ploidy",field_value=results_table$battenberg_ploidy)
-    generic_update(sample_id=results_table$tumour_sample_id,field_name="battenberg_purity",field_value=results_table$battenberg_cellularity)
-    #note special genome build for icgc
-    files_icgc_grch37 = fetch_output_files(genome_build="hs37d5",base_path = "icgc_dart/battenberg_current",results_dir="02-battenberg")
-    results_table = files_icgc_grch37 %>% dplyr::demutate(parse_batt(full_path))
-    generic_update(sample_id=results_table$tumour_sample_id,field_name="battenberg_psi",field_value=results_table$battenberg_psi)
-    generic_update(sample_id=results_table$tumour_sample_id,field_name="battenberg_ploidy",field_value=results_table$battenberg_ploidy)
-    generic_update(sample_id=results_table$tumour_sample_id,field_name="battenberg_purity",field_value=results_table$battenberg_cellularity)
+
+    #files_gambl_grch37 = fetch_output_files(genome_build="grch37",base_path = "gambl/battenberg_current",results_dir="02-battenberg")
+    #results_table = files_gambl_grch37 %>% mutate(parse_batt(full_path))
+    #generic_update(sample_id=results_table$tumour_sample_id,field_name="battenberg_psi",field_value=results_table$battenberg_psi)
+    #generic_update(sample_id=results_table$tumour_sample_id,field_name="battenberg_ploidy",field_value=results_table$battenberg_ploidy)
+    #generic_update(sample_id=results_table$tumour_sample_id,field_name="battenberg_purity",field_value=results_table$battenberg_cellularity)
+
 
   }
 }
@@ -378,8 +393,8 @@ fetch_output_files = function(tool,unix_group,base_path,results_dir="99-outputs"
     #project_base = "/projects/nhl_meta_analysis_scratch/gambl/results_local/"
     base_path = paste0(project_base,base_path)
   }
+  results_path = paste0(base_path,"/",results_dir,"/",seq_type,"--",build,"/")
 
-  print(paste0("using results in: ",results_path))
   #path may contain either directories or files named after the sample pair
   dir_listing = dir(results_path,pattern="--")
   #start a data frame for tidy collation of details
@@ -389,7 +404,8 @@ fetch_output_files = function(tool,unix_group,base_path,results_dir="99-outputs"
   #unnested_df = unnested_df %>% head() %>% mutate(output_file = dir(paste0(results_path,short_path),pattern=search_pattern))
   #This still fails when a matching file isn't found. No clue why this doesn't work
   if(tool=="sequenza"){
-    results_path = paste0(base_path,"/",results_dir,"/",seq_type,"--",genome_build,"/")
+
+    print(paste0("using results in: ",results_path))
     print("THIS CAN BE SLOW!")
     unnested_df = unnested_df  %>% mutate(full_path=paste0(results_path,short_path,"/filtered/sequenza_alternative_solutions.txt"))
     named=pull(unnested_df,full_path)
@@ -398,7 +414,7 @@ fetch_output_files = function(tool,unix_group,base_path,results_dir="99-outputs"
     new_df = cbind(unnested_df,found_files) %>% filter(found_files==TRUE)
     print(head(new_df))
   }else if(tool == "battenberg"){
-    results_path = paste0(base_path,"/",results_dir,"/seg/",seq_type,"--",genome_build,"/")
+    results_path = paste0(base_path,"/",results_dir,"/seg/",seq_type,"--",build,"/")
     all_files = dir(results_path,pattern=search_pattern)
     #extract tumour and normal ID
     all_tumours = unlist(lapply(all_files,function(x){tumour=unlist(strsplit(x,"--"))[1]}))
@@ -408,12 +424,15 @@ fetch_output_files = function(tool,unix_group,base_path,results_dir="99-outputs"
     new_df= data.frame(tumour_sample_id=all_tumours,normal_sample_id=all_normals,full_path=all_files)
     new_df = mutate(new_df,normal_sample_id = gsub(normal_sample_id,pattern = "_subclones.igv.seg",replacement = ""))
   }else if(tool == "battenberg_ploidy"){
-    results_path = paste0(base_path,"/",results_dir,"/",seq_type,"--",genome_build,"/")
+    #results_path = paste0(base_path,"/",results_dir,"/",seq_type,"--",build,"/")
+    search_pattern="_cellularity_ploidy.txt"
     print("THIS CAN BE SLOW!")
     unnested_df = unnested_df  %>% mutate(full_path=paste0(results_path,short_path))
     named=pull(unnested_df,full_path)
     found_files=  tibble(filename=lapply(named,function(x){dir(x,pattern=search_pattern)[1]})) %>%
-      unnest_longer(filename)
+      unnest_longer(filename) #%>% mutate(path=paste0(full_path,filename))
+    found_files = cbind(found_files,unnested_df) %>% filter(!is.na(filename)) %>% mutate(full_path=paste0(full_path,"/",filename))
+    return(found_files)
   }else if(tool == "manta"){
     tool_results_path = config::get("results_directories")$manta
 
@@ -610,6 +629,8 @@ liftover_bedpe = function(bedpe_file,bedpe_df,target_build="grch37",col_names,co
     }else{
       original_bedpe = read_tsv(bedpe_file,col_names=col_names,col_types=col_types)
     }
+  }else{
+    original_bedpe = bedpe_df
   }
   colnames(original_bedpe)[1]="CHROM_A"
   if(!missing(bedpe_df)){
@@ -617,12 +638,18 @@ liftover_bedpe = function(bedpe_file,bedpe_df,target_build="grch37",col_names,co
   }
   if(!grepl("chr",original_bedpe$CHROM_A)){
     #add chr prefix
-    original_bedpe = original_bedpe %>% mutate(CHROM_A = paste0("chr",CHROM_A)) %>% mutate(CHROM_B = paste0("chr",CHROM_B))
+    original_bedpe = original_bedpe %>% mutate(CHROM_A = paste0("chr",CHROM_A)) %>%
+      mutate(CHROM_B = paste0("chr",CHROM_B))
   }
   char_vec = original_bedpe %>% tidyr::unite(united,sep="\t") %>% dplyr::pull(united)
   bedpe_obj <- rtracklayer::import(text=char_vec,format="bedpe")
-  this_patient = colnames(original_bedpe)[23]
-  this_normal = colnames(original_bedpe)[22]
+  if(length(colnames(original_bedpe))>22){
+    this_patient = colnames(original_bedpe)[23]
+    this_normal = colnames(original_bedpe)[22]
+  }else{
+    this_patient = original_bedpe$tumour_sample_id
+    this_normal = original_bedpe$normal_sample_id
+  }
   if(target_build == "grch37" | target_build == "hg19"){
     chain = rtracklayer::import.chain(system.file("extdata","hg38ToHg19.over.chain",package="GAMBLR"))
   }else if(target_build == "grch38" | target_build == "hg38"){
@@ -636,8 +663,12 @@ liftover_bedpe = function(bedpe_file,bedpe_df,target_build="grch37",col_names,co
   no_problem = !((elementNROWS(first_sv_lifted) != 1) | (elementNROWS(second_sv_lifted) != 1))
   first_ok = subset(first_sv_lifted,no_problem)
   second_ok = subset(second_sv_lifted,no_problem)
-  first_ok_df = rtracklayer::export(first_ok,format="bed") %>% read_tsv(col_names = c("CHROM_A","START_A","END_A","name_A","score_A","STRAND_A")) %>% select(-score_A) %>% select(-name_A)
-  second_ok_df = rtracklayer::export(second_ok,format="bed") %>% read_tsv(col_names = c("CHROM_B","START_B","END_B","name_B","score_B","STRAND_B")) %>% select(-score_B) %>% select(-name_B)
+  first_ok_df = rtracklayer::export(first_ok,format="bed") %>%
+    read_tsv(col_names = c("CHROM_A","START_A","END_A","name_A","score_A","STRAND_A")) %>%
+    select(-score_A) %>% select(-name_A)
+  second_ok_df = rtracklayer::export(second_ok,format="bed") %>%
+    read_tsv(col_names = c("CHROM_B","START_B","END_B","name_B","score_B","STRAND_B")) %>%
+    select(-score_B) %>% select(-name_B)
   ok_bedpe = original_bedpe[no_problem,]
   kept_cols = ok_bedpe %>% select(-c("CHROM_A","START_A","END_A","CHROM_B","START_B","END_B","STRAND_A","STRAND_B"))
   fully_lifted = bind_cols(first_ok_df,second_ok_df,kept_cols) %>% select(all_of(original_columns))
