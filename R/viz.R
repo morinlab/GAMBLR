@@ -10,7 +10,9 @@
 #' @import tidyverse DBI RMariaDB
 #'
 #' @examples
-ashm_multi_rainbow_plot = function(regions_bed,regions_to_display,exclude_classifications,metadata,custom_colours,classification_column="lymphgen",maf_data){
+ashm_multi_rainbow_plot = function(regions_bed,regions_to_display,
+                                   exclude_classifications,metadata,custom_colours,
+                                   classification_column="lymphgen",maf_data){
   table_name = config::get("results_tables")$ssm
   db=config::get("database_name")
   #get the mutations for each region and combine
@@ -34,7 +36,8 @@ ashm_multi_rainbow_plot = function(regions_bed,regions_to_display,exclude_classi
 
   names=pull(regions_bed,name)
   names = c(names,"NFKBIZ-UTR","MAF","PAX5","WHSC1","CCND1",
-            "FOXP1-TSS1","FOXP1-TSS2","FOXP1-TSS3","FOXP1-TSS4","FOXP1-TSS5","BCL6","IGH","IGL","IGK","PVT1","BCL2") #add some additional regions of interest
+            "FOXP1-TSS1","FOXP1-TSS2","FOXP1-TSS3","FOXP1-TSS4","FOXP1-TSS5",
+            "BCL6","IGH","IGL","IGK","PVT1","BCL2") #add some additional regions of interest
   regions = pull(regions_bed,regions)
   regions = c(regions,"chr3:101578214-101578365","chr16:79627745-79634622","chr9:36898851-37448583","chr4:1867076-1977887","chr11:69451233-69460334","chr3:71623481-71641671","chr3:71532613-71559445","chr3:71343345-71363145","chr3:71167050-71193679","chr3:71105715-71118362",
               "chr3:187406804-188522799","chr14:106144562-106344765","chr22:23217074-23250428","chr2:89073691-89320640",

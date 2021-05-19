@@ -49,6 +49,7 @@ get_gambl_metadata = function(seq_type_filter = "genome",
       ICGC_PATH == "FL" | ICGC_PATH== "DLBCL" ~ ICGC_PATH,
       TRUE ~ pathology
     ))
+  all_meta = unique(all_meta) #something in the ICGC code is causing this. Need to figure out what
   if(!missing(case_set)){
     if(case_set == "FL-DLBCL-study"){
       #get FL cases and DLBCL cases not in special/embargoed cohorts
@@ -75,7 +76,7 @@ get_gambl_metadata = function(seq_type_filter = "genome",
       dlbcl_meta =all_meta %>% dplyr::filter(consensus_pathology %in% c("FL","DLBCL","COM")) %>%
        dplyr::filter(!cohort %in% c("DLBCL_ctDNA","DLBCL_BLGSP","LLMPP_P01","DLBCL_LSARP_Trios","DLBCL_HTMCP","FL_Kridel","FFPE_Benchmarking")) %>%
       filter(consensus_pathology == "DLBCL" & COO_final == "GCB") %>% mutate(analysis_cohort="DLBCL")
-      all_meta  = bind_rows(dlbcl_meta,fl_meta_kridel,fl_meta_other)
+      all_meta  = bind_rows(dlbcl_meta,fl_meta_kridel,fl_meta_other) %>% unique()
     }
     if(case_set == "FL-study"){
       #get FL cases and DLBCL cases not in special/embargoed cohorts
@@ -492,8 +493,8 @@ get_ashm_count_matrix = function(regions_bed){
   all_meta = get_gambl_metadata() %>% dplyr::select(sample_id)
 
   #fill out all combinations so we can get the cases with zero mutations
-  eg = expand_grid(sample_id=pull(meta_arranged,sample_id),region_name=unique(ashm_counted$region_name))
-  all_counts = left_join(eg,ashm_counted) %>% mutate(n=replace_na(n,0))
+  eg = expand_grid(sample_id=pull(all_meta,sample_id),region_name=unique(ashm_counted$region_name))
+  all_counts = left_join(eg,ashm_counted) %>% mutate(n=replace_na(n,0)) %>% unique() #not sure where the duplicates are coming from but its annoying
 
   all_counts_wide = pivot_wider(all_counts,id_cols = sample_id,names_from=region_name,values_from=n) %>%
     column_to_rownames(var="sample_id")
