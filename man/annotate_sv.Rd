@@ -6,7 +6,7 @@
 \usage{
 annotate_sv(
   sv_data,
-  genome_build = "grch37",
+  partner_bed,
   with_chr_prefix = FALSE,
   collapse_redundant = FALSE,
   return_as = "bedpe"
@@ -15,7 +15,11 @@ annotate_sv(
 \arguments{
 \item{sv_data}{A data frame of SVs. This should be the output of get_manta_sv.}
 
-\item{genome_build}{Which reference genome these SVs are from}
+\item{partner_bed}{Optional bed-format data frame to use for annotating oncogene partners (e.g. enhancers). required columns are: chrom,start,end,gene}
+
+\item{with_chr_prefix}{Optionally request that chromosome names are returned with a chr prefix}
+
+\item{collapse_redundant}{Remove reciprocal events and only return one per event}
 }
 \value{
 A data frame with annotated SVs (gene symbol and entrez ID)

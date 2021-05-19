@@ -6,7 +6,9 @@
 #' Annotate a data frame of SV breakpoints after retrieval from the database
 #'
 #' @param sv_data A data frame of SVs. This should be the output of get_manta_sv.
-#' @param genome_build Which reference genome these SVs are from
+#' @param partner_bed Optional bed-format data frame to use for annotating oncogene partners (e.g. enhancers). required columns are: chrom,start,end,gene
+#' @param with_chr_prefix Optionally request that chromosome names are returned with a chr prefix
+#' @param collapse_redundant Remove reciprocal events and only return one per event
 #'
 #' @return A data frame with annotated SVs (gene symbol and entrez ID)
 #' @export
@@ -17,7 +19,7 @@
 #' # Basic usage
 #' sv_df = get_manta_sv()
 #' annotated_sv = annotate_sv(sv_df)
-annotate_sv = function(sv_data,genome_build="grch37",with_chr_prefix=FALSE,collapse_redundant=FALSE,return_as="bedpe"){
+annotate_sv = function(sv_data,partner_bed,with_chr_prefix=FALSE,collapse_redundant=FALSE,return_as="bedpe"){
   bedpe1 = sv_data %>% dplyr::select("CHROM_A","START_A","END_A","tumour_sample_id","SOMATIC_SCORE","STRAND_A")
   bedpe2 = sv_data %>% dplyr::select("CHROM_B","START_B","END_B","tumour_sample_id","SOMATIC_SCORE","STRAND_B")
 
@@ -27,10 +29,15 @@ annotate_sv = function(sv_data,genome_build="grch37",with_chr_prefix=FALSE,colla
     bedpe1 = dplyr::mutate(bedpe1,chrom = str_replace(chrom,"chr",""))
     bedpe2 = dplyr::mutate(bedpe2,chrom = str_replace(chrom,"chr",""))
   }
-  if(genome_build == "grch37" || genome_build == "hg19"){
-    oncogene_regions = grch37_oncogene
+  if(missing(partner_bed)){
     ig_regions = grch37_partners
+  }else{
+    ig_regions = partner_bed
+    if(!"entrez" %in% colnames(ig_regions)){
+      ig_regions$entrez = 0
+    }
   }
+  oncogene_regions = grch37_oncogene
   y = data.table::as.data.table(oncogene_regions)
 
   data.table::setkey(y, chrom, start, end)

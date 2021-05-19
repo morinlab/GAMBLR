@@ -42,10 +42,17 @@ get_gambl_metadata = function(seq_type_filter = "genome",
   if(remove_benchmarking){
     all_meta = all_meta %>% dplyr::filter(cohort != "FFPE_Benchmarking")
   }
+  all_meta = add_icgc_metadata(all_meta) %>%
+    mutate(consensus_pathology=case_when(
+      ICGC_PATH == "FL-DLBCL" ~ "COM",
+      ICGC_PATH == "DH-BL" ~ pathology,
+      ICGC_PATH == "FL" | ICGC_PATH== "DLBCL" ~ ICGC_PATH,
+      TRUE ~ pathology
+    ))
   if(!missing(case_set)){
     if(case_set == "FL-DLBCL-study"){
       #get FL cases and DLBCL cases not in special/embargoed cohorts
-      fl_meta = all_meta %>% dplyr::filter(consensus_pathology %in% c("FL","DLBCL","COM")) %>%
+      fl_meta_kridel = all_meta %>% dplyr::filter(consensus_pathology %in% c("FL","DLBCL","COM")) %>%
         dplyr::filter(!cohort %in% c("DLBCL_ctDNA","DLBCL_BLGSP","LLMPP_P01","DLBCL_LSARP_Trios","DLBCL_HTMCP")) %>%
         group_by(patient_id) %>%
         mutate(FL = sum(pathology == "FL"), DLBCL = sum(pathology == "DLBCL")) %>%
@@ -54,9 +61,21 @@ get_gambl_metadata = function(seq_type_filter = "genome",
                                          consensus_pathology=="DLBCL" & transformed==TRUE ~ "ignore",
                                          TRUE ~ "FL")) %>%
         filter(cohort=="FL_Kridel") %>%
-        filter((analysis_cohort == "FL" & time_point == "A")|(analysis_cohort =="tFL"))
+        filter((analysis_cohort == "FL" & time_point == "A")|(analysis_cohort =="tFL")) %>% select(-transformed,-FL,-DLBCL)
 
-      #dlbcl_meta =
+
+      fl_meta_other = all_meta %>% dplyr::filter(consensus_pathology %in% c("FL","DLBCL","COM")) %>%
+        dplyr::filter(!cohort %in% c("DLBCL_ctDNA","DLBCL_BLGSP","LLMPP_P01","DLBCL_LSARP_Trios","DLBCL_HTMCP")) %>%
+        filter(cohort!="FL_Kridel") %>%
+        filter((consensus_pathology %in% c("FL","COM"))) %>% mutate(analysis_cohort = consensus_pathology)
+      fl_transformation_meta = read_tsv("/projects/rmorin/projects/gambl-repos/gambl-rmorin/shared/gambl_fl_transformed.tsv")
+      transformed_cases = fl_transformation_meta %>% filter(!is.na(PATHa.tr)) %>% pull(patient_id)
+      fl_meta_other[which(fl_meta_other$patient_id %in% transformed_cases),"analysis_cohort"]="tFL"
+
+      dlbcl_meta =all_meta %>% dplyr::filter(consensus_pathology %in% c("FL","DLBCL","COM")) %>%
+       dplyr::filter(!cohort %in% c("DLBCL_ctDNA","DLBCL_BLGSP","LLMPP_P01","DLBCL_LSARP_Trios","DLBCL_HTMCP","FL_Kridel","FFPE_Benchmarking")) %>%
+      filter(consensus_pathology == "DLBCL" & COO_final == "GCB") %>% mutate(analysis_cohort="DLBCL")
+      all_meta  = bind_rows(dlbcl_meta,fl_meta_kridel,fl_meta_other)
     }
     if(case_set == "FL-study"){
       #get FL cases and DLBCL cases not in special/embargoed cohorts
@@ -94,14 +113,7 @@ get_gambl_metadata = function(seq_type_filter = "genome",
     str_detect(lymphgen_cnv_noA53,"/") ~ "COMPOSITE",
     TRUE ~ lymphgen_cnv_noA53
   ))
-  all_meta = add_icgc_metadata(all_meta) %>% select(-COO_consensus) %>%
-    rename("COO_consensus"="COO_final") %>%
-    mutate(consensus_pathology=case_when(
-      ICGC_PATH == "FL-DLBCL" ~ "COM",
-      ICGC_PATH == "DH-BL" ~ pathology,
-      ICGC_PATH == "FL" | ICGC_PATH== "DLBCL" ~ ICGC_PATH,
-      TRUE ~ pathology
-    ))
+
   all_meta = mutate(all_meta,Tumor_Sample_Barcode=sample_id) #duplicate for convenience
   all_meta = all_meta %>% dplyr::mutate(consensus_coo_dhitsig = case_when(
     pathology != "DLBCL" ~ pathology,
@@ -177,11 +189,11 @@ add_icgc_metadata = function(incoming_metadata){
   icgc_all = left_join(icgc_raw,icgc_publ,by="ICGC_ID") %>%
     select(-tissue_status,-seq_type,-protocol,-seq_source_type,-data_path,-genome_build,-RNA_available) %>%
     select(sample_id,ICGC_ID, pathology.x,pathology.y,COO,molecular_BL,MYC_sv,BCL2_sv,BCL6_sv) %>%
-    rename("ICGC_MYC_sv"="MYC_sv") %>%
-    rename("ICGC_BCL2_sv"="BCL2_sv") %>%
-    rename("ICGC_BCL6_sv"="BCL6_sv") %>%
-    rename("detailed_pathology"="pathology.x") %>%
-    rename("ICGC_PATH"="pathology.y")
+    rename("MYC_sv"="ICGC_MYC_sv") %>%
+    rename("BCL2_sv"="ICGC_BCL2_sv") %>%
+    rename("BCL6_sv"="ICGC_BCL6_sv") %>%
+    rename("pathology.x"="detailed_pathology") %>%
+    rename("pathology.y"="ICGC_PATH")
 
 
 
