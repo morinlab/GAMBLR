@@ -47,6 +47,7 @@ get_gambl_metadata = function(seq_type_filter = "genome",
       ICGC_PATH == "FL-DLBCL" ~ "COM",
       ICGC_PATH == "DH-BL" ~ pathology,
       ICGC_PATH == "FL" | ICGC_PATH== "DLBCL" ~ ICGC_PATH,
+      pathology == "COMFL" ~ "COM",
       TRUE ~ pathology
     ))
   all_meta = unique(all_meta) #something in the ICGC code is causing this. Need to figure out what
@@ -56,7 +57,7 @@ get_gambl_metadata = function(seq_type_filter = "genome",
       fl_meta_kridel = all_meta %>% dplyr::filter(consensus_pathology %in% c("FL","DLBCL","COM")) %>%
         dplyr::filter(!cohort %in% c("DLBCL_ctDNA","DLBCL_BLGSP","LLMPP_P01","DLBCL_LSARP_Trios","DLBCL_HTMCP")) %>%
         group_by(patient_id) %>%
-        mutate(FL = sum(pathology == "FL"), DLBCL = sum(pathology == "DLBCL")) %>%
+        mutate(FL = sum(pathology == "FL"), DLBCL = sum(pathology %in% c("COM","DLBCL","COMFL"))) %>%
         mutate(transformed = ifelse(FL > 0 & DLBCL > 0, TRUE, FALSE))  %>%
         mutate(analysis_cohort=case_when(consensus_pathology=="FL" & transformed==TRUE ~ "tFL",
                                          consensus_pathology=="DLBCL" & transformed==TRUE ~ "ignore",
@@ -372,7 +373,7 @@ get_cn_states = function(regions_list,regions_bed,region_names){
   unnested_df = tibbled_data %>% unnest_longer(region_segs)
   seg_df = data.frame(ID=unnested_df$region_segs$ID,CN=unnested_df$region_segs$CN,region_name=unnested_df$region_name)
   #arbitrarily take the first segment for each region/ID combination
-  seg_df = seg_df %>% group_by(ID,region_name) %>% slice(1) %>% dplyr::rename("sample_id"="ID")
+  seg_df = seg_df %>% dplyr::group_by(ID,region_name) %>% dplyr::slice(1) %>% dplyr::rename("sample_id"="ID")
 
   #fill in any sample/region combinations with missing data as diploid
   meta_arranged = get_gambl_metadata() %>% dplyr::select(sample_id,pathology,lymphgen) %>% arrange(pathology,lymphgen)
