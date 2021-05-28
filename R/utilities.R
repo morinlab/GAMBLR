@@ -416,7 +416,7 @@ collate_sv_results = function(sample_table,tool="manta",oncogenes=c("MYC","BCL2"
 #' @import tidyverse
 #'
 #' @examples
-get_gambl_colours = function(classification="lymphgen"){
+get_gambl_colours = function(classification="all"){
   lymphgen_colours = c(
     "A53" = "#5b6d8a",
     "EZB" = "#721F0F",

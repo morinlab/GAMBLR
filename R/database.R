@@ -111,7 +111,7 @@ get_gambl_metadata = function(seq_type_filter = "genome",
 
   #add some derivative columns that simplify and consolidate some of the others (DLBCL-specific)
   all_meta = all_meta %>% dplyr::mutate(lymphgen = case_when(
-    pathology != "DLBCL" & pathology != "FL" ~ pathology,
+    pathology != "DLBCL" ~ pathology,
     str_detect(lymphgen_cnv_noA53,"/") ~ "COMPOSITE",
     TRUE ~ lymphgen_cnv_noA53
   ))
@@ -201,13 +201,16 @@ add_icgc_metadata = function(incoming_metadata){
   icgc_all = left_join(icgc_raw,icgc_publ,by="ICGC_ID") %>%
     select(-tissue_status,-seq_type,-protocol,-seq_source_type,-data_path,-genome_build,-RNA_available) %>%
     select(sample_id,ICGC_ID, pathology.x,pathology.y,COO,molecular_BL,MYC_sv,BCL2_sv,BCL6_sv) %>%
-    rename("MYC_sv"="ICGC_MYC_sv") %>%
-    rename("BCL2_sv"="ICGC_BCL2_sv") %>%
-    rename("BCL6_sv"="ICGC_BCL6_sv") %>%
-    rename("pathology.x"="detailed_pathology") %>%
-    rename("pathology.y"="ICGC_PATH")
-
-
+    #rename("MYC_sv"="ICGC_MYC_sv") %>%
+    #rename("BCL2_sv"="ICGC_BCL2_sv") %>%
+    #rename("BCL6_sv"="ICGC_BCL6_sv") %>%
+    #rename("pathology.x"="detailed_pathology") %>%
+    #rename("pathology.y"="ICGC_PATH")
+    dplyr::rename("ICGC_MYC_sv"="MYC_sv") %>%
+    dplyr::rename("ICGC_BCL2_sv"="BCL2_sv") %>%
+    dplyr::rename("ICGC_BCL6_sv"="BCL6_sv") %>%
+    dplyr::rename("detailed_pathology"="pathology.x") %>%
+    dplyr::rename("ICGC_PATH"="pathology.y")
 
   #join with all metadata to fill in blanks
   #all_meta=get_gambl_metadata()
