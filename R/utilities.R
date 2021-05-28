@@ -423,7 +423,6 @@ get_gambl_colours = function(classification="all"){
     "EZB-COMP" = "#C7371A",
     "ST2" = "#C41230",
     "ST2-COMP" = "#EC3251",# (never used but include it anyway)
-    #"BN2" = "#EB7EB1",
     "MCD" = "#3B5FAC",
     "MCD-COMP" = "#6787CB",
     "N1" = "#55B55E",
