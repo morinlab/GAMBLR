@@ -27,7 +27,7 @@ get_gambl_metadata = function(seq_type_filter = "genome",
   sample_meta_normal_genomes =  sample_meta %>% dplyr::filter(seq_type == "genome" & tissue_status=="normal") %>%
     dplyr::select(patient_id,sample_id) %>% as.data.frame() %>% dplyr::rename("normal_sample_id"="sample_id")
 
-  sample_meta = sample_meta %>% dplyr::filter(seq_type == seq_type_filter & tissue_status %in% tissue_status_filter)
+  sample_meta = sample_meta %>% dplyr::filter(seq_type == seq_type_filter & tissue_status %in% tissue_status_filter & bam_available == 1)
 
   #if we only care about genomes, we can drop/filter anything that isn't a tumour genome
   #The key for joining this table to the mutation information is to use sample_id. Think of this as equivalent to a library_id. It will differ depending on what assay was done to the sample.
@@ -167,6 +167,16 @@ get_gambl_metadata = function(seq_type_filter = "genome",
   return(all_meta)
 }
 
+add_prps_result = function(incoming_metadata){
+  prps_res = read_tsv("/projects/rmorin/projects/gambl-repos/gambl-rmorin/results/icgc_dart/derived_and_curated_metadata/outputs/BL_dhitsig_PRPS.tsv")
+  colnames(prps_res)[1]="sample_id"
+  prps_res = select(prps_res,sample_id,PRPS_score,PRPS_class)
+  #need to associate each sample with a patient ID then annotate the metadata based on patient ID
+  patient_meta_g = get_gambl_metadata(seq_type_filter = "genome") %>% select(sample_id,patient_id)
+  patient_meta_r = get_gambl_metadata(seq_type_filter = "mrna") %>% select(sample_id,patient_id)
+  patient_meta = bind_rows(patient_meta_g,patient_meta_r)
+}
+
 #' Layer on ICGC metadata from a supplemental table to fill in missing COO
 #'
 #' @param incoming_metadata
@@ -176,7 +186,7 @@ get_gambl_metadata = function(seq_type_filter = "genome",
 #'
 #' @examples
 add_icgc_metadata = function(incoming_metadata){
-  icgc_publ = read_csv("/projects/rmorin/projects/gambl-repos/gambl-rmorin/data/metadata/raw_metadata/MALY_DE_tableS1.csv")
+  icgc_publ = suppressMessages(read_csv("/projects/rmorin/projects/gambl-repos/gambl-rmorin/data/metadata/raw_metadata/MALY_DE_tableS1.csv"))
   icgc_publ = icgc_publ[,c(1:20)]
   #fix commas as decimals
   icgc_publ = mutate(icgc_publ,purity = str_replace(purity,",","."))

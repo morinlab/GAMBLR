@@ -43,12 +43,13 @@ maf_to_custom_track = function(maf_data,output_file){
 #' @import tidyverse config
 #'
 #' @examples
-collate_results = function(sample_table,write_to_file=FALSE){
+collate_results = function(sample_table,write_to_file=FALSE,case_set){
   # important: if you are collating results from anything but WGS (e.g RNA-seq libraries) be sure to use biopsy ID as the key in your join
   # the sample_id should probably not even be in this file if we want this to be biopsy-centric
   if(missing(sample_table)){
     sample_table = get_gambl_metadata() %>% dplyr::select(sample_id,patient_id,biopsy_id)
   }
+
   #edit this function and add a new function to load any additional results into the main summary table
 
   sample_table = collate_sv_results(sample_table=sample_table)
@@ -417,13 +418,21 @@ collate_sv_results = function(sample_table,tool="manta",oncogenes=c("MYC","BCL2"
 #' @examples
 get_gambl_colours = function(classification="lymphgen"){
   lymphgen_colours = c(
-    "EZB" = "#F37A20",
-    "ST2" = "#E73325",
-    "BN2" = "#EB7EB1",
+    "A53" = "#5b6d8a",
+    "EZB" = "#721F0F",
+    "EZB-COMP" = "#C7371A",
+    "ST2" = "#C41230",
+    "ST2-COMP" = "#EC3251",# (never used but include it anyway)
+    #"BN2" = "#EB7EB1",
     "MCD" = "#3B5FAC",
-    "N1" =  "#7F3293",
-    "COMPOSITE" = "#7E8083",
-    "Other" = "#55B55E"
+    "MCD-COMP" = "#6787CB",
+    "N1" = "#55B55E",
+    "N1-COMP" = "#7FC787",
+    "BN2" =  "#7F3293",
+    "BN2-COMP" = "#A949C1",
+    "Other" = "#ACADAF"
+
+
   )
   copy_number_colours=c(
     "nLOH"="#E026D7",
@@ -449,10 +458,11 @@ get_gambl_colours = function(classification="lymphgen"){
     "B-ALL"="#C1C64B",
     "BL"="#926CAD",
     "FL"="#EA8368",
+    #"FL"="#BDD9BF",
     "CLL"="#889BE5",
-    "MCL"="#721F0F",
+    "MCL"="#F37A20",
     "MM"="#CC9A42",
-    "B-cell unclassified"="#B581C6",
+    #"B-cell unclassified"="#B581C6",
     "COMFL"="#8BBC98",
     "PBL" = "#E058C0",
     "DLBCL-BL-like"="#34C7F4",
@@ -465,6 +475,9 @@ get_gambl_colours = function(classification="lymphgen"){
   }
   if(classification == "pathology"){
     return(pathology_colours)
+  }
+  if(classification=="lymphgen"){
+    return(lymphgen_colours)
   }
   else{
     all_colours=c(lymphgen_colours,pathology_colours)
