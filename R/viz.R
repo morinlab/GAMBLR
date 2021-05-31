@@ -1,3 +1,211 @@
+
+
+#' Make a non-maftools oncoplot from a MAFtools object
+#'
+#' @param maf_object A maftools object
+#' @param genes Optional list of genes to restrict to
+#' @param keepGeneOrder
+#' @param keepSampleOrder
+#' @param these_samples_metadata
+#' @param metadataColumns A vector naming the columns to show as annotations on the bottom
+#' @param sortByColumns A vector naming the columns to order on, in the order of priority
+#' @param removeNonMutated
+#'
+#' @return
+#' @export
+#' @import ComplexHeatmap maftools
+#'
+#' @examples
+prettyOncoplot = function(maftools_obj,genes,keepGeneOrder=TRUE,keepSampleOrder=TRUE,
+                          these_samples_metadata,metadataColumns,sortByColumns,removeNonMutated=FALSE,
+                          minMutationPercent,fontSizeGene=6,annoAlpha=1,mutAlpha=1,recycleOncomatrix=FALSE){
+  if(!recycleOncomatrix){
+  #order the data frame the way you want the patients shown
+    if(missing(genes)){
+      maftools::oncoplot(maftools_obj,writeMatrix = T,removeNonMutated = removeNonMutated)
+    }else{
+      maftools::oncoplot(maftools_obj,genes=genes,writeMatrix = T,removeNonMutated = removeNonMutated)
+    }
+  }
+    mat=read.table("onco_matrix.txt",sep="\t",
+                   stringsAsFactors = F)
+
+
+  if(missing(metadataColumns)){
+    print("you should name at least one metadata column to show as an annotation. Defaulting to pathology")
+    metadataColumns=c("pathology")
+  }
+
+  if(missing(genes)){
+    genes = rownames(mat)
+  }
+
+  col=get_gambl_colours("mutation",alpha=mutAlpha)
+  mat[mat==0]=""
+  patients = pull(these_samples_metadata,sample_id)
+  patients_kept = patients[which(patients %in% colnames(mat))]
+  genes_kept = genes[which(genes %in% rownames(mat))]
+  if(!missing(minMutationPercent)){
+    mutation_counts = maftools_obj@gene.summary %>% filter(Hugo_Symbol %in% genes) %>% select(Hugo_Symbol,MutatedSamples) %>%
+      as.data.frame()
+    numpat=length(patients)
+    mutation_counts = mutate(mutation_counts,percent_mutated=100 * MutatedSamples/numpat)
+    genes_kept = mutation_counts %>% filter(percent_mutated>=minMutationPercent) %>% pull(Hugo_Symbol)
+  }
+  mat = mat[genes_kept,patients_kept]
+  spacing = 0
+  height_scaling = 1
+  alter_fun = list(
+    background = function(x, y, w, h) {
+      grid.rect(x, y, w-unit(spacing, "pt"), h*height_scaling,
+                gp = gpar(fill = "#CCCCCC", col = "white"))
+    },
+    # big blue
+    Nonsense_Mutation = function(x, y, w, h) {
+      grid.rect(x, y, w-unit(spacing, "pt"), h*height_scaling,
+                gp = gpar(fill = col["Nonsense_Mutation"], col = "white"))
+    },
+    Splice_Site = function(x, y, w, h) {
+      grid.rect(x, y, w-unit(spacing, "pt"), h*height_scaling,
+                gp = gpar(fill = col["Splice_Site"], col = "white"))
+    },
+    Splice_Region = function(x, y, w, h) {
+      grid.rect(x, y, w-unit(spacing, "pt"), h*height_scaling,
+                gp = gpar(fill = col["Splice_Region"], col = "white"))
+    },
+    Nonstop_Mutation = function(x, y, w, h) {
+      grid.rect(x, y, w-unit(spacing, "pt"), h*height_scaling,
+                gp = gpar(fill = col["Nonstop_Mutation"], col = "white"))
+    },
+    Translation_Start_Site = function(x, y, w, h) {
+      grid.rect(x, y, w-unit(spacing, "pt"), h*height_scaling,
+                gp = gpar(fill = col["Translation_Start_Site"], col = "white"))
+    },
+    In_Frame_Ins = function(x, y, w, h) {
+      grid.rect(x, y, w-unit(spacing, "pt"), h*height_scaling,
+                gp = gpar(fill = col["In_Frame_Ins"], col = "white"))
+    },
+    In_Frame_Del = function(x, y, w, h) {
+      grid.rect(x, y, w-unit(spacing, "pt"), h*height_scaling,
+                gp = gpar(fill = col["In_Frame_Del"], col = "white"))
+    },
+    #all frame shifts will be the same colour, magenta
+    Frame_Shift_Del = function(x, y, w, h) {
+      grid.rect(x, y, w-unit(spacing, "pt"), h*height_scaling,
+                gp = gpar(fill = col["Frame_Shift_Del"], col = "white"))
+    },
+    Frame_Shift_Ins = function(x, y, w, h) {
+      grid.rect(x, y, w-unit(spacing, "pt"), h*height_scaling,
+                gp = gpar(fill = col["Frame_Shift_Ins"], col = "white"))
+    },
+    # big red
+    Multi_Hit = function(x, y, w, h) {
+      grid.rect(x, y, w-unit(spacing, "pt"), h*height_scaling,
+                gp = gpar(fill = col["Multi_Hit"], col = "white"))
+    },
+    # small green
+    Missense_Mutation = function(x, y, w, h) {
+      grid.rect(x, y, w-unit(spacing, "pt"), h*height_scaling,
+                gp = gpar(fill = col["Missense_Mutation"], col = "white"))
+    }
+  )
+  #automagically assign colours for other metadata columns
+  blood_cols=get_gambl_colours("blood",alpha=annoAlpha)
+
+  colours = list()
+  for(column in metadataColumns){
+    options = these_samples_metadata %>% arrange(column) %>% pull(column) %>% unique()
+    these_samples_metadata[[column]] = factor(these_samples_metadata[[column]], levels=unique(these_samples_metadata[[column]]))
+    options = these_samples_metadata %>% arrange(column) %>% pull(column) %>% unique()
+    options=options[!is.na(options)]
+    if(("positive" %in% options | "POS" %in% options) & length(options)<4){
+      print("using pos_neg")
+
+      these = get_gambl_colours("pos_neg",alpha=annoAlpha)
+      these = these[levels(options)]
+
+      if(!"NA" %in% names(these)){
+        these= c(these,"NA"="white")
+
+      }
+      colours[[column]]=these
+    }else if("GCB" %in% options){
+      these=get_gambl_colours("COO",alpha=annoAlpha)
+      #names(these)=levels(options)
+      if(!"NA" %in% names(these)){
+        these= c(these,"NA"="white")
+
+      }
+      colours[[column]]=these
+    }else if(column %in% c("pathology")){
+      these=get_gambl_colours(column,alpha=annoAlpha)
+
+      #names(these)=levels(options)
+      if(!"NA" %in% names(these)){
+        these= c(these,"NA"="white")
+      }
+      colours[[column]]=these
+    }else if(grepl("lymphgen",column,ignore.case = TRUE)){
+      these=get_gambl_colours("lymphgen",alpha=annoAlpha)
+      if(!"NA" %in% names(these)){
+        these= c(these,"NA"="white")
+      }
+      #names(these)=levels(options)
+      colours[[column]]=these
+    }else if(length(options)>15){
+      colours=sample(c(1:60),size=length(options))
+      names(colours)=levels(options)
+      colours[[column]]=colours
+    }else{
+
+      these = blood_cols[sample(c(1:length(blood_cols)),size=length(options))]
+      names(these)=levels(options)
+      #if(!"NA" %in% names(these)){
+      these= c(these,`NA`="white")
+      #}
+      colours[[column]]=these
+    }
+  }
+
+
+  print(colours)
+  metadata_df = filter(these_samples_metadata, sample_id %in% patients_kept) %>%
+    column_to_rownames("sample_id") %>% select(all_of(metadataColumns))
+  if(!missing(sortByColumns)){
+    metadata_df = arrange(metadata_df,across(sortByColumns))
+  }
+  if(keepGeneOrder){
+    ComplexHeatmap::oncoPrint(mat,
+              alter_fun = alter_fun,
+              col = col,
+              row_order = genes,
+              column_order = patients_kept,
+              #column_split=factor(hmrn_kept,levels=names(colours$HMRN)),
+              column_labels = NULL,
+              column_title=NULL,
+              row_names_gp = gpar(fontsize = fontSizeGene),
+              pct_gp = gpar(fontsize = fontSizeGene),
+              bottom_annotation =
+                ComplexHeatmap::HeatmapAnnotation(df=metadata_df,col=colours))
+  }else{
+    ComplexHeatmap::oncoPrint(mat,
+              alter_fun = alter_fun,
+              col = col,
+              column_order = patients_kept,
+              #column_split=factor(hmrn_kept,levels=names(colours$HMRN)),
+              column_labels = NULL,
+              column_title=NULL,
+              row_names_gp = gpar(fontsize = fontSizeGene),
+              pct_gp = gpar(fontsize = fontSizeGene),
+              bottom_annotation =
+                ComplexHeatmap::HeatmapAnnotation(df=metadata_df,col=colours))
+  }
+
+
+
+
+}
+
 #' Generate a colourful multi-panel overview of hypermutation in regions of interest across many samples
 #'
 #' @param regions_bed Bed file with chromosome coordinates, should contain columns chr, start, end, name (with these exact names)

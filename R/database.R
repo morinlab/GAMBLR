@@ -110,10 +110,19 @@ get_gambl_metadata = function(seq_type_filter = "genome",
 
 
   #add some derivative columns that simplify and consolidate some of the others (DLBCL-specific)
-  all_meta = all_meta %>% dplyr::mutate(lymphgen = case_when(
-    pathology != "DLBCL" ~ pathology,
-    str_detect(lymphgen_cnv_noA53,"/") ~ "COMPOSITE",
-    TRUE ~ lymphgen_cnv_noA53
+  #all_meta = all_meta %>% dplyr::mutate(lymphgen = case_when(
+  #  pathology != "DLBCL" ~ pathology,
+  #  str_detect(lymphgen_cnv_noA53,"/") ~ "COMPOSITE",
+  #  TRUE ~ lymphgen_cnv_noA53
+  #))
+
+  all_meta = mutate(all_meta,lymphgen=case_when(
+    !str_detect(lymphgen_cnv_noA53,"/")~lymphgen_cnv_noA53,
+    str_detect(lymphgen_cnv_noA53,"EZB")~"EZB-COMP",
+    str_detect(lymphgen_cnv_noA53,"MCD")~"MCD-COMP",
+    str_detect(lymphgen_cnv_noA53,"N1")~"N1-COMP",
+    str_detect(lymphgen_cnv_noA53,"ST2")~"ST2-COMP",
+    TRUE ~ "COMPOSITE"
   ))
 
   all_meta = mutate(all_meta,Tumor_Sample_Barcode=sample_id) #duplicate for convenience
@@ -661,7 +670,8 @@ get_ssm_by_region = function(chromosome,qstart,qend,region="",basic_columns=TRUE
 #' @examples
 #' #basic usage
 #' maf_data = get_coding_ssm(limit_cohort=c("BL_ICGC"))
-get_coding_ssm = function(limit_cohort,exclude_cohort,limit_pathology,basic_columns=TRUE){
+#' maf_data = get_coding_ssm(limit_samples=my_sample_ids)
+get_coding_ssm = function(limit_cohort,exclude_cohort,limit_pathology,limit_samples,basic_columns=TRUE){
   table_name = config::get("results_tables")$ssm
   db=config::get("database_name")
   con <- DBI::dbConnect(RMariaDB::MariaDB(), dbname = db)
@@ -681,6 +691,9 @@ get_coding_ssm = function(limit_cohort,exclude_cohort,limit_pathology,basic_colu
   }
   if(!missing(limit_pathology)){
     all_meta = all_meta %>% dplyr::filter(pathology %in% limit_pathology)
+  }
+  if(!missing(limit_samples)){
+    all_meta = all_meta %>% dplyr::filter(sample_id %in% limit_samples)
   }
   sample_ids = pull(all_meta,sample_id)
   muts = tbl(con,table_name) %>%

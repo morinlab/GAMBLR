@@ -409,31 +409,65 @@ collate_sv_results = function(sample_table,tool="manta",oncogenes=c("MYC","BCL2"
 
 #' Get some colour schemes for annotating figures
 #'
-#' @param classification (optionally request only colours for pathology, lymphgen or copy_number)
+#' @param classification (optionally request only colours for pathology, lymphgen, mutation or copy_number)
 #'
 #' @return A named vector of colour codes for lymphgen classes and pathology
 #' @export
 #' @import tidyverse
 #'
 #' @examples
-get_gambl_colours = function(classification="all"){
-  lymphgen_colours = c(
-    "A53" = "#5b6d8a",
+#' lymphgen_cols=get_gambl_colours("lymphgen")
+#' # be sure to install ggsci from https://github.com/morinlab/ggsci
+#' # install_github("morinlab/ggsci")
+get_gambl_colours = function(classification="all",alpha=1){
+  all_colours = list()
+  blood_cols=ggsci::get_ash("blood")
+
+  all_colours[["lymphgen_colours"]] = c(
+    "EZB-MYC" = "#52000F",
     "EZB" = "#721F0F",
     "EZB-COMP" = "#C7371A",
     "ST2" = "#C41230",
-    "ST2-COMP" = "#EC3251",# (never used but include it anyway)
+    "ST2-COMP" = "#EC3251",
     "MCD" = "#3B5FAC",
     "MCD-COMP" = "#6787CB",
-    "N1" = "#55B55E",
-    "N1-COMP" = "#7FC787",
     "BN2" =  "#7F3293",
     "BN2-COMP" = "#A949C1",
+    "N1" = "#55B55E",
+    "N1-COMP" = "#7FC787",
+    "A53" = "#5b6d8a",
     "Other" = "#ACADAF"
 
-
   )
-  copy_number_colours=c(
+  #all_colours[["coding_class"]] = c("Frame_Shift_Del","Frame_Shift_Ins",
+  #                 "In_Frame_Del","In_Frame_Ins",
+  #                 "Missense_Mutation","Nonsense_Mutation",
+  #                 "Nonstop_Mutation","Splice_Region","Splice_Site",
+  #                 "Targeted_Region","Translation_Start_Site")
+  all_colours[["mutation_colours"]]=
+    c(
+        "Nonsense_Mutation"=unname(blood_cols["Red"]),
+        "Missense_Mutation"=unname(blood_cols["Green"]),
+        "Multi_Hit"=unname(blood_cols["Steel Blue"]),
+        "Frame_Shift_Ins" = unname(blood_cols["Magenta"]),
+        "Frame_Shift_Del" = unname(blood_cols["Magenta"]),
+        "In_Frame_Ins" = unname(blood_cols["Brown"]),
+        "In_Frame_Del" = unname(blood_cols["Brown"]),
+        "Nonstop_Mutation" = unname(blood_cols["Light Blue"]),
+        "Translation_Start_Site" = unname(blood_cols["Lavendar"]),
+        "Splice_Site" = unname(blood_cols["Orange"]),
+        "Splice_Region" = unname(blood_cols["Orange"]),
+        "3'UTR" = unname(blood_cols["Yellow"]))
+
+  all_colours[["pos_neg_colours"]]=c(
+    "POS"=unname(blood_cols["Light Blue"]),
+    "NEG"=unname(blood_cols["Yellow"]),
+    "FAIL"=unname(blood_cols["Gray"]),
+    "positive"=unname(blood_cols["Light Blue"]),
+    "negative"=unname(blood_cols["Yellow"]),
+    "fail"=unname(blood_cols["Gray"]))
+
+  all_colours[["copy_number_colours"]]=c(
     "nLOH"="#E026D7",
     "14"="#380015",
     "15"="#380015",
@@ -452,35 +486,79 @@ get_gambl_colours = function(classification="all"){
     "1"="#92C5DE",
     "0"="#4393C3"
   )
-  pathology_colours = c(
-    "DLBCL"="#479450",
-    "B-ALL"="#C1C64B",
-    "BL"="#926CAD",
-    "FL"="#EA8368",
-    #"FL"="#BDD9BF",
-    "CLL"="#889BE5",
-    "MCL"="#F37A20",
-    "MM"="#CC9A42",
-    #"B-cell unclassified"="#B581C6",
-    "COMFL"="#8BBC98",
-    "PBL" = "#E058C0",
-    "DLBCL-BL-like"="#34C7F4",
-    "HGBL"="#B23F52",
-    "SCBC"="#8c9c90",
-    "UNSPECIFIED"="#cfba7c"
+  all_colours[["blood_colours"]] = c(
+      "Red" = "#c41230", "Blue"="#115284","Green" = "#39b54b",
+      "Purple" = "#5c266c", "Orange"="#fe9003","Green" = "#046852",
+      "Lavendar" = "#8781bd", "Steel Blue"= "#455564",
+      "Light Blue" = "#2cace3", "Magenta" = "#e90c8b", "Mustard" = "#b76d29",
+      "LimeGreen" = "#a4bb87", "Brown" = "#5f3a17", "Gray" = "#bdbdc1",
+      "Yellow" = "#f9bd1f"
   )
+  all_colours[["pathology_colours"]] = c(
+      "B-ALL"="#C1C64B",
+      "CLL"="#889BE5",
+      "MCL"="#F37A20",
+      "BL"="#926CAD",
+      "mBL"="#34C7F4",
+      "PMBL"= "#227C9D",
+      "FL"="#EA8368",
+      "COMFL"="#8BBC98",
+      "DLBCL"="#479450",
+      "HGBL-NOS"="#294936",
+      "HGBL-DH/TH"="#7A1616",
+      "PBL" = "#E058C0",
+      "CNS" = "#E2EF60",
+      "THRLBCL" = "#A5F2B3",
+      "MM"="#CC9A42",
+      "SCBC"="#8c9c90",
+      "UNSPECIFIED"="#cfba7c"
+  )
+  all_colours[["coo_colours"]] = c(
+    "ABC" = "#05ACEF",
+    "UNCLASS" = "#05631E",
+    "U" = "#05631E",
+    "UNC" = "#05631E",
+    "GCB"= "#F58F20",
+    "DHITsig-"= "#F58F20",
+    "DHITsig-IND" = "#003049",
+    "DHITsig+" = "#D62828"
+  )
+  #print(all_colours)
+  for(colslot in names(all_colours)){
+    raw_cols=all_colours[[colslot]]
+    raw_cols_rgb <- col2rgb(raw_cols)
+    alpha_cols <- rgb(
+      raw_cols_rgb[1L, ], raw_cols_rgb[2L, ], raw_cols_rgb[3L, ],
+      alpha = alpha * 255L, names = names(raw_cols),
+      maxColorValue = 255L
+    )
+    names(alpha_cols)=names(raw_cols)
+    all_colours[[colslot]]=alpha_cols
+  }
   if(classification == "copy_number"){
-    return(copy_number_colours)
+    return(all_colours[["copy_number_colours"]])
+  }
+  if(classification == "blood"){
+    return(all_colours[["blood_colours"]])
   }
   if(classification == "pathology"){
-    return(pathology_colours)
+    return(all_colours[["pathology_colours"]])
   }
   if(classification=="lymphgen"){
-    return(lymphgen_colours)
+    return(all_colours[["lymphgen_colours"]])
+  }
+  if(classification == "COO"){
+    return(all_colours[["coo_colours"]])
+  }
+  if(classification=="mutation"){
+    return(all_colours[["mutation_colours"]])
+  }
+  if(classification =="pos_neg"){
+    return(all_colours[["pos_neg_colours"]]);
   }
   else{
-    all_colours=c(lymphgen_colours,pathology_colours)
-    return(all_colours)
+    all=c(all_colours[["lymphgen_colours"]],all_colours[["pathology_colours"]],all_colours[["coo_colours"]])
+    return(all)
   }
 }
 
