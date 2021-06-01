@@ -494,6 +494,11 @@ get_gambl_colours = function(classification="all",alpha=1){
       "LimeGreen" = "#a4bb87", "Brown" = "#5f3a17", "Gray" = "#bdbdc1",
       "Yellow" = "#f9bd1f"
   )
+  all_colours[["sex_colours"]]=c(
+    "M"="#118AB2",
+    "Male"="#118AB2",
+    "F"="#EF476F",
+    "Female"="#EF476F")
   all_colours[["pathology_colours"]] = c(
       "B-ALL"="#C1C64B",
       "CLL"="#889BE5",
@@ -555,6 +560,9 @@ get_gambl_colours = function(classification="all",alpha=1){
   }
   if(classification =="pos_neg"){
     return(all_colours[["pos_neg_colours"]]);
+  }
+  if(classification=="sex"){
+    return(all_colours[["sex_colours"]]);
   }
   else{
     all=c(all_colours[["lymphgen_colours"]],all_colours[["pathology_colours"]],all_colours[["coo_colours"]])

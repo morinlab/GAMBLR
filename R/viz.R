@@ -32,7 +32,7 @@ prettyOncoplot = function(maftools_obj,genes,keepGeneOrder=TRUE,keepSampleOrder=
   colnames(old_style_mat) = colnames(mat)
   mat=old_style_mat
   if(missing(metadataColumns)){
-    print("you should name at least one metadata column to show as an annotation. Defaulting to pathology")
+    message("you should name at least one metadata column to show as an annotation. Defaulting to pathology")
     metadataColumns=c("pathology")
   }
 
@@ -44,22 +44,30 @@ prettyOncoplot = function(maftools_obj,genes,keepGeneOrder=TRUE,keepSampleOrder=
   mat[mat==0]=""
   patients = pull(these_samples_metadata,sample_id)
 
-  print("====DROPPED=====")
+  message("====DROPPED=====")
   patients_kept = patients[which(patients %in% colnames(mat))]
   patients_dropped = patients[which(!patients %in% colnames(mat))]
 
-  print(patients_dropped)
+  message(patients_dropped)
 
-  print("8*****8*****8*****")
+  #print("8*****8*****8*****")
   genes_kept = genes[which(genes %in% rownames(mat))]
   if(!missing(minMutationPercent)){
-    mutation_counts = maftools_obj@gene.summary %>% filter(Hugo_Symbol %in% genes) %>% select(Hugo_Symbol,MutatedSamples) %>%
+    mutation_counts = maftools_obj@gene.summary %>%
+      filter(Hugo_Symbol %in% genes) %>%
+      select(Hugo_Symbol,MutatedSamples) %>%
       as.data.frame()
     numpat=length(patients)
     mutation_counts = mutate(mutation_counts,percent_mutated=100 * MutatedSamples/numpat)
-    genes_kept = mutation_counts %>% filter(percent_mutated>=minMutationPercent) %>% pull(Hugo_Symbol)
+    genes_keep = mutation_counts %>%
+      filter(percent_mutated>=minMutationPercent) %>%
+      pull(Hugo_Symbol)
+    genes_kept = genes[genes %in% genes_keep]
   }
-  mat = mat[genes_kept,patients_kept]
+  #print("KEEPING")
+  #print(genes_kept)
+  mat = mat[,patients_kept]
+  mat = mat[which(rownames(mat) %in% genes_kept),]
   spacing = 0
   height_scaling = 1
 
@@ -124,10 +132,18 @@ prettyOncoplot = function(maftools_obj,genes,keepGeneOrder=TRUE,keepSampleOrder=
   for(column in metadataColumns){
     options = these_samples_metadata %>% arrange(column) %>% pull(column) %>% unique()
     these_samples_metadata[[column]] = factor(these_samples_metadata[[column]], levels=unique(these_samples_metadata[[column]]))
-    options = these_samples_metadata %>% arrange(column) %>% pull(column) %>% unique()
+    options = these_samples_metadata %>% arrange(column) %>% filter(!is.na(column)) %>% pull(column) %>% unique()
     options=options[!is.na(options)]
-    if(("positive" %in% options | "POS" %in% options) & length(options)<4){
-      print("using pos_neg")
+    if(column == "sex"){
+      these = get_gambl_colours("sex",alpha=annoAlpha)
+      these = these[levels(options)]
+      if(!"NA" %in% names(these)){
+        these= c(these,"NA"="white")
+
+      }
+      colours[[column]]=these
+    }else if(("positive" %in% options | "POS" %in% options) & length(options)<4){
+      #print("using pos_neg")
 
       these = get_gambl_colours("pos_neg",alpha=annoAlpha)
       these = these[levels(options)]
@@ -179,23 +195,25 @@ prettyOncoplot = function(maftools_obj,genes,keepGeneOrder=TRUE,keepSampleOrder=
       these = blood_cols[sample(c(1:length(blood_cols)),size=length(levels(options)))]
 
       names(these)=levels(options)
-      print(these)
+      #print(these)
       colours[[column]]=these
     }
   }
 
 
-  print(colours)
+  #print(colours)
   metadata_df = filter(these_samples_metadata, sample_id %in% patients_kept) %>%
     column_to_rownames("sample_id") %>% select(all_of(metadataColumns))
   if(!missing(sortByColumns)){
     metadata_df = arrange(metadata_df,across(sortByColumns))
+    patients_kept = rownames(metadata_df)
   }
+  print(genes_kept)
   if(keepGeneOrder){
-    ComplexHeatmap::oncoPrint(mat,
+    ComplexHeatmap::oncoPrint(mat[,patients_kept],
               alter_fun = alter_fun,
               col = col,
-              row_order = genes,
+              row_order = genes_kept,
               column_order = patients_kept,
               #column_split=factor(hmrn_kept,levels=names(colours$HMRN)),
               column_labels = NULL,
@@ -205,7 +223,7 @@ prettyOncoplot = function(maftools_obj,genes,keepGeneOrder=TRUE,keepSampleOrder=
               bottom_annotation =
                 ComplexHeatmap::HeatmapAnnotation(df=metadata_df,col=colours))
   }else{
-    ComplexHeatmap::oncoPrint(mat,
+    ComplexHeatmap::oncoPrint(mat[,patients_kept],
               alter_fun = alter_fun,
               col = col,
               column_order = patients_kept,
