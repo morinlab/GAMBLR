@@ -17,7 +17,7 @@
 #'
 #' @examples
 prettyOncoplot = function(maftools_obj,genes,keepGeneOrder=TRUE,keepSampleOrder=TRUE,
-                          these_samples_metadata,metadataColumns,sortByColumns,removeNonMutated=FALSE,
+                          these_samples_metadata,metadataColumns,numericMetadataColumns,numericMetadataMax,sortByColumns,removeNonMutated=FALSE,
                           minMutationPercent,fontSizeGene=6,annoAlpha=1,mutAlpha=1,recycleOncomatrix=FALSE,box_col=NA){
   if(!recycleOncomatrix){
   #order the data frame the way you want the patients shown
@@ -129,6 +129,9 @@ prettyOncoplot = function(maftools_obj,genes,keepGeneOrder=TRUE,keepSampleOrder=
   blood_cols=get_gambl_colours("blood",alpha=annoAlpha)
 
   colours = list()
+  #for(column in numericMetadataColumns){
+
+  #}
   for(column in metadataColumns){
     options = these_samples_metadata %>% arrange(column) %>% pull(column) %>% unique()
     these_samples_metadata[[column]] = factor(these_samples_metadata[[column]], levels=unique(these_samples_metadata[[column]]))
@@ -202,8 +205,17 @@ prettyOncoplot = function(maftools_obj,genes,keepGeneOrder=TRUE,keepSampleOrder=
 
 
   #print(colours)
-  metadata_df = filter(these_samples_metadata, sample_id %in% patients_kept) %>%
+  if(!missing(numericMetadataColumns)){
+    metadata_df = filter(these_samples_metadata, sample_id %in% patients_kept) %>%
+      column_to_rownames("sample_id") %>%
+      select(all_of(c(metadataColumns,numericMetadataColumns)))
+
+    metadata_df = mutate(metadata_df,across(where(is.numeric),~ifelse(.x > numericMetadataMax,numericMetadataMax,.x)))
+
+  }else{
+    metadata_df = filter(these_samples_metadata, sample_id %in% patients_kept) %>%
     column_to_rownames("sample_id") %>% select(all_of(metadataColumns))
+  }
   if(!missing(sortByColumns)){
     metadata_df = arrange(metadata_df,across(sortByColumns))
     patients_kept = rownames(metadata_df)

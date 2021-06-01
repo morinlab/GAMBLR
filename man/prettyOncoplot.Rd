@@ -11,6 +11,7 @@ prettyOncoplot(
   keepSampleOrder = TRUE,
   these_samples_metadata,
   metadataColumns,
+  numericMetadataColumns,
   sortByColumns,
   removeNonMutated = FALSE,
   minMutationPercent,
