@@ -17,7 +17,8 @@ prettyOncoplot(
   fontSizeGene = 6,
   annoAlpha = 1,
   mutAlpha = 1,
-  recycleOncomatrix = FALSE
+  recycleOncomatrix = FALSE,
+  box_col = NA
 )
 }
 \arguments{

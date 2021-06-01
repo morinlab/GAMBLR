@@ -18,7 +18,7 @@
 #' @examples
 prettyOncoplot = function(maftools_obj,genes,keepGeneOrder=TRUE,keepSampleOrder=TRUE,
                           these_samples_metadata,metadataColumns,sortByColumns,removeNonMutated=FALSE,
-                          minMutationPercent,fontSizeGene=6,annoAlpha=1,mutAlpha=1,recycleOncomatrix=FALSE){
+                          minMutationPercent,fontSizeGene=6,annoAlpha=1,mutAlpha=1,recycleOncomatrix=FALSE,box_col=NA){
   if(!recycleOncomatrix){
   #order the data frame the way you want the patients shown
     if(missing(genes)){
@@ -27,10 +27,10 @@ prettyOncoplot = function(maftools_obj,genes,keepGeneOrder=TRUE,keepSampleOrder=
       maftools::oncoplot(maftools_obj,genes=genes,writeMatrix = T,removeNonMutated = removeNonMutated)
     }
   }
-    mat=read.table("onco_matrix.txt",sep="\t",
-                   stringsAsFactors = F)
-
-
+  old_style_mat = read.table("onco_matrix.txt",sep="\t",stringsAsFactors = FALSE)
+  mat=read.table("onco_matrix.txt",sep="\t",header=TRUE,check.names = FALSE,row.names=1,fill=TRUE,stringsAsFactors = F,na.strings = c("NA",""))
+  colnames(old_style_mat) = colnames(mat)
+  mat=old_style_mat
   if(missing(metadataColumns)){
     print("you should name at least one metadata column to show as an annotation. Defaulting to pathology")
     metadataColumns=c("pathology")
@@ -43,7 +43,14 @@ prettyOncoplot = function(maftools_obj,genes,keepGeneOrder=TRUE,keepSampleOrder=
   col=get_gambl_colours("mutation",alpha=mutAlpha)
   mat[mat==0]=""
   patients = pull(these_samples_metadata,sample_id)
+
+  print("====DROPPED=====")
   patients_kept = patients[which(patients %in% colnames(mat))]
+  patients_dropped = patients[which(!patients %in% colnames(mat))]
+
+  print(patients_dropped)
+
+  print("8*****8*****8*****")
   genes_kept = genes[which(genes %in% rownames(mat))]
   if(!missing(minMutationPercent)){
     mutation_counts = maftools_obj@gene.summary %>% filter(Hugo_Symbol %in% genes) %>% select(Hugo_Symbol,MutatedSamples) %>%
@@ -55,58 +62,59 @@ prettyOncoplot = function(maftools_obj,genes,keepGeneOrder=TRUE,keepSampleOrder=
   mat = mat[genes_kept,patients_kept]
   spacing = 0
   height_scaling = 1
+
   alter_fun = list(
     background = function(x, y, w, h) {
       grid.rect(x, y, w-unit(spacing, "pt"), h*height_scaling,
-                gp = gpar(fill = "#CCCCCC", col = "white"))
+                gp = gpar(fill = "#e6e6e6", col = box_col))
     },
     # big blue
     Nonsense_Mutation = function(x, y, w, h) {
       grid.rect(x, y, w-unit(spacing, "pt"), h*height_scaling,
-                gp = gpar(fill = col["Nonsense_Mutation"], col = "white"))
+                gp = gpar(fill = col["Nonsense_Mutation"], col = box_col))
     },
     Splice_Site = function(x, y, w, h) {
       grid.rect(x, y, w-unit(spacing, "pt"), h*height_scaling,
-                gp = gpar(fill = col["Splice_Site"], col = "white"))
+                gp = gpar(fill = col["Splice_Site"], col = box_col))
     },
     Splice_Region = function(x, y, w, h) {
       grid.rect(x, y, w-unit(spacing, "pt"), h*height_scaling,
-                gp = gpar(fill = col["Splice_Region"], col = "white"))
+                gp = gpar(fill = col["Splice_Region"], col = box_col))
     },
     Nonstop_Mutation = function(x, y, w, h) {
       grid.rect(x, y, w-unit(spacing, "pt"), h*height_scaling,
-                gp = gpar(fill = col["Nonstop_Mutation"], col = "white"))
+                gp = gpar(fill = col["Nonstop_Mutation"], col = box_col))
     },
     Translation_Start_Site = function(x, y, w, h) {
       grid.rect(x, y, w-unit(spacing, "pt"), h*height_scaling,
-                gp = gpar(fill = col["Translation_Start_Site"], col = "white"))
+                gp = gpar(fill = col["Translation_Start_Site"], col = box_col))
     },
     In_Frame_Ins = function(x, y, w, h) {
       grid.rect(x, y, w-unit(spacing, "pt"), h*height_scaling,
-                gp = gpar(fill = col["In_Frame_Ins"], col = "white"))
+                gp = gpar(fill = col["In_Frame_Ins"], col = box_col))
     },
     In_Frame_Del = function(x, y, w, h) {
       grid.rect(x, y, w-unit(spacing, "pt"), h*height_scaling,
-                gp = gpar(fill = col["In_Frame_Del"], col = "white"))
+                gp = gpar(fill = col["In_Frame_Del"], col = box_col))
     },
     #all frame shifts will be the same colour, magenta
     Frame_Shift_Del = function(x, y, w, h) {
       grid.rect(x, y, w-unit(spacing, "pt"), h*height_scaling,
-                gp = gpar(fill = col["Frame_Shift_Del"], col = "white"))
+                gp = gpar(fill = col["Frame_Shift_Del"], col = box_col))
     },
     Frame_Shift_Ins = function(x, y, w, h) {
       grid.rect(x, y, w-unit(spacing, "pt"), h*height_scaling,
-                gp = gpar(fill = col["Frame_Shift_Ins"], col = "white"))
+                gp = gpar(fill = col["Frame_Shift_Ins"], col = box_col))
     },
     # big red
     Multi_Hit = function(x, y, w, h) {
       grid.rect(x, y, w-unit(spacing, "pt"), h*height_scaling,
-                gp = gpar(fill = col["Multi_Hit"], col = "white"))
+                gp = gpar(fill = col["Multi_Hit"], col = box_col))
     },
     # small green
     Missense_Mutation = function(x, y, w, h) {
       grid.rect(x, y, w-unit(spacing, "pt"), h*height_scaling,
-                gp = gpar(fill = col["Missense_Mutation"], col = "white"))
+                gp = gpar(fill = col["Missense_Mutation"], col = box_col))
     }
   )
   #automagically assign colours for other metadata columns
@@ -152,17 +160,26 @@ prettyOncoplot = function(maftools_obj,genes,keepGeneOrder=TRUE,keepSampleOrder=
       }
       #names(these)=levels(options)
       colours[[column]]=these
-    }else if(length(options)>15){
-      colours=sample(c(1:60),size=length(options))
-      names(colours)=levels(options)
-      colours[[column]]=colours
+    }else if(length(levels(options))>15){
+      #these=sample(c(1:length(levels(options))),size=length(levels(options)),replace = FALSE)
+      these=rainbow(length(levels(options)),alpha=annoAlpha)
+      names(these)=levels(options)
+
+       # raw_cols_rgb <- col2rgb(these)
+      #  alpha_cols <- rgb(
+       #   raw_cols_rgb[1L, ], raw_cols_rgb[2L, ], raw_cols_rgb[3L, ],
+      #    alpha = annoAlpha * 255L, names = names(these),
+      #    maxColorValue = 255L
+      #  )
+       # names(alpha_cols)=names(these)
+        colours[[column]]=these
+
     }else{
 
-      these = blood_cols[sample(c(1:length(blood_cols)),size=length(options))]
+      these = blood_cols[sample(c(1:length(blood_cols)),size=length(levels(options)))]
+
       names(these)=levels(options)
-      #if(!"NA" %in% names(these)){
-      these= c(these,`NA`="white")
-      #}
+      print(these)
       colours[[column]]=these
     }
   }
