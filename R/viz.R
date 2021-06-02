@@ -30,7 +30,9 @@ prettyOncoplot = function(maftools_obj,genes,keepGeneOrder=TRUE,keepSampleOrder=
                           these_samples_metadata,metadataColumns,numericMetadataColumns,
                           numericMetadataMax,sortByColumns,removeNonMutated=FALSE,
                           minMutationPercent,fontSizeGene=6,annoAlpha=1,mutAlpha=1,
-                          recycleOncomatrix=FALSE,box_col=NA,legend_row=3,legend_col=3){
+                          recycleOncomatrix=FALSE,box_col=NA,metadataBarHeight=1.5,
+                          metadataBarFontsize=5,hideTopBarplot=FALSE,hideSideBarplot=FALSE,
+                          legend_row=3,legend_col=3){
   if(!recycleOncomatrix){
   #order the data frame the way you want the patients shown
     if(missing(genes)){
@@ -141,9 +143,7 @@ prettyOncoplot = function(maftools_obj,genes,keepGeneOrder=TRUE,keepSampleOrder=
   blood_cols=get_gambl_colours("blood",alpha=annoAlpha)
 
   colours = list()
-  #for(column in numericMetadataColumns){
 
-  #}
   for(column in metadataColumns){
     options = these_samples_metadata %>% arrange(column) %>% pull(column) %>% unique()
     these_samples_metadata[[column]] = factor(these_samples_metadata[[column]], levels=unique(these_samples_metadata[[column]]))
@@ -196,13 +196,6 @@ prettyOncoplot = function(maftools_obj,genes,keepGeneOrder=TRUE,keepSampleOrder=
       these=rainbow(length(levels(options)),alpha=annoAlpha)
       names(these)=levels(options)
 
-       # raw_cols_rgb <- col2rgb(these)
-      #  alpha_cols <- rgb(
-       #   raw_cols_rgb[1L, ], raw_cols_rgb[2L, ], raw_cols_rgb[3L, ],
-      #    alpha = annoAlpha * 255L, names = names(these),
-      #    maxColorValue = 255L
-      #  )
-       # names(alpha_cols)=names(these)
         colours[[column]]=these
 
     }else{
@@ -210,13 +203,16 @@ prettyOncoplot = function(maftools_obj,genes,keepGeneOrder=TRUE,keepSampleOrder=
       these = blood_cols[sample(c(1:length(blood_cols)),size=length(levels(options)))]
 
       names(these)=levels(options)
+      if(!"NA" %in% names(these)){
+        these= c(these,"NA"="white")
+      }
       #print(these)
       colours[[column]]=these
     }
   }
 
 
-  #print(colours)
+  print(colours)
   if(!missing(numericMetadataColumns)){
     metadata_df = filter(these_samples_metadata, sample_id %in% patients_kept) %>%
       column_to_rownames("sample_id") %>%
@@ -238,6 +234,7 @@ prettyOncoplot = function(maftools_obj,genes,keepGeneOrder=TRUE,keepSampleOrder=
     patients_kept = rownames(metadata_df)
   }
   print(genes_kept)
+
   if(keepGeneOrder){
     ComplexHeatmap::oncoPrint(mat[,patients_kept],
               alter_fun = alter_fun,
@@ -268,12 +265,15 @@ prettyOncoplot = function(maftools_obj,genes,keepGeneOrder=TRUE,keepSampleOrder=
               row_names_gp = gpar(fontsize = fontSizeGene),
               pct_gp = gpar(fontsize = fontSizeGene),
               bottom_annotation =
-                ComplexHeatmap::HeatmapAnnotation(df=metadata_df,
-                                                  col=colours,
-                                                  annotation_legend_param =
-                                                    list(nrow=legend_row,
-                                                    ncol=legend_col,
-                                                    direction="horizontal")))
+              ComplexHeatmap::HeatmapAnnotation(df=metadata_df,
+                                                col=colours,
+                                                simple_anno_size = unit(metadataBarHeight, "mm"),
+                                                gap = unit(0.25*metadataBarHeight, "mm"),
+                                                annotation_name_gp=gpar(fontsize=metadataBarFontsize),
+                                                annotation_legend_param =
+                                                  list(nrow=legend_row,
+                                                  ncol=legend_col,
+                                                  direction="horizontal")))
     draw(ch, heatmap_legend_side = "bottom", annotation_legend_side = "bottom")
   }
 
