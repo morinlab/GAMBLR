@@ -2,7 +2,7 @@
 % Please edit documentation in R/viz.R
 \name{prettyOncoplot}
 \alias{prettyOncoplot}
-\title{Make a non-maftools oncoplot from a MAFtools object}
+\title{Make an oncoplot that is pretty using ComplexHeatmap}
 \usage{
 prettyOncoplot(
   maftools_obj,
@@ -12,6 +12,7 @@ prettyOncoplot(
   these_samples_metadata,
   metadataColumns,
   numericMetadataColumns,
+  numericMetadataMax,
   sortByColumns,
   removeNonMutated = FALSE,
   minMutationPercent,
@@ -19,23 +20,43 @@ prettyOncoplot(
   annoAlpha = 1,
   mutAlpha = 1,
   recycleOncomatrix = FALSE,
-  box_col = NA
+  box_col = NA,
+  legend_row = 3,
+  legend_col = 3
 )
 }
 \arguments{
-\item{genes}{Optional list of genes to restrict to}
+\item{maftools_obj}{A maftools object containing the mutations you want to plot}
 
-\item{metadataColumns}{A vector naming the columns to show as annotations on the bottom}
+\item{genes}{An optional list of genes to restrict your plot to}
 
-\item{sortByColumns}{A vector naming the columns to order on, in the order of priority}
+\item{keepGeneOrder}{Set to TRUE if you want to preserve the gene order specified}
 
-\item{removeNonMutated}{}
+\item{keepSampleOrder}{Set to TRUE if you want to preserve the sample order specified}
 
-\item{maf_object}{A maftools object}
+\item{these_samples_metadata}{Data frame containing metadata for your samples}
+
+\item{metadataColumns}{A vector containing the categorical column names you want to plot below}
+
+\item{numericMetadataColumns}{A vector containing the numeric columns you want to plot below}
+
+\item{numericMetadataMax}{A numeric vector of cutoffs to apply to numeric columns above}
+
+\item{sortByColumns}{A vector containing the column names you want to sort columns (patients) on}
+
+\item{removeNonMutated}{Set to TRUE to drop unmutated cases}
+
+\item{minMutationPercent}{Only genes mutated in more than minMutationPercent \% patients will be included}
+
+\item{recycleOncomatrix}{Set to TRUE most of the time to reuse the oncomatrix saved by maftools}
+
+\item{legend_row}{Fiddle with these to widen or narrow your legend}
+
+\item{legend_col}{Fiddle with these to widen or narrow your legend}
 }
 \value{
 
 }
 \description{
-Make a non-maftools oncoplot from a MAFtools object
+Make an oncoplot that is pretty using ComplexHeatmap
 }

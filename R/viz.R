@@ -1,24 +1,36 @@
 
 
-#' Make a non-maftools oncoplot from a MAFtools object
+
+#' Make an oncoplot that is pretty using ComplexHeatmap
 #'
-#' @param maf_object A maftools object
-#' @param genes Optional list of genes to restrict to
-#' @param keepGeneOrder
-#' @param keepSampleOrder
-#' @param these_samples_metadata
-#' @param metadataColumns A vector naming the columns to show as annotations on the bottom
-#' @param sortByColumns A vector naming the columns to order on, in the order of priority
-#' @param removeNonMutated
+#' @param maftools_obj A maftools object containing the mutations you want to plot
+#' @param genes An optional list of genes to restrict your plot to
+#' @param keepGeneOrder Set to TRUE if you want to preserve the gene order specified
+#' @param keepSampleOrder Set to TRUE if you want to preserve the sample order specified
+#' @param these_samples_metadata Data frame containing metadata for your samples
+#' @param metadataColumns A vector containing the categorical column names you want to plot below
+#' @param numericMetadataColumns A vector containing the numeric columns you want to plot below
+#' @param numericMetadataMax A numeric vector of cutoffs to apply to numeric columns above
+#' @param sortByColumns A vector containing the column names you want to sort columns (patients) on
+#' @param removeNonMutated Set to TRUE to drop unmutated cases
+#' @param minMutationPercent Only genes mutated in more than minMutationPercent % patients will be included
+#' @param fontSizeGene
+#' @param annoAlpha
+#' @param mutAlpha
+#' @param recycleOncomatrix Set to TRUE most of the time to reuse the oncomatrix saved by maftools
+#' @param box_col
+#' @param legend_row Fiddle with these to widen or narrow your legend
+#' @param legend_col Fiddle with these to widen or narrow your legend
 #'
 #' @return
 #' @export
-#' @import ComplexHeatmap maftools
 #'
 #' @examples
 prettyOncoplot = function(maftools_obj,genes,keepGeneOrder=TRUE,keepSampleOrder=TRUE,
-                          these_samples_metadata,metadataColumns,numericMetadataColumns,numericMetadataMax,sortByColumns,removeNonMutated=FALSE,
-                          minMutationPercent,fontSizeGene=6,annoAlpha=1,mutAlpha=1,recycleOncomatrix=FALSE,box_col=NA){
+                          these_samples_metadata,metadataColumns,numericMetadataColumns,
+                          numericMetadataMax,sortByColumns,removeNonMutated=FALSE,
+                          minMutationPercent,fontSizeGene=6,annoAlpha=1,mutAlpha=1,
+                          recycleOncomatrix=FALSE,box_col=NA,legend_row=3,legend_col=3){
   if(!recycleOncomatrix){
   #order the data frame the way you want the patients shown
     if(missing(genes)){
@@ -209,8 +221,13 @@ prettyOncoplot = function(maftools_obj,genes,keepGeneOrder=TRUE,keepSampleOrder=
     metadata_df = filter(these_samples_metadata, sample_id %in% patients_kept) %>%
       column_to_rownames("sample_id") %>%
       select(all_of(c(metadataColumns,numericMetadataColumns)))
+    if(!missing(numericMetadataMax)){
+      max_list = setNames(numericMetadataMax,numericMetadataColumns)
 
-    metadata_df = mutate(metadata_df,across(where(is.numeric),~ifelse(.x > numericMetadataMax,numericMetadataMax,.x)))
+      metadata_df = metadata_df %>%
+        mutate(across(names(max_list), ~ ifelse(.x > max_list[[cur_column()]], max_list[[cur_column()]], .x)))
+
+    }
 
   }else{
     metadata_df = filter(these_samples_metadata, sample_id %in% patients_kept) %>%
@@ -235,17 +252,29 @@ prettyOncoplot = function(maftools_obj,genes,keepGeneOrder=TRUE,keepSampleOrder=
               bottom_annotation =
                 ComplexHeatmap::HeatmapAnnotation(df=metadata_df,col=colours))
   }else{
-    ComplexHeatmap::oncoPrint(mat[,patients_kept],
+    heatmap_legend_param = list(title = "Alterations",
+                                nrow=2, ncol=1,
+                                legend_direction = "horizontal")
+    ch = ComplexHeatmap::oncoPrint(mat[,patients_kept],
               alter_fun = alter_fun,
+              top_annotation=NULL,
+              right_annotation=NULL,
+
               col = col,
               column_order = patients_kept,
               #column_split=factor(hmrn_kept,levels=names(colours$HMRN)),
               column_labels = NULL,
-              column_title=NULL,
+              heatmap_legend_param = heatmap_legend_param,
               row_names_gp = gpar(fontsize = fontSizeGene),
               pct_gp = gpar(fontsize = fontSizeGene),
               bottom_annotation =
-                ComplexHeatmap::HeatmapAnnotation(df=metadata_df,col=colours))
+                ComplexHeatmap::HeatmapAnnotation(df=metadata_df,
+                                                  col=colours,
+                                                  annotation_legend_param =
+                                                    list(nrow=legend_row,
+                                                    ncol=legend_col,
+                                                    direction="horizontal")))
+    draw(ch, heatmap_legend_side = "bottom", annotation_legend_side = "bottom")
   }
 
 
