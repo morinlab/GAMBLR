@@ -28,11 +28,14 @@
 #' @examples
 prettyOncoplot = function(maftools_obj,genes,keepGeneOrder=TRUE,keepSampleOrder=TRUE,
                           these_samples_metadata,metadataColumns,numericMetadataColumns,
+                          expressionColumns=c(),
                           numericMetadataMax,sortByColumns,removeNonMutated=FALSE,
                           minMutationPercent,fontSizeGene=6,annoAlpha=1,mutAlpha=1,
                           recycleOncomatrix=FALSE,box_col=NA,metadataBarHeight=1.5,
                           metadataBarFontsize=5,hideTopBarplot=FALSE,hideSideBarplot=FALSE,
                           legend_row=3,legend_col=3){
+  #print(expressionColumns)
+  #return()
   if(!recycleOncomatrix){
   #order the data frame the way you want the patients shown
     if(missing(genes)){
@@ -207,6 +210,7 @@ prettyOncoplot = function(maftools_obj,genes,keepGeneOrder=TRUE,keepSampleOrder=
         these= c(these,"NA"="white")
       }
       #print(these)
+
       colours[[column]]=these
     }
   }
@@ -216,7 +220,7 @@ prettyOncoplot = function(maftools_obj,genes,keepGeneOrder=TRUE,keepSampleOrder=
   if(!missing(numericMetadataColumns)){
     metadata_df = filter(these_samples_metadata, sample_id %in% patients_kept) %>%
       column_to_rownames("sample_id") %>%
-      select(all_of(c(metadataColumns,numericMetadataColumns)))
+      select(all_of(c(metadataColumns,numericMetadataColumns,expressionColumns)))
     if(!missing(numericMetadataMax)){
       max_list = setNames(numericMetadataMax,numericMetadataColumns)
 
@@ -227,14 +231,17 @@ prettyOncoplot = function(maftools_obj,genes,keepGeneOrder=TRUE,keepSampleOrder=
 
   }else{
     metadata_df = filter(these_samples_metadata, sample_id %in% patients_kept) %>%
-    column_to_rownames("sample_id") %>% select(all_of(metadataColumns))
+    column_to_rownames("sample_id") %>% select(all_of(c(metadataColumns,expressionColumns)))
   }
   if(!missing(sortByColumns)){
     metadata_df = arrange(metadata_df,across(sortByColumns))
     patients_kept = rownames(metadata_df)
   }
   print(genes_kept)
-
+  col_fun=circlize::colorRamp2(c(0, 0.5, 1), c("blue", "white", "red"))
+  for(exp in expressionColumns){
+    colours[[exp]] = col_fun
+  }
   if(keepGeneOrder){
     ComplexHeatmap::oncoPrint(mat[,patients_kept],
               alter_fun = alter_fun,
@@ -249,14 +256,16 @@ prettyOncoplot = function(maftools_obj,genes,keepGeneOrder=TRUE,keepSampleOrder=
               bottom_annotation =
                 ComplexHeatmap::HeatmapAnnotation(df=metadata_df,col=colours))
   }else{
+
     heatmap_legend_param = list(title = "Alterations",
+
                                 nrow=2, ncol=1,
                                 legend_direction = "horizontal")
+
     ch = ComplexHeatmap::oncoPrint(mat[,patients_kept],
               alter_fun = alter_fun,
               top_annotation=NULL,
               right_annotation=NULL,
-
               col = col,
               column_order = patients_kept,
               #column_split=factor(hmrn_kept,levels=names(colours$HMRN)),
@@ -272,8 +281,9 @@ prettyOncoplot = function(maftools_obj,genes,keepGeneOrder=TRUE,keepSampleOrder=
                                                 annotation_name_gp=gpar(fontsize=metadataBarFontsize),
                                                 annotation_legend_param =
                                                   list(nrow=legend_row,
-                                                  ncol=legend_col,
-                                                  direction="horizontal")))
+                                                       col_fun=col_fun,
+                                                        ncol=legend_col,
+                                                        direction="horizontal")))
     draw(ch, heatmap_legend_side = "bottom", annotation_legend_side = "bottom")
   }
 

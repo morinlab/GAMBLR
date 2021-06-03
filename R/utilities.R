@@ -1,4 +1,53 @@
 
+sv_to_custom_track = function(sv_bedpe,output_file){
+  #browser position chr7:127471196-127495720
+  #browser hide all
+  #track name="ItemRGBDemo" description="Item RGB demonstration" visibility=2 itemRgb="On"
+  #chr7    127471196  127472363  Pos1  0  +  127471196  127472363  255,0,0
+
+  #reduce to a bed-like format
+  sv_data1 = mutate(sv_bedpe,annotation=paste0(chrom1,":",start1,"_",fusion)) %>%
+    dplyr::select(chrom2,start2,end2,tumour_sample_id,annotation,fusion)
+  sv_data2 = mutate(sv_bedpe,annotation=paste0(chrom2,":",start2,"_",fusion)) %>%
+    dplyr::select(chrom1,start1,end1,tumour_sample_id,annotation,fusion)
+
+  colnames(sv_data1)=c("chrom","start","end","sample_id","annotation","fusion")
+  colnames(sv_data2)=c("chrom","start","end","sample_id","annotation","fusion")
+
+  sv_data = bind_rows(sv_data1,sv_data2)
+  sv_data = mutate(sv_data,end=end+10)
+  if(!grepl("chr",sv_data[,1])){
+    #add chr
+    sv_data[,1] = unlist(lapply(sv_data[,1],function(x){paste0("chr",x)}))
+  }
+  coo_cols=get_gambl_colours("COO")
+  path_cols = get_gambl_colours("pathology")
+  all_cols=c(coo_cols,path_cols)
+  colour_df = data.frame(coo=names(all_cols),colour=all_cols)
+  rgb_df = data.frame(t(col2rgb(all_cols))) %>%
+    mutate(consensus_coo_dhitsig=names(all_cols)) %>%
+    unite(col="rgb",red,green,blue,sep = ",")
+  meta=get_gambl_metadata() %>% dplyr::select(sample_id,"consensus_coo_dhitsig",pathology) %>%
+    mutate(consensus_coo_dhitsig=if_else(consensus_coo_dhitsig=="NA",pathology,consensus_coo_dhitsig))
+
+  samples_coloured = left_join(meta, rgb_df)
+  sv_bed_coloured = left_join(sv_data,samples_coloured)
+
+  #chr7    127471196  127472363  Pos1  0  +  127471196  127472363  255,0,0
+  write_bed = function(coloured_svs,sv_name,output_file_base){
+    output_file = paste0(output_file_base,"_",sv_name,".bed")
+    data_bed = coloured_svs %>% mutate(details=paste0(annotation,"_",sample_id)) %>%
+      filter(fusion == sv_name) %>%
+      mutate(score=0,strand="+",end=end+1,start1=start,end1=end) %>%
+      select(chrom, start,end, details,score,strand,start1,end1,rgb) %>% filter(!is.na(rgb)) %>% unique()
+    header_content=paste0('track name="GAMBL SVs ',sv_name, '" description="SV breakpoints ', sv_name, '" visibility=2 itemRgb="On"\n')
+    cat(header_content,file=output_file)
+    tabular = write.table(data_bed,file=output_file,quote=F,sep="\t",row.names=F,col.names = F,append=TRUE)
+  }
+
+
+}
+
 #' Convert a maf-formatted data frame into a bed custom track file for UCSC
 #'
 #' @param maf_data Either a maf loaded from disk or from the database using a get_ssm function
@@ -43,7 +92,7 @@ maf_to_custom_track = function(maf_data,output_file){
 #' @import tidyverse config
 #'
 #' @examples
-collate_results = function(sample_table,write_to_file=FALSE,case_set){
+collate_results = function(sample_table,write_to_file=FALSE,join_with_full_metadata = FALSE,case_set){
   # important: if you are collating results from anything but WGS (e.g RNA-seq libraries) be sure to use biopsy ID as the key in your join
   # the sample_id should probably not even be in this file if we want this to be biopsy-centric
   if(missing(sample_table)){
@@ -63,6 +112,23 @@ collate_results = function(sample_table,write_to_file=FALSE,case_set){
     output_base = config::get("repo_base")
     output_file = paste0(output_base,output_file)
     write_tsv(sample_table,file=output_file)
+  }
+  #convenience columns bringing together related information
+  if(join_with_full_metadata){
+  full_meta = get_gambl_metadata()
+  full_table = left_join(full_meta,sample_table)
+  full_table = full_table %>% mutate("MYC_SV_any"=case_when(ashm_MYC > 3 ~ "POS",
+                                            manta_MYC_sv == "POS" ~ "POS",
+                                            ICGC_MYC_sv == "POS" ~ "POS",
+                                            myc_ba == "POS" ~ "POS",
+                                            TRUE ~ "NEG"))
+  full_table = full_table %>% mutate("BCL2_SV_any"=case_when(ashm_BCL2 > 3 ~ "POS",
+                                                            manta_BCL2_sv == "POS" ~ "POS",
+                                                            ICGC_BCL2_sv == "POS" ~ "POS",
+                                                            bcl2_ba == "POS" ~ "POS",
+                                                            TRUE ~ "NEG"))
+  full_table =full_table %>% mutate("DoubleHitBCL2"=ifelse(BCL2_SV_any == "POS" & MYC_SV_any=="POS","Yes","No"))
+  return(full_table)
   }
   return(sample_table)
 }
@@ -107,6 +173,8 @@ collate_curated_sv_results = function(sample_table){
     #TO DO: fix this so it will join on biopsy_id or sample_id depending on which one is present
     sample_table = left_join(sample_table,this_data)
   }
+
+
   return(sample_table)
 }
 
@@ -527,8 +595,10 @@ get_gambl_colours = function(classification="all",alpha=1){
     "UNC" = "#05631E",
     "GCB"= "#F58F20",
     "DHITsig-"= "#F58F20",
+    "DHITsigNeg"= "#F58F20",
     "DHITsig-IND" = "#003049",
-    "DHITsig+" = "#D62828"
+    "DHITsig+" = "#D62828",
+    "DHITsigPos" = "#D62828"
   )
   #print(all_colours)
   for(colslot in names(all_colours)){

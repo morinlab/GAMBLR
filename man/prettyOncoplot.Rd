@@ -12,6 +12,7 @@ prettyOncoplot(
   these_samples_metadata,
   metadataColumns,
   numericMetadataColumns,
+  expressionColumns = c(),
   numericMetadataMax,
   sortByColumns,
   removeNonMutated = FALSE,
@@ -21,6 +22,10 @@ prettyOncoplot(
   mutAlpha = 1,
   recycleOncomatrix = FALSE,
   box_col = NA,
+  metadataBarHeight = 1.5,
+  metadataBarFontsize = 5,
+  hideTopBarplot = FALSE,
+  hideSideBarplot = FALSE,
   legend_row = 3,
   legend_col = 3
 )

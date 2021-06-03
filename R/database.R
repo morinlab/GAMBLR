@@ -132,7 +132,9 @@ get_gambl_metadata = function(seq_type_filter = "genome",
     DLBCL90_dhitsig_call == "POS" ~ "DHITsigPos",
     DLBCL90_dhitsig_call == "NEG" ~ "DHITsigNeg",
     DHITsig_PRPS_class == "DHITsigPos" ~ "DHITsigPos",
+    DHITsig_PRPS_class == "DHITsig+" ~ "DHITsigPos",
     DHITsig_PRPS_class == "DHITsigNeg" ~ "DHITsigNeg",
+    DHITsig_PRPS_class == "DHITsig-" ~ "DHITsigNeg",
     DHITsig_PRPS_class == "UNCLASS" ~ "DHITsigPos",
     TRUE ~ "NA"
   ))
