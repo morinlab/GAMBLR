@@ -1,4 +1,67 @@
 
+#' Annotate MAF-like data frome with a hot_spot column indicating recurrent mutations
+#'
+#' @param mutation_maf
+#' @param analysis_base
+#'
+#' @return
+#' @export
+#'
+#' @examples
+#' hot_ssms = annotate_hotspots(all_ssm)
+#' hot_maf = read.maf(hot_ssms)
+#' oncoplot(hot_maf,genes=c("MEF2B","TP53","MYD88"),additionalFeature = c("hot_spot",TRUE))
+annotate_hotspots = function(mutation_maf,analysis_base=c("FL--DLBCL","BL--DLBCL")){
+  hotspot_info = list()
+  for(abase in analysis_base){
+    base_path="/projects/rmorin/projects/gambl-repos/gambl-rmorin/results/icgc_dart/oncodriveclustl-0.0/99-outputs/webversion/"
+    clust_full_path = paste0(base_path,abase,"/NO_SILENT_MUTS/",abase,"_clusters_results.tsv")
+    all_full_path = paste0(base_path,abase,"/NO_SILENT_MUTS/",abase,"_elements_results.txt")
+    clust_hotspot=read_tsv(clust_full_path)
+    all_hotspot=read_tsv(all_full_path)
+
+  #filter based on some thresholds for reasonable hotspots
+  p_thresh = 0.05
+  clustered_hotspots = clust_hotspot %>% dplyr::select(-RANK) %>% dplyr::filter(N_SAMPLES>5 & P < p_thresh)
+  #Use the max and min coordinate to annotate all non-silent mutations in that region
+  #all_ssm %>% filter(Chromosome=="19" & Start_Position>= 19260033 & Start_Position <= 19260045)
+
+    arranged = clustered_hotspots %>% separate_rows(COORDINATES,convert=TRUE) %>%
+      group_by(SYMBOL,MAX_COORD) %>% arrange(COORDINATES)
+
+    mins = arranged %>% slice_head() %>% rename("START"="COORDINATES")
+    maxs = arranged %>% slice_tail() %>% rename("END"="COORDINATES")
+    hotspot_ranges = left_join(mins, select(maxs, c(MAX_COORD,END)), by = c("SYMBOL","MAX_COORD"))
+    hotspot_info[[abase]]=hotspot_ranges
+  }
+  merged_hotspot = do.call("rbind",hotspot_info)  %>% ungroup()
+  #example for matching coordinates from one row in merged_hotspot
+  all_ssm %>% filter(Chromosome == "18" & Start_Position >= 60985307 & End_Position < 60985359) %>% select(1:7) %>% head()
+
+  long_hotspot = merged_hotspot %>% select(MAX_COORD,CHROMOSOME,START,END) %>%
+   pivot_longer(c(START,END),names_to="which",values_to="COORDINATE") %>% select(-which)
+  #again take highest and lowest value for each MAX_COORD
+  starts = long_hotspot %>% group_by(MAX_COORD) %>% arrange(COORDINATE) %>% slice_head()
+  ends = long_hotspot %>% group_by(MAX_COORD) %>% arrange(COORDINATE) %>% slice_tail()
+  long_hotspot = bind_rows(starts,ends)
+  filled_coords = long_hotspot  %>% group_by(MAX_COORD) %>% arrange(MAX_COORD,COORDINATE) %>%
+  complete(COORDINATE = seq(COORDINATE[1], COORDINATE[2]))  %>%
+    fill(CHROMOSOME, .direction = "up") %>% rename("Start_Position"="COORDINATE") %>% rename("Chromosome"="CHROMOSOME") %>% ungroup()
+  filled_coords = mutate(filled_coords,hot_spot=TRUE)
+  #just the ssms that match these coordinates!
+  hot_ssms = left_join(all_ssm,filled_coords,by=c("Chromosome","Start_Position"))
+  return(hot_ssms)
+}
+
+#' Title
+#
+#' @param sv_bedpe
+#' @param output_file
+#'
+#' @return
+#' @export
+#'
+#' @examples
 sv_to_custom_track = function(sv_bedpe,output_file){
   #browser position chr7:127471196-127495720
   #browser hide all

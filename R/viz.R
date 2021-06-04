@@ -474,7 +474,8 @@ copy_number_vaf_plot = function(this_sample,just_segments=FALSE,coding_only=FALS
 #' mybed = data.frame(start=c(128806578,128805652,128748315), end=c(128806992,128809822,128748880), name=c("TSS","enhancer","MYC-e1"))
 #' ashm_rainbow_plot(mutations_maf=my_mutations,metadata=my_metadata,bed=mybed)
 ashm_rainbow_plot = function(mutations_maf,
-                             metadata,exclude_classifications,drop_unmutated=FALSE,
+                             metadata,exclude_classifications,
+                             drop_unmutated=FALSE,
                              classification_column,
                              bed,region,custom_colours,hide_ids=TRUE){
   table_name = config::get("results_tables")$ssm

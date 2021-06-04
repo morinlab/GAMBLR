@@ -4,7 +4,12 @@
 \alias{collate_results}
 \title{Bring together all derived sample-level results from many GAMBL pipelines}
 \usage{
-collate_results(sample_table, write_to_file = FALSE, case_set)
+collate_results(
+  sample_table,
+  write_to_file = FALSE,
+  join_with_full_metadata = FALSE,
+  case_set
+)
 }
 \value{
 A table keyed on biopsy_id that contains a bunch of per-sample results from GAMBL
