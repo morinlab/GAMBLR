@@ -11,7 +11,7 @@
 #' hot_ssms = annotate_hotspots(all_ssm)
 #' hot_maf = read.maf(hot_ssms)
 #' oncoplot(hot_maf,genes=c("MEF2B","TP53","MYD88"),additionalFeature = c("hot_spot",TRUE))
-annotate_hotspots = function(mutation_maf,analysis_base=c("FL--DLBCL","BL--DLBCL")){
+annotate_hotspots = function(mutation_maf,recurrence_min = 5,analysis_base=c("FL--DLBCL","BL--DLBCL")){
   hotspot_info = list()
   for(abase in analysis_base){
     base_path="/projects/rmorin/projects/gambl-repos/gambl-rmorin/results/icgc_dart/oncodriveclustl-0.0/99-outputs/webversion/"
@@ -22,7 +22,7 @@ annotate_hotspots = function(mutation_maf,analysis_base=c("FL--DLBCL","BL--DLBCL
 
   #filter based on some thresholds for reasonable hotspots
   p_thresh = 0.05
-  clustered_hotspots = clust_hotspot %>% dplyr::select(-RANK) %>% dplyr::filter(N_SAMPLES>5 & P < p_thresh)
+  clustered_hotspots = clust_hotspot %>% dplyr::select(-RANK) %>% dplyr::filter(N_SAMPLES>recurrence_min & P < p_thresh)
   #Use the max and min coordinate to annotate all non-silent mutations in that region
   #all_ssm %>% filter(Chromosome=="19" & Start_Position>= 19260033 & Start_Position <= 19260045)
 
