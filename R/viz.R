@@ -26,13 +26,22 @@
 #' @export
 #'
 #' @examples
-prettyOncoplot = function(maftools_obj,genes,keepGeneOrder=TRUE,keepSampleOrder=TRUE,
-                          these_samples_metadata,metadataColumns,numericMetadataColumns,
+prettyOncoplot = function(maftools_obj,genes,
+                          keepGeneOrder=TRUE,
+                          keepSampleOrder=TRUE,
+                          these_samples_metadata,metadataColumns,
+                          numericMetadataColumns,
                           expressionColumns=c(),
-                          numericMetadataMax,sortByColumns,removeNonMutated=FALSE,
-                          minMutationPercent,fontSizeGene=6,annoAlpha=1,mutAlpha=1,
-                          recycleOncomatrix=FALSE,box_col=NA,metadataBarHeight=1.5,
-                          metadataBarFontsize=5,hideTopBarplot=FALSE,hideSideBarplot=FALSE,
+                          numericMetadataMax,sortByColumns,
+                          removeNonMutated=FALSE,
+                          minMutationPercent,fontSizeGene=6,
+                          annoAlpha=1,mutAlpha=1,
+                          recycleOncomatrix=FALSE,
+                          box_col=NA,
+                          metadataBarHeight=1.5,
+                          metadataBarFontsize=5,
+                          hideTopBarplot=FALSE,
+                          hideSideBarplot=FALSE,
                           legend_row=3,legend_col=3){
   #print(expressionColumns)
   #return()
@@ -48,6 +57,9 @@ prettyOncoplot = function(maftools_obj,genes,keepGeneOrder=TRUE,keepSampleOrder=
   mat=read.table("onco_matrix.txt",sep="\t",header=TRUE,check.names = FALSE,row.names=1,fill=TRUE,stringsAsFactors = F,na.strings = c("NA",""))
   colnames(old_style_mat) = colnames(mat)
   mat=old_style_mat
+
+  #annotate hot spots if necessary
+
   if(missing(metadataColumns)){
     message("you should name at least one metadata column to show as an annotation. Defaulting to pathology")
     metadataColumns=c("pathology")
@@ -214,6 +226,21 @@ prettyOncoplot = function(maftools_obj,genes,keepGeneOrder=TRUE,keepSampleOrder=
       colours[[column]]=these
     }
   }
+
+  #hot_mat = mat
+  #hot_mat[]=""
+  hot_samples = filter(hot_maf@data,hot_spot==TRUE & Hugo_Symbol %in% genes) %>%
+    select(Hugo_Symbol,Tumor_Sample_Barcode) %>% mutate(mutated="YES") %>% unique()
+  all_samples_df = data.frame(Tumor_Sample_Barcode=colnames(mat))
+
+  #all_samples_df = left_join(all_samples_df,hot_samples) %>%
+  #  filter(!is.na(Hugo_Symbol)) %>%
+  #  mutate(mutated="YES") %>% unique()
+
+  hot_samples %>%
+                pivot_wider(names_from = "Hugo_Symbol",values_from="mutated") %>%
+    left_join(all_samples_df,.)
+
 
 
   print(colours)
