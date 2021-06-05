@@ -35,8 +35,6 @@ annotate_hotspots = function(mutation_maf,recurrence_min = 5,analysis_base=c("FL
     hotspot_info[[abase]]=hotspot_ranges
   }
   merged_hotspot = do.call("rbind",hotspot_info)  %>% ungroup()
-  #example for matching coordinates from one row in merged_hotspot
-  all_ssm %>% filter(Chromosome == "18" & Start_Position >= 60985307 & End_Position < 60985359) %>% select(1:7) %>% head()
 
   long_hotspot = merged_hotspot %>% select(MAX_COORD,CHROMOSOME,START,END) %>%
    pivot_longer(c(START,END),names_to="which",values_to="COORDINATE") %>% select(-which)
@@ -49,7 +47,7 @@ annotate_hotspots = function(mutation_maf,recurrence_min = 5,analysis_base=c("FL
     fill(CHROMOSOME, .direction = "up") %>% rename("Start_Position"="COORDINATE") %>% rename("Chromosome"="CHROMOSOME") %>% ungroup()
   filled_coords = mutate(filled_coords,hot_spot=TRUE)
   #just the ssms that match these coordinates!
-  hot_ssms = left_join(all_ssm,filled_coords,by=c("Chromosome","Start_Position"))
+  hot_ssms = left_join(mutation_maf,filled_coords,by=c("Chromosome","Start_Position"))
   return(hot_ssms)
 }
 
