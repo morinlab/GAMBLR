@@ -29,7 +29,9 @@
 prettyOncoplot = function(maftools_obj,genes,
                           keepGeneOrder=TRUE,
                           keepSampleOrder=TRUE,
-                          these_samples_metadata,metadataColumns,
+                          highlightHotspots=FALSE,
+                          these_samples_metadata,
+                          metadataColumns,
                           numericMetadataColumns,
                           expressionColumns=c(),
                           numericMetadataMax,sortByColumns,
@@ -152,6 +154,10 @@ prettyOncoplot = function(maftools_obj,genes,
     Missense_Mutation = function(x, y, w, h) {
       grid.rect(x, y, w-unit(spacing, "pt"), h*height_scaling,
                 gp = gpar(fill = col["Missense_Mutation"], col = box_col))
+    },
+    hot_spots = function(x, y, w, h) {
+      grid.rect(x, y, w-unit(spacing, "pt"), h/2*height_scaling,
+                gp = gpar(fill = "white", col = box_col))
     }
   )
   #automagically assign colours for other metadata columns
@@ -221,26 +227,22 @@ prettyOncoplot = function(maftools_obj,genes,
       if(!"NA" %in% names(these)){
         these= c(these,"NA"="white")
       }
-      #print(these)
 
       colours[[column]]=these
     }
   }
-
-  #hot_mat = mat
-  #hot_mat[]=""
-  hot_samples = filter(hot_maf@data,hot_spot==TRUE & Hugo_Symbol %in% genes) %>%
+  if(highlightHotspots){
+    hot_samples = filter(maftools_obj@data,hot_spot==TRUE & Hugo_Symbol %in% genes) %>%
     select(Hugo_Symbol,Tumor_Sample_Barcode) %>% mutate(mutated="YES") %>% unique()
-  all_samples_df = data.frame(Tumor_Sample_Barcode=colnames(mat))
-
-  #all_samples_df = left_join(all_samples_df,hot_samples) %>%
-  #  filter(!is.na(Hugo_Symbol)) %>%
-  #  mutate(mutated="YES") %>% unique()
-
-  hot_samples %>%
-                pivot_wider(names_from = "Hugo_Symbol",values_from="mutated") %>%
-    left_join(all_samples_df,.)
-
+    all_genes_df = data.frame(Hugo_Symbol=rownames(mat))
+    all_samples_df = data.frame(Tumor_Sample_Barcode=colnames(mat))
+    hs = left_join(all_samples_df,hot_samples)
+    hot_mat = hs %>%
+        pivot_wider(names_from = "Tumor_Sample_Barcode",values_from="mutated") %>%
+    left_join(all_genes_df,.) %>%
+    column_to_rownames("Hugo_Symbol") %>% as.matrix()
+    colours[["hot_spots"]]= c("YES"="magenta")
+  }
 
 
   print(colours)
@@ -269,6 +271,10 @@ prettyOncoplot = function(maftools_obj,genes,
   for(exp in expressionColumns){
     colours[[exp]] = col_fun
   }
+  #mat_list = list(Missense_Mutation=as.matrix(mat[,patients_kept]))
+  #if(highlightHotspots){
+  #  mat_list[["hot_spots"]]=  hot_mat #hot_mat[,patients_kept]
+  #}
   if(keepGeneOrder){
     ComplexHeatmap::oncoPrint(mat[,patients_kept],
               alter_fun = alter_fun,
