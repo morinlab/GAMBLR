@@ -1,4 +1,49 @@
 
+
+#' Write an oncomatrix from a MAF File for further plotting. This is meant to be run by individuals who have access to data sets to
+#' "sanitize" a subset of data for subsequent use by them or others who don't have permission to access the raw data.
+#' Example: User J has full permissions for ICGC data and has read permissions on a MAF file. User B needs to make some oncoplots
+#' and/or perform some statistical analysis on the frequency and assortment of mutations in that data set but doesn't need all the details.
+#' User J can run this function on a maf file and provide the path of the output to user B.
+#'
+#' @param mutation_maf
+#' @param output_oncomatrix
+#'
+#' @return The full path to the oncomatrix file (a matrix with Variant_Classification or Multi_Hit indicating coding mutation status per patient)
+#' @export
+#'
+#' @examples
+#' lymph_genes = lymphoma_genes$Gene #note, this will be used by default if the user wants to be lazy
+#' secure_maf = "/projects/rmorin/projects/gambl-repos/gambl-rmorin/results/icgc_dart/slms-3_vcf2maf_current/level_3/final_merged_grch37.CDS.maf"
+#' safe_oncomatrix_path = sanitize_maf_data(mutation_maf_path=secure_maf,genes_keep=lymph_genes)
+#'
+sanitize_maf_data = function(mutation_maf_path,mutation_maf_data,output_oncomatrix,genes_keep,genes_drop=c()){
+  if(missing(mutation_maf_path) & missing(mutation_maf_data)){
+    warning("Provide either a path to a MAF file or a data frame of mutations")
+    return()
+  }
+  if(!missing(mutation_maf_path)){
+    mutation_maf_data = fread_maf(mutation_maf_path)
+  }
+  #because we use oncoplot we need to ensure the user gets an oncomatrix for all the genes they care about
+  #optionally we also exclude genes
+  if(missing(genes_keep)){
+    warning("you should provide a list of genes to retain in the output to ensure your genes of interest are included")
+    genes_keep = lymphoma_genes$Gene
+  }
+  maf_o = maftools::read.maf(mutation_maf_data)
+
+  maftools::oncoplot(maf_o,genes=genes_keep,writeMatrix = T,removeNonMutated = F)  #writes to working directory
+  if(!missing(output_oncomatrix)){
+    #rename it
+    file.rename("onco_matrix.txt",output_oncomatrix)
+  }else{
+    output_oncomatrix=paste0(getwd(),"/onco_matrix.tsv")
+  }
+  message(paste("your data is in:",output_oncomatrix))
+  return(output_oncomatrix)
+}
+
 #' Annotate MAF-like data frome with a hot_spot column indicating recurrent mutations
 #'
 #' @param mutation_maf

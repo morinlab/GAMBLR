@@ -1,9 +1,13 @@
 
 
 
-#' Make an oncoplot that is pretty using ComplexHeatmap
+#' Make an oncoplot that is pretty using ComplexHeatmap. The metadata is expected to follow the structure and column naming used in GAMBL.
+#' If you provide your own non-GAMBL samples and metadata, you must include at least the following columns with these names.
+#' The first one should match the Tumor_Sample_Barcode in the MAF object or onco_matrix you provide.
+#' sample_id, pathology
 #'
 #' @param maftools_obj A maftools object containing the mutations you want to plot
+#' @param onco_matrix_path Provide a path to an onco_matrix file instead of a MAF object if the former is unavailable (this limits functionality a bit)
 #' @param genes An optional list of genes to restrict your plot to
 #' @param keepGeneOrder Set to TRUE if you want to preserve the gene order specified
 #' @param keepSampleOrder Set to TRUE if you want to preserve the sample order specified
@@ -26,7 +30,9 @@
 #' @export
 #'
 #' @examples
-prettyOncoplot = function(maftools_obj,genes,
+prettyOncoplot = function(maftools_obj,
+                          onco_matrix_path,
+                          genes,
                           keepGeneOrder=TRUE,
                           keepSampleOrder=TRUE,
                           highlightHotspots=FALSE,
@@ -45,9 +51,8 @@ prettyOncoplot = function(maftools_obj,genes,
                           hideTopBarplot=FALSE,
                           hideSideBarplot=FALSE,
                           legend_row=3,legend_col=3){
-  #print(expressionColumns)
-  #return()
-  if(!recycleOncomatrix){
+
+  if(!recycleOncomatrix & missing(onco_matrix_path)){
   #order the data frame the way you want the patients shown
     if(missing(genes)){
       maftools::oncoplot(maftools_obj,writeMatrix = T,removeNonMutated = removeNonMutated)
@@ -55,13 +60,17 @@ prettyOncoplot = function(maftools_obj,genes,
       maftools::oncoplot(maftools_obj,genes=genes,writeMatrix = T,removeNonMutated = removeNonMutated)
     }
   }
-  old_style_mat = read.table("onco_matrix.txt",sep="\t",stringsAsFactors = FALSE)
-  mat=read.table("onco_matrix.txt",sep="\t",header=TRUE,check.names = FALSE,row.names=1,fill=TRUE,stringsAsFactors = F,na.strings = c("NA",""))
+
+  if(missing(onco_matrix_path)){
+    onco_matrix_path="onco_matrix.txt"
+  }
+  #because the way MAFtools writes this file out is the absolute worst for compatability
+  old_style_mat = read.table(onco_matrix_path,sep="\t",stringsAsFactors = FALSE)
+  mat=read.table(onco_matrix_path,sep="\t",header=TRUE,check.names = FALSE,row.names=1,fill=TRUE,stringsAsFactors = F,na.strings = c("NA",""))
   colnames(old_style_mat) = colnames(mat)
   mat=old_style_mat
 
   #annotate hot spots if necessary
-
   if(missing(metadataColumns)){
     message("you should name at least one metadata column to show as an annotation. Defaulting to pathology")
     metadataColumns=c("pathology")
@@ -81,9 +90,12 @@ prettyOncoplot = function(maftools_obj,genes,
 
   message(patients_dropped)
 
-  #print("8*****8*****8*****")
   genes_kept = genes[which(genes %in% rownames(mat))]
   if(!missing(minMutationPercent)){
+    if(!missing(onco_matrix_path)){
+      warning("mintMutationPercent option is not available when you provide your own oncomatrix. Feel free to implement this if you need it")
+      return()
+    }
     mutation_counts = maftools_obj@gene.summary %>%
       filter(Hugo_Symbol %in% genes) %>%
       select(Hugo_Symbol,MutatedSamples) %>%
@@ -95,8 +107,7 @@ prettyOncoplot = function(maftools_obj,genes,
       pull(Hugo_Symbol)
     genes_kept = genes[genes %in% genes_keep]
   }
-  #print("KEEPING")
-  #print(genes_kept)
+
   mat = mat[,patients_kept]
   mat = mat[which(rownames(mat) %in% genes_kept),]
   spacing = 0
@@ -210,24 +221,20 @@ prettyOncoplot = function(maftools_obj,genes,
       if(!"NA" %in% names(these)){
         these= c(these,"NA"="white")
       }
-      #names(these)=levels(options)
       colours[[column]]=these
     }else if(length(levels(options))>15){
-      #these=sample(c(1:length(levels(options))),size=length(levels(options)),replace = FALSE)
+
       these=rainbow(length(levels(options)),alpha=annoAlpha)
       names(these)=levels(options)
 
         colours[[column]]=these
 
     }else{
-
       these = blood_cols[sample(c(1:length(blood_cols)),size=length(levels(options)))]
-
       names(these)=levels(options)
       if(!"NA" %in% names(these)){
         these= c(these,"NA"="white")
       }
-
       colours[[column]]=these
     }
   }
@@ -245,7 +252,7 @@ prettyOncoplot = function(maftools_obj,genes,
   }
 
 
-  print(colours)
+  print(colours) #eventually get rid of this once the bugs are gone
   if(!missing(numericMetadataColumns)){
     metadata_df = filter(these_samples_metadata, sample_id %in% patients_kept) %>%
       column_to_rownames("sample_id") %>%
@@ -255,7 +262,6 @@ prettyOncoplot = function(maftools_obj,genes,
 
       metadata_df = metadata_df %>%
         mutate(across(names(max_list), ~ ifelse(.x > max_list[[cur_column()]], max_list[[cur_column()]], .x)))
-
     }
 
   }else{
@@ -271,10 +277,7 @@ prettyOncoplot = function(maftools_obj,genes,
   for(exp in expressionColumns){
     colours[[exp]] = col_fun
   }
-  #mat_list = list(Missense_Mutation=as.matrix(mat[,patients_kept]))
-  #if(highlightHotspots){
-  #  mat_list[["hot_spots"]]=  hot_mat #hot_mat[,patients_kept]
-  #}
+
   if(keepGeneOrder){
     ComplexHeatmap::oncoPrint(mat[,patients_kept],
               alter_fun = alter_fun,

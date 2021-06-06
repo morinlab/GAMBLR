@@ -59,3 +59,8 @@ library(data.table)
 library(RMariaDB)
 library(DBI)
 ```
+
+## Contributing
+
+As GAMBL users (GAMBLRs, so to speak) rely on the functionality of this package, the Master branch is protected. All commits must be submitted via pull request on a branch. Please refer to the [GAMBL](https://github.com/morinlab/gambl#contribution-guidelines) documentation for details on how to do this. 
+
