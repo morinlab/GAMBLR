@@ -2,13 +2,18 @@
 % Please edit documentation in R/viz.R
 \name{prettyOncoplot}
 \alias{prettyOncoplot}
-\title{Make an oncoplot that is pretty using ComplexHeatmap}
+\title{Make an oncoplot that is pretty using ComplexHeatmap. The metadata is expected to follow the structure and column naming used in GAMBL.
+If you provide your own non-GAMBL samples and metadata, you must include at least the following columns with these names.
+The first one should match the Tumor_Sample_Barcode in the MAF object or onco_matrix you provide.
+sample_id, pathology}
 \usage{
 prettyOncoplot(
   maftools_obj,
+  onco_matrix_path,
   genes,
   keepGeneOrder = TRUE,
   keepSampleOrder = TRUE,
+  highlightHotspots = FALSE,
   these_samples_metadata,
   metadataColumns,
   numericMetadataColumns,
@@ -32,6 +37,8 @@ prettyOncoplot(
 }
 \arguments{
 \item{maftools_obj}{A maftools object containing the mutations you want to plot}
+
+\item{onco_matrix_path}{Provide a path to an onco_matrix file instead of a MAF object if the former is unavailable (this limits functionality a bit)}
 
 \item{genes}{An optional list of genes to restrict your plot to}
 
@@ -63,5 +70,8 @@ prettyOncoplot(
 
 }
 \description{
-Make an oncoplot that is pretty using ComplexHeatmap
+Make an oncoplot that is pretty using ComplexHeatmap. The metadata is expected to follow the structure and column naming used in GAMBL.
+If you provide your own non-GAMBL samples and metadata, you must include at least the following columns with these names.
+The first one should match the Tumor_Sample_Barcode in the MAF object or onco_matrix you provide.
+sample_id, pathology
 }
