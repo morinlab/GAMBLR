@@ -27,6 +27,7 @@ require(data.table)
 require(rtracklayer)
 require(RMariaDB)
 require(DBI)
+require(ComplexHeatmap)
 ```
 
 
@@ -54,7 +55,7 @@ my_metadata = get_gambl_metadata()
 
 # reduce to some of the more useful metadata fields
 
-my_metadata = my_metadata %>% select(sample_id,biopsy_id,myc_ba,cohort,pathology)
+my_metadata = my_metadata %>% select(sample_id,biopsy_id,myc_ba,cohort,pathology,lymphgen)
 
 print(head(my_metadata))
 
@@ -254,9 +255,13 @@ mybed = data.frame(start=c(128806578,128805652,128748315), end=c(128806992,12880
 
 # get the mutations within a region of interest
 # note that we can specify the query chromosome with or without a chr prefix and it will be handled elegantly
-my_mutations = get_ssm_by_region(chromosome="chr8",qstart=128743606,qend=128820015)
+region="chr8:128743606-128820015"
+all_metadata = get_gambl_metadata()
+my_mutations = get_ssm_by_region(region=region)
 
-ashm_rainbow_plot(mutations_maf=my_mutations,metadata=my_metadata,bed=mybed)
+ashm_rainbow_plot(mutations_maf=my_mutations,metadata=all_metadata,bed=mybed,region=region,classification_column = "lymphgen",custom_colours = get_gambl_colours("lymphgen"))
+
+
 ```
 
 A more advanced and fairly automatic plotting function for exploring multiple aSHM regions at once. 
@@ -303,17 +308,44 @@ We can also extract a MAF-like data frame for a set of samples using any combina
 ```{r get_big_maf,width="100%", fig.dim=c(8,5)}
 # load the master merged MAF (coding only). It's usually more efficient to do this than to try to add filters to this query. Instead, just filter the data afterward
 maf_data = get_coding_ssm() 
-maf_metadata = get_gambl_metadata() %>% dplyr::rename("Tumor_Sample_Barcode"="sample_id")
+maf_metadata = get_gambl_metadata()
 maf = read.maf(maf_data,clinicalData = maf_metadata)
 # subset metadata, for example, to only BLGSP samples
 blgsp_metadata = get_gambl_metadata(case_set="BLGSP-study")
+blgsp_metadata= mutate(Adult=ifelse())
+blgsp_sample_ids = pull(blgsp_metadata,sample_id)
 # subset maf
 blgsp_maf <- subsetMaf(maf, tsb=blgsp_sample_ids)
 # perform analysis for subset maf
-oncoplot(blgsp_maf,clinicalFeatures = c("sex","cohort"),sortByAnnotation = TRUE,genesToIgnore = c("TTN","LILRB1"))
+oncoplot(blgsp_maf,clinicalFeatures = c("sex","cohort"),sortByAnnotation = TRUE,genesToIgnore = c("TTN","LILRB1"),top=30)
 ```
 
 Commonly, we will want to generate visualizations that only show genes deemed relevant for a given malignancy (and above some frequency threshold). There is a lymphoma_genes data frame bundled with this package that allows us a quick way to get a list of genes that are recurrently mutated in that disease. This list is quite long for most because it includes anything mutated at a frequency of at least (roughly) 0.5% in GAMBL. 
+
+```{r pretty_oncoplot}
+
+
+bl_genes=c("MYC","ID3","TP53","ARID1A","FBXO11","GNA13","TCF3","TFAP4","HNRNPU","FOXO1","CCND3","SMARCA4","DDX3X")
+dlbcl_genes = c("EZH2","KMT2D","MEF2B","CREBBP","MYD88")
+gene_groups = c(rep("BL",length(bl_genes)),rep("DLBCL",length(dlbcl_genes)))
+genes=c(bl_genes,dlbcl_genes)
+names(gene_groups)=genes
+oncoplot(maf,writeMatrix = TRUE,genes=genes,removeNonMutated = FALSE)
+prettyOncoplot(maftools_obj = maf,genes = genes,
+               these_samples_metadata = all_meta,
+               metadataColumns = c("pathology","lymphgen","sex","EBV_status_inf","cohort"),
+               sortByColumns = c("pathology","sex","lymphgen","EBV_status_inf","cohort"),
+               keepGeneOrder = TRUE,
+               splitGeneGroups = gene_groups,
+               splitColumnName = "pathology",
+               metadataBarHeight = 5,metadataBarFontsize = 8,fontSizeGene = 11,
+               recycleOncomatrix = TRUE,removeNonMutated = FALSE)
+
+
+
+```
+
+Maftools Oncoplots leave much to be desired. ComplexHeatmap has a function that overcomes many of these. GAMBLR has a front-end to ComplexHeatmap::oncoPrint, which we've named prettyOncoplot. This is one example that shows off some of its functionality. 
 
 #```{r tabulate_genes}
 #BL_genes_all = lymphoma_genes %>% filter(BL==TRUE) %>% pull(Gene)
