@@ -1,0 +1,67 @@
+---
+title: "Lymphoma colours"
+author: "Ryan D. Morin"
+date: "5/28/2021"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+
+```{r cars}
+library("ggsci")
+library("ggplot2")
+library("gridExtra")
+library("scales")
+data("diamonds")
+
+
+```
+
+## Basic Blood-friendly colour palette
+
+You can also embed plots, for example:
+
+```{r blood_colours, echo=FALSE}
+
+p1 <- ggplot(
+  subset(diamonds, carat >= 2.2),
+  aes(x = table, y = price, colour = cut)
+) +
+  geom_point(alpha = 0.7) +
+  geom_smooth(method = "loess", alpha = 0.05, size = 1, span = 1) +
+  theme_bw()
+p2 <- ggplot(
+  subset(diamonds, carat > 2.2 & depth > 55 & depth < 70),
+  aes(x = depth, fill = cut)
+) +
+  geom_histogram(colour = "black", binwidth = 1, position = "dodge") +
+  theme_bw()
+
+
+p1_blood = p1 + scale_color_ash()
+p2_blood = p2 + scale_fill_ash()
+grid.arrange(p1_blood, p2_blood, ncol = 2)
+
+```
+
+```{r coo_colours, echo=FALSE}
+#get a custom (named) colour set for DLBCL molecular subgroups including double-hit signature
+
+COO_colours = ggsci::ggsci_db$"ash"$coo
+
+ggplot(data.frame(COO=names(COO_colours))) + geom_bar(aes(x=COO,y=1,fill=COO),stat="identity") + scale_fill_manual(values=COO_colours) + theme_void()
+
+```
+
+
+```{r lymphgen_colours, echo=FALSE}
+#get a custom (named) colour set for DLBCL genetic subgroups including double-hit signature
+
+lg_colours = ggsci::ggsci_db$"ash"$lymphgen
+
+ggplot(data.frame(LymphGen=names(lg_colours))) + geom_bar(aes(x=LymphGen,y=1,fill=LymphGen),stat="identity") + scale_fill_manual(values=lg_colours) + theme_void()
+
+```

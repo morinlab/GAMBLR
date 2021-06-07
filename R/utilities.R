@@ -596,8 +596,17 @@ collate_sv_results = function(sample_table,tool="manta",oncogenes=c("MYC","BCL2"
 get_gambl_colours = function(classification="all",alpha=1){
   all_colours = list()
   blood_cols=ggsci::get_ash("blood")
-
-  all_colours[["lymphgen_colours"]] = c(
+  all_colours[["hmrn"]] <-c(
+    "BCL2-MYC" = "#52000F",
+    "BCL2"="#721F0F",
+    "SOCS1/SGK1"="#D66B1F",
+    "TET2/SGK1"="#C41230",
+    "MYD88"="#3B5FAC",
+    "NOTCH2"="#7F3293",
+    "NOTCH1" = "#55B55E",
+    "Other"="#ACADAF"
+  )
+  all_colours[["lymphgen"]] = c(
     "EZB-MYC" = "#52000F",
     "EZB" = "#721F0F",
     "EZB-COMP" = "#C7371A",
@@ -618,7 +627,7 @@ get_gambl_colours = function(classification="all",alpha=1){
   #                 "Missense_Mutation","Nonsense_Mutation",
   #                 "Nonstop_Mutation","Splice_Region","Splice_Site",
   #                 "Targeted_Region","Translation_Start_Site")
-  all_colours[["mutation_colours"]]=
+  all_colours[["mutation"]]=
     c(
         "Nonsense_Mutation"=unname(blood_cols["Red"]),
         "Missense_Mutation"=unname(blood_cols["Green"]),
@@ -633,7 +642,7 @@ get_gambl_colours = function(classification="all",alpha=1){
         "Splice_Region" = unname(blood_cols["Orange"]),
         "3'UTR" = unname(blood_cols["Yellow"]))
 
-  all_colours[["pos_neg_colours"]]=c(
+  all_colours[["pos_neg"]]=c(
     "POS"=unname(blood_cols["Light Blue"]),
     "NEG"=unname(blood_cols["Yellow"]),
     "FAIL"=unname(blood_cols["Gray"]),
@@ -641,7 +650,7 @@ get_gambl_colours = function(classification="all",alpha=1){
     "negative"=unname(blood_cols["Yellow"]),
     "fail"=unname(blood_cols["Gray"]))
 
-  all_colours[["copy_number_colours"]]=c(
+  all_colours[["copy_number"]]=c(
     "nLOH"="#E026D7",
     "14"="#380015",
     "15"="#380015",
@@ -660,7 +669,7 @@ get_gambl_colours = function(classification="all",alpha=1){
     "1"="#92C5DE",
     "0"="#4393C3"
   )
-  all_colours[["blood_colours"]] = c(
+  all_colours[["blood"]] = c(
       "Red" = "#c41230", "Blue"="#115284","Green" = "#39b54b",
       "Purple" = "#5c266c", "Orange"="#fe9003","Green" = "#046852",
       "Lavendar" = "#8781bd", "Steel Blue"= "#455564",
@@ -668,12 +677,12 @@ get_gambl_colours = function(classification="all",alpha=1){
       "LimeGreen" = "#a4bb87", "Brown" = "#5f3a17", "Gray" = "#bdbdc1",
       "Yellow" = "#f9bd1f"
   )
-  all_colours[["sex_colours"]]=c(
+  all_colours[["sex"]]=c(
     "M"="#118AB2",
     "Male"="#118AB2",
     "F"="#EF476F",
     "Female"="#EF476F")
-  all_colours[["pathology_colours"]] = c(
+  all_colours[["pathology"]] = c(
       "B-ALL"="#C1C64B",
       "CLL"="#889BE5",
       "MCL"="#F37A20",
@@ -694,7 +703,7 @@ get_gambl_colours = function(classification="all",alpha=1){
       "SCBC"="#8c9c90",
       "UNSPECIFIED"="#cfba7c"
   )
-  all_colours[["coo_colours"]] = c(
+  all_colours[["coo"]] = c(
     "ABC" = "#05ACEF",
     "UNCLASS" = "#05631E",
     "U" = "#05631E",
@@ -718,32 +727,14 @@ get_gambl_colours = function(classification="all",alpha=1){
     names(alpha_cols)=names(raw_cols)
     all_colours[[colslot]]=alpha_cols
   }
-  if(classification == "copy_number"){
-    return(all_colours[["copy_number_colours"]])
-  }
-  if(classification == "blood"){
-    return(all_colours[["blood_colours"]])
-  }
-  if(classification == "pathology"){
-    return(all_colours[["pathology_colours"]])
-  }
-  if(classification=="lymphgen"){
-    return(all_colours[["lymphgen_colours"]])
-  }
-  if(classification == "COO"){
-    return(all_colours[["coo_colours"]])
-  }
-  if(classification=="mutation"){
-    return(all_colours[["mutation_colours"]])
-  }
-  if(classification =="pos_neg"){
-    return(all_colours[["pos_neg_colours"]]);
-  }
-  if(classification=="sex"){
-    return(all_colours[["sex_colours"]]);
-  }
-  else{
-    all=c(all_colours[["lymphgen_colours"]],all_colours[["pathology_colours"]],all_colours[["coo_colours"]])
+  #return matching value from lowercase version of the argument if it exists
+  lc_class = stringr::str_to_lower(classification)
+  if(classification %in% names(all_colours)){
+    return(all_colours[[classification]])
+  }else if(lc_class %in% names(all_colours)){
+    return(all_colours[[lc_class]])
+  }else{
+    all=c(all_colours[["lymphgen"]],all_colours[["pathology"]],all_colours[["coo"]])
     return(all)
   }
 }
