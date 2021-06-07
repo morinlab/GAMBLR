@@ -312,6 +312,7 @@ maf_metadata = get_gambl_metadata()
 maf = read.maf(maf_data,clinicalData = maf_metadata)
 # subset metadata, for example, to only BLGSP samples
 blgsp_metadata = get_gambl_metadata(case_set="BLGSP-study")
+blgsp_metadata= mutate(Adult=ifelse())
 blgsp_sample_ids = pull(blgsp_metadata,sample_id)
 # subset maf
 blgsp_maf <- subsetMaf(maf, tsb=blgsp_sample_ids)
@@ -325,17 +326,19 @@ Commonly, we will want to generate visualizations that only show genes deemed re
 
 
 bl_genes=c("MYC","ID3","TP53","ARID1A","FBXO11","GNA13","TCF3","TFAP4","HNRNPU","FOXO1","CCND3","SMARCA4","DDX3X")
-gene_groups = c(rep("shared",10),c(rep("different",3)))
-
-names(gene_groups)=bl_genes
-oncoplot(blgsp_maf,writeMatrix = TRUE,genes=bl_genes,removeNonMutated = FALSE)
-prettyOncoplot(maftools_obj = blgsp_maf,genes = bl_genes,
-               these_samples_metadata = blgsp_metadata,
-               metadataColumns = c("sex","EBV_status_inf","cohort"),
-               sortByColumns = c("sex","EBV_status_inf","cohort"),
+dlbcl_genes = c("EZH2","KMT2D","MEF2B","CREBBP","MYD88")
+gene_groups = c(rep("BL",length(bl_genes)),rep("DLBCL",length(dlbcl_genes)))
+genes=c(bl_genes,dlbcl_genes)
+names(gene_groups)=genes
+oncoplot(maf,writeMatrix = TRUE,genes=genes,removeNonMutated = FALSE)
+prettyOncoplot(maftools_obj = maf,genes = genes,
+               these_samples_metadata = all_meta,
+               metadataColumns = c("pathology","lymphgen","sex","EBV_status_inf","cohort"),
+               sortByColumns = c("pathology","sex","lymphgen","EBV_status_inf","cohort"),
                keepGeneOrder = TRUE,
                splitGeneGroups = gene_groups,
-               splitColumnName = "sex",metadataBarHeight = 10,metadataBarFontsize = 10,
+               splitColumnName = "pathology",
+               metadataBarHeight = 5,metadataBarFontsize = 8,fontSizeGene = 11,
                recycleOncomatrix = TRUE,removeNonMutated = FALSE)
 
 
