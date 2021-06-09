@@ -50,6 +50,8 @@ prettyOncoplot = function(maftools_obj,
                           metadataBarFontsize=5,
                           hideTopBarplot=FALSE,
                           hideSideBarplot=FALSE,
+                          splitColumnName,
+                          splitGeneGroups,
                           legend_row=3,legend_col=3){
 
   if(!recycleOncomatrix & missing(onco_matrix_path)){
@@ -171,26 +173,38 @@ prettyOncoplot = function(maftools_obj,
                 gp = gpar(fill = "white", col = box_col))
     }
   )
-  #automagically assign colours for other metadata columns
+  #automagically assign colours for other metadata columns.
+  #TO DO: convert the loop below into a "map_metadata_to_colours" function
   blood_cols=get_gambl_colours("blood",alpha=annoAlpha)
 
   colours = list()
+  clinical_colours = ggsci::get_ash("clinical")
 
   for(column in metadataColumns){
-    options = these_samples_metadata %>% arrange(column) %>% pull(column) %>% unique()
+
     these_samples_metadata[[column]] = factor(these_samples_metadata[[column]], levels=unique(these_samples_metadata[[column]]))
     options = these_samples_metadata %>% arrange(column) %>% filter(!is.na(column)) %>% pull(column) %>% unique()
     options=options[!is.na(options)]
+    print(">>>>>>>")
+    print(levels(options))
+    print("<<<<<<<")
     if(column == "sex"){
       these = get_gambl_colours("sex",alpha=annoAlpha)
       these = these[levels(options)]
       if(!"NA" %in% names(these)){
         these= c(these,"NA"="white")
-
+      }
+      colours[[column]]=these
+    }else if(sum(levels(options) %in% names(clinical_colours))==length(levels(options))){
+      #we have a way to map these all to colours!
+      message(paste("found colours for",column))
+      these = clinical_colours[levels(options)]
+      if(!"NA" %in% names(these)){
+        these= c(these,"NA"="white")
       }
       colours[[column]]=these
     }else if(("positive" %in% options | "POS" %in% options) & length(options)<4){
-      #print("using pos_neg")
+      print("using pos_neg")
 
       these = get_gambl_colours("pos_neg",alpha=annoAlpha)
       these = these[levels(options)]
@@ -222,6 +236,13 @@ prettyOncoplot = function(maftools_obj,
         these= c(these,"NA"="white")
       }
       colours[[column]]=these
+    }else if(column == "HMRN"){
+      these=get_gambl_colours("hmrn",alpha=annoAlpha)
+      if(!"NA" %in% names(these)){
+        these= c(these,"NA"="white")
+      }
+      colours[[column]]=these
+
     }else if(length(levels(options))>15){
 
       these=rainbow(length(levels(options)),alpha=annoAlpha)
@@ -278,19 +299,52 @@ prettyOncoplot = function(maftools_obj,
     colours[[exp]] = col_fun
   }
 
+  if(missing(splitColumnName)){
+    column_split=rep("",length(patients_kept))
+  }else{
+    column_split = factor(metadata_df[patients_kept,splitColumnName])
+  }
+  if(missing(splitGeneGroups)){
+    row_split=rep("",length(genes))
+  }else{
+    row_split=factor(splitGeneGroups[genes],levels=unique(splitGeneGroups[genes]))
+  }
   if(keepGeneOrder){
-    ComplexHeatmap::oncoPrint(mat[,patients_kept],
-              alter_fun = alter_fun,
-              col = col,
-              row_order = genes_kept,
-              column_order = patients_kept,
-              #column_split=factor(hmrn_kept,levels=names(colours$HMRN)),
-              column_labels = NULL,
-              column_title=NULL,
-              row_names_gp = gpar(fontsize = fontSizeGene),
-              pct_gp = gpar(fontsize = fontSizeGene),
-              bottom_annotation =
-                ComplexHeatmap::HeatmapAnnotation(df=metadata_df,col=colours))
+    heatmap_legend_param = list(title = "Alterations",
+
+                                nrow=2, ncol=1,
+                                legend_direction = "horizontal")
+
+
+    ch = ComplexHeatmap::oncoPrint(mat[genes,patients_kept],
+                                   alter_fun = alter_fun,
+                                   top_annotation=NULL,
+                                   right_annotation=NULL,
+                                   col = col,
+                                   row_order=genes_kept,
+                                   column_order = patients_kept,
+                                   #column_split=factor(hmrn_kept,levels=names(colours$HMRN)),
+                                   column_labels = NULL,
+                                   show_column_names = FALSE,
+                                   column_split=column_split,
+                                   column_title=NULL,
+                                   row_title=NULL,
+                                   row_split=row_split,
+                                   heatmap_legend_param = heatmap_legend_param,
+                                   row_names_gp = gpar(fontsize = fontSizeGene),
+                                   pct_gp = gpar(fontsize = fontSizeGene),
+                                   bottom_annotation =
+                                     ComplexHeatmap::HeatmapAnnotation(df=metadata_df,
+                                                                       col=colours,
+                                                                       simple_anno_size = unit(metadataBarHeight, "mm"),
+                                                                       gap = unit(0.25*metadataBarHeight, "mm"),
+                                                                       annotation_name_gp=gpar(fontsize=metadataBarFontsize),
+                                                                       annotation_legend_param =
+                                                                         list(nrow=legend_row,
+                                                                              col_fun=col_fun,
+                                                                              ncol=legend_col,
+                                                                              direction="horizontal")))
+    draw(ch, heatmap_legend_side = "bottom", annotation_legend_side = "bottom")
   }else{
 
     heatmap_legend_param = list(title = "Alterations",
@@ -303,9 +357,13 @@ prettyOncoplot = function(maftools_obj,
               top_annotation=NULL,
               right_annotation=NULL,
               col = col,
-              column_order = patients_kept,
+              #column_order = patients_kept,
               #column_split=factor(hmrn_kept,levels=names(colours$HMRN)),
               column_labels = NULL,
+              column_split=column_split,
+              column_title=NULL,
+              row_title=NULL,
+              row_split=row_split,
               heatmap_legend_param = heatmap_legend_param,
               row_names_gp = gpar(fontsize = fontSizeGene),
               pct_gp = gpar(fontsize = fontSizeGene),

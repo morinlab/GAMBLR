@@ -31,6 +31,8 @@ prettyOncoplot(
   metadataBarFontsize = 5,
   hideTopBarplot = FALSE,
   hideSideBarplot = FALSE,
+  splitColumnName,
+  splitGeneGroups,
   legend_row = 3,
   legend_col = 3
 )

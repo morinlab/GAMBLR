@@ -2,5 +2,7 @@
 inst/doc
 Meta
 doc
+*.png
 .Rhistory
 *.pdf
+data/ggsci_db.rda
