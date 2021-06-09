@@ -593,6 +593,7 @@ collate_sv_results = function(sample_table,tool="manta",oncogenes=c("MYC","BCL2"
 #' # install_github("morinlab/ggsci")
 get_gambl_colours = function(classification="all",alpha=1){
   all_colours = list()
+  everything = c()
   blood_cols=ggsci::get_ash("blood")
   all_colours[["hmrn"]] <-c(
     "BCL2-MYC" = "#52000F",
@@ -675,11 +676,12 @@ get_gambl_colours = function(classification="all",alpha=1){
       "LimeGreen" = "#a4bb87", "Brown" = "#5f3a17", "Gray" = "#bdbdc1",
       "Yellow" = "#f9bd1f"
   )
-  all_colours[["sex"]]=c(
-    "M"="#118AB2",
-    "Male"="#118AB2",
-    "F"="#EF476F",
-    "Female"="#EF476F")
+  #all_colours[["sex"]]=c(
+  #  "M"="#118AB2",
+  #  "Male"="#118AB2",
+  #  "F"="#EF476F",
+  #  "Female"="#EF476F")
+  all_colours[["clinical"]]=ggsci::get_ash("clinical")
   all_colours[["pathology"]] = c(
       "B-ALL"="#C1C64B",
       "CLL"="#889BE5",
@@ -725,6 +727,9 @@ get_gambl_colours = function(classification="all",alpha=1){
     names(alpha_cols)=names(raw_cols)
     all_colours[[colslot]]=alpha_cols
   }
+  for(this_group in names(all_colours)){
+    everything=c(everything,all_colours[[this_group]])
+  }
   #return matching value from lowercase version of the argument if it exists
   lc_class = stringr::str_to_lower(classification)
   if(classification %in% names(all_colours)){
@@ -732,8 +737,9 @@ get_gambl_colours = function(classification="all",alpha=1){
   }else if(lc_class %in% names(all_colours)){
     return(all_colours[[lc_class]])
   }else{
-    all=c(all_colours[["lymphgen"]],all_colours[["pathology"]],all_colours[["coo"]])
-    return(all)
+    #all=c(all_colours[["lymphgen"]],all_colours[["pathology"]],all_colours[["coo"]])
+    #return(all)
+    return(everything)
   }
 }
 

@@ -33,6 +33,7 @@ get_gambl_metadata = function(seq_type_filter = "genome",
   #The key for joining this table to the mutation information is to use sample_id. Think of this as equivalent to a library_id. It will differ depending on what assay was done to the sample.
   biopsy_meta = dplyr::tbl(con,"biopsy_metadata") %>% dplyr::select(-patient_id) %>% dplyr::select(-pathology) %>% dplyr::select(-time_point) %>% dplyr::select(-EBV_status_inf) #drop duplicated columns
   all_meta = dplyr::left_join(sample_meta,biopsy_meta,by="biopsy_id") %>% as.data.frame()
+  all_meta = all_meta %>% mutate(bcl2_ba=ifelse(bcl2_ba=="POS_BCC","POS",bcl2_ba))
   if(seq_type_filter == "genome" & length(tissue_status_filter) == 1 & tissue_status_filter[1] == "tumour"){
     #join back the matched normal genome
     all_meta = left_join(all_meta,sample_meta_normal_genomes,by="patient_id")
@@ -197,6 +198,9 @@ add_prps_result = function(incoming_metadata){
 #'
 #' @examples
 add_icgc_metadata = function(incoming_metadata){
+
+  #add trio metadata too!
+  trio_meta = "/projects/rmorin/projects/gambl-repos/gambl-rmorin/data/metadata/private_metadata/2021-04-30-DLBC_LSARP_Trios_with_metadata.tsv"
   icgc_publ = suppressMessages(read_csv("/projects/rmorin/projects/gambl-repos/gambl-rmorin/data/metadata/raw_metadata/MALY_DE_tableS1.csv"))
   icgc_publ = icgc_publ[,c(1:20)]
   #fix commas as decimals
@@ -279,6 +283,7 @@ get_gambl_outcomes = function(patient_ids,time_unit="year",censor_cbioportal=FAL
     all_outcome = all_outcome %>% mutate(DFS_STATUS = case_when(DFS_STATUS=="0" ~ "0:DiseaseFree",DFS_STATUS=="1"~"1:Recurred/Progressed"))
     all_outcome = all_outcome %>% mutate(all_outcome,DFS_MONTHS=PFS_MONTHS)
   }
+  all_outcome = all_outcome %>% mutate(is_adult = ifelse(age < 20, "Pediatric","Adult"))
   DBI::dbDisconnect(con)
   return(all_outcome)
 }
