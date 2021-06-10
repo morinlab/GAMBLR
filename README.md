@@ -58,6 +58,7 @@ library(tidyverse)
 library(data.table)
 library(RMariaDB)
 library(DBI)
+library(ComplexHeatmap)
 ```
 
 ## Contributing
