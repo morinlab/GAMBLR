@@ -52,7 +52,8 @@ prettyOncoplot = function(maftools_obj,
                           hideSideBarplot=FALSE,
                           splitColumnName,
                           splitGeneGroups,
-                          legend_row=3,legend_col=3){
+                          legend_row=3,legend_col=3,showTumorSampleBarcode=FALSE,
+                          groupNames){
 
   if(!recycleOncomatrix & missing(onco_matrix_path)){
   #order the data frame the way you want the patients shown
@@ -168,8 +169,8 @@ prettyOncoplot = function(maftools_obj,
       grid.rect(x, y, w-unit(spacing, "pt"), h*height_scaling,
                 gp = gpar(fill = col["Missense_Mutation"], col = box_col))
     },
-    hot_spots = function(x, y, w, h) {
-      grid.rect(x, y, w-unit(spacing, "pt"), h/2*height_scaling,
+    hot_spot = function(x, y, w, h) {
+      grid.rect(x, y, w-unit(spacing, "pt"), (height_scaling/5)*h,
                 gp = gpar(fill = "white", col = box_col))
     }
   )
@@ -269,7 +270,7 @@ prettyOncoplot = function(maftools_obj,
   }
   if(highlightHotspots){
     hot_samples = filter(maftools_obj@data,hot_spot==TRUE & Hugo_Symbol %in% genes) %>%
-    select(Hugo_Symbol,Tumor_Sample_Barcode) %>% mutate(mutated="YES") %>% unique()
+    dplyr::select(Hugo_Symbol,Tumor_Sample_Barcode) %>% mutate(mutated="hot_spot") %>% unique()
     all_genes_df = data.frame(Hugo_Symbol=rownames(mat))
     all_samples_df = data.frame(Tumor_Sample_Barcode=colnames(mat))
     hs = left_join(all_samples_df,hot_samples)
@@ -277,7 +278,11 @@ prettyOncoplot = function(maftools_obj,
         pivot_wider(names_from = "Tumor_Sample_Barcode",values_from="mutated") %>%
     left_join(all_genes_df,.) %>%
     column_to_rownames("Hugo_Symbol") %>% as.matrix()
-    colours[["hot_spots"]]= c("YES"="magenta")
+    # annotate hotspots in matrix
+    for (i in colnames(mat)){
+      mat[genes,i][!is.na(hot_mat[genes,i])] <- paste0(mat[genes,i][!is.na(hot_mat[genes,i])], ";",  hot_mat[genes,i][!is.na(hot_mat[genes,i])])
+    }
+    colours[["hot_spots"]]= c("hot_spot"="magenta")
   }
 
 
@@ -317,81 +322,48 @@ prettyOncoplot = function(maftools_obj,
   }else{
     row_split=factor(splitGeneGroups[genes],levels=unique(splitGeneGroups[genes]))
   }
+  if(!missing(groupNames)){
+    column_title=groupNames
+  }else{
+    column_title=NULL
+  }
   if(keepGeneOrder){
-    heatmap_legend_param = list(title = "Alterations",
+    gene_order=genes
+  }else{
+    gene_order=NULL
+  }
 
-                                nrow=2, ncol=1,
-                                legend_direction = "horizontal")
-
-
-    ch = ComplexHeatmap::oncoPrint(mat[genes,patients_kept],
+  heatmap_legend_param = list(title = "Alterations",nrow=2, ncol=1,
+                         legend_direction = "horizontal")
+  ch = ComplexHeatmap::oncoPrint(mat[genes,patients_kept],
                                    alter_fun = alter_fun,
                                    top_annotation=NULL,
                                    right_annotation=NULL,
                                    col = col,
-                                   row_order=genes_kept,
+                                   row_order=gene_order,
                                    column_order = patients_kept,
                                    #column_split=factor(hmrn_kept,levels=names(colours$HMRN)),
                                    column_labels = NULL,
-                                   show_column_names = FALSE,
+                                   show_column_names = showTumorSampleBarcode,
                                    column_split=column_split,
-                                   column_title=NULL,
+                                   column_title=column_title,
                                    row_title=NULL,
                                    row_split=row_split,
                                    heatmap_legend_param = heatmap_legend_param,
                                    row_names_gp = gpar(fontsize = fontSizeGene),
                                    pct_gp = gpar(fontsize = fontSizeGene),
-                                   bottom_annotation =
-                                     ComplexHeatmap::HeatmapAnnotation(df=metadata_df,
-                                                                       col=colours,
-                                                                       simple_anno_size = unit(metadataBarHeight, "mm"),
-                                                                       gap = unit(0.25*metadataBarHeight, "mm"),
-                                                                       annotation_name_gp=gpar(fontsize=metadataBarFontsize),
-                                                                       annotation_legend_param =
-                                                                         list(nrow=legend_row,
-                                                                              col_fun=col_fun,
-                                                                              ncol=legend_col,
-                                                                              direction="horizontal")))
+                    bottom_annotation =
+                    ComplexHeatmap::HeatmapAnnotation(df=metadata_df,
+                                                      col=colours,
+                                                      simple_anno_size = unit(metadataBarHeight, "mm"),
+                                                      gap = unit(0.25*metadataBarHeight, "mm"),
+                                                      annotation_name_gp=gpar(fontsize=metadataBarFontsize),
+                                                      annotation_legend_param =
+                                                        list(nrow=legend_row,
+                                                            col_fun=col_fun,
+                                                            ncol=legend_col,
+                                                            direction="horizontal")))
     draw(ch, heatmap_legend_side = "bottom", annotation_legend_side = "bottom")
-  }else{
-
-    heatmap_legend_param = list(title = "Alterations",
-
-                                nrow=2, ncol=1,
-                                legend_direction = "horizontal")
-
-    ch = ComplexHeatmap::oncoPrint(mat[,patients_kept],
-              alter_fun = alter_fun,
-              top_annotation=NULL,
-              right_annotation=NULL,
-              col = col,
-              #column_order = patients_kept,
-              #column_split=factor(hmrn_kept,levels=names(colours$HMRN)),
-              column_labels = NULL,
-              column_split=column_split,
-              column_title=NULL,
-              row_title=NULL,
-              row_split=row_split,
-              heatmap_legend_param = heatmap_legend_param,
-              row_names_gp = gpar(fontsize = fontSizeGene),
-              pct_gp = gpar(fontsize = fontSizeGene),
-              bottom_annotation =
-              ComplexHeatmap::HeatmapAnnotation(df=metadata_df,
-                                                col=colours,
-                                                simple_anno_size = unit(metadataBarHeight, "mm"),
-                                                gap = unit(0.25*metadataBarHeight, "mm"),
-                                                annotation_name_gp=gpar(fontsize=metadataBarFontsize),
-                                                annotation_legend_param =
-                                                  list(nrow=legend_row,
-                                                       col_fun=col_fun,
-                                                        ncol=legend_col,
-                                                        direction="horizontal")))
-    draw(ch, heatmap_legend_side = "bottom", annotation_legend_side = "bottom")
-  }
-
-
-
-
 }
 
 #' Generate a colourful multi-panel overview of hypermutation in regions of interest across many samples

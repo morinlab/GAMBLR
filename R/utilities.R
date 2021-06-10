@@ -72,8 +72,8 @@ annotate_hotspots = function(mutation_maf,recurrence_min = 5,analysis_base=c("FL
     arranged = clustered_hotspots %>% separate_rows(COORDINATES,convert=TRUE) %>%
       group_by(SYMBOL,MAX_COORD) %>% arrange(COORDINATES)
 
-    mins = arranged %>% slice_head() %>% rename("START"="COORDINATES")
-    maxs = arranged %>% slice_tail() %>% rename("END"="COORDINATES")
+    mins = arranged %>% slice_head() %>% dplyr::rename("START"="COORDINATES")
+    maxs = arranged %>% slice_tail() %>% dplyr::rename("END"="COORDINATES")
     hotspot_ranges = left_join(mins, select(maxs, c(MAX_COORD,END)), by = c("SYMBOL","MAX_COORD"))
     hotspot_info[[abase]]=hotspot_ranges
   }
@@ -87,7 +87,8 @@ annotate_hotspots = function(mutation_maf,recurrence_min = 5,analysis_base=c("FL
   long_hotspot = bind_rows(starts,ends)
   filled_coords = long_hotspot  %>% group_by(MAX_COORD) %>% arrange(MAX_COORD,COORDINATE) %>%
   complete(COORDINATE = seq(COORDINATE[1], COORDINATE[2]))  %>%
-    fill(CHROMOSOME, .direction = "up") %>% rename("Start_Position"="COORDINATE") %>% rename("Chromosome"="CHROMOSOME") %>% ungroup()
+    fill(CHROMOSOME, .direction = "up") %>% dplyr::rename("Start_Position"="COORDINATE") %>%
+    dplyr::rename("Chromosome"="CHROMOSOME") %>% ungroup()
   filled_coords = mutate(filled_coords,hot_spot=TRUE)
   #just the ssms that match these coordinates!
   hot_ssms = left_join(mutation_maf,filled_coords,by=c("Chromosome","Start_Position"))
