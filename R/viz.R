@@ -179,6 +179,7 @@ prettyOncoplot = function(maftools_obj,
 
   colours = list()
   clinical_colours = ggsci::get_ash("clinical")
+  gambl_colours=get_gambl_colours()
 
   for(column in metadataColumns){
 
@@ -243,6 +244,13 @@ prettyOncoplot = function(maftools_obj,
       }
       colours[[column]]=these
 
+    }else if(sum(levels(options) %in% names(gambl_colours))==length(levels(options))){
+      message(paste("found colours for",column,"in all_gambl_colours"))
+      these = all_gambl_colours[levels(options)]
+      if(!"NA" %in% names(these)){
+        these= c(these,"NA"="white")
+      }
+      colours[[column]]=these
     }else if(length(levels(options))>15){
 
       these=rainbow(length(levels(options)),alpha=annoAlpha)
