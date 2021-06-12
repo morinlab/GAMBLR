@@ -59,6 +59,7 @@ library(data.table)
 library(RMariaDB)
 library(DBI)
 library(ComplexHeatmap)
+library(ggrepel)
 ```
 
 ## Contributing
