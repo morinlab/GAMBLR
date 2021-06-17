@@ -2,6 +2,8 @@ pandoc: 2.3.1
 pkgdown: 1.6.1
 pkgdown_sha: ~
 articles:
+  GAMBLR_presentation: GAMBLR_presentation.html
   examples: examples.html
-last_built: 2021-04-26T22:55Z
+  lymphoma: lymphoma.html
+last_built: 2021-06-15T01:14Z
 

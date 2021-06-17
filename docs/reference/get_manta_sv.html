@@ -95,7 +95,13 @@
   </a>
   <ul class="dropdown-menu" role="menu">
     <li>
+      <a href="../articles/GAMBLR_presentation.html">Doubling Down on GAMBL with GAMBLR</a>
+    </li>
+    <li>
       <a href="../articles/examples.html">GAMBLR - working with GAMBL data painlessly in R</a>
+    </li>
+    <li>
+      <a href="../articles/lymphoma.html">Lymphoma colours</a>
     </li>
   </ul>
 </li>
@@ -125,8 +131,6 @@
     </div>
 
     <pre class="usage"><span class='fu'>get_manta_sv</span><span class='op'>(</span>
-  db <span class='op'>=</span> <span class='st'>"gambl_test"</span>,
-  table_name <span class='op'>=</span> <span class='st'>"bedpe_manta_hg19"</span>,
   min_vaf <span class='op'>=</span> <span class='fl'>0.1</span>,
   min_score <span class='op'>=</span> <span class='fl'>40</span>,
   pass <span class='op'>=</span> <span class='cn'>TRUE</span>,
@@ -142,14 +146,6 @@
     <h2 class="hasAnchor" id="arguments"><a class="anchor" href="#arguments"></a>Arguments</h2>
     <table class="ref-arguments">
     <colgroup><col class="name" /><col class="desc" /></colgroup>
-    <tr>
-      <th>db</th>
-      <td><p>The GAMBL database name</p></td>
-    </tr>
-    <tr>
-      <th>table_name</th>
-      <td><p>The table we are querying</p></td>
-    </tr>
     <tr>
       <th>min_vaf</th>
       <td><p>The minimum tumour VAF for a SV to be returned</p></td>
@@ -177,6 +173,10 @@
     <tr>
       <th>with_chr_prefix</th>
       <td><p>Prepend all chromosome names with chr (required by some downstream analyses)</p></td>
+    </tr>
+    <tr>
+      <th>table_name</th>
+      <td><p>The table we are querying</p></td>
     </tr>
     <tr>
       <th>pair_status</th>

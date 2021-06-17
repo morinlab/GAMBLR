@@ -95,7 +95,13 @@
   </a>
   <ul class="dropdown-menu" role="menu">
     <li>
+      <a href="../articles/GAMBLR_presentation.html">Doubling Down on GAMBL with GAMBLR</a>
+    </li>
+    <li>
       <a href="../articles/examples.html">GAMBLR - working with GAMBL data painlessly in R</a>
+    </li>
+    <li>
+      <a href="../articles/lymphoma.html">Lymphoma colours</a>
     </li>
   </ul>
 </li>
@@ -124,7 +130,12 @@
     <p>Bring together all derived sample-level results from many GAMBL pipelines</p>
     </div>
 
-    <pre class="usage"><span class='fu'>collate_results</span><span class='op'>(</span><span class='va'>sample_table</span>, write_to_file <span class='op'>=</span> <span class='cn'>FALSE</span><span class='op'>)</span></pre>
+    <pre class="usage"><span class='fu'>collate_results</span><span class='op'>(</span>
+  <span class='va'>sample_table</span>,
+  write_to_file <span class='op'>=</span> <span class='cn'>FALSE</span>,
+  join_with_full_metadata <span class='op'>=</span> <span class='cn'>FALSE</span>,
+  <span class='va'>case_set</span>
+<span class='op'>)</span></pre>
 
 
     <h2 class="hasAnchor" id="value"><a class="anchor" href="#value"></a>Value</h2>

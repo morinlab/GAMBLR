@@ -95,7 +95,13 @@
   </a>
   <ul class="dropdown-menu" role="menu">
     <li>
+      <a href="../articles/GAMBLR_presentation.html">Doubling Down on GAMBL with GAMBLR</a>
+    </li>
+    <li>
       <a href="../articles/examples.html">GAMBLR - working with GAMBL data painlessly in R</a>
+    </li>
+    <li>
+      <a href="../articles/lymphoma.html">Lymphoma colours</a>
     </li>
   </ul>
 </li>
@@ -128,7 +134,10 @@
   <span class='va'>this_sample</span>,
   just_segments <span class='op'>=</span> <span class='cn'>FALSE</span>,
   coding_only <span class='op'>=</span> <span class='cn'>FALSE</span>,
-  <span class='va'>genes_to_label</span>
+  <span class='va'>one_chrom</span>,
+  <span class='va'>genes_to_label</span>,
+  from_flatfile <span class='op'>=</span> <span class='cn'>FALSE</span>,
+  use_augmented_maf <span class='op'>=</span> <span class='cn'>FALSE</span>
 <span class='op'>)</span></pre>
 
     <h2 class="hasAnchor" id="arguments"><a class="anchor" href="#arguments"></a>Arguments</h2>
@@ -141,6 +150,10 @@
     <tr>
       <th>genes_to_label</th>
       <td><p>optional. Provide a list of genes to label (if mutated). Can only be used with coding_only (see below)</p></td>
+    </tr>
+    <tr>
+      <th>from_flatfile</th>
+      <td></td>
     </tr>
     </table>
 

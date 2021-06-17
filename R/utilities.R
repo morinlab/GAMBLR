@@ -210,7 +210,7 @@ collate_results = function(sample_table,write_to_file=FALSE,join_with_full_metad
   sample_table = collate_curated_sv_results(sample_table=sample_table)
   sample_table = collate_ashm_results(sample_table=sample_table)
   sample_table = collate_nfkbiz_results(sample_table=sample_table)
-  #sample_table = collate_sbs_results(sample_table=sample_table)
+  sample_table = collate_sbs_results(sample_table=sample_table)
   sample_table = collate_derived_results(sample_table=sample_table)
   if(write_to_file){
     output_file = config::get("table_flatfiles")$derived
@@ -472,7 +472,7 @@ collate_extra_metadata= function(sample_table,file_path){
 #' @import tidyverse
 #'
 #' @examples
-collate_sbs_results = function(sample_table,file_path){
+collate_sbs_results = function(sample_table,file_path,scale_vals=FALSE){
   if(missing(file_path)){
     file_path = "/projects/rmorin_scratch/prasath_scratch/gambl/sigprofiler/gambl_hg38/02-extract/slms3.gambl.icgc.hg38.matched.unmatched/SBS96/Suggested_Solution/COSMIC_SBS96_Decomposed_Solution/Activities/COSMIC_SBS96_Activities_refit.txt"
   }
@@ -480,14 +480,23 @@ collate_sbs_results = function(sample_table,file_path){
   rs=rowSums(signatures)
   cn=colnames(signatures)
   new_sig = signatures
-  for(col in cn){
-    scaled_vals = signatures[,col] / rs
-    new_sig[,col]=scaled_vals
+  if(scale_vals){
+    for(col in cn){
+      scaled_vals = signatures[,col] / rs
+      new_sig[,col]=scaled_vals
+    }
+    sbs1 = signatures[,"SBS1"] / rs
+    sbs9 = signatures[,"SBS9"] / rs
+    sbs8 = signatures[,"SBS8"] / rs
+    sbs = data.frame(sample_id = rownames(signatures),sbs1=sbs1,sbs9=sbs9,sbs8=sbs8)
   }
-  sbs1 = signatures[,"SBS1"] / rs
-  sbs9 = signatures[,"SBS9"] / rs
-  sbs8 = signatures[,"SBS8"] / rs
-  sbs = data.frame(sample_id = rownames(signatures),sbs1=sbs1,sbs9=sbs9,sbs8=sbs8)
+  else{
+    sbs1 = signatures[,"SBS1"]
+    sbs9 = signatures[,"SBS9"]
+    sbs8 = signatures[,"SBS8"]
+    sbs = data.frame(sample_id = rownames(signatures),sbs1=sbs1,sbs9=sbs9,sbs8=sbs8)
+  }
+
 
   sample_table = left_join(sample_table,sbs)
   return(sample_table)
