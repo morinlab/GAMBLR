@@ -297,7 +297,7 @@ prettyOncoplot = function(maftools_obj,
 
   #scale the expression data and truncate at 5 and 95th percentile
   trim_scale_expression <- function(x){
-    quants <- unname(quantile(x, probs = c(0.05, 0.95)))
+    quants <- unname(quantile(x, probs = c(0.05, 0.95),na.rm=TRUE))
     x <- ifelse(x < quants[1], quants[1], x)
     x <- ifelse(x > quants[2], quants[2], x)
     x <- (x - quants[1]) / (quants[2] - quants[1])

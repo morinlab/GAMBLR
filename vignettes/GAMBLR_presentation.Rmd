@@ -1,0 +1,485 @@
+---
+title: "Doubling Down on GAMBL with GAMBLR"
+author: "Ryan Morin"
+date: "6/15/2021"
+output:
+  beamer_presentation: default
+  slidy_presentation: default
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = FALSE)
+
+require(tidyverse)
+require(maftools)
+require(circlize)
+require(data.table)
+require(rtracklayer)
+require(RMariaDB)
+require(ggbeeswarm)
+require(DBI)
+require(ComplexHeatmap)
+require(gridExtra)
+require(ggsci)
+```
+
+## What is GAMBLR?
+
+* GAMBLR is a new (and actively growing) R package for working with GAMBL results and common pipeline outputs
+* LCR-modules is great for running level 1 and 2 analyses at massive scale
+    - Variant calling and annotation (per sample/pair)
+     - Read mapping for expression analysis and read counting/pre-processing
+* The predictable output file organization gives output files sufficient consistency to allow them to be easily integrated but
+    - We each tend to write (and re-write) similar code unnecessarily to perform ad hoc level-3 analyses
+    - It's challenging to write snakefiles that handle the many complex use cases in GAMBL
+* GAMBLR is meant to provide a framework to maximize code-reuse for level-3 analyses with an emphasis on GAMBL results
+
+## How does it work? 
+
+* All the metadata and some of the main results are regularly importe into a MySQL database, currently with access controlled through the morinlab group
+* Convenience functions are available for retrieving and combining the data for common use cases
+    - "`get_`" functions to retrieve a specific type of mutations
+    - "`annotate_`" functions to add annotations to data on-the-fly using built-in or your own annotation definitions
+    - "`collate_`" functions to summarize key results per-sample for additional annotations and analyses
+- A growing set of plotting functions for generating some standard and some new plot types
+    - oncoplot (maftools), prettyOncoplot (front-end for ComplexHeatmap::oncoprint)
+    - Custom visualization for aberrant somatic hypermuation 
+
+## Where can you learn more?
+
+* Installation instructions are in the Readme for the [GitHub repo](https://github.com/morinlab/gamblr) (send me your user ID if you want access)
+* If you are not in the "morinlab" group many functions won't work for you. I'm working on resolving this. 
+* There is a vignette (Examples.Rmd) in the repo that descibes many more worked use cases
+* RTFM ("read the functions manual") - most functions are documented
+* Install it and load GAMBLR then type GAMBLR::(tab) to get the list of available functions
+* Ask in the GAMBLR help channel in Slack
+
+## Getting started: metadata and collated results
+
+* The most commonly used columns are sample_id and patient_id
+* Biopsy_id is used behind-the-scenes with some GAMBLR functions
+
+\tiny
+```{r metadata, warning=F, message=F,echo=T}
+library(GAMBLR)
+just_metadata = get_gambl_metadata() 
+dim(just_metadata)
+just_metadata %>% filter(cohort=="DLBCL_LSARP_Trios") %>% 
+  select(patient_id,sample_id,biopsy_id,time_point) %>% 
+  head(3) %>% knitr::kable("latex",row.names = F) 
+```
+\normalsize
+
+## Extended metadata: outcomes
+
+* If a sample has outcome data, it can be retrieved as part of the metadata by specifying `with_outcomes`
+
+\tiny
+```{r survival, warning=F, message=F,echo=T}
+
+outcome_meta = get_gambl_metadata(with_outcomes = TRUE) 
+outcome_meta %>% 
+  select(CODE_OS,OS_YEARS,CODE_PFS,PFS_YEARS) %>% 
+  head(6) %>% knitr::kable("latex",row.names = F) 
+
+```
+\normalsize
+
+## Extended metadata: derived results
+* Common oncogene rearrangements and aSHM targets are directly available cohort-wide in a tidy format
+* No need to run the annotation functions (coming up)
+* This function returns many other easter eggs and error messages (the latter will hopefully go away with time)
+
+\tiny
+```{r collated, warning=F, message=F,echo=T}
+
+collate_results()  %>% 
+  select(ashm_MYC,NFKBIZ_UTR,manta_BCL6_partner) %>% 
+  filter(NFKBIZ_UTR !="NEG" & manta_BCL6_partner !="NEG") %>%
+  head(4) %>% knitr::kable("latex",row.names = F) 
+
+```
+\normalsize
+
+
+## Bundled data
+
+* Several data frames are automatically loaded with GAMBLR for your convenience
+* Broad oncogene locations for annotating SVs and their common (usually superenhancer) partners
+    - `grch37_partners`
+    - `grch37_oncogene`
+* Regions recurrently affected by aSHM: `grch37_ashm_regions`
+* Lymphoma genes and their coordinates
+    - `grch37_lymphoma_genes_bed`
+    - `lymphoma_genes`
+* More suggestions or additions for other data sets and resources are encouraged
+
+## Getting and annotating SVs
+\tiny
+```{r sv_stuff, warning=F, message=F, echo=TRUE}
+get_manta_sv() %>%
+annotate_sv(with_chr_prefix=TRUE) %>% #add chr prefix
+filter(!is.na(partner)) %>% #drop SVs without known partners
+filter(gene=="BCL6") %>% head(5) %>% #keep the SVs you care about
+select(chrom1,start1,tumour_sample_id,fusion) %>% 
+  knitr::kable("latex",row.names = F) 
+```
+\normalsize
+* `get_sv` retrieves and `annotate_sv` quickly annotates all the SVs in GAMBL
+* Input is bedpe format (can be your own non-GAMBL data!)
+* Expects hg19 bedpe but if you have hg38 bedpe, check out `liftover_bedpe`
+* Some tables return tumour_sample_id as an alias for sample_id (to disambiguate from normal_sample_id)
+
+## Getting and using coding SSMs
+* All data from MAF files is in the database for quick retrieval
+* Retrieving the full set of annotated coding mutations is relatively fast with `get_coding_ssm`
+* Retrieving all (including non-coding) mutations is fast for relatively small regions
+    - `get_ssm_by_region` if you only want variants in one region
+    - `get_ssm_by_regions` if you want to efficiently retrive for multiple regions
+
+\tiny
+```{r nfkbiz, eval=F, echo=T, fig.height=4}
+# get all the NFKBIZ 3' UTR mutations
+nfkbiz_ssm = get_ssm_by_region(region=
+              "chr3:101,578,215-101,578,366")
+ggplot(nfkbiz_ssm) + 
+  geom_histogram(aes(x=Start_Position))+ 
+  theme_minimal()
+```
+\normalsize
+
+
+## Getting and using coding SSMs
+* ssm functions will return data that is compatible with MAFtools by default
+* You can also obtain the paths to MAF files using the config
+* Run `config::get()` to see the contents of the config
+
+\tiny
+```{r coding_ssm, echo=TRUE, message=FALSE,warning=FALSE,eval=FALSE}
+maf_data = get_coding_ssm() # everything at once
+maf_obj = read.maf(maf_data,clinicalData = just_metadata) 
+#OR 
+base_dir=config::get("project_base")
+maf_file = paste0(base_dir,"icgc_dart/slms-3_vcf2maf_current/level_3/final_merged_grch37.CDS.maf")
+maf_obj = read.maf(maf_file,verbose = F)
+#combine MAF data and metadata into maftools object
+plotmafSummary(maf_obj)
+
+```
+\normalsize
+
+## Getting and using coding SSMs
+\tiny
+```{r coding_ssm_noeval, echo=FALSE, message=FALSE,warning=FALSE,eval=TRUE}
+#maf_data = get_coding_ssm() # everything at once
+#maf_obj = read.maf(maf_data,clinicalData = just_metadata) 
+#OR 
+base_dir=config::get("project_base")
+maf_file = paste0(base_dir,"icgc_dart/slms-3_vcf2maf_current/level_3/final_merged_grch37.CDS.maf")
+maf_obj = read.maf(maf_file,verbose = F)
+#combine MAF data and metadata into maftools object
+plotmafSummary(maf_obj)
+
+```
+
+## Visualization of aSHM patterns
+* The `ashm_multi_rainbow_plot` function is highly configurable and can plot mutation patterns across thousands of samples for one or many regions at once
+* Bundled aSHM sites can be referred to by an unambiguous combination of gene and sub-region
+* Your own regions can be used instead (bed or concise region format: "chr:start-end")
+
+\tiny
+```{r ashm, eval=FALSE, message=FALSE, warning=FALSE, echo=T}
+cols = get_gambl_colours() #get one of the custom colour palettes or all colours together
+some_meta = get_gambl_metadata() %>% #narrow down to cases we want to look at
+  filter(pathology %in% c("DLBCL","BL","FL","HGBL")) %>% 
+  arrange(bcl2_ba,myc_ba)
+ashm_multi_rainbow_plot(regions_to_display = 
+        c("BCL2-TSS","MYC-TSS"), 
+        custom_colours = cols,
+        metadata=some_meta,classification_column = "lymphgen")
+```
+\normalsize
+
+## Visualization of aSHM patterns
+```{r ashm_eval,echo=F,warning=F,message=F,eval=T}
+cols = get_gambl_colours() #get one of the custom colour palettes or all colours together
+some_meta = get_gambl_metadata() %>% #narrow down to cases we want to look at
+  filter(pathology %in% c("DLBCL","BL","FL","HGBL")) %>% 
+  arrange(bcl2_ba,myc_ba)
+ashm_multi_rainbow_plot(regions_to_display = 
+        c("BCL2-TSS","MYC-TSS"), 
+        custom_colours = cols,
+        metadata=some_meta,classification_column = "pathology")
+```
+
+## Ugly (a.k.a. Maftools) Oncoplots
+* Currently most of us use this approach to make an oncoplot/oncoprint visualization
+* GAMBLR has a better option, that relies on maftools::oncoplot under-the-hood to generate the matrix it uses
+* There is a handy function `sanitize_maf_data` that generates the same matrix from a maftools object and this can be shared with others without restriction
+* `prettyOncoplot` can use either the maftools object or sanitized matrix as input so you don't need the original data to use it
+
+\tiny
+```{r not_pretty_oncoplot, eval=F, echo=T, message=FALSE, warning=FALSE}
+bl_genes=c("MYC","ID3","TP53","ARID1A","FBXO11","GNA13","TCF3",
+           "TFAP4","HNRNPU","FOXO1","CCND3","SMARCA4","DDX3X")
+dlbcl_genes = c("EZH2","KMT2D","MEF2B","CREBBP","MYD88")
+gene_groups = c(rep("BL",length(bl_genes)),rep("DLBCL",length(dlbcl_genes)))
+just_metadata = filter(just_metadata,!lymphgen %in% c("COMPOSITE"))
+genes=c(bl_genes,dlbcl_genes)
+names(gene_groups)=genes
+oncoplot(maf_obj,writeMatrix = TRUE,genes=genes,removeNonMutated = FALSE)
+
+```
+\normalsize
+
+
+## Pretty (not Maftools) Oncoplots
+
+\tiny
+```{r pretty_oncoplot, eval=T, echo=F, message=FALSE, warning=FALSE}
+bl_genes=c("MYC","ID3","TP53","ARID1A","FBXO11","GNA13","TCF3",
+           "TFAP4","HNRNPU","FOXO1","CCND3","SMARCA4","DDX3X")
+dlbcl_genes = c("EZH2","KMT2D","MEF2B","CREBBP","MYD88")
+gene_groups = c(rep("BL",length(bl_genes)),rep("DLBCL",length(dlbcl_genes)))
+just_metadata = filter(just_metadata,!lymphgen %in% c("COMPOSITE"))
+genes=c(bl_genes,dlbcl_genes)
+names(gene_groups)=genes
+#oncoplot(maf_obj,writeMatrix = TRUE,genes=genes,removeNonMutated = FALSE) 
+#You would need to run oncoplot() at least once with the data you want to send to prettyOncoplot
+prettyOncoplot(maftools_obj = maf_obj,genes = genes,
+               these_samples_metadata = just_metadata,
+               metadataColumns = c("pathology","lymphgen","sex","EBV_status_inf","cohort"),
+               sortByColumns = c("pathology","sex","lymphgen","EBV_status_inf","cohort"),
+               keepGeneOrder = TRUE,splitGeneGroups = gene_groups,
+               splitColumnName = "pathology",
+               metadataBarHeight = 5,metadataBarFontsize = 8,fontSizeGene = 11,
+               recycleOncomatrix = TRUE,removeNonMutated = FALSE)
+
+
+
+```
+\normalsize
+
+## Pretty (not Maftools) Oncoplots
+\tiny
+```{r pretty_oncoplot_ex, echo=TRUE, eval=FALSE, message=FALSE, warning=FALSE}
+bl_genes=c("MYC","ID3","TP53","ARID1A","FBXO11","GNA13","TCF3",
+           "TFAP4","HNRNPU","FOXO1","CCND3","SMARCA4","DDX3X")
+dlbcl_genes = c("EZH2","KMT2D","MEF2B","CREBBP","MYD88")
+gene_groups = c(rep("BL",length(bl_genes)),rep("DLBCL",length(dlbcl_genes)))
+just_metadata = filter(just_metadata,!lymphgen %in% c("COMPOSITE")) %>% 
+  filter(pathology %in% c("DLBCL","BL"))
+genes=c(bl_genes,dlbcl_genes)
+names(gene_groups)=genes
+#oncoplot(maf_obj,writeMatrix = TRUE,genes=genes,removeNonMutated = FALSE) 
+#You would need to run oncoplot() at least once with the data you want to send to prettyOncoplot
+prettyOncoplot(maftools_obj = maf_obj,genes = genes,
+               these_samples_metadata = just_metadata,
+               metadataColumns = c("pathology","lymphgen","sex","EBV_status_inf","cohort"),
+               sortByColumns = c("pathology","sex","lymphgen","EBV_status_inf","cohort"),
+               keepGeneOrder = TRUE,splitGeneGroups = gene_groups,
+               splitColumnName = "pathology",
+               metadataBarHeight = 5,metadataBarFontsize = 8,fontSizeGene = 11,
+               recycleOncomatrix = TRUE,removeNonMutated = FALSE)
+
+```
+\normalsize
+
+## What's with the colours?
+
+* We are attempting to corner the market on colour in the NHL research field as a first step towards total domination
+* For details check out the [morinlab fork of ggsci](https://github.com/morinlab/ggsci)
+```{r colour,echo=FALSE,message=FALSE}
+
+plot_cols=function(include_nhl=FALSE,remove_composite=TRUE){
+  path_cols=ggsci::get_ash("b-cell")
+
+  path_df = data.frame(Pathology=factor(names(path_cols),levels=names(path_cols)),hex=path_cols) %>%
+    filter(!Pathology %in% c("B-ALL","PMBCL"))
+
+  nhl = ggplot(path_df,aes(x=Pathology,y=0,fill=hex,label=Pathology)) +
+    geom_tile(width = 0.9, height = 1) +
+    geom_text(color = "white",fontface="bold") +
+    scale_fill_identity(guide = "none") +coord_flip() + theme_void() +
+    labs(title="B-NHL") + theme(plot.title = element_text(lineheight = 0.9,hjust=0.5,face="bold"))
+
+
+  coo_cols=ggsci::get_ash("coo")
+  coo_df = data.frame(COO=factor(names(coo_cols),levels=names(coo_cols)),hex=coo_cols) %>%
+    filter(!COO=="U" & !COO=="UNC")
+  coo = ggplot(coo_df,aes(x=COO,y=0,fill=hex,label=COO)) +
+    geom_tile(width = 0.9, height = 1) +
+    geom_text(color = "white",fontface="bold") +
+    scale_fill_identity(guide = "none") +coord_flip() + theme_void() +
+    labs(title="COO") + theme(plot.title = element_text(lineheight = 0.9,hjust=0.5,face="bold"))
+
+  harvard_cols=ggsci::get_ash("harvard")
+
+  harvard_df = data.frame(Harvard=factor(names(harvard_cols),levels=names(harvard_cols)),hex=harvard_cols)
+
+  harvard = ggplot(harvard_df,aes(x=Harvard,y=0,fill=hex,label=Harvard)) +
+    geom_tile(width = 0.9, height = 1) +
+    geom_text(color = "white",fontface="bold") +
+    scale_fill_identity(guide = "none") +coord_flip() + theme_void() +
+    labs(title="Harvard") + theme(plot.title = element_text(lineheight = 0.9,hjust=0.5,face="bold"))
+
+  lymphgen_cols=ggsci::get_ash("lymphgen")
+  #lymphgen_cols=c("#52000F",lymphgen_cols)
+  #names(lymphgen_cols)[1]="EZB-M+"
+
+  lymphgen_df = data.frame(LymphGen=factor(names(lymphgen_cols),levels=names(lymphgen_cols)),hex=lymphgen_cols)
+  if(remove_composite){
+    lymphgen_df = filter(lymphgen_df,LymphGen %in% c("Other","A53","N1","BN2","MCD","ST2","EZB","EZB-MYC"))
+  }
+  lymphgen = ggplot(lymphgen_df,aes(x=LymphGen,y=0,fill=hex,label=LymphGen)) +
+    geom_tile(width = 0.9, height = 1) +
+    geom_text(color = "white",fontface="bold") +
+    scale_fill_identity(guide = "none") +coord_flip() + theme_void() +
+    labs(title="LymphGen") + theme(plot.title = element_text(lineheight = 0.9,hjust=0.5,face="bold"))
+
+  hmrn_cols = ggsci::get_ash("hmrn")
+  hmrn_df = data.frame(HMRN=factor(names(hmrn_cols),levels=names(hmrn_cols)),hex=hmrn_cols)
+
+  hmrn = ggplot(hmrn_df,aes(x=HMRN,y=0,fill=hex,label=HMRN)) +
+    geom_tile(width = 0.9, height = 1) +
+    geom_text(color = "white",fontface="bold") +
+    scale_fill_identity(guide = "none") +coord_flip() + theme_void() +
+    labs(title="HMRN") + theme(plot.title = element_text(lineheight = 0.9,hjust=0.5,face="bold"))
+
+  if(include_nhl){
+    grid.arrange(nhl,coo,harvard,lymphgen,hmrn,ncol = 5)
+
+  }
+  else{
+    grid.arrange(coo,harvard,lymphgen,hmrn,ncol = 5)
+  }
+}
+plot_cols(include_nhl = TRUE)
+
+```
+
+## This doesn't work for gene expression data, right?
+* Wrong! Laura's batch effect-corrected massive matrix of normalized expression values is in the database in a tidy format
+* One main function is used to extract the expression of genes of interest all at once
+* One tricky aspect of this is that the function can return these data keyed either on the RNA-seq or the genome sample_id. Use the "join_with" option to configure this.
+
+\tiny
+```{r expression1, eval=FALSE, message=FALSE, warning=FALSE, echo=TRUE}
+get_gene_expression(hugo_symbols=c("IRF4","MYC"),join_with="genome") %>% head(4) %>%
+  knitr::kable("latex",row.names = F) 
+```
+\normalsize 
+
+* Don't be greedy. This is meant for a reasonable number of genes (not everything)
+
+## What can I use this for?
+* The only limit is your imagination and possibly your coding skills
+
+\tiny
+```{r boxplot_myc, echo=TRUE, eval=TRUE, fig.height=3, message=FALSE, warning=FALSE, include=TRUE}
+all_exp = get_gene_expression(hugo_symbols=c("IRF4","MYC"),join_with="genome") 
+collated_meta = collate_results(join_with_full_metadata=TRUE) %>%
+  filter(!lymphgen %in% c("COMPOSITE")) %>% 
+  filter(pathology %in% c("DLBCL","BL")) #get everything together
+  
+exp_with_meta = left_join(all_exp,collated_meta) %>%
+filter(!is.na(MYC) & !is.na(ashm_MYC)) %>%
+mutate(myc_hypermutated = ifelse(ashm_MYC > 1,"POS","NEG"))
+
+ggplot(exp_with_meta,aes(x=myc_hypermutated,y=MYC,colour=manta_MYC_sv)) + 
+geom_boxplot() + geom_quasirandom(dodge.width=0.8) + 
+scale_color_manual(values=get_gambl_colours()) + facet_wrap(~pathology,ncol=3)
+
+```
+\normalsize
+
+## How can I work with copy number? 
+* Segmented Battenberg and ControlFREEC results are in the database for matched and unmatched cases, respectively
+* Functions to retrieve segments per patient will automagically provide the result from the appropriate tool
+* Several functions exist to allow aggregation, summary and plotting of copy number data
+
+
+## Per-sample copy number and VAF visualization
+\tiny
+```{r cn_vaf, eval=FALSE, fig.height=5, message=FALSE, warning=FALSE, include=TRUE, echo=TRUE}
+copy_number_vaf_plot(this_sample="HTMCP-01-06-00422-01A-01D")
+
+```
+\normalsize
+
+* Genome-wide overview of copy number coloured by the Battenberg result
+* VAF of all (or just coding) SSMs is plotted and coloured according to local CN state
+
+## Optional feature: coding mutation focus
+\tiny
+```{r cn_vaf2, eval=FALSE, fig.height=5, message=FALSE, warning=FALSE, include=TRUE, echo=TRUE}
+my_genes=lymphoma_genes %>% #use the bundled list of lymphoma genes
+  filter(BL==TRUE | DLBCL == TRUE) %>% 
+  pull(Gene)
+
+copy_number_vaf_plot(this_sample="07-35482T",
+                     coding_only = TRUE,genes_to_label = my_genes)
+```
+\normalsize
+
+## prettyOncoplots with expression data
+```{r expression_oncoplot, echo=F, warning=F, message=F}
+some_genes = unique(c("IRF4","BEST3","CREB3L2","HEY2","TNFRSF13B","FCRLB","TOX",
+                     "SERPINA9","MAPK10","PDGFD","PDE4B","SUGCT","SLC1A1","MYC"))
+all_exp=get_gene_expression(hugo_symbols = some_genes,join_with = "genome")
+all_metadata = collate_results(join_with_full_metadata = TRUE,sbs_manipulation = "scale") %>% filter(pathology %in% c("BL","DLBCL"))
+extra_meta = left_join(all_exp,all_metadata,by="sample_id") %>% 
+  filter(!is.na(patient_id)) %>% filter(!is.na(IRF4))
+
+
+#scale_to_path <- function(x, data, pathology){
+#  path_x = data[data$pathology == pathology, ][[cur_column()]]
+#  quants <- unname(quantile(path_x, probs = c(0.05, 0.95)))
+#  x <- ifelse(x < quants[1], quants[1], x)
+#  x <- ifelse(x > quants[2], quants[2], x)
+#  x <- (x - quants[1]) / (quants[2] - quants[1])
+#  return(x)
+#}
+
+bl_cases = get_gambl_metadata(case_set="BLGSP-study") %>% filter(cohort=="BL_Adult") %>% head()
+
+#trim_scale_expression <- function(x){
+#  quants <- unname(quantile(x, probs = c(0.05, 0.95)))
+#  x <- ifelse(x < quants[1], quants[1], x)
+#  x <- ifelse(x > quants[2], quants[2], x)
+#  x <- (x - quants[1]) / (quants[2] - quants[1])
+#  return(x)
+#}
+just_metadata=get_gambl_metadata()
+#extra_meta_scaled_everything <- extra_meta %>% 
+#  mutate(across(all_of(some_genes), ~ trim_scale_expression(.x)))
+
+bl_genes=c("MYC","ID3","TP53","ARID1A","FBXO11","GNA13","TCF3",
+           "TFAP4","HNRNPU","FOXO1","CCND3","SMARCA4","DDX3X")
+dlbcl_genes = c("EZH2","KMT2D","CREBBP")
+gene_groups = c(rep("BL",length(bl_genes)),rep("DLBCL",length(dlbcl_genes)))
+just_metadata = filter(just_metadata,!lymphgen %in% c("COMPOSITE")) %>% 
+  filter(pathology %in% c("DLBCL","BL"))
+genes=c(bl_genes,dlbcl_genes)
+names(gene_groups)=genes
+#oncoplot(maf_obj,writeMatrix = TRUE,genes=genes,removeNonMutated = FALSE) 
+#You would need to run oncoplot() at least once with the data you want to send to prettyOncoplot
+
+extra_meta = mutate(extra_meta,
+                    DLBCL90_dhitsig_call=ifelse(is.na(DLBCL90_dhitsig_call),"NA",DLBCL90_dhitsig_call))
+
+#extra_meta = mutate(extra_meta,sbs9=ifelse(is.na(sbs9),0,sbs9))
+
+prettyOncoplot(maftools_obj = maf_obj,genes = genes,
+               these_samples_metadata = extra_meta,
+               metadataColumns = c("pathology","COO_consensus","EBV_status_inf"),
+               sortByColumns = c("pathology","IRF4","COO_consensus"),
+               expressionColumns = c("IRF4","sbs9","sbs8","sbs1"),
+               #verbose=TRUE,
+               keepGeneOrder = FALSE,splitGeneGroups = gene_groups,
+               splitColumnName = "pathology",
+               metadataBarHeight = 5,metadataBarFontsize = 8,fontSizeGene = 11,
+               recycleOncomatrix = TRUE,removeNonMutated = FALSE)
+
+```
+

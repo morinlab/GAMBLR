@@ -197,7 +197,7 @@ maf_to_custom_track = function(maf_data,output_file){
 #' @import tidyverse config
 #'
 #' @examples
-collate_results = function(sample_table,write_to_file=FALSE,join_with_full_metadata = FALSE,case_set){
+collate_results = function(sample_table,write_to_file=FALSE,join_with_full_metadata = FALSE,case_set,sbs_manipulation=""){
   # important: if you are collating results from anything but WGS (e.g RNA-seq libraries) be sure to use biopsy ID as the key in your join
   # the sample_id should probably not even be in this file if we want this to be biopsy-centric
   if(missing(sample_table)){
@@ -210,7 +210,7 @@ collate_results = function(sample_table,write_to_file=FALSE,join_with_full_metad
   sample_table = collate_curated_sv_results(sample_table=sample_table)
   sample_table = collate_ashm_results(sample_table=sample_table)
   sample_table = collate_nfkbiz_results(sample_table=sample_table)
-  sample_table = collate_sbs_results(sample_table=sample_table)
+  sample_table = collate_sbs_results(sample_table=sample_table,sbs_manipulation=sbs_manipulation)
   sample_table = collate_derived_results(sample_table=sample_table)
   if(write_to_file){
     output_file = config::get("table_flatfiles")$derived
@@ -472,7 +472,7 @@ collate_extra_metadata= function(sample_table,file_path){
 #' @import tidyverse
 #'
 #' @examples
-collate_sbs_results = function(sample_table,file_path,scale_vals=FALSE){
+collate_sbs_results = function(sample_table,file_path,scale_vals=FALSE,sbs_manipulation=""){
   if(missing(file_path)){
     file_path = "/projects/rmorin_scratch/prasath_scratch/gambl/sigprofiler/gambl_hg38/02-extract/slms3.gambl.icgc.hg38.matched.unmatched/SBS96/Suggested_Solution/COSMIC_SBS96_Decomposed_Solution/Activities/COSMIC_SBS96_Activities_refit.txt"
   }
@@ -480,7 +480,7 @@ collate_sbs_results = function(sample_table,file_path,scale_vals=FALSE){
   rs=rowSums(signatures)
   cn=colnames(signatures)
   new_sig = signatures
-  if(scale_vals){
+  if(sbs_manipulation=="scale"){
     for(col in cn){
       scaled_vals = signatures[,col] / rs
       new_sig[,col]=scaled_vals
@@ -490,7 +490,12 @@ collate_sbs_results = function(sample_table,file_path,scale_vals=FALSE){
     sbs8 = signatures[,"SBS8"] / rs
     sbs = data.frame(sample_id = rownames(signatures),sbs1=sbs1,sbs9=sbs9,sbs8=sbs8)
   }
-  else{
+  else if(sbs_manipulation=="log"){
+    sbs1 = log(signatures[,"SBS1"]+1)
+    sbs9 = log(signatures[,"SBS9"]+1)
+    sbs8 = log(signatures[,"SBS8"]+1)
+    sbs = data.frame(sample_id = rownames(signatures),sbs1=sbs1,sbs9=sbs9,sbs8=sbs8)
+  }else{
     sbs1 = signatures[,"SBS1"]
     sbs9 = signatures[,"SBS9"]
     sbs8 = signatures[,"SBS8"]
