@@ -6,7 +6,7 @@
 <meta http-equiv="X-UA-Compatible" content="IE=edge">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
-<title>Title — collate_curated_sv_results • GAMBLR</title>
+<title>Collate all SV calls from the genome data and summarize for main oncogenes of interest per sample — collate_curated_sv_results • GAMBLR</title>
 
 
 <!-- jquery -->
@@ -39,8 +39,8 @@
 
 
 
-<meta property="og:title" content="Title — collate_curated_sv_results" />
-<meta property="og:description" content="Title" />
+<meta property="og:title" content="Collate all SV calls from the genome data and summarize for main oncogenes of interest per sample — collate_curated_sv_results" />
+<meta property="og:description" content="Collate all SV calls from the genome data and summarize for main oncogenes of interest per sample" />
 
 
 
@@ -95,7 +95,13 @@
   </a>
   <ul class="dropdown-menu" role="menu">
     <li>
+      <a href="../articles/GAMBLR_presentation.html">Doubling Down on GAMBL with GAMBLR</a>
+    </li>
+    <li>
       <a href="../articles/examples.html">GAMBLR - working with GAMBL data painlessly in R</a>
+    </li>
+    <li>
+      <a href="../articles/lymphoma.html">Lymphoma colours</a>
     </li>
   </ul>
 </li>
@@ -115,34 +121,29 @@
 <div class="row">
   <div class="col-md-9 contents">
     <div class="page-header">
-    <h1>Title</h1>
+    <h1>Collate all SV calls from the genome data and summarize for main oncogenes of interest per sample</h1>
     
     <div class="hidden name"><code>collate_curated_sv_results.Rd</code></div>
     </div>
 
     <div class="ref-description">
-    <p>Title</p>
+    <p>Collate all SV calls from the genome data and summarize for main oncogenes of interest per sample</p>
     </div>
 
-    <pre class="usage"><span class='fu'>collate_curated_sv_results</span><span class='op'>(</span>
-  <span class='va'>sample_table</span>,
-  path_to_files <span class='op'>=</span> <span class='st'>"icgc_dart/derived_and_curated_metadata/"</span>
-<span class='op'>)</span></pre>
+    <pre class="usage"><span class='fu'>collate_curated_sv_results</span><span class='op'>(</span><span class='va'>sample_table</span><span class='op'>)</span></pre>
 
     <h2 class="hasAnchor" id="arguments"><a class="anchor" href="#arguments"></a>Arguments</h2>
     <table class="ref-arguments">
     <colgroup><col class="name" /><col class="desc" /></colgroup>
     <tr>
-      <th>path_to_files</th>
-      <td></td>
+      <th>sample_table</th>
+      <td><p>A data frame with sample_id as the first column</p></td>
     </tr>
     </table>
 
     <h2 class="hasAnchor" id="value"><a class="anchor" href="#value"></a>Value</h2>
 
-    
-
-
+    <p>The sample table with additional columns</p>
 
   </div>
   <div class="col-md-3 hidden-xs hidden-sm" id="pkgdown-sidebar">

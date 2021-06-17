@@ -95,7 +95,13 @@
   </a>
   <ul class="dropdown-menu" role="menu">
     <li>
+      <a href="../articles/GAMBLR_presentation.html">Doubling Down on GAMBL with GAMBLR</a>
+    </li>
+    <li>
       <a href="../articles/examples.html">GAMBLR - working with GAMBL data painlessly in R</a>
+    </li>
+    <li>
+      <a href="../articles/lymphoma.html">Lymphoma colours</a>
     </li>
   </ul>
 </li>
@@ -125,7 +131,6 @@
     </div>
 
     <pre class="usage"><span class='fu'>get_gambl_outcomes</span><span class='op'>(</span>
-  db <span class='op'>=</span> <span class='st'>"gambl_test"</span>,
   <span class='va'>patient_ids</span>,
   time_unit <span class='op'>=</span> <span class='st'>"year"</span>,
   censor_cbioportal <span class='op'>=</span> <span class='cn'>FALSE</span>,
@@ -135,10 +140,6 @@
     <h2 class="hasAnchor" id="arguments"><a class="anchor" href="#arguments"></a>Arguments</h2>
     <table class="ref-arguments">
     <colgroup><col class="name" /><col class="desc" /></colgroup>
-    <tr>
-      <th>db</th>
-      <td><p>optional. Specify a different database (changing this is not recommended)</p></td>
-    </tr>
     <tr>
       <th>time_unit</th>
       <td><p>Return follow-up times in one of three time units: year, month or day</p></td>
@@ -155,7 +156,7 @@
 
     <h2 class="hasAnchor" id="examples"><a class="anchor" href="#examples"></a>Examples</h2>
     <pre class="examples"><div class='input'><span class='va'>outcome_df</span> <span class='op'>=</span> <span class='fu'>get_gambl_outcomes</span><span class='op'>(</span><span class='op'>)</span>
-</div></pre>
+</div><div class='output co'>#&gt; <span class='error'>Error in mutate(., is_adult = ifelse(age &lt; 20, "Pediatric", "Adult")): could not find function "mutate"</span></div></pre>
   </div>
   <div class="col-md-3 hidden-xs hidden-sm" id="pkgdown-sidebar">
     <nav id="toc" data-toggle="toc" class="sticky-top">

@@ -94,7 +94,13 @@
   </a>
   <ul class="dropdown-menu" role="menu">
     <li>
+      <a href="../articles/GAMBLR_presentation.html">Doubling Down on GAMBL with GAMBLR</a>
+    </li>
+    <li>
       <a href="../articles/examples.html">GAMBLR - working with GAMBL data painlessly in R</a>
+    </li>
+    <li>
+      <a href="../articles/lymphoma.html">Lymphoma colours</a>
     </li>
   </ul>
 </li>
@@ -140,9 +146,27 @@
       <tr>
         
         <td>
+          <p><code><a href="add_icgc_metadata.html">add_icgc_metadata()</a></code> </p>
+        </td>
+        <td><p>Layer on ICGC metadata from a supplemental table to fill in missing COO</p></td>
+      </tr><tr>
+        
+        <td>
+          <p><code><a href="annotate_hotspots.html">annotate_hotspots()</a></code> </p>
+        </td>
+        <td><p>Annotate MAF-like data frome with a hot_spot column indicating recurrent mutations</p></td>
+      </tr><tr>
+        
+        <td>
           <p><code><a href="annotate_sv.html">annotate_sv()</a></code> </p>
         </td>
         <td><p>Annotate a data frame of SV breakpoints after retrieval from the database</p></td>
+      </tr><tr>
+        
+        <td>
+          <p><code><a href="append_to_table.html">append_to_table()</a></code> </p>
+        </td>
+        <td><p>Title</p></td>
       </tr><tr>
         
         <td>
@@ -158,6 +182,12 @@
       </tr><tr>
         
         <td>
+          <p><code><a href="assemble_file_details.html">assemble_file_details()</a></code> </p>
+        </td>
+        <td><p>Title</p></td>
+      </tr><tr>
+        
+        <td>
           <p><code><a href="assign_cn_to_ssm.html">assign_cn_to_ssm()</a></code> </p>
         </td>
         <td><p>Annotate mutations with their copy number information</p></td>
@@ -166,13 +196,13 @@
         <td>
           <p><code><a href="collate_ashm_results.html">collate_ashm_results()</a></code> </p>
         </td>
-        <td><p>Title</p></td>
+        <td><p>Determine the hypermutation status of a few genes</p></td>
       </tr><tr>
         
         <td>
           <p><code><a href="collate_curated_sv_results.html">collate_curated_sv_results()</a></code> </p>
         </td>
-        <td><p>Title</p></td>
+        <td><p>Collate all SV calls from the genome data and summarize for main oncogenes of interest per sample</p></td>
       </tr><tr>
         
         <td>
@@ -184,7 +214,7 @@
         <td>
           <p><code><a href="collate_nfkbiz_results.html">collate_nfkbiz_results()</a></code> </p>
         </td>
-        <td><p>Title</p></td>
+        <td><p>Determine which cases have NFKBIZ UTR mutations</p></td>
       </tr><tr>
         
         <td>
@@ -196,25 +226,19 @@
         <td>
           <p><code><a href="collate_sbs_results.html">collate_sbs_results()</a></code> </p>
         </td>
-        <td><p>Title</p></td>
+        <td><p>Bring in the results from mutational signature analysis</p></td>
       </tr><tr>
         
         <td>
           <p><code><a href="collate_sv_results.html">collate_sv_results()</a></code> </p>
         </td>
-        <td><p>Title</p></td>
+        <td><p>Determine and summarize which cases have specific oncogene SVs</p></td>
       </tr><tr>
         
         <td>
           <p><code><a href="copy_number_vaf_plot.html">copy_number_vaf_plot()</a></code> </p>
         </td>
         <td><p>Create a genome-wide copy number plot for one sample and (optionally) display mutation VAF</p></td>
-      </tr><tr>
-        
-        <td>
-          <p><code><a href="fetch_next_sv.html">fetch_next_sv()</a></code> </p>
-        </td>
-        <td><p>Retrieve the nearest SV to a specified SV in a given patient</p></td>
       </tr><tr>
         
         <td>
@@ -230,6 +254,24 @@
       </tr><tr>
         
         <td>
+          <p><code><a href="find_files_extract_wildcards.html">find_files_extract_wildcards()</a></code> </p>
+        </td>
+        <td><p>Title</p></td>
+      </tr><tr>
+        
+        <td>
+          <p><code><a href="fread_maf.html">fread_maf()</a></code> </p>
+        </td>
+        <td><p>Title</p></td>
+      </tr><tr>
+        
+        <td>
+          <p><code><a href="get_ashm_count_matrix.html">get_ashm_count_matrix()</a></code> </p>
+        </td>
+        <td><p>Title</p></td>
+      </tr><tr>
+        
+        <td>
           <p><code><a href="get_bams.html">get_bams()</a></code> </p>
         </td>
         <td><p>Get full paths for bam files for a sample or patient</p></td>
@@ -242,6 +284,12 @@
       </tr><tr>
         
         <td>
+          <p><code><a href="get_cn_states.html">get_cn_states()</a></code> </p>
+        </td>
+        <td><p>Get a copy number matrix for all samples based on segmented data in database</p></td>
+      </tr><tr>
+        
+        <td>
           <p><code><a href="get_coding_ssm.html">get_coding_ssm()</a></code> </p>
         </td>
         <td><p>Retrieve all coding SSMs from the GAMBL database in MAF-like format</p></td>
@@ -250,7 +298,7 @@
         <td>
           <p><code><a href="get_gambl_colours.html">get_gambl_colours()</a></code> </p>
         </td>
-        <td><p>Title</p></td>
+        <td><p>Get some colour schemes for annotating figures</p></td>
       </tr><tr>
         
         <td>
@@ -263,6 +311,18 @@
           <p><code><a href="get_gambl_outcomes.html">get_gambl_outcomes()</a></code> </p>
         </td>
         <td><p>Get the patient-centric clinical metadata</p></td>
+      </tr><tr>
+        
+        <td>
+          <p><code><a href="get_gene_cn_and_expression.html">get_gene_cn_and_expression()</a></code> </p>
+        </td>
+        <td><p>Get the copy number and expression for a single gene</p></td>
+      </tr><tr>
+        
+        <td>
+          <p><code><a href="get_gene_expression.html">get_gene_expression()</a></code> </p>
+        </td>
+        <td><p>Get the expression for one or more genes for all GAMBL samples</p></td>
       </tr><tr>
         
         <td>
@@ -284,9 +344,21 @@
       </tr><tr>
         
         <td>
+          <p><code><a href="get_ssm_by_regions.html">get_ssm_by_regions()</a></code> </p>
+        </td>
+        <td><p>Title</p></td>
+      </tr><tr>
+        
+        <td>
           <p><code><a href="liftover_bedpe.html">liftover_bedpe()</a></code> </p>
         </td>
         <td><p>Use liftOver to convert a bedpe file between the two main genome builds (grch37/hg38)</p></td>
+      </tr><tr>
+        
+        <td>
+          <p><code><a href="maf_to_custom_track.html">maf_to_custom_track()</a></code> </p>
+        </td>
+        <td><p>Convert a maf-formatted data frame into a bed custom track file for UCSC</p></td>
       </tr><tr>
         
         <td>
@@ -296,15 +368,70 @@
       </tr><tr>
         
         <td>
-          <p><code><a href="populate_tool_results.html">populate_tool_results()</a></code> </p>
+          <p><code><a href="plot_multi_timepoint.html">plot_multi_timepoint()</a></code> </p>
         </td>
         <td><p>Title</p></td>
+      </tr><tr>
+        
+        <td>
+          <p><code><a href="populate_each_tool_result.html">populate_each_tool_result()</a></code> </p>
+        </td>
+        <td><p>Title</p></td>
+      </tr><tr>
+        
+        <td>
+          <p><code><a href="populate_tool_results.html">populate_tool_results()</a></code> </p>
+        </td>
+        <td><p>Populate the database with the per-sample summarized results of various tools</p></td>
+      </tr><tr>
+        
+        <td>
+          <p><code><a href="prettyChromoplot.html">prettyChromoplot()</a></code> </p>
+        </td>
+        <td><p>Use GISTIC2.0 scores output to reproduce maftools::chromoplot with more flexibility</p></td>
+      </tr><tr>
+        
+        <td>
+          <p><code><a href="prettyOncoplot.html">prettyOncoplot()</a></code> </p>
+        </td>
+        <td><p>Make an oncoplot that is pretty using ComplexHeatmap. The metadata is expected to follow the structure and column naming used in GAMBL.
+If you provide your own non-GAMBL samples and metadata, you must include at least the following columns with these names.
+The first one should match the Tumor_Sample_Barcode in the MAF object or onco_matrix you provide.
+sample_id, pathology</p></td>
+      </tr><tr>
+        
+        <td>
+          <p><code><a href="process_all_manta_bedpe.html">process_all_manta_bedpe()</a></code> </p>
+        </td>
+        <td><p>This is a helper function that is not meant to be used routinely</p></td>
       </tr><tr>
         
         <td>
           <p><code><a href="read_merge_manta_with_liftover.html">read_merge_manta_with_liftover()</a></code> </p>
         </td>
         <td><p>This is a helper function that is not meant to be used routinely</p></td>
+      </tr><tr>
+        
+        <td>
+          <p><code><a href="referesh_metadata_tables.html">referesh_metadata_tables()</a></code> </p>
+        </td>
+        <td><p>Title</p></td>
+      </tr><tr>
+        
+        <td>
+          <p><code><a href="refresh_full_table.html">refresh_full_table()</a></code> </p>
+        </td>
+        <td><p>Title</p></td>
+      </tr><tr>
+        
+        <td>
+          <p><code><a href="sanitize_maf_data.html">sanitize_maf_data()</a></code> </p>
+        </td>
+        <td><p>Write an oncomatrix from a MAF File for further plotting. This is meant to be run by individuals who have access to data sets to
+"sanitize" a subset of data for subsequent use by them or others who don't have permission to access the raw data.
+Example: User J has full permissions for ICGC data and has read permissions on a MAF file. User B needs to make some oncoplots
+and/or perform some statistical analysis on the frequency and assortment of mutations in that data set but doesn't need all the details.
+User J can run this function on a maf file and provide the path of the output to user B.</p></td>
       </tr><tr>
         
         <td>
@@ -317,6 +444,18 @@
           <p><code><a href="setup_study.html">setup_study()</a></code> </p>
         </td>
         <td><p>Initialize a new cBioPortal instance or update existing portal data set</p></td>
+      </tr><tr>
+        
+        <td>
+          <p><code><a href="sv_to_custom_track.html">sv_to_custom_track()</a></code> </p>
+        </td>
+        <td><p>Title</p></td>
+      </tr><tr>
+        
+        <td>
+          <p><code><a href="tidy_gene_expression.html">tidy_gene_expression()</a></code> </p>
+        </td>
+        <td><p>Title</p></td>
       </tr>
     </tbody>
     </table>

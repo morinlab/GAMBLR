@@ -95,7 +95,13 @@
   </a>
   <ul class="dropdown-menu" role="menu">
     <li>
+      <a href="../articles/GAMBLR_presentation.html">Doubling Down on GAMBL with GAMBLR</a>
+    </li>
+    <li>
       <a href="../articles/examples.html">GAMBLR - working with GAMBL data painlessly in R</a>
+    </li>
+    <li>
+      <a href="../articles/lymphoma.html">Lymphoma colours</a>
     </li>
   </ul>
 </li>
@@ -126,10 +132,9 @@
 
     <pre class="usage"><span class='fu'>assign_cn_to_ssm</span><span class='op'>(</span>
   <span class='va'>this_sample</span>,
-  tool_name <span class='op'>=</span> <span class='st'>"battenberg"</span>,
-  database_name <span class='op'>=</span> <span class='st'>"gambl_test"</span>,
-  table_name <span class='op'>=</span> <span class='st'>"maf_slms3_hg19_icgc"</span>,
-  coding_only <span class='op'>=</span> <span class='cn'>FALSE</span>
+  coding_only <span class='op'>=</span> <span class='cn'>FALSE</span>,
+  from_flatfile <span class='op'>=</span> <span class='cn'>FALSE</span>,
+  use_augmented_maf <span class='op'>=</span> <span class='cn'>FALSE</span>
 <span class='op'>)</span></pre>
 
     <h2 class="hasAnchor" id="arguments"><a class="anchor" href="#arguments"></a>Arguments</h2>
@@ -140,12 +145,12 @@
       <td><p>Sample ID of the sample you want to annotate</p></td>
     </tr>
     <tr>
-      <th>tool_name</th>
-      <td><p>Copy number caller to use for annotation</p></td>
+      <th>coding_only</th>
+      <td><p>Optional. set to TRUE to rescrict to only coding variants</p></td>
     </tr>
     <tr>
-      <th>coding_only</th>
-      <td></td>
+      <th>from_flatfile</th>
+      <td><p>Optional. instead of the database, load the data from a local MAF and seg file</p></td>
     </tr>
     </table>
 
@@ -158,7 +163,7 @@ CN is the rounded absolute copy number estimate of the region based on log.ratio
 
     <h2 class="hasAnchor" id="examples"><a class="anchor" href="#examples"></a>Examples</h2>
     <pre class="examples"><div class='input'><span class='va'>cn_list</span> <span class='op'>=</span> <span class='fu'>assign_cn_to_ssm</span><span class='op'>(</span>this_sample<span class='op'>=</span><span class='st'>"HTMCP-01-06-00422-01A-01D"</span>,coding_only<span class='op'>=</span><span class='cn'>TRUE</span><span class='op'>)</span>
-</div><div class='output co'>#&gt; <span class='error'>Error in mutate(a, CN = round(2 * 2^log.ratio)): could not find function "mutate"</span></div></pre>
+</div><div class='output co'>#&gt; <span class='error'>Error in ggplot(.): could not find function "ggplot"</span></div></pre>
   </div>
   <div class="col-md-3 hidden-xs hidden-sm" id="pkgdown-sidebar">
     <nav id="toc" data-toggle="toc" class="sticky-top">

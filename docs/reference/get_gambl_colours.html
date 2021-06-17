@@ -6,7 +6,7 @@
 <meta http-equiv="X-UA-Compatible" content="IE=edge">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
-<title>Title — get_gambl_colours • GAMBLR</title>
+<title>Get some colour schemes for annotating figures — get_gambl_colours • GAMBLR</title>
 
 
 <!-- jquery -->
@@ -39,8 +39,8 @@
 
 
 
-<meta property="og:title" content="Title — get_gambl_colours" />
-<meta property="og:description" content="Title" />
+<meta property="og:title" content="Get some colour schemes for annotating figures — get_gambl_colours" />
+<meta property="og:description" content="Get some colour schemes for annotating figures" />
 
 
 
@@ -95,7 +95,13 @@
   </a>
   <ul class="dropdown-menu" role="menu">
     <li>
+      <a href="../articles/GAMBLR_presentation.html">Doubling Down on GAMBL with GAMBLR</a>
+    </li>
+    <li>
       <a href="../articles/examples.html">GAMBLR - working with GAMBL data painlessly in R</a>
+    </li>
+    <li>
+      <a href="../articles/lymphoma.html">Lymphoma colours</a>
     </li>
   </ul>
 </li>
@@ -115,23 +121,23 @@
 <div class="row">
   <div class="col-md-9 contents">
     <div class="page-header">
-    <h1>Title</h1>
+    <h1>Get some colour schemes for annotating figures</h1>
     
     <div class="hidden name"><code>get_gambl_colours.Rd</code></div>
     </div>
 
     <div class="ref-description">
-    <p>Title</p>
+    <p>Get some colour schemes for annotating figures</p>
     </div>
 
-    <pre class="usage"><span class='fu'>get_gambl_colours</span><span class='op'>(</span>classification <span class='op'>=</span> <span class='st'>"lymphgen"</span><span class='op'>)</span></pre>
+    <pre class="usage"><span class='fu'>get_gambl_colours</span><span class='op'>(</span>classification <span class='op'>=</span> <span class='st'>"all"</span>, alpha <span class='op'>=</span> <span class='fl'>1</span><span class='op'>)</span></pre>
 
     <h2 class="hasAnchor" id="arguments"><a class="anchor" href="#arguments"></a>Arguments</h2>
     <table class="ref-arguments">
     <colgroup><col class="name" /><col class="desc" /></colgroup>
     <tr>
       <th>classification</th>
-      <td><p>(optionally request only colours for pathology, lymphgen or copy_number)</p></td>
+      <td><p>(optionally request only colours for pathology, lymphgen, mutation or copy_number)</p></td>
     </tr>
     </table>
 
@@ -139,6 +145,11 @@
 
     <p>A named vector of colour codes for lymphgen classes and pathology</p>
 
+    <h2 class="hasAnchor" id="examples"><a class="anchor" href="#examples"></a>Examples</h2>
+    <pre class="examples"><div class='input'><span class='va'>lymphgen_cols</span><span class='op'>=</span><span class='fu'>get_gambl_colours</span><span class='op'>(</span><span class='st'>"lymphgen"</span><span class='op'>)</span>
+<span class='co'># be sure to install ggsci from https://github.com/morinlab/ggsci</span>
+<span class='co'># install_github("morinlab/ggsci")</span>
+</div></pre>
   </div>
   <div class="col-md-3 hidden-xs hidden-sm" id="pkgdown-sidebar">
     <nav id="toc" data-toggle="toc" class="sticky-top">
