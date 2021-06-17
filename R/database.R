@@ -512,15 +512,18 @@ append_to_table = function(table_name,data_df){
 #' @export
 #'
 #' @examples
-get_ashm_count_matrix = function(regions_bed){
+get_ashm_count_matrix = function(regions_bed,maf_data,sample_metadata){
   if(missing(regions_bed)){
     regions_bed=grch37_ashm_regions
   }
-  ashm_maf=get_ssm_by_regions(regions_bed=regions_bed,streamlined=TRUE)
+  ashm_maf=get_ssm_by_regions(regions_bed=regions_bed,streamlined=TRUE,maf_data=maf_data)
 
   ashm_counted = ashm_maf %>% group_by(sample_id,region_name) %>% tally()
-
-  all_meta = get_gambl_metadata() %>% dplyr::select(sample_id)
+  if(missing(sample_metadata)){
+    all_meta = get_gambl_metadata() %>% dplyr::select(sample_id)
+  }else{
+    all_meta = dplyr::select(sample_metadata,sample_id)
+  }
 
   #fill out all combinations so we can get the cases with zero mutations
   eg = expand_grid(sample_id=pull(all_meta,sample_id),region_name=unique(ashm_counted$region_name))
@@ -572,7 +575,7 @@ get_ssm_by_gene = function(gene_symbol,coding_only=FALSE,rename_splice_region=TR
 #' @export
 #'
 #' @examples
-get_ssm_by_regions = function(regions_list,regions_bed,streamlined=FALSE){
+get_ssm_by_regions = function(regions_list,regions_bed,streamlined=FALSE,maf_data=maf_data){
   bed2region=function(x){
     paste0(x[1],":",as.numeric(x[2]),"-",as.numeric(x[3]))
   }
@@ -583,7 +586,7 @@ get_ssm_by_regions = function(regions_list,regions_bed,streamlined=FALSE){
       warning("You must supply either regions_list or regions_df")
     }
   }
-  region_mafs = lapply(regions,function(x){get_ssm_by_region(region=x,streamlined = streamlined)})
+  region_mafs = lapply(regions,function(x){get_ssm_by_region(region=x,streamlined = streamlined,maf_data=maf_data)})
   tibbled_data = tibble(region_mafs, region_name = regions)
   unnested_df = tibbled_data %>% unnest_longer(region_mafs)
   if(streamlined){
@@ -621,7 +624,8 @@ get_ssm_by_regions = function(regions_list,regions_bed,streamlined=FALSE){
 #' my_mutations=get_ssm_by_region(region="chr8:128,723,128-128,774,067")
 #' #specifying chromosome, start and end individually
 #' my_mutations=get_ssm_by_region(chromosome="8",qstart=128723128,qend=128774067)
-get_ssm_by_region = function(chromosome,qstart,qend,region="",basic_columns=TRUE,streamlined=FALSE,maf_data){
+get_ssm_by_region = function(chromosome,qstart,qend,
+                             region="",basic_columns=TRUE,streamlined=FALSE,maf_data){
   table_name = config::get("results_tables")$ssm
   db=config::get("database_name")
   if(!region==""){
@@ -643,13 +647,11 @@ get_ssm_by_region = function(chromosome,qstart,qend,region="",basic_columns=TRUE
       dplyr::filter(Chromosome == chromosome & Start_Position > qstart & Start_Position < qend)
     muts_region = as.data.frame(muts_region)
   }else{
-    print(paste0("filtering based on Chromosome == ",chromosome," Start_Position >", qstart, "& Start_Position < ", qend))
+    message("not using the database")
+    #print(paste0("filtering based on Chromosome == ",chromosome," Start_Position >", qstart, "& Start_Position < ", qend))
     muts_region = dplyr::filter(maf_data,Chromosome == chromosome & Start_Position > qstart & Start_Position < qend)
-    test = muts_region[,c(1:7)]
-    print(head(test))
+
     muts_region = dplyr::filter(maf_data,Chromosome == chromosome & Start_Position > qstart & Start_Position < qend)
-    test = muts_region[,c(1:7)]
-    print(head(test))
   }
 
   if(streamlined){

@@ -53,7 +53,7 @@ prettyOncoplot = function(maftools_obj,
                           splitColumnName,
                           splitGeneGroups,
                           legend_row=3,legend_col=3,showTumorSampleBarcode=FALSE,
-                          groupNames,verbose=FALSE){
+                          groupNames,verbose=FALSE,show_legend){
 
   if(!recycleOncomatrix & missing(onco_matrix_path)){
   #order the data frame the way you want the patients shown
@@ -380,7 +380,7 @@ prettyOncoplot = function(maftools_obj,
                                    row_names_gp = gpar(fontsize = fontSizeGene),
                                    pct_gp = gpar(fontsize = fontSizeGene),
                     bottom_annotation =
-                    ComplexHeatmap::HeatmapAnnotation(df=metadata_df,
+                    ComplexHeatmap::HeatmapAnnotation(df=metadata_df,show_legend=show_legend,
                                                       col=colours,
                                                       simple_anno_size = unit(metadataBarHeight, "mm"),
                                                       gap = unit(0.25*metadataBarHeight, "mm"),
