@@ -53,7 +53,7 @@ prettyOncoplot = function(maftools_obj,
                           splitColumnName,
                           splitGeneGroups,
                           legend_row=3,legend_col=3,showTumorSampleBarcode=FALSE,
-                          groupNames,verbose=FALSE,show_legend){
+                          groupNames,verbose=FALSE,hide_annotations){
 
   if(!recycleOncomatrix & missing(onco_matrix_path)){
   #order the data frame the way you want the patients shown
@@ -359,7 +359,13 @@ prettyOncoplot = function(maftools_obj,
   }else{
     gene_order=NULL
   }
-
+  if(missing(hide_annotations)){
+    show_legend = rep(TRUE,length(colnames(metadata_df)))
+  }else{
+    show_legend = rep(TRUE,length(colnames(metadata_df)))
+    names(show_legend) = colnames(metadata_df)
+    show_legend[hide_annotations]=FALSE
+  }
   heatmap_legend_param = list(title = "Alterations",nrow=2, ncol=1,
                          legend_direction = "horizontal")
   ch = ComplexHeatmap::oncoPrint(mat[genes,patients_kept],
