@@ -71,8 +71,8 @@ get_gambl_metadata = function(seq_type_filter = "genome",
         dplyr::filter(!cohort %in% c("DLBCL_ctDNA","DLBCL_BLGSP","LLMPP_P01","DLBCL_LSARP_Trios","DLBCL_HTMCP")) %>%
         filter(cohort!="FL_Kridel") %>%
         filter((consensus_pathology %in% c("FL","COM"))) %>% mutate(analysis_cohort = consensus_pathology)
-      fl_transformation_meta = read_tsv("/projects/rmorin/projects/gambl-repos/gambl-rmorin/shared/gambl_fl_transformed.tsv")
-      transformed_cases = fl_transformation_meta %>% filter(!is.na(PATHa.tr)) %>% pull(patient_id)
+      fl_transformation_meta = suppressMessages(read_tsv("/projects/rmorin/projects/gambl-repos/gambl-rmorin/shared/gambl_fl_transformed.tsv"))
+      transformed_cases = fl_transformation_meta %>% dplyr::filter(!is.na(PATHa.tr)) %>% pull(patient_id)
       fl_meta_other[which(fl_meta_other$patient_id %in% transformed_cases),"analysis_cohort"]="tFL"
 
       dlbcl_meta =all_meta %>% dplyr::filter(consensus_pathology %in% c("FL","DLBCL","COM")) %>%
@@ -180,7 +180,7 @@ get_gambl_metadata = function(seq_type_filter = "genome",
 }
 
 add_prps_result = function(incoming_metadata){
-  prps_res = read_tsv("/projects/rmorin/projects/gambl-repos/gambl-rmorin/results/icgc_dart/derived_and_curated_metadata/outputs/BL_dhitsig_PRPS.tsv")
+  prps_res = suppressMessages(read_tsv("/projects/rmorin/projects/gambl-repos/gambl-rmorin/results/icgc_dart/derived_and_curated_metadata/outputs/BL_dhitsig_PRPS.tsv"))
   colnames(prps_res)[1]="sample_id"
   prps_res = select(prps_res,sample_id,PRPS_score,PRPS_class)
   #need to associate each sample with a patient ID then annotate the metadata based on patient ID
@@ -201,13 +201,13 @@ add_icgc_metadata = function(incoming_metadata){
 
   #add trio metadata too!
   trio_meta = "/projects/rmorin/projects/gambl-repos/gambl-rmorin/data/metadata/private_metadata/2021-04-30-DLBC_LSARP_Trios_with_metadata.tsv"
-  icgc_publ = suppressMessages(read_csv("/projects/rmorin/projects/gambl-repos/gambl-rmorin/data/metadata/raw_metadata/MALY_DE_tableS1.csv"))
+  icgc_publ = suppressMessages(suppressWarnings(read_csv("/projects/rmorin/projects/gambl-repos/gambl-rmorin/data/metadata/raw_metadata/MALY_DE_tableS1.csv")))
   icgc_publ = icgc_publ[,c(1:20)]
   #fix commas as decimals
   icgc_publ = mutate(icgc_publ,purity = str_replace(purity,",","."))
   icgc_publ = mutate(icgc_publ,sex=str_to_upper(sex))
 
-  icgc_raw = read_tsv("/projects/rmorin/projects/gambl-repos/gambl-rmorin/data/metadata/raw_metadata/ICGC_MALY_seq_md.tsv")
+  icgc_raw = suppressMessages(read_tsv("/projects/rmorin/projects/gambl-repos/gambl-rmorin/data/metadata/raw_metadata/ICGC_MALY_seq_md.tsv"))
 
   # %>% select(-compression,-bam_available,-read_length,-time_point,-unix_group,-ffpe_or_frozen) %>% rename("sex_gambl"="sex")
   icgc_raw = icgc_raw %>% select(-compression,-bam_available,-read_length,-time_point,-unix_group,-ffpe_or_frozen,-link_name)  %>%
@@ -327,9 +327,11 @@ get_manta_sv = function(min_vaf=0.1,min_score=40,pass=TRUE,pairing_status,sample
 
   con <- DBI::dbConnect(RMariaDB::MariaDB(), dbname = db)
   if(!missing(region) || !missing(chromosome)){
-    if(grepl("chr",chromosome)){
-      chromosome = gsub("chr","",chromosome)
-    }
+    suppressWarnings({
+      if(grepl("chr",chromosome)){
+        chromosome = gsub("chr","",chromosome)
+      }
+    })
     all_sv = dplyr::tbl(con,table_name) %>%
       dplyr::filter((CHROM_A == chromosome & START_A >= qstart & START_A <= qend) | (CHROM_B == chromosome & START_B >= qstart & START_B <= qend)) %>%
       dplyr::filter(VAF_tumour >= min_vaf & SOMATIC_SCORE >= min_score)

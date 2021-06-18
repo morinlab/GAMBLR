@@ -274,9 +274,9 @@ collate_curated_sv_results = function(sample_table){
   manual_files = dir(paste0(project_base,path_to_files),pattern=".tsv")
   for(f in manual_files){
     full = paste0(project_base,path_to_files,f)
-    this_data = read_tsv(full,comment = "#")
+    this_data = suppressMessages(read_tsv(full,comment = "#"))
     #TO DO: fix this so it will join on biopsy_id or sample_id depending on which one is present
-    sample_table = left_join(sample_table,this_data)
+    sample_table = left_join(sample_table,this_data,by="sample_id")
   }
 
 
@@ -550,7 +550,7 @@ collate_ashm_results = function(sample_table){
     tally() %>%
     pivot_wider(values_from=n,names_from=region_name,values_fill=0,names_prefix="ashm_")
 
-  sample_table = left_join(sample_table,tallied)
+  sample_table = left_join(sample_table,tallied,by="sample_id")
   sample_table = mutate(sample_table,across(everything(), ~replace_na(.x, 0)))
 
 }
