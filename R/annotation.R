@@ -25,10 +25,12 @@ annotate_sv = function(sv_data,partner_bed,with_chr_prefix=FALSE,collapse_redund
 
   colnames(bedpe1)= c("chrom","start","end","tumour_sample_id","score","strand1")
   colnames(bedpe2)= c("chrom","start","end","tumour_sample_id","score","strand2")
-  if(grepl("chr",bedpe1$chrom)){
-    bedpe1 = dplyr::mutate(bedpe1,chrom = str_replace(chrom,"chr",""))
-    bedpe2 = dplyr::mutate(bedpe2,chrom = str_replace(chrom,"chr",""))
-  }
+  suppressWarnings({
+    if(grepl("chr",bedpe1$chrom)){
+      bedpe1 = dplyr::mutate(bedpe1,chrom = str_replace(chrom,"chr",""))
+      bedpe2 = dplyr::mutate(bedpe2,chrom = str_replace(chrom,"chr",""))
+    }
+  })
   if(missing(partner_bed)){
     ig_regions = grch37_partners
   }else{
