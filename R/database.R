@@ -514,11 +514,11 @@ append_to_table = function(table_name,data_df){
 #' @export
 #'
 #' @examples
-get_ashm_count_matrix = function(regions_bed,maf_data,sample_metadata){
+get_ashm_count_matrix = function(regions_bed,maf_data,sample_metadata,use_name_column=FALSE){
   if(missing(regions_bed)){
     regions_bed=grch37_ashm_regions
   }
-  ashm_maf=get_ssm_by_regions(regions_bed=regions_bed,streamlined=TRUE,maf_data=maf_data)
+  ashm_maf=get_ssm_by_regions(regions_bed=regions_bed,streamlined=TRUE,maf_data=maf_data,use_name_column=use_name_column)
 
   ashm_counted = ashm_maf %>% group_by(sample_id,region_name) %>% tally()
   if(missing(sample_metadata)){
@@ -577,7 +577,7 @@ get_ssm_by_gene = function(gene_symbol,coding_only=FALSE,rename_splice_region=TR
 #' @export
 #'
 #' @examples
-get_ssm_by_regions = function(regions_list,regions_bed,streamlined=FALSE,maf_data=maf_data){
+get_ssm_by_regions = function(regions_list,regions_bed,streamlined=FALSE,maf_data=maf_data,use_name_column=FALSE){
   bed2region=function(x){
     paste0(x[1],":",as.numeric(x[2]),"-",as.numeric(x[3]))
   }
@@ -588,8 +588,18 @@ get_ssm_by_regions = function(regions_list,regions_bed,streamlined=FALSE,maf_dat
       warning("You must supply either regions_list or regions_df")
     }
   }
-  region_mafs = lapply(regions,function(x){get_ssm_by_region(region=x,streamlined = streamlined,maf_data=maf_data)})
-  tibbled_data = tibble(region_mafs, region_name = regions)
+  if(missing(maf_data)){
+    region_mafs = lapply(regions,function(x){get_ssm_by_region(region=x,streamlined = streamlined)})
+  }else{
+    region_mafs = lapply(regions,function(x){get_ssm_by_region(region=x,streamlined = streamlined,maf_data=maf_data)})
+  }
+  if(!use_name_column){
+    rn = regions
+  }else{
+    rn = regions_bed[["name"]]
+  }
+  tibbled_data = tibble(region_mafs, region_name = rn)
+
   unnested_df = tibbled_data %>% unnest_longer(region_mafs)
   if(streamlined){
 

@@ -210,6 +210,7 @@ collate_results = function(sample_table,write_to_file=FALSE,join_with_full_metad
   sample_table = collate_curated_sv_results(sample_table=sample_table)
   sample_table = collate_ashm_results(sample_table=sample_table)
   sample_table = collate_nfkbiz_results(sample_table=sample_table)
+  sample_table = collate_csr_results(sample_table=sample_table)
   sample_table = collate_sbs_results(sample_table=sample_table,sbs_manipulation=sbs_manipulation)
   sample_table = collate_derived_results(sample_table=sample_table)
   if(write_to_file){
@@ -257,6 +258,26 @@ collate_derived_results = function(sample_table){
   sample_table = dplyr::left_join(sample_table,derived_tbl)
   return(sample_table)
 }
+
+
+#' Collate a few CSR annotations, including MiXCR
+#'
+#' @param sample_table A data frame with sample_id as the first column
+#'
+#' @return The sample table with additional columns
+#' @export
+#' @import tidyverse
+#'
+#' @examples
+collate_csr_results = function(sample_table){
+   csr = suppressMessages(read_tsv("/projects/rmorin/projects/gambl-repos/gambl-nthomas/results/icgc_dart/mixcr_current/level_3/mixcr_genome_CSR_results.tsv"))
+   sm_join = inner_join(sample_table,csr,by=c("sample_id"="sample"))
+   pt_join = inner_join(sample_table,csr,by=c("patient_id"="sample"))
+   complete_join <- bind_rows(pt_join, sm_join) %>%
+     bind_rows(filter(sample_table, !patient_id %in% c(pt_join$patient_id, sm_join$patient_id)))
+  return(complete_join)
+}
+
 
 #' Collate all SV calls from the genome data and summarize for main oncogenes of interest per sample
 #'

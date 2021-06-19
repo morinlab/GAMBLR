@@ -1,4 +1,12 @@
 chr_name	hg19_start	hg19_end	gene	region	regulatory_comment
+chr9	37023396	37027663	PAX5	intron-1	intronic
+chr9	37192080	37207549	ZCCHC7	intron-3	intronic
+chr9	37282092	37309161	ZCCHC7	intron-2	intronic
+chr9	37323113	37340687	ZCCHC7	intron-1	intronic
+chr9	37369209	37372160	PAX5	distal-enhancer-1	enhancer
+chr9	37382267	37385854	PAX5	distal-enhancer-2	enhancer
+chr9	37395932	37409239	PAX5	distal-enhancer-3	enhancer
+chr9	37032576	37037704	PAX5	TSS	active_promoter
 chr3	71626341	71635648	FOXP1	TSS-1	active_promoter
 chr3	71550753	71551478	FOXP1	intron-1a	intronic
 chr3	71503103	71504870	FOXP1	intron-1b	intronic
