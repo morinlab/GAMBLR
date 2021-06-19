@@ -8,7 +8,8 @@ collate_results(
   sample_table,
   write_to_file = FALSE,
   join_with_full_metadata = FALSE,
-  case_set
+  case_set,
+  sbs_manipulation = ""
 )
 }
 \value{

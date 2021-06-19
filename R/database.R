@@ -506,9 +506,13 @@ append_to_table = function(table_name,data_df){
   dbWriteTable(con,table_name,table_data,append=TRUE)
 }
 
-#' Title
+#' Prepare a matrix with one row per sample and one column per region using a set of hypermutated regions.
+#' Values are the number of mutations in that patient in the region.
 #'
 #' @param regions_bed
+#' @param maf_data Optionally provide a data frame in the MAF format, otherwise the database will be used
+#' @param sample_metadata This is used to complete your matrix. All GAMBL samples will be used by default. Provide a data frame with at least sample_id for all samples if you are using non-GAMBL data.
+#'
 #'
 #' @return
 #' @export
@@ -567,11 +571,12 @@ get_ssm_by_gene = function(gene_symbol,coding_only=FALSE,rename_splice_region=TR
   return(muts_gene)
 }
 
-#' Title
+#' Efficiently retrieve all mutations across a range of genomic regions
 #'
-#' @param regions_list
-#' @param regions_bed
-#' @param streamlined
+#' @param regions_list Either provide a vector of regions in the chr:start-end format OR
+#' @param regions_bed Better yet, provide a bed file with the coordinates you want to retrieve
+#' @param streamlined Return a basic rather than full MAF format
+#' @param use_name_column If your bed-format data frame has a name column (must be named "name") these can be used to name your regions
 #'
 #' @return
 #' @export

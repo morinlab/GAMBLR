@@ -2,16 +2,28 @@
 % Please edit documentation in R/database.R
 \name{get_ssm_by_regions}
 \alias{get_ssm_by_regions}
-\title{Title}
+\title{Efficiently retrieve all mutations across a range of genomic regions}
 \usage{
-get_ssm_by_regions(regions_list, regions_bed, streamlined = FALSE)
+get_ssm_by_regions(
+  regions_list,
+  regions_bed,
+  streamlined = FALSE,
+  maf_data = maf_data,
+  use_name_column = FALSE
+)
 }
 \arguments{
-\item{streamlined}{}
+\item{regions_list}{Either provide a vector of regions in the chr:start-end format OR}
+
+\item{regions_bed}{Better yet, provide a bed file with the coordinates you want to retrieve}
+
+\item{streamlined}{Return a basic rather than full MAF format}
+
+\item{use_name_column}{If your bed-format data frame has a name column (must be named "name") these can be used to name your regions}
 }
 \value{
 
 }
 \description{
-Title
+Efficiently retrieve all mutations across a range of genomic regions
 }

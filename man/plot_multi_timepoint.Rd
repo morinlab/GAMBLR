@@ -2,7 +2,7 @@
 % Please edit documentation in R/viz.R
 \name{plot_multi_timepoint}
 \alias{plot_multi_timepoint}
-\title{Title}
+\title{This function doesn't do anything yet}
 \usage{
 plot_multi_timepoint(mafs, sample_id, genes, show_noncoding = FALSE, detail)
 }
@@ -13,5 +13,5 @@ plot_multi_timepoint(mafs, sample_id, genes, show_noncoding = FALSE, detail)
 
 }
 \description{
-Title
+This function doesn't do anything yet
 }
