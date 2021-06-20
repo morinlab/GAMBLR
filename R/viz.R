@@ -793,7 +793,7 @@ plot_multi_timepoint = function(mafs,sample_id,genes,show_noncoding=FALSE,detail
 #'
 #' @return nothing
 #' @export
-#' @import tidyverse
+#' @import tidyverse ggrepel
 #'
 #' @examples
 #' # basic usage

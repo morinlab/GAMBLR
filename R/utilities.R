@@ -869,7 +869,7 @@ make_igv_snapshot = function(bams,genome_build,region,padding=200,chrom,start,en
 #' GRAPH - forest plot visualization of distinct CNV between 2 groups.
 #' Output can be accessed by index (e.g.[3]), or by name (e.g.["GRAPH"])
 #' @export
-#' @import tidyverse
+#' @import tidyverse stats metaviz
 #'
 #' @examples
 #' # basic usage
