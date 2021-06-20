@@ -6,8 +6,11 @@
 #' and/or perform some statistical analysis on the frequency and assortment of mutations in that data set but doesn't need all the details.
 #' User J can run this function on a maf file and provide the path of the output to user B.
 #'
-#' @param mutation_maf
-#' @param output_oncomatrix
+#' @param mutation_maf_path Provide either the full path to a MAF file or
+#' @param mutation_maf_data Otherwise provide a data frame of the MAF data
+#' @param output_oncomatrix Optionally provide the path for your sanitized output file (otherwise it writes to working directory)
+#' @param genes_keep Specify which genes you want to remain in the output
+#' @param genes_drop Optionally specify which genes to drop (this doesn't mean all other genes will remain. Maftools decides that part)
 #'
 #' @return The full path to the oncomatrix file (a matrix with Variant_Classification or Multi_Hit indicating coding mutation status per patient)
 #' @export

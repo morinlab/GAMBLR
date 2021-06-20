@@ -27,3 +27,8 @@ get_ssm_by_regions(
 \description{
 Efficiently retrieve all mutations across a range of genomic regions
 }
+\examples{
+#basic usage, adding custom names from bundled ashm data frame
+regions_bed = grch37_ashm_regions \%>\% mutate(name=paste(gene,region,sep="_"))
+ashm_maf=get_ssm_by_regions(regions_bed=regions_bed,streamlined=TRUE,use_name_column=use_name_column)
+}

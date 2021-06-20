@@ -2,7 +2,7 @@
 % Please edit documentation in R/database.R
 \name{append_to_table}
 \alias{append_to_table}
-\title{Title}
+\title{Housekeeping function to add results to a table}
 \usage{
 append_to_table(table_name, data_df)
 }
@@ -13,5 +13,5 @@ append_to_table(table_name, data_df)
 
 }
 \description{
-Title
+Housekeeping function to add results to a table
 }

@@ -140,6 +140,10 @@ prettyOncoplot = function(maftools_obj,
       grid.rect(x, y, w-unit(spacing, "pt"), h*height_scaling,
                 gp = gpar(fill = "#e6e6e6", col = box_col))
     },
+    RNA = function(x, y, w, h) {
+      grid.rect(x, y, w-unit(spacing, "pt"), h*height_scaling,
+                gp = gpar(fill = "#D972FF", col = box_col))
+    },
     # big blue
     Nonsense_Mutation = function(x, y, w, h) {
       grid.rect(x, y, w-unit(spacing, "pt"), h*height_scaling,

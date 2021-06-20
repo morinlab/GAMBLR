@@ -7,7 +7,7 @@
 add_icgc_metadata(incoming_metadata)
 }
 \arguments{
-\item{incoming_metadata}{}
+\item{incoming_metadata}{A metadata table (probably output from get_gambl_metadata)}
 }
 \value{
 

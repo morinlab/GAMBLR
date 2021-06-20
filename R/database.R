@@ -191,7 +191,7 @@ add_prps_result = function(incoming_metadata){
 
 #' Layer on ICGC metadata from a supplemental table to fill in missing COO
 #'
-#' @param incoming_metadata
+#' @param incoming_metadata A metadata table (probably output from get_gambl_metadata)
 #'
 #' @return
 #' @export
@@ -490,7 +490,7 @@ get_cn_segments = function(chromosome,qstart,qend,region,with_chr_prefix=FALSE,s
   return(all_segs)
 }
 
-#' Title
+#' Housekeeping function to add results to a table
 #'
 #' @param table_name
 #' @param connection
@@ -512,7 +512,7 @@ append_to_table = function(table_name,data_df){
 #' @param regions_bed
 #' @param maf_data Optionally provide a data frame in the MAF format, otherwise the database will be used
 #' @param sample_metadata This is used to complete your matrix. All GAMBL samples will be used by default. Provide a data frame with at least sample_id for all samples if you are using non-GAMBL data.
-#'
+#' @param use_name_column Set this to true to force the function to use the value in column "name" to name each feature in the output
 #'
 #' @return
 #' @export
@@ -582,6 +582,10 @@ get_ssm_by_gene = function(gene_symbol,coding_only=FALSE,rename_splice_region=TR
 #' @export
 #'
 #' @examples
+#' #basic usage, adding custom names from bundled ashm data frame
+#' regions_bed = grch37_ashm_regions %>% mutate(name=paste(gene,region,sep="_"))
+#' ashm_maf=get_ssm_by_regions(regions_bed=regions_bed,streamlined=TRUE,use_name_column=use_name_column)
+
 get_ssm_by_regions = function(regions_list,regions_bed,streamlined=FALSE,maf_data=maf_data,use_name_column=FALSE){
   bed2region=function(x){
     paste0(x[1],":",as.numeric(x[2]),"-",as.numeric(x[3]))
