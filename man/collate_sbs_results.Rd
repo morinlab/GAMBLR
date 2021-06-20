@@ -4,7 +4,12 @@
 \alias{collate_sbs_results}
 \title{Bring in the results from mutational signature analysis}
 \usage{
-collate_sbs_results(sample_table, file_path)
+collate_sbs_results(
+  sample_table,
+  file_path,
+  scale_vals = FALSE,
+  sbs_manipulation = ""
+)
 }
 \arguments{
 \item{sample_table}{A data frame with sample_id as the first column}

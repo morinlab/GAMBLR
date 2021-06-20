@@ -1,5 +1,10 @@
 ## code to prepare `DATASET` dataset goes here
 
+gene_blacklist = system.file("extdata", "gene_blacklist_with_IG.tsv", package = "GAMBLR") %>%
+  read_tsv()
+
+usethis::use_data(gene_blacklist, overwrite = TRUE)
+
 grch37_all_gene_coordinates = system.file("extdata", "grch37_gene_coordinates.tsv", package = "GAMBLR") %>%
   read_tsv()
 

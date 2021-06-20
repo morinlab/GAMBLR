@@ -77,7 +77,7 @@ annotate_sv = function(sv_data,partner_bed,with_chr_prefix=FALSE,collapse_redund
   #colnames(b.annotated.both) = c("chrom2","start2","end2","tumour_sample_id","gene","entrez","score","strand2","chrom1","ig.start","ig.end","partner","e2","start1","end1","tsid","garbage","strand1")
   all.annotated = rbind(a.annotated.both,b.annotated.both)
   all.annotated$fusion = dplyr::pull(tidyr::unite(all.annotated,fusion,partner,gene,sep="-"),fusion)
-  all.annotated = dplyr::filter(all.annotated,fusion != "BCL6-BCL6")
+  all.annotated = dplyr::filter(all.annotated,!fusion %in% c("BCL6-BCL6","CIITA-CIITA","FOXP1-FOXP1"))
 
   #TODO: need a better system for cataloguing and using these
   blacklist = c(60565248,30303126,187728894,101357565,101359747,161734970,69400840,65217851,187728889,188305164)
