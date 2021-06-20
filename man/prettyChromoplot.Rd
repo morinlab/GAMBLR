@@ -7,6 +7,8 @@
 prettyChromoplot(scores, genes_to_label, cutoff = 0.5)
 }
 \arguments{
+\item{scores}{output file scores.gistic from the run of GISTIC2.0}
+
 \item{genes_to_label}{optional. Provide a data frame of genes to label (if mutated). The first 3 columns must contain chromosome, start, and end coordinates. Another required column must contain gene names and be named \code{gene}. All other columns are ignored. If no data frame provided, oncogenes from GAMBLR packages are used by default to annotate on the plot.}
 
 \item{cutoff}{optional. Used to determine which regions to color as aberrant. Must be float in the range \link{0-1}. The higher the number, the less regions will be considered as aberrant. The default is 0.5.}

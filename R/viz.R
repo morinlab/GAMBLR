@@ -808,13 +808,13 @@ plot_multi_timepoint = function(mafs,sample_id,genes,show_noncoding=FALSE,detail
 
 #' Use GISTIC2.0 scores output to reproduce maftools::chromoplot with more flexibility
 #'
-#' @param scores
+#' @param scores output file scores.gistic from the run of GISTIC2.0
 #' @param genes_to_label optional. Provide a data frame of genes to label (if mutated). The first 3 columns must contain chromosome, start, and end coordinates. Another required column must contain gene names and be named `gene`. All other columns are ignored. If no data frame provided, oncogenes from GAMBLR packages are used by default to annotate on the plot.
 #' @param cutoff optional. Used to determine which regions to color as aberrant. Must be float in the range [0-1]. The higher the number, the less regions will be considered as aberrant. The default is 0.5.
 #'
 #' @return nothing
 #' @export
-#' @import tidyverse
+#' @import tidyverse ggrepel
 #'
 #' @examples
 #' # basic usage
