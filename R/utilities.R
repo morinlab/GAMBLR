@@ -6,8 +6,11 @@
 #' and/or perform some statistical analysis on the frequency and assortment of mutations in that data set but doesn't need all the details.
 #' User J can run this function on a maf file and provide the path of the output to user B.
 #'
-#' @param mutation_maf
-#' @param output_oncomatrix
+#' @param mutation_maf_path Provide either the full path to a MAF file or
+#' @param mutation_maf_data Otherwise provide a data frame of the MAF data
+#' @param output_oncomatrix Optionally provide the path for your sanitized output file (otherwise it writes to working directory)
+#' @param genes_keep Specify which genes you want to remain in the output
+#' @param genes_drop Optionally specify which genes to drop (this doesn't mean all other genes will remain. Maftools decides that part)
 #'
 #' @return The full path to the oncomatrix file (a matrix with Variant_Classification or Multi_Hit indicating coding mutation status per patient)
 #' @export
@@ -210,6 +213,7 @@ collate_results = function(sample_table,write_to_file=FALSE,join_with_full_metad
   sample_table = collate_curated_sv_results(sample_table=sample_table)
   sample_table = collate_ashm_results(sample_table=sample_table)
   sample_table = collate_nfkbiz_results(sample_table=sample_table)
+  sample_table = collate_csr_results(sample_table=sample_table)
   sample_table = collate_sbs_results(sample_table=sample_table,sbs_manipulation=sbs_manipulation)
   sample_table = collate_derived_results(sample_table=sample_table)
   if(write_to_file){
@@ -257,6 +261,26 @@ collate_derived_results = function(sample_table){
   sample_table = dplyr::left_join(sample_table,derived_tbl)
   return(sample_table)
 }
+
+
+#' Collate a few CSR annotations, including MiXCR
+#'
+#' @param sample_table A data frame with sample_id as the first column
+#'
+#' @return The sample table with additional columns
+#' @export
+#' @import tidyverse
+#'
+#' @examples
+collate_csr_results = function(sample_table){
+   csr = suppressMessages(read_tsv("/projects/rmorin/projects/gambl-repos/gambl-nthomas/results/icgc_dart/mixcr_current/level_3/mixcr_genome_CSR_results.tsv"))
+   sm_join = inner_join(sample_table,csr,by=c("sample_id"="sample"))
+   pt_join = inner_join(sample_table,csr,by=c("patient_id"="sample"))
+   complete_join <- bind_rows(pt_join, sm_join) %>%
+     bind_rows(filter(sample_table, !patient_id %in% c(pt_join$patient_id, sm_join$patient_id)))
+  return(complete_join)
+}
+
 
 #' Collate all SV calls from the genome data and summarize for main oncogenes of interest per sample
 #'

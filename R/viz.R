@@ -18,11 +18,11 @@
 #' @param sortByColumns A vector containing the column names you want to sort columns (patients) on
 #' @param removeNonMutated Set to TRUE to drop unmutated cases
 #' @param minMutationPercent Only genes mutated in more than minMutationPercent % patients will be included
-#' @param fontSizeGene
-#' @param annoAlpha
-#' @param mutAlpha
+#' @param fontSizeGene Font size for gene labels (default 6)
+#' @param annoAlpha Optional alpha to apply to annotation colours
+#' @param mutAlpha Optional alpha to apply to mutation colours
 #' @param recycleOncomatrix Set to TRUE most of the time to reuse the oncomatrix saved by maftools
-#' @param box_col
+#' @param box_col Colour of boxes for outlining mutations (can be problematic with larger oncoprints)
 #' @param legend_row Fiddle with these to widen or narrow your legend
 #' @param legend_col Fiddle with these to widen or narrow your legend
 #'
@@ -30,6 +30,19 @@
 #' @export
 #'
 #' @examples
+#' prettyOncoplot(maftools_obj = maf_obj,genes = bl_genes,
+#' these_samples_metadata = extra_meta,
+#' metadataColumns = c("pathology","COO_consensus",
+#'                     "cluster_name", "lymphgen","EBV_status_inf",
+#'                     "manta_BCL6_sv"),
+#' hide_annotations = c(some_ashm,"lymphgen","COO_consensus",
+#'                      "pathology","manta_BCL6_sv"),
+#' expressionColumns = c("IRF4",some_ashm),
+#' sortByColumns = c("IRF4"),
+#' keepGeneOrder = FALSE,splitGeneGroups = groups,
+#' splitColumnName = "cluster_name",
+#' metadataBarHeight = 2.5,metadataBarFontsize = 6,fontSizeGene = 8,
+#' recycleOncomatrix = TRUE,removeNonMutated = FALSE)
 prettyOncoplot = function(maftools_obj,
                           onco_matrix_path,
                           genes,
@@ -42,7 +55,8 @@ prettyOncoplot = function(maftools_obj,
                           expressionColumns=c(),
                           numericMetadataMax,sortByColumns,
                           removeNonMutated=FALSE,
-                          minMutationPercent,fontSizeGene=6,
+                          minMutationPercent,
+                          fontSizeGene=6,
                           annoAlpha=1,mutAlpha=1,
                           recycleOncomatrix=FALSE,
                           box_col=NA,
@@ -52,8 +66,11 @@ prettyOncoplot = function(maftools_obj,
                           hideSideBarplot=FALSE,
                           splitColumnName,
                           splitGeneGroups,
-                          legend_row=3,legend_col=3,showTumorSampleBarcode=FALSE,
-                          groupNames,verbose=FALSE,hide_annotations){
+                          legend_row=3,
+                          legend_col=3,
+                          showTumorSampleBarcode=FALSE,
+                          groupNames,verbose=FALSE,
+                          hide_annotations){
 
   if(!recycleOncomatrix & missing(onco_matrix_path)){
   #order the data frame the way you want the patients shown
@@ -122,6 +139,10 @@ prettyOncoplot = function(maftools_obj,
     background = function(x, y, w, h) {
       grid.rect(x, y, w-unit(spacing, "pt"), h*height_scaling,
                 gp = gpar(fill = "#e6e6e6", col = box_col))
+    },
+    RNA = function(x, y, w, h) {
+      grid.rect(x, y, w-unit(spacing, "pt"), h*height_scaling,
+                gp = gpar(fill = "#D972FF", col = box_col))
     },
     # big blue
     Nonsense_Mutation = function(x, y, w, h) {
@@ -660,7 +681,7 @@ ashm_rainbow_plot = function(mutations_maf,
   return(p)
 }
 
-#' Title
+#' This function doesn't do anything yet
 #'
 #' @param mafs
 #' @param sample_id

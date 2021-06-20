@@ -34,7 +34,11 @@ prettyOncoplot(
   splitColumnName,
   splitGeneGroups,
   legend_row = 3,
-  legend_col = 3
+  legend_col = 3,
+  showTumorSampleBarcode = FALSE,
+  groupNames,
+  verbose = FALSE,
+  hide_annotations
 )
 }
 \arguments{
@@ -62,7 +66,15 @@ prettyOncoplot(
 
 \item{minMutationPercent}{Only genes mutated in more than minMutationPercent \% patients will be included}
 
+\item{fontSizeGene}{Font size for gene labels (default 6)}
+
+\item{annoAlpha}{Optional alpha to apply to annotation colours}
+
+\item{mutAlpha}{Optional alpha to apply to mutation colours}
+
 \item{recycleOncomatrix}{Set to TRUE most of the time to reuse the oncomatrix saved by maftools}
+
+\item{box_col}{Colour of boxes for outlining mutations (can be problematic with larger oncoprints)}
 
 \item{legend_row}{Fiddle with these to widen or narrow your legend}
 
@@ -76,4 +88,19 @@ Make an oncoplot that is pretty using ComplexHeatmap. The metadata is expected t
 If you provide your own non-GAMBL samples and metadata, you must include at least the following columns with these names.
 The first one should match the Tumor_Sample_Barcode in the MAF object or onco_matrix you provide.
 sample_id, pathology
+}
+\examples{
+prettyOncoplot(maftools_obj = maf_obj,genes = bl_genes,
+these_samples_metadata = extra_meta,
+metadataColumns = c("pathology","COO_consensus",
+                    "cluster_name", "lymphgen","EBV_status_inf",
+                    "manta_BCL6_sv"),
+hide_annotations = c(some_ashm,"lymphgen","COO_consensus",
+                     "pathology","manta_BCL6_sv"),
+expressionColumns = c("IRF4",some_ashm),
+sortByColumns = c("IRF4"),
+keepGeneOrder = FALSE,splitGeneGroups = groups,
+splitColumnName = "cluster_name",
+metadataBarHeight = 2.5,metadataBarFontsize = 6,fontSizeGene = 8,
+recycleOncomatrix = TRUE,removeNonMutated = FALSE)
 }
