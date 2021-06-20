@@ -95,7 +95,13 @@
   </a>
   <ul class="dropdown-menu" role="menu">
     <li>
+      <a href="../articles/GAMBLR_presentation.html">Doubling Down on GAMBL with GAMBLR</a>
+    </li>
+    <li>
       <a href="../articles/examples.html">GAMBLR - working with GAMBL data painlessly in R</a>
+    </li>
+    <li>
+      <a href="../articles/lymphoma.html">Lymphoma colours</a>
     </li>
   </ul>
 </li>
@@ -126,7 +132,7 @@
 
     <pre class="usage"><span class='fu'>annotate_sv</span><span class='op'>(</span>
   <span class='va'>sv_data</span>,
-  genome_build <span class='op'>=</span> <span class='st'>"grch37"</span>,
+  <span class='va'>partner_bed</span>,
   with_chr_prefix <span class='op'>=</span> <span class='cn'>FALSE</span>,
   collapse_redundant <span class='op'>=</span> <span class='cn'>FALSE</span>,
   return_as <span class='op'>=</span> <span class='st'>"bedpe"</span>
@@ -140,8 +146,16 @@
       <td><p>A data frame of SVs. This should be the output of get_manta_sv.</p></td>
     </tr>
     <tr>
-      <th>genome_build</th>
-      <td><p>Which reference genome these SVs are from</p></td>
+      <th>partner_bed</th>
+      <td><p>Optional bed-format data frame to use for annotating oncogene partners (e.g. enhancers). required columns are: chrom,start,end,gene</p></td>
+    </tr>
+    <tr>
+      <th>with_chr_prefix</th>
+      <td><p>Optionally request that chromosome names are returned with a chr prefix</p></td>
+    </tr>
+    <tr>
+      <th>collapse_redundant</th>
+      <td><p>Remove reciprocal events and only return one per event</p></td>
     </tr>
     </table>
 
@@ -153,7 +167,7 @@
     <pre class="examples"><div class='input'><span class='co'># Basic usage</span>
 <span class='va'>sv_df</span> <span class='op'>=</span> <span class='fu'><a href='get_manta_sv.html'>get_manta_sv</a></span><span class='op'>(</span><span class='op'>)</span>
 <span class='va'>annotated_sv</span> <span class='op'>=</span> <span class='fu'>annotate_sv</span><span class='op'>(</span><span class='va'>sv_df</span><span class='op'>)</span>
-</div></pre>
+</div><div class='output co'>#&gt; <span class='warning'>Warning: the condition has length &gt; 1 and only the first element will be used</span></div></pre>
   </div>
   <div class="col-md-3 hidden-xs hidden-sm" id="pkgdown-sidebar">
     <nav id="toc" data-toggle="toc" class="sticky-top">

@@ -95,7 +95,13 @@
   </a>
   <ul class="dropdown-menu" role="menu">
     <li>
+      <a href="../articles/GAMBLR_presentation.html">Doubling Down on GAMBL with GAMBLR</a>
+    </li>
+    <li>
       <a href="../articles/examples.html">GAMBLR - working with GAMBL data painlessly in R</a>
+    </li>
+    <li>
+      <a href="../articles/lymphoma.html">Lymphoma colours</a>
     </li>
   </ul>
 </li>
@@ -124,7 +130,13 @@
     <p>Use liftOver to convert a bedpe file between the two main genome builds (grch37/hg38)</p>
     </div>
 
-    <pre class="usage"><span class='fu'>liftover_bedpe</span><span class='op'>(</span><span class='va'>bedpe_file</span>, <span class='va'>bedpe_df</span>, target_build <span class='op'>=</span> <span class='st'>"grch37"</span><span class='op'>)</span></pre>
+    <pre class="usage"><span class='fu'>liftover_bedpe</span><span class='op'>(</span>
+  <span class='va'>bedpe_file</span>,
+  <span class='va'>bedpe_df</span>,
+  target_build <span class='op'>=</span> <span class='st'>"grch37"</span>,
+  <span class='va'>col_names</span>,
+  <span class='va'>col_types</span>
+<span class='op'>)</span></pre>
 
     <h2 class="hasAnchor" id="arguments"><a class="anchor" href="#arguments"></a>Arguments</h2>
     <table class="ref-arguments">

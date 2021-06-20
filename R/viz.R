@@ -53,7 +53,7 @@ prettyOncoplot = function(maftools_obj,
                           splitColumnName,
                           splitGeneGroups,
                           legend_row=3,legend_col=3,showTumorSampleBarcode=FALSE,
-                          groupNames){
+                          groupNames,verbose=FALSE,hide_annotations){
 
   if(!recycleOncomatrix & missing(onco_matrix_path)){
   #order the data frame the way you want the patients shown
@@ -87,11 +87,13 @@ prettyOncoplot = function(maftools_obj,
   mat[mat==0]=""
   patients = pull(these_samples_metadata,sample_id)
 
-  message("====DROPPED=====")
+
   patients_kept = patients[which(patients %in% colnames(mat))]
   patients_dropped = patients[which(!patients %in% colnames(mat))]
-
-  message(patients_dropped)
+  if(verbose){
+    message("====DROPPED=====")
+    message(patients_dropped)
+  }
 
   genes_kept = genes[which(genes %in% rownames(mat))]
   if(!missing(minMutationPercent)){
@@ -180,16 +182,18 @@ prettyOncoplot = function(maftools_obj,
 
   colours = list()
   clinical_colours = ggsci::get_ash("clinical")
-  gambl_colours=get_gambl_colours()
+  all_gambl_colours=get_gambl_colours()
 
   for(column in metadataColumns){
 
     these_samples_metadata[[column]] = factor(these_samples_metadata[[column]], levels=unique(these_samples_metadata[[column]]))
     options = these_samples_metadata %>% arrange(column) %>% filter(!is.na(column)) %>% pull(column) %>% unique()
     options=options[!is.na(options)]
-    print(">>>>>>>")
-    print(levels(options))
-    print("<<<<<<<")
+    if(verbose){
+      print(">>>>>>>")
+      print(levels(options))
+      print("<<<<<<<")
+    }
     if(column == "sex"){
       these = get_gambl_colours("sex",alpha=annoAlpha)
       these = these[levels(options)]
@@ -199,14 +203,18 @@ prettyOncoplot = function(maftools_obj,
       colours[[column]]=these
     }else if(sum(levels(options) %in% names(clinical_colours))==length(levels(options))){
       #we have a way to map these all to colours!
-      message(paste("found colours for",column))
+      if(verbose){
+        message(paste("found colours for",column))
+      }
       these = clinical_colours[levels(options)]
       if(!"NA" %in% names(these)){
         these= c(these,"NA"="white")
       }
       colours[[column]]=these
     }else if(("positive" %in% options | "POS" %in% options) & length(options)<4){
-      print("using pos_neg")
+      if(verbose){
+        print("using pos_neg")
+      }
 
       these = get_gambl_colours("pos_neg",alpha=annoAlpha)
       these = these[levels(options)]
@@ -245,8 +253,10 @@ prettyOncoplot = function(maftools_obj,
       }
       colours[[column]]=these
 
-    }else if(sum(levels(options) %in% names(gambl_colours))==length(levels(options))){
-      message(paste("found colours for",column,"in all_gambl_colours"))
+    }else if(sum(levels(options) %in% names(all_gambl_colours))==length(levels(options))){
+      if(verbose){
+        message(paste("found colours for",column,"in all_gambl_colours"))
+      }
       these = all_gambl_colours[levels(options)]
       if(!"NA" %in% names(these)){
         these= c(these,"NA"="white")
@@ -285,8 +295,20 @@ prettyOncoplot = function(maftools_obj,
     colours[["hot_spots"]]= c("hot_spot"="magenta")
   }
 
+  #scale the expression data and truncate at 5 and 95th percentile
+  trim_scale_expression <- function(x){
+    quants <- unname(quantile(x, probs = c(0.05, 0.95),na.rm=TRUE))
+    x <- ifelse(x < quants[1], quants[1], x)
+    x <- ifelse(x > quants[2], quants[2], x)
+    x <- (x - quants[1]) / (quants[2] - quants[1])
+    return(x)
+  }
 
-  print(colours) #eventually get rid of this once the bugs are gone
+
+
+  if(verbose){
+    print(colours) #eventually get rid of this once the bugs are gone
+  }
   if(!missing(numericMetadataColumns)){
     metadata_df = filter(these_samples_metadata, sample_id %in% patients_kept) %>%
       column_to_rownames("sample_id") %>%
@@ -302,11 +324,16 @@ prettyOncoplot = function(maftools_obj,
     metadata_df = filter(these_samples_metadata, sample_id %in% patients_kept) %>%
     column_to_rownames("sample_id") %>% select(all_of(c(metadataColumns,expressionColumns)))
   }
+  metadata_df = metadata_df %>%
+    mutate(across(all_of(expressionColumns), ~ trim_scale_expression(.x)))
+
   if(!missing(sortByColumns)){
     metadata_df = arrange(metadata_df,across(sortByColumns))
     patients_kept = rownames(metadata_df)
   }
-  print(genes_kept)
+  if(verbose){
+    print(genes_kept)
+  }
   col_fun=circlize::colorRamp2(c(0, 0.5, 1), c("blue", "white", "red"))
   for(exp in expressionColumns){
     colours[[exp]] = col_fun
@@ -332,7 +359,13 @@ prettyOncoplot = function(maftools_obj,
   }else{
     gene_order=NULL
   }
-
+  if(missing(hide_annotations)){
+    show_legend = rep(TRUE,length(colnames(metadata_df)))
+  }else{
+    show_legend = rep(TRUE,length(colnames(metadata_df)))
+    names(show_legend) = colnames(metadata_df)
+    show_legend[hide_annotations]=FALSE
+  }
   heatmap_legend_param = list(title = "Alterations",nrow=2, ncol=1,
                          legend_direction = "horizontal")
   ch = ComplexHeatmap::oncoPrint(mat[genes,patients_kept],
@@ -353,7 +386,7 @@ prettyOncoplot = function(maftools_obj,
                                    row_names_gp = gpar(fontsize = fontSizeGene),
                                    pct_gp = gpar(fontsize = fontSizeGene),
                     bottom_annotation =
-                    ComplexHeatmap::HeatmapAnnotation(df=metadata_df,
+                    ComplexHeatmap::HeatmapAnnotation(df=metadata_df,show_legend=show_legend,
                                                       col=colours,
                                                       simple_anno_size = unit(metadataBarHeight, "mm"),
                                                       gap = unit(0.25*metadataBarHeight, "mm"),
@@ -770,9 +803,9 @@ plot_multi_timepoint = function(mafs,sample_id,genes,show_noncoding=FALSE,detail
 #' ...(any ggplot options to customize plot appearance)
 prettyChromoplot = function(scores, genes_to_label, cutoff=0.5){
   # read GISTIC scores file, convert G-score to be negative for deletions, and relocate chromosome, start, and end columns to be the first three
-  scores <- data.table::fread(scores) %>% 
+  scores <- data.table::fread(scores) %>%
     dplyr::mutate(`G-score`= ifelse(Type=="Amp",  `G-score`, -1*`G-score`)) %>%
-    dplyr::relocate(Type, .after=frequency) 
+    dplyr::relocate(Type, .after=frequency)
   # annotate each region with direction of changes - used for coloring
   scores$fill <- ifelse(scores$Type == "Amp" & scores$`-log10(q-value)` > cutoff, "up",
                         ifelse(scores$Type == "Del" & scores$`-log10(q-value)` > cutoff, "down", "neutral"))
@@ -793,7 +826,7 @@ prettyChromoplot = function(scores, genes_to_label, cutoff=0.5){
       data.table::as.data.table()
   }
   # overlap scores with genes to annotate
-  scores <- data.table::foverlaps(scores %>% data.table::setkey(., Chromosome, Start, End), 
+  scores <- data.table::foverlaps(scores %>% data.table::setkey(., Chromosome, Start, End),
                       genes_to_label %>% data.table::setkey(., chrom, start, end),
                       by.x=c("Chromosome", "Start", "End"),
                       by.y = c("chrom", "start", "end"),
@@ -801,21 +834,21 @@ prettyChromoplot = function(scores, genes_to_label, cutoff=0.5){
     # if gene to annotate is provided, but it is in region with no CNV, do not label it
     dplyr::mutate(gene=ifelse(!is.na(gene) & fill=="neutral", NA, gene)) %>%
     # if gene is covering multiple adjacent regions, label only once
-    dplyr::group_by(gene) %>% 
+    dplyr::group_by(gene) %>%
     dplyr::mutate(newcol = ifelse(!is.na(gene) & !duplicated(gene), gene, NA),
-           gene = newcol) %>% 
+           gene = newcol) %>%
     dplyr::select(-newcol)
   # get coordinates to label chromosome numbers
   xses <- scores %>%
     dplyr::group_by(Chromosome) %>%
     dplyr::mutate(End=max(End)/2) %>%
     dplyr::pull(End)
-  
+
   # main plotting
   ggplot(data = scores,
-         aes(x=Start, y=`G-score`,color=fill, label=gene)) + 
-    geom_bar(size=0.2,stat='identity', position="dodge") + 
-    ylab('G-score') + 
+         aes(x=Start, y=`G-score`,color=fill, label=gene)) +
+    geom_bar(size=0.2,stat='identity', position="dodge") +
+    ylab('G-score') +
     ggrepel::geom_text_repel(data = subset(scores, !is.na(gene) & Type=="Amp"),
                     nudge_y = max(subset(scores, !is.na(gene) & Type=="Amp")$`G-score`)*1.25,
                     size=5,

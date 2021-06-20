@@ -197,7 +197,7 @@ maf_to_custom_track = function(maf_data,output_file){
 #' @import tidyverse config
 #'
 #' @examples
-collate_results = function(sample_table,write_to_file=FALSE,join_with_full_metadata = FALSE,case_set){
+collate_results = function(sample_table,write_to_file=FALSE,join_with_full_metadata = FALSE,case_set,sbs_manipulation=""){
   # important: if you are collating results from anything but WGS (e.g RNA-seq libraries) be sure to use biopsy ID as the key in your join
   # the sample_id should probably not even be in this file if we want this to be biopsy-centric
   if(missing(sample_table)){
@@ -210,7 +210,7 @@ collate_results = function(sample_table,write_to_file=FALSE,join_with_full_metad
   sample_table = collate_curated_sv_results(sample_table=sample_table)
   sample_table = collate_ashm_results(sample_table=sample_table)
   sample_table = collate_nfkbiz_results(sample_table=sample_table)
-  #sample_table = collate_sbs_results(sample_table=sample_table)
+  sample_table = collate_sbs_results(sample_table=sample_table,sbs_manipulation=sbs_manipulation)
   sample_table = collate_derived_results(sample_table=sample_table)
   if(write_to_file){
     output_file = config::get("table_flatfiles")$derived
@@ -274,9 +274,9 @@ collate_curated_sv_results = function(sample_table){
   manual_files = dir(paste0(project_base,path_to_files),pattern=".tsv")
   for(f in manual_files){
     full = paste0(project_base,path_to_files,f)
-    this_data = read_tsv(full,comment = "#")
+    this_data = suppressMessages(read_tsv(full,comment = "#"))
     #TO DO: fix this so it will join on biopsy_id or sample_id depending on which one is present
-    sample_table = left_join(sample_table,this_data)
+    sample_table = left_join(sample_table,this_data,by="sample_id")
   }
 
 
@@ -472,7 +472,7 @@ collate_extra_metadata= function(sample_table,file_path){
 #' @import tidyverse
 #'
 #' @examples
-collate_sbs_results = function(sample_table,file_path){
+collate_sbs_results = function(sample_table,file_path,scale_vals=FALSE,sbs_manipulation=""){
   if(missing(file_path)){
     file_path = "/projects/rmorin_scratch/prasath_scratch/gambl/sigprofiler/gambl_hg38/02-extract/slms3.gambl.icgc.hg38.matched.unmatched/SBS96/Suggested_Solution/COSMIC_SBS96_Decomposed_Solution/Activities/COSMIC_SBS96_Activities_refit.txt"
   }
@@ -480,14 +480,28 @@ collate_sbs_results = function(sample_table,file_path){
   rs=rowSums(signatures)
   cn=colnames(signatures)
   new_sig = signatures
-  for(col in cn){
-    scaled_vals = signatures[,col] / rs
-    new_sig[,col]=scaled_vals
+  if(sbs_manipulation=="scale"){
+    for(col in cn){
+      scaled_vals = signatures[,col] / rs
+      new_sig[,col]=scaled_vals
+    }
+    sbs1 = signatures[,"SBS1"] / rs
+    sbs9 = signatures[,"SBS9"] / rs
+    sbs8 = signatures[,"SBS8"] / rs
+    sbs = data.frame(sample_id = rownames(signatures),sbs1=sbs1,sbs9=sbs9,sbs8=sbs8)
   }
-  sbs1 = signatures[,"SBS1"] / rs
-  sbs9 = signatures[,"SBS9"] / rs
-  sbs8 = signatures[,"SBS8"] / rs
-  sbs = data.frame(sample_id = rownames(signatures),sbs1=sbs1,sbs9=sbs9,sbs8=sbs8)
+  else if(sbs_manipulation=="log"){
+    sbs1 = log(signatures[,"SBS1"]+1)
+    sbs9 = log(signatures[,"SBS9"]+1)
+    sbs8 = log(signatures[,"SBS8"]+1)
+    sbs = data.frame(sample_id = rownames(signatures),sbs1=sbs1,sbs9=sbs9,sbs8=sbs8)
+  }else{
+    sbs1 = signatures[,"SBS1"]
+    sbs9 = signatures[,"SBS9"]
+    sbs8 = signatures[,"SBS8"]
+    sbs = data.frame(sample_id = rownames(signatures),sbs1=sbs1,sbs9=sbs9,sbs8=sbs8)
+  }
+
 
   sample_table = left_join(sample_table,sbs)
   return(sample_table)
@@ -536,7 +550,7 @@ collate_ashm_results = function(sample_table){
     tally() %>%
     pivot_wider(values_from=n,names_from=region_name,values_fill=0,names_prefix="ashm_")
 
-  sample_table = left_join(sample_table,tallied)
+  sample_table = left_join(sample_table,tallied,by="sample_id")
   sample_table = mutate(sample_table,across(everything(), ~replace_na(.x, 0)))
 
 }
