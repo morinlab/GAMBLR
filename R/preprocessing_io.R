@@ -84,7 +84,7 @@ populate_each_tool_result = function(tool,genome_builds,unix_groups){
         map(read_tsv) %>% #read each file into a list of tibbles
         map(head,1) %>% #just keep the first line
         reduce(rbind) %>% #rbind the elements all back into one
-        rename(sequenza_cellularity=cellularity,sequenza_ploidy=ploidy) #change the column names
+        dplyr::rename(sequenza_cellularity=cellularity,sequenza_ploidy=ploidy) #change the column names
       return(seq_data)
     }
 
@@ -133,10 +133,10 @@ populate_each_tool_result = function(tool,genome_builds,unix_groups){
   if(tool == "slms3"){
     gambl_mut_maf <- tbl(con, "maf_slms3_hg19_icgc")
     #additional bookkeeping: set matched/unmatched information in the analysis table based on the matched normal ID
-    gambl_mutation_normals = gambl_mut_maf %>% select(Tumor_Sample_Barcode) %>%
+    gambl_mutation_normals = gambl_mut_maf %>% dplyr::select(Tumor_Sample_Barcode) %>%
       group_by(Tumor_Sample_Barcode) %>% as.data.frame()
     gambl_meta_normals = get_gambl_metadata(tissue_status_filter=c('tumour','normal')) %>%
-      select(patient_id,sample_id,tissue_status) %>%
+      dplyr::select(patient_id,sample_id,tissue_status) %>%
       pivot_wider(id_cols=patient_id,names_from=tissue_status,values_from=sample_id)
     #the above has tumour and normal as separate columns for all paired samples.
 
@@ -146,7 +146,7 @@ populate_each_tool_result = function(tool,genome_builds,unix_groups){
     #just use the mutation table to get summary counts per sample and add to the derived table for convenience
 
     #update for gambl cases then do the same for icgc, then repeat for coding changes
-    gambl_counts = gambl_mut_maf %>% select(Tumor_Sample_Barcode) %>%
+    gambl_counts = gambl_mut_maf %>% dplyr::select(Tumor_Sample_Barcode) %>%
       group_by(Tumor_Sample_Barcode) %>% tally() %>% as.data.frame()
     generic_update(sample_id=gambl_counts$Tumor_Sample_Barcode,field_name="slms3_ssm_total",field_value=gambl_counts$n)
 
@@ -281,7 +281,7 @@ read_merge_manta_with_liftover = function(bedpe_paths=c(),pattern="--matched",ou
       print(head(svbed))
       svbed$NAME = "."
 
-      svbed = svbed %>% select(CHROM_A,START_A,END_A,CHROM_B,START_B,END_B,NAME,SOMATIC_SCORE,STRAND_A,STRAND_B,TYPE,FILTER,VAF_tumour,VAF_normal,DP_tumour,DP_normal,tumour_sample_id,normal_sample_id,pair_status)
+      svbed = svbed %>% dplyr::select(CHROM_A,START_A,END_A,CHROM_B,START_B,END_B,NAME,SOMATIC_SCORE,STRAND_A,STRAND_B,TYPE,FILTER,VAF_tumour,VAF_normal,DP_tumour,DP_normal,tumour_sample_id,normal_sample_id,pair_status)
       #remove chr prefix from both chromosome names
       svbed = svbed %>% mutate(CHROM_A = gsub("chr","",CHROM_A)) %>% mutate(CHROM_B = gsub("chr","",CHROM_B))
       write_tsv(svbed,out_file,col_names=FALSE)
@@ -323,7 +323,7 @@ process_all_manta_bedpe = function(file_df,out_dir){
         return(svbed)
       }
       else{
-        svbed = filter(is.na(tumour_sample_id))
+        svbed = dplyr::filter(is.na(tumour_sample_id))
         return(svbed)
       }
     }
@@ -350,7 +350,7 @@ process_all_manta_bedpe = function(file_df,out_dir){
     }
 
     svbed$NAME = "."
-    svbed = svbed %>% select(CHROM_A,START_A,END_A,CHROM_B,START_B,END_B,NAME,SOMATIC_SCORE,STRAND_A,STRAND_B,TYPE,FILTER,VAF_tumour,VAF_normal,DP_tumour,DP_normal,tumour_sample_id,normal_sample_id,pair_status)
+    svbed = svbed %>% dplyr::select(CHROM_A,START_A,END_A,CHROM_B,START_B,END_B,NAME,SOMATIC_SCORE,STRAND_A,STRAND_B,TYPE,FILTER,VAF_tumour,VAF_normal,DP_tumour,DP_normal,tumour_sample_id,normal_sample_id,pair_status)
     #remove chr prefix from both chromosome names
     svbed = svbed %>% mutate(CHROM_A = gsub("chr","",CHROM_A)) %>% mutate(CHROM_B = gsub("chr","",CHROM_B))
     #print(paste("writing output to",out_file))
@@ -359,12 +359,12 @@ process_all_manta_bedpe = function(file_df,out_dir){
   }
 
   #separately run the hg38 and other builds
-  not_hg38_files = filter(file_df,genome_build != "hg38") %>% pull(file_path)
+  not_hg38_files = dplyr::filter(file_df,genome_build != "hg38") %>% pull(file_path)
   bed_data_not_lifted =not_hg38_files %>%
     map(process_manta) %>%
     reduce(rbind)
 
-  hg38_files = filter(file_df,genome_build == "hg38") %>% pull(file_path)
+  hg38_files = dplyr::filter(file_df,genome_build == "hg38") %>% pull(file_path)
   bed_data_lifted = hg38_files %>%
     map(process_manta,liftover_to_hg19=TRUE) %>%
     reduce(rbind)
@@ -399,7 +399,7 @@ fetch_output_files = function(tool,unix_group,base_path,results_dir="99-outputs"
   dir_listing = dir(results_path,pattern="--")
   #start a data frame for tidy collation of details
   dir_df = tibble(short_path=dir_listing)  %>% mutate(sample = strsplit(short_path,"--"))
-  unnested_df = dir_df %>% unnest_wider(sample,names_sep="_") %>% rename(tumour_sample_id=sample_1,normal_sample_id=sample_2)
+  unnested_df = dir_df %>% unnest_wider(sample,names_sep="_") %>% dplyr::rename(tumour_sample_id=sample_1,normal_sample_id=sample_2)
   #find file with search_pattern per directory and handle any missing files. This is a bit slow.
   #unnested_df = unnested_df %>% head() %>% mutate(output_file = dir(paste0(results_path,short_path),pattern=search_pattern))
   #This still fails when a matching file isn't found. No clue why this doesn't work
@@ -411,7 +411,7 @@ fetch_output_files = function(tool,unix_group,base_path,results_dir="99-outputs"
     named=pull(unnested_df,full_path)
     found_files=  tibble(filename=lapply(named,file.exists)) %>%
       unnest_longer(filename)
-    new_df = cbind(unnested_df,found_files) %>% filter(found_files==TRUE)
+    new_df = cbind(unnested_df,found_files) %>% dplyr::filter(found_files==TRUE)
     print(head(new_df))
   }else if(tool == "battenberg"){
     results_path = paste0(base_path,"/",results_dir,"/seg/",seq_type,"--",build,"/")
@@ -431,7 +431,7 @@ fetch_output_files = function(tool,unix_group,base_path,results_dir="99-outputs"
     named=pull(unnested_df,full_path)
     found_files=  tibble(filename=lapply(named,function(x){dir(x,pattern=search_pattern)[1]})) %>%
       unnest_longer(filename) #%>% mutate(path=paste0(full_path,filename))
-    found_files = cbind(found_files,unnested_df) %>% filter(!is.na(filename)) %>% mutate(full_path=paste0(full_path,"/",filename))
+    found_files = cbind(found_files,unnested_df) %>% dplyr::filter(!is.na(filename)) %>% mutate(full_path=paste0(full_path,"/",filename))
     return(found_files)
   }else if(tool == "manta"){
     tool_results_path = config::get("results_directories")$manta
@@ -469,16 +469,16 @@ find_files_extract_wildcards = function(tool_results_path,search_pattern,genome_
   results_paths = paste0(project_base,unix_group,"/",tool_results_path,"genome--",genome_build,"/somaticSV/")
   found_files=  tibble(filename=lapply(results_paths,function(x){dir(x,pattern=search_pattern)})) %>%
     mutate(path=results_paths,genome_build=genome_build) %>%
-    unnest_longer(filename) %>% filter(!is.na(filename)) %>%
+    unnest_longer(filename) %>% dplyr::filter(!is.na(filename)) %>%
     mutate(file_path=paste0(path,filename)) %>%
     mutate(pairing_status = case_when(
       grepl("--unmatched",filename) ~ "unmatched",
       TRUE ~"matched"
     )) %>%
     mutate(sample_id = strsplit(filename,"--")) %>%
-    unnest_wider(sample_id,names_sep = "-") %>% rename(tumour_sample_id=`sample_id-1`,normal_sample_id=`sample_id-2`) %>%
+    unnest_wider(sample_id,names_sep = "-") %>% dplyr::rename(tumour_sample_id=`sample_id-1`,normal_sample_id=`sample_id-2`) %>%
     mutate(tool_name=tool,seq_type=seq_type,unix_group=unix_group) %>%
-    select(tumour_sample_id,unix_group,tool_name,seq_type,genome_build,file_path,pairing_status,normal_sample_id)
+    dplyr::select(tumour_sample_id,unix_group,tool_name,seq_type,genome_build,file_path,pairing_status,normal_sample_id)
   return(found_files)
 }
 
@@ -520,7 +520,7 @@ tidy_gene_expression = function(){
   ex_matrix_full = read_tsv(ex_matrix_file)
 
   ex_tidy = pivot_longer(ex_matrix_full,-Hugo_Symbol,names_to="sample_id",values_to="expression")
-  ex_tidy_nfkbiz = filter(ex_tidy,Hugo_Symbol=="NFKBIZ")
+  ex_tidy_nfkbiz = dplyr::filter(ex_tidy,Hugo_Symbol=="NFKBIZ")
   all_samples = pull(ex_tidy_nfkbiz,sample_id) %>% unique
   #retrieve the full list of sample_id for RNA-seq libraries that have data in this matrix
 
@@ -530,7 +530,7 @@ tidy_gene_expression = function(){
   #subset to just the ones in the matrix and keep only the relevant rows
   rm_dupes = c("08-15460_tumorA","05-32150_tumorA") #toss two duplicated cases AND FFPE_Benchmarking
   #rna_meta[which(rna_meta$sample_id %in% rm_dupes,"cohort"]= "FFPE_Benchmarking"
-  rna_meta_existing = rna_meta %>% filter(sample_id %in% all_samples) %>% select(sample_id,patient_id,biopsy_id,protocol)
+  rna_meta_existing = rna_meta %>% dplyr::filter(sample_id %in% all_samples) %>% dplyr::select(sample_id,patient_id,biopsy_id,protocol)
 
 
   selected_libraries = rna_meta_existing %>%
@@ -550,27 +550,27 @@ tidy_gene_expression = function(){
   #selected_all=rbind(selected_duplicated,selected_singleton)
   #put everything back together
   #at this point I have 1206 sample_ids
-  ex_tidy = ex_tidy %>% rename(mrna_sample_id = sample_id)
+  ex_tidy = ex_tidy %>% dplyr::rename(mrna_sample_id = sample_id)
 
-  ex_tidy = ex_tidy %>% filter(mrna_sample_id %in% selected_libraries$sample_id)
-  rna_meta = rna_meta %>% select(sample_id,biopsy_id)
+  ex_tidy = ex_tidy %>% dplyr::filter(mrna_sample_id %in% selected_libraries$sample_id)
+  rna_meta = rna_meta %>% dplyr::select(sample_id,biopsy_id)
   ex_tidy_final = left_join(ex_tidy,rna_meta,by=c("mrna_sample_id"="sample_id"))
   #this still has the mrna sample ID. Need to add the tumour_sample_id from this biopsy (where available)
-  genome_meta = get_gambl_metadata() %>% select(biopsy_id,sample_id,patient_id,ffpe_or_frozen) %>% rename("genome_sample_id" = "sample_id")
+  genome_meta = get_gambl_metadata() %>% dplyr::select(biopsy_id,sample_id,patient_id,ffpe_or_frozen) %>% dplyr::rename("genome_sample_id" = "sample_id")
   #this gets the metadata in the same format but restricted to genome samples
   #REMOVE ANNOYING DUPLICATE GENOMES!
-  duplicated_cases = genome_meta %>% group_by(biopsy_id) %>% tally() %>% filter(n>1)
+  duplicated_cases = genome_meta %>% group_by(biopsy_id) %>% tally() %>% dplyr::filter(n>1)
 
   selected_genomes = genome_meta %>%
     group_by(biopsy_id) %>%
     # Take the biopsy_id with the longest string length (e.g frozen)
     slice_max(str_length(ffpe_or_frozen), n = 1,with_ties=FALSE) %>%
-    ungroup() %>% select(-patient_id,-ffpe_or_frozen)
+    ungroup() %>% dplyr::select(-patient_id,-ffpe_or_frozen)
 
   #join to genome metadata based on biopsy_id (should be the same for RNA-seq and tumour genomes)
   ex_tidy_genome = left_join(ex_tidy_final,selected_genomes,by="biopsy_id")
 
-  ex_tidy_genome = select(ex_tidy_genome,Hugo_Symbol,mrna_sample_id,expression,biopsy_id,genome_sample_id)
+  ex_tidy_genome = dplyr::select(ex_tidy_genome,Hugo_Symbol,mrna_sample_id,expression,biopsy_id,genome_sample_id)
   #write the data back out for use by others and loading into the database.
   tidy_expression_file = config::get("tidy_expression_file")
   write_tsv(ex_tidy_genome,file=tidy_expression_file)
@@ -665,13 +665,13 @@ liftover_bedpe = function(bedpe_file,bedpe_df,target_build="grch37",col_names,co
   second_ok = subset(second_sv_lifted,no_problem)
   first_ok_df = rtracklayer::export(first_ok,format="bed") %>%
     read_tsv(col_names = c("CHROM_A","START_A","END_A","name_A","score_A","STRAND_A")) %>%
-    select(-score_A) %>% select(-name_A)
+    dplyr::select(-score_A) %>% dplyr::select(-name_A)
   second_ok_df = rtracklayer::export(second_ok,format="bed") %>%
     read_tsv(col_names = c("CHROM_B","START_B","END_B","name_B","score_B","STRAND_B")) %>%
-    select(-score_B) %>% select(-name_B)
+    dplyr::select(-score_B) %>% dplyr::select(-name_B)
   ok_bedpe = original_bedpe[no_problem,]
-  kept_cols = ok_bedpe %>% select(-c("CHROM_A","START_A","END_A","CHROM_B","START_B","END_B","STRAND_A","STRAND_B"))
-  fully_lifted = bind_cols(first_ok_df,second_ok_df,kept_cols) %>% select(all_of(original_columns))
+  kept_cols = ok_bedpe %>% dplyr::select(-c("CHROM_A","START_A","END_A","CHROM_B","START_B","END_B","STRAND_A","STRAND_B"))
+  fully_lifted = bind_cols(first_ok_df,second_ok_df,kept_cols) %>% dplyr::select(all_of(original_columns))
   return(fully_lifted)
 }
 
