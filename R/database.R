@@ -63,21 +63,21 @@ get_gambl_metadata = function(seq_type_filter = "genome",
         mutate(analysis_cohort=case_when(consensus_pathology=="FL" & transformed==TRUE ~ "tFL",
                                          consensus_pathology=="DLBCL" & transformed==TRUE ~ "ignore",
                                          TRUE ~ "FL")) %>%
-        filter(cohort=="FL_Kridel") %>%
-        filter((analysis_cohort == "FL" & time_point == "A")|(analysis_cohort =="tFL")) %>% select(-transformed,-FL,-DLBCL)
+        dplyr::filter(cohort=="FL_Kridel") %>%
+        dplyr::filter((analysis_cohort == "FL" & time_point == "A")|(analysis_cohort =="tFL")) %>% select(-transformed,-FL,-DLBCL)
 
 
       fl_meta_other = all_meta %>% dplyr::filter(consensus_pathology %in% c("FL","DLBCL","COM")) %>%
         dplyr::filter(!cohort %in% c("DLBCL_ctDNA","DLBCL_BLGSP","LLMPP_P01","DLBCL_LSARP_Trios","DLBCL_HTMCP")) %>%
-        filter(cohort!="FL_Kridel") %>%
-        filter((consensus_pathology %in% c("FL","COM"))) %>% mutate(analysis_cohort = consensus_pathology)
+        dplyr::filter(cohort!="FL_Kridel") %>%
+        dplyr::filter((consensus_pathology %in% c("FL","COM"))) %>% mutate(analysis_cohort = consensus_pathology)
       fl_transformation_meta = suppressMessages(read_tsv("/projects/rmorin/projects/gambl-repos/gambl-rmorin/shared/gambl_fl_transformed.tsv"))
       transformed_cases = fl_transformation_meta %>% dplyr::filter(!is.na(PATHa.tr)) %>% pull(patient_id)
       fl_meta_other[which(fl_meta_other$patient_id %in% transformed_cases),"analysis_cohort"]="tFL"
 
       dlbcl_meta =all_meta %>% dplyr::filter(consensus_pathology %in% c("FL","DLBCL","COM")) %>%
        dplyr::filter(!cohort %in% c("DLBCL_ctDNA","DLBCL_BLGSP","LLMPP_P01","DLBCL_LSARP_Trios","DLBCL_HTMCP","FL_Kridel","FFPE_Benchmarking")) %>%
-      filter(consensus_pathology == "DLBCL" & COO_final == "GCB") %>% mutate(analysis_cohort="DLBCL")
+        dplyr::filter(consensus_pathology == "DLBCL" & COO_final == "GCB") %>% mutate(analysis_cohort="DLBCL")
       all_meta  = bind_rows(dlbcl_meta,fl_meta_kridel,fl_meta_other) %>% unique()
     }
     if(case_set == "FL-study"){
@@ -184,8 +184,8 @@ add_prps_result = function(incoming_metadata){
   colnames(prps_res)[1]="sample_id"
   prps_res = select(prps_res,sample_id,PRPS_score,PRPS_class)
   #need to associate each sample with a patient ID then annotate the metadata based on patient ID
-  patient_meta_g = get_gambl_metadata(seq_type_filter = "genome") %>% select(sample_id,patient_id)
-  patient_meta_r = get_gambl_metadata(seq_type_filter = "mrna") %>% select(sample_id,patient_id)
+  patient_meta_g = get_gambl_metadata(seq_type_filter = "genome") %>% dplyr::select(sample_id,patient_id)
+  patient_meta_r = get_gambl_metadata(seq_type_filter = "mrna") %>% dplyr::select(sample_id,patient_id)
   patient_meta = bind_rows(patient_meta_g,patient_meta_r)
 }
 
@@ -210,17 +210,12 @@ add_icgc_metadata = function(incoming_metadata){
   icgc_raw = suppressMessages(read_tsv("/projects/rmorin/projects/gambl-repos/gambl-rmorin/data/metadata/raw_metadata/ICGC_MALY_seq_md.tsv"))
 
   # %>% select(-compression,-bam_available,-read_length,-time_point,-unix_group,-ffpe_or_frozen) %>% rename("sex_gambl"="sex")
-  icgc_raw = icgc_raw %>% select(-compression,-bam_available,-read_length,-time_point,-unix_group,-ffpe_or_frozen,-link_name)  %>%
-    filter(tissue_status %in% c("tumor","tumour"))
+  icgc_raw = icgc_raw %>% dplyr::select(-compression,-bam_available,-read_length,-time_point,-unix_group,-ffpe_or_frozen,-link_name)  %>%
+    dplyr::filter(tissue_status %in% c("tumor","tumour"))
 
   icgc_all = left_join(icgc_raw,icgc_publ,by="ICGC_ID") %>%
-    select(-tissue_status,-seq_type,-protocol,-seq_source_type,-data_path,-genome_build,-RNA_available) %>%
-    select(sample_id,ICGC_ID, pathology.x,pathology.y,COO,molecular_BL,MYC_sv,BCL2_sv,BCL6_sv) %>%
-    #rename("MYC_sv"="ICGC_MYC_sv") %>%
-    #rename("BCL2_sv"="ICGC_BCL2_sv") %>%
-    #rename("BCL6_sv"="ICGC_BCL6_sv") %>%
-    #rename("pathology.x"="detailed_pathology") %>%
-    #rename("pathology.y"="ICGC_PATH")
+    dplyr::select(-tissue_status,-seq_type,-protocol,-seq_source_type,-data_path,-genome_build,-RNA_available) %>%
+    dplyr::select(sample_id,ICGC_ID, pathology.x,pathology.y,COO,molecular_BL,MYC_sv,BCL2_sv,BCL6_sv) %>%
     dplyr::rename("ICGC_MYC_sv"="MYC_sv") %>%
     dplyr::rename("ICGC_BCL2_sv"="BCL2_sv") %>%
     dplyr::rename("ICGC_BCL6_sv"="BCL6_sv") %>%
