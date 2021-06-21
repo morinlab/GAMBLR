@@ -138,7 +138,7 @@ select(chrom1,start1,tumour_sample_id,fusion) %>%
     - `get_ssm_by_regions` if you want to efficiently retrive for multiple regions
 
 \tiny
-```{r nfkbiz, eval=F, echo=T, fig.height=4}
+```{r nfkbiz, eval=T, echo=T, fig.height=4}
 # get all the NFKBIZ 3' UTR mutations
 nfkbiz_ssm = get_ssm_by_region(region=
               "chr3:101,578,215-101,578,366")
@@ -155,7 +155,7 @@ ggplot(nfkbiz_ssm) +
 * Run `config::get()` to see the contents of the config
 
 \tiny
-```{r coding_ssm, echo=TRUE, message=FALSE,warning=FALSE,eval=FALSE}
+```{r coding_ssm, echo=TRUE, message=FALSE,warning=FALSE,eval=TRUE}
 maf_data = get_coding_ssm() # everything at once
 maf_obj = read.maf(maf_data,clinicalData = just_metadata) 
 #OR 
@@ -424,32 +424,14 @@ copy_number_vaf_plot(this_sample="07-35482T",
 
 ## prettyOncoplots with expression data
 ```{r expression_oncoplot, echo=F, warning=F, message=F}
-some_genes = unique(c("IRF4","BEST3","CREB3L2","HEY2","TNFRSF13B","FCRLB","TOX",
-                     "SERPINA9","MAPK10","PDGFD","PDE4B","SUGCT","SLC1A1","MYC"))
+some_genes = unique(c("BCL6","MYC","IRF4","BEST3","CREB3L2","HEY2","TNFRSF13B","FCRLB","TOX",
+                     "SERPINA9","MAPK10","PDGFD","PDE4B","SUGCT","SLC1A1","MME","CCND3"))
+some_genes = c("IRF4","BANK1","ABI3","CCDC50","S1PR2","ITPKB","SERPINA9","TNFRSF13B")
 all_exp=get_gene_expression(hugo_symbols = some_genes,join_with = "genome")
 all_metadata = collate_results(join_with_full_metadata = TRUE,sbs_manipulation = "scale") %>% filter(pathology %in% c("BL","DLBCL"))
 extra_meta = left_join(all_exp,all_metadata,by="sample_id") %>% 
   filter(!is.na(patient_id)) %>% filter(!is.na(IRF4))
-
-
-#scale_to_path <- function(x, data, pathology){
-#  path_x = data[data$pathology == pathology, ][[cur_column()]]
-#  quants <- unname(quantile(path_x, probs = c(0.05, 0.95)))
-#  x <- ifelse(x < quants[1], quants[1], x)
-#  x <- ifelse(x > quants[2], quants[2], x)
-#  x <- (x - quants[1]) / (quants[2] - quants[1])
-#  return(x)
-#}
-
 bl_cases = get_gambl_metadata(case_set="BLGSP-study") %>% filter(cohort=="BL_Adult") %>% head()
-
-#trim_scale_expression <- function(x){
-#  quants <- unname(quantile(x, probs = c(0.05, 0.95)))
-#  x <- ifelse(x < quants[1], quants[1], x)
-#  x <- ifelse(x > quants[2], quants[2], x)
-#  x <- (x - quants[1]) / (quants[2] - quants[1])
-#  return(x)
-#}
 just_metadata=get_gambl_metadata()
 #extra_meta_scaled_everything <- extra_meta %>% 
 #  mutate(across(all_of(some_genes), ~ trim_scale_expression(.x)))
@@ -470,16 +452,48 @@ extra_meta = mutate(extra_meta,
 
 #extra_meta = mutate(extra_meta,sbs9=ifelse(is.na(sbs9),0,sbs9))
 
+probe_level = read_tsv("/projects/rmorin/projects/gambl-repos/gambl-rmorin/data/metadata/raw_metadata/blgsp_dlbcl90_byprobe.tsv") %>% 
+  select(-1,-3,-4,-7,-8,-normval,-pmblval,-pmblp,-pmblcall,-dlbclval,-dlbclp,-dlbclcall,-totalcall,-dhitsig_score,-dhitsig_class,-dhitsig_prob_pos,-dhitsig_prob_neg,-bcl6)
+
+extra_meta = left_join(extra_meta,probe_level,by=c("patient_id"="sample_id2"))
+
+cluster_bl = read_tsv("/projects/rmorin/adult_blgsp/results_manuscript/NMF_clustering_non_redundant_hotspots.tsv") %>%
+  select(-pathology,-cohort)
+
+extra_meta = left_join(extra_meta,cluster_bl)
+
 prettyOncoplot(maftools_obj = maf_obj,genes = genes,
                these_samples_metadata = extra_meta,
-               metadataColumns = c("pathology","COO_consensus","EBV_status_inf"),
-               sortByColumns = c("pathology","IRF4","COO_consensus"),
-               expressionColumns = c("IRF4","sbs9","sbs8","sbs1"),
+               metadataColumns = c("pathology","COO_consensus","cluster_name", "EBV_status_inf"),
+               sortByColumns = c("pathology","cluster_name","IRF4","COO_consensus"),
+               expressionColumns = c("IRF4","irf4"),
                #verbose=TRUE,
                keepGeneOrder = FALSE,splitGeneGroups = gene_groups,
                splitColumnName = "pathology",
                metadataBarHeight = 5,metadataBarFontsize = 8,fontSizeGene = 11,
                recycleOncomatrix = TRUE,removeNonMutated = FALSE)
+```
+
+```{r another_pretty_one, echo=FALSE, message=FALSE, warning=FALSE}
+groups=c("TP53"="TP53",
+         "ID3"="ICS","CCND3"="ICS","SMARCA4"="ICS","TCF3"="ICS","P2RY8"="ICS",
+         "DDX3X"="DGS","GNA13"="DGS","GNAI2"="DGS","HNRNPU"="DGS","SIN3A"="DGS",
+         "ARID1A"="BL","FOXO1"="BL","FBXO11"="BL","RHOA"="BL",
+         "KMT2D"="DLBCL","EZH2"="DLBCL",
+         "TET2"="DLBCL","KLHL6"="DLBCL")
+bl_genes=names(groups)
+
+prettyOncoplot(maftools_obj = maf_obj,genes = bl_genes,
+               these_samples_metadata = extra_meta,
+               metadataColumns = c("pathology","COO_consensus","cluster_name", "EBV_status_inf"),
+               sortByColumns = c("IRF4"),
+               expressionColumns = c("IRF4","irf4"),
+               #verbose=TRUE,
+               keepGeneOrder = FALSE,splitGeneGroups = groups,
+               splitColumnName = "cluster_name",
+               metadataBarHeight = 5,metadataBarFontsize = 8,fontSizeGene = 11,
+               recycleOncomatrix = TRUE,removeNonMutated = FALSE)
+
 
 ```
 
