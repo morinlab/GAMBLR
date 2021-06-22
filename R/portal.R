@@ -66,7 +66,7 @@ setup_fusions = function(short_name="GAMBL",
   unannotated_sv = get_manta_sv() #no filters
 
   annotated_sv = annotate_sv(unannotated_sv) %>%
-    filter(!is.na(partner)) %>% as.data.frame()
+    dplyr::filter(!is.na(partner)) %>% as.data.frame()
 
   fusion_samples = pull(annotated_sv,tumour_sample_id) %>% unique()
 
@@ -112,7 +112,7 @@ setup_fusions = function(short_name="GAMBL",
 
   nfkbiz_entrez = 64332
   nfkbiz_utr_ssm = get_ssm_by_gene(table=maf_table,gene_symbol = "NFKBIZ") %>%
-    filter(Variant_Classification == "3'UTR") %>% pull(Tumor_Sample_Barcode) %>% unique()
+    dplyr::filter(Variant_Classification == "3'UTR") %>% pull(Tumor_Sample_Barcode) %>% unique()
 
   nfkbiz.mut.df = data.frame(Hugo_Symbol = "NFKBIZ",
                              Entrez_Gene_Id = nfkbiz_entrez,
@@ -204,8 +204,8 @@ finalize_study = function(short_name="GAMBL",
   #prepare and write out the relevant metadata
 
   meta_samples = get_gambl_metadata() %>%
-    filter(sample_id %in% sample_ids) %>%
-    select(patient_id, sample_id, pathology,EBV_status_inf,cohort,
+    dplyr::filter(sample_id %in% sample_ids) %>%
+    dplyr::select(patient_id, sample_id, pathology,EBV_status_inf,cohort,
            time_point,ffpe_or_frozen,myc_ba,bcl6_ba,bcl2_ba,COO_consensus,
            DHITsig_consensus,lymphgen)
 
@@ -223,7 +223,7 @@ finalize_study = function(short_name="GAMBL",
   patient_ids = pull(meta_samples,PATIENT_ID)
 
   all_outcomes = get_gambl_outcomes(time_unit="month",censor_cbioportal = TRUE,patient_ids=patient_ids,complete_missing=TRUE) %>%
-    select(c("patient_id","OS_STATUS","OS_MONTHS","DFS_STATUS","DFS_MONTHS","age","sex"))
+    dplyr::select(c("patient_id","OS_STATUS","OS_MONTHS","DFS_STATUS","DFS_MONTHS","age","sex"))
   colnames(all_outcomes) = toupper(colnames(all_outcomes))
 
   header=paste0("#Patient Identifier\tOverall Survival Status\tOverall Survival (Months)\tDisease Free Status\tDisease Free (Months)\tAGE\tSEX\n",

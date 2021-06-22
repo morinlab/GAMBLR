@@ -39,7 +39,7 @@ sanitize_maf_data = function(mutation_maf_path,mutation_maf_data,output_oncomatr
   maftools::oncoplot(maf_o,genes=genes_keep,writeMatrix = T,removeNonMutated = F)  #writes to working directory
   if(!missing(output_oncomatrix)){
     #rename it
-    file.rename("onco_matrix.txt",output_oncomatrix)
+    file.dplyr::rename("onco_matrix.txt",output_oncomatrix)
   }else{
     output_oncomatrix=paste0(getwd(),"/onco_matrix.tsv")
   }
@@ -77,13 +77,13 @@ annotate_hotspots = function(mutation_maf,recurrence_min = 5,analysis_base=c("FL
 
     mins = arranged %>% slice_head() %>% dplyr::rename("START"="COORDINATES")
     maxs = arranged %>% slice_tail() %>% dplyr::rename("END"="COORDINATES")
-    hotspot_ranges = left_join(mins, select(maxs, c(MAX_COORD,END)), by = c("SYMBOL","MAX_COORD"))
+    hotspot_ranges = left_join(mins, dplyr::select(maxs, c(MAX_COORD,END)), by = c("SYMBOL","MAX_COORD"))
     hotspot_info[[abase]]=hotspot_ranges
   }
   merged_hotspot = do.call("rbind",hotspot_info)  %>% ungroup()
 
-  long_hotspot = merged_hotspot %>% select(MAX_COORD,CHROMOSOME,START,END) %>%
-   pivot_longer(c(START,END),names_to="which",values_to="COORDINATE") %>% select(-which)
+  long_hotspot = merged_hotspot %>% dplyr::select(MAX_COORD,CHROMOSOME,START,END) %>%
+   pivot_longer(c(START,END),names_to="which",values_to="COORDINATE") %>% dplyr::select(-which)
   #again take highest and lowest value for each MAX_COORD
   starts = long_hotspot %>% group_by(MAX_COORD) %>% arrange(COORDINATE) %>% slice_head()
   ends = long_hotspot %>% group_by(MAX_COORD) %>% arrange(COORDINATE) %>% slice_tail()
@@ -145,9 +145,9 @@ sv_to_custom_track = function(sv_bedpe,output_file){
   write_bed = function(coloured_svs,sv_name,output_file_base){
     output_file = paste0(output_file_base,"_",sv_name,".bed")
     data_bed = coloured_svs %>% mutate(details=paste0(annotation,"_",sample_id)) %>%
-      filter(fusion == sv_name) %>%
+      dplyr::filter(fusion == sv_name) %>%
       mutate(score=0,strand="+",end=end+1,start1=start,end1=end) %>%
-      select(chrom, start,end, details,score,strand,start1,end1,rgb) %>% filter(!is.na(rgb)) %>% unique()
+      dplyr::select(chrom, start,end, details,score,strand,start1,end1,rgb) %>% dplyr::filter(!is.na(rgb)) %>% unique()
     header_content=paste0('track name="GAMBL SVs ',sv_name, '" description="SV breakpoints ', sv_name, '" visibility=2 itemRgb="On"\n')
     cat(header_content,file=output_file)
     tabular = write.table(data_bed,file=output_file,quote=F,sep="\t",row.names=F,col.names = F,append=TRUE)
@@ -187,7 +187,7 @@ maf_to_custom_track = function(maf_data,output_file){
   meta=get_gambl_metadata() %>% dplyr::select(sample_id,lymphgen)
   samples_coloured = left_join(meta, rgb_df)
   maf_bed = maf_data %>% mutate(score=0,strand="+",end=end+1,start1=start,end1=end)
-  maf_coloured = left_join(maf_bed,samples_coloured,by="sample_id") %>% dplyr::select(-lymphgen) %>% filter(!is.na(rgb))
+  maf_coloured = left_join(maf_bed,samples_coloured,by="sample_id") %>% dplyr::select(-lymphgen) %>% dplyr::filter(!is.na(rgb))
   cat('track name="GAMBL mutations" description="Mutations from GAMBL" visibility=2 itemRgb="On"\n',file=output_file)
   tabular = write.table(maf_coloured,file=output_file,quote=F,sep="\t",row.names=F,col.names = F,append=TRUE)
 }
@@ -277,7 +277,7 @@ collate_csr_results = function(sample_table){
    sm_join = inner_join(sample_table,csr,by=c("sample_id"="sample"))
    pt_join = inner_join(sample_table,csr,by=c("patient_id"="sample"))
    complete_join <- bind_rows(pt_join, sm_join) %>%
-     bind_rows(filter(sample_table, !patient_id %in% c(pt_join$patient_id, sm_join$patient_id)))
+     bind_rows(dplyr::filter(sample_table, !patient_id %in% c(pt_join$patient_id, sm_join$patient_id)))
   return(complete_join)
 }
 

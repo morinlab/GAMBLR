@@ -119,13 +119,13 @@ prettyOncoplot = function(maftools_obj,
       return()
     }
     mutation_counts = maftools_obj@gene.summary %>%
-      filter(Hugo_Symbol %in% genes) %>%
-      select(Hugo_Symbol,MutatedSamples) %>%
+      dplyr::filter(Hugo_Symbol %in% genes) %>%
+      dplyr::select(Hugo_Symbol,MutatedSamples) %>%
       as.data.frame()
     numpat=length(patients)
     mutation_counts = mutate(mutation_counts,percent_mutated=100 * MutatedSamples/numpat)
     genes_keep = mutation_counts %>%
-      filter(percent_mutated>=minMutationPercent) %>%
+      dplyr::filter(percent_mutated>=minMutationPercent) %>%
       pull(Hugo_Symbol)
     genes_kept = genes[genes %in% genes_keep]
   }
@@ -208,7 +208,7 @@ prettyOncoplot = function(maftools_obj,
   for(column in metadataColumns){
 
     these_samples_metadata[[column]] = factor(these_samples_metadata[[column]], levels=unique(these_samples_metadata[[column]]))
-    options = these_samples_metadata %>% arrange(column) %>% filter(!is.na(column)) %>% pull(column) %>% unique()
+    options = these_samples_metadata %>% arrange(column) %>% dplyr::filter(!is.na(column)) %>% pull(column) %>% unique()
     options=options[!is.na(options)]
     if(verbose){
       print(">>>>>>>")
@@ -300,7 +300,7 @@ prettyOncoplot = function(maftools_obj,
     }
   }
   if(highlightHotspots){
-    hot_samples = filter(maftools_obj@data,hot_spot==TRUE & Hugo_Symbol %in% genes) %>%
+    hot_samples = dplyr::filter(maftools_obj@data,hot_spot==TRUE & Hugo_Symbol %in% genes) %>%
     dplyr::select(Hugo_Symbol,Tumor_Sample_Barcode) %>% mutate(mutated="hot_spot") %>% unique()
     all_genes_df = data.frame(Hugo_Symbol=rownames(mat))
     all_samples_df = data.frame(Tumor_Sample_Barcode=colnames(mat))
@@ -331,9 +331,9 @@ prettyOncoplot = function(maftools_obj,
     print(colours) #eventually get rid of this once the bugs are gone
   }
   if(!missing(numericMetadataColumns)){
-    metadata_df = filter(these_samples_metadata, sample_id %in% patients_kept) %>%
+    metadata_df = dplyr::filter(these_samples_metadata, sample_id %in% patients_kept) %>%
       column_to_rownames("sample_id") %>%
-      select(all_of(c(metadataColumns,numericMetadataColumns,expressionColumns)))
+      dplyr::select(all_of(c(metadataColumns,numericMetadataColumns,expressionColumns)))
     if(!missing(numericMetadataMax)){
       max_list = setNames(numericMetadataMax,numericMetadataColumns)
 
@@ -342,8 +342,8 @@ prettyOncoplot = function(maftools_obj,
     }
 
   }else{
-    metadata_df = filter(these_samples_metadata, sample_id %in% patients_kept) %>%
-    column_to_rownames("sample_id") %>% select(all_of(c(metadataColumns,expressionColumns)))
+    metadata_df = dplyr::filter(these_samples_metadata, sample_id %in% patients_kept) %>%
+    column_to_rownames("sample_id") %>% dplyr::select(all_of(c(metadataColumns,expressionColumns)))
   }
   metadata_df = metadata_df %>%
     mutate(across(all_of(expressionColumns), ~ trim_scale_expression(.x)))
@@ -446,7 +446,7 @@ ashm_multi_rainbow_plot = function(regions_bed,regions_to_display,
     meta_arranged = metadata #assume the user already arranged it the way they wanted
   }
   if(!missing(exclude_classifications)){
-    meta_arranged = filter(meta_arranged,!get(classification_column) %in% exclude_classifications)
+    meta_arranged = dplyr::filter(meta_arranged,!get(classification_column) %in% exclude_classifications)
   }
   if(missing(regions_bed)){
     regions_bed= grch37_ashm_regions
@@ -465,7 +465,7 @@ ashm_multi_rainbow_plot = function(regions_bed,regions_to_display,
               "chr3:187406804-188522799","chr14:106144562-106344765","chr22:23217074-23250428","chr2:89073691-89320640",
               "chr8:128774985-128876311","chr18:60982124-60990180")
   regions_bed = data.frame(regions=regions,names=names)
-  regions_bed = filter(regions_bed,names %in% regions_to_display)
+  regions_bed = dplyr::filter(regions_bed,names %in% regions_to_display)
   regions = pull(regions_bed,regions)
   names=pull(regions_bed,names)
   if(missing(maf_data)){
@@ -476,13 +476,13 @@ ashm_multi_rainbow_plot = function(regions_bed,regions_to_display,
   tibbled_data = tibble(region_mafs, region_name = names)
   unnested_df = tibbled_data %>% unnest_longer(region_mafs)
   unlisted_df = mutate(unnested_df,start=region_mafs$Start_Position,sample_id=region_mafs$Tumor_Sample_Barcode) %>%
-    select(start,sample_id,region_name)
+    dplyr::select(start,sample_id,region_name)
 
 
 
   meta_arranged$classification = factor(meta_arranged[,classification_column],levels=unique(meta_arranged[,classification_column]))
   muts_anno = left_join(unlisted_df,meta_arranged)
-  muts_first =  select(muts_anno,start,region_name) %>% group_by(region_name) %>% arrange(start) %>% filter(row_number()==1)
+  muts_first =  dplyr::select(muts_anno,start,region_name) %>% group_by(region_name) %>% arrange(start) %>% dplyr::filter(row_number()==1)
   eg = expand_grid(start=pull(muts_first,start),sample_id=pull(meta_arranged,sample_id))
   eg = left_join(eg,muts_first)
 
@@ -493,7 +493,7 @@ ashm_multi_rainbow_plot = function(regions_bed,regions_to_display,
   muts_anno$sample_id= factor(muts_anno$sample_id,levels=meta_arranged$sample_id)
 
   if(!missing(regions_to_display)){
-    muts_anno = filter(muts_anno,region_name %in% regions_to_display)
+    muts_anno = dplyr::filter(muts_anno,region_name %in% regions_to_display)
   }
   #make the plot
   if(missing(custom_colours)){
@@ -535,7 +535,7 @@ copy_number_vaf_plot = function(this_sample,just_segments=FALSE,coding_only=FALS
   vaf_cn_maf = mutate(vaf_cn_maf,CN=case_when(LOH == "1" & CN == 2 ~ "nLOH",
                                               TRUE ~ as.character(CN)))
   if(!missing(one_chrom)){
-    vaf_cn_maf = filter(vaf_cn_maf,Chromosome == one_chrom)
+    vaf_cn_maf = dplyr::filter(vaf_cn_maf,Chromosome == one_chrom)
   }
   #vaf_cn_maf = mutate(vaf_cn_maf,CN=as.character(CN))
   #use_neut_loh=TRUE
@@ -560,7 +560,7 @@ copy_number_vaf_plot = function(this_sample,just_segments=FALSE,coding_only=FALS
         p + ggtitle(this_sample)
       }else{
         #label any mutations that intersect with our gene list
-        plot_genes = vaf_cn_maf %>% filter(Hugo_Symbol %in% my_genes)
+        plot_genes = vaf_cn_maf %>% dplyr::filter(Hugo_Symbol %in% my_genes)
 
         p = mutate(vaf_cn_maf,vaf=t_alt_count/(t_ref_count+t_alt_count)) %>% ggplot() +
           geom_point(aes(x=Start_Position,y=vaf,colour=CN),size=2) +
@@ -629,7 +629,7 @@ ashm_rainbow_plot = function(mutations_maf,
   if(!missing(classification_column)){
     meta_arranged = arrange(metadata,pathology_rank,lymphgen) #fix this to use the actual column
     if(!missing(exclude_classifications)){
-      meta_arranged = filter(meta_arranged,!get(classification_column) %in% exclude_classifications)
+      meta_arranged = dplyr::filter(meta_arranged,!get(classification_column) %in% exclude_classifications)
     }
   }else{
     classification_column = "lymphgen"
@@ -641,7 +641,7 @@ ashm_rainbow_plot = function(mutations_maf,
     dplyr::select(Tumor_Sample_Barcode,Start_Position) %>% as.data.frame()
   mutated_cases = pull(mutation_positions,Tumor_Sample_Barcode) %>% unique()
   if(drop_unmutated){
-    meta_arranged = meta_arranged %>% filter(sample_id %in% mutated_cases)
+    meta_arranged = meta_arranged %>% dplyr::filter(sample_id %in% mutated_cases)
   }
   #add a fake mutation at the start position for each sample to ensure every sample shows up
   fake_mutations = data.frame(Tumor_Sample_Barcode=pull(metadata,sample_id),Start_Position=qstart-1000)
@@ -716,17 +716,17 @@ plot_multi_timepoint = function(mafs,sample_id,genes,show_noncoding=FALSE,detail
       coding.maf = subset_regions(all.maf,shm_regions)
     }
     else{
-      coding.maf = filter(all.maf,!Variant_Classification %in% c("Silent","RNA","IGR","Intron","5'Flank","3'Flank","5'UTR"))
+      coding.maf = dplyr::filter(all.maf,!Variant_Classification %in% c("Silent","RNA","IGR","Intron","5'Flank","3'Flank","5'UTR"))
       #keep certain 3' UTR mutations, toss the rest
-      coding.maf = filter(coding.maf,(Variant_Classification == "3'UTR" & Hugo_Symbol == "NFKBIZ") | (Variant_Classification != "3'UTR"))
+      coding.maf = dplyr::filter(coding.maf,(Variant_Classification == "3'UTR" & Hugo_Symbol == "NFKBIZ") | (Variant_Classification != "3'UTR"))
     }
     A.rows = which(coding.maf$time_point==1)
     A.zero.coords = pull(unique(coding.maf[which(coding.maf$time_point==1 & VAF == 0), "coord"]))
-    A.zero = filter(coding.maf,coord %in% A.zero.coords)
+    A.zero = dplyr::filter(coding.maf,coord %in% A.zero.coords)
 
     B.rows = which(coding.maf$time_point==2)
     B.zero.coords = pull(unique(coding.maf[which(coding.maf$time_point==2 & VAF == 0), "coord"]))
-    B.zero = filter(coding.maf,coord %in% B.zero.coords)
+    B.zero = dplyr::filter(coding.maf,coord %in% B.zero.coords)
     coding.maf$category = "trunk"
     coding.maf[which(coord %in% A.zero.coords),"category"]="not-A"
     coding.maf[which(coord %in% B.zero.coords),"category"]="not-B"
@@ -734,14 +734,14 @@ plot_multi_timepoint = function(mafs,sample_id,genes,show_noncoding=FALSE,detail
 
 
     #actually this is changed in eitehr direction, not just gained
-    just_gained_lg_all = filter(coding.maf, Hugo_Symbol %in% genes & category != "trunk" )
+    just_gained_lg_all = dplyr::filter(coding.maf, Hugo_Symbol %in% genes & category != "trunk" )
     #just_gained_lg = filter(coding.maf, Hugo_Symbol %in% genes & category != "trunk" & time_point !=2) %>%
     #  mutate(time_point = time_point +0.4)
 
-    just_gained_lg = filter(coding.maf, Hugo_Symbol %in% genes & category != "trunk" & time_point == 2 & VAF > 0) %>%
+    just_gained_lg = dplyr::filter(coding.maf, Hugo_Symbol %in% genes & category != "trunk" & time_point == 2 & VAF > 0) %>%
       mutate(time_point = time_point +0.4)
     print(just_gained_lg)
-    just_trunk = filter(coding.maf, Hugo_Symbol %in% genes & category == "trunk" & time_point ==1) %>%
+    just_trunk = dplyr::filter(coding.maf, Hugo_Symbol %in% genes & category == "trunk" & time_point ==1) %>%
       mutate(time_point = time_point-0.4)
     ggplot(coding.maf,aes(x=time_point,y=VAF,group=coord,colour=category)) +
       geom_point() + geom_line(alpha=0.5) +
@@ -766,33 +766,33 @@ plot_multi_timepoint = function(mafs,sample_id,genes,show_noncoding=FALSE,detail
       coding.maf = subset_regions(all.maf,shm_regions)
     }
     else{
-      coding.maf = filter(all.maf,!Variant_Classification %in% c("Silent","RNA","IGR","Intron","5'Flank","3'Flank","5'UTR"))
+      coding.maf = dplyr::filter(all.maf,!Variant_Classification %in% c("Silent","RNA","IGR","Intron","5'Flank","3'Flank","5'UTR"))
       #keep certain 3' UTR mutations, toss the rest
-      coding.maf = filter(coding.maf,(Variant_Classification == "3'UTR" & Hugo_Symbol == "NFKBIZ") | (Variant_Classification != "3'UTR"))
+      coding.maf = dplyr::filter(coding.maf,(Variant_Classification == "3'UTR" & Hugo_Symbol == "NFKBIZ") | (Variant_Classification != "3'UTR"))
     }
 
     A.rows = which(coding.maf$time_point==1)
     A.zero.coords = pull(unique(coding.maf[which(coding.maf$time_point==1 & VAF == 0), "coord"]))
-    A.zero = filter(coding.maf,coord %in% A.zero.coords)
+    A.zero = dplyr::filter(coding.maf,coord %in% A.zero.coords)
 
     B.rows = which(coding.maf$time_point==2)
     B.zero.coords = pull(unique(coding.maf[which(coding.maf$time_point==2 & VAF == 0), "coord"]))
-    B.zero = filter(coding.maf,coord %in% B.zero.coords)
+    B.zero = dplyr::filter(coding.maf,coord %in% B.zero.coords)
 
     C.rows = which(coding.maf$time_point==3)
     C.zero.coords = pull(unique(coding.maf[which(coding.maf$time_point==3 & VAF == 0), "coord"]))
-    C.zero = filter(coding.maf,coord %in% C.zero.coords)
+    C.zero = dplyr::filter(coding.maf,coord %in% C.zero.coords)
 
     coding.maf$category = "trunk"
     coding.maf[which(coord %in% A.zero.coords),"category"]="not-A"
     coding.maf[which(coord %in% B.zero.coords),"category"]="not-B"
     coding.maf[which(coord %in% C.zero.coords),"category"]="not-C"
 
-    just_gained_lg_all = filter(coding.maf, Hugo_Symbol %in% lg & category != "trunk" )
-    just_gained_lg = filter(coding.maf, Hugo_Symbol %in% lg & category != "trunk" & time_point ==3) %>%
+    just_gained_lg_all = dplyr::filter(coding.maf, Hugo_Symbol %in% lg & category != "trunk" )
+    just_gained_lg = dplyr::filter(coding.maf, Hugo_Symbol %in% lg & category != "trunk" & time_point ==3) %>%
       mutate(time_point = time_point +0.4)
 
-    just_trunk = filter(coding.maf, Hugo_Symbol %in% lg & category == "trunk" & time_point ==1) %>%
+    just_trunk = dplyr::filter(coding.maf, Hugo_Symbol %in% lg & category == "trunk" & time_point ==1) %>%
       mutate(time_point = time_point-0.4)
     ggplot(coding.maf,aes(x=time_point,y=VAF,group=coord,colour=category)) +
       geom_point() + geom_line(alpha=0.3) +
