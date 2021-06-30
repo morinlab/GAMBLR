@@ -13,7 +13,11 @@ annotate_sv(
 )
 }
 \arguments{
-\item{sv_data}{A data frame of SVs. This should be the output of get_manta_sv.}
+\item{sv_data}{A data frame of SVs. This should be the output of get_manta_sv. If you aren't using the database backend you can supply your own data frame in the format show below.
+Most of this data is directly from the bedpe files that are obtained by converting the Manta outputs from VCF.
+Only the columns for both chromosomes, coordinates and strand plus SOMATIC_SCORE and tumour_sample_id are absolutely required
+CHROM_A  START_A    END_A CHROM_B  START_B    END_B NAME SOMATIC_SCORE STRAND_A STRAND_B TYPE FILTER VAF_tumour VAF_normal DP_tumour DP_normal tumour_sample_id normal_sample_id pair_status
+1  1556541  1556547       1  1556664  1556670    .            40        -        -  BND   PASS      0.145          0        55        73  00-14595_tumorA  00-14595_normal     matched}
 
 \item{partner_bed}{Optional bed-format data frame to use for annotating oncogene partners (e.g. enhancers). required columns are: chrom,start,end,gene}
 

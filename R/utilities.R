@@ -1,4 +1,22 @@
-
+#' Title
+#'
+#' @param region
+#'
+#' @return
+#' @export
+#'
+#' @examples
+region_to_chunks = function(region){
+  region = unname(region)
+  region = gsub(",","",region)
+  #format is chr6:37060224-37151701
+  split_chunks = unlist(strsplit(region,":"))
+  chromosome = split_chunks[1]
+  startend = unlist(strsplit(split_chunks[2],"-"))
+  qstart=startend[1]
+  qend=startend[2]
+  return(list(chromosome=chromosome,start=qstart,end=qend))
+}
 
 #' Write an oncomatrix from a MAF File for further plotting. This is meant to be run by individuals who have access to data sets to
 #' "sanitize" a subset of data for subsequent use by them or others who don't have permission to access the raw data.
@@ -681,12 +699,12 @@ get_gambl_colours = function(classification="all",alpha=1){
         "3'UTR" = unname(blood_cols["Yellow"]))
 
   all_colours[["pos_neg"]]=c(
-    "POS"=unname(blood_cols["Light Blue"]),
-    "NEG"=unname(blood_cols["Yellow"]),
-    "FAIL"=unname(blood_cols["Gray"]),
-    "positive"=unname(blood_cols["Light Blue"]),
-    "negative"=unname(blood_cols["Yellow"]),
-    "fail"=unname(blood_cols["Gray"]))
+    "POS"="#c41230",
+    "NEG"="#E88873",
+    "FAIL"="#bdbdc1",
+    "positive"="#c41230",
+    "negative"="#E88873",
+    "fail"="#bdbdc1")
 
   all_colours[["copy_number"]]=c(
     "nLOH"="#E026D7",
@@ -754,6 +772,9 @@ get_gambl_colours = function(classification="all",alpha=1){
     "DHITsig+" = "#D62828",
     "DHITsigPos" = "#D62828"
   )
+  all_colours[["cohort"]] = c("Chapuy"="#8B0000",
+                  "Arthur"= "#8845A8",
+                  "Schmitz"= "#2C72B2")
   #print(all_colours)
   for(colslot in names(all_colours)){
     raw_cols=all_colours[[colslot]]

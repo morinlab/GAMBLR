@@ -139,7 +139,13 @@ get_gambl_metadata = function(seq_type_filter = "genome",
     DHITsig_PRPS_class == "UNCLASS" ~ "DHITsigPos",
     TRUE ~ "NA"
   ))
-
+  all_meta = all_meta %>% dplyr::mutate(DHITsig_consensus = case_when(
+    DHITsig_consensus == "NEG" ~ "DHITsigNeg",
+    DHITsig_consensus == "POS" ~ "DHITsigPos",
+    DHITsig_consensus == "UNCLASS" ~ "DHITsig-IND",
+    DHITsig_consensus == "DHITsigNeg" ~ DHITsig_consensus,
+    DHITsig_consensus == "DHITsigPos" ~ DHITsig_consensus,
+    TRUE ~ "NA"))
 
   #assign a rank to each pathology for consistent and sensible ordering
   all_meta = all_meta %>% dplyr::mutate(pathology_rank = case_when(
@@ -410,6 +416,49 @@ get_cn_states = function(regions_list,regions_bed,region_names){
   cn_matrix = pivot_wider(all_cn,id_cols="sample_id",names_from="region_name",values_from = "CN") %>%
     column_to_rownames("sample_id")
   return(cn_matrix)
+}
+
+#' Get all segments for a single sample_id
+#'
+#' @param sample_id
+#' @param with_chr_prefix
+#' @param streamlined
+#'
+#' @return
+#' @export
+#'
+#' @examples
+get_sample_cn_segments = function(sample_id,with_chr_prefix=FALSE,streamlined=FALSE){
+  db = config::get("database_name")
+  table_name = config::get("results_tables")$copy_number
+  table_name_unmatched = config::get("results_tables")$copy_number_unmatched
+  con <- DBI::dbConnect(RMariaDB::MariaDB(), dbname = db)
+
+  all_segs_matched = dplyr::tbl(con,table_name) %>%
+    dplyr::filter(ID==sample_id) %>%
+    as.data.frame() %>%
+    dplyr::mutate(method="battenberg")
+
+  # get controlfreec segments for samples with missing battenberg results like unpaired
+  all_segs_unmatched = dplyr::tbl(con,table_name_unmatched) %>%
+    dplyr::filter(ID==sample_id) %>%
+    as.data.frame() %>%
+    dplyr::filter(! ID %in% all_segs_matched$ID)  %>%
+    dplyr::mutate(method="controlfreec")
+
+  all_segs = rbind(all_segs_matched,
+                   all_segs_unmatched)
+
+  all_segs = dplyr::mutate(all_segs,CN=round(2*2^log.ratio))
+
+  if(! with_chr_prefix){
+    all_segs = all_segs %>% dplyr::mutate(chrom = gsub("chr","",chrom))
+  }
+  if(streamlined){
+    all_segs = dplyr::select(all_segs,ID,CN)
+  }
+  DBI::dbDisconnect(con)
+  return(all_segs)
 }
 
 #' Retrieve all copy number segments from the GAMBL database that overlap with a single genomic coordinate range
