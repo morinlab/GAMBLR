@@ -249,10 +249,13 @@ add_icgc_metadata = function(incoming_metadata){
 #'
 #' @examples
 #' outcome_df = get_gambl_outcomes()
-get_gambl_outcomes = function(patient_ids,time_unit="year",censor_cbioportal=FALSE,complete_missing=FALSE){
+get_gambl_outcomes = function(patient_ids,time_unit="year",censor_cbioportal=FALSE,complete_missing=FALSE, include_icgc=TRUE){
   db=config::get("database_name")
   con <- DBI::dbConnect(RMariaDB::MariaDB(), dbname = db)
   all_outcome = dplyr::tbl(con,"outcome_metadata") %>% as.data.frame()
+  if(!include_icgc){
+    all_outcome = all_outcome %>% dplyr::filter(!str_detect(patient_id, "^DO"))
+  }
   if(!missing(patient_ids)){
     all_outcome = all_outcome %>% dplyr::filter(patient_id %in% patient_ids)
     if(complete_missing){
