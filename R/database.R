@@ -420,9 +420,9 @@ get_cn_states = function(regions_list,regions_bed,region_names){
 
 #' Get all segments for a single sample_id
 #'
-#' @param sample_id
-#' @param with_chr_prefix
-#' @param streamlined
+#' @param sample_id The sample_id for the sample to retrieve segments for
+#' @param with_chr_prefix Set to TRUE to add a chr prefix to chromosome names
+#' @param streamlined Return a minimal output rather than full details
 #'
 #' @return
 #' @export
@@ -536,9 +536,8 @@ get_cn_segments = function(chromosome,qstart,qend,region,with_chr_prefix=FALSE,s
 
 #' Housekeeping function to add results to a table
 #'
-#' @param table_name
-#' @param connection
-#' @param file_path
+#' @param table_name The name of the database table to update/populate
+#' @param data_df A dataframe of values to load into the table
 #'
 #' @return
 #' @export

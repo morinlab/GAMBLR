@@ -13,11 +13,18 @@ map_metadata_to_colours(
 )
 }
 \arguments{
+\item{metadataColumns}{Names of the metadata columns to assign colours for}
+
+\item{these_samples_metadata}{Metadata for just the samples you need colours for}
+
 \item{annoAlpha}{Optional alpha to apply to annotation colours}
 }
 \value{
-
+Either a vector or list of colours
 }
 \description{
 Assign a colour palette to metadata columns automatically and consistently
+}
+\examples{
+all_cols=map_metadata_to_colours(legend_metadata_columns,these_meta,verbose=T)
 }

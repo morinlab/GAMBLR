@@ -15,3 +15,6 @@ Data frame with one row per sample. Contains the contents of the derived_data ta
 \description{
 Extract derived results stored in the database (these are usually slower to derive on the fly)
 }
+\examples{
+gambl_results_derived = collate_derived_results(samples_df)
+}

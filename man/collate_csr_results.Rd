@@ -15,3 +15,6 @@ The sample table with additional columns
 \description{
 Collate a few CSR annotations, including MiXCR
 }
+\examples{
+gambl_results_derived = collate_csr_results(gambl_results_derived)
+}

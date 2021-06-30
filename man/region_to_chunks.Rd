@@ -2,16 +2,19 @@
 % Please edit documentation in R/utilities.R
 \name{region_to_chunks}
 \alias{region_to_chunks}
-\title{Title}
+\title{Parse a region string into chomosome, start and end}
 \usage{
 region_to_chunks(region)
 }
 \arguments{
-\item{region}{}
+\item{region}{A region string e.g. "chrX:12345-678910"}
 }
 \value{
-
+A named list
 }
 \description{
-Title
+Parse a region string into chomosome, start and end
+}
+\examples{
+chr_start_end = region_to_chunks("chr1:1111-2222")
 }

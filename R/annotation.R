@@ -15,6 +15,7 @@
 #' @export
 #'
 #' @examples
+#' driver_ssm = annotate_driver_ssm(include_noncoding=c("NFKBIZ"="3'UTR"),noncoding_regions=c("NFKBIZ"="chr3:101578206-101578365"))
 annotate_driver_ssm = function(maf_df,lymphoma_type,driver_genes,
                                include_noncoding=c("NFKBIZ"="3'UTR","HNRNPH1"="Intron"),
                                noncoding_regions=c("NFKBIZ"="chr3:101578206-101578365","HNRNPH1"="chr5:179,045,946-179,046,683")){

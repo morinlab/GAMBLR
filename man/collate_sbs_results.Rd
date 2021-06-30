@@ -14,11 +14,14 @@ collate_sbs_results(
 \arguments{
 \item{sample_table}{A data frame with sample_id as the first column}
 
-\item{file_path}{}
+\item{file_path}{Optional path to SBS file}
 }
 \value{
-
+A data frame with new columns added
 }
 \description{
 Bring in the results from mutational signature analysis
+}
+\examples{
+collated = collate_sbs_results(sample_table=sample_table,sbs_manipulation=sbs_manipulation)
 }

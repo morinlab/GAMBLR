@@ -12,10 +12,12 @@ annotate_hotspots(
 )
 }
 \arguments{
-\item{analysis_base}{}
+\item{mutation_maf}{A data frame in MAF format}
+
+\item{analysis_base}{Base name for hot spot output directory}
 }
 \value{
-
+The same data frame with one additional column "hot_spot"
 }
 \description{
 Annotate MAF-like data frome with a hot_spot column indicating recurrent mutations

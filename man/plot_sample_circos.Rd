@@ -20,10 +20,18 @@ plot_sample_circos(
 )
 }
 \arguments{
-\item{include_cnv}{}
+\item{sv_df}{Optional data frame of SVs (default is to use the database)}
+
+\item{cnv_df}{Optional data frame of CNVs (default is to use the database)}
+
+\item{include_sv}{Default TRUE}
+
+\item{include_cnv}{Default TRUE}
+
+\item{sample_id}{Sample ID for the sample to plot}
 }
 \value{
-
+Nothing
 }
 \description{
 Plot a sample-centric circos overview

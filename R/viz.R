@@ -1,13 +1,14 @@
 #' Assign a colour palette to metadata columns automatically and consistently
 #'
-#' @param metadataColumns
-#' @param these_samples_metadata
+#' @param metadataColumns Names of the metadata columns to assign colours for
+#' @param these_samples_metadata Metadata for just the samples you need colours for
 #' @param annoAlpha Optional alpha to apply to annotation colours
-#' @return
+#' @return Either a vector or list of colours
 #' @export
 #' @import dplyr
 #'
 #' @examples
+#' all_cols=map_metadata_to_colours(legend_metadata_columns,these_meta,verbose=T)
 map_metadata_to_colours = function(metadataColumns,these_samples_metadata,as_vector=TRUE,
                                    verbose=F,annoAlpha=1){
 
@@ -142,13 +143,13 @@ map_metadata_to_colours = function(metadataColumns,these_samples_metadata,as_vec
 
 #' Plot a sample-centric circos overview
 #'
-#' @param sample_id
-#' @param sv_df
-#' @param cnv_df
-#' @param include_sv
-#' @param include_cnv
+#' @param sample_id Sample ID for the sample to plot
+#' @param sv_df Optional data frame of SVs (default is to use the database)
+#' @param cnv_df Optional data frame of CNVs (default is to use the database)
+#' @param include_sv Default TRUE
+#' @param include_cnv Default TRUE
 #'
-#' @return
+#' @return Nothing
 #' @export
 #' @import circlize ComplexHeatmap
 #'
@@ -826,11 +827,11 @@ ashm_multi_rainbow_plot = function(regions_bed,regions_to_display,
 
 #' Create a genome-wide copy number plot for one sample and (optionally) display mutation VAF
 #'
-#' @param this_sample
-#' @param just_segments
+#' @param this_sample The sample_id for the sample to plot
+#' @param just_segments Specify whether only the segments will be plotted (instead of mutation VAF)
 #' @param genes_to_label optional. Provide a list of genes to label (if mutated). Can only be used with coding_only (see below)
 #' @param coding_only optional. Set to TRUE to restrict to plotting only coding mutations
-#' @param from_flatfile
+#' @param from_flatfile If set to true the function will use flatfiles instead of the database
 #'
 #' @return nothing
 #' @export
@@ -994,11 +995,11 @@ ashm_rainbow_plot = function(mutations_maf,
 
 #' This function doesn't do anything yet
 #'
-#' @param mafs
-#' @param sample_id
-#' @param genes
-#' @param show_noncoding
-#' @param detail
+#' @param mafs TODO
+#' @param sample_id TODO
+#' @param genes TODO
+#' @param show_noncoding TODO
+#' @param detail TODO
 #'
 #' @return
 #' @export

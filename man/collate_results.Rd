@@ -18,3 +18,6 @@ A table keyed on biopsy_id that contains a bunch of per-sample results from GAMB
 \description{
 Bring together all derived sample-level results from many GAMBL pipelines
 }
+\examples{
+everything_collated = collate_results(join_with_full_metadata=TRUE)
+}
