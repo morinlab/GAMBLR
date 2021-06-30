@@ -206,8 +206,8 @@ plot_sample_circos = function(this_sample_id,sv_df,cnv_df,ssm_df,
     if("IGH" %in% these_partners){
       these_partners = c(these_partners,"IGHV3-62")
     }
-    anno_bed1 = annotated_sv %>% select(chrom1,start1,end1,tumour_sample_id)
-    anno_bed2 = annotated_sv %>% select(chrom2,start2,end2,tumour_sample_id)
+    anno_bed1 = annotated_sv %>% dplyr::select(chrom1,start1,end1,tumour_sample_id)
+    anno_bed2 = annotated_sv %>% dplyr::select(chrom2,start2,end2,tumour_sample_id)
     colnames(anno_bed1)=c("chrom","start","end","sample_id")
     colnames(anno_bed2)=c("chrom","start","end","sample_id")
 
@@ -221,8 +221,8 @@ plot_sample_circos = function(this_sample_id,sv_df,cnv_df,ssm_df,
     bed_mut = bind_rows(bed_mut_partner,bed_mut_onco)
     print(bed_mut)
   }
-  bed1 = sv_df %>% select(CHROM_A,START_A,END_A,tumour_sample_id)
-  bed2 = sv_df %>% select(CHROM_B,START_B,END_B,tumour_sample_id)
+  bed1 = sv_df %>% dplyr::select(CHROM_A,START_A,END_A,tumour_sample_id)
+  bed2 = sv_df %>% dplyr::select(CHROM_B,START_B,END_B,tumour_sample_id)
   colnames(bed1)=c("chrom","start","end","sample_id")
   colnames(bed2)=c("chrom","start","end","sample_id")
   circos.clear()
