@@ -702,7 +702,7 @@ get_ssm_by_region = function(chromosome,qstart,qend,
 #' #basic usage
 #' maf_data = get_coding_ssm(limit_cohort=c("BL_ICGC"))
 #' maf_data = get_coding_ssm(limit_samples=my_sample_ids)
-get_coding_ssm = function(limit_cohort,exclude_cohort,limit_pathology,limit_samples,basic_columns=TRUE){
+get_coding_ssm = function(limit_cohort,exclude_cohort,limit_pathology,limit_samples,basic_columns=TRUE,include_icgc=TRUE){
   table_name = config::get("results_tables")$ssm
   db=config::get("database_name")
   con <- DBI::dbConnect(RMariaDB::MariaDB(), dbname = db)
@@ -710,8 +710,11 @@ get_coding_ssm = function(limit_cohort,exclude_cohort,limit_pathology,limit_samp
   sample_meta = dplyr::tbl(con,"sample_metadata") %>% dplyr::filter(seq_type == "genome" & tissue_status == "tumour")
   biopsy_meta = dplyr::tbl(con,"biopsy_metadata") %>% dplyr::select(-patient_id) %>%
     dplyr::select(-pathology) %>% dplyr::select(-time_point) %>% dplyr::select(-EBV_status_inf) #drop duplicated columns
-    all_meta = left_join(sample_meta,biopsy_meta,by="biopsy_id") %>%
+  all_meta = left_join(sample_meta,biopsy_meta,by="biopsy_id") %>%
     as.data.frame()
+  if (!include_icgc){
+    all_meta = all_meta %>% dplyr::filter(!str_detect(cohort,"ICGC"))
+  }
 
   #do all remaining filtering on the metadata then add the remaining sample_id to the query
   if(!missing(limit_cohort)){
