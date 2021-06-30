@@ -20,7 +20,7 @@
 #' # override default filters and request metadata for samples other than tumour genomes, e.g. also get the normals
 #' only_normal_metadata = get_gambl_metadata(tissue_status_filter = c('tumour','normal'))
 get_gambl_metadata = function(seq_type_filter = "genome",
-                              tissue_status_filter=c("tumour"), case_set, remove_benchmarking = TRUE, with_outcomes=FALSE){
+                              tissue_status_filter=c("tumour"), case_set, remove_benchmarking = TRUE, with_outcomes=FALSE, include_icgc=TRUE){
   db=config::get("database_name")
   con <- DBI::dbConnect(RMariaDB::MariaDB(), dbname = db)
   sample_meta = dplyr::tbl(con,"sample_metadata")
@@ -29,6 +29,9 @@ get_gambl_metadata = function(seq_type_filter = "genome",
 
   sample_meta = sample_meta %>% dplyr::filter(seq_type == seq_type_filter & tissue_status %in% tissue_status_filter & bam_available == 1)
 
+  if (!include_icgc){
+    sample_meta = sample_meta %>% dplyr::filter(!str_detect(unix_group,"ICGC"))
+  }
   #if we only care about genomes, we can drop/filter anything that isn't a tumour genome
   #The key for joining this table to the mutation information is to use sample_id. Think of this as equivalent to a library_id. It will differ depending on what assay was done to the sample.
   biopsy_meta = dplyr::tbl(con,"biopsy_metadata") %>% dplyr::select(-patient_id) %>% dplyr::select(-pathology) %>% dplyr::select(-time_point) %>% dplyr::select(-EBV_status_inf) #drop duplicated columns
