@@ -12,3 +12,6 @@ collate_nfkbiz_results(sample_table)
 \description{
 Determine which cases have NFKBIZ UTR mutations
 }
+\examples{
+sample_table = collate_nfkbiz_results(sample_table=sample_table)
+}

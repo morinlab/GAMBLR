@@ -2,16 +2,22 @@
 % Please edit documentation in R/utilities.R
 \name{sv_to_custom_track}
 \alias{sv_to_custom_track}
-\title{Title}
+\title{Make a UCSC-ready custom track file from SV data}
 \usage{
 sv_to_custom_track(sv_bedpe, output_file)
 }
 \arguments{
-\item{output_file}{}
+\item{sv_bedpe}{A bedpe formatted data frame of SVs}
+
+\item{output_file}{A bed file with UCSC custom header}
 }
 \value{
-
+nothing
 }
 \description{
-Title
+Make a UCSC-ready custom track file from SV data
+}
+\examples{
+all_sv = get_manta_sv()
+sv_to_custom_track(all_sv,output_file="GAMBL_sv_custom_track.bed")
 }

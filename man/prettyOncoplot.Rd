@@ -11,6 +11,7 @@ prettyOncoplot(
   maftools_obj,
   onco_matrix_path,
   genes,
+  include_noncoding = list(NFKBIZ = c("3'UTR"), HNRNPH1 = "Splice_Region"),
   keepGeneOrder = TRUE,
   keepSampleOrder = TRUE,
   highlightHotspots = FALSE,

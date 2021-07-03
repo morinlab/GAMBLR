@@ -13,10 +13,12 @@ collate_sv_results(
 \arguments{
 \item{sample_table}{A data frame with sample_id as the first column}
 
-\item{oncogenes}{}
+\item{tool}{Name of tool (optional, default is manta)}
+
+\item{oncogenes}{Which oncogenes to collate SVs from}
 }
 \value{
-
+Data frame with additional columns ({tool}\emph{{oncogene} and {tool}}{oncogene}_{partner})
 }
 \description{
 Determine and summarize which cases have specific oncogene SVs

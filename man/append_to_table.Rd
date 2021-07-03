@@ -7,7 +7,9 @@
 append_to_table(table_name, data_df)
 }
 \arguments{
-\item{file_path}{}
+\item{table_name}{The name of the database table to update/populate}
+
+\item{data_df}{A dataframe of values to load into the table}
 }
 \value{
 

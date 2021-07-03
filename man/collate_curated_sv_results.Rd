@@ -15,3 +15,6 @@ The sample table with additional columns
 \description{
 Collate all SV calls from the genome data and summarize for main oncogenes of interest per sample
 }
+\examples{
+gambl_results_derived = collate_curated_sv_results(gambl_results_derived)
+}

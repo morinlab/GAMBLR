@@ -12,3 +12,6 @@ referesh_metadata_tables()
 \description{
 Title
 }
+\examples{
+referesh_metadata_tables()
+}

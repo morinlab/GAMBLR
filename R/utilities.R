@@ -1,4 +1,23 @@
-
+#' Parse a region string into chomosome, start and end
+#'
+#' @param region A region string e.g. "chrX:12345-678910"
+#'
+#' @return A named list
+#' @export
+#'
+#' @examples
+#' chr_start_end = region_to_chunks("chr1:1111-2222")
+region_to_chunks = function(region){
+  region = unname(region)
+  region = gsub(",","",region)
+  #format is chr6:37060224-37151701
+  split_chunks = unlist(strsplit(region,":"))
+  chromosome = split_chunks[1]
+  startend = unlist(strsplit(split_chunks[2],"-"))
+  qstart=startend[1]
+  qend=startend[2]
+  return(list(chromosome=chromosome,start=qstart,end=qend))
+}
 
 #' Write an oncomatrix from a MAF File for further plotting. This is meant to be run by individuals who have access to data sets to
 #' "sanitize" a subset of data for subsequent use by them or others who don't have permission to access the raw data.
@@ -49,10 +68,10 @@ sanitize_maf_data = function(mutation_maf_path,mutation_maf_data,output_oncomatr
 
 #' Annotate MAF-like data frome with a hot_spot column indicating recurrent mutations
 #'
-#' @param mutation_maf
-#' @param analysis_base
+#' @param mutation_maf A data frame in MAF format
+#' @param analysis_base Base name for hot spot output directory
 #'
-#' @return
+#' @return The same data frame with one additional column "hot_spot"
 #' @export
 #'
 #' @examples
@@ -98,15 +117,17 @@ annotate_hotspots = function(mutation_maf,recurrence_min = 5,analysis_base=c("FL
   return(hot_ssms)
 }
 
-#' Title
+#' Make a UCSC-ready custom track file from SV data
 #
-#' @param sv_bedpe
-#' @param output_file
+#' @param sv_bedpe A bedpe formatted data frame of SVs
+#' @param output_file A bed file with UCSC custom header
 #'
-#' @return
+#' @return nothing
 #' @export
 #'
 #' @examples
+#' all_sv = get_manta_sv()
+#' sv_to_custom_track(all_sv,output_file="GAMBL_sv_custom_track.bed")
 sv_to_custom_track = function(sv_bedpe,output_file){
   #browser position chr7:127471196-127495720
   #browser hide all
@@ -200,6 +221,7 @@ maf_to_custom_track = function(maf_data,output_file){
 #' @import tidyverse config
 #'
 #' @examples
+#' everything_collated = collate_results(join_with_full_metadata=TRUE)
 collate_results = function(sample_table,write_to_file=FALSE,join_with_full_metadata = FALSE,case_set,sbs_manipulation=""){
   # important: if you are collating results from anything but WGS (e.g RNA-seq libraries) be sure to use biopsy ID as the key in your join
   # the sample_id should probably not even be in this file if we want this to be biopsy-centric
@@ -251,6 +273,7 @@ collate_results = function(sample_table,write_to_file=FALSE,join_with_full_metad
 #' @import tidyverse DBI RMariaDB dbplyr
 #'
 #' @examples
+#' gambl_results_derived = collate_derived_results(samples_df)
 collate_derived_results = function(sample_table){
 
   database_name = config::get("database_name")
@@ -272,6 +295,7 @@ collate_derived_results = function(sample_table){
 #' @import tidyverse
 #'
 #' @examples
+#' gambl_results_derived = collate_csr_results(gambl_results_derived)
 collate_csr_results = function(sample_table){
    csr = suppressMessages(read_tsv("/projects/rmorin/projects/gambl-repos/gambl-nthomas/results/icgc_dart/mixcr_current/level_3/mixcr_genome_CSR_results.tsv"))
    sm_join = inner_join(sample_table,csr,by=c("sample_id"="sample"))
@@ -291,6 +315,7 @@ collate_csr_results = function(sample_table){
 #' @import tidyverse
 #'
 #' @examples
+#' gambl_results_derived = collate_curated_sv_results(gambl_results_derived)
 collate_curated_sv_results = function(sample_table){
   path_to_files = config::get("derived_and_curated")
   project_base = config::get("project_base")
@@ -415,16 +440,17 @@ assign_cn_to_ssm = function(this_sample,coding_only=FALSE,from_flatfile=FALSE,
 
 
 
-#' Title
+#' Refresh the contents of a database table
 #'
-#' @param table_name
-#' @param connection
-#' @param file_path
+#' @param table_name Name of table to refresh
+#' @param connection Database connection object
+#' @param file_path Path to the table contents to populate
 #'
 #' @return
 #' @export
 #'
 #' @examples
+#' refresh_full_table(table_x,con,file_x)
 refresh_full_table = function(table_name,connection,file_path){
   table_data = read_tsv(file_path)
   dbWriteTable(con,table_name,table_data,overwrite=TRUE)
@@ -438,6 +464,7 @@ refresh_full_table = function(table_name,connection,file_path){
 #' @export
 #'
 #' @examples
+#' referesh_metadata_tables()
 referesh_metadata_tables = function(){
 
   con <- dbConnect(RMariaDB::MariaDB(), dbname = database_name)
@@ -489,13 +516,14 @@ collate_extra_metadata= function(sample_table,file_path){
 #' Bring in the results from mutational signature analysis
 #'
 #' @param sample_table A data frame with sample_id as the first column
-#' @param file_path
+#' @param file_path Optional path to SBS file
 #'
-#' @return
+#' @return A data frame with new columns added
 #' @export
 #' @import tidyverse
 #'
 #' @examples
+#' collated = collate_sbs_results(sample_table=sample_table,sbs_manipulation=sbs_manipulation)
 collate_sbs_results = function(sample_table,file_path,scale_vals=FALSE,sbs_manipulation=""){
   if(missing(file_path)){
     file_path = "/projects/rmorin_scratch/prasath_scratch/gambl/sigprofiler/gambl_hg38/02-extract/slms3.gambl.icgc.hg38.matched.unmatched/SBS96/Suggested_Solution/COSMIC_SBS96_Decomposed_Solution/Activities/COSMIC_SBS96_Activities_refit.txt"
@@ -538,6 +566,7 @@ collate_sbs_results = function(sample_table,file_path,scale_vals=FALSE,sbs_manip
 #' @import tidyverse
 #'
 #' @examples
+#' sample_table = collate_nfkbiz_results(sample_table=sample_table)
 collate_nfkbiz_results = function(sample_table){
   if(missing(sample_table)){
     sample_table = get_gambl_metadata() %>% dplyr::select(sample_id,patient_id,biopsy_id)
@@ -582,10 +611,10 @@ collate_ashm_results = function(sample_table){
 #' Determine and summarize which cases have specific oncogene SVs
 #'
 #' @param sample_table A data frame with sample_id as the first column
-#' @param tool
-#' @param oncogenes
+#' @param tool Name of tool (optional, default is manta)
+#' @param oncogenes Which oncogenes to collate SVs from
 #'
-#' @return
+#' @return Data frame with additional columns ({tool}_{oncogene} and {tool}_{oncogene}_{partner})
 #' @export
 #' @import tidyverse
 #'
@@ -681,12 +710,12 @@ get_gambl_colours = function(classification="all",alpha=1){
         "3'UTR" = unname(blood_cols["Yellow"]))
 
   all_colours[["pos_neg"]]=c(
-    "POS"=unname(blood_cols["Light Blue"]),
-    "NEG"=unname(blood_cols["Yellow"]),
-    "FAIL"=unname(blood_cols["Gray"]),
-    "positive"=unname(blood_cols["Light Blue"]),
-    "negative"=unname(blood_cols["Yellow"]),
-    "fail"=unname(blood_cols["Gray"]))
+    "POS"="#c41230",
+    "NEG"="#E88873",
+    "FAIL"="#bdbdc1",
+    "positive"="#c41230",
+    "negative"="#E88873",
+    "fail"="#bdbdc1")
 
   all_colours[["copy_number"]]=c(
     "nLOH"="#E026D7",
@@ -754,6 +783,9 @@ get_gambl_colours = function(classification="all",alpha=1){
     "DHITsig+" = "#D62828",
     "DHITsigPos" = "#D62828"
   )
+  all_colours[["cohort"]] = c("Chapuy"="#8B0000",
+                  "Arthur"= "#8845A8",
+                  "Schmitz"= "#2C72B2")
   #print(all_colours)
   for(colslot in names(all_colours)){
     raw_cols=all_colours[[colslot]]

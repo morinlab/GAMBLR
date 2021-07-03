@@ -1,5 +1,280 @@
+#' Assign a colour palette to metadata columns automatically and consistently
+#'
+#' @param metadataColumns Names of the metadata columns to assign colours for
+#' @param these_samples_metadata Metadata for just the samples you need colours for
+#' @param annoAlpha Optional alpha to apply to annotation colours
+#' @return Either a vector or list of colours
+#' @export
+#' @import dplyr
+#'
+#' @examples
+#' all_cols=map_metadata_to_colours(legend_metadata_columns,these_meta,verbose=T)
+map_metadata_to_colours = function(metadataColumns,these_samples_metadata,as_vector=TRUE,
+                                   verbose=F,annoAlpha=1){
+
+  clinical_colours = ggsci::get_ash("clinical")
+  all_gambl_colours=get_gambl_colours()
+  colours = list()
+  colvec = c()
+  #aliases for finding specific sets of colours
+  aliases = list("COO_consensus"="coo","COO"="coo","DHITsig_consensus"="coo",
+                 "pathology"="pathology","lymphgen"="lymphgen",
+                 "lymphgen_with_cnv"="lymphgen","bcl2_ba"="pos_neg",
+                 "myc_ba"="pos_neg","bcl6_ba"="pos_neg"
+                 )
+  for(column in metadataColumns){
+
+    this_value = these_samples_metadata[[column]]
+
+    if(verbose){
+      print(">>>>>>>")
+      message("finding colour for",this_value)
+      print("<<<<<<<")
+    }
+    if(column %in% names(aliases)){
+
+      key = aliases[[column]]
+      message(paste("using",key,"for",column))
+      these = get_gambl_colours(classification = key)
+      colours[[column]]=these
+      colvec = c(colvec,these[this_value])
+      message("adding:",these[this_value])
+    }else if(column == "sex"){
+      these = get_gambl_colours("sex",alpha=annoAlpha)
+      these = these[levels(options)]
+      if(!"NA" %in% names(these)){
+        these= c(these,"NA"="white")
+      }
+      colours[[column]]=these
+      colvec = c(colvec,these[this_value])
+      message("adding:",these[this_value])
+    }else if(sum(levels(options) %in% names(clinical_colours))==length(levels(options))){
+      #we have a way to map these all to colours!
+      if(verbose){
+        message(paste("found colours for",column))
+      }
+      these = clinical_colours[levels(options)]
+      if(!"NA" %in% names(these)){
+        these= c(these,"NA"="white")
+      }
+      colours[[column]]=these
+      colvec = c(colvec,these[this_value])
+    }else if(("positive" %in% options | "POS" %in% options) & length(options)<4){
+      if(verbose){
+        print("using pos_neg")
+      }
+
+      these = get_gambl_colours("pos_neg",alpha=annoAlpha)
+      these = these[levels(options)]
 
 
+      if(!"NA" %in% names(these)){
+        these= c(these,"NA"="white")
+
+      }
+      colours[[column]]=these
+      colvec = c(colvec,these[this_value])
+    }else if("GCB" %in% options){
+      these=get_gambl_colours("COO",alpha=annoAlpha)
+      #names(these)=levels(options)
+      if(!"NA" %in% names(these)){
+        these= c(these,"NA"="white")
+
+      }
+      colours[[column]]=these
+      colvec = c(colvec,these)
+    }else if(column %in% c("pathology")){
+      these=get_gambl_colours(column,alpha=annoAlpha)
+
+      #names(these)=levels(options)
+      if(!"NA" %in% names(these)){
+        these= c(these,"NA"="white")
+      }
+      colours[[column]]=these
+      colvec = c(colvec,these)
+    }else if(grepl("lymphgen",column,ignore.case = TRUE)){
+      these=get_gambl_colours("lymphgen",alpha=annoAlpha)
+      if(!"NA" %in% names(these)){
+        these= c(these,"NA"="white")
+      }
+      colours[[column]]=these
+      colvec = c(colvec,these)
+    }else if(column == "HMRN"){
+      these=get_gambl_colours("hmrn",alpha=annoAlpha)
+      if(!"NA" %in% names(these)){
+        these= c(these,"NA"="white")
+      }
+      colours[[column]]=these
+      colvec = c(colvec,these)
+    }else if(sum(levels(options) %in% names(all_gambl_colours))==length(levels(options))){
+      if(verbose){
+        message(paste("found colours for",column,"in all_gambl_colours"))
+      }
+      these = all_gambl_colours[levels(options)]
+      if(!"NA" %in% names(these)){
+        these= c(these,"NA"="white")
+      }
+      colours[[column]]=these
+      colvec = c(colvec,these)
+    }else if(length(levels(options))>15){
+
+      these=rainbow(length(levels(options)),alpha=annoAlpha)
+      names(these)=levels(options)
+
+      colours[[column]]=these
+      colvec = c(colvec,these)
+    }else{
+      these = blood_cols[sample(c(1:length(blood_cols)),size=length(levels(options)))]
+      names(these)=levels(options)
+      if(!"NA" %in% names(these)){
+        these= c(these,"NA"="white")
+      }
+      colours[[column]]=these
+      colvec = c(colvec,these)
+    }
+  }
+  if(as_vector){
+    return(colvec)
+  }
+  return(colours)
+}
+
+
+
+#' Plot a sample-centric circos overview
+#'
+#' @param sample_id Sample ID for the sample to plot
+#' @param sv_df Optional data frame of SVs (default is to use the database)
+#' @param cnv_df Optional data frame of CNVs (default is to use the database)
+#' @param include_sv Default TRUE
+#' @param include_cnv Default TRUE
+#'
+#' @return Nothing
+#' @export
+#' @import circlize ComplexHeatmap
+#'
+#' @examples
+#' this_samp = "13-38657_tumorB"
+#' GAMBLR::plot_sample_circos(this_sample_id=this_samp,legend_metadata_columns = c("pathology","lymphgen","COO_consensus","DHITsig_consensus","bcl2_ba","myc_ba"),legend_metadata_names = c("pathology","LymphGen","COO","DHITsig","BCL2","MYC"),auto_label_sv = TRUE,chrom_list = c("chr2","chr3","chr8","chr14","chr18"))
+plot_sample_circos = function(this_sample_id,sv_df,cnv_df,ssm_df,
+                              include_sv=TRUE,include_ssm=FALSE,
+                              legend_metadata_columns,
+                              legend_metadata_names=c(),
+                              include_cnv=TRUE,
+                              chrom_list,label_genes,auto_label_sv=FALSE){
+
+  add_cnv= function(cnv_df){
+
+    bed = data.frame(cnv_df[,c("chrom","start","end","log.ratio")])
+    colnames(bed)=c("chr","start","end","value1")
+    col_fun = colorRamp2(c(-1, 0, 1), c("blue", "white", "red"))
+    circos.genomicTrackPlotRegion(bed, stack = TRUE, panel.fun = function(region, value, ...) {
+      circos.genomicRect(region, value, col = col_fun(value),
+                         border = NA, posTransform = NULL, ...)
+      i = getI(...)
+      cell.xlim = get.cell.meta.data("cell.xlim")
+    }, bg.border = NA)
+  }
+  if(missing(cnv_df)){
+    cnv_df = get_sample_cn_segments(sample_id = this_sample_id,with_chr_prefix = TRUE)
+
+  }
+  if(missing(chrom_list)){
+   chrom_list = c("chr1","chr2","chr3","chr4","chr5","chr6","chr7","chr8","chr9","chr10","chr11","chr12","chr13","chr14","chr15","chr16","chr17","chr18","chr19","chr20","chr21","chr22","chrX")
+  }
+  if(!missing(label_genes)){
+    gene_bed = grch37_gene_coordinates %>%
+      dplyr::filter(gene_name %in% label_genes) %>%
+      dplyr::select(chromosome,start,end,gene_name) %>%
+      dplyr::mutate(chromosome = paste0("chr",chromosome))
+  }
+  if(missing(sv_df)){
+    sv_df = get_manta_sv(with_chr_prefix = TRUE) %>%
+      dplyr::filter(tumour_sample_id == this_sample_id)
+
+  }
+
+  sv_df = sv_df %>% dplyr::filter(CHROM_A %in% chrom_list) %>%
+    dplyr::filter(CHROM_B %in% chrom_list)
+  if(auto_label_sv){
+    # annotate oncogene SVs and label them
+    annotated_sv  = annotate_sv(sv_df,with_chr_prefix = TRUE) %>%
+      dplyr::filter(!is.na(partner)) %>%
+      dplyr::filter(tumour_sample_id == this_sample_id)
+    these_oncogenes=unique(pull(annotated_sv,gene))
+    these_partners = unique(pull(annotated_sv,partner))
+    if("IGH" %in% these_partners){
+      these_partners = c(these_partners,"IGHV3-62")
+    }
+    anno_bed1 = annotated_sv %>% dplyr::select(chrom1,start1,end1,tumour_sample_id)
+    anno_bed2 = annotated_sv %>% dplyr::select(chrom2,start2,end2,tumour_sample_id)
+    colnames(anno_bed1)=c("chrom","start","end","sample_id")
+    colnames(anno_bed2)=c("chrom","start","end","sample_id")
+
+    bed_mut_partner = grch37_partners %>%
+      dplyr::filter(gene %in% these_partners) %>%
+      mutate(chrom=paste0("chr",chrom))
+    bed_mut_onco =
+      grch37_oncogene %>%
+      dplyr::filter(gene %in% these_oncogenes) %>%
+      mutate(chrom=paste0("chr",chrom))
+    bed_mut = bind_rows(bed_mut_partner,bed_mut_onco)
+    print(bed_mut)
+  }
+  bed1 = sv_df %>% dplyr::select(CHROM_A,START_A,END_A,tumour_sample_id)
+  bed2 = sv_df %>% dplyr::select(CHROM_B,START_B,END_B,tumour_sample_id)
+  colnames(bed1)=c("chrom","start","end","sample_id")
+  colnames(bed2)=c("chrom","start","end","sample_id")
+  circos.clear()
+  circos.initializeWithIdeogram(chromosome.index = chrom_list)
+  add_cnv(cnv_df)
+  circos.genomicLink(bed1, bed2,col = "#bdbdc1")
+  if(!missing(label_genes)){
+    circos.genomicLabels(gene_bed,labels.column="gene_name")
+  }
+  if(auto_label_sv){
+    circos.genomicLink(anno_bed1, anno_bed2,col = 'red')
+    circos.genomicLabels(bed_mut,labels.column="gene")
+  }
+  text(c(0.75,0.75),this_sample_id,cex=0.8)
+  if(!missing(legend_metadata_columns)){
+    samp_meta = get_gambl_metadata() %>%
+      dplyr::filter(sample_id == this_sample_id)
+    these_meta = samp_meta[legend_metadata_columns]
+    these_cols = get_gambl_colours()
+    vals = as.character(these_meta)
+    names = colnames(these_meta)
+
+    all_cols=map_metadata_to_colours(legend_metadata_columns,these_meta,verbose=T)
+
+    cols=all_cols[vals]
+    print(cols)
+    if(length(legend_metadata_names) == length(legend_metadata_columns)){
+      for(i in c(1:length(vals))){
+        if(!legend_metadata_names[i]==""){
+          vals[i]=paste(legend_metadata_names[i],vals[i])
+        }
+      }
+    }
+
+
+    lgd_discrete = Legend(labels = vals,
+                          title_position = "topleft",
+                          legend_gp = gpar(fill = cols))
+    #draw(lgd_discrete, x = unit(4, "mm"), y = unit(10, "mm"), just = c("left", "bottom"))
+    draw(lgd_discrete, x = unit(3, "mm"), y = unit(1, "npc") - unit(5,"mm"),
+         just = c("left", "top"))
+  }
+
+  # continuous
+  lgd_cnv = Legend(at = c(-2, -1, 0, 1, 2),
+                     col_fun=circlize::colorRamp2(c(-1, 0, 1),
+                                    c("blue", "white", "red")),
+                     title_position = "topleft", title = "log\nratio")
+
+  draw(lgd_cnv, x = unit(1, "npc") - unit(2, "mm"), y = unit(4, "mm"),
+       just = c("right", "bottom"))
+}
 
 #' Make an oncoplot that is pretty using ComplexHeatmap. The metadata is expected to follow the structure and column naming used in GAMBL.
 #' If you provide your own non-GAMBL samples and metadata, you must include at least the following columns with these names.
@@ -28,6 +303,7 @@
 #'
 #' @return
 #' @export
+#' @import ComplexHeatmap grid
 #'
 #' @examples
 #' prettyOncoplot(maftools_obj = maf_obj,genes = bl_genes,
@@ -46,6 +322,7 @@
 prettyOncoplot = function(maftools_obj,
                           onco_matrix_path,
                           genes,
+                          include_noncoding=list("NFKBIZ"=c("3'UTR"),"HNRNPH1"="Splice_Region"),
                           keepGeneOrder=TRUE,
                           keepSampleOrder=TRUE,
                           highlightHotspots=FALSE,
@@ -89,7 +366,30 @@ prettyOncoplot = function(maftools_obj,
   mat=read.table(onco_matrix_path,sep="\t",header=TRUE,check.names = FALSE,row.names=1,fill=TRUE,stringsAsFactors = F,na.strings = c("NA",""))
   colnames(old_style_mat) = colnames(mat)
   mat=old_style_mat
-
+  mat[mat==0]=""
+  #add the noncoding mutations to this if requested (only for genes and types specified)
+  if(length(include_noncoding)>0){
+    all_genes_df = data.frame(Hugo_Symbol=rownames(mat))
+    all_samples_df = data.frame(Tumor_Sample_Barcode=colnames(mat))
+    for(gene in names(include_noncoding)){
+      for(this_vc in unname(include_noncoding[[gene]])){
+        message(paste(gene,"and",this_vc))
+        these_samples = dplyr::filter(maftools_obj@maf.silent,Hugo_Symbol == gene &
+                                      Variant_Classification == this_vc) %>%
+        dplyr::select(Tumor_Sample_Barcode,Variant_Classification) %>%
+        unique() %>% pull(Tumor_Sample_Barcode)
+        for(samp in these_samples){
+          if(samp %in% colnames(mat)){
+            if(mat[gene,samp]==""){
+              mat[gene,samp] = this_vc
+            }else{
+              mat[gene,samp] = paste0(this_vc,";",mat[gene,samp])
+            }
+          }
+        }
+      }
+    }
+  }
   #annotate hot spots if necessary
   if(missing(metadataColumns)){
     message("you should name at least one metadata column to show as an annotation. Defaulting to pathology")
@@ -142,12 +442,20 @@ prettyOncoplot = function(maftools_obj,
     },
     RNA = function(x, y, w, h) {
       grid.rect(x, y, w-unit(spacing, "pt"), h*height_scaling,
-                gp = gpar(fill = "#D972FF", col = box_col))
+                gp = gpar(fill = "#F2ED36", col = box_col))
+    },
+    `3'UTR` = function(x, y, w, h) {
+      grid.rect(x, y, w-unit(spacing, "pt"), h*height_scaling,
+                gp = gpar(fill = "#F2ED36", col = box_col))
+    },
+    Intron = function(x, y, w, h) {
+      grid.rect(x, y, w-unit(spacing, "pt"), 0.75* h*height_scaling,
+                gp = gpar(fill = col["Nonsense_Mutation"], col = box_col))
     },
     # big blue
     Nonsense_Mutation = function(x, y, w, h) {
       grid.rect(x, y, w-unit(spacing, "pt"), h*height_scaling,
-                gp = gpar(fill = col["Nonsense_Mutation"], col = box_col))
+                gp = gpar(fill = "#D8A7CA", col = box_col))
     },
     Splice_Site = function(x, y, w, h) {
       grid.rect(x, y, w-unit(spacing, "pt"), h*height_scaling,
@@ -387,6 +695,11 @@ prettyOncoplot = function(maftools_obj,
     names(show_legend) = colnames(metadata_df)
     show_legend[hide_annotations]=FALSE
   }
+  if(missing(sortByColumns)){
+    column_order = NULL
+  }else{
+    column_order = patients_kept
+  }
   heatmap_legend_param = list(title = "Alterations",nrow=2, ncol=1,
                          legend_direction = "horizontal")
   ch = ComplexHeatmap::oncoPrint(mat[genes,patients_kept],
@@ -395,8 +708,7 @@ prettyOncoplot = function(maftools_obj,
                                    right_annotation=NULL,
                                    col = col,
                                    row_order=gene_order,
-                                   column_order = patients_kept,
-                                   #column_split=factor(hmrn_kept,levels=names(colours$HMRN)),
+                                   column_order = column_order,
                                    column_labels = NULL,
                                    show_column_names = showTumorSampleBarcode,
                                    column_split=column_split,
@@ -515,11 +827,11 @@ ashm_multi_rainbow_plot = function(regions_bed,regions_to_display,
 
 #' Create a genome-wide copy number plot for one sample and (optionally) display mutation VAF
 #'
-#' @param this_sample
-#' @param just_segments
+#' @param this_sample The sample_id for the sample to plot
+#' @param just_segments Specify whether only the segments will be plotted (instead of mutation VAF)
 #' @param genes_to_label optional. Provide a list of genes to label (if mutated). Can only be used with coding_only (see below)
 #' @param coding_only optional. Set to TRUE to restrict to plotting only coding mutations
-#' @param from_flatfile
+#' @param from_flatfile If set to true the function will use flatfiles instead of the database
 #'
 #' @return nothing
 #' @export
@@ -683,11 +995,11 @@ ashm_rainbow_plot = function(mutations_maf,
 
 #' This function doesn't do anything yet
 #'
-#' @param mafs
-#' @param sample_id
-#' @param genes
-#' @param show_noncoding
-#' @param detail
+#' @param mafs TODO
+#' @param sample_id TODO
+#' @param genes TODO
+#' @param show_noncoding TODO
+#' @param detail TODO
 #'
 #' @return
 #' @export

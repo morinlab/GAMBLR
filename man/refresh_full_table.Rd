@@ -2,16 +2,23 @@
 % Please edit documentation in R/utilities.R
 \name{refresh_full_table}
 \alias{refresh_full_table}
-\title{Title}
+\title{Refresh the contents of a database table}
 \usage{
 refresh_full_table(table_name, connection, file_path)
 }
 \arguments{
-\item{file_path}{}
+\item{table_name}{Name of table to refresh}
+
+\item{connection}{Database connection object}
+
+\item{file_path}{Path to the table contents to populate}
 }
 \value{
 
 }
 \description{
-Title
+Refresh the contents of a database table
+}
+\examples{
+refresh_full_table(table_x,con,file_x)
 }

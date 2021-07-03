@@ -7,7 +7,15 @@
 plot_multi_timepoint(mafs, sample_id, genes, show_noncoding = FALSE, detail)
 }
 \arguments{
-\item{detail}{}
+\item{mafs}{TODO}
+
+\item{sample_id}{TODO}
+
+\item{genes}{TODO}
+
+\item{show_noncoding}{TODO}
+
+\item{detail}{TODO}
 }
 \value{
 
