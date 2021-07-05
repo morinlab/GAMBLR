@@ -9,7 +9,9 @@ get_coding_ssm(
   exclude_cohort,
   limit_pathology,
   limit_samples,
-  basic_columns = TRUE
+  basic_columns = TRUE,
+  from_flatfile = FALSE,
+  groups = c("gambl", "icgc_dart")
 )
 }
 \arguments{

@@ -9,7 +9,8 @@ get_gambl_metadata(
   tissue_status_filter = c("tumour"),
   case_set,
   remove_benchmarking = TRUE,
-  with_outcomes = FALSE
+  with_outcomes = FALSE,
+  from_flatfile = TRUE
 )
 }
 \arguments{
@@ -17,7 +18,13 @@ get_gambl_metadata(
 
 \item{tissue_status_filter}{Filtering criteria (default: only tumour genomes)}
 
-\item{case_set}{optional short name for a pre-defined set of cases avoiding any
+\item{case_set}{optional short name for a pre-defined set of cases avoiding any}
+
+\item{remove_benchmarking}{By default the FFPE benchmarking duplicate samples will be dropped}
+
+\item{with_outcomes}{Optionally join to gambl outcome data}
+
+\item{from_flatfile}{New default is to use the metadata in the flatfiles from your clone of the repo. Can be over-ridden to use the database
 embargoed cases (current options: 'BLGSP-study', 'FL-DLBCL-study', 'DLBCL-unembargoed)}
 }
 \value{

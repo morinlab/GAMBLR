@@ -33,11 +33,16 @@ default:
 
     results_filatfiles:
         sv: "icgc_dart/cbioportal-1.0/01-filtered-manta/genome-grch37/all_merged_sv_info.tsv"
-        ssm: "icgc_dart/slms-3_vcf2maf_current/level_3/final_merged_gambL-icgc_grch37.maf"
+        ssm:
+            all:
+                full: "icgc_dart/slms-3_vcf2maf_current/level_3/final_merged_grch37.maf"
+                cds: "icgc_dart/slms-3_vcf2maf_current/level_3/final_merged_grch37.CDS.maf"
+            gambl:
+                full: "gambl/slms-3_vcf2maf_current/level_3/final_merged_grch37.maf"
+                cds: "gambl/slms-3_vcf2maf_current/level_3/final_merged_grch37.CDS.maf"
 
     results_directories:
         manta: "manta_current/99-outputs/bedpe/"
-
 
     tables:
         biopsies: "biopsy_metadata"
@@ -48,13 +53,13 @@ default:
     table_flatfiles:
         biopsies: "data/metadata/gambl_biopsy_metadata.tsv"
         samples: "data/metadata/gambl_samples_available.tsv"
-        outcomes: "data/metadata/private_metadata/gambl_all_outcomes.tsv"
+        outcomes: "data/metadata/gambl_all_outcomes.tsv"
         derived: "data/metadata/gambl_sample_results.tsv"
-production:
+testing:
     project_base: "/projects/nhl_meta_analysis_scratch/gambl/results_local/"
     repo_base: "/projects/rmorin/projects/gambl-repos/gambl-rmorin/"
     derived_and_curated: "icgc_dart/derived_and_curated_metadata/"
-    database_name: "gambl_production"
+    database_name: "gambl_07_2021"
     results_staging:
         manta: "icgc_dart/cbioportal-1.0/01-filtered-manta/genome-grch37/"
     results_merged:
@@ -81,10 +86,17 @@ production:
         ssm: "maf_slms3_hg19_icgc"
         copy_number: "seg_battenberg_hg19"
         sv: "bedpe_manta_hg19"
+        copy_number_unmatched: "seg_controlfreec_hg19"
 
     results_filatfiles:
         sv: "icgc_dart/cbioportal-1.0/01-filtered-manta/genome-grch37/all_merged_sv_info.tsv"
-        ssm: "icgc_dart/slms-3_vcf2maf_current/level_3/final_merged_gambL-icgc_grch37.maf"
+        ssm:
+            all:
+                full: "icgc_dart/slms-3_vcf2maf_current/level_3/final_merged_grch37.maf"
+                cds: "icgc_dart/slms-3_vcf2maf_current/level_3/final_merged_grch37.CDS.maf"
+            gambl:
+                full: "gambl/slms-3_vcf2maf_current/level_3/final_merged_grch37.maf"
+                cds: "gambl/slms-3_vcf2maf_current/level_3/final_merged_grch37.CDS.maf"
 
     results_directories:
         manta: "manta_current/99-outputs/bedpe/"
@@ -99,5 +111,5 @@ production:
     table_flatfiles:
         biopsies: "data/metadata/gambl_biopsy_metadata.tsv"
         samples: "data/metadata/gambl_samples_available.tsv"
-        outcomes: "data/metadata/private_metadata/gambl_all_outcomes.tsv"
+        outcomes: "data/metadata/gambl_all_outcomes.tsv"
         derived: "data/metadata/gambl_sample_results.tsv"

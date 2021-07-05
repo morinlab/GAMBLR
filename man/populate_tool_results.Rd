@@ -4,14 +4,10 @@
 \alias{populate_tool_results}
 \title{Populate the database with the per-sample summarized results of various tools}
 \usage{
-populate_tool_results(sample_table)
+populate_tool_results()
 }
 \arguments{
-\item{sample_table}{A data frame with sample_id as the first column}
-
 \item{tool}{Name of the tool to get the results for}
-
-\item{base_directory_other}{}
 }
 \value{
 Nothing

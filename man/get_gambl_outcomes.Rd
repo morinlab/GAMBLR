@@ -8,7 +8,8 @@ get_gambl_outcomes(
   patient_ids,
   time_unit = "year",
   censor_cbioportal = FALSE,
-  complete_missing = FALSE
+  complete_missing = FALSE,
+  from_flatfile = FALSE
 )
 }
 \arguments{
