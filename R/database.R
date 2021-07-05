@@ -761,6 +761,7 @@ get_ssm_by_region = function(chromosome,qstart,qend,
 #' @param exclude_cohort  Supply this to exclude mutations from one or more cohorts in a list
 #' @param limit_pathology Supply this to restrict mutations to one pathology
 #' @param basic_columns Set to TRUE to override the default behaviour of returning only the first 45 columns of MAF data
+#' @param from_flatfile Set to TRUE to obtain mutations from a local flatfile instead of the database. This can be more efficient and is currently the only option for users who do not have ICGC data access.
 #'
 #' @return A data frame containing all the MAF data columns (one row per mutation)
 #' @export
@@ -792,26 +793,37 @@ get_coding_ssm = function(limit_cohort,exclude_cohort,
   sample_ids = pull(all_meta,sample_id)
 
   if(from_flatfile){
-    #currently this will only return non-ICGC results
-    maf_partial_path = config::get("results_filatfiles")$ssm$gambl$cds
     base_path = config::get("project_base")
+    #test if we have permissions for the full gambl + icgc merge
+    maf_partial_path = config::get("results_filatfiles")$ssm$all$cds
     maf_path = paste0(base_path,maf_partial_path)
+    maf_permissions = file.access(maf_path,4)
+    if(maf_permissions == -1){
+      #currently this will only return non-ICGC results
+      maf_partial_path = config::get("results_filatfiles")$ssm$gambl$cds
+      base_path = config::get("project_base")
+      #default is non-ICGC
+      maf_path = paste0(base_path,maf_partial_path)
+    }
     muts=fread_maf(maf_path) %>% dplyr::filter(Variant_Classification %in% coding_class) %>% as.data.frame()
+    mutated_samples = length(unique(muts$Tumor_Sample_Barcode))
+    message(paste("mutations from",mutated_samples,"samples"))
   }else{
     table_name = config::get("results_tables")$ssm
     db=config::get("database_name")
     con <- DBI::dbConnect(RMariaDB::MariaDB(), dbname = db)
     muts = tbl(con,table_name) %>%
       dplyr::filter(Variant_Classification %in% coding_class) %>% as.data.frame()
-
+    DBI::dbDisconnect(con)
   }
   muts = muts %>%
     dplyr::filter(Tumor_Sample_Barcode %in% sample_ids)
-
+  mutated_samples = length(unique(muts$Tumor_Sample_Barcode))
+  message(paste("after linking with metadata, we have mutations from",mutated_samples,"samples"))
   if(basic_columns){
     muts = muts[,c(1:45)]
   }
-  DBI::dbDisconnect(con)
+
   return(muts)
 }
 
