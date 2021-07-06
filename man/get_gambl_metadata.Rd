@@ -9,7 +9,7 @@ get_gambl_metadata(
   tissue_status_filter = c("tumour"),
   case_set,
   remove_benchmarking = TRUE,
-  with_outcomes = FALSE,
+  with_outcomes = TRUE,
   from_flatfile = TRUE
 )
 }

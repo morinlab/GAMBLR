@@ -9,13 +9,17 @@ get_gambl_outcomes(
   time_unit = "year",
   censor_cbioportal = FALSE,
   complete_missing = FALSE,
-  from_flatfile = FALSE
+  from_flatfile = TRUE
 )
 }
 \arguments{
 \item{time_unit}{Return follow-up times in one of three time units: year, month or day}
 
 \item{censor_cbioportal}{Optionally request the censoring to be encoded in the specific style required by cBioPortal}
+
+\item{complete_missing}{Optionally fill in any gaps to ensure we have values for every patient (censor at 0 if missing)}
+
+\item{from_flatfile}{Optionally set to FALSE to use the database to get the survival data}
 }
 \value{
 Data frame with one row for each patient_id
