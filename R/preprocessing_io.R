@@ -42,6 +42,7 @@ populate_tool_results = function(){
 populate_each_tool_result = function(tool,genome_builds,unix_groups){
   database_name = config::get("database_name")
   con <- dbConnect(RMariaDB::MariaDB(), dbname = database_name)
+  all_meta = get_gambl_metadata()
   generic_update = function(field_name,sample_id,field_value){
     #note: we'll need to handle strings differently here once we start adding them
     for(i in c(1:length(field_value))){
@@ -130,7 +131,26 @@ populate_each_tool_result = function(tool,genome_builds,unix_groups){
       files_df = find_files_extract_wildcards(tool_name="manta",genome_build=genome_builds,search_pattern=".bed",unix_group=ug)
       print(head(files_df))
       message(paste("processing",ug))
+      #are there unexpected outputs?
+      dupes = names(which(table(files_df$tumour_sample_id)>1))
+      if(length(dupes)>0){
+        message("DUPLICATE RESULTS EXIST. PLEASE FIX THIS AND RERUN")
+        message(dupes)
+        return()
+      }
+
+      all_tsb = pull(all_meta,sample_id)
+      no_meta = unique(pull(files_df[which(!files_df$tumour_sample_id %in% all_tsb),],tumour_sample_id))
+      if(length(no_meta)>0){
+        message("DROPPING RESULTS FROM SAMPLES WITH NO METADATA:")
+        print(no_meta)
+        files_df = files_df %>% dplyr::filter(!tumour_sample_id %in% no_meta)
+      }
+      #TODO: Flag and drop files with too many SVs before merging (i.e. remove really bad data). Done manually currently.
       manta_df = process_all_manta_bedpe(files_df) #need to add this to the database. Not currently automated
+      manta_df %>% group_by(tumour_sample_id) %>% tally() %>% arrange(desc(n)) #have a look at the top offenders (most SVs)
+
+
     }
   }
   if(tool == "slms3"){

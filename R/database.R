@@ -32,9 +32,9 @@ get_gambl_metadata = function(seq_type_filter = "genome",
   if(from_flatfile){
     base = config::get("repo_base")
     sample_flatfile = paste0(base,config::get("table_flatfiles")$samples)
-    sample_meta = read_tsv(sample_flatfile,guess_max=100000)
+    sample_meta = suppressMessages(read_tsv(sample_flatfile,guess_max=100000))
     biopsy_flatfile = paste0(base,config::get("table_flatfiles")$biopsies)
-    biopsy_meta = read_tsv(biopsy_flatfile,guess_max=100000)
+    biopsy_meta = suppressMessages(read_tsv(biopsy_flatfile,guess_max=100000))
 
   }else{
     db=config::get("database_name")
@@ -278,7 +278,7 @@ add_icgc_metadata = function(incoming_metadata){
 get_gambl_outcomes = function(patient_ids,time_unit="year",censor_cbioportal=FALSE,complete_missing=FALSE,from_flatfile=TRUE){
   if(from_flatfile){
     outcome_flatfile = paste0(config::get("repo_base"),config::get("table_flatfiles")$outcomes)
-    all_outcome = read_tsv(outcome_flatfile)
+    all_outcome = suppressMessages(read_tsv(outcome_flatfile))
 
   }else{
     db=config::get("database_name")
