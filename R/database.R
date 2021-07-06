@@ -24,7 +24,9 @@
 #' only_normal_metadata = get_gambl_metadata(tissue_status_filter = c('tumour','normal'))
 get_gambl_metadata = function(seq_type_filter = "genome",
                               tissue_status_filter=c("tumour"),
-                              case_set, remove_benchmarking = TRUE, with_outcomes=FALSE,from_flatfile=TRUE){
+                              case_set, remove_benchmarking = TRUE,
+                              with_outcomes=TRUE,from_flatfile=TRUE){
+
   outcome_table = get_gambl_outcomes(from_flatfile=from_flatfile) %>% dplyr::select(-sex)
 
   if(from_flatfile){
