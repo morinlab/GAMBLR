@@ -1,5 +1,77 @@
 
+#' Get the details including file paths for the anticipated outputs from a pipeline or tool
+#'
+#' @param Optionally provide a data frame with all file details
+#' @param tool_name
+#' @param unix_group
+#' @param filename_end_pattern Optionally specify a pattern to search for the files among a longer set of files in the outputs
+#' @param update_db Set to TRUE to overwrite any existing rows in the table for this tool/unix_group combination
+#'
+#' @return
+#' @export
+#'
+#' @examples
+find_expected_outputs = function(targ_df,tool_name,unix_group,filename_end_pattern,update_db=FALSE,target_path){
+  repo_base =config::get("repo_base")
+  if(missing(target_path)){
+    target_path = paste0(repo_base,"targets/",tool_name,"--",unix_group)
+  }
 
+  if(tool_name == "manta"){
+    if(missing(targ_df)){
+      filename_end_pattern=".somaticSV.bedpe"
+      targ_df = read_tsv(target_path,col_names = c("file")) %>%
+        dplyr::filter(str_detect(file,pattern = filename_end_pattern))
+      targ_df = mutate(targ_df,file_path=paste0(repo_base,file)) %>%
+        separate(file,sep="/",into=c("results","unix_group","tool_version","outputs","type","seq_genome","detail","filename"))
+      targ_df = separate(targ_df,seq_genome,sep="--",into=c("seq_type","genome_build")) %>%
+        dplyr::select(-results,-type,-detail,-outputs) %>%
+        separate(filename,sep="--",into=c("tumour_sample_id","normal_sample_id","pairing_status")) %>%
+        mutate(pairing_status = str_remove(pairing_status,filename_end_pattern)) %>%
+        separate(tool_version,sep="-",into=c("tool_name","tool_version"))
+    }
+    targ_df = targ_df %>%
+      mutate(file_timestamp=file.info(file_path)$mtime)
+    targ_df$output_type = "bedpe"
+    print(targ_df)
+    print(target_path)
+  }else if(tool_name=="gridss"){
+    filename_end_pattern=".gridss_somatic_filtered.bedpe"
+    targ_df = read_tsv(target_path,col_names = c("file")) %>%
+      dplyr::filter(str_detect(file,pattern = filename_end_pattern))
+    targ_df = mutate(targ_df,file_path=paste0(repo_base,file)) %>%
+      separate(file,sep="/",into=c("results","unix_group","tool_version","outputs","type","seq_genome","detail","filename"))
+    targ_df = separate(targ_df,seq_genome,sep="--",into=c("seq_type","genome_build")) %>%
+      dplyr::select(-results,-type,-detail,-outputs) %>%
+      separate(filename,sep="--",into=c("tumour_sample_id","normal_sample_id","pairing_status")) %>%
+      mutate(pairing_status = str_remove(pairing_status,filename_end_pattern)) %>%
+      separate(tool_version,sep="-",into=c("tool_name","tool_version")) %>%
+      mutate(file_timestamp=file.info(file_path)$mtime)
+    targ_df$output_type = "bedpe"
+  }
+  if(update_db){
+    database_name = config::get("database_name")
+
+    con <- dbConnect(RMariaDB::MariaDB(), dbname = database_name)
+    table_name = config::get("tables")$files
+    message(paste("updating",table_name,"in",database_name))
+    #clear all files for this tool/unix_group combination
+    update_q = paste0("DELETE from ", table_name, " WHERE tool_name = \"", tool_name,"\" and unix_group = \"", unix_group, "\" ;")
+    print(update_q)
+    something = dbReadTable(conn=con,table_name)
+    summarized = something %>% group_by(unix_group) %>% tally()
+    #merge with incoming data
+    print(summarized)
+    #to_write = rbind(something,targ_df)
+    dbExecute(con, update_q,immediate=TRUE)
+    dbWriteTable(con,table_name,targ_df,append=TRUE)
+
+    #dbExecute(con, update_q,immediate=TRUE)
+    #dbWriteTable(con,table_name,expected_manta,append=TRUE)
+    DBI::dbDisconnect(con)
+  }
+  return(targ_df)
+}
 
 #' Populate the database with the per-sample summarized results of various tools
 #'
@@ -128,9 +200,15 @@ populate_each_tool_result = function(tool,genome_builds,unix_groups){
     message(paste(unix_groups,sep=","))
     #separately process by unix group
     for(ug in unix_groups){
-      files_df = find_files_extract_wildcards(tool_name="manta",genome_build=genome_builds,search_pattern=".bed",unix_group=ug)
+      #files_df = find_files_extract_wildcards(tool_name="manta",genome_build=genome_builds,search_pattern=".bed",unix_group=ug)
+      files_df = find_expected_outputs(tool_name="manta",unix_group=ug)
       print(head(files_df))
       message(paste("processing",ug))
+      n_missing =  files_df %>% dplyr::filter(is.na(file_timestamp)) %>% count() %>% pull(n)
+      if(n_missing){
+        message(paste("missing outputs for",n_missing))
+        files_df=files_df %>% dplyr::filter(!is.na(file_timestamp))
+      }
       #are there unexpected outputs?
       dupes = names(which(table(files_df$tumour_sample_id)>1))
       if(length(dupes)>0){
@@ -147,7 +225,7 @@ populate_each_tool_result = function(tool,genome_builds,unix_groups){
         files_df = files_df %>% dplyr::filter(!tumour_sample_id %in% no_meta)
       }
       #TODO: Flag and drop files with too many SVs before merging (i.e. remove really bad data). Done manually currently.
-      manta_df = process_all_manta_bedpe(files_df) #need to add this to the database. Not currently automated
+      manta_df = process_all_manta_bedpe(files_df,group=ug) #need to add this to the database. Not currently automated
       manta_df %>% group_by(tumour_sample_id) %>% tally() %>% arrange(desc(n)) #have a look at the top offenders (most SVs)
 
 
@@ -320,25 +398,48 @@ read_merge_manta_with_liftover = function(bedpe_paths=c(),pattern="--matched",ou
 #' @param bedpe_paths
 #' @param pattern
 #' @param out_dir
+#' @param projection_build The genome we want all results to be relative to (lifted if necessary)
 #'
 #' @return
 #' @import tidyverse
 #'
+#' @export
+#'
 #' @examples
-process_all_manta_bedpe = function(file_df,out_dir){
+process_all_manta_bedpe = function(file_df,out_dir,group,genome_build,projection_build="grch37"){
   to_merge = list()
   if(missing(out_dir)){
     project_base =config::get("project_base")
     base_out_dir = config::get("results_staging")$manta
-    out_dir = paste0(project_base,base_out_dir)
+    out_dir = paste0(project_base,group,"/",base_out_dir)
   }
-  process_manta = function(bedpe_file,liftover_to_hg19=FALSE,only_return_missing=FALSE){
+
+  process_manta = function(bedpe_file,liftover_to_hg19=FALSE,liftover_to_hg38=FALSE,only_return_missing=FALSE){
     cnames = c("CHROM_A","START_A","END_A","CHROM_B","START_B","END_B","NAME","SOMATIC_SCORE","STRAND_A","STRAND_B","TYPE","FILTER","VAF_tumour","VAF_normal","DP_tumour","DP_normal","tumour_sample_id","normal_sample_id","pair_status")
 
     svbed=read_tsv(bedpe_file,comment = "##",col_types="cddcddccccccccccccccccc")
     this_patient = colnames(svbed)[23]
     this_normal = colnames(svbed)[22]
-    out_file = paste0(out_dir,"/",this_patient,"--",this_normal,"--hg38Togrch37_sv.tsv")
+
+    if(grepl("--unmatched",bedpe_file)){
+      pair_status = "unmatched"
+      svbed$pair_status = "unmatched"
+    }else{
+      svbed$pair_status = "matched"
+      pair_status = "matched"
+    }
+    is_lifted = "native"
+    if(liftover_to_hg19 || liftover_to_hg38){
+      is_lifted = "lifted"
+    }
+    projection = "grch37"
+    if(liftover_to_hg38){
+      projection = "hg38"
+    }
+    if(genome_build == projection){
+      is_lifted = "native"
+    }
+    out_file = paste0(out_dir,"/",this_patient,"--",this_normal,"--",pair_status,"--", is_lifted,"--genome--",genome_build,"--",projection_build,"_sv.tsv")
     message("working on OVER HERE:",bedpe_file)
     if(file.exists(out_file)){
       if(!only_return_missing){
@@ -353,6 +454,8 @@ process_all_manta_bedpe = function(file_df,out_dir){
     }
     if(liftover_to_hg19){
       svbed = liftover_bedpe(bedpe_df=svbed)
+    }else if(liftover_to_hg38){
+      svbed = liftover_bedpe(bedpe_df=svbed,target_build = "hg38")
     }
 
     infos = pull(svbed,this_patient)
@@ -368,11 +471,7 @@ process_all_manta_bedpe = function(file_df,out_dir){
     svbed$tumour_sample_id = this_patient
     svbed$normal_sample_id = this_normal
     message(paste("checking status:",bedpe_file))
-    if(grepl("--unmatched",bedpe_file)){
-      svbed$pair_status = "unmatched"
-    }else{
-      svbed$pair_status = "matched"
-    }
+
 
     svbed$NAME = "."
     svbed = svbed %>% dplyr::select(CHROM_A,START_A,END_A,CHROM_B,START_B,END_B,NAME,SOMATIC_SCORE,STRAND_A,STRAND_B,TYPE,FILTER,VAF_tumour,VAF_normal,DP_tumour,DP_normal,tumour_sample_id,normal_sample_id,pair_status)
@@ -386,18 +485,34 @@ process_all_manta_bedpe = function(file_df,out_dir){
     return(svbed)
   }
 
-  #separately run the hg38 and other builds
+  #separately run the hg38 and other builds, separately run per unix_group
+  if(projection_build=="grch37"){
+    if(genome_build == "hg38"){
+      hg38_files = dplyr::filter(file_df,genome_build == "hg38" & unix_group == group) %>% pull(file_path)
+      bed_data_lifted = hg38_files %>%
+        purrr::map(process_manta,liftover_to_hg19=TRUE) %>%
+        purrr::reduce(rbind)
+    }else{
+      not_hg38_files = dplyr::filter(file_df,genome_build != "hg38" & unix_group == group) %>% pull(file_path)
+      bed_data_not_lifted =not_hg38_files %>%
+        purrr::map(process_manta,liftover_to_hg19=FALSE) %>%
+        purrr::reduce(rbind)
+    }
+  }else if(projection_build == "hg38"){
+    if(genome_build == "hg38"){
+      hg38_files = dplyr::filter(file_df,genome_build == "hg38" & unix_group == group) %>% pull(file_path)
+      bed_data_lifted = hg38_files %>%
+        purrr::map(process_manta,liftover_to_hg38=FALSE) %>%
+        purrr::reduce(rbind)
+    }else{
+      not_hg38_files = dplyr::filter(file_df,genome_build != "hg38" & unix_group == group) %>% pull(file_path)
+      bed_data_not_lifted =not_hg38_files %>%
+        purrr::map(process_manta,liftover_to_hg38=TRUE) %>%
+        purrr::reduce(rbind)
+    }
+  }
 
 
-  hg38_files = dplyr::filter(file_df,genome_build == "hg38") %>% pull(file_path)
-  bed_data_lifted = hg38_files %>%
-    purrr::map(process_manta,liftover_to_hg19=TRUE) %>%
-    purrr::reduce(rbind)
-
-  not_hg38_files = dplyr::filter(file_df,genome_build != "hg38") %>% pull(file_path)
-  bed_data_not_lifted =not_hg38_files %>%
-    purrr::map(process_manta) %>%
-    purrr::reduce(rbind)
 
 }
 

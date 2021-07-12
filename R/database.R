@@ -27,7 +27,7 @@ get_gambl_metadata = function(seq_type_filter = "genome",
                               case_set, remove_benchmarking = TRUE,
                               with_outcomes=TRUE,from_flatfile=TRUE){
 
-  outcome_table = get_gambl_outcomes(from_flatfile=from_flatfile) %>% dplyr::select(-sex)
+  outcome_table = get_gambl_outcomes(from_flatfile=from_flatfile)
 
   if(from_flatfile){
     base = config::get("repo_base")
@@ -46,7 +46,7 @@ get_gambl_metadata = function(seq_type_filter = "genome",
   sample_meta_normal_genomes =  sample_meta %>% dplyr::filter(seq_type == "genome" & tissue_status=="normal") %>%
       dplyr::select(patient_id,sample_id) %>% as.data.frame() %>% dplyr::rename("normal_sample_id"="sample_id")
 
-  sample_meta = sample_meta %>% dplyr::filter(seq_type == seq_type_filter & tissue_status %in% tissue_status_filter & bam_available %in% c(1,"TRUE"))
+  sample_meta = sample_meta %>% dplyr::filter(seq_type == seq_type_filter & tissue_status %in% tissue_status_filter & bam_available %in% c(1,"TRUE")) %>% dplyr::select(-sex)
 
   #if we only care about genomes, we can drop/filter anything that isn't a tumour genome
   #The key for joining this table to the mutation information is to use sample_id. Think of this as equivalent to a library_id. It will differ depending on what assay was done to the sample.

@@ -4,7 +4,7 @@ default:
     derived_and_curated: "icgc_dart/derived_and_curated_metadata/"
     database_name: "gambl_test"
     results_staging:
-        manta: "icgc_dart/cbioportal-1.0/01-filtered-manta/genome-grch37/"
+        manta: "manta_current/level_3/01-gamblr_preprocess/"
     results_merged:
         tidy_expression_file: "/projects/rmorin/projects/gambl-repos/gambl-rmorin/results/icgc_dart/DESeq2-0.0_salmon-1.0/mrna--gambl-icgc-all/vst-matrix-Hugo_Symbol_tidy.tsv"
         ex_matrix_file: "/projects/rmorin/projects/gambl-repos/gambl-rmorin/results/icgc_dart/DESeq2-0.0_salmon-1.0/mrna--gambl-icgc-all/vst-matrix-Hugo_Symbol.tsv.gz"
@@ -49,6 +49,7 @@ default:
         samples: "sample_metadata"
         outcomes: "outcome_metadata"
         derived: "derived_data"
+        files: "gambl_files"
 
     table_flatfiles:
         biopsies: "data/metadata/gambl_biopsy_metadata.tsv"
@@ -61,7 +62,7 @@ testing:
     derived_and_curated: "icgc_dart/derived_and_curated_metadata/"
     database_name: "gambl_07_2021"
     results_staging:
-        manta: "icgc_dart/cbioportal-1.0/01-filtered-manta/genome-grch37/"
+        manta: "manta_current/level_3/01-gamblr_preprocess/"
     results_merged:
         tidy_expression_file: "/projects/rmorin/projects/gambl-repos/gambl-rmorin/results/icgc_dart/DESeq2-0.0_salmon-1.0/mrna--gambl-icgc-all/vst-matrix-Hugo_Symbol_tidy.tsv"
         ex_matrix_file: "/projects/rmorin/projects/gambl-repos/gambl-rmorin/results/icgc_dart/DESeq2-0.0_salmon-1.0/mrna--gambl-icgc-all/vst-matrix-Hugo_Symbol.tsv.gz"
