@@ -6,6 +6,9 @@
 #' @param seq_type_filter Filtering criteria (default: all genomes)
 #' @param tissue_status_filter Filtering criteria (default: only tumour genomes)
 #' @param case_set optional short name for a pre-defined set of cases avoiding any
+#' @param remove_benchmarking By default the FFPE benchmarking duplicate samples will be dropped
+#' @param with_outcomes Optionally join to gambl outcome data
+#' @param from_flatfile New default is to use the metadata in the flatfiles from your clone of the repo. Can be over-ridden to use the database
 #' embargoed cases (current options: 'BLGSP-study', 'FL-DLBCL-study', 'DLBCL-unembargoed)
 #'
 #' @return A data frame with metadata for each biopsy in GAMBL
@@ -20,18 +23,36 @@
 #' # override default filters and request metadata for samples other than tumour genomes, e.g. also get the normals
 #' only_normal_metadata = get_gambl_metadata(tissue_status_filter = c('tumour','normal'))
 get_gambl_metadata = function(seq_type_filter = "genome",
-                              tissue_status_filter=c("tumour"), case_set, remove_benchmarking = TRUE, with_outcomes=FALSE){
-  db=config::get("database_name")
-  con <- DBI::dbConnect(RMariaDB::MariaDB(), dbname = db)
-  sample_meta = dplyr::tbl(con,"sample_metadata")
-  sample_meta_normal_genomes =  sample_meta %>% dplyr::filter(seq_type == "genome" & tissue_status=="normal") %>%
-    dplyr::select(patient_id,sample_id) %>% as.data.frame() %>% dplyr::rename("normal_sample_id"="sample_id")
+                              tissue_status_filter=c("tumour"),
+                              case_set, remove_benchmarking = TRUE,
+                              with_outcomes=TRUE,from_flatfile=TRUE){
 
-  sample_meta = sample_meta %>% dplyr::filter(seq_type == seq_type_filter & tissue_status %in% tissue_status_filter & bam_available == 1)
+  outcome_table = get_gambl_outcomes(from_flatfile=from_flatfile)
+
+  if(from_flatfile){
+    base = config::get("repo_base")
+    sample_flatfile = paste0(base,config::get("table_flatfiles")$samples)
+    sample_meta = suppressMessages(read_tsv(sample_flatfile,guess_max=100000))
+    biopsy_flatfile = paste0(base,config::get("table_flatfiles")$biopsies)
+    biopsy_meta = suppressMessages(read_tsv(biopsy_flatfile,guess_max=100000))
+
+  }else{
+    db=config::get("database_name")
+    con <- DBI::dbConnect(RMariaDB::MariaDB(), dbname = db)
+    sample_meta = dplyr::tbl(con,"sample_metadata") %>% as.data.frame()
+    biopsy_meta = dplyr::tbl(con,"biopsy_metadata") %>% as.data.frame()
+    DBI::dbDisconnect(con)
+  }
+  sample_meta_normal_genomes =  sample_meta %>% dplyr::filter(seq_type == "genome" & tissue_status=="normal") %>%
+      dplyr::select(patient_id,sample_id) %>% as.data.frame() %>% dplyr::rename("normal_sample_id"="sample_id")
+
+  sample_meta = sample_meta %>% dplyr::filter(seq_type == seq_type_filter & tissue_status %in% tissue_status_filter & bam_available %in% c(1,"TRUE")) %>% dplyr::select(-sex)
 
   #if we only care about genomes, we can drop/filter anything that isn't a tumour genome
   #The key for joining this table to the mutation information is to use sample_id. Think of this as equivalent to a library_id. It will differ depending on what assay was done to the sample.
-  biopsy_meta = dplyr::tbl(con,"biopsy_metadata") %>% dplyr::select(-patient_id) %>% dplyr::select(-pathology) %>% dplyr::select(-time_point) %>% dplyr::select(-EBV_status_inf) #drop duplicated columns
+
+  biopsy_meta = biopsy_meta %>% dplyr::select(-patient_id) %>% dplyr::select(-pathology) %>% dplyr::select(-time_point) %>% dplyr::select(-EBV_status_inf) #drop duplicated columns
+
   all_meta = dplyr::left_join(sample_meta,biopsy_meta,by="biopsy_id") %>% as.data.frame()
   all_meta = all_meta %>% mutate(bcl2_ba=ifelse(bcl2_ba=="POS_BCC","POS",bcl2_ba))
   if(seq_type_filter == "genome" & length(tissue_status_filter) == 1 & tissue_status_filter[1] == "tumour"){
@@ -176,12 +197,12 @@ get_gambl_metadata = function(seq_type_filter = "genome",
     TRUE ~ 50
   ))
   if(with_outcomes){
-    outcome_table = get_gambl_outcomes() %>% dplyr::select(-sex)
+
     all_meta = left_join(all_meta,outcome_table,by="patient_id") %>%
       mutate(age_group = case_when(cohort=="BL_Adult"~"Adult_BL",cohort=="BL_Pediatric" | cohort == "BL_ICGC" ~ "BL_Pediatric", TRUE ~ "Other"))
 
   }
-  DBI::dbDisconnect(con)
+
   return(all_meta)
 }
 
@@ -245,6 +266,8 @@ add_icgc_metadata = function(incoming_metadata){
 #'
 #' @param time_unit Return follow-up times in one of three time units: year, month or day
 #' @param censor_cbioportal Optionally request the censoring to be encoded in the specific style required by cBioPortal
+#' @param complete_missing Optionally fill in any gaps to ensure we have values for every patient (censor at 0 if missing)
+#' @param from_flatfile Optionally set to FALSE to use the database to get the survival data
 #'
 #' @return Data frame with one row for each patient_id
 #' @export
@@ -252,10 +275,17 @@ add_icgc_metadata = function(incoming_metadata){
 #'
 #' @examples
 #' outcome_df = get_gambl_outcomes()
-get_gambl_outcomes = function(patient_ids,time_unit="year",censor_cbioportal=FALSE,complete_missing=FALSE){
-  db=config::get("database_name")
-  con <- DBI::dbConnect(RMariaDB::MariaDB(), dbname = db)
-  all_outcome = dplyr::tbl(con,"outcome_metadata") %>% as.data.frame()
+get_gambl_outcomes = function(patient_ids,time_unit="year",censor_cbioportal=FALSE,complete_missing=FALSE,from_flatfile=TRUE){
+  if(from_flatfile){
+    outcome_flatfile = paste0(config::get("repo_base"),config::get("table_flatfiles")$outcomes)
+    all_outcome = suppressMessages(read_tsv(outcome_flatfile))
+
+  }else{
+    db=config::get("database_name")
+    con <- DBI::dbConnect(RMariaDB::MariaDB(), dbname = db)
+    all_outcome = dplyr::tbl(con,"outcome_metadata") %>% as.data.frame()
+    DBI::dbDisconnect(con)
+  }
   if(!missing(patient_ids)){
     all_outcome = all_outcome %>% dplyr::filter(patient_id %in% patient_ids)
     if(complete_missing){
@@ -285,7 +315,7 @@ get_gambl_outcomes = function(patient_ids,time_unit="year",censor_cbioportal=FAL
     all_outcome = all_outcome %>% mutate(all_outcome,DFS_MONTHS=PFS_MONTHS)
   }
   all_outcome = all_outcome %>% mutate(is_adult = ifelse(age < 20, "Pediatric","Adult"))
-  DBI::dbDisconnect(con)
+
   return(all_outcome)
 }
 
@@ -735,6 +765,7 @@ get_ssm_by_region = function(chromosome,qstart,qend,
 #' @param exclude_cohort  Supply this to exclude mutations from one or more cohorts in a list
 #' @param limit_pathology Supply this to restrict mutations to one pathology
 #' @param basic_columns Set to TRUE to override the default behaviour of returning only the first 45 columns of MAF data
+#' @param from_flatfile Set to TRUE to obtain mutations from a local flatfile instead of the database. This can be more efficient and is currently the only option for users who do not have ICGC data access.
 #'
 #' @return A data frame containing all the MAF data columns (one row per mutation)
 #' @export
@@ -744,18 +775,13 @@ get_ssm_by_region = function(chromosome,qstart,qend,
 #' #basic usage
 #' maf_data = get_coding_ssm(limit_cohort=c("BL_ICGC"))
 #' maf_data = get_coding_ssm(limit_samples=my_sample_ids)
-get_coding_ssm = function(limit_cohort,exclude_cohort,limit_pathology,limit_samples,basic_columns=TRUE){
-  table_name = config::get("results_tables")$ssm
-  db=config::get("database_name")
-  con <- DBI::dbConnect(RMariaDB::MariaDB(), dbname = db)
+get_coding_ssm = function(limit_cohort,exclude_cohort,
+                          limit_pathology,limit_samples,basic_columns=TRUE,
+                          from_flatfile=FALSE,groups=c("gambl","icgc_dart")){
   coding_class = c("Frame_Shift_Del","Frame_Shift_Ins","In_Frame_Del","In_Frame_Ins","Missense_Mutation","Nonsense_Mutation","Nonstop_Mutation","Silent","Splice_Region","Splice_Site","Targeted_Region","Translation_Start_Site")
-  sample_meta = dplyr::tbl(con,"sample_metadata") %>% dplyr::filter(seq_type == "genome" & tissue_status == "tumour")
-  biopsy_meta = dplyr::tbl(con,"biopsy_metadata") %>% dplyr::select(-patient_id) %>%
-    dplyr::select(-pathology) %>% dplyr::select(-time_point) %>% dplyr::select(-EBV_status_inf) #drop duplicated columns
-    all_meta = left_join(sample_meta,biopsy_meta,by="biopsy_id") %>%
-    as.data.frame()
-
+  all_meta= get_gambl_metadata(from_flatfile=from_flatfile)
   #do all remaining filtering on the metadata then add the remaining sample_id to the query
+  all_meta = all_meta %>% dplyr::filter(unix_group %in% groups)
   if(!missing(limit_cohort)){
     all_meta = all_meta %>% dplyr::filter(cohort %in% limit_cohort)
   }
@@ -769,15 +795,39 @@ get_coding_ssm = function(limit_cohort,exclude_cohort,limit_pathology,limit_samp
     all_meta = all_meta %>% dplyr::filter(sample_id %in% limit_samples)
   }
   sample_ids = pull(all_meta,sample_id)
-  muts = tbl(con,table_name) %>%
-    dplyr::filter(Variant_Classification %in% coding_class) %>% as.data.frame()
+
+  if(from_flatfile){
+    base_path = config::get("project_base")
+    #test if we have permissions for the full gambl + icgc merge
+    maf_partial_path = config::get("results_filatfiles")$ssm$all$cds
+    maf_path = paste0(base_path,maf_partial_path)
+    maf_permissions = file.access(maf_path,4)
+    if(maf_permissions == -1){
+      #currently this will only return non-ICGC results
+      maf_partial_path = config::get("results_filatfiles")$ssm$gambl$cds
+      base_path = config::get("project_base")
+      #default is non-ICGC
+      maf_path = paste0(base_path,maf_partial_path)
+    }
+    muts=fread_maf(maf_path) %>% dplyr::filter(Variant_Classification %in% coding_class) %>% as.data.frame()
+    mutated_samples = length(unique(muts$Tumor_Sample_Barcode))
+    message(paste("mutations from",mutated_samples,"samples"))
+  }else{
+    table_name = config::get("results_tables")$ssm
+    db=config::get("database_name")
+    con <- DBI::dbConnect(RMariaDB::MariaDB(), dbname = db)
+    muts = tbl(con,table_name) %>%
+      dplyr::filter(Variant_Classification %in% coding_class) %>% as.data.frame()
+    DBI::dbDisconnect(con)
+  }
   muts = muts %>%
     dplyr::filter(Tumor_Sample_Barcode %in% sample_ids)
-
+  mutated_samples = length(unique(muts$Tumor_Sample_Barcode))
+  message(paste("after linking with metadata, we have mutations from",mutated_samples,"samples"))
   if(basic_columns){
     muts = muts[,c(1:45)]
   }
-  DBI::dbDisconnect(con)
+
   return(muts)
 }
 

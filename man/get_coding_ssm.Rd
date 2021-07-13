@@ -9,7 +9,9 @@ get_coding_ssm(
   exclude_cohort,
   limit_pathology,
   limit_samples,
-  basic_columns = TRUE
+  basic_columns = TRUE,
+  from_flatfile = FALSE,
+  groups = c("gambl", "icgc_dart")
 )
 }
 \arguments{
@@ -20,6 +22,8 @@ get_coding_ssm(
 \item{limit_pathology}{Supply this to restrict mutations to one pathology}
 
 \item{basic_columns}{Set to TRUE to override the default behaviour of returning only the first 45 columns of MAF data}
+
+\item{from_flatfile}{Set to TRUE to obtain mutations from a local flatfile instead of the database. This can be more efficient and is currently the only option for users who do not have ICGC data access.}
 }
 \value{
 A data frame containing all the MAF data columns (one row per mutation)
