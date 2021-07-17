@@ -9,7 +9,8 @@ annotate_sv(
   partner_bed,
   with_chr_prefix = FALSE,
   collapse_redundant = FALSE,
-  return_as = "bedpe"
+  return_as = "bedpe",
+  genome_build = "grch37"
 )
 }
 \arguments{

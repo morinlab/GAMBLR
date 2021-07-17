@@ -1,3 +1,26 @@
+#' Write bedpe format data frame to a file that will work with IGV
+#'
+#' @param sv_df data frame of bedpe formatted SV data
+#' @param filename File name (will be written to results/icgc_dart/misc/FILENAME )
+#' @param add_chr_prefix Whether to force chr to be added to chromosome names
+#'
+#' @return
+#' @export
+#'
+#' @examples
+sv_to_bedpe_file = function(sv_df,filename="something.bedpe",add_chr_prefix=TRUE){
+  #add chr prefix if missing
+  if(add_chr_prefix){
+    if(!grepl("chr",region_sv$CHROM_A[1])){
+      sv_df = mutate(sv_df,CHROM_A=paste0("chr",CHROM_A)) %>%
+        mutate(CHROM_B=paste0("chr",CHROM_B))
+    }
+  }
+  bed_file="/projects/rmorin/projects/gambl-repos/gambl-rmorin/results/icgc_dart/misc/"
+  bed_file = paste0(bed_file,filename)
+  write.table(sv_df,file=bed_file,sep="\t",quote=F,row.names=F,col.names=F)
+}
+
 #' Parse a region string into chomosome, start and end
 #'
 #' @param region A region string e.g. "chrX:12345-678910"

@@ -14,7 +14,9 @@ get_manta_sv(
   qstart,
   qend,
   region,
-  with_chr_prefix = FALSE
+  with_chr_prefix = FALSE,
+  from_flatfile = FALSE,
+  projection = "grch37"
 )
 }
 \arguments{

@@ -9,7 +9,8 @@ liftover_bedpe(
   bedpe_df,
   target_build = "grch37",
   col_names,
-  col_types
+  col_types,
+  standard_bed = FALSE
 )
 }
 \arguments{

@@ -91,7 +91,7 @@ annotate_driver_ssm = function(maf_df,lymphoma_type,driver_genes,
 #' # Basic usage
 #' sv_df = get_manta_sv()
 #' annotated_sv = annotate_sv(sv_df)
-annotate_sv = function(sv_data,partner_bed,with_chr_prefix=FALSE,collapse_redundant=FALSE,return_as="bedpe"){
+annotate_sv = function(sv_data,partner_bed,with_chr_prefix=FALSE,collapse_redundant=FALSE,return_as="bedpe",genome_build="grch37"){
   bedpe1 = sv_data %>% dplyr::select("CHROM_A","START_A","END_A","tumour_sample_id","SOMATIC_SCORE","STRAND_A")
   bedpe2 = sv_data %>% dplyr::select("CHROM_B","START_B","END_B","tumour_sample_id","SOMATIC_SCORE","STRAND_B")
 
@@ -104,14 +104,22 @@ annotate_sv = function(sv_data,partner_bed,with_chr_prefix=FALSE,collapse_redund
     }
   })
   if(missing(partner_bed)){
-    ig_regions = grch37_partners
+    if(genome_build == "hg38"){
+      ig_regions = hg38_partners
+    }else{
+      ig_regions = grch37_partners
+    }
   }else{
     ig_regions = partner_bed
     if(!"entrez" %in% colnames(ig_regions)){
       ig_regions$entrez = 0
     }
   }
-  oncogene_regions = grch37_oncogene
+  if(genome_build == "hg38"){
+    oncogene_regions = hg38_oncogene
+  }else{
+    oncogene_regions = grch37_oncogene
+  }
   y = data.table::as.data.table(oncogene_regions)
 
   data.table::setkey(y, chrom, start, end)
