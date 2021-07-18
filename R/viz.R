@@ -41,7 +41,7 @@ map_metadata_to_colours = function(metadataColumns,these_samples_metadata,as_vec
       message("adding:",these[this_value])
     }else if(column == "sex"){
       these = get_gambl_colours("sex",alpha=annoAlpha)
-      these = these[levels(options)]
+      #these = these[levels(these)]
       if(!"NA" %in% names(these)){
         these= c(these,"NA"="white")
       }
@@ -767,7 +767,7 @@ ashm_multi_rainbow_plot = function(regions_bed,regions_to_display,
   }else{
     regions_bed = mutate(regions_bed,regions=paste0(chr,":",start,"-",end))
   }
-
+  print(regions_bed)
   names=pull(regions_bed,name)
   names = c(names,"NFKBIZ-UTR","MAF","PAX5","WHSC1","CCND1",
             "FOXP1-TSS1","FOXP1-TSS2","FOXP1-TSS3","FOXP1-TSS4","FOXP1-TSS5",
@@ -780,11 +780,13 @@ ashm_multi_rainbow_plot = function(regions_bed,regions_to_display,
   regions_bed = dplyr::filter(regions_bed,names %in% regions_to_display)
   regions = pull(regions_bed,regions)
   names=pull(regions_bed,names)
+
   if(missing(maf_data)){
     region_mafs = lapply(regions,function(x){get_ssm_by_region(region=x,streamlined = TRUE)})
   }else{
     region_mafs = lapply(regions,function(x){get_ssm_by_region(region=x,streamlined=TRUE,maf_data=maf_data)})
   }
+
   tibbled_data = tibble(region_mafs, region_name = names)
   unnested_df = tibbled_data %>% unnest_longer(region_mafs)
   unlisted_df = mutate(unnested_df,start=region_mafs$Start_Position,sample_id=region_mafs$Tumor_Sample_Barcode) %>%

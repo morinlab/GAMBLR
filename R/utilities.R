@@ -767,11 +767,11 @@ get_gambl_colours = function(classification="all",alpha=1){
       "LimeGreen" = "#a4bb87", "Brown" = "#5f3a17", "Gray" = "#bdbdc1",
       "Yellow" = "#f9bd1f"
   )
-  #all_colours[["sex"]]=c(
-  #  "M"="#118AB2",
-  #  "Male"="#118AB2",
-  #  "F"="#EF476F",
-  #  "Female"="#EF476F")
+  all_colours[["sex"]]=c(
+    "M"="#118AB2",
+    "Male"="#118AB2",
+    "F"="#EF476F",
+    "Female"="#EF476F")
   all_colours[["clinical"]]=ggsci::get_ash("clinical")
   all_colours[["pathology"]] = c(
       "B-ALL"="#C1C64B",
