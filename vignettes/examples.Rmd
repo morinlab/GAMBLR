@@ -124,6 +124,16 @@ circos.initializeWithIdeogram()
 circos.genomicLink(bed1, bed2,col = rand_color(nrow(bed1),transparency=0.5))
 
 ```
+
+There is also a function that generates a sample overview with SV and CNV data displayed and it labels oncogene rearrangements. 
+
+```{r circos_auto}
+
+this_samp = "13-38657_tumorB"
+GAMBLR::plot_sample_circos(this_sample_id=this_samp)
+
+```
+
 This package also includes a convenience function to facilitate annotation of common oncogene fusions/SVs in B-cell lymphomas. 
 ```{r oncogene_annotations, out.width="100%"}
 

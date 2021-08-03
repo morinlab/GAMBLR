@@ -1,5 +1,31 @@
 
-
+#' Helper function to find the production merge for a pipeline and restrict to the right file based on file permissions
+#'
+#' @param tool_name Lowercase name of the tool (e.g. manta, slms-3)
+#' @param projection Which genome you want your results projected (lifted) to
+#' @param seq_type The seq_type you want back (currently only genome is supported/available)
+#'
+#' @return
+#' @export
+#'
+#' @examples
+get_merged_result = function(tool_name,projection="grch37",seq_type="genome"){
+  base_path = config::get("project_base")
+  gambl_only = paste0(base_path,"gambl/gamblr/02-merge/",tool_name,"/",seq_type,"/")
+  gambl_plus = paste0(base_path,"all_the_things/",tool_name,"/",seq_type,"--gambl,icgc_dart/")
+  if(tool_name == "manta"){
+    extension = ".bedpe"
+  }
+  gambl_only = paste0(gambl_only,"all_", tool_name,"_merged_",projection,extension)
+  gambl_plus = paste0(gambl_plus,"all_",tool_name,"_merged_",projection,extension)
+  permissions = file.access(gambl_plus,4)
+  if(permissions == -1){
+    message("restricting to non-ICGC data")
+    return(gambl_only)
+  }else{
+    return(gambl_plus)
+  }
+}
 
 #' Get GAMBL metadata
 #'
@@ -342,7 +368,7 @@ get_gambl_outcomes = function(patient_ids,time_unit="year",censor_cbioportal=FAL
 #' some_sv = get_manta_sv(sample_id="94-15772_tumorA")
 #' #get the SVs in a region around MYC
 #' myc_locus_sv = get_manta_sv(region="8:128723128-128774067")
-get_manta_sv = function(min_vaf=0.1,min_score=40,pass=TRUE,pairing_status,sample_id,chromosome,qstart,qend,region,with_chr_prefix=FALSE){
+get_manta_sv = function(min_vaf=0.1,min_score=40,pass=TRUE,pairing_status,sample_id,chromosome,qstart,qend,region,with_chr_prefix=FALSE,from_flatfile=FALSE,projection="grch37"){
   db=config::get("database_name")
   table_name=config::get("results_tables")$sv
     if(!missing(region)){
@@ -355,19 +381,25 @@ get_manta_sv = function(min_vaf=0.1,min_score=40,pass=TRUE,pairing_status,sample
       qend=startend[2]
     }
   #this table stores chromosomes with un-prefixed names. Convert to prefixed chromosome if necessary
+  if(from_flatfile){
+    sv_file = get_merged_result(tool_name="manta",projection=projection)
 
-  con <- DBI::dbConnect(RMariaDB::MariaDB(), dbname = db)
+    all_sv = read_tsv(sv_file,col_types = "cnncnncnccccnnnnccc",col_names = cnames)
+  }else{
+    con <- DBI::dbConnect(RMariaDB::MariaDB(), dbname = db)
+    all_sv = dplyr::tbl(con,table_name) %>% as.data.frame()
+  }
   if(!missing(region) || !missing(chromosome)){
     suppressWarnings({
       if(grepl("chr",chromosome)){
         chromosome = gsub("chr","",chromosome)
       }
     })
-    all_sv = dplyr::tbl(con,table_name) %>%
+    all_sv = all_sv %>%
       dplyr::filter((CHROM_A == chromosome & START_A >= qstart & START_A <= qend) | (CHROM_B == chromosome & START_B >= qstart & START_B <= qend)) %>%
       dplyr::filter(VAF_tumour >= min_vaf & SOMATIC_SCORE >= min_score)
   }else{
-    all_sv = dplyr::tbl(con,table_name) %>% dplyr::filter(VAF_tumour >= min_vaf & SOMATIC_SCORE >= min_score)
+    all_sv = all_sv %>% dplyr::filter(VAF_tumour >= min_vaf & SOMATIC_SCORE >= min_score)
   }
   if(pass){
     all_sv = all_sv %>% dplyr::filter(FILTER == "PASS")
@@ -392,7 +424,9 @@ get_manta_sv = function(min_vaf=0.1,min_score=40,pass=TRUE,pairing_status,sample
     ))
 
   }
-  DBI::dbDisconnect(con)
+  if(!from_flatfile){
+    DBI::dbDisconnect(con)
+  }
   return(all_sv)
 }
 

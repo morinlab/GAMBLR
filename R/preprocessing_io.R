@@ -414,7 +414,7 @@ process_all_manta_bedpe = function(file_df,out_dir,group,genome_build,projection
     out_dir = paste0(project_base,group,"/",base_out_dir)
   }
 
-  process_manta = function(bedpe_file,liftover_to_hg19=FALSE,liftover_to_hg38=FALSE,only_return_missing=FALSE){
+  process_manta = function(bedpe_file,liftover_to_hg19=FALSE,liftover_to_hg38=FALSE,only_return_missing=FALSE,projection="grch37"){
     cnames = c("CHROM_A","START_A","END_A","CHROM_B","START_B","END_B","NAME","SOMATIC_SCORE","STRAND_A","STRAND_B","TYPE","FILTER","VAF_tumour","VAF_normal","DP_tumour","DP_normal","tumour_sample_id","normal_sample_id","pair_status")
 
     svbed=read_tsv(bedpe_file,comment = "##",col_types="cddcddccccccccccccccccc")
@@ -432,15 +432,13 @@ process_all_manta_bedpe = function(file_df,out_dir,group,genome_build,projection
     if(liftover_to_hg19 || liftover_to_hg38){
       is_lifted = "lifted"
     }
-    projection = "grch37"
-    if(liftover_to_hg38){
-      projection = "hg38"
-    }
-    if(genome_build == projection){
+
+    if(genome_build == projection | (genome_build == "hs37d5" & projection == "grch37")){
       is_lifted = "native"
     }
     out_file = paste0(out_dir,"/",this_patient,"--",this_normal,"--",pair_status,"--", is_lifted,"--genome--",genome_build,"--",projection_build,"_sv.tsv")
     message("working on OVER HERE:",bedpe_file)
+    print(paste("output:",out_file))
     if(file.exists(out_file)){
       if(!only_return_missing){
         print(paste("LOADING",out_file))
@@ -490,24 +488,24 @@ process_all_manta_bedpe = function(file_df,out_dir,group,genome_build,projection
     if(genome_build == "hg38"){
       hg38_files = dplyr::filter(file_df,genome_build == "hg38" & unix_group == group) %>% pull(file_path)
       bed_data_lifted = hg38_files %>%
-        purrr::map(process_manta,liftover_to_hg19=TRUE) %>%
+        purrr::map(process_manta,liftover_to_hg19=TRUE,projection=projection_build) %>%
         purrr::reduce(rbind)
     }else{
       not_hg38_files = dplyr::filter(file_df,genome_build != "hg38" & unix_group == group) %>% pull(file_path)
       bed_data_not_lifted =not_hg38_files %>%
-        purrr::map(process_manta,liftover_to_hg19=FALSE) %>%
+        purrr::map(process_manta,liftover_to_hg19=FALSE,projection=projection_build) %>%
         purrr::reduce(rbind)
     }
   }else if(projection_build == "hg38"){
     if(genome_build == "hg38"){
       hg38_files = dplyr::filter(file_df,genome_build == "hg38" & unix_group == group) %>% pull(file_path)
-      bed_data_lifted = hg38_files %>%
-        purrr::map(process_manta,liftover_to_hg38=FALSE) %>%
+      bed_data_not_lifted = hg38_files %>%
+        purrr::map(process_manta,liftover_to_hg38=FALSE,liftover_to_hg19=FALSE,projection=projection_build) %>%
         purrr::reduce(rbind)
     }else{
       not_hg38_files = dplyr::filter(file_df,genome_build != "hg38" & unix_group == group) %>% pull(file_path)
-      bed_data_not_lifted =not_hg38_files %>%
-        purrr::map(process_manta,liftover_to_hg38=TRUE) %>%
+      bed_data_lifted =not_hg38_files %>%
+        purrr::map(process_manta,liftover_to_hg38=TRUE,liftover_to_hg19=FALSE,projection=projection_build) %>%
         purrr::reduce(rbind)
     }
   }
@@ -767,7 +765,7 @@ assemble_file_details = function(file_details_df,file_paths,tool_name,unix_group
 #' @examples
 #' hg19_sv = get_manta_sv() %>% head(100)
 #' hg38_sv = liftover_bedpe(bedpe_df=hg19_sv,target_build="hg38")
-liftover_bedpe = function(bedpe_file,bedpe_df,target_build="grch37",col_names,col_types){
+liftover_bedpe = function(bedpe_file,bedpe_df,target_build="grch37",col_names,col_types,standard_bed=FALSE){
 
   if(!missing(bedpe_file)){
     if(missing(col_names)){
@@ -781,48 +779,67 @@ liftover_bedpe = function(bedpe_file,bedpe_df,target_build="grch37",col_names,co
     original_bedpe = bedpe_df
 
   }
-  colnames(original_bedpe)[1]="CHROM_A"
-  original_bedpe = as.data.frame(original_bedpe)
-  original_bedpe=original_bedpe %>% mutate_if(is.numeric, as.integer)
-  #print(head(original_bedpe))
-  if(!grepl("chr",original_bedpe$CHROM_A)){
-    #add chr prefix
-    original_bedpe = original_bedpe %>% mutate(CHROM_A = paste0("chr",CHROM_A)) %>%
+  if(!standard_bed){
+    colnames(original_bedpe)[1]="CHROM_A"
+    original_bedpe = as.data.frame(original_bedpe)
+    original_bedpe=original_bedpe %>% mutate_if(is.numeric, as.integer)
+    #print(head(original_bedpe))
+    if(!grepl("chr",original_bedpe$CHROM_A)){
+      #add chr prefix
+      original_bedpe = original_bedpe %>% mutate(CHROM_A = paste0("chr",CHROM_A)) %>%
       mutate(CHROM_B = paste0("chr",CHROM_B))
-  }
-  print(head(original_bedpe))
-  char_vec = original_bedpe %>% tidyr::unite(united,sep="\t") %>% dplyr::pull(united)
-  bedpe_obj <- rtracklayer::import(text=char_vec,format="bedpe")
-  if(length(colnames(original_bedpe))>22){
-    this_patient = colnames(original_bedpe)[23]
-    this_normal = colnames(original_bedpe)[22]
+    }
+    print(head(original_bedpe))
+    char_vec = original_bedpe %>% tidyr::unite(united,sep="\t") %>% dplyr::pull(united)
+    bedpe_obj <- rtracklayer::import(text=char_vec,format="bedpe")
+    if(length(colnames(original_bedpe))>22){
+      this_patient = colnames(original_bedpe)[23]
+      this_normal = colnames(original_bedpe)[22]
+    }else{
+      this_patient = original_bedpe$tumour_sample_id
+      this_normal = original_bedpe$normal_sample_id
+    }
   }else{
-    this_patient = original_bedpe$tumour_sample_id
-    this_normal = original_bedpe$normal_sample_id
+    colnames(original_bedpe)[1]="chrom"
+    if(!grepl("chr",original_bedpe$chrom)){
+      original_bedpe = mutate(original_bedpe,chrom=paste0("chr",chrom))
+    }
+    char_vec = original_bedpe %>% tidyr::unite(united,sep="\t") %>% dplyr::pull(united)
+    bedpe_obj <- rtracklayer::import(text=char_vec,format="bed")
   }
   if(target_build == "grch37" | target_build == "hg19"){
     chain = rtracklayer::import.chain(system.file("extdata","hg38ToHg19.over.chain",package="GAMBLR"))
   }else if(target_build == "grch38" | target_build == "hg38"){
     chain = rtracklayer::import.chain(system.file("extdata","hg19ToHg38.over.chain",package="GAMBLR"))
   }
-  colnames(original_bedpe)[1]="CHROM_A"
-  original_columns = colnames(original_bedpe)
+  if(!standard_bed){
+    colnames(original_bedpe)[1]="CHROM_A"
+    original_columns = colnames(original_bedpe)
 
-  first_sv_lifted = rtracklayer::liftOver(bedpe_obj@first,chain)
-  second_sv_lifted = rtracklayer::liftOver(bedpe_obj@second,chain)
-  no_problem = !((elementNROWS(first_sv_lifted) != 1) | (elementNROWS(second_sv_lifted) != 1))
-  first_ok = subset(first_sv_lifted,no_problem)
-  second_ok = subset(second_sv_lifted,no_problem)
-  first_ok_df = rtracklayer::export(first_ok,format="bed") %>%
+    first_sv_lifted = rtracklayer::liftOver(bedpe_obj@first,chain)
+    second_sv_lifted = rtracklayer::liftOver(bedpe_obj@second,chain)
+    no_problem = !((elementNROWS(first_sv_lifted) != 1) | (elementNROWS(second_sv_lifted) != 1))
+    first_ok = subset(first_sv_lifted,no_problem)
+    second_ok = subset(second_sv_lifted,no_problem)
+    first_ok_df = rtracklayer::export(first_ok,format="bed") %>%
     read_tsv(col_names = c("CHROM_A","START_A","END_A","name_A","score_A","STRAND_A")) %>%
     dplyr::select(-score_A) %>% dplyr::select(-name_A)
-  second_ok_df = rtracklayer::export(second_ok,format="bed") %>%
+    second_ok_df = rtracklayer::export(second_ok,format="bed") %>%
     read_tsv(col_names = c("CHROM_B","START_B","END_B","name_B","score_B","STRAND_B")) %>%
     dplyr::select(-score_B) %>% dplyr::select(-name_B)
-  ok_bedpe = original_bedpe[no_problem,]
-  kept_cols = ok_bedpe %>% dplyr::select(-c("CHROM_A","START_A","END_A","CHROM_B","START_B","END_B","STRAND_A","STRAND_B"))
-  fully_lifted = bind_cols(first_ok_df,second_ok_df,kept_cols) %>% dplyr::select(all_of(original_columns))
-  return(fully_lifted)
+    ok_bedpe = original_bedpe[no_problem,]
+    kept_cols = ok_bedpe %>% dplyr::select(-c("CHROM_A","START_A","END_A","CHROM_B","START_B","END_B","STRAND_A","STRAND_B"))
+    fully_lifted = bind_cols(first_ok_df,second_ok_df,kept_cols) %>% dplyr::select(all_of(original_columns))
+    return(fully_lifted)
+  }else{
+    lifted = rtracklayer::liftOver(bedpe_obj,chain)
+    no_problem = !((elementNROWS(lifted) != 1))
+    first_ok = subset(lifted,no_problem)
+    output = rtracklayer::export(first_ok,format="bed") %>%
+      read_tsv(col_names = c("chrom","start","end","score","strand","nothing","s1","e1","junk","more","stuff","nada")) %>%
+      dplyr::select("chrom","start","end")
+    return(output)
+  }
 }
 
 

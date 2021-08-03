@@ -10,15 +10,25 @@ grch37_all_gene_coordinates = system.file("extdata", "grch37_gene_coordinates.ts
 
 usethis::use_data(grch37_all_gene_coordinates, overwrite = TRUE)
 
+
+hg38_oncogene = system.file("extdata", "oncogene_regions.hg38.tsv", package = "GAMBLR") %>%
+  read_tsv(col_types="ciici")
+
+usethis::use_data(hg38_oncogene, overwrite = TRUE)
+
 grch37_oncogene = system.file("extdata", "oncogene_regions.grch37.tsv", package = "GAMBLR") %>%
   read_tsv(col_types="ciici")
 
 usethis::use_data(grch37_oncogene, overwrite = TRUE)
 
+hg38_partners = system.file("extdata","superenhancer_regions.hg38.tsv",package="GAMBLR") %>%
+  read_tsv(col_types="ciici")
+
+usethis::use_data(hg38_partners, overwrite = TRUE)
+
 grch37_partners = system.file("extdata", "superenhancer_regions.grch37.tsv", package = "GAMBLR") %>%
   read_tsv(col_types="ciici")
 
-usethis::use_data(grch37_partners, overwrite = TRUE)
 
 grch37_ashm_regions = system.file("extdata", "somatic_hypermutation_locations_GRCh37.txt", package = "GAMBLR") %>%
   read_tsv()

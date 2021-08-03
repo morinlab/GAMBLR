@@ -19,8 +19,7 @@ Suggests:
     testthat
 biocViews:
 Imports:
-    tidyverse,
-    data.table,
+    metaviz,
     RMariaDB,
     DBI,
     maftools,
@@ -29,7 +28,8 @@ Imports:
     GenomeInfoDb,
     circlize,
     rtracklayer,
-    config
+    config,
+    tidyverse
 VignetteBuilder: knitr
 Depends: 
     R (>= 2.10)
