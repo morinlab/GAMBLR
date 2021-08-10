@@ -347,7 +347,9 @@ prettyOncoplot = function(maftools_obj,
                           legend_col=3,
                           showTumorSampleBarcode=FALSE,
                           groupNames,verbose=FALSE,
-                          hide_annotations){
+                          hide_annotations,
+                          custom_colours = NULL
+                          ){
 
   if(!recycleOncomatrix & missing(onco_matrix_path)){
   #order the data frame the way you want the patients shown
@@ -607,6 +609,11 @@ prettyOncoplot = function(maftools_obj,
       colours[[column]]=these
     }
   }
+
+  if (! is.null(custom_colours)){
+    colours=custom_colours
+  }
+
   if(highlightHotspots){
     hot_samples = dplyr::filter(maftools_obj@data,hot_spot==TRUE & Hugo_Symbol %in% genes) %>%
     dplyr::select(Hugo_Symbol,Tumor_Sample_Barcode) %>% mutate(mutated="hot_spot") %>% unique()
