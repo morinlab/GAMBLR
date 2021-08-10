@@ -300,6 +300,7 @@ plot_sample_circos = function(this_sample_id,sv_df,cnv_df,ssm_df,
 #' @param box_col Colour of boxes for outlining mutations (can be problematic with larger oncoprints)
 #' @param legend_row Fiddle with these to widen or narrow your legend
 #' @param legend_col Fiddle with these to widen or narrow your legend
+#' @param custom_colours Provide named vector (or named list of vectors) containing custom annotation colours if you do not want to use standartized pallette
 #'
 #' @return
 #' @export
