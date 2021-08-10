@@ -302,6 +302,7 @@ plot_sample_circos = function(this_sample_id,sv_df,cnv_df,ssm_df,
 #' @param box_col Colour of boxes for outlining mutations (can be problematic with larger oncoprints)
 #' @param legend_row Fiddle with these to widen or narrow your legend
 #' @param legend_col Fiddle with these to widen or narrow your legend
+#' @param custom_colours Provide named vector (or named list of vectors) containing custom annotation colours if you do not want to use standartized pallette
 #'
 #' @return
 #' @export
@@ -349,7 +350,9 @@ prettyOncoplot = function(maftools_obj,
                           legend_col=3,
                           showTumorSampleBarcode=FALSE,
                           groupNames,verbose=FALSE,
-                          hide_annotations){
+                          hide_annotations,
+                          custom_colours = NULL
+                          ){
 
   if(!recycleOncomatrix & missing(onco_matrix_path)){
   #order the data frame the way you want the patients shown
@@ -609,6 +612,11 @@ prettyOncoplot = function(maftools_obj,
       colours[[column]]=these
     }
   }
+
+  if (! is.null(custom_colours)){
+    colours=custom_colours
+  }
+
   if(highlightHotspots){
     hot_samples = dplyr::filter(maftools_obj@data,hot_spot==TRUE & Hugo_Symbol %in% genes) %>%
     dplyr::select(Hugo_Symbol,Tumor_Sample_Barcode) %>% mutate(mutated="hot_spot") %>% unique()
