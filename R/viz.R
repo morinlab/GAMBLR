@@ -20,7 +20,9 @@ map_metadata_to_colours = function(metadataColumns,these_samples_metadata,as_vec
   aliases = list("COO_consensus"="coo","COO"="coo","DHITsig_consensus"="coo",
                  "pathology"="pathology","lymphgen"="lymphgen",
                  "lymphgen_with_cnv"="lymphgen","bcl2_ba"="pos_neg",
-                 "myc_ba"="pos_neg","bcl6_ba"="pos_neg"
+                 "myc_ba"="pos_neg","bcl6_ba"="pos_neg","manta_BCL2_sv"="pos_neg",
+                 "manual_BCL2_sv"="pos_neg",
+                 "manta_MYC_sv"="pos_neg"
                  )
   for(column in metadataColumns){
 
@@ -719,7 +721,8 @@ prettyOncoplot = function(maftools_obj,
                                    row_names_gp = gpar(fontsize = fontSizeGene),
                                    pct_gp = gpar(fontsize = fontSizeGene),
                     bottom_annotation =
-                    ComplexHeatmap::HeatmapAnnotation(df=metadata_df,show_legend=show_legend,
+                    ComplexHeatmap::HeatmapAnnotation(df=metadata_df,
+                                                      show_legend=show_legend,
                                                       col=colours,
                                                       simple_anno_size = unit(metadataBarHeight, "mm"),
                                                       gap = unit(0.25*metadataBarHeight, "mm"),
@@ -766,6 +769,11 @@ ashm_multi_rainbow_plot = function(regions_bed,regions_to_display,
     regions_bed = mutate(regions_bed,name=paste0(gene,"-",region))
   }else{
     regions_bed = mutate(regions_bed,regions=paste0(chr,":",start,"-",end))
+    #if name column is missing, add it
+    if(!"name" %in% colnames(regions_bed))
+    {
+      regions_bed$name =regions_bed$regions
+    }
   }
   print(regions_bed)
   names=pull(regions_bed,name)
