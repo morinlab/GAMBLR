@@ -35,7 +35,7 @@ get_merged_result = function(tool_name,projection="grch37",seq_type="genome"){
 #' @param remove_benchmarking By default the FFPE benchmarking duplicate samples will be dropped
 #' @param with_outcomes Optionally join to gambl outcome data
 #' @param from_flatfile New default is to use the metadata in the flatfiles from your clone of the repo. Can be over-ridden to use the database
-#' embargoed cases (current options: 'BLGSP-study', 'FL-DLBCL-study', 'DLBCL-unembargoed)
+#' embargoed cases (current options: 'BLGSP-study', 'FL-study', 'DLBCL-study', 'FL-DLBCL-study', 'DLBCL-unembargoed', 'BL-DLBCL-manuscript')
 #'
 #' @return A data frame with metadata for each biopsy in GAMBL
 #' @export
@@ -149,6 +149,12 @@ get_gambl_metadata = function(seq_type_filter = "genome",
     if(case_set == "BLGSP-study"){
       #get BL cases minus duplicates (i.e. drop benchmarking cases)
       all_meta = all_meta %>% dplyr::filter(cohort %in% c("BL_Adult","BL_cell_lines","BL_ICGC","BLGSP_Bcell_UNC","BL_Pediatric") |(cohort=="LLMPP_P01" & pathology == "BL"))
+    }else if(case_set == "BL-DLBCL-manuscript"){
+      adult_bl_manuscript_samples <- data.table::fread("/projects/adult_blgsp/results_manuscript/BL--DLBCL.hg38.maf.counts") %>%
+        dplyr::select(2) %>%
+        dplyr::filter(! V2 %in% c("BL58", "Tumor_Sample_Barcode")) %>%
+        pull(V2)
+      all_meta = all_meta %>% dplyr::filter(sample_id %in% adult_bl_manuscript_samples)
     }else if(case_set == "GAMBL-all"){
       #get all GAMBL but remove FFPE benchmarking cases and ctDNA
       all_meta = all_meta %>% dplyr::filter(!cohort %in% c("FFPE_Benchmarking","DLBCL_ctDNA"))
