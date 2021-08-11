@@ -11,7 +11,7 @@ get_mutation_frequency_bin_matrix(
   region_padding = 1000,
   metadataColumns = c("pathology"),
   sortByColumns = c("pathology"),
-  customColourColumns = NULL,
+  customColour = NULL,
   slide_by = 100,
   window_size = 500,
   min_count_per_bin = 3,
@@ -22,7 +22,29 @@ get_mutation_frequency_bin_matrix(
 )
 }
 \arguments{
-\item{metadata}{}
+\item{regions}{Vector of regions in the format "chr:start-end"}
+
+\item{these_samples_metadata}{GAMBL metadata subset to the cases you want to process (or full metadata)}
+
+\item{region_padding}{How many bases will be added on the left and right of the regions to ensure any small regions are sufficiently covered by bins}
+
+\item{metadataColumns}{What metadata will be shown in the visualization}
+
+\item{sortByColumns}{Which of the metadata to sort on for the heatmap}
+
+\item{customColour}{Optional named list of named vectors for specifying all colours for metadata. Can be generated with map_metadata_to_colours}
+
+\item{slide_by}{How far to shift before starting the next window}
+
+\item{window_size}{The width of your sliding window}
+
+\item{min_bin_recurrence}{How many samples a bin must be mutated in to retain in the visualization}
+
+\item{min_bin_patient}{How many bins must a patient mutated in to retain in the visualization}
+
+\item{cluster_rows_heatmap}{Optional parameter to enable/disable clustering of each dimension of the heatmap}
+
+\item{region_df}{Data frame of regions with four columns (chrom,start,end,gene_name)}
 }
 \value{
 

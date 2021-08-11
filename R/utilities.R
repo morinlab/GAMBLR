@@ -1,20 +1,33 @@
 
 #' Count hypermutated bins and generate heatmaps/cluster the data
 #'
-#' @param regions
-#' @param region_df
-#' @param metadata
+#' @param regions Vector of regions in the format "chr:start-end"
+#' @param region_df Data frame of regions with four columns (chrom,start,end,gene_name)
+#' @param slide_by How far to shift before starting the next window
+#' @param window_size The width of your sliding window
+#' @param min_count_per_bin
+#' @param min_bin_recurrence How many samples a bin must be mutated in to retain in the visualization
+#' @param min_bin_patient How many bins must a patient mutated in to retain in the visualization
+#' @param these_samples_metadata GAMBL metadata subset to the cases you want to process (or full metadata)
+#' @param region_padding How many bases will be added on the left and right of the regions to ensure any small regions are sufficiently covered by bins
+#' @param metadataColumns What metadata will be shown in the visualization
+#' @param sortByColumns Which of the metadata to sort on for the heatmap
+#' @param cluster_rows_heatmap Optional parameter to enable/disable clustering of each dimension of the heatmap
+#' @param cluster_cols_heatmap
+#' @param customColour Optional named list of named vectors for specifying all colours for metadata. Can be generated with map_metadata_to_colours
+#'
 #'
 #' @return
 #' @export
 #'
 #' @examples
-get_mutation_frequency_bin_matrix = function(regions,regions_df,
+get_mutation_frequency_bin_matrix = function(regions,
+                                  regions_df,
                                   these_samples_metadata,
                                   region_padding= 1000,
                                   metadataColumns=c("pathology"),
                                   sortByColumns=c("pathology"),
-                                  customColourColumns = NULL,
+                                  customColour = NULL,
                                   slide_by=100,
                                   window_size=500,
                                   min_count_per_bin = 3,
@@ -26,13 +39,15 @@ get_mutation_frequency_bin_matrix = function(regions,regions_df,
     if(missing(regions)){
       if(missing(regions_df)){
         regions_df = grch37_ashm_regions #drop MYC and BCL2
-        regions_df = grch37_ashm_regions %>% dplyr::filter(!gene %in% c("MYC","BCL2","IGLL5"))
+        regions_df = grch37_ashm_regions %>%
+          dplyr::filter(!gene %in% c("MYC","BCL2","IGLL5"))
       }
       regions = unlist(apply(regions_df,1,function(x){paste0(x[1],":",as.numeric(x[2])-region_padding,"-",as.numeric(x[3])+region_padding)})) #add some buffer around each
     }
     dfs = lapply(regions,function(x){calc_mutation_frequency_sliding_windows(
     this_region=x,drop_unmutated = TRUE,
-    slide_by = 250,plot_type="none",min_count_per_bin=min_count_per_bin,return_count = TRUE,
+    slide_by = slide_by,plot_type="none",window_size=window_size,
+    min_count_per_bin=min_count_per_bin,return_count = TRUE,
     metadata = these_samples_metadata)})
 
   all= do.call("rbind",dfs)
@@ -71,6 +86,7 @@ get_mutation_frequency_bin_matrix = function(regions,regions_df,
 
   assign_bins_to_region = function(bin_names,rdf){
     bin_df = data.frame(bin_name=bin_names)
+
     separated = bin_df %>%
       separate(bin_name,into=c("start","chrom")) %>%
       mutate(start = as.integer(start)) %>%
@@ -89,11 +105,11 @@ get_mutation_frequency_bin_matrix = function(regions,regions_df,
     return(bin_overlapped)
   }
   #regions_df = grch37_ashm_regions
-  if(is.null(customColourColumns)){
+  if(is.null(customColour)){
     meta_cols = map_metadata_to_colours(metadataColumns,these_samples_metadata = meta_show,as_vector = F)
 
   }else{
-    meta_cols = customColourColumns
+    meta_cols = customColour
   }
 
   bin_annot = assign_bins_to_region(bin_names=colnames(to_show_t),rdf=regions_df)
@@ -121,12 +137,18 @@ get_mutation_frequency_bin_matrix = function(regions,regions_df,
 
 }
 
-#' Count the number of mutations in a sliding window across a region for all samples
+#' Count the number of mutations in a sliding window across a region for all samples. Unlikely to be used directly in most cases. See get_mutation_frequency_bin_matrix instead
 #'
 #' @param chromosome
 #' @param start_pos
 #' @param end_pos
 #' @param metadata
+#' @param return_format
+#' @param classification_column Only used for plotting
+#' @param plot_type Set to true for a plot of your bins. By default no plots are made.
+#' @param min_count_per_bin
+#' @param return_count
+#' @param drop_unmutated This may not currently work properly.
 #'
 #' @return
 #' @export
@@ -136,11 +158,14 @@ get_mutation_frequency_bin_matrix = function(regions,regions_df,
 
 calc_mutation_frequency_sliding_windows =
   function(this_region,chromosome,start_pos,end_pos,
-           metadata,slide_by=100,window_size=1000,plot_type = "none",
+           metadata,slide_by=100,
+           window_size=1000,
+           plot_type = "none",
            return_format="long-simple",
            min_count_per_bin=3,
            return_count = FALSE,
-           drop_unmutated=FALSE,classification_column="lymphgen"){
+           drop_unmutated=FALSE,
+           classification_column="lymphgen"){
 
 
   max_region = 1000000
@@ -165,7 +190,7 @@ calc_mutation_frequency_sliding_windows =
   }
   windows = data.frame(start=seq(start_pos,end_pos,by=slide_by)) %>%
     mutate(end=start+window_size-1)
-  print(tail(windows))
+
 
   #use foverlaps to assign mutations to bins
   windows.dt = as.data.table(windows)
@@ -174,16 +199,6 @@ calc_mutation_frequency_sliding_windows =
   region_ssm = GAMBLR::get_ssm_by_region(region=this_region,streamlined = TRUE) %>%
     dplyr::rename(c("start"="Start_Position","sample_id"="Tumor_Sample_Barcode")) %>%
     mutate(mutated=1)
-  #all_positions = pull(region_ssm,start) %>% unique()
-  #all_samples = pull(region_ssm,sample_id) %>% unique()
-  #eg = expand_grid(start=all_positions,sample_id=all_samples)
-
-  #this is only neccessary if we're doing a pivot
-  #completed = left_join(eg,region_ssm,by="sample_id") %>%
-  #  mutate(mutated=ifelse(is.na(mutated),0,mutated)) %>% unique()
-
-  #widened = pivot_wider(completed,names_from=sample_id,values_from=mutated)
-  #widened = widened %>% mutate(end = start + 1)
 
   region.dt = mutate(region_ssm,end=start+1) %>% as.data.table()
   setkey(windows.dt,start,end)

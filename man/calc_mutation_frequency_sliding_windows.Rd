@@ -2,7 +2,7 @@
 % Please edit documentation in R/utilities.R
 \name{calc_mutation_frequency_sliding_windows}
 \alias{calc_mutation_frequency_sliding_windows}
-\title{Count the number of mutations in a sliding window across a region for all samples}
+\title{Count the number of mutations in a sliding window across a region for all samples. Unlikely to be used directly in most cases. See get_mutation_frequency_bin_matrix instead}
 \usage{
 calc_mutation_frequency_sliding_windows(
   this_region,
@@ -21,11 +21,15 @@ calc_mutation_frequency_sliding_windows(
 )
 }
 \arguments{
-\item{metadata}{}
+\item{plot_type}{Set to true for a plot of your bins. By default no plots are made.}
+
+\item{drop_unmutated}{This may not currently work properly.}
+
+\item{classification_column}{Only used for plotting}
 }
 \value{
 
 }
 \description{
-Count the number of mutations in a sliding window across a region for all samples
+Count the number of mutations in a sliding window across a region for all samples. Unlikely to be used directly in most cases. See get_mutation_frequency_bin_matrix instead
 }
