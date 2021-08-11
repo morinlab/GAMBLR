@@ -1,3 +1,291 @@
+
+#' Count hypermutated bins and generate heatmaps/cluster the data
+#'
+#' @param regions Vector of regions in the format "chr:start-end"
+#' @param region_df Data frame of regions with four columns (chrom,start,end,gene_name)
+#' @param slide_by How far to shift before starting the next window
+#' @param window_size The width of your sliding window
+#' @param min_count_per_bin
+#' @param min_bin_recurrence How many samples a bin must be mutated in to retain in the visualization
+#' @param min_bin_patient How many bins must a patient mutated in to retain in the visualization
+#' @param these_samples_metadata GAMBL metadata subset to the cases you want to process (or full metadata)
+#' @param region_padding How many bases will be added on the left and right of the regions to ensure any small regions are sufficiently covered by bins
+#' @param metadataColumns What metadata will be shown in the visualization
+#' @param sortByColumns Which of the metadata to sort on for the heatmap
+#' @param cluster_rows_heatmap Optional parameter to enable/disable clustering of each dimension of the heatmap
+#' @param cluster_cols_heatmap
+#' @param customColour Optional named list of named vectors for specifying all colours for metadata. Can be generated with map_metadata_to_colours
+#'
+#'
+#' @return
+#' @export
+#'
+#' @examples
+get_mutation_frequency_bin_matrix = function(regions,
+                                  regions_df,
+                                  these_samples_metadata,
+                                  region_padding= 1000,
+                                  metadataColumns=c("pathology"),
+                                  sortByColumns=c("pathology"),
+                                  customColour = NULL,
+                                  slide_by=100,
+                                  window_size=500,
+                                  min_count_per_bin = 3,
+                                  min_bin_recurrence = 5,
+                                  min_bin_patient = 0,
+                                  cluster_rows_heatmap = FALSE,
+                                  cluster_cols_heatmap = FALSE){
+
+    if(missing(regions)){
+      if(missing(regions_df)){
+        regions_df = grch37_ashm_regions #drop MYC and BCL2
+        regions_df = grch37_ashm_regions %>%
+          dplyr::filter(!gene %in% c("MYC","BCL2","IGLL5"))
+      }
+      regions = unlist(apply(regions_df,1,function(x){paste0(x[1],":",as.numeric(x[2])-region_padding,"-",as.numeric(x[3])+region_padding)})) #add some buffer around each
+    }
+    dfs = lapply(regions,function(x){calc_mutation_frequency_sliding_windows(
+    this_region=x,drop_unmutated = TRUE,
+    slide_by = slide_by,plot_type="none",window_size=window_size,
+    min_count_per_bin=min_count_per_bin,return_count = TRUE,
+    metadata = these_samples_metadata)})
+
+  all= do.call("rbind",dfs)
+  #add a fake bin for one gene and make every patient not mutated in it (to fill gaps)
+  fake = these_samples_metadata %>% dplyr::select(sample_id) %>% mutate(bin="1_chrN") %>% mutate(mutated=0)
+  all = bind_rows(all,fake)
+  completed = complete(all,sample_id,bin,fill = list(mutated = 0))
+  widened = pivot_wider(completed,names_from=sample_id,values_from=mutated)
+  widened_df = column_to_rownames(widened,var="bin")
+
+  #meta_show = metadata %>% select(sample_id,pathology,lymphgen) %>%
+  meta_show = these_samples_metadata %>% select(sample_id,all_of(metadataColumns)) %>%
+    arrange(across(all_of(sortByColumns))) %>%
+    dplyr::filter(sample_id %in% colnames(widened_df)) %>%
+    column_to_rownames(var="sample_id")
+  message(paste("starting with",length(colnames(widened_df)),"patients"))
+  patients_show = colnames(widened_df)[which(colSums(widened_df)>=min_bin_patient)]
+  message(paste("returning matrix with",length(patients_show),"patients"))
+  meta_show = dplyr::filter(meta_show,rownames(meta_show) %in% patients_show)
+  to_show = widened_df[which(rowSums(widened_df)>min_bin_recurrence),patients_show]
+
+  bin_col_fun = colorRamp2(c(0, 3, 6, 9),
+                       c("white", "orange","red","purple"))
+  to_show_t = t(to_show)
+  meta_show_t = meta_show[rownames(to_show_t),]
+  lg_cols = get_gambl_colours("lymphgen")
+  path_fun = function(x){
+    path_cols = get_gambl_colours("pathology")
+    lg_cols = get_gambl_colours("lymphgen")
+
+    return(unname(path_cols[x]))
+  }
+  path_cols = get_gambl_colours("pathology")
+
+  # assign bins back to regions for better annotation
+
+  assign_bins_to_region = function(bin_names,rdf){
+    bin_df = data.frame(bin_name=bin_names)
+
+    separated = bin_df %>%
+      separate(bin_name,into=c("start","chrom")) %>%
+      mutate(start = as.integer(start)) %>%
+      mutate(end=start+1)
+
+    separated$bin_name = bin_names
+    colnames(rdf)[c(1:3)]=c("chrom","start","end")
+    rdf = mutate(rdf,start=start-1500) %>% mutate(end=end+1500)
+    regions.dt = as.data.table(rdf)
+
+    setkey(regions.dt,chrom,start,end)
+    bin.dt = as.data.table(separated)
+    setkey(bin.dt,chrom,start,end)
+    bin_overlapped = foverlaps(bin.dt,regions.dt,mult="first") %>%
+      as.data.frame() %>% select(bin_name,gene) %>% column_to_rownames(var="bin_name")
+    return(bin_overlapped)
+  }
+  #regions_df = grch37_ashm_regions
+  if(is.null(customColour)){
+    meta_cols = map_metadata_to_colours(metadataColumns,these_samples_metadata = meta_show,as_vector = F)
+
+  }else{
+    meta_cols = customColour
+  }
+
+  bin_annot = assign_bins_to_region(bin_names=colnames(to_show_t),rdf=regions_df)
+  row_annot = HeatmapAnnotation(df=meta_show,show_legend = T,
+                            which = 'row',
+                            col=meta_cols)
+  col_annot = HeatmapAnnotation(df=bin_annot,show_legend = T,
+                                which = 'col')
+
+
+   Heatmap(to_show_t[rownames(meta_show),rownames(bin_annot)],
+           cluster_columns = cluster_cols_heatmap,
+           cluster_rows=cluster_rows_heatmap,
+           col=bin_col_fun,
+           bottom_annotation = col_annot,
+           left_annotation = row_annot,
+           show_row_names = F,show_column_names = F,
+           column_split = factor(bin_annot$gene),
+           #row_split = factor(meta_show$pathology),
+           column_title_gp = gpar(fontsize=6),
+           column_title_rot = 90,
+           row_title_gp = gpar(fontsize=10))
+
+
+
+}
+
+#' Count the number of mutations in a sliding window across a region for all samples. Unlikely to be used directly in most cases. See get_mutation_frequency_bin_matrix instead
+#'
+#' @param chromosome
+#' @param start_pos
+#' @param end_pos
+#' @param metadata
+#' @param return_format
+#' @param classification_column Only used for plotting
+#' @param plot_type Set to true for a plot of your bins. By default no plots are made.
+#' @param min_count_per_bin
+#' @param return_count
+#' @param drop_unmutated This may not currently work properly.
+#'
+#' @return
+#' @export
+#' @import dplyr data.table ggplot2 cowplot
+#'
+#' @examples
+
+calc_mutation_frequency_sliding_windows =
+  function(this_region,chromosome,start_pos,end_pos,
+           metadata,slide_by=100,
+           window_size=1000,
+           plot_type = "none",
+           return_format="long-simple",
+           min_count_per_bin=3,
+           return_count = FALSE,
+           drop_unmutated=FALSE,
+           classification_column="lymphgen"){
+
+
+  max_region = 1000000
+  if(missing(metadata)){
+    metadata = collate_results(join_with_full_metadata = TRUE)
+  }
+  if(missing(this_region)){
+    this_region =paste0(chromosome,":",start_pos,"-",end_pos)
+  }else{
+    chunks = region_to_chunks(this_region)
+    #print(chunks)
+    chromosome = chunks$chromosome
+    start_pos=as.numeric(chunks$start)
+    end_pos=as.numeric(chunks$end)
+  }
+  region_size = end_pos - start_pos
+  if(region_size < max_region){
+    message(paste("processing bins of size",window_size,"across",region_size,"bp region"))
+  }else{
+    message(paste("CAUTION!\n",region_size,"exceeds maximum size recommended by this function."))
+
+  }
+  windows = data.frame(start=seq(start_pos,end_pos,by=slide_by)) %>%
+    mutate(end=start+window_size-1)
+
+
+  #use foverlaps to assign mutations to bins
+  windows.dt = as.data.table(windows)
+
+
+  region_ssm = GAMBLR::get_ssm_by_region(region=this_region,streamlined = TRUE) %>%
+    dplyr::rename(c("start"="Start_Position","sample_id"="Tumor_Sample_Barcode")) %>%
+    mutate(mutated=1)
+
+  region.dt = mutate(region_ssm,end=start+1) %>% as.data.table()
+  setkey(windows.dt,start,end)
+  setkey(region.dt,start,end)
+
+  windows_overlap = foverlaps(windows.dt,region.dt) %>%
+    dplyr::filter(!is.na(start)) %>%
+    dplyr::rename(c("window_start"="i.start","mutation_position"="start")) %>%
+    dplyr::select(-i.end,-end,-mutation_position) %>% as.data.frame()
+
+  windows_tallied_full = windows_overlap %>%
+    group_by(sample_id,window_start) %>%
+    tally() %>%
+    dplyr::filter(n>=min_count_per_bin) %>%
+    arrange(sample_id) %>% as.data.frame()
+  windows_tallied = windows_tallied_full
+
+
+  all_samples = pull(metadata,sample_id) %>% unique()
+  num_samples = length(all_samples)
+  lg_cols = get_gambl_colours("lymphgen")
+  path_cols = get_gambl_colours("pathology")
+  annos = data.frame(window_start = rep(start_pos,num_samples),
+                     sample_id=factor(all_samples))
+  annos = left_join(annos,metadata,by="sample_id")
+  windows_tallied = left_join(metadata,windows_tallied,by="sample_id")
+  windows_tallied$classification = factor(windows_tallied[,classification_column],levels=unique(windows_tallied[,classification_column]))
+  if(drop_unmutated){
+    windows_tallied = windows_tallied %>% dplyr::filter(!is.na(n))
+  }
+  if(classification_column== "lymphgen"){
+    windows_tallied = arrange(windows_tallied,pathology,lymphgen)
+    annos = arrange(annos,pathology,lymphgen)
+  }else{
+    windows_tallied = arrange(windows_tallied,classification)
+    annos = arrange(annos,classification)
+
+  }
+  annos$sample_id = factor(annos$sample_id,levels=unique(annos$sample_id))
+  windows_tallied$sample_id = factor(windows_tallied$sample_id,levels=unique(windows_tallied$sample_id))
+
+  if(plot_type %in% c("points","point")){
+    #p = ggplot2::ggplot(windows_tallied,aes(x=window_start,y=sample_id,colour=bcl2_ba)) +
+    #geom_point(alpha=0.5) + theme(axis.text=element_text(size=4))
+    #add a bin at position 1 for pathology
+    windows_tallied = dplyr::filter(windows_tallied,!is.na(window_start))
+
+    p = ggplot2::ggplot() +
+      geom_point(data=annos,aes(x=window_start,y=sample_id,
+                                colour=pathology)) +
+      geom_point(data=windows_tallied,aes(x=window_start,y=sample_id,
+                  colour=classification)) +
+      theme(axis.text=element_text(size=4)) +
+      scale_colour_manual(values=c(lg_cols,path_cols))
+
+  }else if(plot_type == "tile"){
+    p = windows_tallied %>%
+      ggplot(aes(x=window_start,y=sample_id,fill=n)) +
+      geom_tile() +scale_fill_gradient(low = "orange", high = "red", na.value = NA) +
+      theme_cowplot()
+  }
+  if(plot_type != "none"){
+    print(p)
+  }
+  if(return_count){
+    windows_tallied = mutate(windows_tallied,bin = paste0(window_start,"_",chromosome)) %>%
+      mutate(mutated=n)
+  }else{
+    #binary mutated or not
+    windows_tallied = mutate(windows_tallied,bin = paste0(window_start,"_",chromosome)) %>%
+    mutate(mutated=1)
+  }
+  a = dplyr::select(windows_tallied,sample_id,bin,mutated)
+  completed = complete(a,sample_id,bin,fill = list(mutated = 0))
+  widened = pivot_wider(completed,names_from=sample_id,values_from=mutated)
+  if(return_format == "long"){
+    return(windows_tallied)
+  }else if(return_format == "long-simple"){
+    #just return the columns needed for completing and making a wide matrix for many regions
+    windows_simple = dplyr::select(windows_tallied,sample_id,bin,mutated)
+    return(windows_simple)
+
+  }else{
+    return(widened)
+  }
+}
+
 #' Write bedpe format data frame to a file that will work with IGV
 #'
 #' @param sv_df data frame of bedpe formatted SV data
@@ -151,23 +439,32 @@ annotate_hotspots = function(mutation_maf,recurrence_min = 5,analysis_base=c("FL
 #' @examples
 #' all_sv = get_manta_sv()
 #' sv_to_custom_track(all_sv,output_file="GAMBL_sv_custom_track.bed")
-sv_to_custom_track = function(sv_bedpe,output_file){
+sv_to_custom_track = function(sv_bedpe,output_file,is_annotated=TRUE,sv_name="all"){
   #browser position chr7:127471196-127495720
   #browser hide all
   #track name="ItemRGBDemo" description="Item RGB demonstration" visibility=2 itemRgb="On"
   #chr7    127471196  127472363  Pos1  0  +  127471196  127472363  255,0,0
-
+  if(is_annotated){
   #reduce to a bed-like format
   sv_data1 = mutate(sv_bedpe,annotation=paste0(chrom1,":",start1,"_",fusion)) %>%
     dplyr::select(chrom2,start2,end2,tumour_sample_id,annotation,fusion)
   sv_data2 = mutate(sv_bedpe,annotation=paste0(chrom2,":",start2,"_",fusion)) %>%
     dplyr::select(chrom1,start1,end1,tumour_sample_id,annotation,fusion)
-
+  print(head(sv_data1))
+  print(head(sv_data2))
   colnames(sv_data1)=c("chrom","start","end","sample_id","annotation","fusion")
   colnames(sv_data2)=c("chrom","start","end","sample_id","annotation","fusion")
-
   sv_data = bind_rows(sv_data1,sv_data2)
   sv_data = mutate(sv_data,end=end+10)
+  }else{
+    sv_data = mutate(sv_bedpe,annotation=paste0(1,":",2)) %>%
+      dplyr::select(1,2,6,tumour_sample_id,annotation)
+    #sv_data2 = mutate(sv_bedpe,annotation=paste0(4,":",5)) %>%
+    #  dplyr::select(1,2,3,tumour_sample_id,annotation)
+    colnames(sv_data)=c("chrom","start","end","sample_id","annotation")
+    #colnames(sv_data2)=c("chrom","start","end","sample_id","annotation")
+  }
+
   if(!grepl("chr",sv_data[,1])){
     #add chr
     sv_data[,1] = unlist(lapply(sv_data[,1],function(x){paste0("chr",x)}))
@@ -183,20 +480,20 @@ sv_to_custom_track = function(sv_bedpe,output_file){
     mutate(consensus_coo_dhitsig=if_else(consensus_coo_dhitsig=="NA",pathology,consensus_coo_dhitsig))
 
   samples_coloured = left_join(meta, rgb_df)
-  sv_bed_coloured = left_join(sv_data,samples_coloured)
+  sv_bed_coloured = left_join(sv_data,samples_coloured) %>% arrange(pathology)
 
   #chr7    127471196  127472363  Pos1  0  +  127471196  127472363  255,0,0
   write_bed = function(coloured_svs,sv_name,output_file_base){
-    output_file = paste0(output_file_base,"_",sv_name,".bed")
     data_bed = coloured_svs %>% mutate(details=paste0(annotation,"_",sample_id)) %>%
-      dplyr::filter(fusion == sv_name) %>%
       mutate(score=0,strand="+",end=end+1,start1=start,end1=end) %>%
-      dplyr::select(chrom, start,end, details,score,strand,start1,end1,rgb) %>% dplyr::filter(!is.na(rgb)) %>% unique()
+      dplyr::select(chrom, start,end, details,score,strand,start1,end1,rgb) %>%
+      dplyr::filter(!is.na(rgb)) %>% unique()
     header_content=paste0('track name="GAMBL SVs ',sv_name, '" description="SV breakpoints ', sv_name, '" visibility=2 itemRgb="On"\n')
     cat(header_content,file=output_file)
+    message(paste("writing to",output_file))
     tabular = write.table(data_bed,file=output_file,quote=F,sep="\t",row.names=F,col.names = F,append=TRUE)
   }
-
+  write_bed(sv_bed_coloured,sv_name=sv_name)
 
 }
 
@@ -696,6 +993,13 @@ get_gambl_colours = function(classification="all",alpha=1){
     "NOTCH1" = "#55B55E",
     "Other"="#ACADAF"
   )
+  all_colours[["BL"]] = c("M53-BL"="#A6CEE3",
+                                         "DLBCL-1"="#721F0F",
+                                         "IC-BL"="#45425A",
+                                         "DGG-BL"="#33A02C",
+                                         "DLBCL-2"="#FB9A99",
+                                         "DLBCL-3"="#C41230")
+  all_colours[["FL"]]=c(dFL="#99C1B9",cFL="#E8E46E")
   all_colours[["lymphgen"]] = c(
     "EZB-MYC" = "#52000F",
     "EZB" = "#721F0F",
