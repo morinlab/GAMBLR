@@ -4,7 +4,7 @@
 \alias{sv_to_custom_track}
 \title{Make a UCSC-ready custom track file from SV data}
 \usage{
-sv_to_custom_track(sv_bedpe, output_file)
+sv_to_custom_track(sv_bedpe, output_file, is_annotated = TRUE, sv_name = "all")
 }
 \arguments{
 \item{sv_bedpe}{A bedpe formatted data frame of SVs}
