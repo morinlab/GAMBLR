@@ -39,7 +39,7 @@ get_merged_result = function(tool_name,projection="grch37",seq_type="genome"){
 #'
 #' @return A data frame with metadata for each biopsy in GAMBL
 #' @export
-#' @import tidyverse DBI RMariaDB dbplyr
+#' @import tidyverse DBI RMariaDB dbplyr data.table
 #'
 #' @examples
 #' # basic usage
