@@ -1,4 +1,20 @@
 
+#' Title
+#'
+#' @param x
+#'
+#' @return
+#' @export
+#'
+#' @examples
+trim_scale_expression <- function(x){
+  quants <- unname(quantile(x, probs = c(0.05, 0.95),na.rm=TRUE))
+  x <- ifelse(x < quants[1], quants[1], x)
+  x <- ifelse(x > quants[2], quants[2], x)
+  x <- (x - quants[1]) / (quants[2] - quants[1])
+  return(x)
+}
+
 #' Count hypermutated bins and generate heatmaps/cluster the data
 #'
 #' @param regions Vector of regions in the format "chr:start-end"
@@ -27,12 +43,15 @@ get_mutation_frequency_bin_matrix = function(regions,
                                   region_padding= 1000,
                                   metadataColumns=c("pathology"),
                                   sortByColumns=c("pathology"),
+                                  expressionColumns=c(),
+                                  orientation = "sample_rows",
                                   customColour = NULL,
                                   slide_by=100,
                                   window_size=500,
                                   min_count_per_bin = 3,
                                   min_bin_recurrence = 5,
                                   min_bin_patient = 0,
+                                  region_fontsize=8,
                                   cluster_rows_heatmap = FALSE,
                                   cluster_cols_heatmap = FALSE){
 
@@ -59,6 +78,10 @@ get_mutation_frequency_bin_matrix = function(regions,
   widened_df = column_to_rownames(widened,var="bin")
 
   #meta_show = metadata %>% select(sample_id,pathology,lymphgen) %>%
+  if(length(expressionColumns)>0){
+    these_samples_metadata = these_samples_metadata %>%
+      mutate(across(all_of(expressionColumns), ~ trim_scale_expression(.x)))
+  }
   meta_show = these_samples_metadata %>% select(sample_id,all_of(metadataColumns)) %>%
     arrange(across(all_of(sortByColumns))) %>%
     dplyr::filter(sample_id %in% colnames(widened_df)) %>%
@@ -111,16 +134,20 @@ get_mutation_frequency_bin_matrix = function(regions,
   }else{
     meta_cols = customColour
   }
-
+  col_fun=circlize::colorRamp2(c(0, 0.5, 1), c("blue", "white", "red"))
+  for(exp in expressionColumns){
+    meta_cols[[exp]] = col_fun
+  }
   bin_annot = assign_bins_to_region(bin_names=colnames(to_show_t),rdf=regions_df)
-  row_annot = HeatmapAnnotation(df=meta_show,show_legend = T,
-                            which = 'row',
-                            col=meta_cols)
-  col_annot = HeatmapAnnotation(df=bin_annot,show_legend = T,
-                                which = 'col')
 
 
-   Heatmap(to_show_t[rownames(meta_show),rownames(bin_annot)],
+  if(orientation == "sample_rows"){
+    row_annot = HeatmapAnnotation(df=meta_show,show_legend = T,
+                                  which = 'row',
+                                  col=meta_cols)
+    col_annot = HeatmapAnnotation(df=bin_annot,show_legend = F,
+                                  which = 'col')
+    Heatmap(to_show_t[rownames(meta_show),rownames(bin_annot)],
            cluster_columns = cluster_cols_heatmap,
            cluster_rows=cluster_rows_heatmap,
            col=bin_col_fun,
@@ -129,10 +156,28 @@ get_mutation_frequency_bin_matrix = function(regions,
            show_row_names = F,show_column_names = F,
            column_split = factor(bin_annot$gene),
            #row_split = factor(meta_show$pathology),
-           column_title_gp = gpar(fontsize=6),
+           column_title_gp = gpar(fontsize=region_fontsize),
            column_title_rot = 90,
            row_title_gp = gpar(fontsize=10))
-
+  }else{
+    col_annot = HeatmapAnnotation(df=meta_show,show_legend = F,
+                                  which = 'col',
+                                  col=meta_cols)
+    row_annot = HeatmapAnnotation(df=bin_annot,show_legend = T,
+                                  which = 'row')
+    Heatmap(to_show[rownames(bin_annot),rownames(meta_show)],show_heatmap_legend = F,
+            cluster_columns = cluster_rows_heatmap,
+            cluster_rows=cluster_cols_heatmap,
+            col=bin_col_fun,
+            bottom_annotation = col_annot,
+            left_annotation = row_annot,
+            show_row_names = F,show_column_names = F,
+            row_split = factor(bin_annot$gene),
+            #row_split = factor(meta_show$pathology),
+            row_title_gp = gpar(fontsize=region_fontsize),
+            row_title_rot = 0,
+            column_title_gp = gpar(fontsize=8))
+  }
 
 
 }
@@ -594,12 +639,16 @@ collate_results = function(sample_table,write_to_file=FALSE,join_with_full_metad
 #'
 #' @examples
 #' gambl_results_derived = collate_derived_results(samples_df)
-collate_derived_results = function(sample_table){
+collate_derived_results = function(sample_table,from_flatfile=FALSE){
 
-  database_name = config::get("database_name")
+  if(from_flatfile){
+    message("not implemented YET")
+  }else{
+    database_name = config::get("database_name")
 
-  con <- DBI::dbConnect(RMariaDB::MariaDB(), dbname = database_name)
-  derived_tbl = dplyr::tbl(con,"derived_data") %>% as.data.frame()
+    con <- DBI::dbConnect(RMariaDB::MariaDB(), dbname = database_name)
+    derived_tbl = dplyr::tbl(con,"derived_data") %>% as.data.frame()
+  }
   derived_tbl = derived_tbl %>% dplyr::select(where( ~!all(is.na(.x)))) #drop the columns that are completely empty
   sample_table = dplyr::left_join(sample_table,derived_tbl)
   return(sample_table)

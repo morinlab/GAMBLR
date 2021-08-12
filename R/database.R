@@ -148,7 +148,9 @@ get_gambl_metadata = function(seq_type_filter = "genome",
     }
     if(case_set == "BLGSP-study"){
       #get BL cases minus duplicates (i.e. drop benchmarking cases)
-      all_meta = all_meta %>% dplyr::filter(cohort %in% c("BL_Adult","BL_cell_lines","BL_ICGC","BLGSP_Bcell_UNC","BL_Pediatric") |(cohort=="LLMPP_P01" & pathology == "BL"))
+      all_meta = all_meta %>%
+        dplyr::filter(cohort %in% c("BL_Adult","BL_cell_lines","BL_ICGC","BLGSP_Bcell_UNC","BL_Pediatric") |
+                        (cohort=="LLMPP_P01" & pathology == "BL"))
     }else if(case_set == "GAMBL-all"){
       #get all GAMBL but remove FFPE benchmarking cases and ctDNA
       all_meta = all_meta %>% dplyr::filter(!cohort %in% c("FFPE_Benchmarking","DLBCL_ctDNA"))
