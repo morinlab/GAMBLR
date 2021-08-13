@@ -1134,6 +1134,14 @@ plot_multi_timepoint = function(mafs,sample_id,genes,show_noncoding=FALSE,detail
 #' @param scores output file scores.gistic from the run of GISTIC2.0
 #' @param genes_to_label optional. Provide a data frame of genes to label (if mutated). The first 3 columns must contain chromosome, start, and end coordinates. Another required column must contain gene names and be named `gene`. All other columns are ignored. If no data frame provided, oncogenes from GAMBLR packages are used by default to annotate on the plot.
 #' @param cutoff optional. Used to determine which regions to color as aberrant. Must be float in the range [0-1]. The higher the number, the less regions will be considered as aberrant. The default is 0.5.
+#' @param adjust_amps optional. The value of G-score for highest amplification peak will be multiplied by this value to determine how far up the gene label will be displayed. Default 0.5.
+#' @param adjust_dels optional. The value of G-score for highest deletion peak will be multiplied by this value to determine how far down the gene label will be displayed. Default 2.75.
+#' @param label_size optional. The font size for the gene label to be displayed. Default 3.
+#' @param force_pull optional. How strong the gene name label will be pulled towards a data point. Default 0 (no pulling).
+#' @param segment.curvature optional. Indicates whether arrow to the data point should be curved. Accepts numeric value, where negative is for left-hand and positive for right-hand curves, and 0 for straight lines. Default 0.25
+#' @param segment.ncp optional. Indicates number of control points to make a smoother curve. Higher value allows for more flexibility for the curve. Default 4
+#' @param segment.angle optional. Numeric value in the range 0-180, where less than 90 skews control points of the arrow from label to data point toward the start point. Default 25
+#'
 #'
 #' @return nothing
 #' @export
@@ -1145,7 +1153,16 @@ plot_multi_timepoint = function(mafs,sample_id,genes,show_noncoding=FALSE,detail
 #' # advanced usages
 #' prettyChromoplot("path_to_gistic_results/scores.gistic", genes_to_label="path_to_gene_coordinates_table.tsv", cutoff=0.75) +
 #' ...(any ggplot options to customize plot appearance)
-prettyChromoplot = function(scores, genes_to_label, cutoff=0.5){
+prettyChromoplot = function(scores,
+                            genes_to_label,
+                            cutoff=0.5,
+                            adjust_amps=0.5,
+                            adjust_dels=2.75,
+                            label_size=3,
+                            force_pull = 0,
+                            segment.curvature = 0.25,
+                            segment.ncp = 4,
+                            segment.angle = 25){
   # read GISTIC scores file, convert G-score to be negative for deletions, and relocate chromosome, start, and end columns to be the first three
   scores <- data.table::fread(scores) %>%
     dplyr::mutate(`G-score`= ifelse(Type=="Amp",  `G-score`, -1*`G-score`)) %>%
@@ -1194,20 +1211,26 @@ prettyChromoplot = function(scores, genes_to_label, cutoff=0.5){
     geom_bar(size=0.2,stat='identity', position="dodge") +
     ylab('G-score') +
     ggrepel::geom_text_repel(data = subset(scores, !is.na(gene) & Type=="Amp"),
-                    nudge_y = max(subset(scores, !is.na(gene) & Type=="Amp")$`G-score`)*1.25,
-                    size=5,
+                    nudge_y = max(subset(scores, !is.na(gene) & Type=="Amp")$`G-score`)*adjust_amps,
+                    size=label_size,
                     segment.size = 0.5,
                     segment.color = "#000000",
+                    force_pull = force_pull,
                     arrow = arrow(length = unit(0.05, "inches"), type = "closed"),
-                    point.padding = 5) +
+                    segment.curvature = segment.curvature,
+                    segment.ncp = segment.ncp,
+                    segment.angle = segment.angle) +
     ggrepel::geom_text_repel(data = subset(scores, !is.na(gene) & Type=="Del"),
-                             nudge_y = min(subset(scores, !is.na(gene) & Type=="Del")$`G-score`)*1.75,
+                             nudge_y = min(subset(scores, !is.na(gene) & Type=="Del")$`G-score`)*adjust_dels,
                              nudge_x=subset(scores, !is.na(gene) & Type=="Del")$Start,
-                             size=5,
+                             size=label_size,
                              segment.size = 0.5,
                              segment.color = "#000000",
+                             force_pull = force_pull,
                              arrow = arrow(length = unit(0.05, "inches"), type = "closed"),
-                             point.padding = 5) +
+                             segment.curvature = segment.curvature,
+                             segment.ncp = segment.ncp,
+                             segment.angle = segment.angle) +
     facet_grid(. ~ Chromosome, scales="free") +
     scale_color_manual(values=cnv_palette) +
     theme_bw() +
