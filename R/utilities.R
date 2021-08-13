@@ -1293,6 +1293,7 @@ make_igv_snapshot = function(bams,genome_build,region,padding=200,chrom,start,en
 #' @param comparison Specify column annotating groups of interest.
 #' @param fdr.method FDR method to adjust p values. Uses stats::p.adjust function, and therefore accepts its method for FDR ("holm", "hochberg", "hommel", "bonferroni", "BH", "BY", "fdr", "none"). By default, this function uses "fdr".
 #' @param fdr.cutoff Specify FDR significance cut-off. By default, this function uses 0.1.
+#' @param text_size Size of the text on the forest plot of differentially enriched CNV.
 #' @param blacklisted_regions Optionally, specify any descriptors (value from column `Descriptor` of GISTIC2.0 all_lesions output file) to filter out before amy comparisons are done. It is possible to specify list of multiple descriptors, for example, c("3p12.3", "12p13.2").
 #'
 #' @return list of 3 objects:
@@ -1309,7 +1310,7 @@ make_igv_snapshot = function(bams,genome_build,region,padding=200,chrom,start,en
 #' # advanced usage
 #' FtestCNV(gistic_lesions = "path_to_GISTIC2.0_output/all_lesions.conf_{confidence_level}.txt", metadata = derived_data,
 #' comparison = "pathology", fdr.method = "bonferroni", fdr.cutoff = 0.05, blacklisted_regions = c("3p12.3", "12p13.2"))
-FtestCNV <- function(gistic_lesions, metadata, comparison, fdr.method="fdr", fdr.cutoff=0.1, blacklisted_regions=NULL){
+FtestCNV <- function(gistic_lesions, metadata, comparison, fdr.method="fdr", fdr.cutoff=0.1, text_size = 7, blacklisted_regions=NULL){
   # get groups of interest for comparison
   GROUPS.TO.COMPARE <- unique(metadata[,comparison])
 
@@ -1446,7 +1447,7 @@ FtestCNV <- function(gistic_lesions, metadata, comparison, fdr.method="fdr", fdr
                       col = "Greys", xlab = "Log(OddsRatio)", annotate_CI = T,
                       type = "study_only",
                       study_table = study_table,
-                      text_size = 7,
+                      text_size = text_size,
                       table_headers = c("Region"))
 
   message("Successfully completed step 3/3...")

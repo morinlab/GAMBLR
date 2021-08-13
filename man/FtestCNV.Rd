@@ -10,6 +10,7 @@ FtestCNV(
   comparison,
   fdr.method = "fdr",
   fdr.cutoff = 0.1,
+  text_size = 7,
   blacklisted_regions = NULL
 )
 }
@@ -23,6 +24,8 @@ FtestCNV(
 \item{fdr.method}{FDR method to adjust p values. Uses stats::p.adjust function, and therefore accepts its method for FDR ("holm", "hochberg", "hommel", "bonferroni", "BH", "BY", "fdr", "none"). By default, this function uses "fdr".}
 
 \item{fdr.cutoff}{Specify FDR significance cut-off. By default, this function uses 0.1.}
+
+\item{text_size}{Size of the text on the forest plot of differentially enriched CNV.}
 
 \item{blacklisted_regions}{Optionally, specify any descriptors (value from column \code{Descriptor} of GISTIC2.0 all_lesions output file) to filter out before amy comparisons are done. It is possible to specify list of multiple descriptors, for example, c("3p12.3", "12p13.2").}
 }
