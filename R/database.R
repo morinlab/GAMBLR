@@ -159,6 +159,9 @@ get_gambl_metadata = function(seq_type_filter = "genome",
       fl_dlbcl_all_samples <- data.table::fread("/projects/rmorin/projects/FL_vs_DLBCL/data/maf/FL--DLBCL-unembragoed.samples.tsv") %>%
         pull(Tumor_Sample_Barcode)
       all_meta = all_meta %>% dplyr::filter(sample_id %in% fl_dlbcl_all_samples)
+      all_meta = all_meta %>%
+        dplyr::filter(cohort %in% c("BL_Adult","BL_cell_lines","BL_ICGC","BLGSP_Bcell_UNC","BL_Pediatric") |
+                        (cohort=="LLMPP_P01" & pathology == "BL"))
     }else if(case_set == "GAMBL-all"){
       #get all GAMBL but remove FFPE benchmarking cases and ctDNA
       all_meta = all_meta %>% dplyr::filter(!cohort %in% c("FFPE_Benchmarking","DLBCL_ctDNA"))

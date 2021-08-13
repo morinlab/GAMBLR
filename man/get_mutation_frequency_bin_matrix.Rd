@@ -11,12 +11,15 @@ get_mutation_frequency_bin_matrix(
   region_padding = 1000,
   metadataColumns = c("pathology"),
   sortByColumns = c("pathology"),
+  expressionColumns = c(),
+  orientation = "sample_rows",
   customColour = NULL,
   slide_by = 100,
   window_size = 500,
   min_count_per_bin = 3,
   min_bin_recurrence = 5,
   min_bin_patient = 0,
+  region_fontsize = 8,
   cluster_rows_heatmap = FALSE,
   cluster_cols_heatmap = FALSE
 )
