@@ -694,7 +694,7 @@ collate_curated_sv_results = function(sample_table){
     full = paste0(project_base,path_to_files,f)
     this_data = suppressMessages(read_tsv(full,comment = "#"))
     #TO DO: fix this so it will join on biopsy_id or sample_id depending on which one is present
-    sample_table = left_join(sample_table,this_data,by="sample_id")
+    sample_table = left_join(sample_table,this_data)
   }
 
 
