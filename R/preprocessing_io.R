@@ -650,8 +650,7 @@ fread_maf = function(maf_file_path){
   return(maf_dt)
 }
 
-#Not meant to be used routinely
-#' Title
+#' Read a full expression matrix and subset to samples in GAMBL that have metadata (remove duplicates with consistent preferences)
 #'
 #' @return
 #' @export
@@ -659,8 +658,11 @@ fread_maf = function(maf_file_path){
 #' @examples
 tidy_gene_expression = function(){
   #read in the full matrix
-  ex_matrix_file=config::get("ex_matrix_file")
+  ex_matrix_file = config::get("results_merged")$ex_matrix_file
+  tidy_expression_file = config::get("results_merged")$tidy_expression_file
   ex_matrix_full = read_tsv(ex_matrix_file)
+  ex_matrix_full = dplyr::select(ex_matrix_full,-gene_id,-ensembl_gene_id) %>%
+    dplyr::rename("Hugo_Symbol"="hgnc_symbol")
 
   ex_tidy = pivot_longer(ex_matrix_full,-Hugo_Symbol,names_to="sample_id",values_to="expression")
   ex_tidy_nfkbiz = dplyr::filter(ex_tidy,Hugo_Symbol=="NFKBIZ")
@@ -673,7 +675,9 @@ tidy_gene_expression = function(){
   #subset to just the ones in the matrix and keep only the relevant rows
   rm_dupes = c("08-15460_tumorA","05-32150_tumorA") #toss two duplicated cases AND FFPE_Benchmarking
   #rna_meta[which(rna_meta$sample_id %in% rm_dupes,"cohort"]= "FFPE_Benchmarking"
-  rna_meta_existing = rna_meta %>% dplyr::filter(sample_id %in% all_samples) %>% dplyr::select(sample_id,patient_id,biopsy_id,protocol)
+  rna_meta_existing = rna_meta %>%
+    dplyr::filter(sample_id %in% all_samples) %>%
+    dplyr::select(sample_id,patient_id,biopsy_id,protocol)
 
 
   selected_libraries = rna_meta_existing %>%
@@ -681,7 +685,7 @@ tidy_gene_expression = function(){
     # Take the biopsy_id with the longest string length (e.g PolyA vs. Ribodepletion)
     slice_max(str_length(protocol), n = 1,with_ties=FALSE) %>%
     ungroup()
-
+  #this brings the total from 1399 to 1298
 
   #set the canonical library per biopsy_id by picking the ribominus for cases with more than one
   #duplicated = rna_meta_existing %>% group_by(biopsy_id) %>% tally() %>% filter(n>1) %>% select(biopsy_id)
@@ -697,9 +701,12 @@ tidy_gene_expression = function(){
 
   ex_tidy = ex_tidy %>% dplyr::filter(mrna_sample_id %in% selected_libraries$sample_id)
   rna_meta = rna_meta %>% dplyr::select(sample_id,biopsy_id)
+
   ex_tidy_final = left_join(ex_tidy,rna_meta,by=c("mrna_sample_id"="sample_id"))
   #this still has the mrna sample ID. Need to add the tumour_sample_id from this biopsy (where available)
-  genome_meta = get_gambl_metadata() %>% dplyr::select(biopsy_id,sample_id,patient_id,ffpe_or_frozen) %>% dplyr::rename("genome_sample_id" = "sample_id")
+  genome_meta = get_gambl_metadata() %>%
+    dplyr::select(biopsy_id,sample_id,patient_id,ffpe_or_frozen) %>%
+    dplyr::rename("genome_sample_id" = "sample_id")
   #this gets the metadata in the same format but restricted to genome samples
   #REMOVE ANNOYING DUPLICATE GENOMES!
   duplicated_cases = genome_meta %>% group_by(biopsy_id) %>% tally() %>% dplyr::filter(n>1)
@@ -713,9 +720,20 @@ tidy_gene_expression = function(){
   #join to genome metadata based on biopsy_id (should be the same for RNA-seq and tumour genomes)
   ex_tidy_genome = left_join(ex_tidy_final,selected_genomes,by="biopsy_id")
 
-  ex_tidy_genome = dplyr::select(ex_tidy_genome,Hugo_Symbol,mrna_sample_id,expression,biopsy_id,genome_sample_id)
+  ex_tidy_genome = dplyr::select(ex_tidy_genome,Hugo_Symbol,mrna_sample_id,expression,biopsy_id,genome_sample_id) %>%
+    dplyr::filter(!is.na(Hugo_Symbol))
   #write the data back out for use by others and loading into the database.
   tidy_expression_file = config::get("tidy_expression_file")
+
+  #drop genes that are duplicated
+  #table_out = pull(ex_tidy_genome,Hugo_Symbol) %>% table
+  #badgenes = names(which(table_out>1803))
+  #tidy_expression_data_nobadgenes = dplyr::filter(ex_tidy_genome,!Hugo_Symbol %in% badgenes)
+  #full_expression_wider = dplyr::select(tidy_expression_data_nobadgenes,-mrna_sample_id,-genome_sample_id) %>%
+  #    pivot_wider(names_from=Hugo_Symbol,values_from=expression)
+  #transpose it
+  #full_expression_wider = column_to_rownames(full_expression_wider,var="biopsy_id")
+  #full_expression_wider_t = t(full_expression_wider)
   write_tsv(ex_tidy_genome,file=tidy_expression_file)
 
 

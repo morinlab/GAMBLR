@@ -3,11 +3,11 @@ default:
     repo_base: "/projects/rmorin/projects/gambl-repos/gambl-rmorin/"
     derived_and_curated: "icgc_dart/derived_and_curated_metadata/"
     database_name: "gambl_test"
-    results_staging:
+    results_staging:        
         manta: "manta_current/level_3/01-gamblr_preprocess/"
     results_merged:
         tidy_expression_file: "/projects/rmorin/projects/gambl-repos/gambl-rmorin/results/icgc_dart/DESeq2-0.0_salmon-1.0/mrna--gambl-icgc-all/vst-matrix-Hugo_Symbol_tidy.tsv"
-        ex_matrix_file: "/projects/rmorin/projects/gambl-repos/gambl-rmorin/results/icgc_dart/DESeq2-0.0_salmon-1.0/mrna--gambl-icgc-all/vst-matrix-Hugo_Symbol.tsv.gz"
+        ex_matrix_file: "/projects/rmorin/projects/gambl-repos/gambl-rmorin/results/icgc_dart/DESeq2-0.0_salmon-1.0/mrna--gambl-icgc-all/vst-matrix.tsv"
 
 #results from every combination of each of these will be included in the database
     unix_groups: "gambl,icgc_dart"
