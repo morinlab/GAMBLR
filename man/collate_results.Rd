@@ -9,7 +9,8 @@ collate_results(
   write_to_file = FALSE,
   join_with_full_metadata = FALSE,
   case_set,
-  sbs_manipulation = ""
+  sbs_manipulation = "",
+  seq_type_filter = "genome"
 )
 }
 \value{

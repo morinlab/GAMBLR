@@ -16,7 +16,7 @@ get_gambl_metadata(
 \arguments{
 \item{seq_type_filter}{Filtering criteria (default: all genomes)}
 
-\item{tissue_status_filter}{Filtering criteria (default: only tumour genomes)}
+\item{tissue_status_filter}{Filtering criteria (default: only tumour genomes, can be "mrna" or "any" for the superset of cases)}
 
 \item{case_set}{optional short name for a pre-defined set of cases avoiding any}
 

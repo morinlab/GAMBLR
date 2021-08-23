@@ -1,4 +1,40 @@
 
+#' Tabulate mutation status for non-silent SSMs for a set of genes
+#'
+#' @param gene_symbols
+#' @param these_samples_metadata
+#' @param from_flatfile
+#'
+#' @return
+#' @export
+#'
+#' @examples
+#' coding_tabulated_df = get_coding_ssm_status(gene_symbols=c("MYC","KMT2D"))
+get_coding_ssm_status = function(gene_symbols,these_samples_metadata,from_flatfile=TRUE){
+  if(missing(gene_symbols)){
+    message("you must supply at least one gene symbol")
+    return()
+  }
+  if(missing(these_samples_metadata)){
+    these_samples_metadata = get_gambl_metadata()
+  }
+
+  coding = get_coding_ssm(from_flatfile=from_flatfile) %>%
+    dplyr::filter(Hugo_Symbol %in% gene_symbols &
+                    Variant_Classification != "Synonymous") %>%
+    dplyr::select(Tumor_Sample_Barcode,Hugo_Symbol) %>%
+    dplyr::rename("sample_id"="Tumor_Sample_Barcode","gene"="Hugo_Symbol") %>%
+    unique() %>%
+    mutate(mutated=1)
+  samples_table = dplyr::select(these_samples_metadata,sample_id)
+  wide_coding = pivot_wider(coding,names_from = "gene",
+                            values_from="mutated",values_fill = 0)
+  #complete(wide_coding,fill=list("sample_id"=samples_table$sample_id))
+  all_tabulated = left_join(samples_table,wide_coding)
+  all_tabulated = all_tabulated %>% replace(is.na(.), 0)
+  return(all_tabulated)
+}
+
 #' Title
 #'
 #' @param x
@@ -587,11 +623,12 @@ maf_to_custom_track = function(maf_data,output_file){
 #'
 #' @examples
 #' everything_collated = collate_results(join_with_full_metadata=TRUE)
-collate_results = function(sample_table,write_to_file=FALSE,join_with_full_metadata = FALSE,case_set,sbs_manipulation=""){
+collate_results = function(sample_table,write_to_file=FALSE,join_with_full_metadata = FALSE,
+                           case_set,sbs_manipulation="",seq_type_filter="genome"){
   # important: if you are collating results from anything but WGS (e.g RNA-seq libraries) be sure to use biopsy ID as the key in your join
   # the sample_id should probably not even be in this file if we want this to be biopsy-centric
   if(missing(sample_table)){
-    sample_table = get_gambl_metadata() %>% dplyr::select(sample_id,patient_id,biopsy_id)
+    sample_table = get_gambl_metadata(seq_type_filter = seq_type_filter) %>% dplyr::select(sample_id,patient_id,biopsy_id)
   }
 
   #edit this function and add a new function to load any additional results into the main summary table
@@ -611,7 +648,7 @@ collate_results = function(sample_table,write_to_file=FALSE,join_with_full_metad
   }
   #convenience columns bringing together related information
   if(join_with_full_metadata){
-  full_meta = get_gambl_metadata()
+  full_meta = get_gambl_metadata(seq_type_filter = seq_type_filter)
   full_table = left_join(full_meta,sample_table)
   full_table = full_table %>% mutate("MYC_SV_any"=case_when(ashm_MYC > 3 ~ "POS",
                                             manta_MYC_sv == "POS" ~ "POS",
@@ -670,7 +707,7 @@ collate_csr_results = function(sample_table){
    sm_join = inner_join(sample_table,csr,by=c("sample_id"="sample"))
    pt_join = inner_join(sample_table,csr,by=c("patient_id"="sample"))
    complete_join <- bind_rows(pt_join, sm_join) %>%
-     bind_rows(dplyr::filter(sample_table, !patient_id %in% c(pt_join$patient_id, sm_join$patient_id)))
+     bind_rows(dplyr::filter(sample_table, !patient_id %in% c(pt_join$patient_id, sm_join$patient_id))) %>% unique()
   return(complete_join)
 }
 
@@ -1042,6 +1079,10 @@ get_gambl_colours = function(classification="all",alpha=1){
     "NOTCH1" = "#55B55E",
     "Other"="#ACADAF"
   )
+  all_colours[["EBV"]] =  c("EBV-positive"="#7F055F",
+                            "EBV-negative"="#E5A4CB",
+                            "POS"="#7F055F",
+                            "NEG"="#E5A4CB")
   all_colours[["BL"]] = c("M53-BL"="#A6CEE3",
                                          "DLBCL-1"="#721F0F",
                                          "IC-BL"="#45425A",
