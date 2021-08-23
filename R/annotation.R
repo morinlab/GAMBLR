@@ -26,6 +26,9 @@ annotate_igh_breakpoints = function(annotated_df,genome_build="grch37"){
   # chr14:106330789-106330851 J3
   emu_start= 106327853
   emu_end = 106330900
+  #these coordinates are all somewhat manually determined via UCSC and won't
+  #perfectly match any one annotation. They get the job done, though. Note that
+  #to find overlaps I pad the outer boundaries anyway so exact coordinates aren't the real point, it's proximity to the nearest feature
   j_segs = data.frame(start=c(106329408,106330010,
                               106330412,106330789,emu_start,
                               106323800,106054077,106320301,
