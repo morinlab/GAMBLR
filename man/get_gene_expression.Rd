@@ -8,11 +8,13 @@ get_gene_expression(
   hugo_symbols,
   tidy_expression_data,
   metadata,
-  join_with = "mrna"
+  join_with = "mrna",
+  from_flatfile = FALSE,
+  drop_missing = FALSE
 )
 }
 \arguments{
-\item{join_with}{}
+\item{join_with}{How to restrict cases for the join. Can be one of genome, mrna or "any"}
 }
 \value{
 
