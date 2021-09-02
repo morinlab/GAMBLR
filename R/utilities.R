@@ -70,6 +70,7 @@ trim_scale_expression <- function(x){
 #' @param show_gene_colours Optional logical argument indicating whether regions should have associated colours plotted as annotation track of heatmap
 #' @param legend_row Fiddle with these to widen or narrow your legend
 #' @param legend_col Fiddle with these to widen or narrow your legend
+#' @param legend_col Accepts one of "horizontal" (default) or "vertical" to indicate in which direction the legend will be drawn
 #'
 #'
 #' @return
@@ -95,7 +96,8 @@ get_mutation_frequency_bin_matrix = function(regions,
                                   cluster_cols_heatmap = FALSE,
                                   show_gene_colours=FALSE,
                                   legend_row=3,
-                                  legend_col=3){
+                                  legend_col=3,
+                                  legend_direction="horizontal"){
 
     if(missing(regions)){
       if(missing(regions_df)){
@@ -182,11 +184,11 @@ get_mutation_frequency_bin_matrix = function(regions,
   }
   bin_annot = assign_bins_to_region(bin_names=colnames(to_show_t),rdf=regions_df)
   heatmap_legend_param = list(title = "Bin value",nrow=legend_row, ncol=legend_row,
-                         legend_direction = "horizontal")
+                         legend_direction = legend_direction)
 
   annotation_legend_param = list(nrow=legend_row,
                             ncol=legend_col,
-                            direction="horizontal")
+                            direction=legend_direction)
 
   if(orientation == "sample_rows"){
     row_annot = HeatmapAnnotation(df=meta_show,show_legend = T,

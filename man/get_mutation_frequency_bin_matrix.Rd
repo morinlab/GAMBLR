@@ -24,7 +24,8 @@ get_mutation_frequency_bin_matrix(
   cluster_cols_heatmap = FALSE,
   show_gene_colours = FALSE,
   legend_row = 3,
-  legend_col = 3
+  legend_col = 3,
+  legend_direction = "horizontal"
 )
 }
 \arguments{
@@ -54,7 +55,7 @@ get_mutation_frequency_bin_matrix(
 
 \item{legend_row}{Fiddle with these to widen or narrow your legend}
 
-\item{legend_col}{Fiddle with these to widen or narrow your legend}
+\item{legend_col}{Accepts one of "horizontal" (default) or "vertical" to indicate in which direction the legend will be drawn}
 
 \item{region_df}{Data frame of regions with four columns (chrom,start,end,gene_name)}
 }
