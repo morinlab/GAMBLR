@@ -22,7 +22,9 @@ get_mutation_frequency_bin_matrix(
   region_fontsize = 8,
   cluster_rows_heatmap = FALSE,
   cluster_cols_heatmap = FALSE,
-  show_gene_colours = FALSE
+  show_gene_colours = FALSE,
+  legend_row = 3,
+  legend_col = 3
 )
 }
 \arguments{
@@ -49,6 +51,10 @@ get_mutation_frequency_bin_matrix(
 \item{cluster_rows_heatmap}{Optional parameter to enable/disable clustering of each dimension of the heatmap}
 
 \item{show_gene_colours}{Optional logical argument indicating whether regions should have associated colours plotted as annotation track of heatmap}
+
+\item{legend_row}{Fiddle with these to widen or narrow your legend}
+
+\item{legend_col}{Fiddle with these to widen or narrow your legend}
 
 \item{region_df}{Data frame of regions with four columns (chrom,start,end,gene_name)}
 }
