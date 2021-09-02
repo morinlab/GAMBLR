@@ -177,15 +177,22 @@ get_mutation_frequency_bin_matrix = function(regions,
     meta_cols[[exp]] = col_fun
   }
   bin_annot = assign_bins_to_region(bin_names=colnames(to_show_t),rdf=regions_df)
+  heatmap_legend_param = list(title = "Bin value",nrow=2, ncol=1,
+                         legend_direction = "horizontal")
 
+  annotation_legend_param = list(nrow=2,
+                            ncol=2,
+                            direction="horizontal")
 
   if(orientation == "sample_rows"){
     row_annot = HeatmapAnnotation(df=meta_show,show_legend = T,
                                   which = 'row',
-                                  col=meta_cols)
+                                  col=meta_cols,
+                                  annotation_legend_param = annotation_legend_param)
     if(show_gene_colours){
         col_annot = HeatmapAnnotation(df=bin_annot,show_legend = F,
-                                  which = 'col')
+                                  which = 'col',
+                                  annotation_legend_param = annotation_legend_param)
     }else{
         col_annot = HeatmapAnnotation(value=anno_empty(border = FALSE))
     }
@@ -200,14 +207,17 @@ get_mutation_frequency_bin_matrix = function(regions,
            #row_split = factor(meta_show$pathology),
            column_title_gp = gpar(fontsize=region_fontsize),
            column_title_rot = 90,
-           row_title_gp = gpar(fontsize=10))
+           row_title_gp = gpar(fontsize=10),
+           heatmap_legend_param = heatmap_legend_param)
   }else{
     col_annot = HeatmapAnnotation(df=meta_show,show_legend = T,
                                   which = 'col',
-                                  col=meta_cols)
+                                  col=meta_cols,
+                                  annotation_legend_param = annotation_legend_param)
     if(show_gene_colours){
       row_annot = HeatmapAnnotation(df=bin_annot,show_legend = F,
-                                  which = 'row')
+                                  which = 'row',
+                                  annotation_legend_param = annotation_legend_param)
     }else{
       row_annot = rowAnnotation(value=anno_empty(border = FALSE))
     }
@@ -223,7 +233,8 @@ get_mutation_frequency_bin_matrix = function(regions,
             #row_split = factor(meta_show$pathology),
             row_title_gp = gpar(fontsize=region_fontsize),
             row_title_rot = 0,
-            column_title_gp = gpar(fontsize=8))
+            column_title_gp = gpar(fontsize=8),
+            heatmap_legend_param = heatmap_legend_param)
   }
 
 
