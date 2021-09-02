@@ -67,6 +67,7 @@ trim_scale_expression <- function(x){
 #' @param cluster_rows_heatmap Optional parameter to enable/disable clustering of each dimension of the heatmap
 #' @param cluster_cols_heatmap
 #' @param customColour Optional named list of named vectors for specifying all colours for metadata. Can be generated with map_metadata_to_colours
+#' @param show_gene_colours Optional logical argument indicating whether regions should have associated colours plotted as annotation track of heatmap
 #'
 #'
 #' @return
@@ -89,7 +90,8 @@ get_mutation_frequency_bin_matrix = function(regions,
                                   min_bin_patient = 0,
                                   region_fontsize=8,
                                   cluster_rows_heatmap = FALSE,
-                                  cluster_cols_heatmap = FALSE){
+                                  cluster_cols_heatmap = FALSE,
+                                  show_gene_colours=FALSE){
 
     if(missing(regions)){
       if(missing(regions_df)){
@@ -181,8 +183,12 @@ get_mutation_frequency_bin_matrix = function(regions,
     row_annot = HeatmapAnnotation(df=meta_show,show_legend = T,
                                   which = 'row',
                                   col=meta_cols)
-    col_annot = HeatmapAnnotation(df=bin_annot,show_legend = F,
+    if(show_gene_colours){
+        col_annot = HeatmapAnnotation(df=bin_annot,show_legend = F,
                                   which = 'col')
+    }else{
+        col_annot = HeatmapAnnotation(value=anno_empty(border = FALSE))
+    }
     Heatmap(to_show_t[rownames(meta_show),rownames(bin_annot)],
            cluster_columns = cluster_cols_heatmap,
            cluster_rows=cluster_rows_heatmap,
@@ -196,11 +202,16 @@ get_mutation_frequency_bin_matrix = function(regions,
            column_title_rot = 90,
            row_title_gp = gpar(fontsize=10))
   }else{
-    col_annot = HeatmapAnnotation(df=meta_show,show_legend = F,
+    col_annot = HeatmapAnnotation(df=meta_show,show_legend = T,
                                   which = 'col',
                                   col=meta_cols)
-    row_annot = HeatmapAnnotation(df=bin_annot,show_legend = T,
+    if(show_gene_colours){
+      row_annot = HeatmapAnnotation(df=bin_annot,show_legend = F,
                                   which = 'row')
+    }else{
+      row_annot = rowAnnotation(value=anno_empty(border = FALSE))
+    }
+
     Heatmap(to_show[rownames(bin_annot),rownames(meta_show)],show_heatmap_legend = F,
             cluster_columns = cluster_rows_heatmap,
             cluster_rows=cluster_cols_heatmap,

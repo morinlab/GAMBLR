@@ -21,7 +21,8 @@ get_mutation_frequency_bin_matrix(
   min_bin_patient = 0,
   region_fontsize = 8,
   cluster_rows_heatmap = FALSE,
-  cluster_cols_heatmap = FALSE
+  cluster_cols_heatmap = FALSE,
+  show_gene_colours = FALSE
 )
 }
 \arguments{
@@ -46,6 +47,8 @@ get_mutation_frequency_bin_matrix(
 \item{min_bin_patient}{How many bins must a patient mutated in to retain in the visualization}
 
 \item{cluster_rows_heatmap}{Optional parameter to enable/disable clustering of each dimension of the heatmap}
+
+\item{show_gene_colours}{Optional logical argument indicating whether regions should have associated colours plotted as annotation track of heatmap}
 
 \item{region_df}{Data frame of regions with four columns (chrom,start,end,gene_name)}
 }
