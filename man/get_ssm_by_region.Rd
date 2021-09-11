@@ -11,7 +11,8 @@ get_ssm_by_region(
   region = "",
   basic_columns = TRUE,
   streamlined = FALSE,
-  maf_data
+  maf_data,
+  from_indexed_flatfile = FALSE
 )
 }
 \arguments{
@@ -24,6 +25,8 @@ get_ssm_by_region(
 \item{region}{Region formatted like chrX:1234-5678 instead of specifying chromosome, start and end separately}
 
 \item{basic_columns}{Set to TRUE to override the default behaviour of returning only the first 45 columns of MAF data}
+
+\item{from_indexed_flatfile}{Set to TRUE to avoid using the database and instead rely on flatfiles (only works for streamlined data, not full MAF details)}
 }
 \value{
 A data frame containing all the MAF data columns (one row per mutation)

@@ -644,6 +644,7 @@ append_to_table = function(table_name,data_df){
 #' @param maf_data Optionally provide a data frame in the MAF format, otherwise the database will be used
 #' @param sample_metadata This is used to complete your matrix. All GAMBL samples will be used by default. Provide a data frame with at least sample_id for all samples if you are using non-GAMBL data.
 #' @param use_name_column Set this to true to force the function to use the value in column "name" to name each feature in the output
+#' @param from_indexed_flatfile Set to TRUE to avoid using the database and instead rely on flatfiles (only works for streamlined data, not full MAF details)
 #'
 #' @return
 #' @export
@@ -766,6 +767,7 @@ get_ssm_by_regions = function(regions_list,regions_bed,streamlined=FALSE,maf_dat
 #' @param qend Query end coordinate of the range you are restricting to
 #' @param region Region formatted like chrX:1234-5678 instead of specifying chromosome, start and end separately
 #' @param basic_columns Set to TRUE to override the default behaviour of returning only the first 45 columns of MAF data
+#' @param from_indexed_flatfile Set to TRUE to avoid using the database and instead rely on flatfiles (only works for streamlined data, not full MAF details)
 #'
 #' @return A data frame containing all the MAF data columns (one row per mutation)
 #' @export
