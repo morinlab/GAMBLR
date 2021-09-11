@@ -10,10 +10,11 @@
 #'
 #' @examples
 #' coding_tabulated_df = get_coding_ssm_status(gene_symbols=c("MYC","KMT2D"))
+#' coding_tabulated_df = get_coding_ssm_status() #all lymphoma genes from bundled NHL gene list
 get_coding_ssm_status = function(gene_symbols,these_samples_metadata,from_flatfile=TRUE){
   if(missing(gene_symbols)){
-    message("you must supply at least one gene symbol")
-    return()
+    message("defaulting to all lymphoma genes")
+    gene_symbols = pull(lymphoma_genes,Gene)
   }
   if(missing(these_samples_metadata)){
     these_samples_metadata = get_gambl_metadata()

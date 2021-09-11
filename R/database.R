@@ -649,11 +649,11 @@ append_to_table = function(table_name,data_df){
 #' @export
 #'
 #' @examples
-get_ashm_count_matrix = function(regions_bed,maf_data,sample_metadata,use_name_column=FALSE){
+get_ashm_count_matrix = function(regions_bed,maf_data,sample_metadata,use_name_column=FALSE,from_indexed_flatfile=FALSE){
   if(missing(regions_bed)){
     regions_bed=grch37_ashm_regions
   }
-  ashm_maf=get_ssm_by_regions(regions_bed=regions_bed,streamlined=TRUE,maf_data=maf_data,use_name_column=use_name_column)
+  ashm_maf=get_ssm_by_regions(regions_bed=regions_bed,streamlined=TRUE,maf_data=maf_data,use_name_column=use_name_column,from_indexed_flatfile=from_indexed_flatfile)
 
   ashm_counted = ashm_maf %>% group_by(sample_id,region_name) %>% tally()
   if(missing(sample_metadata)){
@@ -717,7 +717,7 @@ get_ssm_by_gene = function(gene_symbol,coding_only=FALSE,rename_splice_region=TR
 #' regions_bed = grch37_ashm_regions %>% mutate(name=paste(gene,region,sep="_"))
 #' ashm_maf=get_ssm_by_regions(regions_bed=regions_bed,streamlined=TRUE,use_name_column=use_name_column)
 
-get_ssm_by_regions = function(regions_list,regions_bed,streamlined=FALSE,maf_data=maf_data,use_name_column=FALSE){
+get_ssm_by_regions = function(regions_list,regions_bed,streamlined=FALSE,maf_data=maf_data,use_name_column=FALSE,from_indexed_flatfile=FALSE){
   bed2region=function(x){
     paste0(x[1],":",as.numeric(x[2]),"-",as.numeric(x[3]))
   }
@@ -729,9 +729,9 @@ get_ssm_by_regions = function(regions_list,regions_bed,streamlined=FALSE,maf_dat
     }
   }
   if(missing(maf_data)){
-    region_mafs = lapply(regions,function(x){get_ssm_by_region(region=x,streamlined = streamlined)})
+    region_mafs = lapply(regions,function(x){get_ssm_by_region(region=x,streamlined = streamlined,from_indexed_flatfile = from_indexed_flatfile)})
   }else{
-    region_mafs = lapply(regions,function(x){get_ssm_by_region(region=x,streamlined = streamlined,maf_data=maf_data)})
+    region_mafs = lapply(regions,function(x){get_ssm_by_region(region=x,streamlined = streamlined,maf_data=maf_data,from_indexed_flatfile = from_indexed_flatfile)})
   }
   if(!use_name_column){
     rn = regions
@@ -777,13 +777,33 @@ get_ssm_by_regions = function(regions_list,regions_bed,streamlined=FALSE,maf_dat
 #' #specifying chromosome, start and end individually
 #' my_mutations=get_ssm_by_region(chromosome="8",qstart=128723128,qend=128774067)
 get_ssm_by_region = function(chromosome,qstart,qend,
-                             region="",basic_columns=TRUE,streamlined=FALSE,maf_data){
+                             region="",basic_columns=TRUE,streamlined=FALSE,maf_data,
+                             from_indexed_flatfile=FALSE){
+  tabix_bin = "/home/rmorin/miniconda3/bin/tabix"
   table_name = config::get("results_tables")$ssm
   db=config::get("database_name")
+  if(from_indexed_flatfile){
+    base_path = config::get("project_base")
+    #test if we have permissions for the full gambl + icgc merge
+    maf_partial_path = config::get("results_filatfiles")$ssm$all$full
+    maf_path = paste0(base_path,maf_partial_path)
+    maf_permissions = file.access(maf_path,4)
+    if(maf_permissions == -1){
+      #currently this will only return non-ICGC results
+      maf_partial_path = config::get("results_filatfiles")$ssm$gambl$full
+      base_path = config::get("project_base")
+      #default is non-ICGC
+      maf_path = paste0(base_path,maf_partial_path)
+    }
+    #substitute maf with bed.gz for indexed flatfiles
+    maf_path = stringr::str_replace(maf_path,".maf$",".bed.gz")
+
+  }
   if(!region==""){
     region = gsub(",","",region)
     #format is chr6:37060224-37151701
     split_chunks = unlist(strsplit(region,":"))
+    region = stringr::str_replace(region,"chr","")
     chromosome = split_chunks[1]
 
     startend = unlist(strsplit(split_chunks[2],"-"))
@@ -791,13 +811,30 @@ get_ssm_by_region = function(chromosome,qstart,qend,
     qend=as.numeric(startend[2])
     #print(class(qstart))
     #print(class(qend))
+
   }
+
   chromosome = gsub("chr","",chromosome)
   if(missing(maf_data)){
-    con <- DBI::dbConnect(RMariaDB::MariaDB(), dbname = db)
-    muts_region = dplyr::tbl(con,table_name) %>%
+    if(from_indexed_flatfile){
+      streamlined = TRUE
+      muts = system(paste(tabix_bin,maf_path,region),intern=TRUE)
+      if(length(muts)>0){
+        muts_region = readr::read_tsv(muts,col_names=c("Chromosome","Start_Position",
+                                                  "End_Position","Tumor_Sample_Barcode"))
+      }else{
+        muts_region = data.frame(Chromosome=character(),
+                                 Start_Position=character(),
+                                 End_Position=character(),
+                                 Tumor_Sample_Barcode=character())
+      }
+    }else{
+      con <- DBI::dbConnect(RMariaDB::MariaDB(), dbname = db)
+      muts_region = dplyr::tbl(con,table_name) %>%
       dplyr::filter(Chromosome == chromosome & Start_Position > qstart & Start_Position < qend)
-    muts_region = as.data.frame(muts_region)
+      muts_region = as.data.frame(muts_region)
+      DBI::dbDisconnect(con)
+    }
   }else{
     message("not using the database")
     #print(paste0("filtering based on Chromosome == ",chromosome," Start_Position >", qstart, "& Start_Position < ", qend))
@@ -811,9 +848,7 @@ get_ssm_by_region = function(chromosome,qstart,qend,
   }else if(basic_columns){
     muts_region = muts_region[,c(1:45)]
   }
-  if(missing(maf_data)){
-    DBI::dbDisconnect(con)
-  }
+
   return(muts_region)
 }
 
