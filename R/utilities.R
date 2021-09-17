@@ -542,7 +542,7 @@ annotate_hotspots = function(mutation_maf,recurrence_min = 5,analysis_base=c("FL
 #'
 #' @param annotated_maf A data frame in MAF format that has hotspots annotated using function annotate_hotspots().
 #' @param genes_of_interest List of genes for hotspot review. Currently only FOXO1, MYD88, and CREBBP are supported.
-#' @param genome_build Reference genome build for the coordinates in the mAF file. Currently only variations of hg19 genome build are supported.
+#' @param genome_build Reference genome build for the coordinates in the MAF file. The default is hg19 genome build.
 #'
 #' @return The same data frame with reviewed column "hot_spot"
 #' @export
