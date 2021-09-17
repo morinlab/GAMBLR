@@ -21,4 +21,5 @@ Tabulate mutation status for non-silent SSMs for a set of genes
 }
 \examples{
 coding_tabulated_df = get_coding_ssm_status(gene_symbols=c("MYC","KMT2D"))
+coding_tabulated_df = get_coding_ssm_status() #all lymphoma genes from bundled NHL gene list
 }

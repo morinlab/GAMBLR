@@ -9,7 +9,8 @@ get_ssm_by_regions(
   regions_bed,
   streamlined = FALSE,
   maf_data = maf_data,
-  use_name_column = FALSE
+  use_name_column = FALSE,
+  from_indexed_flatfile = FALSE
 )
 }
 \arguments{
