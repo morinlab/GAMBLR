@@ -538,6 +538,52 @@ annotate_hotspots = function(mutation_maf,recurrence_min = 5,analysis_base=c("FL
   return(hot_ssms)
 }
 
+#' Annotate MAF-like data frome with a hot_spot column indicating recurrent mutations
+#'
+#' @param annotated_maf A data frame in MAF format that has hotspots annotated using function annotate_hotspots().
+#' @param genes_of_interest List of genes for hotspot review. Currently only FOXO1, MYD88, and CREBBP are supported.
+#' @param genome_build Reference genome build for the coordinates in the mAF file. Currently only variations of hg19 genome build are supported.
+#'
+#' @return The same data frame with reviewed column "hot_spot"
+#' @export
+#' @import dplyr
+#'
+#' @examples
+#' hot_ssms = review_hotspots(annotate_hotspots(get_coding_ssm()), genes_of_interest=c("CREBBP"))
+
+review_hotspots = function(annotated_maf, genes_of_interest=c("FOXO1", "MYD88", "CREBBP"), genome_build="hg19"){
+
+  # check genome build because CREBBP coordinates are hg19-based
+  if (!genome_build %in% c("hg19", "grch37", "hs37d5", "GRCh37")){
+    stop("Currently only variations of hg19 genome build are supported.")
+  }
+
+  # check that at least one of the currently supported genes are present
+  if (sum(c("FOXO1", "MYD88", "CREBBP") %in% genes_of_interest)<1){
+      stop("Currently only FOXO1, MYD88, and CREBBP are supported. Please specify one of these genes.")
+  }
+
+  # notify user that there is limited number of genes currently supported
+  if (sum(c("FOXO1", "MYD88", "CREBBP") %in% genes_of_interest)>1 & length(genes_of_interest) > 1 ){
+      print("Currently only FOXO1, MYD88, and CREBBP are supported. By default only these genes from the supplied list will be reviewed.")
+  }
+
+  if("FOXO1" %in% genes_of_interest){
+      annotated_maf <- annotated_maf %>%
+          dplyr::mutate(hot_spot=ifelse(Hugo_Symbol=="FOXO1" & HGVSp_Short == "p.M1?", "TRUE" , hot_spot))
+  }
+  if("CREBBP" %in% genes_of_interest){
+      annotated_maf <- annotated_maf %>%
+          dplyr::mutate(hot_spot=ifelse(Hugo_Symbol=="CREBBP" & Start_Position > 3785000 & End_Position < 3791000 & Variant_Classification == "Missense_Mutation", "TRUE" , hot_spot))
+  }
+  if("MYD88" %in% genes_of_interest){
+      annotated_maf <- annotated_maf %>%
+          dplyr::mutate(Hugo_Symbol=="MYD88" & HGVSp_Short %in% c("p.L273P", "p.L265P"), "TRUE" , hot_spot)
+  }
+  return(annotated_maf)
+}
+
+
 #' Make a UCSC-ready custom track file from SV data
 #
 #' @param sv_bedpe A bedpe formatted data frame of SVs
