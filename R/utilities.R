@@ -553,9 +553,18 @@ annotate_hotspots = function(mutation_maf,recurrence_min = 5,analysis_base=c("FL
 
 review_hotspots = function(annotated_maf, genes_of_interest=c("FOXO1", "MYD88", "CREBBP"), genome_build="hg19"){
 
-  # check genome build because CREBBP coordinates are hg19-based
-  if (!genome_build %in% c("hg19", "grch37", "hs37d5", "GRCh37")){
-    stop("Currently only variations of hg19 genome build are supported.")
+  # check genome build because CREBBP coordinates are hg19-based or hg38-based
+  coordinates <- list()
+  if (genome_build %in% c("hg19", "grch37", "hs37d5", "GRCh37")){
+    coordinates$start <- 3785000
+    coordinates$end <- 3791000
+    print(coordinates)
+  }else if(genome_build %in% c("hg38", "grch38", "GRCh38")){
+    coordinates$start <- 3734999
+    coordinates$end <- 3740999
+    print(coordinates)
+  }else{
+    stop("The genome build specified is not currently supported. Please provide MAF file in one of the following cordinates: hg19, grch37, hs37d5, GRCh37, hg38, grch38, or GRCh38")
   }
 
   # check that at least one of the currently supported genes are present
@@ -574,7 +583,7 @@ review_hotspots = function(annotated_maf, genes_of_interest=c("FOXO1", "MYD88", 
   }
   if("CREBBP" %in% genes_of_interest){
       annotated_maf <- annotated_maf %>%
-          dplyr::mutate(hot_spot=ifelse(Hugo_Symbol=="CREBBP" & Start_Position > 3785000 & End_Position < 3791000 & Variant_Classification == "Missense_Mutation", "TRUE" , hot_spot))
+          dplyr::mutate(hot_spot=ifelse(Hugo_Symbol=="CREBBP" & Start_Position > coordinates$start & End_Position < coordinates$end & Variant_Classification == "Missense_Mutation", "TRUE" , hot_spot))
   }
   if("MYD88" %in% genes_of_interest){
       annotated_maf <- annotated_maf %>%
