@@ -63,7 +63,6 @@ get_coding_ssm_status = function(gene_symbols,
               dplyr::mutate(gene=paste0(gene, "HOTSPOT")) %>%
               unique() %>%
               dplyr::mutate(mutated=ifelse(hot_spot=="TRUE", 1, 0)) %>%
-              replace(is.na(.), 0) %>%
               dplyr::filter(mutated==1) %>%
               dplyr::select(-hot_spot)
 
