@@ -1633,7 +1633,7 @@ FtestCNV <- function(gistic_lesions, metadata, comparison, fdr.method="fdr", fdr
 
 
 
-#' Using GISTIC2.0 outputs, perform Fisher's exact test to compare CNV frequencies between 2 groups
+#' If some samples are missing from the matrix, add them with filled in 0 as value and normalize their ordering for consistency
 #'
 #' @param incoming_matrix A matrix or data frame that should be filled.
 #' @param list_of_samples Vector specifying all desired samples to be present in the resulting matrix.
