@@ -1630,3 +1630,47 @@ FtestCNV <- function(gistic_lesions, metadata, comparison, fdr.method="fdr", fdr
   return(OUTPUT)
   message("Done!")
 }
+
+
+
+#' Using GISTIC2.0 outputs, perform Fisher's exact test to compare CNV frequencies between 2 groups
+#'
+#' @param incoming_matrix A matrix or data frame that should be filled.
+#' @param list_of_samples Vector specifying all desired samples to be present in the resulting matrix.
+#' @param fill_in_values Value that will be used to fill in the matrix.
+#' @param normalize_order Logical parameter specifying whether sample order should be according to the supplied list. Default is TRUE.
+#' @param samples_in_rows Logical argument indicating whether samples are in rows or columns. Default assumes samples are in rows and columns are features.
+#'
+#' @return a data frame with maintained orientation (rows and columns) where samples from the supplied list are present and reordered according to the specified order
+#' @export
+#'
+#' @examples
+#' partial_matrix = get_coding_ssm_status(these_samples_metadata = (get_gambl_metadata(case_set = "BL--DLBCL") %>% filter(pairing_status=="unmatched")), include_hotspots = FALSE)
+#' complete_matrix = complete_missing_from_matrix(partial_matrix, get_gambl_metadata() %>% pull(sample_id))
+complete_missing_from_matrix = function(incoming_matrix,
+                                        list_of_samples,
+                                        fill_in_values = 0,
+                                        normalize_order=TRUE,
+                                        samples_in_rows=TRUE){
+
+  if(!samples_in_rows){
+    incoming_matrix = as.data.frame(incoming_matrix) %>% t()
+  }
+
+  matrix_with_all_samples <- rbind(incoming_matrix,
+        matrix(fill_in_values:fill_in_values,# populate matrix with all 0
+               length(setdiff(list_of_samples, rownames(incoming_matrix))), # how many rows
+               ncol(incoming_matrix), # how many columns
+               dimnames = list(setdiff(list_of_samples, rownames(incoming_matrix)), # name rows with sample IDs
+                               colnames(incoming_matrix))) %>% # name columns with gene names
+          as.data.frame(.))
+  if(normalize_order){
+    matrix_with_all_samples = matrix_with_all_samples[ order(match(rownames(matrix_with_all_samples), list_of_samples)),]
+  }
+
+  if(!samples_in_rows){
+    matrix_with_all_samples = as.data.frame(matrix_with_all_samples) %>% t()
+  }
+
+  return(matrix_with_all_samples)
+}
