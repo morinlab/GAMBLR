@@ -1,9 +1,9 @@
 
 #' Tabulate mutation status for non-silent SSMs for a set of genes
 #'
-#' @param gene_symbols
-#' @param these_samples_metadata
-#' @param from_flatfile
+#' @param gene_symbols List of gene symbols for which the mutation status will be tabulated. If not provided, lymphoma genes will be returned by default.
+#' @param these_samples_metadata The matedata for samples of interest to be included in the returned matrix. Only the column "sample_id" is required. If not provided, the matrix is tabulated for all available samples as default.
+#' @param from_flatfile Optional argument whether to use database or flat file to retrieve mutations.
 #' @param include_hotspots Logical parameter indicating whether hotspots object should also be tabulated. Default is TRUE.
 #' @param from_flatfile Integer value indicating minimal recurrence level
 #' @param review_hotspots Logical parameter indicating whether hotspots object should be reviewed to include functionally relevant mutations or rare lymphoma-related genes. Default is TRUE.
