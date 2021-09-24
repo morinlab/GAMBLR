@@ -363,6 +363,12 @@ prettyOncoplot = function(maftools_obj,
     }
   }
 
+  if(!missing(numericMetadataColumns)){
+    message(paste0("The column(s) ", numericMetadataColumns, " specified both in metadata and numeric metadata. Plotting as numeric values..."))
+    metadataColumns = metadataColumns[!metadataColumns %in% numericMetadataColumns]
+  }
+
+
   if(missing(onco_matrix_path)){
     onco_matrix_path="onco_matrix.txt"
   }
