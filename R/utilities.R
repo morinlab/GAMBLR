@@ -4,6 +4,10 @@
 #' @param gene_symbols
 #' @param these_samples_metadata
 #' @param from_flatfile
+#' @param include_hotspots Logical parameter indicating whether hotspots object should also be tabulated. Default is TRUE.
+#' @param from_flatfile Integer value indicating minimal recurrence level
+#' @param review_hotspots Logical parameter indicating whether hotspots object should be reviewed to include functionally relevant mutations or rare lymphoma-related genes. Default is TRUE.
+#' @param ... Other parameters accepted by the review_hotspots() function
 #'
 #' @return
 #' @export
@@ -11,7 +15,14 @@
 #' @examples
 #' coding_tabulated_df = get_coding_ssm_status(gene_symbols=c("MYC","KMT2D"))
 #' coding_tabulated_df = get_coding_ssm_status() #all lymphoma genes from bundled NHL gene list
-get_coding_ssm_status = function(gene_symbols,these_samples_metadata,from_flatfile=TRUE){
+get_coding_ssm_status = function(gene_symbols,
+                                  these_samples_metadata,
+                                  from_flatfile=TRUE,
+                                  include_hotspots=TRUE,
+                                  recurrence_min = 5,
+                                  review_hotspots=TRUE,
+                                  genes_of_interest = c("FOXO1", "MYD88", "CREBBP"),
+                                  genome_build = "hg19"){
   if(missing(gene_symbols)){
     message("defaulting to all lymphoma genes")
     gene_symbols = pull(lymphoma_genes,Gene)
@@ -20,7 +31,10 @@ get_coding_ssm_status = function(gene_symbols,these_samples_metadata,from_flatfi
     these_samples_metadata = get_gambl_metadata()
   }
 
-  coding = get_coding_ssm(from_flatfile=from_flatfile) %>%
+  # call it once so the object can be reused if user wants to annotate hotspots
+  coding_ssm = get_coding_ssm(from_flatfile=from_flatfile)
+
+  coding = coding_ssm %>%
     dplyr::filter(Hugo_Symbol %in% gene_symbols &
                     Variant_Classification != "Synonymous") %>%
     dplyr::select(Tumor_Sample_Barcode,Hugo_Symbol) %>%
@@ -33,6 +47,44 @@ get_coding_ssm_status = function(gene_symbols,these_samples_metadata,from_flatfi
   #complete(wide_coding,fill=list("sample_id"=samples_table$sample_id))
   all_tabulated = left_join(samples_table,wide_coding)
   all_tabulated = all_tabulated %>% replace(is.na(.), 0)
+
+  # include hotspots if user chooses to do so
+  if(include_hotspots){
+    # first annotate
+    annotated = annotate_hotspots(coding_ssm, recurrence_min = recurrence_min)
+    # review for the supported genes
+    if(review_hotspots){
+      annotated = review_hotspots(annotated, genes_of_interest = genes_of_interest, genome_build = genome_build)
+    }
+    hotspots = annotated %>%
+              dplyr::filter(Hugo_Symbol %in% gene_symbols) %>%
+              dplyr::select(Tumor_Sample_Barcode,Hugo_Symbol, hot_spot) %>%
+              dplyr::rename("sample_id"="Tumor_Sample_Barcode","gene"="Hugo_Symbol") %>%
+              dplyr::mutate(gene=paste0(gene, "HOTSPOT")) %>%
+              unique() %>%
+              dplyr::mutate(mutated=ifelse(hot_spot=="TRUE", 1, 0)) %>%
+              replace(is.na(.), 0) %>%
+              dplyr::filter(mutated==1) %>%
+              dplyr::select(-hot_spot)
+
+    # long to wide hotspots, samples are tabulated with 0 if no hotspot is detected
+    wide_hotspots = pivot_wider(hotspots,names_from = "gene",
+                          values_from="mutated",values_fill = 0)
+    # join with the ssm object
+    all_tabulated = left_join(all_tabulated,wide_hotspots)
+    all_tabulated = all_tabulated %>% replace(is.na(.), 0)
+    # make SSM and hotspots non-redundant by giving priority to hotspot feature and setting SSM to 0
+    for (hotspot_site in colnames(wide_hotspots)[grepl("HOTSPOT", colnames(wide_hotspots))]){
+          this_gene = gsub("HOTSPOT", "", hotspot_site)
+          redundant_features = all_tabulated %>% dplyr::select(starts_with(this_gene))
+          # if not both the gene and the hotspot are present, go to the next iteration
+          if(ncol(redundant_features)!=2) next
+          # if both gene and it's hotspot are in the matrix, give priority to hotspot feature
+          all_tabulated[(all_tabulated[,this_gene]>0 & all_tabulated[,paste0(this_gene, "HOTSPOT")]==1),][,c(this_gene, paste0(this_gene, "HOTSPOT"))][,this_gene] = 0
+    }
+
+  }
+
   return(all_tabulated)
 }
 
@@ -558,11 +610,9 @@ review_hotspots = function(annotated_maf, genes_of_interest=c("FOXO1", "MYD88", 
   if (genome_build %in% c("hg19", "grch37", "hs37d5", "GRCh37")){
     coordinates$start <- 3785000
     coordinates$end <- 3791000
-    print(coordinates)
   }else if(genome_build %in% c("hg38", "grch38", "GRCh38")){
     coordinates$start <- 3734999
     coordinates$end <- 3740999
-    print(coordinates)
   }else{
     stop("The genome build specified is not currently supported. Please provide MAF file in one of the following cordinates: hg19, grch37, hs37d5, GRCh37, hg38, grch38, or GRCh38")
   }
@@ -573,7 +623,7 @@ review_hotspots = function(annotated_maf, genes_of_interest=c("FOXO1", "MYD88", 
   }
 
   # notify user that there is limited number of genes currently supported
-  if (sum(c("FOXO1", "MYD88", "CREBBP") %in% genes_of_interest)>1 & length(genes_of_interest) > 1 ){
+  if (sum(c("FOXO1", "MYD88", "CREBBP") %in% genes_of_interest)>1 & length(genes_of_interest) > 3 ){
       print("Currently only FOXO1, MYD88, and CREBBP are supported. By default only these genes from the supplied list will be reviewed.")
   }
 
@@ -587,7 +637,7 @@ review_hotspots = function(annotated_maf, genes_of_interest=c("FOXO1", "MYD88", 
   }
   if("MYD88" %in% genes_of_interest){
       annotated_maf <- annotated_maf %>%
-          dplyr::mutate(Hugo_Symbol=="MYD88" & HGVSp_Short %in% c("p.L273P", "p.L265P"), "TRUE" , hot_spot)
+          dplyr::mutate(hot_spot=ifelse(Hugo_Symbol=="MYD88" & HGVSp_Short %in% c("p.L273P", "p.L265P"), "TRUE" , hot_spot))
   }
   return(annotated_maf)
 }
