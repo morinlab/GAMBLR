@@ -13,9 +13,9 @@ complete_missing_from_matrix(
 )
 }
 \arguments{
-\item{incoming_matrix}{A matrix or data frame that should be filled.}
+\item{incoming_matrix}{A matrix or data frame that should be filled. Required parameter.}
 
-\item{list_of_samples}{Vector specifying all desired samples to be present in the resulting matrix.}
+\item{list_of_samples}{Vector specifying all desired samples to be present in the resulting matrix. Required parameter.}
 
 \item{fill_in_values}{Value that will be used to fill in the matrix.}
 
