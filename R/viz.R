@@ -1271,7 +1271,7 @@ prettyChromoplot = function(scores,
 #' @examples
 #' ggplot(mpg, aes(displ, hwy, colour = class)) +
 #' geom_point() +
-#' theme_Morons
+#' theme_Morons()
 
 theme_Morons <- function(base_size=14,
                         base_family="Arial",
