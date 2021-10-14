@@ -799,7 +799,7 @@ get_ssm_by_region = function(chromosome,qstart,qend,
     if(mode=="slms-3"){
       maf_partial_path = config::get("results_filatfiles")$ssm$all$full
     }else if (mode=="strelka2"){
-      maf_partial_path = config::get("results_filatfiles")$ssm$gambl$strelka2
+      maf_partial_path = config::get("results_filatfiles")$ssm$all$strelka2
     }else{
       stop("You requested results from indexed flatfile. The mode should be set to either slms-3 (default) or strelka2. Please specify one of these modes.")
     }
