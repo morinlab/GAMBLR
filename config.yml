@@ -40,6 +40,7 @@ default:
             gambl:
                 full: "gambl/slms-3_vcf2maf_current/level_3/final_merged_grch37.maf"
                 cds: "gambl/slms-3_vcf2maf_current/level_3/final_merged_grch37.CDS.maf"
+                strelka2: "gambl/strelka-1.1_vcf2maf-1.2/level_3/final_merged_grch37.maf"
 
     results_directories:
         manta: "manta_current/99-outputs/bedpe/"

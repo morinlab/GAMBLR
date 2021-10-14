@@ -149,7 +149,9 @@ get_mutation_frequency_bin_matrix = function(regions,
                                   show_gene_colours=FALSE,
                                   legend_row=3,
                                   legend_col=3,
-                                  legend_direction="horizontal"){
+                                  legend_direction="horizontal",
+                                  from_indexed_flatfile=FALSE,
+                                  mode="slms-3"){
 
     if(missing(regions)){
       if(missing(regions_df)){
@@ -163,7 +165,8 @@ get_mutation_frequency_bin_matrix = function(regions,
     this_region=x,drop_unmutated = TRUE,
     slide_by = slide_by,plot_type="none",window_size=window_size,
     min_count_per_bin=min_count_per_bin,return_count = TRUE,
-    metadata = these_samples_metadata)})
+    metadata = these_samples_metadata,
+    from_indexed_flatfile=from_indexed_flatfile, mode=mode)})
 
   all= do.call("rbind",dfs)
   #add a fake bin for one gene and make every patient not mutated in it (to fill gaps)
@@ -326,7 +329,9 @@ calc_mutation_frequency_sliding_windows =
            min_count_per_bin=3,
            return_count = FALSE,
            drop_unmutated=FALSE,
-           classification_column="lymphgen"){
+           classification_column="lymphgen",
+           from_indexed_flatfile=FALSE,
+           mode="slms-3"){
 
 
   max_region = 1000000
@@ -357,11 +362,16 @@ calc_mutation_frequency_sliding_windows =
   windows.dt = as.data.table(windows)
 
 
-  region_ssm = GAMBLR::get_ssm_by_region(region=this_region,streamlined = TRUE) %>%
+  region_ssm = GAMBLR::get_ssm_by_region(region=this_region,streamlined = TRUE, from_indexed_flatfile=from_indexed_flatfile, mode=mode) %>%
     dplyr::rename(c("start"="Start_Position","sample_id"="Tumor_Sample_Barcode")) %>%
     mutate(mutated=1)
 
-  region.dt = mutate(region_ssm,end=start+1) %>% as.data.table()
+  region.dt = region_ssm %>%
+    dplyr::mutate(start=as.numeric(as.character(start)),
+                  end=start+1,
+                  end=as.numeric(as.character(end))) %>%
+    dplyr::relocate(start, .before=end) %>%
+    as.data.table()
   setkey(windows.dt,start,end)
   setkey(region.dt,start,end)
 
