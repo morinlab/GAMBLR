@@ -27,7 +27,7 @@ nothing
 Define function for consistent plot theme
 }
 \examples{
-ggplot(mpg, aes(displ, hwy, colour = class)) + 
+ggplot(mpg, aes(displ, hwy, colour = class)) +
 geom_point() +
-theme_Morons
+theme_Morons()
 }

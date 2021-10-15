@@ -123,6 +123,8 @@ trim_scale_expression <- function(x){
 #' @param legend_row Fiddle with these to widen or narrow your legend
 #' @param legend_col Fiddle with these to widen or narrow your legend
 #' @param legend_col Accepts one of "horizontal" (default) or "vertical" to indicate in which direction the legend will be drawn
+#' @param from_indexed_flatfile Set to TRUE to avoid using the database and instead rely on flatfiles (only works for streamlined data, not full MAF details)
+#' @param mode Only works with indexed flatfiles. Accepts 2 options of "slms-3" and "strelka2" to indicate which variant caller to use. Default is "slms-3".
 #'
 #'
 #' @return
@@ -313,6 +315,8 @@ get_mutation_frequency_bin_matrix = function(regions,
 #' @param min_count_per_bin
 #' @param return_count
 #' @param drop_unmutated This may not currently work properly.
+#' @param from_indexed_flatfile Set to TRUE to avoid using the database and instead rely on flatfiles (only works for streamlined data, not full MAF details)
+#' @param mode Only works with indexed flatfiles. Accepts 2 options of "slms-3" and "strelka2" to indicate which variant caller to use. Default is "slms-3".
 #'
 #' @return
 #' @export

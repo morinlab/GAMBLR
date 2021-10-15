@@ -717,6 +717,8 @@ get_ssm_by_gene = function(gene_symbol,coding_only=FALSE,rename_splice_region=TR
 #' @param regions_bed Better yet, provide a bed file with the coordinates you want to retrieve
 #' @param streamlined Return a basic rather than full MAF format
 #' @param use_name_column If your bed-format data frame has a name column (must be named "name") these can be used to name your regions
+#' @param from_indexed_flatfile Set to TRUE to avoid using the database and instead rely on flatfiles (only works for streamlined data, not full MAF details)
+#' @param mode Only works with indexed flatfiles. Accepts 2 options of "slms-3" and "strelka2" to indicate which variant caller to use. Default is "slms-3".
 #'
 #' @return
 #' @export
@@ -776,6 +778,7 @@ get_ssm_by_regions = function(regions_list,regions_bed,streamlined=FALSE,maf_dat
 #' @param region Region formatted like chrX:1234-5678 instead of specifying chromosome, start and end separately
 #' @param basic_columns Set to TRUE to override the default behaviour of returning only the first 45 columns of MAF data
 #' @param from_indexed_flatfile Set to TRUE to avoid using the database and instead rely on flatfiles (only works for streamlined data, not full MAF details)
+#' @param mode Only works with indexed flatfiles. Accepts 2 options of "slms-3" and "strelka2" to indicate which variant caller to use. Default is "slms-3".
 #'
 #' @return A data frame containing all the MAF data columns (one row per mutation)
 #' @export
