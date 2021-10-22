@@ -25,7 +25,9 @@ get_mutation_frequency_bin_matrix(
   show_gene_colours = FALSE,
   legend_row = 3,
   legend_col = 3,
-  legend_direction = "horizontal"
+  legend_direction = "horizontal",
+  from_indexed_flatfile = FALSE,
+  mode = "slms-3"
 )
 }
 \arguments{
@@ -56,6 +58,10 @@ get_mutation_frequency_bin_matrix(
 \item{legend_row}{Fiddle with these to widen or narrow your legend}
 
 \item{legend_col}{Accepts one of "horizontal" (default) or "vertical" to indicate in which direction the legend will be drawn}
+
+\item{from_indexed_flatfile}{Set to TRUE to avoid using the database and instead rely on flatfiles (only works for streamlined data, not full MAF details)}
+
+\item{mode}{Only works with indexed flatfiles. Accepts 2 options of "slms-3" and "strelka2" to indicate which variant caller to use. Default is "slms-3".}
 
 \item{region_df}{Data frame of regions with four columns (chrom,start,end,gene_name)}
 }

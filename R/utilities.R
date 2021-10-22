@@ -1,9 +1,13 @@
 
 #' Tabulate mutation status for non-silent SSMs for a set of genes
 #'
-#' @param gene_symbols
-#' @param these_samples_metadata
-#' @param from_flatfile
+#' @param gene_symbols List of gene symbols for which the mutation status will be tabulated. If not provided, lymphoma genes will be returned by default.
+#' @param these_samples_metadata The matedata for samples of interest to be included in the returned matrix. Only the column "sample_id" is required. If not provided, the matrix is tabulated for all available samples as default.
+#' @param from_flatfile Optional argument whether to use database or flat file to retrieve mutations.
+#' @param include_hotspots Logical parameter indicating whether hotspots object should also be tabulated. Default is TRUE.
+#' @param from_flatfile Integer value indicating minimal recurrence level
+#' @param review_hotspots Logical parameter indicating whether hotspots object should be reviewed to include functionally relevant mutations or rare lymphoma-related genes. Default is TRUE.
+#' @param ... Other parameters accepted by the review_hotspots() function
 #'
 #' @return
 #' @export
@@ -11,7 +15,14 @@
 #' @examples
 #' coding_tabulated_df = get_coding_ssm_status(gene_symbols=c("MYC","KMT2D"))
 #' coding_tabulated_df = get_coding_ssm_status() #all lymphoma genes from bundled NHL gene list
-get_coding_ssm_status = function(gene_symbols,these_samples_metadata,from_flatfile=TRUE){
+get_coding_ssm_status = function(gene_symbols,
+                                  these_samples_metadata,
+                                  from_flatfile=TRUE,
+                                  include_hotspots=TRUE,
+                                  recurrence_min = 5,
+                                  review_hotspots=TRUE,
+                                  genes_of_interest = c("FOXO1", "MYD88", "CREBBP"),
+                                  genome_build = "hg19"){
   if(missing(gene_symbols)){
     message("defaulting to all lymphoma genes")
     gene_symbols = pull(lymphoma_genes,Gene)
@@ -20,7 +31,10 @@ get_coding_ssm_status = function(gene_symbols,these_samples_metadata,from_flatfi
     these_samples_metadata = get_gambl_metadata()
   }
 
-  coding = get_coding_ssm(from_flatfile=from_flatfile) %>%
+  # call it once so the object can be reused if user wants to annotate hotspots
+  coding_ssm = get_coding_ssm(from_flatfile=from_flatfile)
+
+  coding = coding_ssm %>%
     dplyr::filter(Hugo_Symbol %in% gene_symbols &
                     Variant_Classification != "Synonymous") %>%
     dplyr::select(Tumor_Sample_Barcode,Hugo_Symbol) %>%
@@ -33,6 +47,43 @@ get_coding_ssm_status = function(gene_symbols,these_samples_metadata,from_flatfi
   #complete(wide_coding,fill=list("sample_id"=samples_table$sample_id))
   all_tabulated = left_join(samples_table,wide_coding)
   all_tabulated = all_tabulated %>% replace(is.na(.), 0)
+
+  # include hotspots if user chooses to do so
+  if(include_hotspots){
+    # first annotate
+    annotated = annotate_hotspots(coding_ssm, recurrence_min = recurrence_min)
+    # review for the supported genes
+    if(review_hotspots){
+      annotated = review_hotspots(annotated, genes_of_interest = genes_of_interest, genome_build = genome_build)
+    }
+    hotspots = annotated %>%
+              dplyr::filter(Hugo_Symbol %in% gene_symbols) %>%
+              dplyr::select(Tumor_Sample_Barcode,Hugo_Symbol, hot_spot) %>%
+              dplyr::rename("sample_id"="Tumor_Sample_Barcode","gene"="Hugo_Symbol") %>%
+              dplyr::mutate(gene=paste0(gene, "HOTSPOT")) %>%
+              unique() %>%
+              dplyr::mutate(mutated=ifelse(hot_spot=="TRUE", 1, 0)) %>%
+              dplyr::filter(mutated==1) %>%
+              dplyr::select(-hot_spot)
+
+    # long to wide hotspots, samples are tabulated with 0 if no hotspot is detected
+    wide_hotspots = pivot_wider(hotspots,names_from = "gene",
+                          values_from="mutated",values_fill = 0)
+    # join with the ssm object
+    all_tabulated = left_join(all_tabulated,wide_hotspots)
+    all_tabulated = all_tabulated %>% replace(is.na(.), 0)
+    # make SSM and hotspots non-redundant by giving priority to hotspot feature and setting SSM to 0
+    for (hotspot_site in colnames(wide_hotspots)[grepl("HOTSPOT", colnames(wide_hotspots))]){
+          this_gene = gsub("HOTSPOT", "", hotspot_site)
+          redundant_features = all_tabulated %>% dplyr::select(starts_with(this_gene))
+          # if not both the gene and the hotspot are present, go to the next iteration
+          if(ncol(redundant_features)!=2) next
+          # if both gene and it's hotspot are in the matrix, give priority to hotspot feature
+          all_tabulated[(all_tabulated[,this_gene]>0 & all_tabulated[,paste0(this_gene, "HOTSPOT")]==1),][,c(this_gene, paste0(this_gene, "HOTSPOT"))][,this_gene] = 0
+    }
+
+  }
+
   return(all_tabulated)
 }
 
@@ -72,6 +123,8 @@ trim_scale_expression <- function(x){
 #' @param legend_row Fiddle with these to widen or narrow your legend
 #' @param legend_col Fiddle with these to widen or narrow your legend
 #' @param legend_col Accepts one of "horizontal" (default) or "vertical" to indicate in which direction the legend will be drawn
+#' @param from_indexed_flatfile Set to TRUE to avoid using the database and instead rely on flatfiles (only works for streamlined data, not full MAF details)
+#' @param mode Only works with indexed flatfiles. Accepts 2 options of "slms-3" and "strelka2" to indicate which variant caller to use. Default is "slms-3".
 #'
 #'
 #' @return
@@ -98,7 +151,9 @@ get_mutation_frequency_bin_matrix = function(regions,
                                   show_gene_colours=FALSE,
                                   legend_row=3,
                                   legend_col=3,
-                                  legend_direction="horizontal"){
+                                  legend_direction="horizontal",
+                                  from_indexed_flatfile=FALSE,
+                                  mode="slms-3"){
 
     if(missing(regions)){
       if(missing(regions_df)){
@@ -112,7 +167,8 @@ get_mutation_frequency_bin_matrix = function(regions,
     this_region=x,drop_unmutated = TRUE,
     slide_by = slide_by,plot_type="none",window_size=window_size,
     min_count_per_bin=min_count_per_bin,return_count = TRUE,
-    metadata = these_samples_metadata)})
+    metadata = these_samples_metadata,
+    from_indexed_flatfile=from_indexed_flatfile, mode=mode)})
 
   all= do.call("rbind",dfs)
   #add a fake bin for one gene and make every patient not mutated in it (to fill gaps)
@@ -259,6 +315,8 @@ get_mutation_frequency_bin_matrix = function(regions,
 #' @param min_count_per_bin
 #' @param return_count
 #' @param drop_unmutated This may not currently work properly.
+#' @param from_indexed_flatfile Set to TRUE to avoid using the database and instead rely on flatfiles (only works for streamlined data, not full MAF details)
+#' @param mode Only works with indexed flatfiles. Accepts 2 options of "slms-3" and "strelka2" to indicate which variant caller to use. Default is "slms-3".
 #'
 #' @return
 #' @export
@@ -275,7 +333,9 @@ calc_mutation_frequency_sliding_windows =
            min_count_per_bin=3,
            return_count = FALSE,
            drop_unmutated=FALSE,
-           classification_column="lymphgen"){
+           classification_column="lymphgen",
+           from_indexed_flatfile=FALSE,
+           mode="slms-3"){
 
 
   max_region = 1000000
@@ -306,11 +366,16 @@ calc_mutation_frequency_sliding_windows =
   windows.dt = as.data.table(windows)
 
 
-  region_ssm = GAMBLR::get_ssm_by_region(region=this_region,streamlined = TRUE) %>%
+  region_ssm = GAMBLR::get_ssm_by_region(region=this_region,streamlined = TRUE, from_indexed_flatfile=from_indexed_flatfile, mode=mode) %>%
     dplyr::rename(c("start"="Start_Position","sample_id"="Tumor_Sample_Barcode")) %>%
     mutate(mutated=1)
 
-  region.dt = mutate(region_ssm,end=start+1) %>% as.data.table()
+  region.dt = region_ssm %>%
+    dplyr::mutate(start=as.numeric(as.character(start)),
+                  end=start+1,
+                  end=as.numeric(as.character(end))) %>%
+    dplyr::relocate(start, .before=end) %>%
+    as.data.table()
   setkey(windows.dt,start,end)
   setkey(region.dt,start,end)
 
@@ -537,6 +602,59 @@ annotate_hotspots = function(mutation_maf,recurrence_min = 5,analysis_base=c("FL
   hot_ssms = left_join(mutation_maf,filled_coords,by=c("Chromosome","Start_Position"))
   return(hot_ssms)
 }
+
+#' Annotate MAF-like data frome with a hot_spot column indicating recurrent mutations
+#'
+#' @param annotated_maf A data frame in MAF format that has hotspots annotated using function annotate_hotspots().
+#' @param genes_of_interest List of genes for hotspot review. Currently only FOXO1, MYD88, and CREBBP are supported.
+#' @param genome_build Reference genome build for the coordinates in the MAF file. The default is hg19 genome build.
+#'
+#' @return The same data frame with reviewed column "hot_spot"
+#' @export
+#' @import dplyr
+#'
+#' @examples
+#' hot_ssms = review_hotspots(annotate_hotspots(get_coding_ssm()), genes_of_interest=c("CREBBP"))
+
+review_hotspots = function(annotated_maf, genes_of_interest=c("FOXO1", "MYD88", "CREBBP"), genome_build="hg19"){
+
+  # check genome build because CREBBP coordinates are hg19-based or hg38-based
+  coordinates <- list()
+  if (genome_build %in% c("hg19", "grch37", "hs37d5", "GRCh37")){
+    coordinates$start <- 3785000
+    coordinates$end <- 3791000
+  }else if(genome_build %in% c("hg38", "grch38", "GRCh38")){
+    coordinates$start <- 3734999
+    coordinates$end <- 3740999
+  }else{
+    stop("The genome build specified is not currently supported. Please provide MAF file in one of the following cordinates: hg19, grch37, hs37d5, GRCh37, hg38, grch38, or GRCh38")
+  }
+
+  # check that at least one of the currently supported genes are present
+  if (sum(c("FOXO1", "MYD88", "CREBBP") %in% genes_of_interest)<1){
+      stop("Currently only FOXO1, MYD88, and CREBBP are supported. Please specify one of these genes.")
+  }
+
+  # notify user that there is limited number of genes currently supported
+  if (sum(c("FOXO1", "MYD88", "CREBBP") %in% genes_of_interest)>1 & length(genes_of_interest) > 3 ){
+      print("Currently only FOXO1, MYD88, and CREBBP are supported. By default only these genes from the supplied list will be reviewed.")
+  }
+
+  if("FOXO1" %in% genes_of_interest){
+      annotated_maf <- annotated_maf %>%
+          dplyr::mutate(hot_spot=ifelse(Hugo_Symbol=="FOXO1" & HGVSp_Short == "p.M1?", "TRUE" , hot_spot))
+  }
+  if("CREBBP" %in% genes_of_interest){
+      annotated_maf <- annotated_maf %>%
+          dplyr::mutate(hot_spot=ifelse(Hugo_Symbol=="CREBBP" & Start_Position > coordinates$start & End_Position < coordinates$end & Variant_Classification == "Missense_Mutation", "TRUE" , hot_spot))
+  }
+  if("MYD88" %in% genes_of_interest){
+      annotated_maf <- annotated_maf %>%
+          dplyr::mutate(hot_spot=ifelse(Hugo_Symbol=="MYD88" & HGVSp_Short %in% c("p.L273P", "p.L265P"), "TRUE" , hot_spot))
+  }
+  return(annotated_maf)
+}
+
 
 #' Make a UCSC-ready custom track file from SV data
 #
@@ -1575,4 +1693,61 @@ FtestCNV <- function(gistic_lesions, metadata, comparison, fdr.method="fdr", fdr
   OUTPUT <- list("DISTINCT"=DISTINCT, "CNV.EVENTS"=CNV.EVENTS, "GRAPH"=GRAPH)
   return(OUTPUT)
   message("Done!")
+}
+
+
+
+#' If some samples are missing from the matrix, add them with filled in 0 as value and normalize their ordering for consistency
+#'
+#' @param incoming_matrix A matrix or data frame that should be filled. Required parameter.
+#' @param list_of_samples Vector specifying all desired samples to be present in the resulting matrix. Required parameter.
+#' @param fill_in_values Value that will be used to fill in the matrix.
+#' @param normalize_order Logical parameter specifying whether sample order should be according to the supplied list. Default is TRUE.
+#' @param samples_in_rows Logical argument indicating whether samples are in rows or columns. Default assumes samples are in rows and columns are features.
+#'
+#' @return a data frame with maintained orientation (rows and columns) where samples from the supplied list are present and reordered according to the specified order
+#' @export
+#'
+#' @examples
+#' partial_matrix = get_coding_ssm_status(these_samples_metadata = (get_gambl_metadata(case_set = "BL--DLBCL") %>% filter(pairing_status=="unmatched")), include_hotspots = FALSE)
+#' complete_matrix = complete_missing_from_matrix(partial_matrix, get_gambl_metadata() %>% pull(sample_id))
+complete_missing_from_matrix = function(incoming_matrix,
+                                        list_of_samples,
+                                        fill_in_values = 0,
+                                        normalize_order=TRUE,
+                                        samples_in_rows=TRUE){
+
+  # check for required arguments
+  if (missing(incoming_matrix)){
+      stop("Please provide initial matrix to fill.")
+  }
+
+  if (missing(list_of_samples)){
+      stop("Please provide list of samples to complete the matrix and normalize order.")
+  }
+
+  # is samples are in columns, transpose the matrix so code below is generalizable
+  if(!samples_in_rows){
+    incoming_matrix = as.data.frame(incoming_matrix) %>% t()
+  }
+
+  matrix_with_all_samples <- rbind(incoming_matrix,
+        matrix(fill_in_values:fill_in_values, # populate matrix with all 0
+               length(setdiff(list_of_samples, rownames(incoming_matrix))), # how many rows
+               ncol(incoming_matrix), # how many columns
+               dimnames = list(setdiff(list_of_samples, rownames(incoming_matrix)), # name rows with sample IDs
+                               colnames(incoming_matrix))) %>% # name columns with gene names
+          as.data.frame(.))
+
+  # this is very helpful in clustering
+  if(normalize_order){
+    matrix_with_all_samples = matrix_with_all_samples[ order(match(rownames(matrix_with_all_samples), list_of_samples)),]
+  }
+
+  # transpose matrix back to the initial format supplied by user (samples in columns)
+  if(!samples_in_rows){
+    matrix_with_all_samples = as.data.frame(matrix_with_all_samples) %>% t()
+  }
+
+  return(matrix_with_all_samples)
 }

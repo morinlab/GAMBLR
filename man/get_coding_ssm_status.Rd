@@ -7,11 +7,26 @@
 get_coding_ssm_status(
   gene_symbols,
   these_samples_metadata,
-  from_flatfile = TRUE
+  from_flatfile = TRUE,
+  include_hotspots = TRUE,
+  recurrence_min = 5,
+  review_hotspots = TRUE,
+  genes_of_interest = c("FOXO1", "MYD88", "CREBBP"),
+  genome_build = "hg19"
 )
 }
 \arguments{
-\item{from_flatfile}{}
+\item{gene_symbols}{List of gene symbols for which the mutation status will be tabulated. If not provided, lymphoma genes will be returned by default.}
+
+\item{these_samples_metadata}{The matedata for samples of interest to be included in the returned matrix. Only the column "sample_id" is required. If not provided, the matrix is tabulated for all available samples as default.}
+
+\item{from_flatfile}{Integer value indicating minimal recurrence level}
+
+\item{include_hotspots}{Logical parameter indicating whether hotspots object should also be tabulated. Default is TRUE.}
+
+\item{review_hotspots}{Logical parameter indicating whether hotspots object should be reviewed to include functionally relevant mutations or rare lymphoma-related genes. Default is TRUE.}
+
+\item{...}{Other parameters accepted by the review_hotspots() function}
 }
 \value{
 

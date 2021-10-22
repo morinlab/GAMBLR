@@ -782,6 +782,8 @@ get_ssm_by_gene = function(gene_symbol,coding_only=FALSE,rename_splice_region=TR
 #' @param regions_bed Better yet, provide a bed file with the coordinates you want to retrieve
 #' @param streamlined Return a basic rather than full MAF format
 #' @param use_name_column If your bed-format data frame has a name column (must be named "name") these can be used to name your regions
+#' @param from_indexed_flatfile Set to TRUE to avoid using the database and instead rely on flatfiles (only works for streamlined data, not full MAF details)
+#' @param mode Only works with indexed flatfiles. Accepts 2 options of "slms-3" and "strelka2" to indicate which variant caller to use. Default is "slms-3".
 #'
 #' @return
 #' @export
@@ -791,7 +793,7 @@ get_ssm_by_gene = function(gene_symbol,coding_only=FALSE,rename_splice_region=TR
 #' regions_bed = grch37_ashm_regions %>% mutate(name=paste(gene,region,sep="_"))
 #' ashm_maf=get_ssm_by_regions(regions_bed=regions_bed,streamlined=TRUE,use_name_column=use_name_column)
 
-get_ssm_by_regions = function(regions_list,regions_bed,streamlined=FALSE,maf_data=maf_data,use_name_column=FALSE,from_indexed_flatfile=FALSE){
+get_ssm_by_regions = function(regions_list,regions_bed,streamlined=FALSE,maf_data=maf_data,use_name_column=FALSE,from_indexed_flatfile=FALSE, mode="slms-3"){
   bed2region=function(x){
     paste0(x[1],":",as.numeric(x[2]),"-",as.numeric(x[3]))
   }
@@ -803,9 +805,9 @@ get_ssm_by_regions = function(regions_list,regions_bed,streamlined=FALSE,maf_dat
     }
   }
   if(missing(maf_data)){
-    region_mafs = lapply(regions,function(x){get_ssm_by_region(region=x,streamlined = streamlined,from_indexed_flatfile = from_indexed_flatfile)})
+    region_mafs = lapply(regions,function(x){get_ssm_by_region(region=x,streamlined = streamlined,from_indexed_flatfile = from_indexed_flatfile, mode=mode)})
   }else{
-    region_mafs = lapply(regions,function(x){get_ssm_by_region(region=x,streamlined = streamlined,maf_data=maf_data,from_indexed_flatfile = from_indexed_flatfile)})
+    region_mafs = lapply(regions,function(x){get_ssm_by_region(region=x,streamlined = streamlined,maf_data=maf_data,from_indexed_flatfile = from_indexed_flatfile, mode=mode)})
   }
   if(!use_name_column){
     rn = regions
@@ -841,6 +843,7 @@ get_ssm_by_regions = function(regions_list,regions_bed,streamlined=FALSE,maf_dat
 #' @param region Region formatted like chrX:1234-5678 instead of specifying chromosome, start and end separately
 #' @param basic_columns Set to TRUE to override the default behaviour of returning only the first 45 columns of MAF data
 #' @param from_indexed_flatfile Set to TRUE to avoid using the database and instead rely on flatfiles (only works for streamlined data, not full MAF details)
+#' @param mode Only works with indexed flatfiles. Accepts 2 options of "slms-3" and "strelka2" to indicate which variant caller to use. Default is "slms-3".
 #'
 #' @return A data frame containing all the MAF data columns (one row per mutation)
 #' @export
@@ -853,19 +856,32 @@ get_ssm_by_regions = function(regions_list,regions_bed,streamlined=FALSE,maf_dat
 #' my_mutations=get_ssm_by_region(chromosome="8",qstart=128723128,qend=128774067)
 get_ssm_by_region = function(chromosome,qstart,qend,
                              region="",basic_columns=TRUE,streamlined=FALSE,maf_data,
-                             from_indexed_flatfile=FALSE){
+                             from_indexed_flatfile=FALSE,
+                             mode="slms-3"){
   tabix_bin = "/home/rmorin/miniconda3/bin/tabix"
   table_name = config::get("results_tables")$ssm
   db=config::get("database_name")
   if(from_indexed_flatfile){
     base_path = config::get("project_base")
     #test if we have permissions for the full gambl + icgc merge
-    maf_partial_path = config::get("results_filatfiles")$ssm$all$full
+    if(mode=="slms-3"){
+      maf_partial_path = config::get("results_filatfiles")$ssm$all$full
+    }else if (mode=="strelka2"){
+      maf_partial_path = config::get("results_filatfiles")$ssm$all$strelka2
+    }else{
+      stop("You requested results from indexed flatfile. The mode should be set to either slms-3 (default) or strelka2. Please specify one of these modes.")
+    }
     maf_path = paste0(base_path,maf_partial_path)
     maf_permissions = file.access(maf_path,4)
     if(maf_permissions == -1){
       #currently this will only return non-ICGC results
-      maf_partial_path = config::get("results_filatfiles")$ssm$gambl$full
+      if(mode=="slms-3"){
+        maf_partial_path = config::get("results_filatfiles")$ssm$gambl$full
+      }else if (mode=="strelka2"){
+        maf_partial_path = config::get("results_filatfiles")$ssm$gambl$strelka2
+      }else{
+        stop("You requested results from indexed flatfile. The mode should be set to either slms-3 (default) or strelka2. Please specify one of these modes.")
+      }
       base_path = config::get("project_base")
       #default is non-ICGC
       maf_path = paste0(base_path,maf_partial_path)
@@ -894,10 +910,19 @@ get_ssm_by_region = function(chromosome,qstart,qend,
     if(from_indexed_flatfile){
       streamlined = TRUE
       muts = system(paste(tabix_bin,maf_path,region),intern=TRUE)
-      if(length(muts)>0){
+      if(length(muts)>1){
         muts_region = readr::read_tsv(muts,col_names=c("Chromosome","Start_Position",
                                                   "End_Position","Tumor_Sample_Barcode"))
-      }else{
+      # this is necessary because when only one row is returned, read_tsv thinks it is a file name
+      }else if (length(muts)==1){
+        region_with_one_row <- stringr::str_split(muts, "\t", n=4)
+
+        muts_region = data.frame(Chromosome=unlist(region_with_one_row)[1],
+           Start_Position=as.numeric(unlist(region_with_one_row)[2]),
+           End_Position=as.numeric(unlist(region_with_one_row)[3]),
+           Tumor_Sample_Barcode=unlist(region_with_one_row)[4],
+           stringsAsFactors=FALSE)
+      } else {
         muts_region = data.frame(Chromosome=character(),
                                  Start_Position=character(),
                                  End_Position=character(),

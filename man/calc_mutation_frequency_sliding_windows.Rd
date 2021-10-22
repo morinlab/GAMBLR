@@ -17,7 +17,9 @@ calc_mutation_frequency_sliding_windows(
   min_count_per_bin = 3,
   return_count = FALSE,
   drop_unmutated = FALSE,
-  classification_column = "lymphgen"
+  classification_column = "lymphgen",
+  from_indexed_flatfile = FALSE,
+  mode = "slms-3"
 )
 }
 \arguments{
@@ -26,6 +28,10 @@ calc_mutation_frequency_sliding_windows(
 \item{drop_unmutated}{This may not currently work properly.}
 
 \item{classification_column}{Only used for plotting}
+
+\item{from_indexed_flatfile}{Set to TRUE to avoid using the database and instead rely on flatfiles (only works for streamlined data, not full MAF details)}
+
+\item{mode}{Only works with indexed flatfiles. Accepts 2 options of "slms-3" and "strelka2" to indicate which variant caller to use. Default is "slms-3".}
 }
 \value{
 
