@@ -4,14 +4,19 @@
 \alias{get_sample_cn_segments}
 \title{Get all segments for a single sample_id}
 \usage{
-get_sample_cn_segments(sample_id, with_chr_prefix = FALSE, streamlined = FALSE)
+get_sample_cn_segments(
+  this_sample_id,
+  with_chr_prefix = FALSE,
+  streamlined = FALSE,
+  from_flatfile = FALSE
+)
 }
 \arguments{
-\item{sample_id}{The sample_id for the sample to retrieve segments for}
-
 \item{with_chr_prefix}{Set to TRUE to add a chr prefix to chromosome names}
 
 \item{streamlined}{Return a minimal output rather than full details}
+
+\item{sample_id}{The sample_id for the sample to retrieve segments for}
 }
 \value{
 

@@ -4,7 +4,13 @@
 \alias{get_cn_states}
 \title{Get a copy number matrix for all samples based on segmented data in database}
 \usage{
-get_cn_states(regions_list, regions_bed, region_names)
+get_cn_states(
+  regions_list,
+  regions_bed,
+  region_names,
+  all_cytobands = FALSE,
+  use_cytoband_name = FALSE
+)
 }
 \arguments{
 \item{regions_list}{A list of regions in the format chrom:start-end}

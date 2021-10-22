@@ -11,7 +11,8 @@ copy_number_vaf_plot(
   one_chrom,
   genes_to_label,
   from_flatfile = FALSE,
-  use_augmented_maf = FALSE
+  use_augmented_maf = FALSE,
+  add_chr_prefix = FALSE
 )
 }
 \arguments{

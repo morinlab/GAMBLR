@@ -5,12 +5,13 @@
 \title{Retrieve all copy number segments from the GAMBL database that overlap with a single genomic coordinate range}
 \usage{
 get_cn_segments(
-  chromosome,
+  chromosome = "",
   qstart,
   qend,
   region,
   with_chr_prefix = FALSE,
-  streamlined = FALSE
+  streamlined = FALSE,
+  from_flatfile = FALSE
 )
 }
 \arguments{

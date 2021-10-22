@@ -35,7 +35,7 @@ get_merged_result = function(tool_name,projection="grch37",seq_type="genome"){
 #' @param remove_benchmarking By default the FFPE benchmarking duplicate samples will be dropped
 #' @param with_outcomes Optionally join to gambl outcome data
 #' @param from_flatfile New default is to use the metadata in the flatfiles from your clone of the repo. Can be over-ridden to use the database
-#' embargoed cases (current options: 'BLGSP-study', 'FL-study', 'DLBCL-study', 'FL-DLBCL-study', 'FL-DLBCL-all', 'DLBCL-unembargoed', 'BL-DLBCL-manuscript')
+#' embargoed cases (current options: 'BLGSP-study', 'FL-study', 'DLBCL-study', 'FL-DLBCL-study', 'FL-DLBCL-all', 'DLBCL-unembargoed', 'BL-DLBCL-manuscript', 'MCL','MCL-CLL')
 #'
 #' @return A data frame with metadata for each biopsy in GAMBL
 #' @export
@@ -122,6 +122,14 @@ get_gambl_metadata = function(seq_type_filter = "genome",
     ))
   all_meta = unique(all_meta) #something in the ICGC code is causing this. Need to figure out what
   if(!missing(case_set)){
+    if(case_set=="MCL"){
+      all_meta = all_meta %>% dplyr::filter(consensus_pathology %in% c("MCL"))
+    }
+    if(case_set=="MCL-CLL"){
+      all_meta = all_meta %>%
+        dplyr::filter(consensus_pathology %in% c("MCL","CLL")) %>%
+        dplyr::filter(cohort != "CLL_LSARP_Trios")
+    }
     if(case_set == "FL-DLBCL-study"){
       #get FL cases and DLBCL cases not in special/embargoed cohorts
       fl_meta_kridel = all_meta %>% dplyr::filter(consensus_pathology %in% c("FL","DLBCL","COM")) %>%
