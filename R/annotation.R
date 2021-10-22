@@ -1,4 +1,17 @@
 
+annotate_recurrent_cnv = function(seg_df,seg_file){
+  cnv_coord_df = data.frame(chrom=c("18"),
+                            start=c(60000000),
+                            end=c(61000000),
+                            anchor=c("right"),
+                            min_cn=c(3),
+                            name="18der_gain")
+  cnv_dt = as.data.table(cnv_coord_df)
+  seg_dt = as.data.table(seg_df)
+  setkey(cnv_dt,chrom,start,end)
+  setkey(seg_dt,start,end)
+
+}
 
 #' Add annotation to IGH breakpoints to infer mechanism based on location within IGH
 #'

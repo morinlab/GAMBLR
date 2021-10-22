@@ -461,19 +461,31 @@ get_manta_sv = function(min_vaf=0.1,min_score=40,pass=TRUE,pairing_status,sample
 #' @param region_names
 #'
 #' @return
-#' @import tidyverse
+#' @import tidyverse circlize
 #' @export
 #'
 #' @examples
 #' #basic usage, generic lymphoma gene list
 #' cn_matrix = get_cn_states(regions_bed=grch37_lymphoma_genes_bed)
 #' single_gene_cn = get_cn_states(regions_list=c(this_region),region_names = c("FCGR2B"))
-get_cn_states = function(regions_list,regions_bed,region_names){
+get_cn_states = function(regions_list,regions_bed,region_names,all_cytobands=FALSE,use_cytoband_name=FALSE){
   #retrieve the CN value for this region for every segment that overlaps it
   bed2region=function(x){
     paste0(x[1],":",as.numeric(x[2]),"-",as.numeric(x[3]))
   }
-  if(missing(regions_list)){
+  if(all_cytobands){
+    message("this will take awhile but it does work, trust me!")
+    regions_bed=circlize::read.cytoband(species="hg19")$df
+    colnames(regions_bed) = c("chromosome_name","start_position","end_position","name","dunno")
+    if(use_cytoband_name){
+      regions_bed = mutate(regions_bed,region_name=paste0(str_remove(chromosome_name,pattern="chr"),name))
+      region_names = pull(regions_bed,region_name)
+    }else{
+      region_names = pull(regions_bed,region_name)
+    }
+    regions= apply(regions_bed,1,bed2region)
+    #use the cytobands from the circlize package (currently hg19 but can extend to hg38 once GAMBLR handles it)
+  }else if(missing(regions_list)){
     if(!missing(regions_bed)){
       regions= apply(regions_bed,1,bed2region)
     }else{
@@ -483,7 +495,7 @@ get_cn_states = function(regions_list,regions_bed,region_names){
     regions = regions_list
   }
   region_segs = lapply(regions,function(x){get_cn_segments(region=x,streamlined=TRUE)})
-  if(missing(region_names)){
+  if(missing(region_names) & !use_cytoband_name){
     region_names = regions
   }
 
@@ -503,7 +515,8 @@ get_cn_states = function(regions_list,regions_bed,region_names){
     mutate(CN=replace_na(CN,2))
   cn_matrix = pivot_wider(all_cn,id_cols="sample_id",names_from="region_name",values_from = "CN") %>%
     column_to_rownames("sample_id")
-  return(cn_matrix)
+  #order the regions the same way the user provided them for convenience
+  return(cn_matrix[,region_names])
 }
 
 #' Get all segments for a single sample_id
@@ -516,24 +529,54 @@ get_cn_states = function(regions_list,regions_bed,region_names){
 #' @export
 #'
 #' @examples
-get_sample_cn_segments = function(sample_id,with_chr_prefix=FALSE,streamlined=FALSE){
-  db = config::get("database_name")
-  table_name = config::get("results_tables")$copy_number
-  table_name_unmatched = config::get("results_tables")$copy_number_unmatched
-  con <- DBI::dbConnect(RMariaDB::MariaDB(), dbname = db)
+get_sample_cn_segments = function(this_sample_id,with_chr_prefix=FALSE,streamlined=FALSE,from_flatfile=FALSE){
+  sample_status = get_gambl_metadata() %>%
+    dplyr::filter(sample_id==this_sample_id) %>%
+    pull(pairing_status)
+  if(!from_flatfile){
+    db = config::get("database_name")
+    table_name = config::get("results_tables")$copy_number
+    table_name_unmatched = config::get("results_tables")$copy_number_unmatched
+    con <- DBI::dbConnect(RMariaDB::MariaDB(), dbname = db)
 
-  all_segs_matched = dplyr::tbl(con,table_name) %>%
-    dplyr::filter(ID==sample_id) %>%
-    as.data.frame() %>%
-    dplyr::mutate(method="battenberg")
+    all_segs_matched = dplyr::tbl(con,table_name) %>%
+      dplyr::filter(ID==this_sample_id) %>%
+      as.data.frame() %>%
+      dplyr::mutate(method="battenberg")
 
-  # get controlfreec segments for samples with missing battenberg results like unpaired
-  all_segs_unmatched = dplyr::tbl(con,table_name_unmatched) %>%
-    dplyr::filter(ID==sample_id) %>%
-    as.data.frame() %>%
-    dplyr::filter(! ID %in% all_segs_matched$ID)  %>%
-    dplyr::mutate(method="controlfreec")
+    # get controlfreec segments for samples with missing battenberg results like unpaired
+    all_segs_unmatched = dplyr::tbl(con,table_name_unmatched) %>%
+      dplyr::filter(ID==this_sample_id) %>%
+      as.data.frame() %>%
+      dplyr::filter(! ID %in% all_segs_matched$ID)  %>%
+      dplyr::mutate(method="controlfreec")
+  }else{
+    #use flatfiles, preferring Battenberg and using Controlfreec when missing
+    if(sample_status=="unmatched"){
 
+      tool_name=config::get("analyses")$unmatched$copy_number
+
+    }else{
+      tool_name=config::get("analyses")$matched$copy_number
+      battenberg_files = fetch_output_files(build=genome_build,base_path = "gambl/battenberg_current",tool="battenberg",search_pattern = ".igv.seg")
+      battenberg_file = dplyr::filter(battenberg_files,tumour_sample_id==this_sample) %>%
+        dplyr::pull(full_path) %>% as.character()
+      message(paste("using flatfile:",battenberg_file))
+      if(length(battenberg_file)>1){
+        print("WARNING: more than one SEG found for this sample. This shouldn't happen!")
+        battenberg_file = battenberg_file[1]
+      }
+      seg_sample = read_tsv(battenberg_file) %>%
+        as.data.table() %>% dplyr::mutate(size=end - start) %>%
+        dplyr::filter(size > 100) %>%
+        dplyr::mutate(chrom = gsub("chr","",chrom)) %>%
+        dplyr::rename(Chromosome=chrom,Start_Position=start,End_Position=end)
+    }
+
+
+
+
+  }
   all_segs = rbind(all_segs_matched,
                    all_segs_unmatched)
 
@@ -568,7 +611,8 @@ get_sample_cn_segments = function(sample_id,with_chr_prefix=FALSE,streamlined=FA
 #' my_segments=get_cn_segments(chromosome="8",qstart=128723128,qend=128774067)
 #' # Asking for chromosome names to have a chr prefix (default is un-prefixed)
 #' prefixed_segments = get_cn_segments(chromosome="12",qstart=122456912,qend=122464036,with_chr_prefix = TRUE)
-get_cn_segments = function(chromosome,qstart,qend,region,with_chr_prefix=FALSE,streamlined=FALSE){
+get_cn_segments = function(chromosome="",qstart,qend,region,
+                           with_chr_prefix=FALSE,streamlined=FALSE,from_flatfile=FALSE){
   db = config::get("database_name")
   table_name = config::get("results_tables")$copy_number
   table_name_unmatched = config::get("results_tables")$copy_number_unmatched
@@ -581,31 +625,44 @@ get_cn_segments = function(chromosome,qstart,qend,region,with_chr_prefix=FALSE,s
     qstart=startend[1]
     qend=startend[2]
   }
-  #chr prefix the query chromosome to match how it's stored in the table.
-  # This isn't yet standardized in the db so it's just a workaround "for now".
-  con <- DBI::dbConnect(RMariaDB::MariaDB(), dbname = db)
-
   if(grepl("chr",chromosome)){
 
   }else{
     chromosome = paste0("chr",chromosome)
   }
-  #remove the prefix if this is false (or leave as is otherwise)
+  #chr prefix the query chromosome to match how it's stored in the table.
+  # This isn't yet standardized in the db so it's just a workaround "for now".
+  if(from_flatfile){
+    base_dir = config::get()$project_base
+    unmatched_path = config::get()$results_directories$controlfreec
+    #separated by which genome the sample was aligned to
+    unmatched_hg38_path = paste0(unmatched_path,"from--genome--hg38/")
+    unmatched_grch37_path = paste0(unmatched_path,"from--genome--grch37/")
 
-  #TODO improve this query to allow for partial overlaps
-  all_segs_matched = dplyr::tbl(con,table_name) %>%
-    dplyr::filter((chrom == chromosome & start <= qstart & end >= qend) |
+  }else{
+    con <- DBI::dbConnect(RMariaDB::MariaDB(), dbname = db)
+    #remove the prefix if this is false (or leave as is otherwise)
+    if(missing(qstart) & missing(region)){
+      all_segs_matched = dplyr::tbl(con,table_name) %>% as.data.frame()
+      all_segs_unmatched = dplyr::tbl(con,table_name_unmatched) %>% as.data.frame()
+    }else{
+      #TODO improve this query to allow for partial overlaps
+      all_segs_matched = dplyr::tbl(con,table_name) %>%
+        dplyr::filter((chrom == chromosome & start <= qstart & end >= qend) |
              (chrom == chromosome & start >= qstart & end <= qend)) %>%
-    as.data.frame() %>%
-    dplyr::mutate(method="battenberg")
+        as.data.frame() %>%
+        dplyr::mutate(method="battenberg")
 
-  # get controlfreec segments for samples with missing battenberg results like unpaired
-  all_segs_unmatched = dplyr::tbl(con,table_name_unmatched) %>%
-    dplyr::filter((chrom == chromosome & start <= qstart & end >= qend) |
+      # get controlfreec segments for samples with missing battenberg results like unpaired
+      all_segs_unmatched = dplyr::tbl(con,table_name_unmatched) %>%
+        dplyr::filter((chrom == chromosome & start <= qstart & end >= qend) |
              (chrom == chromosome & start >= qstart & end <= qend)) %>%
               as.data.frame() %>%
               dplyr::filter(! ID %in% all_segs_matched$ID)  %>%
-    dplyr::mutate(method="controlfreec")
+        dplyr::mutate(method="controlfreec")
+      DBI::dbDisconnect(con)
+    }
+  }
 
   all_segs = rbind(all_segs_matched,
                   all_segs_unmatched)
@@ -618,7 +675,7 @@ get_cn_segments = function(chromosome,qstart,qend,region,with_chr_prefix=FALSE,s
   if(streamlined){
     all_segs = dplyr::select(all_segs,ID,CN)
   }
-  DBI::dbDisconnect(con)
+
   return(all_segs)
 }
 
