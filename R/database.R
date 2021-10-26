@@ -1,4 +1,62 @@
 
+
+#' Get the ssms (i.e. load MAF) for a single sample. This was implemented to allow flexibility because
+#' there are some samples that we may want to use a different set of variants than those in the main GAMBL merge.
+#' The current use case is to allow a force_unmatched output to be used to replace the SSMs from the merge for samples
+#' with known contamination in the normal. This will also be useful to apply a blacklist to individual MAFs when coupled with
+#' annotate_ssm_blacklist
+#'
+#' @param this_sample_id Required. The sample_id you want the data from.
+#' @param tool_name The name of the variant calling pipeline (currently only slms-3 is supported)
+#' @param projection The projection genome build. Currently only grch37 is supported but hg38 should be easy to add.
+#' @param seq_type What type of sequencing data you want mutations from (e.g. genome, exome, mrna)
+#' @param force_unmatched Defaults to TRUE and only supports this option curently (added option for anticipated future flexibility)
+#'
+#' @return data frame in MAF format
+#' @export
+#'
+#' @examples
+#'
+get_ssm_by_sample = function(this_sample_id,
+                             these_samples_metadata,
+                             tool_name="slms-3",
+                             projection="grch37",
+                             seq_type="genome",
+                             flavour="augmented"){
+ #figure out which unix_group this sample belongs to
+  if(missing(these_samples_metadata)){
+    these_samples_metadata = get_gambl_metadata() %>% dplyr::filter(sample_id==this_sample_id)
+  }else{
+    these_samples_metadata = these_samples_metadata %>% dplyr::filter(sample_id==this_sample_id)
+  }
+
+  this_unix_group = pull(these_samples_metadata,unix_group)
+  this_genome_build = pull(these_samples_metadata,genome_build)
+  if(flavour=="force_unmatched"){
+    base_path = paste0(config::get("project_base"),unix_group,"/force_unmatched/",tool_name,"_vcf2maf_current/99-outputs/",seq_type,"--",this_genome_build)
+  }else if(flavour=="augmented"){
+    base_path = paste0(config::get("project_base"),unix_group,"/",tool_name,"_vcf2maf_current/level_3/augmented_mafs/99-outputs/",seq_type,"--",this_genome_build)
+  }else{
+    base_path = paste0(config::get("project_base"),unix_group,"/",tool_name,"_vcf2maf_current/99-outputs/",seq_type,"--",this_genome_build)
+  }
+  if(projection == "grch37"){
+    if(this_genome_build != projection){
+      maf_pattern = paste0(this_sample_id,"--*converted*maf")
+
+    }else{
+      maf_pattern = paste0(this_sample_id,"--*final.maf")
+
+    }
+    maf_path = dir(base_path,pattern=glob2rx(maf_pattern))
+  }
+  if(length(maf_path)<1){
+    message(paste0("NO FILE FOUND FOR THIS SAMPLE",this_sample_id))
+    print(base_path)
+  }
+  sample_ssm = fread_maf(paste0(base_path,"/",maf_path))
+  return(sample_ssm)
+}
+
 #' Helper function to find the production merge for a pipeline and restrict to the right file based on file permissions
 #'
 #' @param tool_name Lowercase name of the tool (e.g. manta, slms-3)
