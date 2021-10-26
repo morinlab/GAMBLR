@@ -787,6 +787,7 @@ collate_results = function(sample_table,write_to_file=FALSE,join_with_full_metad
   sample_table = collate_csr_results(sample_table=sample_table)
   sample_table = collate_sbs_results(sample_table=sample_table,sbs_manipulation=sbs_manipulation)
   sample_table = collate_derived_results(sample_table=sample_table)
+  sample_table = collate_ancestry(sample_table=sample_table)
   if(write_to_file){
     output_file = config::get("table_flatfiles")$derived
     output_base = config::get("repo_base")
@@ -905,7 +906,7 @@ assign_cn_to_ssm = function(this_sample,coding_only=FALSE,from_flatfile=FALSE,
 
   database_name = config::get("database_name")
   project_base = config::get("project_base")
-  tool_name=config::get("analyses")$matched$copy_number
+  #tool_name=config::get("analyses")$matched$copy_number
 
 
   #project_base = "/projects/nhl_meta_analysis_scratch/gambl/results_local/"
@@ -913,6 +914,7 @@ assign_cn_to_ssm = function(this_sample,coding_only=FALSE,from_flatfile=FALSE,
   if(from_flatfile){
     #get the genome_build for this sample
     bam_info = get_bams(this_sample)
+    #message(paste("bams:",bam_info))
     genome_build = bam_info$genome_build
     unix_group = bam_info$unix_group
     #maf path for a single file is easy to predict. This really should be generalized for all tools
@@ -933,6 +935,7 @@ assign_cn_to_ssm = function(this_sample,coding_only=FALSE,from_flatfile=FALSE,
       print("WARNING: more than one MAF found for this sample. This shouldn't happen!")
       this_sample_maf = this_sample_maf[1]
     }
+    message(paste("loading MAF:",this_sample_maf))
     #now we can load it
     maf_sample = fread_maf(this_sample_maf)
 
@@ -948,27 +951,39 @@ assign_cn_to_ssm = function(this_sample,coding_only=FALSE,from_flatfile=FALSE,
   if(coding_only){
     maf_sample = dplyr::filter(maf_sample,Variant_Classification %in% coding_class)
   }
-  if(tool_name == "battenberg"){
-    if(from_flatfile){
+  #if(tool_name == "battenberg"){
+  if(from_flatfile){
+      message(paste("fetching:",tool_name))
       battenberg_files = fetch_output_files(build=genome_build,base_path = "gambl/battenberg_current",tool="battenberg",search_pattern = ".igv.seg")
+
       battenberg_file = dplyr::filter(battenberg_files,tumour_sample_id==this_sample) %>%
         dplyr::pull(full_path) %>% as.character()
+      message(paste("using flatfile:",battenberg_file))
       if(length(battenberg_file)>1){
         print("WARNING: more than one SEG found for this sample. This shouldn't happen!")
         battenberg_file = battenberg_file[1]
       }
-      seg_sample = read_tsv(battenberg_file) %>% as.data.table() %>% dplyr::mutate(size=end - start) %>%
+      seg_sample = read_tsv(battenberg_file) %>%
+        as.data.table() %>% dplyr::mutate(size=end - start) %>%
         dplyr::filter(size > 100) %>%
         dplyr::mutate(chrom = gsub("chr","",chrom)) %>%
         dplyr::rename(Chromosome=chrom,Start_Position=start,End_Position=end)
     }else{
-      seg_table = config::get("results_tables")$copy_number
-      seg_sample = dplyr::tbl(con,seg_table) %>%
-      dplyr::filter(ID == this_sample) %>%
-      data.table::as.data.table() %>% dplyr::mutate(size=end - start) %>%
-      dplyr::filter(size > 100) %>%
-      dplyr::mutate(chrom = gsub("chr","",chrom)) %>%
-      dplyr::rename(Chromosome=chrom,Start_Position=start,End_Position=end)
+      seg_sample = get_sample_cn_segments(sample_id=this_sample) %>%
+        dplyr::mutate(size=end - start) %>%
+        dplyr::filter(size > 100) %>%
+        dplyr::mutate(chrom = gsub("chr","",chrom)) %>%
+        dplyr::rename(Chromosome=chrom,Start_Position=start,End_Position=end) %>%
+        data.table::as.data.table()
+    print(seg_sample)
+      #seg_table = config::get("results_tables")$copy_number
+      #message(paste("querying",seg_table))
+      #seg_sample = dplyr::tbl(con,seg_table) %>%
+      #dplyr::filter(ID == this_sample) %>%
+      #data.table::as.data.table() %>% dplyr::mutate(size=end - start) %>%
+      #dplyr::filter(size > 100) %>%
+      #dplyr::mutate(chrom = gsub("chr","",chrom)) %>%
+      #dplyr::rename(Chromosome=chrom,Start_Position=start,End_Position=end)
     }
     data.table::setkey(seg_sample, Chromosome, Start_Position, End_Position)
     a = data.table::as.data.table(maf_sample)
@@ -986,9 +1001,7 @@ assign_cn_to_ssm = function(this_sample,coding_only=FALSE,from_flatfile=FALSE,
     if(!from_flatfile){
       DBI::dbDisconnect(con)
     }
-  }else{
-    print("ERROR: missing a required argument")
-  }
+
 }
 
 
@@ -1059,6 +1072,18 @@ sanity_check_metadata = function(){
   return(all_metadata_info)
 }
 
+collate_ancestry = function(sample_table,somalier_output){
+  if(missing(somalier_output)){
+    somalier_output="/projects/rmorin/projects/gambl-repos/gambl-rmorin/results/gambl/somalier_current/02-ancestry/2020_08_07.somalier-ancestry.tsv"
+  }
+  somalier_all = read_tsv(somalier_output)
+  somalier_all = mutate(somalier_all,sample_id = str_remove(`#sample_id`,pattern=":.+")) %>%
+    dplyr::select(-`#sample_id`,-given_ancestry)
+  somalier_all = dplyr::select(somalier_all,sample_id,predicted_ancestry,PC1,PC2,PC3,PC4,PC5)
+  sample_table = left_join(sample_table,somalier_all)
+  return(sample_table)
+}
+
 
 collate_extra_metadata= function(sample_table,file_path){
   file_path = "/projects/rmorin/projects/gambl-repos/gambl-mutect2-lhilton/experiments/2021-04-21-Trios-MiXCR/trios_relapse_timing.tsv"
@@ -1086,25 +1111,50 @@ collate_sbs_results = function(sample_table,file_path,scale_vals=FALSE,sbs_manip
   cn=colnames(signatures)
   new_sig = signatures
   if(sbs_manipulation=="scale"){
-    for(col in cn){
-      scaled_vals = signatures[,col] / rs
-      new_sig[,col]=scaled_vals
-    }
-    sbs1 = signatures[,"SBS1"] / rs
-    sbs9 = signatures[,"SBS9"] / rs
-    sbs8 = signatures[,"SBS8"] / rs
-    sbs = data.frame(sample_id = rownames(signatures),sbs1=sbs1,sbs9=sbs9,sbs8=sbs8)
+    #for(col in cn){
+    #  scaled_vals = signatures[,col] / rs
+    #  new_sig[,col]=scaled_vals
+    #}
+    #sbs1 = signatures[,"SBS1"] / rs
+    #sbs5 = signatures[,"SBS5"] / rs
+    #sbs9 = signatures[,"SBS9"] / rs
+    #sbs8 = signatures[,"SBS8"] / rs
+    #sbs12 = signatures[,"SBS12"] / rs
+    #sbs17b = signatures[,"SBS17b"]/rs
+    #sbs18 = signatures[,"SBS18"]/rs
+    #sbs84 = signatures[,"SBS84"]/rs
+    #sbs85 = signatures[,"SBS85"]/rs
+    #sbs = data.frame(sample_id = rownames(signatures),sbs1=sbs1,sbs5=sbs5,sbs9=sbs9,sbs8=sbs8,sbs12=sbs12,sbs17b=sbs17b,sbs18=sbs18,sbs84=sbs84,sbs85=sbs85)
+    sbs = apply(signatures,2,function(x){x/rs}) %>%
+      as.data.frame() %>%
+      rownames_to_column("sample_id")
   }
   else if(sbs_manipulation=="log"){
-    sbs1 = log(signatures[,"SBS1"]+1)
-    sbs9 = log(signatures[,"SBS9"]+1)
-    sbs8 = log(signatures[,"SBS8"]+1)
-    sbs = data.frame(sample_id = rownames(signatures),sbs1=sbs1,sbs9=sbs9,sbs8=sbs8)
+    #sbs1 = log(signatures[,"SBS1"]+1)
+    #sbs5 = log(signatures[,"SBS5"]+1)
+    #sbs9 = log(signatures[,"SBS9"]+1)
+    #sbs8 = log(signatures[,"SBS8"]+1)
+    #sbs12 = log(signatures[,"SBS12"]+1)
+    #sbs17b = log(signatures[,"SBS17b"]+1)
+    #sbs18 = log(signatures[,"SBS18"]+1)
+    #sbs84 = log(signatures[,"SBS84"]+1)
+    #sbs85 = log(signatures[,"SBS85"]+1)
+    sbs = apply(signatures,2,function(x){log(x+1)}) %>%
+      as.data.frame() %>%
+      rownames_to_column("sample_id")
+    #sbs = data.frame(sample_id = rownames(signatures),sbs1=sbs1,sbs5=sbs5,sbs9=sbs9,sbs8=sbs8,sbs12=sbs12,sbs17b=sbs17b,sbs18=sbs18,sbs84=sbs84,sbs85=sbs85)
   }else{
-    sbs1 = signatures[,"SBS1"]
-    sbs9 = signatures[,"SBS9"]
-    sbs8 = signatures[,"SBS8"]
-    sbs = data.frame(sample_id = rownames(signatures),sbs1=sbs1,sbs9=sbs9,sbs8=sbs8)
+    #sbs1 = signatures[,"SBS1"]
+    #sbs5 = signatures[,"SBS5"]
+    #sbs9 = signatures[,"SBS9"]
+    #sbs8 = signatures[,"SBS8"]
+    #sbs12 = signatures[,"SBS12"]
+    #sbs17b = signatures[,"SBS17b"]
+    #sbs18 = signatures[,"SBS18"]
+    #sbs84 = signatures[,"SBS84"]
+    #sbs85 = signatures[,"SBS85"]
+    #sbs = data.frame(sample_id = rownames(signatures),sbs1=sbs1,sbs5=sbs5,sbs9=sbs9,sbs8=sbs8,sbs12=sbs12,sbs17b=sbs17b,sbs18=sbs18,sbs84=sbs84,sbs85=sbs85)
+    sbs = signatures %>% rownames_to_column("sample_id")
   }
 
 

@@ -530,19 +530,26 @@ process_all_manta_bedpe = function(file_df,out_dir,group,genome_build,projection
 #' @import tidyverse
 #'
 #' @examples
-fetch_output_files = function(tool,unix_group,base_path,results_dir="99-outputs",seq_type="genome",build="hg38",search_pattern="cellularity_ploidy.txt"){
+fetch_output_files = function(tool,unix_group,base_path,results_dir="99-outputs",
+                              seq_type="genome",build="hg38",
+                              search_pattern="cellularity_ploidy.txt"){
   if(!grepl("^/",base_path)){
     project_base = config::get("project_base")
     #project_base = "/projects/nhl_meta_analysis_scratch/gambl/results_local/"
     base_path = paste0(project_base,base_path)
   }
-  results_path = paste0(base_path,"/",results_dir,"/",seq_type,"--",build,"/")
-
+  if(tool == "battenberg"){
+    results_path = paste0(base_path,"/",results_dir,"/seg/",seq_type,"--",build,"/")
+  }else{
+    results_path = paste0(base_path,"/",results_dir,"/",seq_type,"--",build,"/")
+  }
   #path may contain either directories or files named after the sample pair
+
   dir_listing = dir(results_path,pattern="--")
   #start a data frame for tidy collation of details
   dir_df = tibble(short_path=dir_listing)  %>% mutate(sample = strsplit(short_path,"--"))
-  unnested_df = dir_df %>% unnest_wider(sample,names_sep="_") %>% dplyr::rename(tumour_sample_id=sample_1,normal_sample_id=sample_2)
+  unnested_df = dir_df %>% unnest_wider(sample,names_sep="_") %>%
+    dplyr::rename(tumour_sample_id=sample_1,normal_sample_id=sample_2)
   #find file with search_pattern per directory and handle any missing files. This is a bit slow.
   #unnested_df = unnested_df %>% head() %>% mutate(output_file = dir(paste0(results_path,short_path),pattern=search_pattern))
   #This still fails when a matching file isn't found. No clue why this doesn't work

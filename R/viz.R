@@ -856,8 +856,12 @@ ashm_multi_rainbow_plot = function(regions_bed,regions_to_display,
 #'
 #' @examples
 copy_number_vaf_plot = function(this_sample,just_segments=FALSE,coding_only=FALSE,one_chrom,
-                                genes_to_label,from_flatfile=FALSE,use_augmented_maf=FALSE){
+                                genes_to_label,from_flatfile=FALSE,use_augmented_maf=FALSE,add_chr_prefix = FALSE){
   chrom_order=factor(c(1:22,"X"))
+  if(add_chr_prefix){
+    chrom_order = c(1:22,"X")
+    chrom_order = factor(unlist(lapply(chrom_order,function(x){paste0("chr",x)})))
+  }
   cn_colours = get_gambl_colours(classification = "copy_number")
   maf_and_seg = assign_cn_to_ssm(this_sample=this_sample,coding_only=coding_only,from_flatfile=from_flatfile,use_augmented_maf=use_augmented_maf)
   vaf_cn_maf = maf_and_seg[["maf"]]
@@ -873,9 +877,14 @@ copy_number_vaf_plot = function(this_sample,just_segments=FALSE,coding_only=FALS
     #I realized this is ugly
     cn_seg = maf_and_seg[["seg"]]
     cn_seg = mutate(cn_seg,CN_segment = as.numeric(CN),CN = as.character(CN))
+    print(head(cn_seg))
+    if(!missing(one_chrom)){
+      cn_seg = dplyr::filter(cn_seg,Chromosome %in% one_chrom)
+    }
+
     ggplot(cn_seg) +
-      geom_segment(data=cn_seg,aes(x=Start_Position,xend=End_Position,y=CN_segment,yend=CN_segment)) +
-      facet_wrap(~factor(Chromosome,levels=chrom_order),scales="free_x") +
+      geom_segment(data=cn_seg,aes(x=Start_Position,xend=End_Position,y=CN_segment,yend=CN_segment,colour=CN)) +
+      facet_wrap(~Chromosome,scales="free_x") +
       scale_colour_manual(values = cn_colours) +
       theme_minimal() + guides(color = guide_legend(reverse = TRUE,override.aes = list(size = 3)))
   }else{
