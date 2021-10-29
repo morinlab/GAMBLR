@@ -705,9 +705,15 @@ prettyOncoplot = function(maftools_obj,
   }
   heatmap_legend_param = list(title = "Alterations",nrow=2, ncol=1,
                          legend_direction = "horizontal")
+  if(hideTopBarplot){
+    top_annotation = NULL
+  }else{
+    top_annotation = HeatmapAnnotation(cbar = anno_oncoprint_barplot())
+  }
+
   ch = ComplexHeatmap::oncoPrint(mat[genes,patients_kept],
                                    alter_fun = alter_fun,
-                                   top_annotation=NULL,
+                                   top_annotation=top_annotation,
                                    right_annotation=NULL,
                                    col = col,
                                    row_order=gene_order,
