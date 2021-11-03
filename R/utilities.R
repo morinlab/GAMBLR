@@ -901,8 +901,11 @@ collate_curated_sv_results = function(sample_table){
 #'
 #' @examples
 #' cn_list = assign_cn_to_ssm(this_sample="HTMCP-01-06-00422-01A-01D",coding_only=TRUE)
-assign_cn_to_ssm = function(this_sample,coding_only=FALSE,from_flatfile=FALSE,
-                            use_augmented_maf=FALSE){
+assign_cn_to_ssm = function(this_sample,coding_only=FALSE,
+                            from_flatfile=FALSE,
+                            use_augmented_maf=FALSE,
+                            maf_file,
+                            seg_file){
 
   database_name = config::get("database_name")
   project_base = config::get("project_base")
@@ -911,7 +914,10 @@ assign_cn_to_ssm = function(this_sample,coding_only=FALSE,from_flatfile=FALSE,
 
   #project_base = "/projects/nhl_meta_analysis_scratch/gambl/results_local/"
   coding_class = c("Frame_Shift_Del","Frame_Shift_Ins","In_Frame_Del","In_Frame_Ins","Missense_Mutation","Nonsense_Mutation","Nonstop_Mutation","Splice_Region","Splice_Site","Targeted_Region","Translation_Start_Site")
-  if(from_flatfile){
+  if(!missing(maf_file)){
+    maf_sample = fread_maf(maf_file) %>%
+      dplyr::mutate(Chromosome = gsub("chr","",Chromosome))
+  }else if(from_flatfile){
     #get the genome_build for this sample
     bam_info = get_bams(this_sample)
     #message(paste("bams:",bam_info))
@@ -952,7 +958,18 @@ assign_cn_to_ssm = function(this_sample,coding_only=FALSE,from_flatfile=FALSE,
     maf_sample = dplyr::filter(maf_sample,Variant_Classification %in% coding_class)
   }
   #if(tool_name == "battenberg"){
-  if(from_flatfile){
+  
+  if(!missing(seg_file)){
+    seg_sample = read_tsv(seg_file) %>%
+      dplyr::mutate(size=end - start) %>%
+      dplyr::filter(size > 100)
+    colnames(seg_sample)[c(1:4)] = c("ID","chrom","start","end")
+    seg_sample = seg_sample %>%
+      dplyr::mutate(chrom = gsub("chr","",chrom)) %>%
+      dplyr::rename(Chromosome=chrom,Start_Position=start,End_Position=end) %>%
+      data.table::as.data.table()
+    print(seg_sample)
+  }else if(from_flatfile){
       message(paste("fetching:",tool_name))
       battenberg_files = fetch_output_files(build=genome_build,base_path = "gambl/battenberg_current",tool="battenberg",search_pattern = ".igv.seg")
 
@@ -998,10 +1015,6 @@ assign_cn_to_ssm = function(this_sample,coding_only=FALSE,from_flatfile=FALSE,
       geom_segment(data=seg_sample,aes(x=Start_Position,xend=End_Position,y=CN,yend=CN,colour=LOH_flag)) +
       facet_wrap(~Chromosome,scales="free_x")
     return(list(maf=a,seg=seg_sample))
-    if(!from_flatfile){
-      DBI::dbDisconnect(con)
-    }
-
 }
 
 
