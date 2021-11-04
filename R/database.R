@@ -1,4 +1,32 @@
 
+#' Get MAF-format data frame for more than one sample and combine together (wraps get_ssm_by_sample)
+#' See get_ssm_by_sample for more information
+#' @param these_sample_ids A vector of sample_id that you want results for. This is the only required argument.
+#' @param these_samples_metadata
+#' @param tool_name
+#' @param projection
+#' @param seq_type
+#' @param flavour Specify this as either "augmented" or "force_unmatched" or leave out to get the default (original MAF)
+#'
+#' @return
+#' @export
+#'
+#' @examples
+#' merged_maf_force_unmatched = get_ssm_by_samples(these_sample_ids=c("HTMCP-01-06-00485-01A-01D","14-35472_tumorA","14-35472_tumorB"))
+get_ssm_by_samples = function(these_sample_ids,these_samples_metadata,tool_name="slms-3",projection="grch37",seq_type="genome",flavour=""){
+  if(missing(these_samples_metadata)){
+    these_samples_metadata = get_gambl_metadata() %>% dplyr::filter(sample_id %in% these_sample_ids)
+  }else{
+    these_samples_metadata = these_samples_metadata %>% dplyr::filter(sample_id %in% these_sample_ids)
+  }
+  maf_df_list = list()
+  for(this_sample in these_sample_ids){
+    maf_df = get_ssm_by_sample(this_sample,these_samples_metadata,tool_name,projection,seq_type,flavour)
+    maf_df_list[[this_sample]]=maf_df
+  }
+  maf_df_merge = bind_rows(maf_df_list)
+  return(maf_df_merge)
+}
 
 #' Get the ssms (i.e. load MAF) for a single sample. This was implemented to allow flexibility because
 #' there are some samples that we may want to use a different set of variants than those in the main GAMBL merge.
@@ -22,7 +50,8 @@ get_ssm_by_sample = function(this_sample_id,
                              tool_name="slms-3",
                              projection="grch37",
                              seq_type="genome",
-                             flavour="augmented"){
+                             flavour="",
+                             verbose=FALSE){
  #figure out which unix_group this sample belongs to
   if(missing(these_samples_metadata)){
     these_samples_metadata = get_gambl_metadata() %>% dplyr::filter(sample_id==this_sample_id)
@@ -32,10 +61,15 @@ get_ssm_by_sample = function(this_sample_id,
 
   this_unix_group = pull(these_samples_metadata,unix_group)
   this_genome_build = pull(these_samples_metadata,genome_build)
+  if(verbose){
+    print(paste("group:",this_unix_group,"genome:",this_genome_build))
+  }
   if(flavour=="force_unmatched"){
     base_path = paste0(config::get("project_base"),unix_group,"/force_unmatched/",tool_name,"_vcf2maf_current/99-outputs/",seq_type,"--",this_genome_build)
   }else if(flavour=="augmented"){
     base_path = paste0(config::get("project_base"),unix_group,"/",tool_name,"_vcf2maf_current/level_3/augmented_mafs/99-outputs/",seq_type,"--",this_genome_build)
+  }else if(flavour == "clustered"){
+    base_path = paste0(config::get("project_base"),unix_group,"/",tool_name,"_clustered_vcf2maf_current/99-outputs/",seq_type,"--",this_genome_build)
   }else{
     base_path = paste0(config::get("project_base"),unix_group,"/",tool_name,"_vcf2maf_current/99-outputs/",seq_type,"--",this_genome_build)
   }
@@ -50,8 +84,12 @@ get_ssm_by_sample = function(this_sample_id,
     maf_path = dir(base_path,pattern=glob2rx(maf_pattern))
   }
   if(length(maf_path)<1){
-    message(paste0("NO FILE FOUND FOR THIS SAMPLE",this_sample_id))
-    print(base_path)
+    message(paste("NO FILE FOUND FOR THIS SAMPLE (flavour):",this_sample_id, "(",flavour,")"))
+    return()
+  }
+  if(length(maf_path)>1){
+    message(paste("TOO MANY FILES FOR THIS SAMPLE (flavour):",this_sample_id, "(",flavour,")"))
+    return()
   }
   sample_ssm = fread_maf(paste0(base_path,"/",maf_path))
   return(sample_ssm)
@@ -187,6 +225,35 @@ get_gambl_metadata = function(seq_type_filter = "genome",
       all_meta = all_meta %>%
         dplyr::filter(consensus_pathology %in% c("MCL","CLL")) %>%
         dplyr::filter(cohort != "CLL_LSARP_Trios")
+    }
+    if(case_set == "tFL-study"){
+      fl_meta_kridel = all_meta %>% dplyr::filter(consensus_pathology %in% c("FL","DLBCL","COM")) %>%
+        dplyr::filter(!cohort %in% c("DLBCL_ctDNA","DLBCL_BLGSP","LLMPP_P01","DLBCL_LSARP_Trios","DLBCL_HTMCP")) %>%
+        group_by(patient_id) %>%
+        mutate(FL = sum(pathology == "FL"), DLBCL = sum(pathology %in% c("COM","DLBCL","COMFL"))) %>%
+        mutate(transformed = ifelse(FL > 0 & DLBCL > 0, TRUE, FALSE))  %>%
+        mutate(analysis_cohort=case_when(consensus_pathology=="FL" & transformed==TRUE ~ "tFL",
+                                         consensus_pathology=="DLBCL" & transformed==TRUE ~ "ignore",
+                                         TRUE ~ "FL")) %>%
+        dplyr::filter(cohort=="FL_Kridel") %>%
+        dplyr::filter((analysis_cohort == "FL" & time_point == "A")|(analysis_cohort =="tFL")) %>% dplyr::select(-transformed,-FL,-DLBCL)
+
+
+      fl_meta_other = all_meta %>% dplyr::filter(consensus_pathology %in% c("FL","DLBCL","COM")) %>%
+        dplyr::filter(!cohort %in% c("DLBCL_ctDNA","DLBCL_BLGSP","LLMPP_P01","DLBCL_LSARP_Trios","DLBCL_HTMCP")) %>%
+        dplyr::filter(cohort!="FL_Kridel") %>%
+        dplyr::filter((consensus_pathology %in% c("FL","COM"))) %>% mutate(analysis_cohort = consensus_pathology)
+      gambl_transformations = suppressMessages(read_delim("/projects/rmorin/projects/gambl-repos/gambl-rmorin/data/metadata/raw_metadata/gambl_transformation.txt",delim = " ")) %>%
+        dplyr::filter(code_transf==1) %>% group_by(res_id) %>% slice_head()
+      fl_transformation_meta = suppressMessages(read_tsv("/projects/rmorin/projects/gambl-repos/gambl-rmorin/shared/gambl_fl_transformed.tsv"))
+      transformed_cases = pull(gambl_transformations,res_id)
+      #transformed_cases = fl_transformation_meta %>% dplyr::filter(!is.na(PATHa.tr)) %>% pull(patient_id)
+      fl_meta_other[which(fl_meta_other$patient_id %in% transformed_cases),"analysis_cohort"]="tFL"
+
+      dlbcl_meta =all_meta %>% dplyr::filter(consensus_pathology %in% c("FL","DLBCL","COM")) %>%
+        dplyr::filter(!cohort %in% c("DLBCL_ctDNA","DLBCL_BLGSP","LLMPP_P01","DLBCL_LSARP_Trios","DLBCL_HTMCP","FL_Kridel","FFPE_Benchmarking")) %>%
+        dplyr::filter(consensus_pathology == "DLBCL") %>% mutate(analysis_cohort="DLBCL")
+      all_meta  = bind_rows(dlbcl_meta,fl_meta_kridel,fl_meta_other) %>% unique()
     }
     if(case_set == "FL-DLBCL-study"){
       #get FL cases and DLBCL cases not in special/embargoed cohorts
@@ -1026,9 +1093,14 @@ get_ssm_by_region = function(chromosome,qstart,qend,
 #' #basic usage
 #' maf_data = get_coding_ssm(limit_cohort=c("BL_ICGC"))
 #' maf_data = get_coding_ssm(limit_samples=my_sample_ids)
-get_coding_ssm = function(limit_cohort,exclude_cohort,
-                          limit_pathology,limit_samples,basic_columns=TRUE,
-                          from_flatfile=FALSE,groups=c("gambl","icgc_dart")){
+get_coding_ssm = function(limit_cohort,
+                          exclude_cohort,
+                          limit_pathology,
+                          limit_samples,
+                          force_unmatched_samples,
+                          basic_columns=TRUE,
+                          from_flatfile=FALSE,
+                          groups=c("gambl","icgc_dart")){
   coding_class = c("Frame_Shift_Del","Frame_Shift_Ins","In_Frame_Del","In_Frame_Ins","Missense_Mutation","Nonsense_Mutation","Nonstop_Mutation","Silent","Splice_Region","Splice_Site","Targeted_Region","Translation_Start_Site")
   all_meta= get_gambl_metadata(from_flatfile=from_flatfile)
   #do all remaining filtering on the metadata then add the remaining sample_id to the query
@@ -1078,7 +1150,16 @@ get_coding_ssm = function(limit_cohort,exclude_cohort,
   if(basic_columns){
     muts = muts[,c(1:45)]
   }
+  if(!missing(force_unmatched_samples)){
+    #drop rows for these samples so we can swap in the force_unmatched outputs instead
+    muts = muts %>% dplyr::filter(!sample_id %in% force_unmatched_samples)
+    nsamp = length(force_unmatched_samples)
+    message(paste("dropping variants from",nsamp,"samples and replacing with force_unmatched outputs"))
+    #get replacements using get_ssm_by_samples
+    fu_muts = get_ssm_by_samples(these_sample_ids=force_unmatched_samples)
+    muts = bind_rows(muts,fu_muts)
 
+  }
   return(muts)
 }
 
