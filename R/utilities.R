@@ -115,8 +115,10 @@ get_coding_ssm_status = function(gene_symbols,
     # join with the ssm object
     all_tabulated = left_join(all_tabulated,wide_hotspots)
     all_tabulated = all_tabulated %>% replace(is.na(.), 0)
+    all_tabulated = all_tabulated %>% dplyr::select(where(~ any(. != 0)))
+    all_tabulated = as.data.frame(all_tabulated)
     # make SSM and hotspots non-redundant by giving priority to hotspot feature and setting SSM to 0
-    for (hotspot_site in colnames(wide_hotspots)[grepl("HOTSPOT", colnames(wide_hotspots))]){
+    for (hotspot_site in colnames(all_tabulated)[grepl("HOTSPOT", colnames(all_tabulated))]){
           this_gene = gsub("HOTSPOT", "", hotspot_site)
           redundant_features = all_tabulated %>% dplyr::select(starts_with(this_gene))
           # if not both the gene and the hotspot are present, go to the next iteration
