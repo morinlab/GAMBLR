@@ -220,24 +220,37 @@ get_gambl_metadata = function(seq_type_filter = "genome",
   if(!missing(case_set)){
     if(case_set=="MCL"){
       all_meta = all_meta %>% dplyr::filter(consensus_pathology %in% c("MCL"))
-    }
-    if(case_set=="MCL-CLL"){
+    }else if(case_set=="MCL-CLL"){
       all_meta = all_meta %>%
         dplyr::filter(consensus_pathology %in% c("MCL","CLL")) %>%
         dplyr::filter(cohort != "CLL_LSARP_Trios")
-    }
-    if(case_set == "tFL-study"){
+    }else if(case_set == "tFL-study"){
+      #update all DLBCLs in this file to indicate they're transformations
+      transformed_manual = read_tsv("/projects/rmorin/projects/gambl-repos/gambl-rmorin/data/metadata/raw_metadata/gambl_tFL_manual.tsv")
+
+      all_meta = left_join(all_meta,transformed_manual)
       fl_meta_kridel = all_meta %>% dplyr::filter(consensus_pathology %in% c("FL","DLBCL","COM")) %>%
         dplyr::filter(!cohort %in% c("DLBCL_ctDNA","DLBCL_BLGSP","LLMPP_P01","DLBCL_LSARP_Trios","DLBCL_HTMCP")) %>%
         group_by(patient_id) %>%
         mutate(FL = sum(pathology == "FL"), DLBCL = sum(pathology %in% c("COM","DLBCL","COMFL"))) %>%
         mutate(transformed = ifelse(FL > 0 & DLBCL > 0, TRUE, FALSE))  %>%
-        mutate(analysis_cohort=case_when(consensus_pathology=="FL" & transformed==TRUE ~ "tFL",
+        mutate(analysis_cohort=case_when(consensus_pathology=="FL" & transformed==TRUE ~ "pre-HT",
                                          consensus_pathology=="DLBCL" & transformed==TRUE ~ "ignore",
-                                         TRUE ~ "FL")) %>%
+                                         TRUE ~ "no-HT")) %>%
         dplyr::filter(cohort=="FL_Kridel") %>%
-        dplyr::filter((analysis_cohort == "FL" & time_point == "A")|(analysis_cohort =="tFL")) %>% dplyr::select(-transformed,-FL,-DLBCL)
+        dplyr::filter((analysis_cohort == "no-HT" & time_point == "A")|(analysis_cohort =="pre-HT")) %>%
+        dplyr::select(-transformed,-FL,-DLBCL)
 
+      dlbcl_meta_kridel = all_meta %>% dplyr::filter(consensus_pathology %in% c("DLBCL","COM")) %>%
+        dplyr::filter(!cohort %in% c("DLBCL_ctDNA","DLBCL_BLGSP","LLMPP_P01","DLBCL_LSARP_Trios","DLBCL_HTMCP")) %>%
+        group_by(patient_id) %>%
+        mutate(FL = sum(pathology == "FL"), DLBCL = sum(pathology %in% c("COM","DLBCL","COMFL"))) %>%
+        mutate(transformed = ifelse(FL > 0 & DLBCL > 0, TRUE, FALSE))  %>%
+        mutate(analysis_cohort=case_when(consensus_pathology=="FL" & transformed==TRUE ~ "post-HT",
+                                         consensus_pathology=="DLBCL" & transformed==TRUE ~ "ignore",
+                                         TRUE ~ "post-HT")) %>%
+        #dplyr::filter(cohort=="FL_Kridel") %>%
+        dplyr::filter((analysis_cohort == "post-HT" & time_point == "B"))
 
       fl_meta_other = all_meta %>% dplyr::filter(consensus_pathology %in% c("FL","DLBCL","COM")) %>%
         dplyr::filter(!cohort %in% c("DLBCL_ctDNA","DLBCL_BLGSP","LLMPP_P01","DLBCL_LSARP_Trios","DLBCL_HTMCP")) %>%
@@ -248,14 +261,19 @@ get_gambl_metadata = function(seq_type_filter = "genome",
       fl_transformation_meta = suppressMessages(read_tsv("/projects/rmorin/projects/gambl-repos/gambl-rmorin/shared/gambl_fl_transformed.tsv"))
       transformed_cases = pull(gambl_transformations,res_id)
       #transformed_cases = fl_transformation_meta %>% dplyr::filter(!is.na(PATHa.tr)) %>% pull(patient_id)
-      fl_meta_other[which(fl_meta_other$patient_id %in% transformed_cases),"analysis_cohort"]="tFL"
+      fl_meta_other[which(fl_meta_other$patient_id %in% transformed_cases),"analysis_cohort"]="pre-HT"
+      fl_meta_other = mutate(fl_meta_other,analysis_cohort=ifelse(analysis_cohort=="FL","no-HT",analysis_cohort))
+      #Finally over-ride analysis cohort with the outcome of clinical review
 
-      dlbcl_meta =all_meta %>% dplyr::filter(consensus_pathology %in% c("FL","DLBCL","COM")) %>%
+      dlbcl_meta =all_meta %>%
+        dplyr::filter(consensus_pathology %in% c("FL","DLBCL","COM")) %>%
         dplyr::filter(!cohort %in% c("DLBCL_ctDNA","DLBCL_BLGSP","LLMPP_P01","DLBCL_LSARP_Trios","DLBCL_HTMCP","FL_Kridel","FFPE_Benchmarking")) %>%
-        dplyr::filter(consensus_pathology == "DLBCL") %>% mutate(analysis_cohort="DLBCL")
-      all_meta  = bind_rows(dlbcl_meta,fl_meta_kridel,fl_meta_other) %>% unique()
-    }
-    if(case_set == "FL-DLBCL-study"){
+        dplyr::filter(consensus_pathology == "DLBCL") %>% mutate(analysis_cohort="denovo-DLBCL")
+      all_meta  = bind_rows(dlbcl_meta,dlbcl_meta_kridel,fl_meta_kridel,fl_meta_other) %>% unique()
+      curated = suppressMessages(read_tsv("/projects/rmorin/projects/gambl-repos/gambl-rmorin/data/metadata/raw_metadata/clin_review_fl.tsv"))
+      all_meta = left_join(all_meta,curated) %>% mutate(analysis_cohort = ifelse(is.na(clinical_review),analysis_cohort,clinical_review))
+      all_meta[which(all_meta$is_tFL==1),"analysis_cohort"]="post-HT"
+    } else if(case_set == "FL-DLBCL-study"){
       #get FL cases and DLBCL cases not in special/embargoed cohorts
       fl_meta_kridel = all_meta %>% dplyr::filter(consensus_pathology %in% c("FL","DLBCL","COM")) %>%
         dplyr::filter(!cohort %in% c("DLBCL_ctDNA","DLBCL_BLGSP","LLMPP_P01","DLBCL_LSARP_Trios","DLBCL_HTMCP")) %>%
@@ -281,27 +299,23 @@ get_gambl_metadata = function(seq_type_filter = "genome",
        dplyr::filter(!cohort %in% c("DLBCL_ctDNA","DLBCL_BLGSP","LLMPP_P01","DLBCL_LSARP_Trios","DLBCL_HTMCP","FL_Kridel","FFPE_Benchmarking")) %>%
         dplyr::filter(consensus_pathology == "DLBCL" & COO_final == "GCB") %>% mutate(analysis_cohort="DLBCL")
       all_meta  = bind_rows(dlbcl_meta,fl_meta_kridel,fl_meta_other) %>% unique()
-    }
-    if(case_set == "FL-study"){
+    }else if(case_set == "FL-study"){
       #get FL cases and DLBCL cases not in special/embargoed cohorts
       all_meta = all_meta %>% dplyr::filter(consensus_pathology %in% c("FL","DLBCL")) %>%
         dplyr::filter(!cohort %in% c("DLBCL_ctDNA","DLBCL_BLGSP","LLMPP_P01","DLBCL_LSARP_Trios")) %>%
         group_by(patient_id) %>% arrange(patient_id,pathology)  %>% dplyr::slice(1) %>% dplyr::ungroup() %>%
         dplyr::filter(pathology == "FL")
-    }
-    if(case_set == "DLBCL-study"){
+    }else if(case_set == "DLBCL-study"){
       #get FL cases and DLBCL cases not in special/embargoed cohorts
       all_meta = all_meta %>% dplyr::filter(consensus_pathology %in% c("FL","DLBCL")) %>%
         dplyr::filter(!cohort %in% c("DLBCL_ctDNA","DLBCL_BLGSP","LLMPP_P01","DLBCL_LSARP_Trios")) %>%
         group_by(patient_id) %>% arrange(patient_id,pathology)  %>% dplyr::slice(1) %>% dplyr::ungroup() %>%
         dplyr::filter(consensus_pathology %in% c("DLBCL","FL"))
-    }
-    if(case_set == "DLBCL-unembargoed"){
+    }else if(case_set == "DLBCL-unembargoed"){
       #get DLBCL cases not in special/embargoed cohorts
       all_meta = all_meta %>% dplyr::filter(consensus_pathology %in% c("DLBCL","COM")) %>%
         dplyr::filter(!cohort %in% c("DLBCL_ctDNA","DLBCL_BLGSP","LLMPP_P01","DLBCL_LSARP_Trios","DLBCL_HTMCP"))
-    }
-    if(case_set == "BLGSP-study"){
+    }else if(case_set == "BLGSP-study"){
       #get BL cases minus duplicates (i.e. drop benchmarking cases)
       all_meta = all_meta %>%
         dplyr::filter(cohort %in% c("BL_Adult","BL_cell_lines","BL_ICGC","BLGSP_Bcell_UNC","BL_Pediatric") |
@@ -317,6 +331,9 @@ get_gambl_metadata = function(seq_type_filter = "genome",
     }else if(case_set == "GAMBL-all"){
       #get all GAMBL but remove FFPE benchmarking cases and ctDNA
       all_meta = all_meta %>% dplyr::filter(!cohort %in% c("FFPE_Benchmarking","DLBCL_ctDNA"))
+    }else{
+      message(paste("case set",case_set,"not available"))
+      return()
     }
   }
 
@@ -1132,6 +1149,7 @@ get_coding_ssm = function(limit_cohort,
       #default is non-ICGC
       maf_path = paste0(base_path,maf_partial_path)
     }
+    message(paste("reading from:", maf_path))
     muts=fread_maf(maf_path) %>% dplyr::filter(Variant_Classification %in% coding_class) %>% as.data.frame()
     mutated_samples = length(unique(muts$Tumor_Sample_Barcode))
     message(paste("mutations from",mutated_samples,"samples"))

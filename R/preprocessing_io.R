@@ -293,11 +293,13 @@ populate_each_tool_result = function(tool,genome_builds,unix_groups){
 
 
     for(unix_group in unix_groups){
+      message(unix_group)
       for(genome_build in genome_builds){
+        message(genome_build)
         files = fetch_output_files(build=genome_build,unix_group=unix_group,
                                              base_path = paste0(unix_group,"/battenberg_current"),
                                              results_dir="02-battenberg",tool="battenberg_ploidy")
-        print(head(files))
+
         results_table = files %>% mutate(parse_batt(full_path))
         generic_update(sample_id=results_table$tumour_sample_id,field_name="battenberg_psi",field_value=results_table$battenberg_psi)
         generic_update(sample_id=results_table$tumour_sample_id,field_name="battenberg_ploidy",field_value=results_table$battenberg_ploidy)

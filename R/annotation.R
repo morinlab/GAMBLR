@@ -22,6 +22,13 @@ annotate_ssm_blacklist = function(mutations_df,unix_group="gambl",tool_name="slm
   lifted_blacklist = mutate(lifted_blacklist,Start_Position = as.integer(Start_Position))
   native_blacklist = mutate(native_blacklist,Start_Position = as.integer(Start_Position))
   #join using chromosome and position
+  print(mutations_df)
+  print(native_blacklist)
+  if(genome_build == "hg38"){
+    native_blacklist = mutate(native_blacklist,Chromosome = paste0("chr",Chromosome))
+    lifted_blacklist = mutate(lifted_blacklist,Chromosome = paste0("chr",Chromosome))
+
+  }
   mutations_df = left_join(mutations_df,native_blacklist,by=c("Chromosome", "Start_Position"))
   mutations_df = left_join(mutations_df,lifted_blacklist,by=c("Chromosome", "Start_Position"))
   #drop anything that exceeds our threshold but keep NA

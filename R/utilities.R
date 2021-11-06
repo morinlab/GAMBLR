@@ -1,4 +1,47 @@
 
+#' Get a MAF that is just the variants unique to one of two flavours of variant calls available
+#'
+#' @param these_sample_ids
+#' @param flavour1
+#' @param flavour2
+#'
+#' @return
+#' @export
+#'
+#' @examples
+compare_mutation_flavour = function(these_sample_ids,flavour1="clustered",flavour2=""){
+  these_dfs = list()
+  for(this_sample_id in these_sample_ids){
+    message(this_sample_id)
+    maf1 = get_ssm_by_sample(this_sample_id,flavour=flavour1)
+    maf2  = get_ssm_by_sample(this_sample_id,flavour=flavour2)
+    maf1_only = intersect_maf(maf1,maf2)
+    these_dfs[[this_sample_id]]=maf1_only
+  }
+
+  this_maf = rbindlist(these_dfs,use.names = TRUE)
+  return(this_maf)
+}
+
+#' perform set operations on two MAFs
+#'
+#' @param maf1
+#' @param maf2
+#' @param set_returned
+#'
+#' @return
+#' @export
+#'
+#' @examples
+intersect_maf = function(maf1,maf2,set_returned="maf1_only"){
+  if(set_returned=="maf1_only"){
+    maf_set = dplyr::filter(maf1,!Start_Position %in% maf2$Start_Position)
+  }else if(set_returned == "maf2_only"){
+    maf_set = dplyr::filter(maf2,!Start_Position %in% maf1$Start_Position)
+  }
+  return(maf_set)
+}
+
 #' Tabulate mutation status for non-silent SSMs for a set of genes
 #'
 #' @param gene_symbols List of gene symbols for which the mutation status will be tabulated. If not provided, lymphoma genes will be returned by default.
@@ -770,24 +813,28 @@ maf_to_custom_track = function(maf_data,output_file){
 #'
 #' @examples
 #' everything_collated = collate_results(join_with_full_metadata=TRUE)
-collate_results = function(sample_table,write_to_file=FALSE,join_with_full_metadata = FALSE,
+collate_results = function(sample_table,
+                           write_to_file=FALSE,
+                           join_with_full_metadata = FALSE,
                            case_set,sbs_manipulation="",seq_type_filter="genome"){
   # important: if you are collating results from anything but WGS (e.g RNA-seq libraries) be sure to use biopsy ID as the key in your join
   # the sample_id should probably not even be in this file if we want this to be biopsy-centric
   if(missing(sample_table)){
-    sample_table = get_gambl_metadata(seq_type_filter = seq_type_filter) %>% dplyr::select(sample_id,patient_id,biopsy_id)
+    sample_table = get_gambl_metadata(seq_type_filter = seq_type_filter) %>%
+      dplyr::select(sample_id,patient_id,biopsy_id)
   }
-
+  message("this will be slow until collate_ssm_results is modified to cache its result")
   #edit this function and add a new function to load any additional results into the main summary table
-
+  sample_table = collate_ssm_results(sample_table=sample_table)
   sample_table = collate_sv_results(sample_table=sample_table)
   sample_table = collate_curated_sv_results(sample_table=sample_table)
   sample_table = collate_ashm_results(sample_table=sample_table)
   sample_table = collate_nfkbiz_results(sample_table=sample_table)
   sample_table = collate_csr_results(sample_table=sample_table)
+  sample_table = collate_ancestry(sample_table=sample_table)
   sample_table = collate_sbs_results(sample_table=sample_table,sbs_manipulation=sbs_manipulation)
   sample_table = collate_derived_results(sample_table=sample_table)
-  sample_table = collate_ancestry(sample_table=sample_table)
+
   if(write_to_file){
     output_file = config::get("table_flatfiles")$derived
     output_base = config::get("repo_base")
@@ -834,8 +881,11 @@ collate_derived_results = function(sample_table,from_flatfile=FALSE){
     con <- DBI::dbConnect(RMariaDB::MariaDB(), dbname = database_name)
     derived_tbl = dplyr::tbl(con,"derived_data") %>% as.data.frame()
   }
-  derived_tbl = derived_tbl %>% dplyr::select(where( ~!all(is.na(.x)))) #drop the columns that are completely empty
+  derived_tbl = derived_tbl %>%
+    dplyr::select(where( ~!all(is.na(.x)))) %>% as.data.frame() #drop the columns that are completely empty
+  print(derived_tbl)
   sample_table = dplyr::left_join(sample_table,derived_tbl)
+  print(sample_table)
   return(sample_table)
 }
 
@@ -858,6 +908,66 @@ collate_csr_results = function(sample_table){
      bind_rows(dplyr::filter(sample_table, !patient_id %in% c(pt_join$patient_id, sm_join$patient_id))) %>% unique()
   return(complete_join)
 }
+
+#' Compute some summary statistics based on SSM calls
+#'
+#' @param sample_table
+#'
+#' @return
+#' @export
+#'
+#' @examples
+collate_ssm_results = function(sample_table,from_flatfile=TRUE){
+  coding_class = c("Frame_Shift_Del","Frame_Shift_Ins","In_Frame_Del",
+                   "In_Frame_Ins","Missense_Mutation","Nonsense_Mutation",
+                   "Nonstop_Mutation","Splice_Region",
+                   "Splice_Site","Targeted_Region","Translation_Start_Site")
+  #iterate over every sample and compute some summary stats from its MAF
+  if(from_flatfile){
+    base_path = config::get("project_base")
+    #test if we have permissions for the full gambl + icgc merge
+    maf_partial_path = config::get("results_filatfiles")$ssm$all$full
+    maf_path = paste0(base_path,maf_partial_path)
+    maf_permissions = file.access(maf_path,4)
+    if(maf_permissions == -1){
+      #currently this will only return non-ICGC results
+      maf_partial_path = config::get("results_filatfiles")$ssm$gambl$full
+      base_path = config::get("project_base")
+      #default is non-ICGC
+      maf_path = paste0(base_path,maf_partial_path)
+    }
+    muts=fread_maf(maf_path)
+    mutated_samples = length(unique(muts$Tumor_Sample_Barcode))
+    message(paste("mutations from",mutated_samples,"samples"))
+  }
+  #get tally of total per sample
+  muts = muts %>% dplyr::rename("sample_id"="Tumor_Sample_Barcode")
+  muts = mutate(muts,vaf=t_alt_count/(t_alt_count+t_ref_count))
+  muts_count = dplyr::select(muts,sample_id) %>%
+    group_by(sample_id) %>%
+    tally() %>%
+    dplyr::rename("total_ssm"="n")
+  sample_table = left_join(sample_table,muts_count)
+  muts_mean = muts %>% dplyr::select(sample_id,vaf) %>%
+    group_by(sample_id) %>%
+    summarize(mean_vaf=mean(vaf))
+  coding_mut = dplyr::filter(muts,Variant_Classification %in% coding_class)
+  coding_mut_count = coding_mut %>%
+    dplyr::select(sample_id) %>%
+    group_by(sample_id) %>%
+    tally() %>%
+    dplyr::rename("coding_ssm"="n")
+
+  sample_table = left_join(sample_table,muts_mean)
+  sample_table = left_join(sample_table,coding_mut_count)
+  #check for coding SSMs in lymphoma genes
+  coding_nhl = coding_mut %>%
+    dplyr::filter(Hugo_Symbol %in% lymphoma_genes$Gene)
+  coding_nhl_count = coding_nhl %>% group_by(sample_id) %>% tally() %>%
+    dplyr::rename("driver_ssm"="n")
+  return(sample_table)
+}
+
 
 
 #' Collate all SV calls from the genome data and summarize for main oncogenes of interest per sample
@@ -1218,9 +1328,9 @@ collate_ashm_results = function(sample_table){
   tallied = unlisted_df %>% group_by(sample_id,region_name) %>%
     tally() %>%
     pivot_wider(values_from=n,names_from=region_name,values_fill=0,names_prefix="ashm_")
-
+  #sample_table = mutate(sample_table,across(everything(), ~replace_na(.x, 0)))
   sample_table = left_join(sample_table,tallied,by="sample_id")
-  sample_table = mutate(sample_table,across(everything(), ~replace_na(.x, 0)))
+
 
 }
 
