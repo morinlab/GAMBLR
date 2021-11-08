@@ -76,8 +76,12 @@ get_coding_ssm_status = function(gene_symbols,
     these_samples_metadata = get_gambl_metadata()
   }
 
-  # call it once so the object can be reused if user wants to annotate hotspots
-  coding_ssm = get_coding_ssm(from_flatfile=from_flatfile)
+  if (is.null(maf_path)){
+    # call it once so the object can be reused if user wants to annotate hotspots
+    coding_ssm = get_coding_ssm(from_flatfile=from_flatfile)
+  }else{
+    coding_ssm = fread_maf(maf_path)
+  }
 
   coding = coding_ssm %>%
     dplyr::filter(Hugo_Symbol %in% gene_symbols &
