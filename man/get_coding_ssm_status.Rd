@@ -24,9 +24,13 @@ get_coding_ssm_status(
 
 \item{from_flatfile}{Integer value indicating minimal recurrence level}
 
+\item{maf_path}{If the status of coding SSM should be tabulated from a custom maf file, provide path to the maf in this argument. The default is set to NULL.}
+
 \item{include_hotspots}{Logical parameter indicating whether hotspots object should also be tabulated. Default is TRUE.}
 
 \item{review_hotspots}{Logical parameter indicating whether hotspots object should be reviewed to include functionally relevant mutations or rare lymphoma-related genes. Default is TRUE.}
+
+\item{drop_unreviewed_hotspots}{Logical argumant indicating whether the hotspots for all unsupported genes should be tabulated separately (TRUE) or disregarded to avoid signal dilution between coding cnage and hotspot (FALSE). Default is FALSE.}
 
 \item{...}{Other parameters accepted by the review_hotspots() function}
 }
