@@ -1281,7 +1281,7 @@ prettyChromoplot = function(scores,
 #'
 #' @return nothing
 #' @export
-#' @import ggplot2
+#' @import ggplot2 ggthemes
 #'
 #' @examples
 #' ggplot(mpg, aes(displ, hwy, colour = class)) +
