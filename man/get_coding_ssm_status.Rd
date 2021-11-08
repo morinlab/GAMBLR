@@ -8,10 +8,12 @@ get_coding_ssm_status(
   gene_symbols,
   these_samples_metadata,
   from_flatfile = TRUE,
+  maf_path = NULL,
   include_hotspots = TRUE,
   recurrence_min = 5,
   review_hotspots = TRUE,
   genes_of_interest = c("FOXO1", "MYD88", "CREBBP"),
+  drop_unreviewed_hotspots = FALSE,
   genome_build = "hg19"
 )
 }
