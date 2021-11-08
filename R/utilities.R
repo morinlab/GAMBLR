@@ -61,10 +61,12 @@ intersect_maf = function(maf1,maf2,set_returned="maf1_only"){
 get_coding_ssm_status = function(gene_symbols,
                                   these_samples_metadata,
                                   from_flatfile=TRUE,
+                                  maf_path = NULL,
                                   include_hotspots=TRUE,
                                   recurrence_min = 5,
                                   review_hotspots=TRUE,
                                   genes_of_interest = c("FOXO1", "MYD88", "CREBBP"),
+                                  drop_unreviewed_hotspots=FALSE,
                                   genome_build = "hg19"){
   if(missing(gene_symbols)){
     message("defaulting to all lymphoma genes")
@@ -98,6 +100,9 @@ get_coding_ssm_status = function(gene_symbols,
     # review for the supported genes
     if(review_hotspots){
       annotated = review_hotspots(annotated, genes_of_interest = genes_of_interest, genome_build = genome_build)
+    }
+    if(drop_unreviewed_hotspots){
+      gene_symbols=intersect(genes_of_interest, c("CREBBP", "FOXO1", "MYD88"))
     }
     hotspots = annotated %>%
               dplyr::filter(Hugo_Symbol %in% gene_symbols) %>%
