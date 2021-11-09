@@ -1529,3 +1529,233 @@ prettyForestPlot <- function(maf, metadata, genes, comparison_column, comparison
 
 
 }
+
+
+
+
+splendidHeatmap = function(this_matrix,
+                           importance_values,
+                           these_samples_metadata,
+                           max_number_of_features_per_group = 10,
+                           splitColumnName = "pathology",
+                           metadataColumns = c("pathology"),
+                           numericMetadataColumns = NULL,
+                           numericMetadataMax = NULL,
+                           custom_colours=NULL,
+                           legend_direction="horizontal", #vertical
+                           legend_position="bottom",
+                           legend_row=3,
+                           legend_col=3,
+                           fontSizeGene=6,
+                           metadataBarHeight=1.5,
+                           leftStackedWidth=4,
+                           metadataBarFontsize=5,
+                           groupNames = NULL){
+  
+  comparison_groups <- unique(these_samples_metadata[,splitColumnName])
+
+  if(!is.null(splitColumnName) & (splitColumnName %in% metadataColumns)){
+    metadataColumns <- c(splitColumnName, metadataColumns[!metadataColumns==splitColumnName])
+  }
+
+  if(!is.null(numericMetadataColumns) & length(intersect(numericMetadataColumns, metadataColumns))>0){
+    message(paste0("The column(s) ", numericMetadataColumns, " specified both in metadata and numeric metadata. Plotting as numeric values..."))
+    metadataColumns = metadataColumns[!metadataColumns %in% numericMetadataColumns]
+  }
+
+  # get which cluster samples belong to
+  metadata_df <- these_samples_metadata[,c("Tumor_Sample_Barcode", metadataColumns, numericMetadataColumns)] %>%
+    as.data.frame() %>%
+    column_to_rownames(., "Tumor_Sample_Barcode")
+
+
+
+  if(!is.null(numericMetadataMax)){
+      max_list <- setNames(numericMetadataMax,numericMetadataColumns)
+      metadata_df <- metadata_df %>%
+        mutate(across(names(max_list), ~ ifelse(.x > max_list[[cur_column()]], max_list[[cur_column()]], .x)))
+  }
+
+  my_colours <- NULL
+  these_names=NULL
+  for (i in 1:length(metadataColumns)){
+    this_metadata_column <- get_gambl_colours(metadataColumns[i])
+    if (sum(is.na(names(this_metadata_column[unique(these_samples_metadata[,metadataColumns[i]])])))<=1 &
+        length(unique(these_samples_metadata[,metadataColumns[i]])) > 1){
+      these_names = c(these_names,metadataColumns[i])
+      my_colours = append(my_colours, list(c(this_metadata_column, "NA"="#BDBDC1FF")))
+      names(my_colours) = these_names
+    }
+  }
+
+
+  my_colours <- c(custom_colours, my_colours)
+
+
+  col_fun=circlize::colorRamp2(c(0, 0.5, 1), c("blue", "white", "red"))
+  for(exp in numericMetadataColumns){
+    my_colours[[exp]] = col_fun
+  }
+
+
+
+  # get all features
+  w <- importance_values[,comparison_groups]
+  w <- as.data.frame(w) %>%
+    mutate_if(is.character,as.numeric)
+
+
+
+  # extract most important features, while taking the feature with highest weight for a particular cluster if it was seen before for other cluster with lower weight
+  FEATURES <- w[,1] %>%
+    as.data.frame() %>% 
+    `rownames<-`(rownames(w)) %>%
+    arrange(desc(.)) %>%
+    head(., max_number_of_features_per_group) %>%
+    rownames_to_column(., var="Feature") %>%
+    mutate(group=comparison_groups[1])
+  for (i in 2:length(comparison_groups)){
+    FEATURES <- rbind(as.data.frame(FEATURES),
+                    w[,i] %>% as.data.frame() %>%
+                      `rownames<-`(rownames(w)) %>%
+                      arrange(desc(.)) %>%
+                      head(., max_number_of_features_per_group+3) %>%
+                      rownames_to_column(., var="Feature") %>%
+                      mutate(group=comparison_groups[i])) %>%
+    group_by(Feature) %>%
+    filter(. == max(.)) %>%
+    arrange(group)
+  }
+  FEATURES <- as.data.frame(FEATURES)
+
+
+  mat <- this_matrix %>%
+    merge(., metadata_df %>% rownames_to_column(., "Tumor_Sample_Barcode") %>% select(Tumor_Sample_Barcode, splitColumnName))
+  mat[,splitColumnName] = factor(mat[,splitColumnName])
+
+  # breaks used to display clusters with different colors on heatmap
+  bk <- c(0,seq(0.5, length(comparison_groups)+0.5, 1))
+
+  my_palette <- c("white", rev(unlist(my_colours[splitColumnName])))
+  my_palette <- unname(my_palette)
+
+  # get each cluster and label the events for each feature with cluster number
+  mat_2 <- mat[,-ncol(mat)]
+  # subset samples of each cluster
+  MY.LIST <- list()
+  for (i in 1:length(comparison_groups)){
+    MY.LIST[[i]] <- assign(comparison_groups[i], mat_2 %>%
+                           as.data.frame(.) %>%
+                           column_to_rownames(., var="Tumor_Sample_Barcode") %>%
+                           t(.) %>%
+                           as.data.frame(.) %>%
+                           select(metadata_df %>%
+                                    filter(get(splitColumnName)==comparison_groups[i]) %>%
+                                    rownames) )
+  }
+
+  # assign numbers - used for coloring
+  for(i in 1:length(comparison_groups)){
+    MY.LIST[[i]][MY.LIST[[i]]>0] <- i
+  }
+
+  # bind them all together for plotting
+  mat_2 <- do.call(cbind, MY.LIST) %>%
+    as.data.frame(.) %>%
+    t(.) %>%
+    as.data.frame(.) %>%
+    rownames_to_column(., var="Tumor_Sample_Barcode") %>%
+    base::merge(., metadata_df %>%
+                rownames_to_column(., "Tumor_Sample_Barcode") %>%
+                select(Tumor_Sample_Barcode, splitColumnName), by="Tumor_Sample_Barcode")
+
+
+  # specify where row breaks should be on heatmap
+  breaks <- 0
+  for (this_group in comparison_groups){
+    N <- (nrow(FEATURES %>% filter(group==this_group)))
+    breaks <- c(breaks, N)
+  }
+
+  # second, make a vector that will be supplied to ComplexHeatmap
+  my_vector <- NULL
+  for (i in 1:(length(breaks))){
+    my_vector <- c(my_vector,
+                 rep(i-1, breaks[i]))
+  }
+
+  # prepare matrix for stacked barplots on the left
+  STACKED <- data.frame(matrix(NA, ncol=1, nrow=nrow(FEATURES)))[-1]
+  rownames(STACKED) <- FEATURES$Feature
+  for (i in 1:length(comparison_groups)) {
+  STACKED <- cbind(STACKED,
+                   mat_2[,c("Tumor_Sample_Barcode", FEATURES$Feature)] %>%
+                     base::merge(., metadata_df %>%
+                                   rownames_to_column(., "Tumor_Sample_Barcode") %>%
+                                   select(Tumor_Sample_Barcode, splitColumnName), by="Tumor_Sample_Barcode") %>%
+                     arrange(!!sym(splitColumnName)) %>%
+                     filter(get(splitColumnName)==comparison_groups[i]) %>%
+                     select(-Tumor_Sample_Barcode, -splitColumnName) %>%
+                     summarise_all(funs(sum)) %>%
+                     t(.) %>%
+                     `colnames<-`(comparison_groups[i]) %>%
+                     as.data.frame(.) %>%
+                     mutate_all(~(./i)/nrow(metadata_df)))
+  }
+  m <- t(apply(STACKED, 1, function(x) x/sum(x)))
+
+
+  # left annotation: stacked feature weights
+  ha = rowAnnotation(`feature abundance` = anno_barplot(m, gp = gpar(fill = my_palette[1:length(comparison_groups)+1]),
+                                                      bar_width = 1, width = unit(leftStackedWidth, "cm"), 
+                                                      axis_param = list(side = legend_position, labels_rot = 0)))
+  used_for_ordering_df <- t(base::merge(mat_2 %>% select(-splitColumnName),
+              metadata_df %>% rownames_to_column(., "Tumor_Sample_Barcode"),
+              by="Tumor_Sample_Barcode") %>%
+    column_to_rownames(., var="Tumor_Sample_Barcode") %>%
+    arrange(!!!syms(metadataColumns), desc(`.`)) %>%  select(FEATURES$Feature))
+  used_for_ordering <- colnames(used_for_ordering_df)
+
+
+  # bottom annotation: tracks indicating metadata
+  ha_bottom = HeatmapAnnotation(df = metadata_df[ (order(match(rownames(metadata_df), used_for_ordering))), ] %>%
+                                arrange(!!!syms(metadataColumns), desc(`.`)) %>% select(-splitColumnName),
+                              col = my_colours,
+                              simple_anno_size = unit(metadataBarHeight, "mm"),
+                              gap = unit(0.25*metadataBarHeight, "mm"),
+                              annotation_name_gp=gpar(fontsize=metadataBarFontsize),
+                              annotation_legend_param =
+                                list(nrow=legend_row,
+                                     ncol=legend_col,
+                                     direction=legend_direction))
+
+  # top annotation: groups of interest to split on
+  ha_top = HeatmapAnnotation(df = metadata_df[ (order(match(rownames(metadata_df), used_for_ordering))), ] %>%
+                             arrange(!!!syms(metadataColumns), desc(`.`)) %>% select(splitColumnName),
+                           col = my_colours[splitColumnName],
+                           simple_anno_size = unit(metadataBarHeight, "mm"),
+                           gap = unit(0.25*metadataBarHeight, "mm"),
+                           annotation_name_gp=gpar(fontsize=fontSizeGene*1.5),
+                           annotation_legend_param =
+                             list(nrow=legend_row,
+                                  ncol=legend_col,
+                                  direction=legend_direction))
+
+  splendidHM <- ComplexHeatmap::Heatmap(used_for_ordering_df,
+                               col = my_palette,
+                               show_column_names = FALSE,
+                               cluster_columns = FALSE,
+                               cluster_rows = FALSE,
+                               row_names_gp = gpar(fontsize = fontSizeGene),
+                               show_heatmap_legend = FALSE,
+                               row_split = my_vector,
+                               row_title = NULL,
+                               left_annotation=ha,
+                               bottom_annotation=ha_bottom,
+                               top_annotation=ha_top,
+                               column_split=pull(metadata_df[(order(match(rownames(metadata_df), used_for_ordering))), ], splitColumnName),
+                               column_title=groupNames)
+
+  draw(splendidHM, heatmap_legend_side = legend_position, annotation_legend_side = legend_position)
+
+}
