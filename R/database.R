@@ -1161,8 +1161,20 @@ get_coding_ssm = function(limit_cohort,
                           force_unmatched_samples,
                           basic_columns=TRUE,
                           from_flatfile=FALSE,
+                          allow_clustered=FALSE,
                           groups=c("gambl","icgc_dart")){
-  coding_class = c("Frame_Shift_Del","Frame_Shift_Ins","In_Frame_Del","In_Frame_Ins","Missense_Mutation","Nonsense_Mutation","Nonstop_Mutation","Silent","Splice_Region","Splice_Site","Targeted_Region","Translation_Start_Site")
+  coding_class = c("Frame_Shift_Del",
+                   "Frame_Shift_Ins",
+                   "In_Frame_Del",
+                   "In_Frame_Ins",
+                   "Missense_Mutation",
+                   "Nonsense_Mutation",
+                   "Nonstop_Mutation",
+                   "Silent",
+                   "Splice_Region",
+                   "Splice_Site",
+                   "Targeted_Region",
+                   "Translation_Start_Site")
   all_meta= get_gambl_metadata(from_flatfile=from_flatfile)
   #do all remaining filtering on the metadata then add the remaining sample_id to the query
   all_meta = all_meta %>% dplyr::filter(unix_group %in% groups)
@@ -1183,12 +1195,22 @@ get_coding_ssm = function(limit_cohort,
   if(from_flatfile){
     base_path = config::get("project_base")
     #test if we have permissions for the full gambl + icgc merge
-    maf_partial_path = config::get("results_filatfiles")$ssm$all$cds
+
+    if(allow_clustered){
+      maf_partial_path = config::get("results_filatfiles")$ssm$all$clustered_cds
+    }
+    else{
+      maf_partial_path = config::get("results_filatfiles")$ssm$all$cds
+    }
     maf_path = paste0(base_path,maf_partial_path)
     maf_permissions = file.access(maf_path,4)
     if(maf_permissions == -1){
       #currently this will only return non-ICGC results
-      maf_partial_path = config::get("results_filatfiles")$ssm$gambl$cds
+      if(allow_clustered){
+        maf_partial_path = config::get("results_filatfiles")$ssm$gambl$clustered_cds
+      }else{
+        maf_partial_path = config::get("results_filatfiles")$ssm$gambl$cds
+      }
       base_path = config::get("project_base")
       #default is non-ICGC
       maf_path = paste0(base_path,maf_partial_path)
