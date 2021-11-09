@@ -68,7 +68,6 @@ get_coding_ssm_status = function(gene_symbols,
                                   recurrence_min = 5,
                                   review_hotspots=TRUE,
                                   genes_of_interest = c("FOXO1", "MYD88", "CREBBP"),
-                                  drop_unreviewed_hotspots=FALSE,
                                   genome_build = "hg19"){
   if(missing(gene_symbols)){
     message("defaulting to all lymphoma genes")
