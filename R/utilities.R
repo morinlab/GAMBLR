@@ -905,7 +905,8 @@ assign_cn_to_ssm = function(this_sample,coding_only=FALSE,
                             from_flatfile=FALSE,
                             use_augmented_maf=FALSE,
                             maf_file,
-                            seg_file){
+                            seg_file,
+                            seg_file_source="ichorCNA"){
 
   database_name = config::get("database_name")
   project_base = config::get("project_base")
@@ -968,7 +969,7 @@ assign_cn_to_ssm = function(this_sample,coding_only=FALSE,
       dplyr::mutate(chrom = gsub("chr","",chrom)) %>%
       dplyr::rename(Chromosome=chrom,Start_Position=start,End_Position=end) %>%
       data.table::as.data.table()
-    print(seg_sample)
+    #print(seg_sample)
   }else if(from_flatfile){
       message(paste("fetching:",tool_name))
       battenberg_files = fetch_output_files(build=genome_build,base_path = "gambl/battenberg_current",tool="battenberg",search_pattern = ".igv.seg")
@@ -992,7 +993,7 @@ assign_cn_to_ssm = function(this_sample,coding_only=FALSE,
         dplyr::mutate(chrom = gsub("chr","",chrom)) %>%
         dplyr::rename(Chromosome=chrom,Start_Position=start,End_Position=end) %>%
         data.table::as.data.table()
-    print(seg_sample)
+    
       #seg_table = config::get("results_tables")$copy_number
       #message(paste("querying",seg_table))
       #seg_sample = dplyr::tbl(con,seg_table) %>%
@@ -1003,20 +1004,153 @@ assign_cn_to_ssm = function(this_sample,coding_only=FALSE,
       #dplyr::rename(Chromosome=chrom,Start_Position=start,End_Position=end)
     }
     data.table::setkey(seg_sample, Chromosome, Start_Position, End_Position)
+    
     a = data.table::as.data.table(maf_sample)
-    a.seg = data.table::foverlaps(a, seg_sample, type="any")
-    a$log.ratio = a.seg$log.ratio
-    a$LOH = factor(a.seg$LOH_flag)
-    a = dplyr::mutate(a,CN=round(2*2^log.ratio))
-    seg_sample = dplyr::mutate(seg_sample,CN=round(2*2^log.ratio))
-    seg_sample$LOH_flag = factor(seg_sample$LOH_flag)
-    mutate(a,vaf=t_alt_count/(t_ref_count+t_alt_count)) %>% ggplot() +
-      #geom_point(aes(x=Start_Position,y=vaf,colour=CN),size=0.1)  +
-      geom_segment(data=seg_sample,aes(x=Start_Position,xend=End_Position,y=CN,yend=CN,colour=LOH_flag)) +
-      facet_wrap(~Chromosome,scales="free_x")
+    if(seg_file_source=="ichorCNA"){
+      #message("defaulting to ichorCNA format")
+      seg_sample = dplyr::rename(seg_sample, c("log.ratio"="median", "CN"="copy.number"))
+      a.seg = data.table::foverlaps(a, seg_sample, type="any")
+      a$log.ratio = a.seg$log.ratio
+      a$LOH = factor(a.seg$LOH_flag)
+      a$CN = a.seg$CN
+    }else{
+      a.seg = data.table::foverlaps(a, seg_sample, type="any")
+      a$log.ratio = a.seg$log.ratio
+      a$LOH = factor(a.seg$LOH_flag)
+      a = dplyr::mutate(a,CN=round(2*2^log.ratio))
+      seg_sample = dplyr::mutate(seg_sample,CN=round(2*2^log.ratio))
+      seg_sample$LOH_flag = factor(seg_sample$LOH_flag)
+    }
+
+    
+  #    mutate(a,vaf=t_alt_count/(t_ref_count+t_alt_count)) %>% ggplot() +
+  #    geom_point(aes(x=Start_Position,y=vaf,colour=CN),size=0.1)  +
+  #    geom_segment(data=seg_sample,aes(x=Start_Position,xend=End_Position,y=CN,yend=CN,colour=LOH_flag)) +
+  #    facet_wrap(~Chromosome,scales="free_x")
     return(list(maf=a,seg=seg_sample))
 }
 
+
+#' Estimate purity 
+#'
+#' @param in_maf Path to a local maf file
+#' @param in_seg Path to a local corresponding seg file for the same sample ID as the input maf
+#' @param seg_file_source Specify what copy number calling program the input seg file is from, as it handles ichorCNA differently than WisecondorX, battenberg, etc.
+#' @param show_plots Optional. Show two faceted plots that display the VAF and purity distributions for each copy number state in the sample
+#'
+#' @return A list containing a data frame (MAF-like format) with the segmented absolute copy number data and three extra columns:
+#' VAF is the variant allele frequency calculated from the t_ref_count and t_alt_count
+#' Ploidy is the number of copies of an allele in the tumour cell
+#' Final_purity is the finalized purity estimation per mutation after considering different copy number states and LOH events
+#' @export
+#'
+#' @examples
+#' tumour_purity = estimate_purity(in_maf="path/to/file.maf", in_seg="path/to/file.seg", seg_file_source="ichorCNA", show_plots=TRUE)
+
+estimate_purity = function(in_maf, 
+                           in_seg, 
+                           seg_file_source="ichorCNA",
+                           show_plots=FALSE
+                           ){
+  
+  # merge the CN info to the corresponding MAF file, uses GAMBLR function, "this_sample" not nevcessary since thats for flatfiles that are used and we arent using that here atm.
+  if(seg_file_source=="ichorCNA"){
+    CN_new <- assign_cn_to_ssm(maf_file = in_maf, seg_file = in_seg, seg_file_source = "ichorCNA")$maf
+  }else{
+    CN_new <- assign_cn_to_ssm(maf_file = in_maf, seg_file = in_seg, seg_file_source = "")$maf
+  }
+  
+  # Select only the relevant columns, add new columns for VAF, Ploidy, and Purity
+  # Need to make a function for ploidy where if the CN is 1 or 2 then make it one thing, but if its 3 or more then multiply the column by 3 
+  CN_new <- CN_new %>%
+    dplyr::select(Hugo_Symbol, Chromosome, Start_Position, End_Position, t_ref_count, t_alt_count, CN) %>%
+    dplyr::mutate(VAF = t_alt_count/(t_ref_count+t_alt_count)) %>%
+    dplyr::mutate(Ploidy = ifelse(CN %in% 1:2, 1, 0)) %>% 
+    dplyr::mutate(Purity = "") %>%
+    tidyr::drop_na(CN) %>%
+    tidyr::unite("Chrom_pos", Chromosome:Start_Position, sep=":", remove=FALSE)
+  
+  CN_new$CN[CN_new$CN<1] = 1
+  
+  my_range <- range(CN_new$CN)
+  #length(my_range)
+  #min(my_range)
+  #max(my_range)
+  
+  # Create an empty list
+  indiv_CN = list()
+  
+  # For a copy number ranging from the smallest to largest copy number in the maf, filter/separate mutations in each CN state into separate dataframes
+  # Duplicate rows based on the copy number value (CN of 2 = 2 rows, etc): CN_maf[rep(seq(nrow(CN_maf)), CN_maf$CN),]
+  # Fill out the ploidy column for each duplicated column: rep(seq(i),nrow(CN_new_2))
+  # Add a column for Purity and Calculate for CNs 3 or larger: mutate(CN_new_3, Purity = (CN*VAF)/Ploidy)
+  for(i in min(my_range):max(my_range)){
+    CN_new_2 = CN_new %>% dplyr::filter(CN == i)
+    if(i > 2){
+      CN_new_3 = CN_new_2[rep(seq(nrow(CN_new_2)), CN_new_2$CN),]
+      CN_new_3$Ploidy = rep(seq(i),nrow(CN_new_2))
+      CN_new_3 = dplyr::mutate(CN_new_3, Purity = (CN*VAF)/Ploidy)
+      indiv_CN[[i]] = CN_new_3
+    }else(indiv_CN[[i]] = CN_new_2)
+  }
+  
+  # Before putting these back together, do purity calculations for each CN group
+  # Bind together the dataframes with CN 1 or 2, sicne they both have a ploidy of 1, and calculate purity based off of this equation:
+  # Purity = (CN*VAF)/Ploidy
+  CN_1_2 = bind_rows(indiv_CN[[1]], indiv_CN[[2]])
+  CN_1_2 <- CN_1_2 %>%
+    dplyr::mutate(Purity = (CN*VAF)/Ploidy) %>%
+    dplyr::mutate(Purity = ifelse(Purity > 1, VAF, Purity))
+  
+  # Calculate a temporary purity based on the mean of these ploidy values
+  mean_clean_purity = mean(CN_1_2$Purity)
+  
+  # For CN of 3 or larger: 
+  ## Create a new column that subtracts the mean_clean_purity from all ploidy possibilities for each mutation (chromosomal position), 
+  ## Group by chromosonal position, 
+  ## Then for each group, choose only the value/temporary purity that is closest to the mean_clean_purity
+  CN_3_4 = bind_rows(indiv_CN[[3]], indiv_CN[[4]])
+  CN_3_4 <- CN_3_4 %>%
+    dplyr::mutate(Temp = mean_clean_purity - Purity ) %>%
+    group_by(Chrom_pos) %>%
+    slice(which.min(abs(Temp - mean_clean_purity)))
+  
+  # Merge/bind both dataframes back together (the one with CNs 1 and 2, and the other that contains CNs 3 or higher)
+  CN_final = bind_rows(CN_1_2, CN_3_4)
+  
+  # Join the purity estimations from temp into Purity column? or just say take the mean of al the CNs 1 and 2 then the mean of everything in the Temp column.
+  # Coalesce merges temp into pruity and puts it all into a new column
+  CN_final <- CN_final %>%
+    dplyr::mutate(Temp, Final_purity = coalesce(Temp, Purity)) %>%
+    dplyr::select(Hugo_Symbol, Chromosome, Start_Position, End_Position, t_ref_count, t_alt_count, CN, VAF, Ploidy, Final_purity)
+  
+  # Another way to merge the two columns, using an ifelse statement for rows containing NA values. 
+  # CN_final$Temp <- ifelse(is.na(CN_final$Temp), CN_final$Purity, CN_final$Temp)
+  
+  # Estimate full mean
+  sample_purity_estimation = mean(CN_final$Final_purity)
+  
+  if(show_plots){
+    VAF_plot <- CN_final %>% 
+      ggplot(aes(x=VAF)) + 
+      geom_histogram() + 
+      facet_wrap(~CN) 
+   
+     Purity_plot <- CN_final %>% 
+      ggplot(aes(x=Final_purity)) + 
+      geom_histogram() + 
+      facet_wrap(~CN)
+     
+     output_plots <- list("VAF_plot" = VAF_plot, "Purity_plot" = Purity_plot)
+  }
+  
+  output <- list("sample_purity_estimation" = sample_purity_estimation, "CN_final" = CN_final)
+  if(show_plots){
+    output = c(output, output_plots)
+  }
+  
+  return(output)
+}
 
 
 #' Refresh the contents of a database table
