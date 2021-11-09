@@ -1330,12 +1330,20 @@ theme_Morons <- function(base_size=14,
 #' @param custom_labels Optional: Specify custom labels for the legend categories. Must be in the same order as comparison_values.
 #' @return A ggplot object with a side-by-side forest plot and bar plot showing mutation incidences across two groups.
 #' @export
-#' @import dplyr
-#' @import cowplot
-#' @import broom
+#' @import dplyr cowplot broom
 #'
 #' @examples
-#' all_cols=map_metadata_to_colours(legend_metadata_columns,these_meta,verbose=T)
+#' metadata <- get_gambl_metadata(case_set = "tFL-study") #%>%
+#'   dplyr::filter(pairing_status == "matched") %>%
+#'   dplyr::filter(consensus_pathology %in% c("FL", "DLBCL"))
+#'
+#' maf <- get_coding_ssm(limit_samples = metadata$sample_id, basic_columns = TRUE)
+#' genes <- c("ATP6V1B2", "EZH2", "TNFRSF14", "RRAGC")
+#' comparison_column = "consensus_pathology"
+#' comparison_values = c("DLBCL", "FL")
+#' comparison_name = "FL vs DLBCL"
+#'
+#' prettyForestPlot(maf, metadata, genes, comparison_column, comparison_values, separate_hotspots = FALSE, comparison_name)
 prettyForestPlot <- function(maf, metadata, genes, comparison_column, comparison_values = FALSE, separate_hotspots = FALSE, comparison_name = FALSE, custom_colours = FALSE, custom_labels = FALSE){
 
   # Subset the maf file to the specified genes
@@ -1383,8 +1391,8 @@ prettyForestPlot <- function(maf, metadata, genes, comparison_column, comparison
 
   # Convert the maf file to a binary matrix
   mutmat <- maf %>%
-    select(Hugo_Symbol, Tumor_Sample_Barcode) %>%
-    left_join(select(metadata, Tumor_Sample_Barcode, comparison),
+    dplyr::select(Hugo_Symbol, Tumor_Sample_Barcode) %>%
+    left_join(dplyr::select(metadata, Tumor_Sample_Barcode, comparison),
               by = "Tumor_Sample_Barcode") %>%
     distinct() %>%
     mutate(is_mutated = 1) %>%
@@ -1406,7 +1414,7 @@ prettyForestPlot <- function(maf, metadata, genes, comparison_column, comparison
     ) %>%
     unnest(tidy) %>%
     mutate(q.value = p.adjust(p.value, "BH")) %>%
-    select(-c(table, test, method, alternative)) %>%
+    dplyr::select(-c(table, test, method, alternative)) %>%
     mutate(gene = fct_reorder(gene, estimate))
 
   forest <- fish_test %>%
@@ -1416,7 +1424,7 @@ prettyForestPlot <- function(maf, metadata, genes, comparison_column, comparison
     coord_flip() +
     geom_errorbar(aes(ymin = log(conf.low), ymax = log(conf.high), width = 0.2)) +
     ylab("ln(Odds Ratio)") +
-    xlab("Driver Mutations") +
+    xlab("Mutated Genes") +
     cowplot::theme_cowplot()
 
   if(comparison_name == FALSE){
@@ -1471,4 +1479,3 @@ prettyForestPlot <- function(maf, metadata, genes, comparison_column, comparison
 
 
 }
-
