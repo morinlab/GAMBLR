@@ -10,7 +10,8 @@ assign_cn_to_ssm(
   from_flatfile = FALSE,
   use_augmented_maf = FALSE,
   maf_file,
-  seg_file
+  seg_file,
+  seg_file_source = "ichorCNA"
 )
 }
 \arguments{
