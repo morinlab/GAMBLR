@@ -99,8 +99,9 @@ get_coding_ssm_status = function(gene_symbols,
     if(review_hotspots){
       annotated = review_hotspots(annotated, genes_of_interest = genes_of_interest, genome_build = genome_build)
     }
+    message("annotating hotspots")
     hotspots = annotated %>%
-              dplyr::filter(Hugo_Symbol %in% gene_symbols) %>%
+              dplyr::filter(Hugo_Symbol %in% genes_of_interest) %>%
               dplyr::select(Tumor_Sample_Barcode,Hugo_Symbol, hot_spot) %>%
               dplyr::rename("sample_id"="Tumor_Sample_Barcode","gene"="Hugo_Symbol") %>%
               dplyr::mutate(gene=paste0(gene, "HOTSPOT")) %>%
@@ -117,10 +118,12 @@ get_coding_ssm_status = function(gene_symbols,
     all_tabulated = all_tabulated %>% replace(is.na(.), 0)
     # make SSM and hotspots non-redundant by giving priority to hotspot feature and setting SSM to 0
     for (hotspot_site in colnames(wide_hotspots)[grepl("HOTSPOT", colnames(wide_hotspots))]){
+      message(hotspot_site)
           this_gene = gsub("HOTSPOT", "", hotspot_site)
           redundant_features = all_tabulated %>% dplyr::select(starts_with(this_gene))
           # if not both the gene and the hotspot are present, go to the next iteration
           if(ncol(redundant_features)!=2) next
+          message("OK")
           # if both gene and it's hotspot are in the matrix, give priority to hotspot feature
           all_tabulated[(all_tabulated[,this_gene]>0 & all_tabulated[,paste0(this_gene, "HOTSPOT")]==1),][,c(this_gene, paste0(this_gene, "HOTSPOT"))][,this_gene] = 0
     }

@@ -997,7 +997,9 @@ get_ssm_by_regions = function(regions_list,regions_bed,streamlined=FALSE,maf_dat
 #' #specifying chromosome, start and end individually
 #' my_mutations=get_ssm_by_region(chromosome="8",qstart=128723128,qend=128774067)
 get_ssm_by_region = function(chromosome,qstart,qend,
-                             region="",basic_columns=TRUE,streamlined=FALSE,maf_data,
+                             region="",basic_columns=TRUE,
+                             streamlined=FALSE,
+                             maf_data,
                              from_indexed_flatfile=FALSE,
                              mode="slms-3"){
   tabix_bin = "/home/rmorin/miniconda3/bin/tabix"
@@ -1049,12 +1051,16 @@ get_ssm_by_region = function(chromosome,qstart,qend,
 
   chromosome = gsub("chr","",chromosome)
   if(missing(maf_data)){
+    #message("missing maf_data")
     if(from_indexed_flatfile){
+      #message(paste("from indexed flatfile",maf_path,region))
       streamlined = TRUE
       muts = system(paste(tabix_bin,maf_path,region),intern=TRUE)
       if(length(muts)>1){
-        muts_region = readr::read_tsv(muts,col_names=c("Chromosome","Start_Position",
+        muts_region = suppressMessages(
+          readr::read_tsv(I(muts),col_names=c("Chromosome","Start_Position",
                                                   "End_Position","Tumor_Sample_Barcode"))
+        )
       # this is necessary because when only one row is returned, read_tsv thinks it is a file name
       }else if (length(muts)==1){
         region_with_one_row <- stringr::str_split(muts, "\t", n=4)
