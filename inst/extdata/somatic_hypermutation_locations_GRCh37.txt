@@ -6,7 +6,7 @@ chr9	37323113	37340687	ZCCHC7	intron-1	intronic
 chr9	37369209	37372160	PAX5	distal-enhancer-1	enhancer
 chr9	37382267	37385854	PAX5	distal-enhancer-2	enhancer
 chr9	37395932	37409239	PAX5	distal-enhancer-3	enhancer
-chr9	37032576	37037704	PAX5	TSS	active_promoter
+chr9	37032576	37037704	PAX5	TSS-1	active_promoter
 chr3	71626341	71635648	FOXP1	TSS-1	active_promoter
 chr3	71550753	71551478	FOXP1	intron-1a	intronic
 chr3	71503103	71504870	FOXP1	intron-1b	intronic
@@ -15,8 +15,8 @@ chr3	71176427	71180960	FOXP1	TSS-3	active_promoter
 chr3	71104986	71119518	FOXP1	TSS-4	active_promoter
 chr3	101546669	101547704	NFKBIZ	TSS-1	active_promoter
 chr3	101568239	101569274	NFKBIZ	TSS-2	active_promoter
-chr3	186783199	186784291	ST6GAL1	intronic	strong_enhancer
-chr3	186739628	186740875	ST6GAL1	TSS	active_promoter
+chr3	186783199	186784291	ST6GAL1	intronic-1	strong_enhancer
+chr3	186739628	186740875	ST6GAL1	TSS-1	active_promoter
 chr18	60982728	60988342	BCL2	TSS	active_promoter
 chr18	60796984	60814103	BCL2	intronic	strong_enhancer
 chr3	187458526	187464632	BCL6	TSS	NA
@@ -35,13 +35,13 @@ chr6	390572	394093	IRF4	TSS	active_promoter
 chr16	85931918	85933977	IRF8	TSS	active_promoter
 chr8	128748352	128749427	MYC	TSS	active_promoter
 chr20	46128611	46138099	NCOA3	TSS	active_promoter
-chr9	37021323	37043181	PAX5	TSS	active_promoter-strong_enhancer
+chr9	37021323	37043181	PAX5	TSS-2	active_promoter-strong_enhancer
 chr6	37138104	37139804	PIM1	TSS	active_promoter
 chrX	48774756	48776255	PIM2	TSS	active_promoter
 chr19	10340142	10341764	S1PR2	TSS	active_promoter
 chr14	94940587	94942549	SERPINA9	TSS	NA
-chr3	186781067	186784816	ST6GAL1	intronic	strong_enhancer
-chr3	186737482	186741455	ST6GAL1	TSS	strong_enhancer
+chr3	186781067	186784816	ST6GAL1	intronic-2	strong_enhancer
+chr3	186737482	186741455	ST6GAL1	TSS-2	strong_enhancer
 chrX	12993308	12994511	TMSB4X	intronic	active_promoter
 chr9	37276495	37342191	ZCCHC7	intronic	NA
 chr14	69257848	69259739	ZFP36L1	TSS	active_promoter
@@ -64,7 +64,7 @@ chr5	131823933	131826458	IRF1	TSS	active_promoter
 chr1	226920563	226927885	ITPKB	TSS	active_promoter
 chr1	226864857	226873452	ITPKB	intronic	weak_enhancer
 chr3	183269360	183274139	KLHL6	TSS	active_promoter-strong_enhancer
-chr3	187771678	187982852	LPP	TSS	NA
+chr3	187771678	187982852	LPP	TSS-1	NA
 chr3	188377178	188491248	LPP	intronic	NA
 chr12	25204045	25213569	LRMP	TSS	active_promoter
 chr5	88131209	88206620	MEF2C	TSS	active_promoter
@@ -74,4 +74,4 @@ chr17	3597616	3599572	P2RX5	TSS	active_promoter
 chr11	111248078	111250224	POU2AF1	TSS	active_promoter
 chr20	49120482	49140477	PTPN1	TSS	active_promoter
 chr17	75424734	75471471	SEPT9	intronic	active_promoter
-chr6	134487960	134499859	SGK1	TSS	active_promoter
+chr6	134487960	134499859	SGK1	TSS-1	active_promoter

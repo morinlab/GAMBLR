@@ -354,24 +354,73 @@ prettyOncoplot = function(maftools_obj,
                           custom_colours = NULL
                           ){
 
+  patients = pull(these_samples_metadata,sample_id)
+  #ensure patients not in metadata get dropped up-front to ensure mutation frequencies are accurate
   if(!recycleOncomatrix & missing(onco_matrix_path)){
+    onco_matrix_path="onco_matrix.txt"
   #order the data frame the way you want the patients shown
+    maf_patients =unique(as.character(maftools_obj@data$Tumor_Sample_Barcode))
+    if(any(!maf_patients %in% patients)){
+      extra = maf_patients[which(maf_patients %in% patients)]
+      patients = maf_patients[which(maf_patients %in% patients)]
+      n_drop=length(extra)
+      message(paste(n_drop,"patients are not in your metadata, will drop them from the data before displaying"))
+      maftools_obj = subsetMaf(maf = maftools_obj,tsb=patients)
+
+    }
     if(missing(genes)){
-      maftools::oncoplot(maftools_obj,writeMatrix = T,removeNonMutated = removeNonMutated)
+      #check that our MAFtools object only contains samples in the supplied metadata
+
+      genes = maftools::getGeneSummary(x = maftools_obj)[order(MutatedSamples, decreasing = TRUE)][,.(Hugo_Symbol, MutatedSamples)]
+      colnames(genes)[2] = "mutload"
+      totSamps = as.numeric(maftools_obj@summary[3,summary])
+      genes[,fractMutated := mutload/totSamps]
+
+      genes = genes[fractMutated*100 >= minMutationPercent, Hugo_Symbol]
+
+      lg = length(genes)
+      message(paste("creating oncomatrix with",lg,"genes"))
+      om = maftools:::createOncoMatrix(m = maftools_obj,
+                                     g = genes)
+      mat_origin = om$oncoMatrix
+      tsbs = levels(maftools:::getSampleSummary(x = maftools_obj)[,Tumor_Sample_Barcode])
+      print(paste("numcases:",length(tsbs)))
+      if(!removeNonMutated){
+        tsb.include = matrix(data = 0, nrow = nrow(mat_origin),
+                             ncol = length(tsbs[!tsbs %in% colnames(mat_origin)]))
+        colnames(tsb.include) = tsbs[!tsbs %in% colnames(mat_origin)]
+        rownames(tsb.include) = rownames(mat_origin)
+
+        mat_origin = cbind(mat_origin, tsb.include)
+      }
+      write.table(mat_origin,file=onco_matrix_path,quote=F,sep="\t")
+
     }else{
-      maftools::oncoplot(maftools_obj,genes=genes,writeMatrix = T,removeNonMutated = removeNonMutated)
+      om = maftools:::createOncoMatrix(m = maftools_obj,
+                                       g = genes)
+      mat_origin = om$oncoMatrix
+      tsbs = levels(maftools:::getSampleSummary(x = maftools_obj)[,Tumor_Sample_Barcode])
+      print(paste("numcases:",length(tsbs)))
+      if(!removeNonMutated){
+        tsb.include = matrix(data = 0, nrow = nrow(mat_origin),
+                             ncol = length(tsbs[!tsbs %in% colnames(mat_origin)]))
+        colnames(tsb.include) = tsbs[!tsbs %in% colnames(mat_origin)]
+        rownames(tsb.include) = rownames(mat_origin)
+
+        mat_origin = cbind(mat_origin, tsb.include)
+      }
+      write.table(mat_origin,file=onco_matrix_path,quote=F,sep="\t")
+      #maftools::oncoplot(maftools_obj,genes=genes,writeMatrix = T,removeNonMutated = removeNonMutated)
     }
   }
-
+  if(missing(onco_matrix_path)){
+    onco_matrix_path="onco_matrix.txt"
+  }
   if(!missing(numericMetadataColumns)){
     message(paste0("The column(s) ", numericMetadataColumns, " specified both in metadata and numeric metadata. Plotting as numeric values..."))
     metadataColumns = metadataColumns[!metadataColumns %in% numericMetadataColumns]
   }
-
-
-  if(missing(onco_matrix_path)){
-    onco_matrix_path="onco_matrix.txt"
-  }
+  patients = pull(these_samples_metadata,sample_id)
   #because the way MAFtools writes this file out is the absolute worst for compatability
   old_style_mat = read.table(onco_matrix_path,sep="\t",stringsAsFactors = FALSE)
   mat=read.table(onco_matrix_path,sep="\t",header=TRUE,check.names = FALSE,row.names=1,fill=TRUE,stringsAsFactors = F,na.strings = c("NA",""))
@@ -413,7 +462,6 @@ prettyOncoplot = function(maftools_obj,
 
   col=get_gambl_colours("mutation",alpha=mutAlpha)
   mat[mat==0]=""
-  patients = pull(these_samples_metadata,sample_id)
 
 
   patients_kept = patients[which(patients %in% colnames(mat))]
@@ -425,12 +473,14 @@ prettyOncoplot = function(maftools_obj,
 
   genes_kept = genes[which(genes %in% rownames(mat))]
   if(!missing(minMutationPercent)){
-    if(!missing(onco_matrix_path)){
+    if(! onco_matrix_path == "onco_matrix.txt"){
+
       warning("mintMutationPercent option is not available when you provide your own oncomatrix. Feel free to implement this if you need it")
       return()
     }
+
     mutation_counts = maftools_obj@gene.summary %>%
-      dplyr::filter(Hugo_Symbol %in% genes) %>%
+      #dplyr::filter(Hugo_Symbol %in% genes) %>%
       dplyr::select(Hugo_Symbol,MutatedSamples) %>%
       as.data.frame()
     numpat=length(patients)
