@@ -31,7 +31,7 @@ grch37_partners = system.file("extdata", "superenhancer_regions.grch37.tsv", pac
 
 
 grch37_ashm_regions = system.file("extdata", "somatic_hypermutation_locations_GRCh37.txt", package = "GAMBLR") %>%
-  read_tsv()
+  read_tsv() %>% mutate(name=paste0(gene,"-",region))
 
 usethis::use_data(grch37_ashm_regions, overwrite = TRUE)
 
@@ -40,6 +40,7 @@ lymphoma_genes = system.file("extdata","lymphoma_genes.tsv",package="GAMBLR") %>
 
 usethis::use_data(lymphoma_genes, overwrite = TRUE)
 
+#THis needs to be syncronized with the list above (it currently is out of sync!)
 grch37_lymphoma_genes_bed = system.file("extdata","lymphoma_genes.grch37.bed",package="GAMBLR") %>%
   read_tsv()
 

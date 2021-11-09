@@ -860,16 +860,26 @@ append_to_table = function(table_name,data_df){
 #' @param sample_metadata This is used to complete your matrix. All GAMBL samples will be used by default. Provide a data frame with at least sample_id for all samples if you are using non-GAMBL data.
 #' @param use_name_column Set this to true to force the function to use the value in column "name" to name each feature in the output
 #' @param from_indexed_flatfile Set to TRUE to avoid using the database and instead rely on flatfiles (only works for streamlined data, not full MAF details)
+#' @param allow_clustered Set to TRUE to utilize the latest SLMS-3 variant calls that allow clustered variants
 #'
 #' @return
 #' @export
 #'
 #' @examples
-get_ashm_count_matrix = function(regions_bed,maf_data,sample_metadata,use_name_column=FALSE,from_indexed_flatfile=FALSE){
+get_ashm_count_matrix = function(regions_bed,maf_data,
+                                 sample_metadata,
+                                 use_name_column=FALSE,
+                                 from_indexed_flatfile=FALSE,
+                                 allow_clustered=FALSE){
   if(missing(regions_bed)){
     regions_bed=grch37_ashm_regions
   }
-  ashm_maf=get_ssm_by_regions(regions_bed=regions_bed,streamlined=TRUE,maf_data=maf_data,use_name_column=use_name_column,from_indexed_flatfile=from_indexed_flatfile)
+  ashm_maf=get_ssm_by_regions(regions_bed=regions_bed,
+                              streamlined=TRUE,
+                              maf_data=maf_data,
+                              use_name_column=use_name_column,
+                              from_indexed_flatfile=from_indexed_flatfile,
+                              allow_clustered = allow_clustered)
 
   ashm_counted = ashm_maf %>% group_by(sample_id,region_name) %>% tally()
   if(missing(sample_metadata)){
@@ -935,7 +945,14 @@ get_ssm_by_gene = function(gene_symbol,coding_only=FALSE,rename_splice_region=TR
 #' regions_bed = grch37_ashm_regions %>% mutate(name=paste(gene,region,sep="_"))
 #' ashm_maf=get_ssm_by_regions(regions_bed=regions_bed,streamlined=TRUE,use_name_column=use_name_column)
 
-get_ssm_by_regions = function(regions_list,regions_bed,streamlined=FALSE,maf_data=maf_data,use_name_column=FALSE,from_indexed_flatfile=FALSE, mode="slms-3"){
+get_ssm_by_regions = function(regions_list,
+                              regions_bed,
+                              streamlined=FALSE,
+                              maf_data=maf_data,
+                              use_name_column=FALSE,
+                              from_indexed_flatfile=FALSE,
+                              mode="slms-3",
+                              allow_clustered = FALSE){
   bed2region=function(x){
     paste0(x[1],":",as.numeric(x[2]),"-",as.numeric(x[3]))
   }
@@ -947,9 +964,18 @@ get_ssm_by_regions = function(regions_list,regions_bed,streamlined=FALSE,maf_dat
     }
   }
   if(missing(maf_data)){
-    region_mafs = lapply(regions,function(x){get_ssm_by_region(region=x,streamlined = streamlined,from_indexed_flatfile = from_indexed_flatfile, mode=mode)})
+    region_mafs = lapply(regions,function(x){get_ssm_by_region(region=x,
+                                                               streamlined = streamlined,
+                                                               from_indexed_flatfile = from_indexed_flatfile,
+                                                               mode=mode,
+                                                               allow_clustered = allow_clustered)})
   }else{
-    region_mafs = lapply(regions,function(x){get_ssm_by_region(region=x,streamlined = streamlined,maf_data=maf_data,from_indexed_flatfile = from_indexed_flatfile, mode=mode)})
+    region_mafs = lapply(regions,function(x){get_ssm_by_region(region=x,
+                                                               streamlined = streamlined,
+                                                               maf_data=maf_data,
+                                                               from_indexed_flatfile = from_indexed_flatfile,
+                                                               mode=mode,
+                                                               allow_clustered = allow_clustered)})
   }
   if(!use_name_column){
     rn = regions
@@ -1001,7 +1027,8 @@ get_ssm_by_region = function(chromosome,qstart,qend,
                              streamlined=FALSE,
                              maf_data,
                              from_indexed_flatfile=FALSE,
-                             mode="slms-3"){
+                             mode="slms-3",
+                             allow_clustered = FALSE){
   tabix_bin = "/home/rmorin/miniconda3/bin/tabix"
   table_name = config::get("results_tables")$ssm
   db=config::get("database_name")
@@ -1009,7 +1036,12 @@ get_ssm_by_region = function(chromosome,qstart,qend,
     base_path = config::get("project_base")
     #test if we have permissions for the full gambl + icgc merge
     if(mode=="slms-3"){
-      maf_partial_path = config::get("results_filatfiles")$ssm$all$full
+      if(allow_clustered){
+        maf_partial_path = config::get("results_filatfiles")$ssm$all$clustered
+      }
+      else{
+        maf_partial_path = config::get("results_filatfiles")$ssm$all$full
+      }
     }else if (mode=="strelka2"){
       maf_partial_path = config::get("results_filatfiles")$ssm$all$strelka2
     }else{
@@ -1020,7 +1052,11 @@ get_ssm_by_region = function(chromosome,qstart,qend,
     if(maf_permissions == -1){
       #currently this will only return non-ICGC results
       if(mode=="slms-3"){
-        maf_partial_path = config::get("results_filatfiles")$ssm$gambl$full
+        if(allow_clustered){
+          maf_partial_path = config::get("results_filatfiles")$ssm$gambl$clustered
+        }else{
+          maf_partial_path = config::get("results_filatfiles")$ssm$gambl$full
+        }
       }else if (mode=="strelka2"){
         maf_partial_path = config::get("results_filatfiles")$ssm$gambl$strelka2
       }else{
@@ -1057,16 +1093,11 @@ get_ssm_by_region = function(chromosome,qstart,qend,
       streamlined = TRUE
       muts = system(paste(tabix_bin,maf_path,region),intern=TRUE)
       if(length(muts)>1){
-
-        muts_region = read.table(muts,
-                                 col.names=
-                                   c("Chromosome",
-                                     "Start_Position",
-                                     "End_Position",
-                                     "Tumor_Sample_Barcode"
-                                     ),
-                                 sep = "\t"
-                                 )
+        muts_region =
+          readr::read_tsv(I(muts),col_names=c("Chromosome",
+                                           "Start_Position",
+                                        "End_Position",
+                                        "Tumor_Sample_Barcode"))
 
       # this is necessary because when only one row is returned, read_tsv thinks it is a file name
       }else if (length(muts)==1){
