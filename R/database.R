@@ -1057,10 +1057,17 @@ get_ssm_by_region = function(chromosome,qstart,qend,
       streamlined = TRUE
       muts = system(paste(tabix_bin,maf_path,region),intern=TRUE)
       if(length(muts)>1){
-        muts_region = suppressMessages(
-          readr::read_tsv(I(muts),col_names=c("Chromosome","Start_Position",
-                                                  "End_Position","Tumor_Sample_Barcode"))
-        )
+
+        muts_region = read.table(muts,
+                                 col.names=
+                                   c("Chromosome",
+                                     "Start_Position",
+                                     "End_Position",
+                                     "Tumor_Sample_Barcode"
+                                     ),
+                                 sep = "\t"
+                                 )
+
       # this is necessary because when only one row is returned, read_tsv thinks it is a file name
       }else if (length(muts)==1){
         region_with_one_row <- stringr::str_split(muts, "\t", n=4)

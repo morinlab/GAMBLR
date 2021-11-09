@@ -1317,3 +1317,165 @@ theme_Morons <- function(base_size=14,
             strip.text = element_text(face="bold")
     ))
 }
+
+#' Create a forest plot comparing mutation frequencies for a set of genes between two groups.
+#'
+#' @param maf A maf data frame. Minimum required columns are Hugo_Symbol and Tumor_Sample_Barcode.
+#' @param metadata Metadata for the comparisons. Minimum required columns are Tumor_Sample_Barcode and the column assigning each case to one of two groups.
+#' @param comparison_column Mandatory: the name of the metadata column containing the comparison values.
+#' @param comparison_values Optional: If the comparison column contains more than two values or is not a factor, specify a character vector of length two in the order you would like the factor levels to be set, reference group first.
+#' @param separate_hotspots Optional: If you would like to treat hotspots separately from other mutations in any gene. Requires that the maf file is annotated with GAMBLR::annotate_hotspots.
+#' @param comparison_name Optional: Specify the legend title if different from the comparison column name.
+#' @param custom_colours Optional: Specify a named vector of colours that match the values in the comparison column.
+#' @param custom_labels Optional: Specify custom labels for the legend categories. Must be in the same order as comparison_values.
+#' @return A ggplot object with a side-by-side forest plot and bar plot showing mutation incidences across two groups.
+#' @export
+#' @import dplyr cowplot broom
+#'
+#' @examples
+#' metadata <- get_gambl_metadata(case_set = "tFL-study") #%>%
+#'   dplyr::filter(pairing_status == "matched") %>%
+#'   dplyr::filter(consensus_pathology %in% c("FL", "DLBCL"))
+#'
+#' maf <- get_coding_ssm(limit_samples = metadata$sample_id, basic_columns = TRUE)
+#' genes <- c("ATP6V1B2", "EZH2", "TNFRSF14", "RRAGC")
+#' comparison_column = "consensus_pathology"
+#' comparison_values = c("DLBCL", "FL")
+#' comparison_name = "FL vs DLBCL"
+#'
+#' prettyForestPlot(maf, metadata, genes, comparison_column, comparison_values, separate_hotspots = FALSE, comparison_name)
+prettyForestPlot <- function(maf, metadata, genes, comparison_column, comparison_values = FALSE, separate_hotspots = FALSE, comparison_name = FALSE, custom_colours = FALSE, custom_labels = FALSE){
+
+  # Subset the maf file to the specified genes
+  {
+    if(!exists("genes"))
+      stop("Please provide a character vector of genes you wish to compare. ")
+  }
+
+  maf <- maf[maf$Hugo_Symbol %in% genes, ]
+
+
+  # If no comparison_values are specified, derive the comparison_values from the specified comparison_column
+  if(comparison_values[1] == FALSE){
+    if(class(metadata[[comparison_column]]) == "factor"){
+      comparison_values = levels(metadata[[comparison_column]])
+    } else {
+      comparison_values = unique(metadata[[comparison_column]])
+    }
+  }
+
+  # Ensure there are only two comparison_values
+  {
+    if(length(comparison_values) != 2)
+      stop(paste0("Your comparison must have two values. \nEither specify comparison_values as a vector of length 2 or subset your metadata so your comparison_column has only two unique values or factor levels."))
+  }
+
+  # Subset the metadata to the specified comparison_values and the maf to the remaining sample_ids
+  metadata <- metadata[metadata[[comparison_column]] %in% comparison_values, ]
+  maf <- maf[maf$Tumor_Sample_Barcode %in% metadata$Tumor_Sample_Barcode, ]
+
+  # Ensure the metadata comparison column is a factor with levels matching the input
+  metadata$comparison = factor(metadata[[comparison_column]], levels = comparison_values)
+
+  # If separate_hotspots = true, confirm the input maf is hotspot annotated
+  if(separate_hotspots){
+
+    {
+      if(!"hot_spot" %in% colnames(maf))
+        stop("No \"hot_spot\" column in maf file. Annotate your maf file with GAMBLR::annotate_hot_spots() first. ")
+    }
+
+    maf$Hugo_Symbol = ifelse(!is.na(maf$hot_spot), paste0(maf$Hugo_Symbol, "_hotspot"), maf$Hugo_Symbol)
+
+  }
+
+  # Convert the maf file to a binary matrix
+  mutmat <- maf %>%
+    dplyr::select(Hugo_Symbol, Tumor_Sample_Barcode) %>%
+    left_join(dplyr::select(metadata, Tumor_Sample_Barcode, comparison),
+              by = "Tumor_Sample_Barcode") %>%
+    distinct() %>%
+    mutate(is_mutated = 1) %>%
+    pivot_wider(names_from = Hugo_Symbol,
+                values_from = is_mutated,
+                values_fill = 0) %>%
+    mutate(across(where(is.numeric), ~replace_na(., 0)))
+
+  fish_test <- mutmat %>%
+    pivot_longer(-c(Tumor_Sample_Barcode, comparison),
+                 names_to = "gene",
+                 values_to = "is_mutated") %>%
+    mutate(is_mutated = factor(is_mutated, levels = c("1", "0"))) %>%
+    group_by(gene) %>%
+    summarise(table = list(table(is_mutated, comparison))) %>%
+    mutate(
+      test = map(table, fisher.test),
+      tidy = map(test, broom::tidy)
+    ) %>%
+    unnest(tidy) %>%
+    mutate(q.value = p.adjust(p.value, "BH")) %>%
+    dplyr::select(-c(table, test, method, alternative)) %>%
+    mutate(gene = fct_reorder(gene, estimate))
+
+  forest <- fish_test %>%
+    ggplot(aes(x = gene, y = log(estimate))) +
+    geom_point(size = 5, shape = "square") +
+    geom_hline(yintercept = 0, lty = 2) +
+    coord_flip() +
+    geom_errorbar(aes(ymin = log(conf.low), ymax = log(conf.high), width = 0.2)) +
+    ylab("ln(Odds Ratio)") +
+    xlab("Mutated Genes") +
+    cowplot::theme_cowplot()
+
+  if(comparison_name == FALSE){
+    comparison_name = comparison_column
+  }
+
+  if(custom_colours[1] == FALSE){
+    if(length(levels(metadata$comparison)[levels(metadata$comparison) %in% names(get_gambl_colours())]) == 2){
+      colours = get_gambl_colours()[levels(metadata$comparison)]
+    } else {
+      colours = get_gambl_colours(classification = "blood")[c("Red", "Blue")]
+      names(colours) = levels(metadata$comparison)
+    }
+  } else {
+    colours <- custom_colours
+  }
+
+  if(custom_labels[1] == FALSE){
+    labels = levels(metadata$comparison)
+    names(labels) = levels(metadata$comparison)
+  } else if(length(custom_labels) != 2) {
+    labels = levels(metadata$comparison)
+    names(labels) = levels(metadata$comparison)
+    print("Provided custom labels is not a character vector of length 2. Defaulting to comparison factor levels as labels. ")
+  } else {
+    labels = custom_labels
+    names(labels) = comparison_values
+  }
+
+  bar <- mutmat %>%
+    pivot_longer(-c(Tumor_Sample_Barcode, comparison),
+                 names_to = "gene",
+                 values_to = "is_mutated") %>%
+    group_by(gene, comparison) %>%
+    summarise(percent_mutated = sum(is_mutated)/n() * 100) %>%
+    mutate(gene = factor(gene, levels = levels(fish_test$gene))) %>%
+    ggplot(aes(x = gene, y = percent_mutated, fill = comparison)) +
+    geom_col(position = "dodge", width = 0.5) +
+    xlab("") + ylab("% Mutated") +
+    coord_flip() +
+    scale_fill_manual(name = comparison_name, values = colours, labels = labels[levels(metadata$comparison)]) +
+    cowplot::theme_cowplot() +
+    theme(axis.text.y = element_blank(),
+          legend.position = "bottom",
+          legend.justification = )
+
+  legend = cowplot::get_legend(bar)
+
+  plots <- plot_grid(forest, bar + theme(legend.position = "none"), rel_widths = c(1, 0.6), nrow = 1)
+
+  cowplot::plot_grid(plot_grid(NULL, legend, NULL, nrow = 1), plots, nrow = 2, rel_heights = c(0.1, 1))
+
+
+}
