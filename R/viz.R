@@ -1530,12 +1530,44 @@ prettyForestPlot <- function(maf, metadata, genes, comparison_column, comparison
 
 }
 
-
-
+#' Make an heatmap that is looking cute using ComplexHeatmap. The metadata is expected to follow the structure and column naming used in GAMBL.
+#' If you provide your own non-GAMBL samples and metadata, you must include at least the columns with names corresponding to annotation tracks and column "Tumor_Sample_Barcode"
+#' showing sample ids. The metadata can contain numeric columns, which will be plotted as numeric variables in the annotation. The efature matrix is supplied in this_matrix argument
+#' and is expected to have samples in rows, and features in columns. The argument importance_values is similar to the widths of NMF object or importance values for feature/group from RF models.
+#' It is also expected to have column names (having names of the groups that will be shown on heatmap) and rownames (corresponding to feature ids).
+#' @param this_matrix A data frame with column Tumor_Sample_Barcode and a column for each feature. Can be binary. Expected to not contain negative values.
+#' @param importance_values Provide a data frame of feature (in rows) by group (in columns) with numeric values representative of feature importance. Can be obtained from rf$inportance or basis(NMF)
+#' @param these_samples_metadata Data frame containing metadata for your samples
+#' @param max_number_of_features_per_group Optional argument to indicate how many features from each group to be considered for display. Default is 10
+#' @param splitColumnName Optional argument to indicate which metadata column to split on. Default is set to pathology
+#' @param metadataColumns A vector containing the categorical column names you want to plot below
+#' @param numericMetadataColumns A vector containing the numeric columns you want to plot below
+#' @param numericMetadataMax A numeric vector of cutoffs to apply to numeric columns above
+#' @param custom_colours Provide named vector (or named list of vectors) containing custom annotation colours if you do not want to use standartized pallette
+#' @param legend_direction Optional argument to indicate whether legend should be in horizontal (default) or vertical position
+#' @param legend_position Optional argument to indicate where the legend should be drawn. The default is set to bottom, but can also accept top, right, and left.
+#' @param legend_row Fiddle with these to widen or narrow your legend (default 3)
+#' @param legend_col Fiddle with these to widen or narrow your legend (default 3)
+#' @param fontSizeGene Font size for gene labels (default 6)
+#' @param metadataBarHeight Optional argument to adjust the height of bar with annotations. The default is 1.5
+#' @param leftStackedWidth Optional argument to control how wide should the stacked plot on the left be. The default is 4
+#' @param metadataBarFontsize Optional argument to control for the font size of metadata annotations. The default is 5
+#' @param groupNames optional vector of group names to be displayed above heatmap. Should be the same length as the number of groups that will be shown. Default is NULL (no labels)
+#'
 #' @return
 #' @export
 #' @import ComplexHeatmap grid dplyr circlize
-
+#'
+#' @examples
+#' splendidHeatmap(
+#'  this_matrix = data,
+#'  importance_values = rf$importance[,c(1:3)],
+#'  these_samples_metadata = MASTER.METADATA,
+#'  splitColumnName = "pathology",
+#'  metadataColumns = c("cohort", "pathology", "sex", ".", "COO_consensus", "DHITsig_consensus", "seq_type"),
+#'  numericMetadataColumns = ".",
+#'  numericMetadataMax = 0.7,
+#'  custom_colours=custom_colours)
 
 splendidHeatmap = function(this_matrix,
                            importance_values,
