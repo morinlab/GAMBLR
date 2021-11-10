@@ -1661,7 +1661,8 @@ splendidHeatmap = function(this_matrix,
   mat <- this_matrix %>%
     merge(., metadata_df %>%
              rownames_to_column(., "Tumor_Sample_Barcode") %>%
-             dplyr::select(Tumor_Sample_Barcode, splitColumnName))
+             dplyr::select(Tumor_Sample_Barcode, splitColumnName)) %>%
+             as.data.frame()
   mat[,splitColumnName] = factor(mat[,splitColumnName])
 
   # breaks used to display groups with different colors on heatmap
@@ -1682,7 +1683,7 @@ splendidHeatmap = function(this_matrix,
                            t(.) %>%
                            as.data.frame(.) %>%
                            dplyr::select(metadata_df %>%
-                                    dplyr::filter(get(splitColumnName)==comparison_groups[i]) %>%
+                                    dplyr::filter(base::get(splitColumnName)==comparison_groups[i]) %>%
                                     rownames) )
   }
 
@@ -1728,7 +1729,7 @@ splendidHeatmap = function(this_matrix,
                                    dplyr::select(Tumor_Sample_Barcode, splitColumnName),
                                    by="Tumor_Sample_Barcode") %>%
                      dplyr::arrange(!!sym(splitColumnName)) %>%
-                     dplyr::filter(get(splitColumnName)==comparison_groups[i]) %>%
+                     dplyr::filter(base::get(splitColumnName)==comparison_groups[i]) %>%
                      dplyr::select(-Tumor_Sample_Barcode, -splitColumnName) %>%
                      dplyr::summarise_all(funs(sum)) %>%
                      t(.) %>%
