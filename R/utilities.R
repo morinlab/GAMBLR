@@ -1223,7 +1223,7 @@ estimate_purity = function(in_maf,
   ## Create a new column that subtracts the mean_clean_purity from all ploidy possibilities for each mutation (chromosomal position), 
   ## Group by chromosonal position, 
   ## Then for each group, choose only the value/temporary purity that is closest to the mean_clean_purity
-  CN_3_4 = bind_rows(indiv_CN[[3]], indiv_CN[[4]])
+  CN_3_4 = bind_rows(indiv_CN[3:max(CN_new$CN)])
   CN_3_4 <- CN_3_4 %>%
     dplyr::mutate(Temp = mean_clean_purity - Purity ) %>%
     group_by(Chrom_pos) %>%
@@ -1231,6 +1231,8 @@ estimate_purity = function(in_maf,
   
   # Merge/bind both dataframes back together (the one with CNs 1 and 2, and the other that contains CNs 3 or higher)
   CN_final = bind_rows(CN_1_2, CN_3_4)
+  CN_final<- CN_final %>%
+    arrange(CN_final$CN)
   
   # Join the purity estimations from temp into Purity column? or just say take the mean of al the CNs 1 and 2 then the mean of everything in the Temp column.
   # Coalesce merges temp into pruity and puts it all into a new column
