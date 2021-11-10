@@ -30,7 +30,7 @@ prettyOncoplot(
   box_col = NA,
   metadataBarHeight = 1.5,
   metadataBarFontsize = 5,
-  hideTopBarplot = FALSE,
+  hideTopBarplot = TRUE,
   hideSideBarplot = FALSE,
   splitColumnName,
   splitGeneGroups,
