@@ -1156,7 +1156,7 @@ assign_cn_to_ssm = function(this_sample,coding_only=FALSE,
 #' Ploidy is the number of copies of an allele in the tumour cell
 #' Final_purity is the finalized purity estimation per mutation after considering different copy number states and LOH events
 #' @export
-#' @import tidyverse dbplyr
+#' @import tidyverse
 #'
 #' @examples
 #' tumour_purity = estimate_purity(in_maf="path/to/file.maf", in_seg="path/to/file.seg", seg_file_source="ichorCNA", show_plots=TRUE)
