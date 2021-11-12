@@ -1380,7 +1380,7 @@ theme_Morons <- function(base_size=14,
 #' @param custom_labels Optional: Specify custom labels for the legend categories. Must be in the same order as comparison_values.
 #' @return A ggplot object with a side-by-side forest plot and bar plot showing mutation incidences across two groups.
 #' @export
-#' @import dplyr cowplot broom
+#' @import dplyr cowplot broom reshape2
 #'
 #' @examples
 #' metadata <- get_gambl_metadata(case_set = "tFL-study") #%>%
@@ -1448,11 +1448,11 @@ prettyForestPlot <- function(maf,mutmat, metadata, genes, comparison_column, com
       left_join(dplyr::select(metadata, Tumor_Sample_Barcode, comparison),
               by = "Tumor_Sample_Barcode") %>%
       distinct() %>%
-      mutate(is_mutated = 1) %>%
+      dplyr::mutate(is_mutated = 1) %>%
       pivot_wider(names_from = Hugo_Symbol,
                 values_from = is_mutated,
                 values_fill = 0) %>%
-      mutate(across(where(is.numeric), ~replace_na(., 0)))
+      dplyr::mutate(across(where(is.numeric), ~replace_na(., 0)))
   }else{
     message("provide a MAF or mutation matrix")
     return()
@@ -1461,18 +1461,18 @@ prettyForestPlot <- function(maf,mutmat, metadata, genes, comparison_column, com
     pivot_longer(-c(Tumor_Sample_Barcode, comparison),
                  names_to = "gene",
                  values_to = "is_mutated") %>%
-    mutate(is_mutated = factor(is_mutated, levels = c("1", "0"))) %>%
+    dplyr::mutate(is_mutated = factor(is_mutated, levels = c("1", "0"))) %>%
     group_by(gene) %>%
-    summarise(table = list(table(is_mutated, comparison))) %>%
-    mutate(
+    dplyr::summarise(table = list(table(is_mutated, comparison))) %>%
+    dplyr::mutate(
       test = map(table, fisher.test),
       tidy = map(test, broom::tidy)
     ) %>%
     unnest(tidy) %>%
-    mutate(q.value = p.adjust(p.value, "BH")) %>%
+    dplyr::mutate(q.value = p.adjust(p.value, "BH")) %>%
     dplyr::select(-c(table, test, method, alternative)) %>%
     dplyr::filter(q.value <= max_q) %>%
-    mutate(gene = fct_reorder(gene, estimate))
+    dplyr::mutate(gene = fct_reorder(gene, estimate))
   #fish_test <- mutate(fish_test, gene = fct_reorder(gene, estimate))
   #fish_test$gene = factor(fish_test$gene,levels=unique(fish_test$gene))
 
@@ -1526,13 +1526,13 @@ prettyForestPlot <- function(maf,mutmat, metadata, genes, comparison_column, com
   }
 
   bar <- mutmat %>%
-    pivot_longer(-c(Tumor_Sample_Barcode, comparison),
-                 names_to = "gene",
-                 values_to = "is_mutated") %>%
+    dplyr::select(-Tumor_Sample_Barcode) %>%
+    reshape2::melt(., id.vars = c("comparison"), value.name="is_mutated", variable.name="gene") %>%
     group_by(gene, comparison) %>%
+    drop_na() %>%
     summarise(percent_mutated = sum(is_mutated)/n() * 100) %>%
     dplyr::filter(gene %in% fish_test$gene) %>%
-    mutate(gene = factor(gene, levels = levels(fish_test$gene))) %>%
+    dplyr::mutate(gene = factor(gene, levels = levels(fish_test$gene))) %>%
     ggplot(aes(x = gene, y = percent_mutated, fill = comparison)) +
     geom_col(position = "dodge", width = 0.5) +
     xlab("") + ylab("% Mutated") +
