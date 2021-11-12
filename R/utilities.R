@@ -1211,34 +1211,55 @@ estimate_purity = function(in_maf,
   # Before putting these back together, do purity calculations for each CN group
   # Bind together the dataframes with CN 1 or 2, sicne they both have a ploidy of 1, and calculate purity based off of this equation:
   # Purity = (CN*VAF)/Ploidy
-  CN_1_2 = bind_rows(indiv_CN[[1]], indiv_CN[[2]])
-  CN_1_2 <- CN_1_2 %>%
-    dplyr::mutate(Purity = (CN*VAF)/Ploidy) %>%
-    dplyr::mutate(Purity = ifelse(Purity > 1, VAF, Purity))
-  
-  # Calculate a temporary purity based on the mean of these ploidy values
-  mean_clean_purity = mean(CN_1_2$Purity)
+  if (exists("indiv_CN[[1]], indiv_CN[[2]]")){
+    CN_1_2 = bind_rows(indiv_CN[[1]], indiv_CN[[2]])
+    CN_1_2 <- CN_1_2 %>%
+      dplyr::mutate(Purity = (CN*VAF)/Ploidy) %>%
+      dplyr::mutate(Purity = ifelse(Purity > 1, VAF, Purity))
+    
+    # Calculate a temporary purity based on the mean of these ploidy values
+    mean_clean_purity = mean(CN_1_2$Purity)
+  }
   
   # For CN of 3 or larger: 
   ## Create a new column that subtracts the mean_clean_purity from all ploidy possibilities for each mutation (chromosomal position), 
   ## Group by chromosonal position, 
   ## Then for each group, choose only the value/temporary purity that is closest to the mean_clean_purity
-  CN_3_4 = bind_rows(indiv_CN[3:max(CN_new$CN)])
-  CN_3_4 <- CN_3_4 %>%
-    dplyr::mutate(Temp = mean_clean_purity - Purity ) %>%
-    group_by(Chrom_pos) %>%
-    slice(which.min(abs(Temp - mean_clean_purity)))
-  
-  # Merge/bind both dataframes back together (the one with CNs 1 and 2, and the other that contains CNs 3 or higher)
-  CN_final = bind_rows(CN_1_2, CN_3_4)
-  CN_final<- CN_final %>%
-    arrange(CN_final$CN)
-  
-  # Join the purity estimations from temp into Purity column? or just say take the mean of al the CNs 1 and 2 then the mean of everything in the Temp column.
-  # Coalesce merges temp into pruity and puts it all into a new column
-  CN_final <- CN_final %>%
-    dplyr::mutate(Temp, Final_purity = coalesce(Temp, Purity)) %>%
-    dplyr::select(Hugo_Symbol, Chromosome, Start_Position, End_Position, t_ref_count, t_alt_count, CN, VAF, Ploidy, Final_purity)
+  if (max(CN_new$CN) > 3){
+    if (!is.null("indiv_CN[3:max(CN_new$CN)]") && exists("mean_clean_purity")){
+     CN_3_4 <- bind_rows(indiv_CN[3:max(CN_new$CN)])
+      CN_3_4 <- CN_3_4 %>%
+        dplyr::mutate(Temp = mean_clean_purity - Purity) %>%
+        group_by(Chrom_pos) %>%
+        slice(which.min(abs(Temp - mean_clean_purity)))
+    
+      # Merge/bind both dataframes back together (the one with CNs 1 and 2, and the other that contains CNs 3 or higher)
+      CN_final = bind_rows(CN_1_2, CN_3_4)
+      CN_final <- CN_final %>%
+        arrange(CN_final$CN)
+    
+      # Join the purity estimations from temp into Purity column? or just say take the mean of al the CNs 1 and 2 then the mean of everything in the Temp column..
+      # Coalesce merges temp into pruity and puts it all into a new column
+      CN_final <- CN_final %>%
+        dplyr::mutate(Temp, Final_purity = coalesce(Temp, Purity)) %>%
+        dplyr::select(Hugo_Symbol, Chromosome, Start_Position, End_Position, t_ref_count, t_alt_count, CN, VAF, Ploidy, Final_purity)
+    
+    }else if (!is.null("indiv_CN[[3:max(CN_new$CN)]]") && !exists("mean_clean_purity")){
+      indiv_CN_only_gains <- bind_rows(indiv_CN[3:max(CN_new$CN)])
+      indiv_CN_only_gains <- indiv_CN_only_gains %>%
+        dplyr::mutate(Purity = ifelse(Purity > 1, VAF, Purity)) %>%
+        group_by(Chrom_pos) %>%
+        dplyr::slice_tail(n=1)
+    
+      CN_final <- indiv_CN_only_gains
+      CN_final <- CN_final %>%
+        dplyr::mutate(Final_purity = Purity)
+    }  
+  }else{ 
+      CN_final <- CN_1_2
+      CN_final <- CN_final %>%
+        dplyr::mutate(Final_purity = Purity)
+  }
   
   # Another way to merge the two columns, using an ifelse statement for rows containing NA values. 
   # CN_final$Temp <- ifelse(is.na(CN_final$Temp), CN_final$Purity, CN_final$Temp)
