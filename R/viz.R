@@ -1394,7 +1394,7 @@ theme_Morons <- function(base_size=14,
 #' comparison_name = "FL vs DLBCL"
 #'
 #' prettyForestPlot(maf, metadata, genes, comparison_column, comparison_values, separate_hotspots = FALSE, comparison_name)
-prettyForestPlot <- function(maf, metadata, genes, comparison_column, comparison_values = FALSE, separate_hotspots = FALSE, comparison_name = FALSE, custom_colours = FALSE, custom_labels = FALSE){
+prettyForestPlot <- function(maf,mutmat, metadata, genes, comparison_column, comparison_values = FALSE, separate_hotspots = FALSE, comparison_name = FALSE, custom_colours = FALSE, custom_labels = FALSE, max_q=1){
 
   # Subset the maf file to the specified genes
   {
@@ -1402,7 +1402,6 @@ prettyForestPlot <- function(maf, metadata, genes, comparison_column, comparison
       stop("Please provide a character vector of genes you wish to compare. ")
   }
 
-  maf <- maf[maf$Hugo_Symbol %in% genes, ]
 
 
   # If no comparison_values are specified, derive the comparison_values from the specified comparison_column
@@ -1422,35 +1421,42 @@ prettyForestPlot <- function(maf, metadata, genes, comparison_column, comparison
 
   # Subset the metadata to the specified comparison_values and the maf to the remaining sample_ids
   metadata <- metadata[metadata[[comparison_column]] %in% comparison_values, ]
-  maf <- maf[maf$Tumor_Sample_Barcode %in% metadata$Tumor_Sample_Barcode, ]
+
 
   # Ensure the metadata comparison column is a factor with levels matching the input
   metadata$comparison = factor(metadata[[comparison_column]], levels = comparison_values)
 
-  # If separate_hotspots = true, confirm the input maf is hotspot annotated
-  if(separate_hotspots){
-
-    {
-      if(!"hot_spot" %in% colnames(maf))
-        stop("No \"hot_spot\" column in maf file. Annotate your maf file with GAMBLR::annotate_hot_spots() first. ")
-    }
-
-    maf$Hugo_Symbol = ifelse(!is.na(maf$hot_spot), paste0(maf$Hugo_Symbol, "_hotspot"), maf$Hugo_Symbol)
-
+  if(!missing(maf)){
+    maf <- maf[maf$Hugo_Symbol %in% genes, ]
+    maf <- maf[maf$Tumor_Sample_Barcode %in% metadata$Tumor_Sample_Barcode, ]
   }
+  # If separate_hotspots = true, confirm the input maf is hotspot annotated
 
-  # Convert the maf file to a binary matrix
-  mutmat <- maf %>%
-    dplyr::select(Hugo_Symbol, Tumor_Sample_Barcode) %>%
-    left_join(dplyr::select(metadata, Tumor_Sample_Barcode, comparison),
+  if(!missing(mutmat)){
+    #add the required columns from the metadata and make the names consistent
+    mutmat = left_join(dplyr::select(metadata, sample_id, comparison),mutmat) %>%
+      dplyr::rename("Tumor_Sample_Barcode"="sample_id")
+  }else if(!missing(maf)){
+    if(separate_hotspots){
+        if(!"hot_spot" %in% colnames(maf))
+          stop("No \"hot_spot\" column in maf file. Annotate your maf file with GAMBLR::annotate_hot_spots() first. ")
+      maf$Hugo_Symbol = ifelse(!is.na(maf$hot_spot), paste0(maf$Hugo_Symbol, "_hotspot"), maf$Hugo_Symbol)
+    }
+    # Convert the maf file to a binary matrix
+    mutmat <- maf %>%
+      dplyr::select(Hugo_Symbol, Tumor_Sample_Barcode) %>%
+      left_join(dplyr::select(metadata, Tumor_Sample_Barcode, comparison),
               by = "Tumor_Sample_Barcode") %>%
-    distinct() %>%
-    mutate(is_mutated = 1) %>%
-    pivot_wider(names_from = Hugo_Symbol,
+      distinct() %>%
+      mutate(is_mutated = 1) %>%
+      pivot_wider(names_from = Hugo_Symbol,
                 values_from = is_mutated,
                 values_fill = 0) %>%
-    mutate(across(where(is.numeric), ~replace_na(., 0)))
-
+      mutate(across(where(is.numeric), ~replace_na(., 0)))
+  }else{
+    message("provide a MAF or mutation matrix")
+    return()
+  }
   fish_test <- mutmat %>%
     pivot_longer(-c(Tumor_Sample_Barcode, comparison),
                  names_to = "gene",
@@ -1465,17 +1471,32 @@ prettyForestPlot <- function(maf, metadata, genes, comparison_column, comparison
     unnest(tidy) %>%
     mutate(q.value = p.adjust(p.value, "BH")) %>%
     dplyr::select(-c(table, test, method, alternative)) %>%
+    dplyr::filter(q.value <= max_q) %>%
     mutate(gene = fct_reorder(gene, estimate))
+  #fish_test <- mutate(fish_test, gene = fct_reorder(gene, estimate))
+  #fish_test$gene = factor(fish_test$gene,levels=unique(fish_test$gene))
 
+  point_size = 50/round(length(fish_test$gene))
+  if(point_size<1){
+    point_size = 1
+  }
+  font_size = 360/round(length(fish_test$gene))
+  if(font_size<4){
+    font_size=4
+  }else if(font_size > 20){
+    font_size = 20
+  }
+  message(paste("FONT:",font_size,"POINT:",point_size,length(fish_test$gene)))
   forest <- fish_test %>%
     ggplot(aes(x = gene, y = log(estimate))) +
-    geom_point(size = 5, shape = "square") +
+    geom_point(size = point_size, shape = "square") +
     geom_hline(yintercept = 0, lty = 2) +
     coord_flip() +
     geom_errorbar(aes(ymin = log(conf.low), ymax = log(conf.high), width = 0.2)) +
     ylab("ln(Odds Ratio)") +
     xlab("Mutated Genes") +
-    cowplot::theme_cowplot()
+    cowplot::theme_cowplot() +
+    theme(axis.text.y = element_text(size = font_size))
 
   if(comparison_name == FALSE){
     comparison_name = comparison_column
@@ -1510,6 +1531,7 @@ prettyForestPlot <- function(maf, metadata, genes, comparison_column, comparison
                  values_to = "is_mutated") %>%
     group_by(gene, comparison) %>%
     summarise(percent_mutated = sum(is_mutated)/n() * 100) %>%
+    dplyr::filter(gene %in% fish_test$gene) %>%
     mutate(gene = factor(gene, levels = levels(fish_test$gene))) %>%
     ggplot(aes(x = gene, y = percent_mutated, fill = comparison)) +
     geom_col(position = "dodge", width = 0.5) +
@@ -1525,7 +1547,7 @@ prettyForestPlot <- function(maf, metadata, genes, comparison_column, comparison
 
   plots <- plot_grid(forest, bar + theme(legend.position = "none"), rel_widths = c(1, 0.6), nrow = 1)
 
-  cowplot::plot_grid(plot_grid(NULL, legend, NULL, nrow = 1), plots, nrow = 2, rel_heights = c(0.1, 1))
+  arranged_plot = cowplot::plot_grid(plot_grid(NULL, legend, NULL, nrow = 1), plots, nrow = 2, rel_heights = c(0.1, 1))
 
-
+  return(list(fisher=fish_test,forest=forest,bar=bar,legend=legend,arranged=arranged_plot))
 }
