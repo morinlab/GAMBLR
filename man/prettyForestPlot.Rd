@@ -6,6 +6,7 @@
 \usage{
 prettyForestPlot(
   maf,
+  mutmat,
   metadata,
   genes,
   comparison_column,
@@ -13,7 +14,8 @@ prettyForestPlot(
   separate_hotspots = FALSE,
   comparison_name = FALSE,
   custom_colours = FALSE,
-  custom_labels = FALSE
+  custom_labels = FALSE,
+  max_q = 1
 )
 }
 \arguments{
