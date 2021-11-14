@@ -601,7 +601,7 @@ prettyOncoplot = function(maftools_obj,
         these= c(these,"NA"="white")
       }
       colours[[column]]=these
-    }else if(("positive" %in% options | "POS" %in% options) & length(options)<4){
+    }else if(("positive" %in% options | "POS" %in% options | "yes" %in% options) & length(options)<4){
       if(verbose){
         print("using pos_neg")
       }

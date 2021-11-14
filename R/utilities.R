@@ -61,6 +61,7 @@ intersect_maf = function(maf1,maf2,set_returned="maf1_only"){
 get_coding_ssm_status = function(gene_symbols,
                                   these_samples_metadata,
                                   from_flatfile=TRUE,
+                                  maf_data,
                                   include_hotspots=TRUE,
                                   recurrence_min = 5,
                                   review_hotspots=TRUE,
@@ -75,7 +76,11 @@ get_coding_ssm_status = function(gene_symbols,
   }
 
   # call it once so the object can be reused if user wants to annotate hotspots
-  coding_ssm = get_coding_ssm(from_flatfile=from_flatfile)
+  if(missing(maf_data)){
+    coding_ssm = get_coding_ssm(from_flatfile=from_flatfile)
+  }else{
+    coding_ssm = maf_data
+  }
 
   coding = coding_ssm %>%
     dplyr::filter(Hugo_Symbol %in% gene_symbols &
@@ -1071,7 +1076,7 @@ assign_cn_to_ssm = function(this_sample,coding_only=FALSE,
     maf_sample = dplyr::filter(maf_sample,Variant_Classification %in% coding_class)
   }
   #if(tool_name == "battenberg"){
-  
+
   if(!missing(seg_file)){
     seg_sample = read_tsv(seg_file) %>%
       dplyr::mutate(size=end - start) %>%
@@ -1412,7 +1417,7 @@ get_gambl_colours = function(classification="all",alpha=1){
                                          "DGG-BL"="#33A02C",
                                          "DLBCL-2"="#FB9A99",
                                          "DLBCL-3"="#C41230")
-  all_colours[["FL"]]=c(dFL="#99C1B9",cFL="#E8E46E")
+  all_colours[["FL"]]=c(dFL="#99C1B9",cFL="#D16666")
   all_colours[["lymphgen"]] = c(
     "EZB-MYC" = "#52000F",
     "EZB" = "#721F0F",
@@ -1452,6 +1457,11 @@ get_gambl_colours = function(classification="all",alpha=1){
   all_colours[["pos_neg"]]=c(
     "POS"="#c41230",
     "NEG"="#E88873",
+    "PARTIAL"="#E88873",
+    "yes"="#c41230",
+    "no"="#E88873",
+    "YES"="#c41230",
+    "NO"="#E88873",
     "FAIL"="#bdbdc1",
     "positive"="#c41230",
     "negative"="#E88873",
