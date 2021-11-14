@@ -82,6 +82,20 @@ get_coding_ssm_status = function(gene_symbols,
     coding_ssm = get_coding_ssm(from_flatfile=from_flatfile)
   }else{
     coding_ssm = fread_maf(maf_path)
+    coding_ssm = coding_ssm %>%
+                        dplyr::filter(Variant_Classification %in%   c("Frame_Shift_Del",
+                            "Frame_Shift_Ins",
+                            "In_Frame_Del",
+                            "In_Frame_Ins",
+                            "Missense_Mutation",
+                            "Nonsense_Mutation",
+                            "Nonstop_Mutation",
+                            "Silent",
+                            "Splice_Region",
+                            "Splice_Site",
+                            "Targeted_Region",
+                            "Translation_Start_Site"))
+    print(table(coding_ssm$Variant_Classification))
   }
 
   coding = coding_ssm %>%
