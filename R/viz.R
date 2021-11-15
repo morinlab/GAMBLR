@@ -351,7 +351,11 @@ prettyOncoplot = function(maftools_obj,
                           showTumorSampleBarcode=FALSE,
                           groupNames,verbose=FALSE,
                           hide_annotations,
-                          custom_colours = NULL
+                          custom_colours = NULL,
+                          legend_direction="horizontal",
+                          legend_position="bottom",
+                          annotation_row=2,
+                          annotation_col=1
                           ){
 
   patients = pull(these_samples_metadata,sample_id)
@@ -759,8 +763,8 @@ prettyOncoplot = function(maftools_obj,
   }else{
     column_order = patients_kept
   }
-  heatmap_legend_param = list(title = "Alterations",nrow=2, ncol=1,
-                         legend_direction = "horizontal")
+  heatmap_legend_param = list(title = "Alterations",nrow=annotation_row, ncol=annotation_col,
+                         legend_direction = legend_direction)
   if(hideTopBarplot){
     top_annotation = NULL
   }else{
@@ -794,8 +798,8 @@ prettyOncoplot = function(maftools_obj,
                                                         list(nrow=legend_row,
                                                             col_fun=col_fun,
                                                             ncol=legend_col,
-                                                            direction="horizontal")))
-    draw(ch, heatmap_legend_side = "bottom", annotation_legend_side = "bottom")
+                                                            direction=legend_direction)))
+    draw(ch, heatmap_legend_side = legend_position, annotation_legend_side = legend_position)
 }
 
 #' Generate a colourful multi-panel overview of hypermutation in regions of interest across many samples
