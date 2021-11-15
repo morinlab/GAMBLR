@@ -355,7 +355,8 @@ prettyOncoplot = function(maftools_obj,
                           legend_direction="horizontal",
                           legend_position="bottom",
                           annotation_row=2,
-                          annotation_col=1
+                          annotation_col=1,
+                          legendFontSize=10
                           ){
 
   patients = pull(these_samples_metadata,sample_id)
@@ -764,7 +765,8 @@ prettyOncoplot = function(maftools_obj,
     column_order = patients_kept
   }
   heatmap_legend_param = list(title = "Alterations",nrow=annotation_row, ncol=annotation_col,
-                         legend_direction = legend_direction)
+                         legend_direction = legend_direction,
+                         labels_gp = gpar(fontsize = legendFontSize))
   if(hideTopBarplot){
     top_annotation = NULL
   }else{
@@ -798,7 +800,8 @@ prettyOncoplot = function(maftools_obj,
                                                         list(nrow=legend_row,
                                                             col_fun=col_fun,
                                                             ncol=legend_col,
-                                                            direction=legend_direction)))
+                                                            direction=legend_direction,
+                                                            labels_gp = gpar(fontsize = legendFontSize))))
     draw(ch, heatmap_legend_side = legend_position, annotation_legend_side = legend_position)
 }
 

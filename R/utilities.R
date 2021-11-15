@@ -221,6 +221,7 @@ get_mutation_frequency_bin_matrix = function(regions,
                                   legend_row=3,
                                   legend_col=3,
                                   legend_direction="horizontal",
+                                  legendFontSize=10,
                                   from_indexed_flatfile=FALSE,
                                   mode="slms-3"){
 
@@ -310,11 +311,13 @@ get_mutation_frequency_bin_matrix = function(regions,
   }
   bin_annot = assign_bins_to_region(bin_names=colnames(to_show_t),rdf=regions_df)
   heatmap_legend_param = list(title = "Bin value",nrow=legend_row, ncol=legend_row,
-                         legend_direction = legend_direction)
+                         legend_direction = legend_direction,
+                         labels_gp = gpar(fontsize = legendFontSize))
 
   annotation_legend_param = list(nrow=legend_row,
                             ncol=legend_col,
-                            direction=legend_direction)
+                            direction=legend_direction,
+                            labels_gp = gpar(fontsize = legendFontSize))
 
   if(orientation == "sample_rows"){
     row_annot = HeatmapAnnotation(df=meta_show,show_legend = T,
