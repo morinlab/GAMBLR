@@ -764,7 +764,13 @@ prettyOncoplot = function(maftools_obj,
   }else{
     column_order = patients_kept
   }
-  heatmap_legend_param = list(title = "Alterations",nrow=annotation_row, ncol=annotation_col,
+  heatmap_legend_param = list(title = "Alterations",
+                         at = c("RNA", "3'UTR" , "Nonsense_Mutation", "Splice_Site","Splice_Region", "Nonstop_Mutation", "Translation_Start_Site",
+                         "In_Frame_Ins", "In_Frame_Del", "Frame_Shift_Ins", "Frame_Shift_Del", "Multi_Hit", "Missense_Mutation", "hot_spot"), 
+                         labels = c("RNA", "3'UTR", "Nonsense Mutation", "Splice Site","Splice Region", "Nonstop Mutation", "Translation Start Site",
+                         "In Frame Insertion", "In Frame Deletion", "Frame Shift Insertion", "Frame Shift Deletion",
+                         "Multi Hit", "Missense Mutation", "Hotspot"),
+                         nrow=annotation_row, ncol=annotation_col,
                          legend_direction = legend_direction,
                          labels_gp = gpar(fontsize = legendFontSize))
   if(hideTopBarplot){
