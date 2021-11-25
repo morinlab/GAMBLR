@@ -8,7 +8,8 @@ estimate_purity(
   in_maf,
   in_seg,
   seg_file_source = "ichorCNA",
-  show_plots = FALSE
+  show_plots = FALSE,
+  assume_diploid = FALSE
 )
 }
 \arguments{
@@ -19,6 +20,8 @@ estimate_purity(
 \item{seg_file_source}{Specify what copy number calling program the input seg file is from, as it handles ichorCNA differently than WisecondorX, battenberg, etc.}
 
 \item{show_plots}{Optional. Show two faceted plots that display the VAF and purity distributions for each copy number state in the sample}
+
+\item{assume_diploid}{Optional. If no local seg file is provided, instead of defaulting to a GAMBL sample, this parameter annotates every mutation as copy neutral.}
 }
 \value{
 A list containing a data frame (MAF-like format) with the segmented absolute copy number data and three extra columns:
@@ -31,4 +34,5 @@ Estimate purity
 }
 \examples{
 tumour_purity = estimate_purity(in_maf="path/to/file.maf", in_seg="path/to/file.seg", seg_file_source="ichorCNA", show_plots=TRUE)
+tumour_purity = estimate_purity(in_maf="path/to/file.maf", assume_diploid = TRUE)
 }
