@@ -2106,22 +2106,31 @@ complete_missing_from_matrix = function(incoming_matrix,
 #' GAMBLR::genome_to_exome(maf=myc_ashm_maf, padding = 0) # get mutations covered in WEX with no padding
 
 genome_to_exome = function(maf,
+                           custom_bed,
                            genome_build="grch37",
                            padding=100,
                            chr_prefixed=FALSE){
 
-  # first check that the genome build provided is supported
-  if(! genome_build %in% c("hg19", "grch37", "hs37d5", "GRCh37", "hg38", "GRCh38", "grch38")){
-    stop("The genome build specified is not currently supported. Please refer to genome build in one of the following cordinates: hg19, grch37, hs37d5, GRCh37, hg38, grch38, or GRCh38.")
-  }else if(genome_build %in% c("hg19", "grch37", "hs37d5", "GRCh37")){
-    this_genome_coordinates = target_regions_grch37 # if the genome build is a flavour of hg19, get its exome space
-  }else if(genome_build %in% c("hg38", "GRCh38", "grch38")){
-    this_genome_coordinates = target_regions_hg38 # exome space for the variations of hg38
+
+  if(missing(custom_bed)){
+      # first check that the genome build provided is supported
+      if(! genome_build %in% c("hg19", "grch37", "hs37d5", "GRCh37", "hg38", "GRCh38", "grch38")){
+        stop("The genome build specified is not currently supported. Please refer to genome build in one of the following cordinates: hg19, grch37, hs37d5, GRCh37, hg38, grch38, or GRCh38.")
+      }else if(genome_build %in% c("hg19", "grch37", "hs37d5", "GRCh37")){
+        this_genome_coordinates = target_regions_grch37 # if the genome build is a flavour of hg19, get its exome space
+      }else if(genome_build %in% c("hg38", "GRCh38", "grch38")){
+        this_genome_coordinates = target_regions_hg38 # exome space for the variations of hg38
+      }
+  }else{
+      this_genome_coordinates = fread(custom_bed)
+      this_genome_coordinates = this_genome_coordinates[,1:3]
+      colnames(this_genome_coordinates) = c("chrom", "start", "end")
   }
 
   # pad the ends of the probes with the padding length
   this_genome_coordinates = this_genome_coordinates %>%
-                                        dplyr::mutate(start=start-padding,
+                                        dplyr::mutate(chrom=as.character(chrom),
+                                        start=start-padding,
                                         end=end+padding)
 
   # collapse regions if the padding results in 2 features that are overlapping
