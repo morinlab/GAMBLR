@@ -2092,6 +2092,7 @@ complete_missing_from_matrix = function(incoming_matrix,
 #' Subset maf file to only features that would be available in the WEX data
 #'
 #' @param maf Incoming maf object. Can be maf-like data frame or maftools maf object. Required parameter. Minimum columns that should be present are Chromosome, Start_Position, and End_Position.
+#' @param custom_bed Optional argument specifying a path to custom bed file for covered regions. Must be bed-like and contain chrom, start, and end position information in first 3 columns. Other columns are disregarded if provided.
 #' @param genome_build String indicating genome build of the maf file. Default is grch37, but can accept modifications of both grch37- and hg38-based duilds.
 #' @param padding Numeric value that will be used to pad probes in WEX data from both ends. Default is 100. After padding, overlapping features are squished together.
 #' @param chr_prefixed Is the data chr-prefixed or not? Default is FALSE.
