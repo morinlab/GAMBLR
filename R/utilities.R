@@ -1124,7 +1124,9 @@ estimate_purity = function(in_maf,
   CN_final <- CN_final %>%
     dplyr::mutate(CCF_mutation = Purity/max(Purity)) %>%
     dplyr::mutate(CCF_sample = Purity/sample_purity_estimation)
-
+  
+  output = list()
+  
   if(show_plots){
     # Figure 1 : VAF distribution
     # Creates facet wraps showing the VAF distribution of CN-annotated mutations for each available copy number state
@@ -1138,15 +1140,14 @@ estimate_purity = function(in_maf,
       ggplot(aes(x=Purity)) +
       geom_histogram() +
       facet_wrap(~CN)
-
-     output_plots <- list("VAF_plot" = VAF_plot, "Purity_plot" = Purity_plot)
+     
+     output[["VAF_plot"]] = VAF_plot
+     output[["Purity_plot"]] = Purity_plot
   }
-
-  output <- list("sample_purity_estimation" = sample_purity_estimation, "CN_final" = CN_final)
-  if(show_plots){
-    output = c(output, output_plots)
-  }
-
+  
+  output[["sample_purity_estimation"]] = sample_purity_estimation
+  output[["CN_final"]] = CN_final
+  
   return(output)
 }
 
