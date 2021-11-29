@@ -13,6 +13,7 @@ calc_mutation_frequency_sliding_windows(
   slide_by = 100,
   window_size = 1000,
   plot_type = "none",
+  sortByColumns = "pathology",
   return_format = "long-simple",
   min_count_per_bin = 3,
   return_count = FALSE,
@@ -24,6 +25,8 @@ calc_mutation_frequency_sliding_windows(
 }
 \arguments{
 \item{plot_type}{Set to true for a plot of your bins. By default no plots are made.}
+
+\item{sortByColumns}{Which of the metadata to sort on for the heatmap}
 
 \item{drop_unmutated}{This may not currently work properly.}
 

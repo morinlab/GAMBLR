@@ -4,6 +4,7 @@
 #' @param mutations_df
 #' @param unix_group
 #' @param tool_name
+#' @param flavour Set to "clustered" if you want to use the blacklist for the new and improved SLMS-3 outputs (otherwise leave empty)
 #' @param genome_build The genome build projection for the variants you want (grch37 is the only one currently supported)
 #' @param drop_threshold The minimum count from one of the blacklists to drop a variant
 #'
@@ -11,16 +12,34 @@
 #' @export
 #'
 #' @examples deblacklisted_maf_df = annotate_ssm_blacklist(original_maf_df)
-annotate_ssm_blacklist = function(mutations_df,unix_group="gambl",tool_name="slms-3",genome_build="grch37",drop_threshold = 4){
-
-  native_blacklist_path = paste0(config::get("project_base"),unix_group,"/",tool_name,"_vcf2maf_current/level_3/variants_",genome_build,"_native_clean_blacklist.txt")
+annotate_ssm_blacklist = function(mutations_df,
+                                  unix_group="gambl",
+                                  tool_name="slms_3",
+                                  tool_version="1.0",
+                                  annotator_name="vcf2maf",
+                                  annotator_version="1.2",
+                                  flavour="",
+                                  genome_build="grch37",
+                                  drop_threshold = 4,
+                                  return_blacklist = FALSE){
+  if(flavour=="clustered"){
+    native_blacklist_path = paste0(config::get("project_base"),unix_group,"/",tool_name,"-",tool_version,"_",annotator_name,"-",annotator_version,"/level_3/variants_",genome_build,"_native_clean_blacklist.txt")
+    lifted_blacklist_path = paste0(config::get("project_base"),unix_group,"/",tool_name,"-",tool_version,"_",annotator_name,"-",annotator_version,"/level_3/variants_",genome_build, "_lifted_clean_blacklist.txt")
+  }else{
+    annotator_version="1.2"
+    native_blacklist_path = paste0(config::get("project_base"),unix_group,"/",tool_name,"-",tool_version,"_",annotator_name,"-",annotator_version,"/level_3/variants_",genome_build,"_native_clean_blacklist.txt")
+    lifted_blacklist_path = paste0(config::get("project_base"),unix_group,"/",tool_name,"-",tool_version,"_",annotator_name,"-",annotator_version,"/level_3/variants_",genome_build, "_lifted_clean_blacklist.txt")
+  }
+  lifted_blacklist=read_tsv(lifted_blacklist_path,col_names = c("chrpos","lifted_blacklist_count"),show_col_types = FALSE)
   native_blacklist=read_tsv(native_blacklist_path,col_names = c("chrpos","native_blacklist_count"),show_col_types = FALSE)
   native_blacklist = native_blacklist %>% separate(chrpos,into=c("Chromosome","Start_Position"),sep=":")
-  lifted_blacklist_path = paste0(config::get("project_base"),unix_group,"/",tool_name,"_vcf2maf_current/level_3/variants_",genome_build,"_lifted_clean_blacklist.txt")
-  lifted_blacklist=read_tsv(lifted_blacklist_path,col_names = c("chrpos","lifted_blacklist_count"),show_col_types = FALSE)
   lifted_blacklist = lifted_blacklist %>% separate(chrpos,into=c("Chromosome","Start_Position"),sep=":")
+
   lifted_blacklist = mutate(lifted_blacklist,Start_Position = as.integer(Start_Position))
   native_blacklist = mutate(native_blacklist,Start_Position = as.integer(Start_Position))
+  if(return_blacklist){
+    return(native_blacklist)
+  }
   #join using chromosome and position
   print(mutations_df)
   print(native_blacklist)

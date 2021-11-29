@@ -13,7 +13,8 @@ get_ssm_by_region(
   streamlined = FALSE,
   maf_data,
   from_indexed_flatfile = FALSE,
-  mode = "slms-3"
+  mode = "slms-3",
+  allow_clustered = FALSE
 )
 }
 \arguments{

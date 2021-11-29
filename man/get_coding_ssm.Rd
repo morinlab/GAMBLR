@@ -12,6 +12,7 @@ get_coding_ssm(
   force_unmatched_samples,
   basic_columns = TRUE,
   from_flatfile = FALSE,
+  allow_clustered = FALSE,
   groups = c("gambl", "icgc_dart")
 )
 }
