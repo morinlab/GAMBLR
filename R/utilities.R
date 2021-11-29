@@ -1,4 +1,12 @@
 
+gene_to_region = function(gene_symbol,ensembl_id,genome_build){
+  if(!missing(gene_symbol)){
+    gene_coordinates = dplyr::filter(grch37_gene_coordinates,hugo_symbol==gene_symbol)
+  }
+  region= paste0(gene_coordinates$chromosome,":",gene_coordinates$start,"-",gene_coordinates$end)
+  return(region)
+}
+
 #' Get a MAF that is just the variants unique to one of two flavours of variant calls available
 #'
 #' @param these_sample_ids
@@ -1124,9 +1132,9 @@ estimate_purity = function(in_maf,
   CN_final <- CN_final %>%
     dplyr::mutate(CCF_mutation = Purity/max(Purity)) %>%
     dplyr::mutate(CCF_sample = Purity/sample_purity_estimation)
-  
+
   output = list()
-  
+
   if(show_plots){
     # Figure 1 : VAF distribution
     # Creates facet wraps showing the VAF distribution of CN-annotated mutations for each available copy number state
@@ -1140,14 +1148,14 @@ estimate_purity = function(in_maf,
       ggplot(aes(x=Purity)) +
       geom_histogram() +
       facet_wrap(~CN)
-     
+
      output[["VAF_plot"]] = VAF_plot
      output[["Purity_plot"]] = Purity_plot
   }
-  
+
   output[["sample_purity_estimation"]] = sample_purity_estimation
   output[["CN_final"]] = CN_final
-  
+
   return(output)
 }
 

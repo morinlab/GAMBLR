@@ -1,3 +1,55 @@
+
+#' Generate a plot of all CN segments
+#'
+#' @param region
+#' @param gene
+#' @param these_samples_metadata
+#' @param type
+#' @param crop_segments
+#' @param crop_distance
+#'
+#' @return
+#' @export
+#'
+#' @examples
+focal_cn_plot = function(region,gene,
+                         these_samples_metadata,
+                         type="gain",segment_size=1,
+                         crop_segments = TRUE,
+                         sort_by_annotation=c('pathology'),
+                         crop_distance=100000000){
+  if(!missing(gene)){
+    region=gene_to_region(gene)
+    chunks = region_to_chunks(region)
+  }else{
+    chunks = region_to_chunks(region)
+  }
+  if(type == "gain"){
+    all_not_dip = get_cn_segments(region=region) %>%
+      mutate(size=end-start) %>% dplyr::filter(CN>2)
+  }else{
+    all_not_dip = get_cn_segments(region=region) %>%
+      mutate(size=end-start) %>% dplyr::filter(CN<2)
+  }
+
+  #crop start and end if they're further than crop_distance from your region
+  all_not_dip = mutate(all_not_dip,left_distance=as.numeric(chunks$start)- start)
+  all_not_dip = mutate(all_not_dip,right_distance=end - as.numeric(chunks$end))
+  if(crop_segments){
+    all_not_dip = mutate(all_not_dip,end=ifelse(right_distance >crop_distance,as.numeric(chunks$end)+crop_distance,end ))
+    all_not_dip = mutate(all_not_dip,start=ifelse(left_distance >crop_distance,as.numeric(chunks$start)-crop_distance,start ))
+  }
+  #all_not_dip$ID=factor(all_not_dip$ID,levels=unique(all_not_dip$ID))
+  all_not_dip = left_join(all_not_dip,these_samples_metadata,by=c("ID"="sample_id")) %>%
+    dplyr::filter(!is.na(pathology))
+  all_not_dip = all_not_dip %>% arrange(across(all_of(c(sort_by_annotation,"size"))))
+  all_not_dip$ID=factor(all_not_dip$ID,levels=unique(all_not_dip$ID))
+  ggplot(all_not_dip,aes(x=start,xend=end,y=ID,yend=ID,colour=lymphgen)) +
+    geom_vline(aes(xintercept=as.numeric(chunks$start)),alpha=0.5,colour="red") +
+    geom_segment(size=segment_size) + theme_cowplot() +
+    theme(axis.text.y=element_blank())
+}
+
 #' Generate a more visually appealing and flexible lollipop plot
 #'
 #' @param maf_df A data frame containing the mutation data (from a MAF)
