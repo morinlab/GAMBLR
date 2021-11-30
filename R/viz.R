@@ -68,7 +68,7 @@ pretty_lollipop_plot = function(maf_df,gene,plot_title,plot_theme="cbioportal"){
   }
   maf_df = maf_df %>% dplyr::filter(Hugo_Symbol==gene)
   #use the readMAF function (modified by Ryan) to parse/convert
-  maf_df = readMAF(maf.df=maf_df)
+  maf_df = g3viz::readMAF(maf.df=maf_df)
   chart.options <- g3Lollipop.theme(theme.name = plot_theme,title.text = plot_title)
   g3Lollipop(maf_df,
              gene.symbol = gene,
