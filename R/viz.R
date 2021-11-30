@@ -1,15 +1,465 @@
+
+#' Generate a plot of all CN segments
+#'
+#' @param region
+#' @param gene
+#' @param these_samples_metadata
+#' @param type
+#' @param crop_segments
+#' @param crop_distance
+#'
+#' @return
+#' @export
+#'
+#' @examples
+focal_cn_plot = function(region,gene,
+                         these_samples_metadata,
+                         type="gain",segment_size=1,
+                         crop_segments = TRUE,
+                         sort_by_annotation=c('pathology'),
+                         crop_distance=100000000){
+  if(!missing(gene)){
+    region=gene_to_region(gene)
+    chunks = region_to_chunks(region)
+  }else{
+    chunks = region_to_chunks(region)
+  }
+  if(type == "gain"){
+    all_not_dip = get_cn_segments(region=region) %>%
+      mutate(size=end-start) %>% dplyr::filter(CN>2)
+  }else{
+    all_not_dip = get_cn_segments(region=region) %>%
+      mutate(size=end-start) %>% dplyr::filter(CN<2)
+  }
+
+  #crop start and end if they're further than crop_distance from your region
+  all_not_dip = mutate(all_not_dip,left_distance=as.numeric(chunks$start)- start)
+  all_not_dip = mutate(all_not_dip,right_distance=end - as.numeric(chunks$end))
+  if(crop_segments){
+    all_not_dip = mutate(all_not_dip,end=ifelse(right_distance >crop_distance,as.numeric(chunks$end)+crop_distance,end ))
+    all_not_dip = mutate(all_not_dip,start=ifelse(left_distance >crop_distance,as.numeric(chunks$start)-crop_distance,start ))
+  }
+  #all_not_dip$ID=factor(all_not_dip$ID,levels=unique(all_not_dip$ID))
+  all_not_dip = left_join(all_not_dip,these_samples_metadata,by=c("ID"="sample_id")) %>%
+    dplyr::filter(!is.na(pathology))
+  all_not_dip = all_not_dip %>% arrange(across(all_of(c(sort_by_annotation,"size"))))
+  all_not_dip$ID=factor(all_not_dip$ID,levels=unique(all_not_dip$ID))
+  ggplot(all_not_dip,aes(x=start,xend=end,y=ID,yend=ID,colour=lymphgen)) +
+    geom_vline(aes(xintercept=as.numeric(chunks$start)),alpha=0.5,colour="red") +
+    geom_segment(size=segment_size) + theme_cowplot() +
+    theme(axis.text.y=element_blank())
+}
+
+#' Generate a more visually appealing and flexible lollipop plot
+#'
+#' @param maf_df A data frame containing the mutation data (from a MAF)
+#' @param gene The gene symbol to plot
+#' @param plot_title Optional (defaults to gene name)
+#' @param plot_theme Options: default, blue, simple, cbioportal, nature, nature2, ggplot2, and dark
+#'
+#' @return
+#' @export
+#' @import g3viz
+#'
+#' @examples
+pretty_lollipop_plot = function(maf_df,gene,plot_title,plot_theme="cbioportal"){
+  if(missing(plot_title)){
+    plot_title=gene
+  }
+  maf_df = maf_df %>% dplyr::filter(Hugo_Symbol==gene)
+  #use the readMAF function (modified by Ryan) to parse/convert
+  maf_df = g3viz::readMAF(maf.df=maf_df)
+  chart.options <- g3Lollipop.theme(theme.name = plot_theme,title.text = plot_title)
+  g3Lollipop(maf_df,
+             gene.symbol = gene,
+             plot.options = chart.options,
+             output.filename = "default_theme")
+}
+
+#' Count hypermutated bins and generate heatmaps/cluster the data
+#'
+#' @param regions Vector of regions in the format "chr:start-end"
+#' @param region_df Data frame of regions with four columns (chrom,start,end,gene_name)
+#' @param slide_by How far to shift before starting the next window
+#' @param window_size The width of your sliding window
+#' @param min_count_per_bin
+#' @param min_bin_recurrence How many samples a bin must be mutated in to retain in the visualization
+#' @param min_bin_patient How many bins must a patient mutated in to retain in the visualization
+#' @param these_samples_metadata GAMBL metadata subset to the cases you want to process (or full metadata)
+#' @param region_padding How many bases will be added on the left and right of the regions to ensure any small regions are sufficiently covered by bins
+#' @param metadataColumns What metadata will be shown in the visualization
+#' @param sortByColumns Which of the metadata to sort on for the heatmap
+#' @param cluster_rows_heatmap Optional parameter to enable/disable clustering of each dimension of the heatmap
+#' @param cluster_cols_heatmap
+#' @param customColour Optional named list of named vectors for specifying all colours for metadata. Can be generated with map_metadata_to_colours
+#' @param show_gene_colours Optional logical argument indicating whether regions should have associated colours plotted as annotation track of heatmap
+#' @param legend_row Fiddle with these to widen or narrow your legend
+#' @param legend_col Fiddle with these to widen or narrow your legend
+#' @param legend_col Accepts one of "horizontal" (default) or "vertical" to indicate in which direction the legend will be drawn
+#' @param from_indexed_flatfile Set to TRUE to avoid using the database and instead rely on flatfiles (only works for streamlined data, not full MAF details)
+#' @param mode Only works with indexed flatfiles. Accepts 2 options of "slms-3" and "strelka2" to indicate which variant caller to use. Default is "slms-3".
+#'
+#'
+#' @return
+#' @export
+#'
+#' @examples
+get_mutation_frequency_bin_matrix = function(regions,
+                                             regions_df,
+                                             these_samples_metadata,
+                                             region_padding= 1000,
+                                             metadataColumns=c("pathology"),
+                                             sortByColumns=c("pathology"),
+                                             expressionColumns=c(),
+                                             orientation = "sample_rows",
+                                             customColour = NULL,
+                                             slide_by=100,
+                                             window_size=500,
+                                             min_count_per_bin = 3,
+                                             min_bin_recurrence = 5,
+                                             min_bin_patient = 0,
+                                             region_fontsize=8,
+                                             cluster_rows_heatmap = FALSE,
+                                             cluster_cols_heatmap = FALSE,
+                                             show_gene_colours=FALSE,
+                                             legend_row=3,
+                                             legend_col=3,
+                                             legend_direction="horizontal",
+                                             from_indexed_flatfile=FALSE,
+                                             mode="slms-3"){
+
+  if(missing(regions)){
+    if(missing(regions_df)){
+      regions_df = grch37_ashm_regions #drop MYC and BCL2
+      regions_df = grch37_ashm_regions %>%
+        dplyr::filter(!gene %in% c("MYC","BCL2","IGLL5"))
+    }
+    regions = unlist(apply(regions_df,1,function(x){paste0(x[1],":",as.numeric(x[2])-region_padding,"-",as.numeric(x[3])+region_padding)})) #add some buffer around each
+  }
+  dfs = lapply(regions,function(x){calc_mutation_frequency_sliding_windows(
+    this_region=x,drop_unmutated = TRUE,
+    slide_by = slide_by,plot_type="none",window_size=window_size,
+    min_count_per_bin=min_count_per_bin,return_count = TRUE,
+    metadata = these_samples_metadata,
+    from_indexed_flatfile=from_indexed_flatfile, mode=mode)})
+
+  all= do.call("rbind",dfs)
+  #add a fake bin for one gene and make every patient not mutated in it (to fill gaps)
+  fake = these_samples_metadata %>% dplyr::select(sample_id) %>% mutate(bin="1_chrN") %>% mutate(mutated=0)
+  all = bind_rows(all,fake)
+  completed = complete(all,sample_id,bin,fill = list(mutated = 0))
+  widened = pivot_wider(completed,names_from=sample_id,values_from=mutated)
+  widened_df = column_to_rownames(widened,var="bin")
+
+  #meta_show = metadata %>% select(sample_id,pathology,lymphgen) %>%
+  if(length(expressionColumns)>0){
+    these_samples_metadata = these_samples_metadata %>%
+      mutate(across(all_of(expressionColumns), ~ trim_scale_expression(.x)))
+  }
+  meta_show = these_samples_metadata %>% select(sample_id,all_of(metadataColumns)) %>%
+    arrange(across(all_of(sortByColumns))) %>%
+    dplyr::filter(sample_id %in% colnames(widened_df)) %>%
+    column_to_rownames(var="sample_id")
+  message(paste("starting with",length(colnames(widened_df)),"patients"))
+  patients_show = colnames(widened_df)[which(colSums(widened_df)>=min_bin_patient)]
+  message(paste("returning matrix with",length(patients_show),"patients"))
+  meta_show = dplyr::filter(meta_show,rownames(meta_show) %in% patients_show)
+  to_show = widened_df[which(rowSums(widened_df)>min_bin_recurrence),patients_show]
+
+  bin_col_fun = colorRamp2(c(0, 3, 6, 9),
+                           c("white", "orange","red","purple"))
+  to_show_t = t(to_show)
+  meta_show_t = meta_show[rownames(to_show_t),]
+  lg_cols = get_gambl_colours("lymphgen")
+  path_fun = function(x){
+    path_cols = get_gambl_colours("pathology")
+    lg_cols = get_gambl_colours("lymphgen")
+
+    return(unname(path_cols[x]))
+  }
+  path_cols = get_gambl_colours("pathology")
+
+  # assign bins back to regions for better annotation
+
+  assign_bins_to_region = function(bin_names,rdf){
+    bin_df = data.frame(bin_name=bin_names)
+
+    separated = bin_df %>%
+      separate(bin_name,into=c("start","chrom")) %>%
+      mutate(start = as.integer(start)) %>%
+      mutate(end=start+1)
+
+    separated$bin_name = bin_names
+    colnames(rdf)[c(1:3)]=c("chrom","start","end")
+    rdf = mutate(rdf,start=start-1500) %>% mutate(end=end+1500)
+    regions.dt = as.data.table(rdf)
+
+    setkey(regions.dt,chrom,start,end)
+    bin.dt = as.data.table(separated)
+    setkey(bin.dt,chrom,start,end)
+    bin_overlapped = foverlaps(bin.dt,regions.dt,mult="first") %>%
+      as.data.frame() %>% select(bin_name,gene) %>% column_to_rownames(var="bin_name")
+    return(bin_overlapped)
+  }
+  #regions_df = grch37_ashm_regions
+  if(is.null(customColour)){
+    meta_cols = map_metadata_to_colours(metadataColumns,these_samples_metadata = meta_show,as_vector = F)
+
+  }else{
+    meta_cols = customColour
+  }
+  col_fun=circlize::colorRamp2(c(0, 0.5, 1), c("blue", "white", "red"))
+  for(exp in expressionColumns){
+    meta_cols[[exp]] = col_fun
+  }
+  bin_annot = assign_bins_to_region(bin_names=colnames(to_show_t),rdf=regions_df)
+  heatmap_legend_param = list(title = "Bin value",nrow=legend_row, ncol=legend_row,
+                              legend_direction = legend_direction)
+
+  annotation_legend_param = list(nrow=legend_row,
+                                 ncol=legend_col,
+                                 direction=legend_direction)
+
+  if(orientation == "sample_rows"){
+    row_annot = HeatmapAnnotation(df=meta_show,show_legend = T,
+                                  which = 'row',
+                                  col=meta_cols,
+                                  annotation_legend_param = annotation_legend_param)
+    if(show_gene_colours){
+      col_annot = HeatmapAnnotation(df=bin_annot,show_legend = F,
+                                    which = 'col',
+                                    annotation_legend_param = annotation_legend_param)
+    }else{
+      col_annot = HeatmapAnnotation(value=anno_empty(border = FALSE))
+    }
+    Heatmap(to_show_t[rownames(meta_show),rownames(bin_annot)],
+            cluster_columns = cluster_cols_heatmap,
+            cluster_rows=cluster_rows_heatmap,
+            col=bin_col_fun,
+            bottom_annotation = col_annot,
+            left_annotation = row_annot,
+            show_row_names = F,show_column_names = F,
+            column_split = factor(bin_annot$gene),
+            #row_split = factor(meta_show$pathology),
+            column_title_gp = gpar(fontsize=region_fontsize),
+            column_title_rot = 90,
+            row_title_gp = gpar(fontsize=10),
+            heatmap_legend_param = heatmap_legend_param)
+  }else{
+    col_annot = HeatmapAnnotation(df=meta_show,show_legend = T,
+                                  which = 'col',
+                                  col=meta_cols,
+                                  annotation_legend_param = annotation_legend_param)
+    if(show_gene_colours){
+      row_annot = HeatmapAnnotation(df=bin_annot,show_legend = F,
+                                    which = 'row',
+                                    annotation_legend_param = annotation_legend_param)
+    }else{
+      row_annot = rowAnnotation(value=anno_empty(border = FALSE))
+    }
+
+    Heatmap(to_show[rownames(bin_annot),rownames(meta_show)],show_heatmap_legend = F,
+            cluster_columns = cluster_rows_heatmap,
+            cluster_rows=cluster_cols_heatmap,
+            col=bin_col_fun,
+            bottom_annotation = col_annot,
+            left_annotation = row_annot,
+            show_row_names = F,show_column_names = F,
+            row_split = factor(bin_annot$gene),
+            #row_split = factor(meta_show$pathology),
+            row_title_gp = gpar(fontsize=region_fontsize),
+            row_title_rot = 0,
+            column_title_gp = gpar(fontsize=8),
+            heatmap_legend_param = heatmap_legend_param)
+  }
+
+
+}
+
+
+#' Plot a heatmap comparing the VAF of mutations in T1/T2 pairs
+#'
+#' @param maf1
+#' @param maf2
+#' @param vafcolname
+#' @param patient_colname
+#' @param these_samples_metadata
+#' @param sortByColumns
+#' @param metadata_columns
+#' @param gene_orientation
+#' @param annotate_zero
+#' @param genes
+#' @param top_n_genes
+#' @param drop_unless_lowvaf
+#' @param vaf_cutoff_to_drop
+#' @param cluster_columns
+#' @param cluster_rows
+#'
+#' @return
+#' @export
+#'
+#' @examples
+plot_mutation_dynamics_heatmap = function(maf1,maf2,vafcolname,
+                                          patient_colname="patient_id",
+                                          these_samples_metadata,
+                                          sortByColumns,
+                                          metadata_columns=c("sample_id"),
+                                          gene_orientation="bottom",
+                                          annotate_zero=FALSE,
+                                          genes,
+                                          top_n_genes,
+                                          drop_unless_lowvaf=FALSE,
+                                          vaf_cutoff_to_drop=0.05,
+                                          cluster_columns=F,
+                                          cluster_rows=F){
+  if(missing(vafcolname)){
+    t1_pair_mafdat = mutate(maf1,vaf=t_alt_count/(t_alt_count+t_ref_count))
+    t2_pair_mafdat = mutate(maf2,vaf=t_alt_count/(t_alt_count+t_ref_count))
+  }else{
+    t1_pair_mafdat[,"vaf"]=t1_pair_mafdat[,vafcolname]
+    t2_pair_mafdat[,"vaf"]=t2_pair_mafdat[,vafcolname]
+  }
+  if(!missing(sortByColumns)){
+    these_samples_metadata = arrange(these_samples_metadata,across(sortByColumns))
+  }
+  #print(patient_colname)
+
+  t1_pair_mafdat = t1_pair_mafdat %>% dplyr::rename("patient_id"=patient_colname)
+  t2_pair_mafdat = t2_pair_mafdat %>% dplyr::rename("patient_id"=patient_colname)
+  these_samples_metadata = these_samples_metadata %>% dplyr::rename("patient_id"=patient_colname)
+  both_vaf_all = full_join(t1_pair_mafdat,t2_pair_mafdat,by=c("patient_id","Start_Position")) %>%
+    dplyr::select(patient_id,HGVSp_Short.x,Hugo_Symbol.x,Hugo_Symbol.y,Tumor_Sample_Barcode.x,
+                  Tumor_Sample_Barcode.y,HGVSp_Short.y,vaf.x,vaf.y,hot_spot.x,hot_spot.y) %>%
+    mutate(ANNO=ifelse(is.na(vaf.x),HGVSp_Short.y,HGVSp_Short.x)) %>%
+    mutate(GENE=ifelse(is.na(vaf.x),Hugo_Symbol.y,Hugo_Symbol.x)) %>%
+    mutate(VAF1=ifelse(is.na(vaf.x),0,vaf.x)) %>%
+    mutate(VAF2=ifelse(is.na(vaf.y),0,vaf.y)) %>%
+    mutate(hot_spot.x=ifelse(is.na(hot_spot.x),0,1)) %>%
+    mutate(hot_spot.y=ifelse(is.na(hot_spot.y),0,1)) %>%
+    mutate(HOTSPOT=ifelse(hot_spot.x==1 | hot_spot.y==1,1,0)) %>%
+    dplyr::filter(ANNO !="") %>%
+    mutate(Mutation=paste(GENE,ANNO,sep="_")) %>%
+    dplyr::select(patient_id,GENE,Mutation,VAF1,VAF2,ANNO,HOTSPOT)
+  if(drop_unless_lowvaf){
+    both_vaf_all = dplyr::filter(both_vaf_all,VAF1<vaf_cutoff_to_drop | VAF2<vaf_cutoff_to_drop)
+  }
+  if(!missing(genes)){
+    both_vaf_all = dplyr::filter(both_vaf_all,GENE %in% genes)
+  }
+  both_vaf_all = mutate(both_vaf_all,unique_id=paste(patient_id,Mutation,sep="_")) %>%
+    mutate(fold_change=log(VAF2+0.1)-log(VAF1+0.1)) %>%
+    group_by(patient_id,GENE) %>%
+    mutate(Number=paste(GENE,row_number(),sep="_"))
+  print(head(both_vaf_all))
+  h = both_vaf_all %>%
+    select(patient_id,Number,fold_change) %>%
+    pivot_wider(id_cols = patient_id,names_from=Number,values_from=fold_change) %>%
+    column_to_rownames("patient_id")
+  both_vaf_all = mutate(both_vaf_all,minVAF=ifelse(VAF1<VAF2,VAF1,VAF2))
+  zeroes = both_vaf_all %>% select(patient_id,Number,minVAF) %>%
+    pivot_wider(id_cols = patient_id,names_from=Number,values_from=minVAF) %>%
+    column_to_rownames("patient_id")
+
+  hotspots = both_vaf_all %>% select(patient_id,Number,HOTSPOT) %>%
+    pivot_wider(id_cols = patient_id,names_from=Number,values_from=HOTSPOT) %>%
+    column_to_rownames("patient_id")
+
+  #zeroes = as.data.frame(zeroes)
+  zeroes[is.na(zeroes)]=0.001
+  hotspots[is.na(hotspots)]=-1
+  hotspots[hotspots==0]=-1
+  hotspots[hotspots==1]=0
+  zeroes[zeroes>0]=1
+  print(head(hotspots))
+
+  #print(head(both_vaf_all))
+  #print(head(these_samples_metadata))
+  these_samples_metadata_rn =
+    dplyr::filter(these_samples_metadata,patient_id %in% rownames(h)) %>%
+    select(all_of(c("patient_id",metadata_columns))) %>%
+    column_to_rownames("patient_id")
+
+  la = HeatmapAnnotation(df = as.data.frame( these_samples_metadata_rn),
+                         which="row")
+  ta = HeatmapAnnotation(df = as.data.frame( these_samples_metadata_rn),
+                         which="column")
+
+  h[is.na(h)]=0
+  cs=colSums(zeroes)
+  ordered = names(cs[order(cs)])
+  if(!missing(top_n_genes)){
+    print(head(ordered,top_n_genes))
+    genes=ordered[c(1:top_n_genes)]
+  }
+  col_fun = colorRamp2(c(0, 1), c("white", "red"))
+
+  if(gene_orientation=="bottom"){
+    if(annotate_zero){
+
+    }else{
+      H=Heatmap(h[rownames(these_samples_metadata_rn),],cluster_rows=F,
+                cluster_columns=F,left_annotation = la)
+    }
+  }else{
+    if(!missing(top_n_genes)){
+
+      these_zeroes=t(zeroes[rownames(these_samples_metadata_rn),genes])
+      these_zeroes=t(hotspots[rownames(these_samples_metadata_rn),genes])
+      to_show = t(h[rownames(these_samples_metadata_rn),genes])
+
+    }else{
+      these_zeroes=t(zeroes[rownames(these_samples_metadata_rn),])
+      these_zeroes=t(hotspots[rownames(these_samples_metadata_rn),])
+
+      to_show = t(h[rownames(these_samples_metadata_rn),])
+    }
+    if(annotate_zero){
+
+
+      H=Heatmap(to_show,
+
+                layer_fun =
+                  function(j, i, x, y, width, height, fill) {
+
+                    v = pindex(these_zeroes, i, j)
+                    l = v == 0
+                    grid.points(x[l], y[l], pch = 16, size = unit(1, "mm"),
+                                gp = gpar(col = "white"))
+                    #grid.text(sprintf("%.1f", v[l]), x[l], y[l], gp = gpar(fontsize = 10))
+                  },
+                cluster_columns=cluster_columns,
+                cluster_rows=cluster_rows,
+                bottom_annotation = ta)
+      print("HERE")
+    }else{
+      H=Heatmap(t(h[rownames(these_samples_metadata_rn),]),
+                cluster_rows=cluster_rows,
+                cluster_columns=cluster_columns,
+                bottom_annotation = ta)
+    }
+  }
+
+  return(H)
+}
+
+
 #' Assign a colour palette to metadata columns automatically and consistently
 #'
 #' @param metadataColumns Names of the metadata columns to assign colours for
 #' @param these_samples_metadata Metadata for just the samples you need colours for
+#' @param column_alias A list of column_names with values indicating what gambl colour scheme they should use (e.g. pos_neg, pathology, lymphgen)
 #' @param annoAlpha Optional alpha to apply to annotation colours
 #' @return Either a vector or list of colours
 #' @export
-#' @import dplyr
+#' @import dplyr ggsci
 #'
 #' @examples
 #' all_cols=map_metadata_to_colours(legend_metadata_columns,these_meta,verbose=T)
-map_metadata_to_colours = function(metadataColumns,these_samples_metadata,as_vector=TRUE,
+#' all_cols=map_metadata_to_colours(c("lymphgen","pathology","genetic_subgroup"),these_samples_metadata = all_meta,column_alias=list("nothing"="FL"),as_vector = F)
+map_metadata_to_colours = function(metadataColumns,
+                                   these_samples_metadata,
+                                   column_alias=list(),
+                                   as_vector=TRUE,
                                    verbose=F,annoAlpha=1){
 
   clinical_colours = ggsci::get_ash("clinical")
@@ -18,16 +468,23 @@ map_metadata_to_colours = function(metadataColumns,these_samples_metadata,as_vec
   colvec = c()
   #aliases for finding specific sets of colours
   aliases = list("COO_consensus"="coo","COO"="coo","DHITsig_consensus"="coo",
-                 "pathology"="pathology","lymphgen"="lymphgen",
-                 "lymphgen_with_cnv"="lymphgen","bcl2_ba"="pos_neg",
+                 "pathology"="pathology","analysis_cohort"="pathology",
+                 "group"="pathology",
+                 "FL_group"="FL",
+                 "lymphgen"="lymphgen",
+                 "lymphgen_with_cnv"="lymphgen",
+                 "bcl2_ba"="pos_neg",
+                 "BCL2_status"="pos_neg",
                  "myc_ba"="pos_neg","bcl6_ba"="pos_neg","manta_BCL2_sv"="pos_neg",
                  "manual_BCL2_sv"="pos_neg",
                  "manta_MYC_sv"="pos_neg"
                  )
+  aliases=c(aliases,column_alias)
+  #print(aliases)
   for(column in metadataColumns){
 
     this_value = these_samples_metadata[[column]]
-
+  options = this_value
     if(verbose){
       print(">>>>>>>")
       message("finding colour for",this_value)
@@ -36,11 +493,16 @@ map_metadata_to_colours = function(metadataColumns,these_samples_metadata,as_vec
     if(column %in% names(aliases)){
 
       key = aliases[[column]]
-      message(paste("using",key,"for",column))
+      if(verbose){
+        print(paste("using alias to look up colours for",column))
+        message(paste("using",key,"for",column))
+      }
       these = get_gambl_colours(classification = key)
       colours[[column]]=these
       colvec = c(colvec,these[this_value])
-      message("adding:",these[this_value])
+      if(verbose){
+        message("adding:",these[this_value])
+      }
     }else if(column == "sex"){
       these = get_gambl_colours("sex",alpha=annoAlpha)
       #these = these[levels(these)]
@@ -53,7 +515,7 @@ map_metadata_to_colours = function(metadataColumns,these_samples_metadata,as_vec
     }else if(sum(levels(options) %in% names(clinical_colours))==length(levels(options))){
       #we have a way to map these all to colours!
       if(verbose){
-        message(paste("found colours for",column))
+        message(paste("found colours for",column,"in clinical"))
       }
       these = clinical_colours[levels(options)]
       if(!"NA" %in% names(these)){
@@ -594,14 +1056,14 @@ prettyOncoplot = function(maftools_obj,
     }else if(sum(levels(options) %in% names(clinical_colours))==length(levels(options))){
       #we have a way to map these all to colours!
       if(verbose){
-        message(paste("found colours for",column))
+        message(paste("found colours for",column, "here"))
       }
       these = clinical_colours[levels(options)]
       if(!"NA" %in% names(these)){
         these= c(these,"NA"="white")
       }
       colours[[column]]=these
-    }else if(("positive" %in% options | "POS" %in% options) & length(options)<4){
+    }else if(("positive" %in% options | "POS" %in% options | "yes" %in% options) & length(options)<4){
       if(verbose){
         print("using pos_neg")
       }

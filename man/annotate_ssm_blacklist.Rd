@@ -7,12 +7,19 @@
 annotate_ssm_blacklist(
   mutations_df,
   unix_group = "gambl",
-  tool_name = "slms-3",
+  tool_name = "slms_3",
+  tool_version = "1.0",
+  annotator_name = "vcf2maf",
+  annotator_version = "1.2",
+  flavour = "",
   genome_build = "grch37",
-  drop_threshold = 4
+  drop_threshold = 4,
+  return_blacklist = FALSE
 )
 }
 \arguments{
+\item{flavour}{Set to "clustered" if you want to use the blacklist for the new and improved SLMS-3 outputs (otherwise leave empty)}
+
 \item{genome_build}{The genome build projection for the variants you want (grch37 is the only one currently supported)}
 
 \item{drop_threshold}{The minimum count from one of the blacklists to drop a variant}
