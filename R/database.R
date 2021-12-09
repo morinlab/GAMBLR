@@ -65,13 +65,13 @@ get_ssm_by_sample = function(this_sample_id,
     print(paste("group:",this_unix_group,"genome:",this_genome_build))
   }
   if(flavour=="force_unmatched"){
-    base_path = paste0(config::get("project_base"),unix_group,"/force_unmatched/",tool_name,"_vcf2maf_current/99-outputs/",seq_type,"--",this_genome_build)
+    base_path = paste0(config::get("project_base"),this_unix_group,"/force_unmatched/",tool_name,"_vcf2maf_current/99-outputs/",seq_type,"--",this_genome_build)
   }else if(flavour=="augmented"){
-    base_path = paste0(config::get("project_base"),unix_group,"/",tool_name,"_vcf2maf_current/level_3/augmented_mafs/99-outputs/",seq_type,"--",this_genome_build)
+    base_path = paste0(config::get("project_base"),this_unix_group,"/",tool_name,"_vcf2maf_current/level_3/augmented_mafs/99-outputs/",seq_type,"--",this_genome_build)
   }else if(flavour == "clustered"){
-    base_path = paste0(config::get("project_base"),unix_group,"/",tool_name,"_clustered_vcf2maf_current/99-outputs/",seq_type,"--",this_genome_build)
+    base_path = paste0(config::get("project_base"),this_unix_group,"/","slms_3-1.0_vcf2maf-1.3/99-outputs/",seq_type,"--",this_genome_build)
   }else{
-    base_path = paste0(config::get("project_base"),unix_group,"/",tool_name,"_vcf2maf_current/99-outputs/",seq_type,"--",this_genome_build)
+    base_path = paste0(config::get("project_base"),this_unix_group,"/",tool_name,"_vcf2maf_current/99-outputs/",seq_type,"--",this_genome_build)
   }
   if(projection == "grch37"){
     if(this_genome_build != projection){
@@ -85,6 +85,7 @@ get_ssm_by_sample = function(this_sample_id,
   }
   if(length(maf_path)<1){
     message(paste("NO FILE FOUND FOR THIS SAMPLE (flavour):",this_sample_id, "(",flavour,")"))
+    print(paste(base_path,maf_pattern))
     return()
   }
   if(length(maf_path)>1){

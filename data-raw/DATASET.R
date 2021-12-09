@@ -6,7 +6,7 @@ gene_blacklist = system.file("extdata", "gene_blacklist_with_IG.tsv", package = 
 usethis::use_data(gene_blacklist, overwrite = TRUE)
 
 grch37_all_gene_coordinates = system.file("extdata", "grch37_gene_coordinates.tsv", package = "GAMBLR") %>%
-  read_tsv()
+  read_tsv() %>% dplyr::filter(grepl("PATCH",chromosome))
 
 usethis::use_data(grch37_all_gene_coordinates, overwrite = TRUE)
 

@@ -9,6 +9,7 @@ get_coding_ssm_status(
   these_samples_metadata,
   from_flatfile = TRUE,
   maf_path = NULL,
+  maf_data,
   include_hotspots = TRUE,
   recurrence_min = 5,
   review_hotspots = TRUE,

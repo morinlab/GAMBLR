@@ -1,4 +1,12 @@
 
+gene_to_region = function(gene_symbol,ensembl_id,genome_build){
+  if(!missing(gene_symbol)){
+    gene_coordinates = dplyr::filter(grch37_gene_coordinates,hugo_symbol==gene_symbol)
+  }
+  region= paste0(gene_coordinates$chromosome,":",gene_coordinates$start,"-",gene_coordinates$end)
+  return(region)
+}
+
 #' Get a MAF that is just the variants unique to one of two flavours of variant calls available
 #'
 #' @param these_sample_ids
@@ -64,6 +72,7 @@ get_coding_ssm_status = function(gene_symbols,
                                   these_samples_metadata,
                                   from_flatfile=TRUE,
                                   maf_path = NULL,
+                                  maf_data,
                                   include_hotspots=TRUE,
                                   recurrence_min = 5,
                                   review_hotspots=TRUE,
@@ -77,10 +86,11 @@ get_coding_ssm_status = function(gene_symbols,
     these_samples_metadata = get_gambl_metadata()
   }
 
-  if (is.null(maf_path)){
-    # call it once so the object can be reused if user wants to annotate hotspots
-    coding_ssm = get_coding_ssm(from_flatfile=from_flatfile)
-  }else{
+
+  # call it once so the object can be reused if user wants to annotate hotspots
+  if(! missing(maf_data)){
+    coding_ssm = maf_data
+  }else if (! is.null(maf_path) ){
     coding_ssm = fread_maf(maf_path)
     coding_ssm = coding_ssm %>%
                         dplyr::filter(Variant_Classification %in%   c("Frame_Shift_Del",
@@ -95,7 +105,8 @@ get_coding_ssm_status = function(gene_symbols,
                             "Splice_Site",
                             "Targeted_Region",
                             "Translation_Start_Site"))
-    print(table(coding_ssm$Variant_Classification))
+  else{
+    coding_ssm = maf_data
   }
 
   coding = coding_ssm %>%
@@ -172,208 +183,6 @@ trim_scale_expression <- function(x){
   return(x)
 }
 
-#' Count hypermutated bins and generate heatmaps/cluster the data
-#'
-#' @param regions Vector of regions in the format "chr:start-end"
-#' @param region_df Data frame of regions with four columns (chrom,start,end,gene_name)
-#' @param slide_by How far to shift before starting the next window
-#' @param window_size The width of your sliding window
-#' @param min_count_per_bin
-#' @param min_bin_recurrence How many samples a bin must be mutated in to retain in the visualization
-#' @param min_bin_patient How many bins must a patient mutated in to retain in the visualization
-#' @param these_samples_metadata GAMBL metadata subset to the cases you want to process (or full metadata)
-#' @param region_padding How many bases will be added on the left and right of the regions to ensure any small regions are sufficiently covered by bins
-#' @param metadataColumns What metadata will be shown in the visualization
-#' @param sortByColumns Which of the metadata to sort on for the heatmap
-#' @param cluster_rows_heatmap Optional parameter to enable/disable clustering of each dimension of the heatmap
-#' @param cluster_cols_heatmap
-#' @param customColour Optional named list of named vectors for specifying all colours for metadata. Can be generated with map_metadata_to_colours
-#' @param show_gene_colours Optional logical argument indicating whether regions should have associated colours plotted as annotation track of heatmap
-#' @param legend_row Fiddle with these to widen or narrow your legend
-#' @param legend_col Fiddle with these to widen or narrow your legend
-#' @param legend_col Accepts one of "horizontal" (default) or "vertical" to indicate in which direction the legend will be drawn
-#' @param from_indexed_flatfile Set to TRUE to avoid using the database and instead rely on flatfiles (only works for streamlined data, not full MAF details)
-#' @param mode Only works with indexed flatfiles. Accepts 2 options of "slms-3" and "strelka2" to indicate which variant caller to use. Default is "slms-3".
-#'
-#'
-#' @return
-#' @export
-#'
-#' @examples
-get_mutation_frequency_bin_matrix = function(regions,
-                                  regions_df,
-                                  these_samples_metadata,
-                                  region_padding= 1000,
-                                  metadataColumns=c("pathology"),
-                                  sortByColumns=c("pathology"),
-                                  expressionColumns=c(),
-                                  orientation = "sample_rows",
-                                  customColour = NULL,
-                                  slide_by=100,
-                                  window_size=500,
-                                  min_count_per_bin = 3,
-                                  min_bin_recurrence = 5,
-                                  min_bin_patient = 0,
-                                  region_fontsize=8,
-                                  cluster_rows_heatmap = FALSE,
-                                  cluster_cols_heatmap = FALSE,
-                                  show_gene_colours=FALSE,
-                                  legend_row=3,
-                                  legend_col=3,
-                                  legend_direction="horizontal",
-                                  legendFontSize=10,
-                                  from_indexed_flatfile=FALSE,
-                                  mode="slms-3"){
-
-    if(missing(regions)){
-      if(missing(regions_df)){
-        regions_df = grch37_ashm_regions #drop MYC and BCL2
-        regions_df = grch37_ashm_regions %>%
-          dplyr::filter(!gene %in% c("MYC","BCL2","IGLL5"))
-      }
-      regions = unlist(apply(regions_df,1,function(x){paste0(x[1],":",as.numeric(x[2])-region_padding,"-",as.numeric(x[3])+region_padding)})) #add some buffer around each
-    }
-    dfs = lapply(regions,function(x){calc_mutation_frequency_sliding_windows(
-    this_region=x,drop_unmutated = TRUE,
-    slide_by = slide_by,plot_type="none",window_size=window_size,
-    min_count_per_bin=min_count_per_bin,return_count = TRUE,
-    metadata = these_samples_metadata,
-    from_indexed_flatfile=from_indexed_flatfile, mode=mode)})
-
-  all= do.call("rbind",dfs)
-  #add a fake bin for one gene and make every patient not mutated in it (to fill gaps)
-  fake = these_samples_metadata %>% dplyr::select(sample_id) %>% mutate(bin="1_chrN") %>% mutate(mutated=0)
-  all = bind_rows(all,fake)
-  completed = complete(all,sample_id,bin,fill = list(mutated = 0))
-  widened = pivot_wider(completed,names_from=sample_id,values_from=mutated)
-  widened_df = column_to_rownames(widened,var="bin")
-
-  #meta_show = metadata %>% select(sample_id,pathology,lymphgen) %>%
-  if(length(expressionColumns)>0){
-    these_samples_metadata = these_samples_metadata %>%
-      mutate(across(all_of(expressionColumns), ~ trim_scale_expression(.x)))
-  }
-  meta_show = these_samples_metadata %>% select(sample_id,all_of(metadataColumns)) %>%
-    arrange(across(all_of(sortByColumns))) %>%
-    dplyr::filter(sample_id %in% colnames(widened_df)) %>%
-    column_to_rownames(var="sample_id")
-  message(paste("starting with",length(colnames(widened_df)),"patients"))
-  patients_show = colnames(widened_df)[which(colSums(widened_df)>=min_bin_patient)]
-  message(paste("returning matrix with",length(patients_show),"patients"))
-  meta_show = dplyr::filter(meta_show,rownames(meta_show) %in% patients_show)
-  to_show = widened_df[which(rowSums(widened_df)>min_bin_recurrence),patients_show]
-
-  bin_col_fun = colorRamp2(c(0, 3, 6, 9),
-                       c("white", "orange","red","purple"))
-  to_show_t = t(to_show)
-  meta_show_t = meta_show[rownames(to_show_t),]
-  lg_cols = get_gambl_colours("lymphgen")
-  path_fun = function(x){
-    path_cols = get_gambl_colours("pathology")
-    lg_cols = get_gambl_colours("lymphgen")
-
-    return(unname(path_cols[x]))
-  }
-  path_cols = get_gambl_colours("pathology")
-
-  # assign bins back to regions for better annotation
-
-  assign_bins_to_region = function(bin_names,rdf){
-    bin_df = data.frame(bin_name=bin_names)
-
-    separated = bin_df %>%
-      separate(bin_name,into=c("start","chrom")) %>%
-      mutate(start = as.integer(start)) %>%
-      mutate(end=start+1)
-
-    separated$bin_name = bin_names
-    colnames(rdf)[c(1:3)]=c("chrom","start","end")
-    rdf = mutate(rdf,start=start-1500) %>% mutate(end=end+1500)
-    regions.dt = as.data.table(rdf)
-
-    setkey(regions.dt,chrom,start,end)
-    bin.dt = as.data.table(separated)
-    setkey(bin.dt,chrom,start,end)
-    bin_overlapped = foverlaps(bin.dt,regions.dt,mult="first") %>%
-      as.data.frame() %>% select(bin_name,gene) %>% column_to_rownames(var="bin_name")
-    return(bin_overlapped)
-  }
-  #regions_df = grch37_ashm_regions
-  if(is.null(customColour)){
-    meta_cols = map_metadata_to_colours(metadataColumns,these_samples_metadata = meta_show,as_vector = F)
-
-  }else{
-    meta_cols = customColour
-  }
-  col_fun=circlize::colorRamp2(c(0, 0.5, 1), c("blue", "white", "red"))
-  for(exp in expressionColumns){
-    meta_cols[[exp]] = col_fun
-  }
-  bin_annot = assign_bins_to_region(bin_names=colnames(to_show_t),rdf=regions_df)
-  heatmap_legend_param = list(title = "Bin value",nrow=legend_row, ncol=legend_row,
-                         legend_direction = legend_direction,
-                         labels_gp = gpar(fontsize = legendFontSize))
-
-  annotation_legend_param = list(nrow=legend_row,
-                            ncol=legend_col,
-                            direction=legend_direction,
-                            labels_gp = gpar(fontsize = legendFontSize))
-
-  if(orientation == "sample_rows"){
-    row_annot = HeatmapAnnotation(df=meta_show,show_legend = T,
-                                  which = 'row',
-                                  col=meta_cols,
-                                  annotation_legend_param = annotation_legend_param)
-    if(show_gene_colours){
-        col_annot = HeatmapAnnotation(df=bin_annot,show_legend = F,
-                                  which = 'col',
-                                  annotation_legend_param = annotation_legend_param)
-    }else{
-        col_annot = HeatmapAnnotation(value=anno_empty(border = FALSE))
-    }
-    Heatmap(to_show_t[rownames(meta_show),rownames(bin_annot)],
-           cluster_columns = cluster_cols_heatmap,
-           cluster_rows=cluster_rows_heatmap,
-           col=bin_col_fun,
-           bottom_annotation = col_annot,
-           left_annotation = row_annot,
-           show_row_names = F,show_column_names = F,
-           column_split = factor(bin_annot$gene),
-           #row_split = factor(meta_show$pathology),
-           column_title_gp = gpar(fontsize=region_fontsize),
-           column_title_rot = 90,
-           row_title_gp = gpar(fontsize=10),
-           heatmap_legend_param = heatmap_legend_param)
-  }else{
-    col_annot = HeatmapAnnotation(df=meta_show,show_legend = T,
-                                  which = 'col',
-                                  col=meta_cols,
-                                  annotation_legend_param = annotation_legend_param)
-    if(show_gene_colours){
-      row_annot = HeatmapAnnotation(df=bin_annot,show_legend = F,
-                                  which = 'row',
-                                  annotation_legend_param = annotation_legend_param)
-    }else{
-      row_annot = rowAnnotation(value=anno_empty(border = FALSE))
-    }
-
-    Heatmap(to_show[rownames(bin_annot),rownames(meta_show)],show_heatmap_legend = F,
-            cluster_columns = cluster_rows_heatmap,
-            cluster_rows=cluster_cols_heatmap,
-            col=bin_col_fun,
-            bottom_annotation = col_annot,
-            left_annotation = row_annot,
-            show_row_names = F,show_column_names = F,
-            row_split = factor(bin_annot$gene),
-            #row_split = factor(meta_show$pathology),
-            row_title_gp = gpar(fontsize=region_fontsize),
-            row_title_rot = 0,
-            column_title_gp = gpar(fontsize=8),
-            heatmap_legend_param = heatmap_legend_param)
-  }
-
-
-}
 
 #' Count the number of mutations in a sliding window across a region for all samples. Unlikely to be used directly in most cases. See get_mutation_frequency_bin_matrix instead
 #'
@@ -386,6 +195,7 @@ get_mutation_frequency_bin_matrix = function(regions,
 #' @param plot_type Set to true for a plot of your bins. By default no plots are made.
 #' @param min_count_per_bin
 #' @param return_count
+#' @param sortByColumns Which of the metadata to sort on for the heatmap
 #' @param drop_unmutated This may not currently work properly.
 #' @param from_indexed_flatfile Set to TRUE to avoid using the database and instead rely on flatfiles (only works for streamlined data, not full MAF details)
 #' @param mode Only works with indexed flatfiles. Accepts 2 options of "slms-3" and "strelka2" to indicate which variant caller to use. Default is "slms-3".
@@ -397,10 +207,15 @@ get_mutation_frequency_bin_matrix = function(regions,
 #' @examples
 
 calc_mutation_frequency_sliding_windows =
-  function(this_region,chromosome,start_pos,end_pos,
-           metadata,slide_by=100,
+  function(this_region,
+           chromosome,
+           start_pos,
+           end_pos,
+           metadata,
+           slide_by=100,
            window_size=1000,
            plot_type = "none",
+           sortByColumns="pathology",
            return_format="long-simple",
            min_count_per_bin=3,
            return_count = FALSE,
@@ -412,7 +227,7 @@ calc_mutation_frequency_sliding_windows =
 
   max_region = 1000000
   if(missing(metadata)){
-    metadata = collate_results(join_with_full_metadata = TRUE)
+    metadata = get_gambl_metadata()
   }
   if(missing(this_region)){
     this_region =paste0(chromosome,":",start_pos,"-",end_pos)
@@ -472,7 +287,9 @@ calc_mutation_frequency_sliding_windows =
                      sample_id=factor(all_samples))
   annos = left_join(annos,metadata,by="sample_id")
   windows_tallied = left_join(metadata,windows_tallied,by="sample_id")
-  windows_tallied$classification = factor(windows_tallied[,classification_column],levels=unique(windows_tallied[,classification_column]))
+  windows_tallied = arrange(windows_tallied,lymphgen)
+  windows_tallied$classification = factor(windows_tallied[,classification_column],
+                                          levels=unique(windows_tallied[,classification_column]))
   if(drop_unmutated){
     windows_tallied = windows_tallied %>% dplyr::filter(!is.na(n))
   }
@@ -499,13 +316,18 @@ calc_mutation_frequency_sliding_windows =
       geom_point(data=windows_tallied,aes(x=window_start,y=sample_id,
                   colour=classification)) +
       theme(axis.text=element_text(size=4)) +
+      theme(axis.text.y=element_blank()) +
       scale_colour_manual(values=c(lg_cols,path_cols))
 
-  }else if(plot_type == "tile"){
-    p = windows_tallied %>%
-      ggplot(aes(x=window_start,y=sample_id,fill=n)) +
-      geom_tile() +scale_fill_gradient(low = "orange", high = "red", na.value = NA) +
-      theme_cowplot()
+  }else if(plot_type %in% c("tile","tiled")){
+    print(annos)
+    p =
+      ggplot() +
+      geom_point(data=annos,aes(x=window_start,y=sample_id,colour=lymphgen)) +
+      geom_tile(data=windows_tallied,aes(x=window_start,y=sample_id,fill=n)) +
+      scale_fill_gradient(low = "orange", high = "red", na.value = NA) +
+      theme_cowplot() + scale_colour_manual(values=c(lg_cols,path_cols)) +
+      theme(axis.text.y=element_blank())
   }
   if(plot_type != "none"){
     print(p)
@@ -854,7 +676,7 @@ collate_results = function(sample_table,
   }
   message("this will be slow until collate_ssm_results is modified to cache its result")
   #edit this function and add a new function to load any additional results into the main summary table
-  sample_table = collate_ssm_results(sample_table=sample_table)
+  #sample_table = collate_ssm_results(sample_table=sample_table)
   sample_table = collate_sv_results(sample_table=sample_table)
   sample_table = collate_curated_sv_results(sample_table=sample_table)
   sample_table = collate_ashm_results(sample_table=sample_table)
@@ -1048,8 +870,9 @@ assign_cn_to_ssm = function(this_sample,
                             use_augmented_maf=FALSE,
                             maf_file,
                             seg_file,
-                            seg_file_source="ichorCNA", 
-                            assume_diploid=FALSE){
+                            seg_file_source="ichorCNA",
+                            assume_diploid=FALSE,
+                            genes){
 
   database_name = config::get("database_name")
   project_base = config::get("project_base")
@@ -1101,8 +924,11 @@ assign_cn_to_ssm = function(this_sample,
   if(coding_only){
     maf_sample = dplyr::filter(maf_sample,Variant_Classification %in% coding_class)
   }
+  if(!missing(genes)){
+    maf_sample = dplyr::filter(maf_sample,Hugo_Symbol %in% genes)
+  }
   #if(tool_name == "battenberg"){
-  
+
   if(!missing(seg_file)){
     seg_sample = read_tsv(seg_file) %>%
       dplyr::mutate(size=end - start) %>%
@@ -1121,7 +947,7 @@ assign_cn_to_ssm = function(this_sample,
     }
     a = data.table::as.data.table(maf_sample)
     a_diploid = dplyr::mutate(a, CN=2)
-    return(a_diploid)
+    return(list(maf=a_diploid))
   }else if(from_flatfile){
       message(paste("fetching:",tool_name))
       battenberg_files = fetch_output_files(build=genome_build,base_path = "gambl/battenberg_current",tool="battenberg",search_pattern = ".igv.seg")
@@ -1138,20 +964,27 @@ assign_cn_to_ssm = function(this_sample,
         dplyr::filter(size > 100) %>%
         dplyr::mutate(chrom = gsub("chr","",chrom)) %>%
         dplyr::rename(Chromosome=chrom,Start_Position=start,End_Position=end)
-      
+
       data.table::setkey(seg_sample, Chromosome, Start_Position, End_Position)
       a = data.table::as.data.table(maf_sample)
     }else{
-      seg_sample = get_sample_cn_segments(sample_id=this_sample) %>%
+      seg_sample = get_sample_cn_segments(this_sample_id=this_sample) %>%
         dplyr::mutate(size=end - start) %>%
         dplyr::filter(size > 100) %>%
         dplyr::mutate(chrom = gsub("chr","",chrom)) %>%
         dplyr::rename(Chromosome=chrom,Start_Position=start,End_Position=end) %>%
         data.table::as.data.table()
-      
+
       data.table::setkey(seg_sample, Chromosome, Start_Position, End_Position)
       a = data.table::as.data.table(maf_sample)
-    
+
+      a.seg = data.table::foverlaps(a, seg_sample, type="any")
+      a$log.ratio = a.seg$log.ratio
+      a$LOH = factor(a.seg$LOH_flag)
+      a = dplyr::mutate(a,CN=round(2*2^log.ratio))
+      seg_sample = dplyr::mutate(seg_sample,CN=round(2*2^log.ratio))
+      seg_sample$LOH_flag = factor(seg_sample$LOH_flag)
+
       #seg_table = config::get("results_tables")$copy_number
       #message(paste("querying",seg_table))
       #seg_sample = dplyr::tbl(con,seg_table) %>%
@@ -1162,7 +995,7 @@ assign_cn_to_ssm = function(this_sample,
       #dplyr::rename(Chromosome=chrom,Start_Position=start,End_Position=end)
     }
     #data.table::setkey(seg_sample, Chromosome, Start_Position, End_Position)
-    
+
     if(!missing(seg_file_source)){
       if(seg_file_source=="ichorCNA"){
         #message("defaulting to ichorCNA format")
@@ -1180,8 +1013,8 @@ assign_cn_to_ssm = function(this_sample,
         seg_sample$LOH_flag = factor(seg_sample$LOH_flag)
       }
     }
-  
-    
+
+
   #    mutate(a,vaf=t_alt_count/(t_ref_count+t_alt_count)) %>% ggplot() +
   #    geom_point(aes(x=Start_Position,y=vaf,colour=CN),size=0.1)  +
   #    geom_segment(data=seg_sample,aes(x=Start_Position,xend=End_Position,y=CN,yend=CN,colour=LOH_flag)) +
@@ -1193,7 +1026,7 @@ assign_cn_to_ssm = function(this_sample,
 }
 
 
-#' Estimate purity 
+#' Estimate purity
 #'
 #' @param in_maf Path to a local maf file
 #' @param in_seg Path to a local corresponding seg file for the same sample ID as the input maf
@@ -1212,49 +1045,55 @@ assign_cn_to_ssm = function(this_sample,
 #' tumour_purity = estimate_purity(in_maf="path/to/file.maf", in_seg="path/to/file.seg", seg_file_source="ichorCNA", show_plots=TRUE)
 #' tumour_purity = estimate_purity(in_maf="path/to/file.maf", assume_diploid = TRUE)
 
-estimate_purity = function(in_maf, 
-                           in_seg, 
+estimate_purity = function(in_maf,
+                           in_seg,
+                           sample_id,
                            seg_file_source="ichorCNA",
                            show_plots=FALSE,
-                           assume_diploid=FALSE
+                           assume_diploid=FALSE,
+                           coding_only=FALSE,
+                           genes
                            ){
-  
+
   # Merge the CN info to the corresponding MAF file, uses GAMBLR function
-  if(!missing(in_seg)){
+  if(missing(in_maf) & missing(in_seg)){
+    CN_new <- assign_cn_to_ssm(this_sample = sample_id,coding_only=coding_only,assume_diploid=assume_diploid,genes=genes)$maf
+
+  }else if(!missing(in_seg)){
     if(seg_file_source=="ichorCNA"){
-      CN_new <- assign_cn_to_ssm(maf_file = in_maf, seg_file = in_seg, seg_file_source = "ichorCNA")$maf
+      CN_new <- assign_cn_to_ssm(maf_file = in_maf, seg_file = in_seg, seg_file_source = "ichorCNA",coding_only=coding_only,genes=genes)$maf
     }else{
-      CN_new <- assign_cn_to_ssm(maf_file = in_maf, seg_file = in_seg, seg_file_source = "")$maf
+      CN_new <- assign_cn_to_ssm(maf_file = in_maf, seg_file = in_seg, seg_file_source = "",coding_only=coding_only,genes=genes)$maf
     }
   }else{
-    # If no seg file was provided and assume_diploid paramtere is set to true, 
+    # If no seg file was provided and assume_diploid paramtere is set to true,
     if(assume_diploid){
-      CN_new <- assign_cn_to_ssm(maf_file = in_maf, assume_diploid = TRUE)
+      CN_new <- assign_cn_to_ssm(maf_file = in_maf, assume_diploid = TRUE,coding_only=coding_only,genes=genes)
     }
   }
-  
+
   # Change any homozygous deletions (CN = 0) to 1 for calculation purposes
   CN_new$CN[CN_new$CN<1] = 1
-  
+
   # Select only the relevant columns, add new columns for VAF, Ploidy, and Purity
   CN_new <- CN_new %>%
     dplyr::select(Hugo_Symbol, Chromosome, Start_Position, End_Position, t_ref_count, t_alt_count, CN) %>%
     dplyr::mutate(VAF = t_alt_count/(t_ref_count+t_alt_count)) %>%
-    dplyr::mutate(Ploidy = ifelse(CN %in% 1:2, 1, 0)) %>% 
+    dplyr::mutate(Ploidy = ifelse(CN %in% 1:2, 1, 0)) %>%
     dplyr::mutate(Purity = "") %>%
     tidyr::drop_na(CN) %>%
     tidyr::unite("Chrom_pos", Chromosome:Start_Position, sep=":", remove=FALSE)
-  
+
   # Create an empty list
   indiv_CN = list()
-  
+
   # For each copy number state, separate mutations in each CN state into separate datatables
     ## "for" loop, and this function to get different copy number states: unique(CN_new$CN)
-  # Duplicate rows based on the copy number value (CN of 2 = 2 rows, etc): 
+  # Duplicate rows based on the copy number value (CN of 2 = 2 rows, etc):
     ##CN_maf[rep(seq(nrow(CN_maf)), CN_maf$CN),]
-  # Fill out the ploidy column for each duplicated column: 
+  # Fill out the ploidy column for each duplicated column:
     ##rep(seq(i),nrow(CN_max))
-  # Add a column for Purity and Calculate for CNs 3 or larger: 
+  # Add a column for Purity and Calculate for CNs 3 or larger:
     ##mutate(CN_max_dup, Purity = (CN*VAF)/Ploidy)
   for(i in unique(CN_new$CN)){
     CN_max = CN_new %>% dplyr::filter(CN == i)
@@ -1265,27 +1104,27 @@ estimate_purity = function(in_maf,
       indiv_CN[[as.character(i)]] = CN_max_dup
     }else(indiv_CN[[as.character(i)]] = CN_max)
   }
-  
+
   # Merge all copy state tables together into one table
   merged_CN <- do.call("rbind", indiv_CN)
-  
+
   # Filter for copy nnumber states 1 or 2
   # Calculate purity, and if the number is larger 1 (100%) use the VAF calue instead
   merged_CN_neut <- merged_CN %>%
     dplyr::filter(merged_CN$CN < 3) %>%
     dplyr::mutate(Purity = (CN*VAF)/Ploidy) %>%
     dplyr::mutate(Purity = ifelse(Purity > 1, VAF, Purity))
-    
+
     # Calculate a temporary purity based on the mean of these purity values
     mean_neut_purity = mean(merged_CN_neut$Purity)
-  
-  # For CN of 3 or larger: 
+
+  # For CN of 3 or larger:
     ## Filter for copy number states 1 or 2
     ## Calculate purity, and if the number is larger 1 (100%) use the VAF calue instead
-    ## Group by chromosonal position, 
+    ## Group by chromosonal position,
     ## For each group, choose only the purity value that is closest to the mean_neut_purity (the temporary purity calculated from the copy neutral values)
   if (is.na(mean_neut_purity)){
-    merged_CN_gain <- merged_CN %>% 
+    merged_CN_gain <- merged_CN %>%
       dplyr::filter(merged_CN$CN > 2) %>%
       dplyr::mutate(Purity = (VAF*2)) %>%
       dplyr::mutate(Purity = ifelse(Purity > 1, VAF, Purity)) %>%
@@ -1293,51 +1132,51 @@ estimate_purity = function(in_maf,
       slice_head()  %>%
       dplyr::mutate(Assumed_CN = 2) %>%
       dplyr::mutate(Assumed_ploidy = 1)
-  }else{ 
-    merged_CN_gain <- merged_CN %>% 
+  }else{
+    merged_CN_gain <- merged_CN %>%
       dplyr::filter(merged_CN$CN > 2) %>%
       dplyr::mutate(Purity = (CN*VAF)/Ploidy) %>%
       dplyr::mutate(Purity = ifelse(Purity > 1, VAF, Purity)) %>%
       group_by(Chrom_pos) %>%
-      slice(which.min(abs(Purity - mean_neut_purity)))  
+      slice(which.min(abs(Purity - mean_neut_purity)))
   }
 
   # Bind both datatables back together (the first contains CNs 1 and/or 2, the second contains CNs 3 and/or higher)
   CN_final <- bind_rows(merged_CN_neut, merged_CN_gain)
-  
+
   # Estimate the mean of all purity values from all available copy number states
   sample_purity_estimation = mean(CN_final$Purity)
-  
+
   # Calculate CCF (cancer cell fraction) 2 ways:
    ## With the maximum purity estimation for the mutations in the same (largest value will be 1 for the mutation with the highest purity estimation)
    ## With the purity estimation of the sample in total. This will give values over 1 though which is problematic, as the maximum value should be 1 (100%) for clonal events
   CN_final <- CN_final %>%
     dplyr::mutate(CCF_mutation = Purity/max(Purity)) %>%
     dplyr::mutate(CCF_sample = Purity/sample_purity_estimation)
-  
+
   output = list()
-  
+
   if(show_plots){
     # Figure 1 : VAF distribution
     # Creates facet wraps showing the VAF distribution of CN-annotated mutations for each available copy number state
-    VAF_plot <- CN_final %>% 
-      ggplot(aes(x=VAF)) + 
-      geom_histogram() + 
-      facet_wrap(~CN) 
-   
-    # Figure 2: Final purity distribution
-    Purity_plot <- CN_final %>% 
-      ggplot(aes(x=Purity)) + 
-      geom_histogram() + 
+    VAF_plot <- CN_final %>%
+      ggplot(aes(x=VAF)) +
+      geom_histogram() +
       facet_wrap(~CN)
-     
+
+    # Figure 2: Final purity distribution
+    Purity_plot <- CN_final %>%
+      ggplot(aes(x=Purity)) +
+      geom_histogram() +
+      facet_wrap(~CN)
+
      output[["VAF_plot"]] = VAF_plot
      output[["Purity_plot"]] = Purity_plot
   }
-  
+
   output[["sample_purity_estimation"]] = sample_purity_estimation
   output[["CN_final"]] = CN_final
-  
+
   return(output)
 }
 
@@ -1440,7 +1279,8 @@ collate_extra_metadata= function(sample_table,file_path){
 #' collated = collate_sbs_results(sample_table=sample_table,sbs_manipulation=sbs_manipulation)
 collate_sbs_results = function(sample_table,file_path,scale_vals=FALSE,sbs_manipulation=""){
   if(missing(file_path)){
-    file_path = "/projects/rmorin_scratch/prasath_scratch/gambl/sigprofiler/gambl_hg38/02-extract/slms3.gambl.icgc.hg38.matched.unmatched/SBS96/Suggested_Solution/COSMIC_SBS96_Decomposed_Solution/Activities/COSMIC_SBS96_Activities_refit.txt"
+    file_path = "/projects/rmorin_scratch/prasath_scratch/gambl/sigprofiler/gambl_slms3/02-extract/slms3_matched_unmatched_gambl_icgc.hg38/SBS96/Suggested_Solution/COSMIC_SBS96_Decomposed_Solution/Activities/COSMIC_SBS96_Activities_refit.txt"
+    #file_path = "/projects/rmorin_scratch/prasath_scratch/gambl/sigprofiler/gambl_hg38/02-extract/slms3.gambl.icgc.hg38.matched.unmatched/SBS96/Suggested_Solution/COSMIC_SBS96_Decomposed_Solution/Activities/COSMIC_SBS96_Activities_refit.txt"
   }
   signatures = read.csv(file_path,sep="\t",header=1,row.names=1)
   rs=rowSums(signatures)
@@ -1622,7 +1462,7 @@ get_gambl_colours = function(classification="all",alpha=1){
                                          "DGG-BL"="#33A02C",
                                          "DLBCL-2"="#FB9A99",
                                          "DLBCL-3"="#C41230")
-  all_colours[["FL"]]=c(dFL="#99C1B9",cFL="#E8E46E")
+  all_colours[["FL"]]=c(dFL="#99C1B9",cFL="#D16666",DLBCL="#479450")
   all_colours[["lymphgen"]] = c(
     "EZB-MYC" = "#52000F",
     "EZB" = "#721F0F",
@@ -1662,6 +1502,11 @@ get_gambl_colours = function(classification="all",alpha=1){
   all_colours[["pos_neg"]]=c(
     "POS"="#c41230",
     "NEG"="#E88873",
+    "PARTIAL"="#E88873",
+    "yes"="#c41230",
+    "no"="#E88873",
+    "YES"="#c41230",
+    "NO"="#E88873",
     "FAIL"="#bdbdc1",
     "positive"="#c41230",
     "negative"="#E88873",
@@ -1706,11 +1551,17 @@ get_gambl_colours = function(classification="all",alpha=1){
       "MCL"="#F37A20",
       "BL"="#926CAD",
       "mBL"="#34C7F4",
+      "tFL"="#FF8595",
       "DLBCL-BL-like"="#34C7F4",
+      "pre-HT"="#754F5B",
       "PMBL"= "#227C9D",
       "FL"="#EA8368",
+      "no-HT"="#EA8368",
       "COMFL"="#8BBC98",
+      "COM"="#8BBC98",
+      "post-HT"="#479450",
       "DLBCL"="#479450",
+      "denovo-DLBCL"="#479450",
       "HGBL-NOS"="#294936",
       "HGBL"="#294936",
       "HGBL-DH/TH"="#7A1616",

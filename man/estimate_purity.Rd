@@ -7,9 +7,12 @@
 estimate_purity(
   in_maf,
   in_seg,
+  sample_id,
   seg_file_source = "ichorCNA",
   show_plots = FALSE,
-  assume_diploid = FALSE
+  assume_diploid = FALSE,
+  coding_only = FALSE,
+  genes
 )
 }
 \arguments{

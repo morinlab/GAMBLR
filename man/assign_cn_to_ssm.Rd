@@ -12,7 +12,8 @@ assign_cn_to_ssm(
   maf_file,
   seg_file,
   seg_file_source = "ichorCNA",
-  assume_diploid = FALSE
+  assume_diploid = FALSE,
+  genes
 )
 }
 \arguments{
