@@ -30,8 +30,6 @@ get_coding_ssm_status(
 
 \item{review_hotspots}{Logical parameter indicating whether hotspots object should be reviewed to include functionally relevant mutations or rare lymphoma-related genes. Default is TRUE.}
 
-\item{drop_unreviewed_hotspots}{Logical argumant indicating whether the hotspots for all unsupported genes should be tabulated separately (TRUE) or disregarded to avoid signal dilution between coding cnage and hotspot (FALSE). Default is FALSE.}
-
 \item{...}{Other parameters accepted by the review_hotspots() function}
 }
 \value{
