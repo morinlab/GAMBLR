@@ -35,6 +35,11 @@ grch37_ashm_regions = system.file("extdata", "somatic_hypermutation_locations_GR
 
 usethis::use_data(grch37_ashm_regions, overwrite = TRUE)
 
+hg38_ashm_regions = system.file("extdata", "somatic_hypermutation_locations_GRCh38.txt", package = "GAMBLR") %>%
+  read_tsv()
+
+usethis::use_data(hg38_ashm_regions, overwrite = TRUE)
+
 lymphoma_genes = system.file("extdata","lymphoma_genes.tsv",package="GAMBLR") %>%
   read_tsv(col_types="clllll")
 
