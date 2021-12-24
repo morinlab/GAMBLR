@@ -4,10 +4,12 @@
 \alias{collate_ssm_results}
 \title{Compute some summary statistics based on SSM calls}
 \usage{
-collate_ssm_results(sample_table, from_flatfile = TRUE)
+collate_ssm_results(sample_table, from_flatfile = TRUE, include_silent = FALSE)
 }
 \arguments{
-\item{sample_table}{}
+\item{from_flatfile}{Optional argument whether to use database or flat file to retrieve mutations}
+
+\item{include_silent}{Logical parameter indicating whether to include siment mutations into coding mutations. Default is FALSE}
 }
 \value{
 

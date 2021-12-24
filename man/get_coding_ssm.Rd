@@ -13,7 +13,8 @@ get_coding_ssm(
   basic_columns = TRUE,
   from_flatfile = FALSE,
   allow_clustered = FALSE,
-  groups = c("gambl", "icgc_dart")
+  groups = c("gambl", "icgc_dart"),
+  include_silent = TRUE
 )
 }
 \arguments{
@@ -26,6 +27,12 @@ get_coding_ssm(
 \item{basic_columns}{Set to TRUE to override the default behaviour of returning only the first 45 columns of MAF data}
 
 \item{from_flatfile}{Set to TRUE to obtain mutations from a local flatfile instead of the database. This can be more efficient and is currently the only option for users who do not have ICGC data access.}
+
+\item{allow_clustered}{Logical parameter indicating whether to use SLMS-3 results with clustered events. Default is FALSE}
+
+\item{groups}{Unix groups for the samples to be included. Default is both gambl and icgc_dart samples}
+
+\item{include_silent}{Logical parameter indicating whether to include siment mutations into coding mutations. Default is TRUE}
 }
 \value{
 A data frame containing all the MAF data columns (one row per mutation)

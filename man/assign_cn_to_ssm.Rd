@@ -13,7 +13,8 @@ assign_cn_to_ssm(
   seg_file,
   seg_file_source = "ichorCNA",
   assume_diploid = FALSE,
-  genes
+  genes,
+  include_silent = FALSE
 )
 }
 \arguments{
@@ -26,6 +27,8 @@ assign_cn_to_ssm(
 \item{seg_file_source}{Specify what copy number calling program the input seg file is from, as it handles ichorCNA differently than WisecondorX, Battenberg, etc.}
 
 \item{assume_diploid}{Optional. If no local seg file is provided, instead of defaulting to a GAMBL sample, this parameter annotates every mutation as copy neutral.}
+
+\item{include_silent}{Logical parameter indicating whether to include siment mutations into coding mutations. Default is FALSE}
 }
 \value{
 A list containing a data frame (MAF-like format) with two extra columns:
