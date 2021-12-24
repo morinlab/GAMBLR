@@ -106,12 +106,13 @@ populate_tool_results = function(){
 #' @param tool
 #' @param genome_build A list of all genome builds to process
 #' @param unix_group A list of all unix groups to process
+#' @param include_silent Logical parameter indicating whether to include siment mutations into coding mutations. Default is FALSE
 #'
 #' @return
 #' @export
 #'
 #' @examples
-populate_each_tool_result = function(tool,genome_builds,unix_groups){
+populate_each_tool_result = function(tool,genome_builds,unix_groups,include_silent=FALSE){
   database_name = config::get("database_name")
   con <- dbConnect(RMariaDB::MariaDB(), dbname = database_name)
   all_meta = get_gambl_metadata()
@@ -261,7 +262,22 @@ populate_each_tool_result = function(tool,genome_builds,unix_groups){
     #update all vafs at once
     generic_update(sample_id=vaf_tbl$Tumor_Sample_Barcode,field_name="slms3_mean_vaf",field_value=vaf_tbl$vaf)
 
-    coding_class = c("Frame_Shift_Del","Frame_Shift_Ins","In_Frame_Del","In_Frame_Ins","Missense_Mutation","Nonsense_Mutation","Nonstop_Mutation","Splice_Region","Splice_Site","Targeted_Region","Translation_Start_Site")
+    coding_class = c("Frame_Shift_Del",
+                     "Frame_Shift_Ins",
+                     "In_Frame_Del",
+                     "In_Frame_Ins",
+                     "Missense_Mutation",
+                     "Nonsense_Mutation",
+                     "Nonstop_Mutation",
+                     "Silent",
+                     "Splice_Region",
+                     "Splice_Site",
+                     "Targeted_Region",
+                     "Translation_Start_Site")
+
+    if(!include_silent){
+      coding_class=coding_class[coding_class != "Silent"]
+    }
 
     #this is where things get SLOW! It seems the most efficient here to do this query per sample.
     for(sam in gambl_counts$Tumor_Sample_Barcode){

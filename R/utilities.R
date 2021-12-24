@@ -56,9 +56,10 @@ intersect_maf = function(maf1,maf2,set_returned="maf1_only"){
 #' @param these_samples_metadata The matedata for samples of interest to be included in the returned matrix. Only the column "sample_id" is required. If not provided, the matrix is tabulated for all available samples as default.
 #' @param from_flatfile Optional argument whether to use database or flat file to retrieve mutations.
 #' @param include_hotspots Logical parameter indicating whether hotspots object should also be tabulated. Default is TRUE.
-#' @param from_flatfile Integer value indicating minimal recurrence level
+#' @param recurrence_min Integer value indicating minimal recurrence level
 #' @param review_hotspots Logical parameter indicating whether hotspots object should be reviewed to include functionally relevant mutations or rare lymphoma-related genes. Default is TRUE.
 #' @param maf_path If the status of coding SSM should be tabulated from a custom maf file, provide path to the maf in this argument. The default is set to NULL.
+#' @param include_silent Logical parameter indicating whether to include siment mutations into coding mutations. Default is TRUE
 #' @param ... Other parameters accepted by the review_hotspots() function
 #'
 #' @return
@@ -76,7 +77,8 @@ get_coding_ssm_status = function(gene_symbols,
                                   recurrence_min = 5,
                                   review_hotspots=TRUE,
                                   genes_of_interest = c("FOXO1", "MYD88", "CREBBP"),
-                                  genome_build = "hg19"){
+                                  genome_build = "hg19",
+                                  include_silent=TRUE){
   if(missing(gene_symbols)){
     message("defaulting to all lymphoma genes")
     gene_symbols = pull(lymphoma_genes,Gene)
@@ -85,6 +87,21 @@ get_coding_ssm_status = function(gene_symbols,
     these_samples_metadata = get_gambl_metadata()
   }
 
+  coding_class = c("Frame_Shift_Del",
+                   "Frame_Shift_Ins",
+                   "In_Frame_Del",
+                   "In_Frame_Ins",
+                   "Missense_Mutation",
+                   "Nonsense_Mutation",
+                   "Nonstop_Mutation",
+                   "Silent",
+                   "Splice_Region",
+                   "Splice_Site",
+                   "Targeted_Region",
+                   "Translation_Start_Site")
+  if(!include_silent){
+    coding_class=coding_class[coding_class != "Silent"]
+  }
 
   # call it once so the object can be reused if user wants to annotate hotspots
   if(! missing(maf_data)){
@@ -92,18 +109,7 @@ get_coding_ssm_status = function(gene_symbols,
   }else if (! is.null(maf_path) ){
     coding_ssm = fread_maf(maf_path)
     coding_ssm = coding_ssm %>%
-                        dplyr::filter(Variant_Classification %in%   c("Frame_Shift_Del",
-                            "Frame_Shift_Ins",
-                            "In_Frame_Del",
-                            "In_Frame_Ins",
-                            "Missense_Mutation",
-                            "Nonsense_Mutation",
-                            "Nonstop_Mutation",
-                            "Silent",
-                            "Splice_Region",
-                            "Splice_Site",
-                            "Targeted_Region",
-                            "Translation_Start_Site"))
+                        dplyr::filter(Variant_Classification %in% coding_class)
   }else{
     coding_ssm = maf_data
   }
@@ -762,16 +768,30 @@ collate_csr_results = function(sample_table){
 #' Compute some summary statistics based on SSM calls
 #'
 #' @param sample_table
+#' @param from_flatfile Optional argument whether to use database or flat file to retrieve mutations
+#' @param include_silent Logical parameter indicating whether to include siment mutations into coding mutations. Default is FALSE
 #'
 #' @return
 #' @export
 #'
 #' @examples
-collate_ssm_results = function(sample_table,from_flatfile=TRUE){
-  coding_class = c("Frame_Shift_Del","Frame_Shift_Ins","In_Frame_Del",
-                   "In_Frame_Ins","Missense_Mutation","Nonsense_Mutation",
-                   "Nonstop_Mutation","Splice_Region",
-                   "Splice_Site","Targeted_Region","Translation_Start_Site")
+collate_ssm_results = function(sample_table,from_flatfile=TRUE,include_silent=FALSE){
+  coding_class = c("Frame_Shift_Del",
+                   "Frame_Shift_Ins",
+                   "In_Frame_Del",
+                   "In_Frame_Ins",
+                   "Missense_Mutation",
+                   "Nonsense_Mutation",
+                   "Nonstop_Mutation",
+                   "Silent",
+                   "Splice_Region",
+                   "Splice_Site",
+                   "Targeted_Region",
+                   "Translation_Start_Site")
+  if(!include_silent){
+    coding_class=coding_class[coding_class != "Silent"]
+  }
+  
   #iterate over every sample and compute some summary stats from its MAF
   if(from_flatfile){
     base_path = config::get("project_base")
@@ -853,6 +873,7 @@ collate_curated_sv_results = function(sample_table){
 #' @param coding_only Optional. set to TRUE to rescrict to only coding variants
 #' @param from_flatfile Optional. Instead of the database, load the data from a local MAF and seg file
 #' @param assume_diploid Optional. If no local seg file is provided, instead of defaulting to a GAMBL sample, this parameter annotates every mutation as copy neutral.
+#' @param include_silent Logical parameter indicating whether to include siment mutations into coding mutations. Default is FALSE
 #'
 #' @return A list containing a data frame (MAF-like format) with two extra columns:
 #' log.ratio is the log ratio from the seg file (NA when no overlap was found)
@@ -871,7 +892,8 @@ assign_cn_to_ssm = function(this_sample,
                             seg_file,
                             seg_file_source="ichorCNA",
                             assume_diploid=FALSE,
-                            genes){
+                            genes,
+                            include_silent=FALSE){
 
   database_name = config::get("database_name")
   project_base = config::get("project_base")
@@ -879,7 +901,22 @@ assign_cn_to_ssm = function(this_sample,
 
 
   #project_base = "/projects/nhl_meta_analysis_scratch/gambl/results_local/"
-  coding_class = c("Frame_Shift_Del","Frame_Shift_Ins","In_Frame_Del","In_Frame_Ins","Missense_Mutation","Nonsense_Mutation","Nonstop_Mutation","Splice_Region","Splice_Site","Targeted_Region","Translation_Start_Site")
+  coding_class = c("Frame_Shift_Del",
+                   "Frame_Shift_Ins",
+                   "In_Frame_Del",
+                   "In_Frame_Ins",
+                   "Missense_Mutation",
+                   "Nonsense_Mutation",
+                   "Nonstop_Mutation",
+                   "Silent",
+                   "Splice_Region",
+                   "Splice_Site",
+                   "Targeted_Region",
+                   "Translation_Start_Site")
+  if(!include_silent){
+    coding_class=coding_class[coding_class != "Silent"]
+  }
+  
   if(!missing(maf_file)){
     maf_sample = fread_maf(maf_file) %>%
       dplyr::mutate(Chromosome = gsub("chr","",Chromosome))
