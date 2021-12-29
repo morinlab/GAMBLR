@@ -30,7 +30,7 @@ prettyOncoplot(
   box_col = NA,
   metadataBarHeight = 1.5,
   metadataBarFontsize = 5,
-  hideTopBarplot = FALSE,
+  hideTopBarplot = TRUE,
   hideSideBarplot = FALSE,
   splitColumnName,
   splitGeneGroups,
@@ -40,7 +40,12 @@ prettyOncoplot(
   groupNames,
   verbose = FALSE,
   hide_annotations,
-  custom_colours = NULL
+  custom_colours = NULL,
+  legend_direction = "horizontal",
+  legend_position = "bottom",
+  annotation_row = 2,
+  annotation_col = 1,
+  legendFontSize = 10
 )
 }
 \arguments{

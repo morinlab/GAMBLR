@@ -35,6 +35,11 @@ grch37_ashm_regions = system.file("extdata", "somatic_hypermutation_locations_GR
 
 usethis::use_data(grch37_ashm_regions, overwrite = TRUE)
 
+hg38_ashm_regions = system.file("extdata", "somatic_hypermutation_locations_GRCh38.txt", package = "GAMBLR") %>%
+  read_tsv()
+
+usethis::use_data(hg38_ashm_regions, overwrite = TRUE)
+
 lymphoma_genes = system.file("extdata","lymphoma_genes.tsv",package="GAMBLR") %>%
   read_tsv(col_types="clllll")
 
@@ -61,3 +66,10 @@ dhitsig_genes_with_weights = system.file("extdata","DHITsigGenesWithWeights.txt"
   read.table(sep="\t",header=1) %>% rename(Ensembl_ID=ensembl_gene_id,Hugo_Symbol=GeneName)
 usethis::use_data(dhitsig_genes_with_weights, overwrite = TRUE)
 
+target_regions_hg38 = system.file("extdata","target_regions_hg38.txt",package="GAMBLR") %>%
+  read.table(sep="\t",header=1)
+usethis::use_data(target_regions_hg38, overwrite = TRUE)
+
+target_regions_grch37 = system.file("extdata","target_regions_grch37.txt",package="GAMBLR") %>%
+  read.table(sep="\t",header=1)
+usethis::use_data(target_regions_grch37, overwrite = TRUE)

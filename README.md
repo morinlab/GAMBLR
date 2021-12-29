@@ -60,6 +60,7 @@ library(RMariaDB)
 library(DBI)
 library(ComplexHeatmap)
 library(ggrepel)
+library(ggthemes)
 library(stats)
 library(metaviz)
 ```

@@ -4,9 +4,16 @@
 \alias{populate_each_tool_result}
 \title{Title}
 \usage{
-populate_each_tool_result(tool, genome_builds, unix_groups)
+populate_each_tool_result(
+  tool,
+  genome_builds,
+  unix_groups,
+  include_silent = FALSE
+)
 }
 \arguments{
+\item{include_silent}{Logical parameter indicating whether to include siment mutations into coding mutations. Default is FALSE}
+
 \item{genome_build}{A list of all genome builds to process}
 
 \item{unix_group}{A list of all unix groups to process}

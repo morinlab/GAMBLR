@@ -56,8 +56,10 @@ intersect_maf = function(maf1,maf2,set_returned="maf1_only"){
 #' @param these_samples_metadata The matedata for samples of interest to be included in the returned matrix. Only the column "sample_id" is required. If not provided, the matrix is tabulated for all available samples as default.
 #' @param from_flatfile Optional argument whether to use database or flat file to retrieve mutations.
 #' @param include_hotspots Logical parameter indicating whether hotspots object should also be tabulated. Default is TRUE.
-#' @param from_flatfile Integer value indicating minimal recurrence level
+#' @param recurrence_min Integer value indicating minimal recurrence level
 #' @param review_hotspots Logical parameter indicating whether hotspots object should be reviewed to include functionally relevant mutations or rare lymphoma-related genes. Default is TRUE.
+#' @param maf_path If the status of coding SSM should be tabulated from a custom maf file, provide path to the maf in this argument. The default is set to NULL.
+#' @param include_silent Logical parameter indicating whether to include siment mutations into coding mutations. Default is TRUE
 #' @param ... Other parameters accepted by the review_hotspots() function
 #'
 #' @return
@@ -69,12 +71,14 @@ intersect_maf = function(maf1,maf2,set_returned="maf1_only"){
 get_coding_ssm_status = function(gene_symbols,
                                   these_samples_metadata,
                                   from_flatfile=TRUE,
+                                  maf_path = NULL,
                                   maf_data,
                                   include_hotspots=TRUE,
                                   recurrence_min = 5,
                                   review_hotspots=TRUE,
                                   genes_of_interest = c("FOXO1", "MYD88", "CREBBP"),
-                                  genome_build = "hg19"){
+                                  genome_build = "hg19",
+                                  include_silent=TRUE){
   if(missing(gene_symbols)){
     message("defaulting to all lymphoma genes")
     gene_symbols = pull(lymphoma_genes,Gene)
@@ -83,9 +87,29 @@ get_coding_ssm_status = function(gene_symbols,
     these_samples_metadata = get_gambl_metadata()
   }
 
+  coding_class = c("Frame_Shift_Del",
+                   "Frame_Shift_Ins",
+                   "In_Frame_Del",
+                   "In_Frame_Ins",
+                   "Missense_Mutation",
+                   "Nonsense_Mutation",
+                   "Nonstop_Mutation",
+                   "Silent",
+                   "Splice_Region",
+                   "Splice_Site",
+                   "Targeted_Region",
+                   "Translation_Start_Site")
+  if(!include_silent){
+    coding_class=coding_class[coding_class != "Silent"]
+  }
+
   # call it once so the object can be reused if user wants to annotate hotspots
-  if(missing(maf_data)){
-    coding_ssm = get_coding_ssm(from_flatfile=from_flatfile)
+  if(! missing(maf_data)){
+    coding_ssm = maf_data
+  }else if (! is.null(maf_path) ){
+    coding_ssm = fread_maf(maf_path)
+    coding_ssm = coding_ssm %>%
+                        dplyr::filter(Variant_Classification %in% coding_class)
   }else{
     coding_ssm = maf_data
   }
@@ -129,6 +153,8 @@ get_coding_ssm_status = function(gene_symbols,
     # join with the ssm object
     all_tabulated = left_join(all_tabulated,wide_hotspots)
     all_tabulated = all_tabulated %>% replace(is.na(.), 0)
+    all_tabulated = all_tabulated %>% dplyr::select(where(~ any(. != 0)))
+    all_tabulated = as.data.frame(all_tabulated)
     # make SSM and hotspots non-redundant by giving priority to hotspot feature and setting SSM to 0
     for (hotspot_site in colnames(wide_hotspots)[grepl("HOTSPOT", colnames(wide_hotspots))]){
       message(hotspot_site)
@@ -742,16 +768,30 @@ collate_csr_results = function(sample_table){
 #' Compute some summary statistics based on SSM calls
 #'
 #' @param sample_table
+#' @param from_flatfile Optional argument whether to use database or flat file to retrieve mutations
+#' @param include_silent Logical parameter indicating whether to include siment mutations into coding mutations. Default is FALSE
 #'
 #' @return
 #' @export
 #'
 #' @examples
-collate_ssm_results = function(sample_table,from_flatfile=TRUE){
-  coding_class = c("Frame_Shift_Del","Frame_Shift_Ins","In_Frame_Del",
-                   "In_Frame_Ins","Missense_Mutation","Nonsense_Mutation",
-                   "Nonstop_Mutation","Splice_Region",
-                   "Splice_Site","Targeted_Region","Translation_Start_Site")
+collate_ssm_results = function(sample_table,from_flatfile=TRUE,include_silent=FALSE){
+  coding_class = c("Frame_Shift_Del",
+                   "Frame_Shift_Ins",
+                   "In_Frame_Del",
+                   "In_Frame_Ins",
+                   "Missense_Mutation",
+                   "Nonsense_Mutation",
+                   "Nonstop_Mutation",
+                   "Silent",
+                   "Splice_Region",
+                   "Splice_Site",
+                   "Targeted_Region",
+                   "Translation_Start_Site")
+  if(!include_silent){
+    coding_class=coding_class[coding_class != "Silent"]
+  }
+  
   #iterate over every sample and compute some summary stats from its MAF
   if(from_flatfile){
     base_path = config::get("project_base")
@@ -833,6 +873,7 @@ collate_curated_sv_results = function(sample_table){
 #' @param coding_only Optional. set to TRUE to rescrict to only coding variants
 #' @param from_flatfile Optional. Instead of the database, load the data from a local MAF and seg file
 #' @param assume_diploid Optional. If no local seg file is provided, instead of defaulting to a GAMBL sample, this parameter annotates every mutation as copy neutral.
+#' @param include_silent Logical parameter indicating whether to include siment mutations into coding mutations. Default is FALSE
 #'
 #' @return A list containing a data frame (MAF-like format) with two extra columns:
 #' log.ratio is the log ratio from the seg file (NA when no overlap was found)
@@ -851,7 +892,8 @@ assign_cn_to_ssm = function(this_sample,
                             seg_file,
                             seg_file_source="ichorCNA",
                             assume_diploid=FALSE,
-                            genes){
+                            genes,
+                            include_silent=FALSE){
 
   database_name = config::get("database_name")
   project_base = config::get("project_base")
@@ -859,7 +901,22 @@ assign_cn_to_ssm = function(this_sample,
 
 
   #project_base = "/projects/nhl_meta_analysis_scratch/gambl/results_local/"
-  coding_class = c("Frame_Shift_Del","Frame_Shift_Ins","In_Frame_Del","In_Frame_Ins","Missense_Mutation","Nonsense_Mutation","Nonstop_Mutation","Splice_Region","Splice_Site","Targeted_Region","Translation_Start_Site")
+  coding_class = c("Frame_Shift_Del",
+                   "Frame_Shift_Ins",
+                   "In_Frame_Del",
+                   "In_Frame_Ins",
+                   "Missense_Mutation",
+                   "Nonsense_Mutation",
+                   "Nonstop_Mutation",
+                   "Silent",
+                   "Splice_Region",
+                   "Splice_Site",
+                   "Targeted_Region",
+                   "Translation_Start_Site")
+  if(!include_silent){
+    coding_class=coding_class[coding_class != "Silent"]
+  }
+  
   if(!missing(maf_file)){
     maf_sample = fread_maf(maf_file) %>%
       dplyr::mutate(Chromosome = gsub("chr","",Chromosome))
@@ -1916,4 +1973,93 @@ complete_missing_from_matrix = function(incoming_matrix,
   }
 
   return(matrix_with_all_samples)
+}
+
+
+#' Subset maf file to only features that would be available in the WEX data
+#'
+#' @param maf Incoming maf object. Can be maf-like data frame or maftools maf object. Required parameter. Minimum columns that should be present are Chromosome, Start_Position, and End_Position.
+#' @param custom_bed Optional argument specifying a path to custom bed file for covered regions. Must be bed-like and contain chrom, start, and end position information in first 3 columns. Other columns are disregarded if provided.
+#' @param genome_build String indicating genome build of the maf file. Default is grch37, but can accept modifications of both grch37- and hg38-based duilds.
+#' @param padding Numeric value that will be used to pad probes in WEX data from both ends. Default is 100. After padding, overlapping features are squished together.
+#' @param chr_prefixed Is the data chr-prefixed or not? Default is FALSE.
+#'
+#' @return a data frame of maf-like object with same columns as in input, but where rows are only kept for features that would be present as if the sample is WEX.
+#' @export
+#' @import tidyverse data.table
+#'
+#' @examples
+#' myc_ashm_maf = get_ssm_by_region(region="8:128748352-128749427") # get all ssm in the MYC aSHM region
+#' GAMBLR::genome_to_exome(maf=myc_ashm_maf) # get mutations with 100 bp padding (default)
+#' GAMBLR::genome_to_exome(maf=myc_ashm_maf, padding = 0) # get mutations covered in WEX with no padding
+
+genome_to_exome = function(maf,
+                           custom_bed,
+                           genome_build="grch37",
+                           padding=100,
+                           chr_prefixed=FALSE){
+
+
+  if(missing(custom_bed)){
+      # first check that the genome build provided is supported
+      if(! genome_build %in% c("hg19", "grch37", "hs37d5", "GRCh37", "hg38", "GRCh38", "grch38")){
+        stop("The genome build specified is not currently supported. Please refer to genome build in one of the following cordinates: hg19, grch37, hs37d5, GRCh37, hg38, grch38, or GRCh38.")
+      }else if(genome_build %in% c("hg19", "grch37", "hs37d5", "GRCh37")){
+        this_genome_coordinates = target_regions_grch37 # if the genome build is a flavour of hg19, get its exome space
+      }else if(genome_build %in% c("hg38", "GRCh38", "grch38")){
+        this_genome_coordinates = target_regions_hg38 # exome space for the variations of hg38
+      }
+  }else{
+      this_genome_coordinates = fread(custom_bed)
+      this_genome_coordinates = this_genome_coordinates[,1:3]
+      colnames(this_genome_coordinates) = c("chrom", "start", "end")
+  }
+
+  # pad the ends of the probes with the padding length
+  this_genome_coordinates = this_genome_coordinates %>%
+                                        dplyr::mutate(chrom=as.character(chrom),
+                                        start=start-padding,
+                                        end=end+padding)
+
+  # collapse regions if the padding results in 2 features that are overlapping
+  this_genome_coordinates = this_genome_coordinates %>%
+    dplyr::arrange(chrom, start) %>%
+    group_by(chrom) %>%
+    dplyr::mutate(indx = c(0, cumsum(as.numeric(lead(start)) >
+                                cummax(as.numeric(end)))[-n()])) %>%
+    group_by(chrom, indx) %>%
+    dplyr::summarise(start = first(start), end = last(end)) %>%
+    dplyr::select(-indx) %>%
+    ungroup %>%
+    dplyr::mutate_if(is.factor, as.character)
+
+  # handle the chr prefixes
+  if(chr_prefixed & ! str_detect(this_genome_coordinates$chrom[1],"chr")){
+    this_genome_coordinates = this_genome_coordinates %>%
+      dplyr::mutate(chrom=paste0("chr",chrom))
+  }else if(!chr_prefixed & str_detect(this_genome_coordinates$chrom[1],"chr")){
+    this_genome_coordinates = this_genome_coordinates %>%
+      dplyr::mutate(chrom=gsub("chr", "", chrom, ignore.case = TRUE))
+  }
+
+  # make the coordinates as data table and set keys
+  this_genome_coordinates = data.table::as.data.table(this_genome_coordinates)
+  setkey(this_genome_coordinates)
+
+  # now the maf file
+  # in case the maf file is from maftools, get the ssm as data table and set keys
+  if (class(maf)[1] == "MAF"){
+    maf=maf@data
+  }
+  maf=as.data.table(maf)
+  setkey(maf, Chromosome, Start_Position, End_Position)
+
+  # subset to only features covered in exome with provided padding
+  features_in_exome = foverlaps(maf,
+                                this_genome_coordinates,
+                                mult="first",
+                                nomatch = 0L) %>% # nomatch automatically drops those that do not overlap between DTs
+    as.data.frame() %>%
+    dplyr::select(colnames(maf)) # make sure columns and their order is consitent with the input maf
+  return(features_in_exome)
 }

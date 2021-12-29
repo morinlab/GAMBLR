@@ -901,6 +901,9 @@ get_ashm_count_matrix = function(regions_bed,maf_data,
 #' Get all somatic mutations for a given gene or list of genes and optionally restrict to coding variants
 #'
 #' @param gene_symbol Character vector of gene symbols
+#' @param coding_only Logical parameter indicating whether to return only coding mutations. Default is FALSE
+#' @param include_silent Logical parameter indicating whether to include siment mutations into coding mutations. Default is TRUE
+#' @param rename_splice_region Logical parameter indicating whether to rename splice regions. Default is TRUE
 #'
 #' @return MAF-format data frame of mutations in query gene
 #' @export
@@ -909,10 +912,24 @@ get_ashm_count_matrix = function(regions_bed,maf_data,
 #' @examples
 #' #basic usage
 #' get_ssm_by_gene(gene_symbol=c("EZH2"),coding_only=TRUE)
-get_ssm_by_gene = function(gene_symbol,coding_only=FALSE,rename_splice_region=TRUE){
+get_ssm_by_gene = function(gene_symbol,coding_only=FALSE,include_silent=TRUE,rename_splice_region=TRUE){
   table_name = config::get("results_tables")$ssm
   db=config::get("database_name")
-  coding_class = c("Frame_Shift_Del","Frame_Shift_Ins","In_Frame_Del","In_Frame_Ins","Missense_Mutation","Nonsense_Mutation","Nonstop_Mutation","Silent","Splice_Region","Splice_Site","Targeted_Region","Translation_Start_Site")
+  coding_class = c("Frame_Shift_Del",
+                   "Frame_Shift_Ins",
+                   "In_Frame_Del",
+                   "In_Frame_Ins",
+                   "Missense_Mutation",
+                   "Nonsense_Mutation",
+                   "Nonstop_Mutation",
+                   "Silent",
+                   "Splice_Region",
+                   "Splice_Site",
+                   "Targeted_Region",
+                   "Translation_Start_Site")
+  if(!include_silent){
+    coding_class=coding_class[coding_class != "Silent"]
+  }
   con <- DBI::dbConnect(RMariaDB::MariaDB(), dbname = db)
   muts_gene = dplyr::tbl(con,table_name) %>%
     dplyr::filter(Hugo_Symbol %in% gene_symbol)
@@ -1146,6 +1163,9 @@ get_ssm_by_region = function(chromosome,qstart,qend,
 #' @param limit_pathology Supply this to restrict mutations to one pathology
 #' @param basic_columns Set to TRUE to override the default behaviour of returning only the first 45 columns of MAF data
 #' @param from_flatfile Set to TRUE to obtain mutations from a local flatfile instead of the database. This can be more efficient and is currently the only option for users who do not have ICGC data access.
+#' @param allow_clustered Logical parameter indicating whether to use SLMS-3 results with clustered events. Default is FALSE
+#' @param groups Unix groups for the samples to be included. Default is both gambl and icgc_dart samples
+#' @param include_silent Logical parameter indicating whether to include siment mutations into coding mutations. Default is TRUE
 #'
 #' @return A data frame containing all the MAF data columns (one row per mutation)
 #' @export
@@ -1163,7 +1183,8 @@ get_coding_ssm = function(limit_cohort,
                           basic_columns=TRUE,
                           from_flatfile=FALSE,
                           allow_clustered=FALSE,
-                          groups=c("gambl","icgc_dart")){
+                          groups=c("gambl","icgc_dart"),
+                          include_silent=TRUE){
   coding_class = c("Frame_Shift_Del",
                    "Frame_Shift_Ins",
                    "In_Frame_Del",
@@ -1176,6 +1197,9 @@ get_coding_ssm = function(limit_cohort,
                    "Splice_Site",
                    "Targeted_Region",
                    "Translation_Start_Site")
+  if(!include_silent){
+    coding_class=coding_class[coding_class != "Silent"]
+  }
   all_meta= get_gambl_metadata(from_flatfile=from_flatfile)
   #do all remaining filtering on the metadata then add the remaining sample_id to the query
   all_meta = all_meta %>% dplyr::filter(unix_group %in% groups)
