@@ -8,12 +8,14 @@ get_coding_ssm_status(
   gene_symbols,
   these_samples_metadata,
   from_flatfile = TRUE,
+  maf_path = NULL,
   maf_data,
   include_hotspots = TRUE,
   recurrence_min = 5,
   review_hotspots = TRUE,
   genes_of_interest = c("FOXO1", "MYD88", "CREBBP"),
-  genome_build = "hg19"
+  genome_build = "hg19",
+  include_silent = TRUE
 )
 }
 \arguments{
@@ -21,11 +23,17 @@ get_coding_ssm_status(
 
 \item{these_samples_metadata}{The matedata for samples of interest to be included in the returned matrix. Only the column "sample_id" is required. If not provided, the matrix is tabulated for all available samples as default.}
 
-\item{from_flatfile}{Integer value indicating minimal recurrence level}
+\item{from_flatfile}{Optional argument whether to use database or flat file to retrieve mutations.}
+
+\item{maf_path}{If the status of coding SSM should be tabulated from a custom maf file, provide path to the maf in this argument. The default is set to NULL.}
 
 \item{include_hotspots}{Logical parameter indicating whether hotspots object should also be tabulated. Default is TRUE.}
 
+\item{recurrence_min}{Integer value indicating minimal recurrence level}
+
 \item{review_hotspots}{Logical parameter indicating whether hotspots object should be reviewed to include functionally relevant mutations or rare lymphoma-related genes. Default is TRUE.}
+
+\item{include_silent}{Logical parameter indicating whether to include siment mutations into coding mutations. Default is TRUE}
 
 \item{...}{Other parameters accepted by the review_hotspots() function}
 }

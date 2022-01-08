@@ -4,10 +4,21 @@
 \alias{get_ssm_by_gene}
 \title{Get all somatic mutations for a given gene or list of genes and optionally restrict to coding variants}
 \usage{
-get_ssm_by_gene(gene_symbol, coding_only = FALSE, rename_splice_region = TRUE)
+get_ssm_by_gene(
+  gene_symbol,
+  coding_only = FALSE,
+  include_silent = TRUE,
+  rename_splice_region = TRUE
+)
 }
 \arguments{
 \item{gene_symbol}{Character vector of gene symbols}
+
+\item{coding_only}{Logical parameter indicating whether to return only coding mutations. Default is FALSE}
+
+\item{include_silent}{Logical parameter indicating whether to include siment mutations into coding mutations. Default is TRUE}
+
+\item{rename_splice_region}{Logical parameter indicating whether to rename splice regions. Default is TRUE}
 }
 \value{
 MAF-format data frame of mutations in query gene

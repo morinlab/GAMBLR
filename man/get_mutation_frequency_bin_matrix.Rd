@@ -26,6 +26,7 @@ get_mutation_frequency_bin_matrix(
   legend_row = 3,
   legend_col = 3,
   legend_direction = "horizontal",
+  legendFontSize = 10,
   from_indexed_flatfile = FALSE,
   mode = "slms-3"
 )
