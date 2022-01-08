@@ -528,6 +528,61 @@ get_gambl_outcomes = function(patient_ids,time_unit="year",censor_cbioportal=FAL
   return(all_outcome)
 }
 
+#' Retrieve Combined Manta and GRIDSS-derived SVs from a flatfile and filter
+#'
+#' @param min_vaf The minimum tumour VAF for a SV to be returned
+#' @param min_score The lowest Manta somatic score for a SV to be returned
+#' @param with_chr_prefix Prepend all chromosome names with chr (required by some downstream analyses)
+#' @param min_vaf
+#' @param min_score
+#' @param this_sample_id
+#'
+#' @return A data frame in a bedpe-like format with additional columns that allow filtering of high-confidence SVs
+#' @export
+#' @import DBI RMariaDB tidyverse dbplyr
+#'
+#' @examples
+get_combined_sv = function(min_vaf=0.1,
+                           min_score=40,
+                           pass=TRUE,
+                           this_sample_id,
+                           with_chr_prefix=FALSE,
+                           projection="grch37"){
+
+  #sv_file = "/projects/rmorin/projects/gambl-repos/gambl-rmorin/results/gambl/svar_master-1.0/level_3/gridss_manta.genome--grch37.native.bedpe"
+  base_path = config::get("project_base")
+  sv_file = config::get()$results_filatfiles$sv_combined$icgc_dart
+  sv_file = paste0(base_path,sv_file)
+  permissions = file.access(sv_file,4)
+  if(permissions == -1){
+    sv_file = config::get()$results_filatfiles$sv_combined$gambl
+    sv_file = paste0(base_path,sv_file)
+  }
+  all_sv = read_tsv(sv_file,col_types = "cnncnncnccccnnccncn") %>%
+    dplyr::rename(c("VAF_tumour"="VAF","SOMATIC_SCORE"="SCORE")) %>%
+    dplyr::filter(VAF_tumour >= min_vaf & SOMATIC_SCORE >= min_score)
+
+  if(!missing(this_sample_id)){
+    all_sv = all_sv %>% dplyr::filter(tumour_sample_id == sample_id)
+  }
+
+  if(with_chr_prefix){
+    #add chr prefix only if it's missing
+
+    all_sv = all_sv %>% dplyr::mutate(CHROM_A = case_when(
+      str_detect(CHROM_A,"chr") ~ CHROM_A,
+      TRUE ~ paste0("chr",CHROM_A)
+    ))
+    all_sv = all_sv %>% dplyr::mutate(CHROM_B = case_when(
+      str_detect(CHROM_B,"chr") ~ CHROM_B,
+      TRUE ~ paste0("chr",CHROM_B)
+    ))
+
+  }
+  return(all_sv)
+}
+
+
 #' Retrieve Manta SVs from the database and filter
 #'
 #' @param table_name The table we are querying

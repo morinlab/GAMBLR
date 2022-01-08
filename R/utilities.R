@@ -672,25 +672,33 @@ maf_to_custom_track = function(maf_data,output_file){
 collate_results = function(sample_table,
                            write_to_file=FALSE,
                            join_with_full_metadata = FALSE,
-                           case_set,sbs_manipulation="",seq_type_filter="genome"){
+                           case_set,sbs_manipulation="",
+                           seq_type_filter="genome",
+                           from_cache=TRUE){
   # important: if you are collating results from anything but WGS (e.g RNA-seq libraries) be sure to use biopsy ID as the key in your join
   # the sample_id should probably not even be in this file if we want this to be biopsy-centric
   if(missing(sample_table)){
     sample_table = get_gambl_metadata(seq_type_filter = seq_type_filter) %>%
       dplyr::select(sample_id,patient_id,biopsy_id)
   }
-  message("this will be slow until collate_ssm_results is modified to cache its result")
-  #edit this function and add a new function to load any additional results into the main summary table
-  #sample_table = collate_ssm_results(sample_table=sample_table)
-  sample_table = collate_sv_results(sample_table=sample_table)
-  sample_table = collate_curated_sv_results(sample_table=sample_table)
-  sample_table = collate_ashm_results(sample_table=sample_table)
-  sample_table = collate_nfkbiz_results(sample_table=sample_table)
-  sample_table = collate_csr_results(sample_table=sample_table)
-  sample_table = collate_ancestry(sample_table=sample_table)
-  sample_table = collate_sbs_results(sample_table=sample_table,sbs_manipulation=sbs_manipulation)
-  sample_table = collate_derived_results(sample_table=sample_table)
-
+  if(from_cache){
+    output_file = config::get("table_flatfiles")$derived
+    output_base = config::get("repo_base")
+    output_file = paste0(output_base,output_file)
+    sample_table = read_tsv(output_file)
+  }else{
+    message("Slow option: not using cached result. I suggest use_cache=TRUE whenever possible")
+    #edit this function and add a new function to load any additional results into the main summary table
+    sample_table = collate_ssm_results(sample_table=sample_table)
+    sample_table = collate_sv_results(sample_table=sample_table)
+    sample_table = collate_curated_sv_results(sample_table=sample_table)
+    sample_table = collate_ashm_results(sample_table=sample_table)
+    sample_table = collate_nfkbiz_results(sample_table=sample_table)
+    sample_table = collate_csr_results(sample_table=sample_table)
+    sample_table = collate_ancestry(sample_table=sample_table)
+    sample_table = collate_sbs_results(sample_table=sample_table,sbs_manipulation=sbs_manipulation)
+    sample_table = collate_derived_results(sample_table=sample_table)
+  }
   if(write_to_file){
     output_file = config::get("table_flatfiles")$derived
     output_base = config::get("repo_base")
@@ -1165,7 +1173,7 @@ estimate_purity = function(in_maf,
       dplyr::mutate(Purity = (VAF*2)) %>%
       dplyr::mutate(Purity = ifelse(Purity > 1, VAF, Purity)) %>%
       group_by(Chrom_pos) %>%
-      slice_head()  %>%
+      slice_head() %>%
       dplyr::mutate(Assumed_CN = 2) %>%
       dplyr::mutate(Assumed_ploidy = 1)
   }else{
