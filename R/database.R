@@ -530,28 +530,35 @@ get_gambl_outcomes = function(patient_ids,time_unit="year",censor_cbioportal=FAL
 
 #' Retrieve Combined Manta and GRIDSS-derived SVs from a flatfile and filter
 #'
-#' @param min_vaf The minimum tumour VAF for a SV to be returned
-#' @param min_score The lowest Manta somatic score for a SV to be returned
+#' The bedpe files used as input to this function were pre-filtered for a minimum VAF of 0.05, and SVs affecting
+#' common translocation regions (BCL2, BCL6, MYC, CCND1) were whitelisted (e.g. no VAF filter applied).
+#' Therefore if you wish to post-filter the SVs we recommend doing so carefully after loading this data frame.
+#' Further, the input bedpe file is annotated with oncogenes and superenhancers from naive and germinal centre B-cells.
+#' You can subset to events affecting certain loci using the "oncogenes" argument.
+#'
+#' @param min_vaf The minimum tumour VAF for a SV to be returned. Recommended: 0. (default: 0)
 #' @param with_chr_prefix Prepend all chromosome names with chr (required by some downstream analyses)
-#' @param min_vaf
-#' @param min_score
-#' @param this_sample_id
+#' @param this_sample_id A character vector of tumour sample IDs you wish to retrieve SVs for.
+#' @param oncogenes A character vector of genes commonly involved in translocations. Possible values: CCND1, CIITA, SOCS1, BCL2, RFTN1, BCL6, MYC, PAX5.
+#'
 #'
 #' @return A data frame in a bedpe-like format with additional columns that allow filtering of high-confidence SVs
 #' @export
 #' @import DBI RMariaDB tidyverse dbplyr
 #'
 #' @examples
-get_combined_sv = function(min_vaf=0.1,
-                           min_score=40,
-                           pass=TRUE,
+get_combined_sv = function(min_vaf=0,
                            this_sample_id,
                            with_chr_prefix=FALSE,
-                           projection="grch37"){
+                           projection="grch37",
+                           oncogenes){
 
   #sv_file = "/projects/rmorin/projects/gambl-repos/gambl-rmorin/results/gambl/svar_master-1.0/level_3/gridss_manta.genome--grch37.native.bedpe"
   base_path = config::get("project_base")
   sv_file = config::get()$results_filatfiles$sv_combined$icgc_dart
+  if(projection == "hg38"){
+    sv_file <- str_replace(sv_file, "--grch37", "--hg38")
+  }
   sv_file = paste0(base_path,sv_file)
   permissions = file.access(sv_file,4)
   if(permissions == -1){
@@ -559,11 +566,15 @@ get_combined_sv = function(min_vaf=0.1,
     sv_file = paste0(base_path,sv_file)
   }
   all_sv = read_tsv(sv_file,col_types = "cnncnncnccccnnccncn") %>%
-    dplyr::rename(c("VAF_tumour"="VAF","SOMATIC_SCORE"="SCORE")) %>%
-    dplyr::filter(VAF_tumour >= min_vaf & SOMATIC_SCORE >= min_score)
+    dplyr::rename(c("VAF_tumour"="VAF")) %>%
+    dplyr::filter(VAF_tumour >= min_vaf)
 
   if(!missing(this_sample_id)){
     all_sv = all_sv %>% dplyr::filter(tumour_sample_id == sample_id)
+  }
+
+  if(!missing(oncogenes)){
+    all_sv = all_sv %>% dplyr::filter(ANNOTATION_A %in% oncogenes | ANNOTATION_B %in% oncogenes)
   }
 
   if(with_chr_prefix){

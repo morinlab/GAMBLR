@@ -37,8 +37,8 @@ default:
                 unmatched: "controlfreec_liftover_current/99-outputs/"
         sv: "icgc_dart/cbioportal-1.0/01-filtered-manta/genome-grch37/all_merged_sv_info.tsv"
         sv_combined:
-            gambl: "gambl/svar_master-1.0/level_3/gridss_manta.genome--grch37.native.bedpe"
-            icgc_dart: "icgc_dart/svar_master-1.0/level_3/gridss_manta.genome--grch37.native.bedpe"
+            gambl: "gambl/svar_master-1.0/merges/gridss_manta.genome--grch37.bedpe"
+            icgc_dart: "all_the_things/svar_master-1.0/merges/gridss_manta.genome--grch37.bedpe"
         ssm:
             all:
                 full: "icgc_dart/slms-3_vcf2maf_current/level_3/final_merged_grch37.maf"
