@@ -131,6 +131,7 @@ get_merged_result = function(tool_name,projection="grch37",seq_type="genome"){
 #' @param case_set optional short name for a pre-defined set of cases avoiding any
 #' @param remove_benchmarking By default the FFPE benchmarking duplicate samples will be dropped
 #' @param with_outcomes Optionally join to gambl outcome data
+#' @param only_available If TRUE, will remove samples with FALSE or NA in the bam_available column (default: TRUE)
 #' @param from_flatfile New default is to use the metadata in the flatfiles from your clone of the repo. Can be over-ridden to use the database
 #' embargoed cases (current options: 'BLGSP-study', 'FL-study', 'DLBCL-study', 'FL-DLBCL-study', 'FL-DLBCL-all', 'DLBCL-unembargoed', 'BL-DLBCL-manuscript', 'MCL','MCL-CLL')
 #'
@@ -148,7 +149,7 @@ get_merged_result = function(tool_name,projection="grch37",seq_type="genome"){
 get_gambl_metadata = function(seq_type_filter = "genome",
                               tissue_status_filter=c("tumour"),
                               case_set, remove_benchmarking = TRUE,
-                              with_outcomes=TRUE,from_flatfile=TRUE){
+                              with_outcomes=TRUE,from_flatfile=TRUE, only_available = TRUE){
 
   outcome_table = get_gambl_outcomes(from_flatfile=from_flatfile)
 
@@ -173,12 +174,17 @@ get_gambl_metadata = function(seq_type_filter = "genome",
   if(seq_type_filter == "any"){
     #only drop the normals/unavailable samples then pick one unique row per biopsy_id, preferring genome when available
     sample_meta = sample_meta %>%
-      dplyr::filter(tissue_status %in% tissue_status_filter & bam_available %in% c(1,"TRUE")) %>%
+      dplyr::filter(tissue_status %in% tissue_status_filter) %>%
       dplyr::select(-sex)
   }else{
     sample_meta = sample_meta %>%
-      dplyr::filter(seq_type == seq_type_filter & tissue_status %in% tissue_status_filter & bam_available %in% c(1,"TRUE")) %>%
+      dplyr::filter(seq_type == seq_type_filter & tissue_status %in% tissue_status_filter) %>%
       dplyr::select(-sex)
+  }
+
+  # Conditionally remove samples without bam_available == TRUE
+  if(only_available == TRUE){
+    sample_meta = dplyr::filter(sample_meta, bam_available %in% c(1,"TRUE"))
   }
 
 
@@ -1374,35 +1380,37 @@ get_gene_cn_and_expression = function(gene_symbol,ensembl_id){
 
 #' Get the expression for one or more genes for all GAMBL samples
 #'
-#' @param hugo_symbols
-#' @param tidy_expression_data
-#' @param metadata
+#' @param hugo_symbols One or more gene symbols. Should match the values in a maf file.
+#' @param ensembl_gene_ids One or more ensembl gene IDs. Only one of hugo_symbols or ensembl_gene_ids may be used.
+#' @param metadata # GAMBL metadata.
 #' @param join_with How to restrict cases for the join. Can be one of genome, mrna or "any"
 #'
 #' @return
 #' @export
 #'
 #' @examples
-get_gene_expression = function(hugo_symbols,tidy_expression_data,metadata,
-                               join_with="mrna",from_flatfile=FALSE,drop_missing = FALSE){
+get_gene_expression = function(hugo_symbols,ensembl_gene_ids,metadata,
+                               join_with="mrna",from_flatfile=TRUE,drop_missing = FALSE){
 
   database_name = config::get("database_name")
   if(missing(metadata)){
     if(join_with=="mrna"){
-      metadata = get_gambl_metadata(seq_type_filter = "mrna")
+      metadata = get_gambl_metadata(seq_type_filter = "mrna", only_available = FALSE)
       metadata = metadata %>% dplyr::select(sample_id)
     }else if(join_with == "genome"){
-      metadata = get_gambl_metadata()
+      metadata = get_gambl_metadata(only_available = FALSE)
       metadata = metadata %>% dplyr::select(sample_id)
     }else{
       #use every unique biopsy_id in GAMBL regardless of seq_type
-      metadata = get_gambl_metadata(seq_type_filter = "any")
+      metadata = get_gambl_metadata(seq_type_filter = "any", only_available = FALSE)
       metadata = metadata %>% dplyr::select(sample_id,biopsy_id)
     }
   }
 
-  if(missing(hugo_symbols)){
-    print("ERROR: supply at least one gene symbol")
+  if(missing(hugo_symbols) & missing(ensembl_gene_ids)){
+    stop("ERROR: supply at least one gene symbol or Ensembl gene ID")
+  }else if(!missing(hugo_symbols) & !missing(ensembl_gene_ids)){
+    stop("ERROR: Both hugo_symbols and ensembl_gene_ids were provided. Please provide only one type of ID. ")
   }
   if(from_flatfile){
     tidy_expression_file = config::get("results_merged")$tidy_expression_file
@@ -1412,27 +1420,35 @@ get_gene_expression = function(hugo_symbols,tidy_expression_data,metadata,
     con <- DBI::dbConnect(RMariaDB::MariaDB(), dbname = database_name)
     tidy_expression_data = tbl(con,"expression_vst_hg38")
   }
-  gene_expression_df = tidy_expression_data %>%
-    dplyr::filter(Hugo_Symbol %in% hugo_symbols) %>% as.data.frame()
+  if(!missing(hugo_symbols)){
+    tidy_expression_data = tidy_expression_data %>%
+      dplyr::filter(Hugo_Symbol %in% hugo_symbols) %>%
+      dplyr::select(-ensembl_gene_id) %>%
+      as.data.frame() %>%
+      pivot_wider(names_from=Hugo_Symbol,values_from=expression)
+  }
+  if(!missing(ensembl_gene_ids)){
+    tidy_expression_data = tidy_expression_data %>%
+      dplyr::filter(ensembl_gene_id %in% ensembl_gene_ids) %>%
+      dplyr::select(-Hugo_Symbol) %>%
+      as.data.frame() %>%
+      pivot_wider(names_from=ensembl_gene_id,values_from=expression)
+  }
+
 
 
   if(join_with=="mrna"){
     #join to metadata
-    gene_expression_df = dplyr::select(gene_expression_df,-genome_sample_id,-biopsy_id)
-    expression_wider = pivot_wider(gene_expression_df,names_from=Hugo_Symbol,values_from=expression)
+    expression_wider = dplyr::select(tidy_expression_data, -biopsy_id, -genome_sample_id)
     expression_wider = left_join(metadata,expression_wider,by=c("sample_id"="mrna_sample_id"))
   }else if(join_with == "genome"){
-    expression_wider = dplyr::select(gene_expression_df,-mrna_sample_id,-biopsy_id) %>%
-      dplyr::filter(genome_sample_id !="NA") %>%
-      pivot_wider(names_from=Hugo_Symbol,values_from=expression)
+    expression_wider = dplyr::select(tidy_expression_data,-mrna_sample_id,-biopsy_id) %>%
+      dplyr::filter(genome_sample_id !="NA")
     expression_wider = left_join(metadata,expression_wider,by=c("sample_id"="genome_sample_id"))
   }else if(join_with == "any"){
    #use biopsy_id to join
-    expression_wider = dplyr::select(gene_expression_df,-mrna_sample_id,-genome_sample_id) %>%
-      pivot_wider(names_from=Hugo_Symbol,values_from=expression)
+    expression_wider = dplyr::select(tidy_expression_data,-mrna_sample_id,-genome_sample_id)
     expression_wider = left_join(metadata,expression_wider,by=c("biopsy_id"="biopsy_id"))
-    sampnum = length(unique(metadata$biopsy_id))
-
   }
   return(expression_wider)
 }
