@@ -552,7 +552,7 @@ get_gambl_outcomes = function(patient_ids,time_unit="year",censor_cbioportal=FAL
 #' @export
 #' @import DBI RMariaDB tidyverse dbplyr
 #'
-#' @examples 
+#' @examples
 #' get_combined_sv(oncogenes = c("MYC", "BCL2", "BCL6"))
 get_combined_sv = function(min_vaf=0,
                            this_sample_id,
@@ -577,7 +577,7 @@ get_combined_sv = function(min_vaf=0,
     dplyr::filter(VAF_tumour >= min_vaf)
 
   if(!missing(this_sample_id)){
-    all_sv = all_sv %>% dplyr::filter(tumour_sample_id == sample_id)
+    all_sv = all_sv %>% dplyr::filter(tumour_sample_id == this_sample_id)
   }
 
   if(!missing(oncogenes)){
@@ -1391,7 +1391,7 @@ get_gene_cn_and_expression = function(gene_symbol,ensembl_id){
 #'
 #' @examples
 #' MYC_expr <- get_gene_expression(hugo_symbols = c("MYC"), join_with = "mrna")
-#' 
+#'
 get_gene_expression = function(hugo_symbols,ensembl_gene_ids,metadata,
                                join_with="mrna",from_flatfile=TRUE){
 
