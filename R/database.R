@@ -544,7 +544,7 @@ get_gambl_outcomes = function(patient_ids,time_unit="year",censor_cbioportal=FAL
 #'
 #' @param min_vaf The minimum tumour VAF for a SV to be returned. Recommended: 0. (default: 0)
 #' @param with_chr_prefix Prepend all chromosome names with chr (required by some downstream analyses)
-#' @param this_sample_id A character vector of tumour sample IDs you wish to retrieve SVs for.
+#' @param sample_ids A character vector of tumour sample IDs you wish to retrieve SVs for.
 #' @param oncogenes A character vector of genes commonly involved in translocations. Possible values: CCND1, CIITA, SOCS1, BCL2, RFTN1, BCL6, MYC, PAX5.
 #'
 #'
@@ -555,7 +555,7 @@ get_gambl_outcomes = function(patient_ids,time_unit="year",censor_cbioportal=FAL
 #' @examples
 #' get_combined_sv(oncogenes = c("MYC", "BCL2", "BCL6"))
 get_combined_sv = function(min_vaf=0,
-                           this_sample_id,
+                           sample_ids,
                            with_chr_prefix=FALSE,
                            projection="grch37",
                            oncogenes){
@@ -576,8 +576,8 @@ get_combined_sv = function(min_vaf=0,
     dplyr::rename(c("VAF_tumour"="VAF")) %>%
     dplyr::filter(VAF_tumour >= min_vaf)
 
-  if(!missing(this_sample_id)){
-    all_sv = all_sv %>% dplyr::filter(tumour_sample_id == this_sample_id)
+  if(!missing(sample_ids)){
+    all_sv = all_sv %>% dplyr::filter(tumour_sample_id %in% sample_ids)
   }
 
   if(!missing(oncogenes)){
