@@ -10,7 +10,8 @@ get_gambl_metadata(
   case_set,
   remove_benchmarking = TRUE,
   with_outcomes = TRUE,
-  from_flatfile = TRUE
+  from_flatfile = TRUE,
+  only_available = TRUE
 )
 }
 \arguments{
@@ -26,6 +27,8 @@ get_gambl_metadata(
 
 \item{from_flatfile}{New default is to use the metadata in the flatfiles from your clone of the repo. Can be over-ridden to use the database
 embargoed cases (current options: 'BLGSP-study', 'FL-study', 'DLBCL-study', 'FL-DLBCL-study', 'FL-DLBCL-all', 'DLBCL-unembargoed', 'BL-DLBCL-manuscript', 'MCL','MCL-CLL')}
+
+\item{only_available}{If TRUE, will remove samples with FALSE or NA in the bam_available column (default: TRUE)}
 }
 \value{
 A data frame with metadata for each biopsy in GAMBL

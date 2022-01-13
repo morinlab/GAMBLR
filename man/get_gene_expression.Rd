@@ -6,14 +6,20 @@
 \usage{
 get_gene_expression(
   hugo_symbols,
-  tidy_expression_data,
+  ensembl_gene_ids,
   metadata,
   join_with = "mrna",
-  from_flatfile = FALSE,
+  from_flatfile = TRUE,
   drop_missing = FALSE
 )
 }
 \arguments{
+\item{hugo_symbols}{One or more gene symbols. Should match the values in a maf file.}
+
+\item{ensembl_gene_ids}{One or more ensembl gene IDs. Only one of hugo_symbols or ensembl_gene_ids may be used.}
+
+\item{metadata}{GAMBL metadata.}
+
 \item{join_with}{How to restrict cases for the join. Can be one of genome, mrna or "any"}
 }
 \value{

@@ -131,6 +131,7 @@ get_merged_result = function(tool_name,projection="grch37",seq_type="genome"){
 #' @param case_set optional short name for a pre-defined set of cases avoiding any
 #' @param remove_benchmarking By default the FFPE benchmarking duplicate samples will be dropped
 #' @param with_outcomes Optionally join to gambl outcome data
+#' @param only_available If TRUE, will remove samples with FALSE or NA in the bam_available column (default: TRUE)
 #' @param from_flatfile New default is to use the metadata in the flatfiles from your clone of the repo. Can be over-ridden to use the database
 #' embargoed cases (current options: 'BLGSP-study', 'FL-study', 'DLBCL-study', 'FL-DLBCL-study', 'FL-DLBCL-all', 'DLBCL-unembargoed', 'BL-DLBCL-manuscript', 'MCL','MCL-CLL')
 #'
@@ -148,7 +149,7 @@ get_merged_result = function(tool_name,projection="grch37",seq_type="genome"){
 get_gambl_metadata = function(seq_type_filter = "genome",
                               tissue_status_filter=c("tumour"),
                               case_set, remove_benchmarking = TRUE,
-                              with_outcomes=TRUE,from_flatfile=TRUE){
+                              with_outcomes=TRUE,from_flatfile=TRUE, only_available = TRUE){
 
   outcome_table = get_gambl_outcomes(from_flatfile=from_flatfile)
 
@@ -173,12 +174,17 @@ get_gambl_metadata = function(seq_type_filter = "genome",
   if(seq_type_filter == "any"){
     #only drop the normals/unavailable samples then pick one unique row per biopsy_id, preferring genome when available
     sample_meta = sample_meta %>%
-      dplyr::filter(tissue_status %in% tissue_status_filter & bam_available %in% c(1,"TRUE")) %>%
+      dplyr::filter(tissue_status %in% tissue_status_filter) %>%
       dplyr::select(-sex)
   }else{
     sample_meta = sample_meta %>%
-      dplyr::filter(seq_type == seq_type_filter & tissue_status %in% tissue_status_filter & bam_available %in% c(1,"TRUE")) %>%
+      dplyr::filter(seq_type == seq_type_filter & tissue_status %in% tissue_status_filter) %>%
       dplyr::select(-sex)
+  }
+
+  # Conditionally remove samples without bam_available == TRUE
+  if(only_available == TRUE){
+    sample_meta = dplyr::filter(sample_meta, bam_available %in% c(1,"TRUE"))
   }
 
 
@@ -530,28 +536,36 @@ get_gambl_outcomes = function(patient_ids,time_unit="year",censor_cbioportal=FAL
 
 #' Retrieve Combined Manta and GRIDSS-derived SVs from a flatfile and filter
 #'
-#' @param min_vaf The minimum tumour VAF for a SV to be returned
-#' @param min_score The lowest Manta somatic score for a SV to be returned
+#' The bedpe files used as input to this function were pre-filtered for a minimum VAF of 0.05, and SVs affecting
+#' common translocation regions (BCL2, BCL6, MYC, CCND1) were whitelisted (e.g. no VAF filter applied).
+#' Therefore if you wish to post-filter the SVs we recommend doing so carefully after loading this data frame.
+#' Further, the input bedpe file is annotated with oncogenes and superenhancers from naive and germinal centre B-cells.
+#' You can subset to events affecting certain loci using the "oncogenes" argument.
+#'
+#' @param min_vaf The minimum tumour VAF for a SV to be returned. Recommended: 0. (default: 0)
 #' @param with_chr_prefix Prepend all chromosome names with chr (required by some downstream analyses)
-#' @param min_vaf
-#' @param min_score
-#' @param this_sample_id
+#' @param sample_ids A character vector of tumour sample IDs you wish to retrieve SVs for.
+#' @param oncogenes A character vector of genes commonly involved in translocations. Possible values: CCND1, CIITA, SOCS1, BCL2, RFTN1, BCL6, MYC, PAX5.
+#'
 #'
 #' @return A data frame in a bedpe-like format with additional columns that allow filtering of high-confidence SVs
 #' @export
 #' @import DBI RMariaDB tidyverse dbplyr
 #'
 #' @examples
-get_combined_sv = function(min_vaf=0.1,
-                           min_score=40,
-                           pass=TRUE,
-                           this_sample_id,
+#' get_combined_sv(oncogenes = c("MYC", "BCL2", "BCL6"))
+get_combined_sv = function(min_vaf=0,
+                           sample_ids,
                            with_chr_prefix=FALSE,
-                           projection="grch37"){
+                           projection="grch37",
+                           oncogenes){
 
   #sv_file = "/projects/rmorin/projects/gambl-repos/gambl-rmorin/results/gambl/svar_master-1.0/level_3/gridss_manta.genome--grch37.native.bedpe"
   base_path = config::get("project_base")
   sv_file = config::get()$results_filatfiles$sv_combined$icgc_dart
+  if(projection == "hg38"){
+    sv_file <- str_replace(sv_file, "--grch37", "--hg38")
+  }
   sv_file = paste0(base_path,sv_file)
   permissions = file.access(sv_file,4)
   if(permissions == -1){
@@ -559,11 +573,15 @@ get_combined_sv = function(min_vaf=0.1,
     sv_file = paste0(base_path,sv_file)
   }
   all_sv = read_tsv(sv_file,col_types = "cnncnncnccccnnccncn") %>%
-    dplyr::rename(c("VAF_tumour"="VAF","SOMATIC_SCORE"="SCORE")) %>%
-    dplyr::filter(VAF_tumour >= min_vaf & SOMATIC_SCORE >= min_score)
+    dplyr::rename(c("VAF_tumour"="VAF")) %>%
+    dplyr::filter(VAF_tumour >= min_vaf)
 
-  if(!missing(this_sample_id)){
-    all_sv = all_sv %>% dplyr::filter(tumour_sample_id == sample_id)
+  if(!missing(sample_ids)){
+    all_sv = all_sv %>% dplyr::filter(tumour_sample_id %in% sample_ids)
+  }
+
+  if(!missing(oncogenes)){
+    all_sv = all_sv %>% dplyr::filter(ANNOTATION_A %in% oncogenes | ANNOTATION_B %in% oncogenes)
   }
 
   if(with_chr_prefix){
@@ -1363,35 +1381,39 @@ get_gene_cn_and_expression = function(gene_symbol,ensembl_id){
 
 #' Get the expression for one or more genes for all GAMBL samples
 #'
-#' @param hugo_symbols
-#' @param tidy_expression_data
-#' @param metadata
+#' @param hugo_symbols One or more gene symbols. Should match the values in a maf file.
+#' @param ensembl_gene_ids One or more ensembl gene IDs. Only one of hugo_symbols or ensembl_gene_ids may be used.
+#' @param metadata # GAMBL metadata.
 #' @param join_with How to restrict cases for the join. Can be one of genome, mrna or "any"
 #'
 #' @return
 #' @export
 #'
 #' @examples
-get_gene_expression = function(hugo_symbols,tidy_expression_data,metadata,
-                               join_with="mrna",from_flatfile=FALSE,drop_missing = FALSE){
+#' MYC_expr <- get_gene_expression(hugo_symbols = c("MYC"), join_with = "mrna")
+#'
+get_gene_expression = function(hugo_symbols,ensembl_gene_ids,metadata,
+                               join_with="mrna",from_flatfile=TRUE){
 
   database_name = config::get("database_name")
   if(missing(metadata)){
     if(join_with=="mrna"){
-      metadata = get_gambl_metadata(seq_type_filter = "mrna")
+      metadata = get_gambl_metadata(seq_type_filter = "mrna", only_available = FALSE)
       metadata = metadata %>% dplyr::select(sample_id)
     }else if(join_with == "genome"){
-      metadata = get_gambl_metadata()
+      metadata = get_gambl_metadata(only_available = FALSE)
       metadata = metadata %>% dplyr::select(sample_id)
     }else{
       #use every unique biopsy_id in GAMBL regardless of seq_type
-      metadata = get_gambl_metadata(seq_type_filter = "any")
+      metadata = get_gambl_metadata(seq_type_filter = "any", only_available = FALSE)
       metadata = metadata %>% dplyr::select(sample_id,biopsy_id)
     }
   }
 
-  if(missing(hugo_symbols)){
-    print("ERROR: supply at least one gene symbol")
+  if(missing(hugo_symbols) & missing(ensembl_gene_ids)){
+    stop("ERROR: supply at least one gene symbol or Ensembl gene ID")
+  }else if(!missing(hugo_symbols) & !missing(ensembl_gene_ids)){
+    stop("ERROR: Both hugo_symbols and ensembl_gene_ids were provided. Please provide only one type of ID. ")
   }
   if(from_flatfile){
     tidy_expression_file = config::get("results_merged")$tidy_expression_file
@@ -1401,27 +1423,35 @@ get_gene_expression = function(hugo_symbols,tidy_expression_data,metadata,
     con <- DBI::dbConnect(RMariaDB::MariaDB(), dbname = database_name)
     tidy_expression_data = tbl(con,"expression_vst_hg38")
   }
-  gene_expression_df = tidy_expression_data %>%
-    dplyr::filter(Hugo_Symbol %in% hugo_symbols) %>% as.data.frame()
+  if(!missing(hugo_symbols)){
+    tidy_expression_data = tidy_expression_data %>%
+      dplyr::filter(Hugo_Symbol %in% hugo_symbols) %>%
+      dplyr::select(-ensembl_gene_id) %>%
+      as.data.frame() %>%
+      pivot_wider(names_from=Hugo_Symbol,values_from=expression)
+  }
+  if(!missing(ensembl_gene_ids)){
+    tidy_expression_data = tidy_expression_data %>%
+      dplyr::filter(ensembl_gene_id %in% ensembl_gene_ids) %>%
+      dplyr::select(-Hugo_Symbol) %>%
+      as.data.frame() %>%
+      pivot_wider(names_from=ensembl_gene_id,values_from=expression)
+  }
+
 
 
   if(join_with=="mrna"){
     #join to metadata
-    gene_expression_df = dplyr::select(gene_expression_df,-genome_sample_id,-biopsy_id)
-    expression_wider = pivot_wider(gene_expression_df,names_from=Hugo_Symbol,values_from=expression)
+    expression_wider = dplyr::select(tidy_expression_data, -biopsy_id, -genome_sample_id)
     expression_wider = left_join(metadata,expression_wider,by=c("sample_id"="mrna_sample_id"))
   }else if(join_with == "genome"){
-    expression_wider = dplyr::select(gene_expression_df,-mrna_sample_id,-biopsy_id) %>%
-      dplyr::filter(genome_sample_id !="NA") %>%
-      pivot_wider(names_from=Hugo_Symbol,values_from=expression)
+    expression_wider = dplyr::select(tidy_expression_data,-mrna_sample_id,-biopsy_id) %>%
+      dplyr::filter(genome_sample_id !="NA")
     expression_wider = left_join(metadata,expression_wider,by=c("sample_id"="genome_sample_id"))
   }else if(join_with == "any"){
    #use biopsy_id to join
-    expression_wider = dplyr::select(gene_expression_df,-mrna_sample_id,-genome_sample_id) %>%
-      pivot_wider(names_from=Hugo_Symbol,values_from=expression)
+    expression_wider = dplyr::select(tidy_expression_data,-mrna_sample_id,-genome_sample_id)
     expression_wider = left_join(metadata,expression_wider,by=c("biopsy_id"="biopsy_id"))
-    sampnum = length(unique(metadata$biopsy_id))
-
   }
   return(expression_wider)
 }
