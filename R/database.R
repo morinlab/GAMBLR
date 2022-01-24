@@ -1,3 +1,5 @@
+#global variable
+coding_class = c("Frame_Shift_Del", "Frame_Shift_Ins", "In_Frame_Del", "In_Frame_Ins", "Missense_Mutation", "Nonsense_Mutation", "Nonstop_Mutation", "Silent", "Splice_Region", "Splice_Site", "Targeted_Region", "Translation_Start_Site")
 
 #' Get MAF-format data frame for more than one sample and combine together (wraps get_ssm_by_sample)
 #' See get_ssm_by_sample for more information
@@ -8,7 +10,7 @@
 #' @param seq_type What type of sequencing data you want mutations from (e.g. genome, exome, mrna)
 #' @param flavour Specify this as either "augmented" or "force_unmatched" or leave out to get the default (original MAF)
 #'
-#' @return Add return?
+#' @return Returns a data frame of variants in MAF-like format
 #' @export
 #'
 #' @examples
@@ -48,7 +50,7 @@ get_ssm_by_samples = function(these_sample_ids,
 #' @param projection The projection genome build. Currently only grch37 is supported but hg38 should be easy to add.
 #' @param seq_type What type of sequencing data you want mutations from (e.g. genome, exome, mrna)
 #' @param flavour Specify this as either "augmented" or "force_unmatched" or leave out to get the default (original MAF)
-#' @param verbose ?
+#' @param verbose Set to TRUE to enable verbose mode (debugging messages)
 #'
 #' @return data frame in MAF format
 #' @export
@@ -155,11 +157,11 @@ get_merged_result = function(tool_name,
 #' @import tidyverse DBI RMariaDB dbplyr data.table
 #'
 #' @examples
-#' # basic usage
+#' basic usage
 #' my_metadata = get_gambl_metadata()
-#' # use pre-defined custom sample sets
+#' use pre-defined custom sample sets
 #' only_blgsp_metadata = get_gambl_metadata(case_set="BLGSP-study")
-#' # override default filters and request metadata for samples other than tumour genomes, e.g. also get the normals
+#' override default filters and request metadata for samples other than tumour genomes, e.g. also get the normals
 #' only_normal_metadata = get_gambl_metadata(tissue_status_filter = c('tumour','normal'))
 get_gambl_metadata = function(seq_type_filter = "genome",
                               tissue_status_filter = c("tumour"),
@@ -231,6 +233,7 @@ get_gambl_metadata = function(seq_type_filter = "genome",
       dplyr::filter(cohort != "FFPE_Benchmarking")
   }
   if(seq_type_filter == "any"){
+  #remove semi-redundant metadata rows so we have each biopsy represented only once
 
    all_meta = all_meta %>% 
     arrange(seq_type) %>% 
@@ -266,7 +269,9 @@ get_gambl_metadata = function(seq_type_filter = "genome",
         group_by(patient_id) %>%
         mutate(FL = sum(pathology == "FL"), DLBCL = sum(pathology %in% c("COM", "DLBCL", "COMFL"))) %>%
         mutate(transformed = ifelse(FL > 0 & DLBCL > 0, TRUE, FALSE))  %>%
-        mutate(analysis_cohort = case_when(consensus_pathology == "FL" & transformed == TRUE ~ "pre-HT", consensus_pathology == "DLBCL" & transformed == TRUE ~ "ignore", TRUE ~ "no-HT")) %>%
+        mutate(analysis_cohort = case_when(consensus_pathology == "FL" & transformed == TRUE ~ "pre-HT", 
+          consensus_pathology == "DLBCL" & transformed == TRUE ~ "ignore", 
+          TRUE ~ "no-HT")) %>%
         dplyr::filter(cohort == "FL_Kridel") %>%
         dplyr::filter((analysis_cohort == "no-HT" & time_point == "A")|(analysis_cohort == "pre-HT")) %>%
         dplyr::select(-transformed, -FL, -DLBCL)
@@ -277,7 +282,9 @@ get_gambl_metadata = function(seq_type_filter = "genome",
         group_by(patient_id) %>%
         mutate(FL = sum(pathology == "FL"), DLBCL = sum(pathology %in% c("COM", "DLBCL", "COMFL"))) %>%
         mutate(transformed = ifelse(FL > 0 & DLBCL > 0, TRUE, FALSE))  %>%
-        mutate(analysis_cohort = case_when(consensus_pathology == "FL" & transformed == TRUE ~ "post-HT", consensus_pathology == "DLBCL" & transformed == TRUE ~ "ignore", TRUE ~ "post-HT")) %>%
+        mutate(analysis_cohort = case_when(consensus_pathology == "FL" & transformed == TRUE ~ "post-HT", 
+          consensus_pathology == "DLBCL" & transformed == TRUE ~ "ignore", 
+          TRUE ~ "post-HT")) %>%
         dplyr::filter((analysis_cohort == "post-HT" & time_point == "B"))
 
       fl_meta_other = all_meta %>% dplyr::filter(consensus_pathology %in% c("FL", "DLBCL", "COM")) %>%
@@ -846,7 +853,7 @@ get_cn_states = function(regions_list,
 #' @param this_sample_id The sample_id for the sample to retrieve segments for
 #' @param with_chr_prefix Set to TRUE to add a chr prefix to chromosome names
 #' @param streamlined Return a minimal output rather than full details
-#' @param from_flatfile Set to FALSE by default
+#' @param from_flatfile Resort to a flat file instead of the database for retrieving the data
 #'
 #' @return
 #' @export
@@ -934,9 +941,9 @@ get_sample_cn_segments = function(this_sample_id,
 #' @examples
 #' #basic usage
 #' my_segments=get_cn_segments(region="chr8:128,723,128-128,774,067")
-#' # specifying chromosome, start and end individually
+#' #specifying chromosome, start and end individually
 #' my_segments=get_cn_segments(chromosome="8",qstart=128723128,qend=128774067)
-#' # Asking for chromosome names to have a chr prefix (default is un-prefixed)
+#' #Asking for chromosome names to have a chr prefix (default is un-prefixed)
 #' prefixed_segments = get_cn_segments(chromosome="12",qstart=122456912,qend=122464036,with_chr_prefix = TRUE)
 get_cn_segments = function(chromosome="",
                            qstart,
@@ -1100,8 +1107,7 @@ get_ssm_by_gene = function(gene_symbol,
                            include_silent = TRUE,
                            rename_splice_region = TRUE){
   table_name = config::get("results_tables")$ssm
-  db=config::get("database_name")
-  coding_class = c("Frame_Shift_Del", "Frame_Shift_Ins", "In_Frame_Del", "In_Frame_Ins", "Missense_Mutation", "Nonsense_Mutation", "Nonstop_Mutation", "Silent", "Splice_Region", "Splice_Site", "Targeted_Region", "Translation_Start_Site")
+  db = config::get("database_name")
   if(!include_silent){
     coding_class = coding_class[coding_class != "Silent"]
   }
@@ -1132,7 +1138,7 @@ get_ssm_by_gene = function(gene_symbol,
 #' @param mode Only works with indexed flatfiles. Accepts 2 options of "slms-3" and "strelka2" to indicate which variant caller to use. Default is "slms-3".
 #' @param allow_clustered Logical parameter indicating whether to use SLMS-3 results with clustered events. Default is FALSE
 #'
-#' @return
+#' @return Returns a data frame of variants in MAF-like format
 #' @export
 #'
 #' @examples
@@ -1397,7 +1403,6 @@ get_coding_ssm = function(limit_cohort,
 
   if(from_flatfile){
     base_path = config::get("project_base")
-    #test if we have permissions for the full gambl + icgc merge DONE?
 
     if(allow_clustered){
       maf_partial_path = config::get("results_filatfiles")$ssm$all$clustered_cds
