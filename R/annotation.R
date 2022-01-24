@@ -1,3 +1,5 @@
+#adding coding_vc to global enviroment
+coding_vc = c("Frame_Shift_Del", "Frame_Shift_Ins", "In_Frame_Del", "In_Frame_Ins", "Missense_Mutation", "Nonsense_Mutation", "Nonstop_Mutation", "Splice_Region", "Splice_Site", "Targeted_Region", "Translation_Start_Site")
 
 #' Annotate and auto-drop a MAF data frame with existing blacklists to remove variants that would be dropped during the merge process
 #'
@@ -10,7 +12,7 @@
 #' @param flavour Set to "clustered" if you want to use the blacklist for the new and improved SLMS-3 outputs (otherwise leave empty)
 #' @param genome_build The genome build projection for the variants you want (grch37 is the only one currently supported)
 #' @param drop_threshold The minimum count from one of the blacklists to drop a variant
-#' @param return_blacklist Bolean parameter to return Black list, default is FALSE
+#' @param return_blacklist Boolean parameter to return Black list, default is FALSE
 #'
 #' @return A MAF format data frame with two new columns indicating the number of occurrences of each variant in the two blacklists
 #' @export
@@ -26,7 +28,11 @@ annotate_ssm_blacklist = function(mutations_df,
                                   genome_build = "grch37",
                                   drop_threshold = 4,
                                   return_blacklist = FALSE){
-  if(flavour == "clustered"){
+  if(genome_build != "grch37"){
+    message("Currently, only grch37 is supported")
+    return()
+  }
+    if(flavour == "clustered"){
     native_blacklist_path = paste0(config::get("project_base"), unix_group, "/", tool_name, "-", tool_version, "_", annotator_name, "-", annotator_version, "/level_3/variants_", genome_build, "_native_clean_blacklist.txt")
     lifted_blacklist_path = paste0(config::get("project_base"), unix_group, "/", tool_name, "-", tool_version, "_", annotator_name, "-", annotator_version, "/level_3/variants_", genome_build, "_lifted_clean_blacklist.txt")
   }else{
@@ -179,7 +185,6 @@ annotate_driver_ssm = function(maf_df,
                                driver_genes,
                                include_noncoding = c("NFKBIZ" = "3'UTR", "HNRNPH1" = "Intron"),
                                noncoding_regions = c("NFKBIZ" = "chr3:101578206-101578365", "HNRNPH1" = "chr5:179,045,946-179,046,683")){
-  coding_vc = c("Frame_Shift_Del", "Frame_Shift_Ins", "In_Frame_Del", "In_Frame_Ins", "Missense_Mutation", "Nonsense_Mutation", "Nonstop_Mutation", "Splice_Region", "Splice_Site", "Targeted_Region", "Translation_Start_Site")
   #get the gene list if missing
   if(missing(driver_genes)){
     driver_genes = lymphoma_genes[which(lymphoma_genes[[lymphoma_type]] == TRUE),] %>% pull(Gene)
