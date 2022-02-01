@@ -105,7 +105,8 @@ get_coding_ssm_status = function(gene_symbols,
 
   # call it once so the object can be reused if user wants to annotate hotspots
   if(! missing(maf_data)){
-    coding_ssm = maf_data
+    coding_ssm = maf_data %>%
+                        dplyr::filter(Variant_Classification %in% coding_class)
   }else if (! is.null(maf_path) ){
     coding_ssm = fread_maf(maf_path)
     coding_ssm = coding_ssm %>%
