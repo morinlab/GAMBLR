@@ -105,7 +105,8 @@ get_coding_ssm_status = function(gene_symbols,
 
   # call it once so the object can be reused if user wants to annotate hotspots
   if(! missing(maf_data)){
-    coding_ssm = maf_data
+    coding_ssm = maf_data %>%
+                        dplyr::filter(Variant_Classification %in% coding_class)
   }else if (! is.null(maf_path) ){
     coding_ssm = fread_maf(maf_path)
     coding_ssm = coding_ssm %>%
@@ -1520,7 +1521,8 @@ get_gambl_colours = function(classification="all",alpha=1){
     "N1" = "#55B55E",
     "N1-COMP" = "#7FC787",
     "A53" = "#5b6d8a",
-    "Other" = "#ACADAF"
+    "Other" = "#ACADAF",
+    "COMPOSITE" = "#ACADAF"
 
   )
   #all_colours[["coding_class"]] = c("Frame_Shift_Del","Frame_Shift_Ins",
@@ -1586,8 +1588,10 @@ get_gambl_colours = function(classification="all",alpha=1){
   all_colours[["sex"]]=c(
     "M"="#118AB2",
     "Male"="#118AB2",
+    "male"="#118AB2",
     "F"="#EF476F",
-    "Female"="#EF476F")
+    "Female"="#EF476F",
+    "female"="#EF476F")
   all_colours[["clinical"]]=ggsci::get_ash("clinical")
   all_colours[["pathology"]] = c(
       "B-ALL"="#C1C64B",
@@ -1614,11 +1618,13 @@ get_gambl_colours = function(classification="all",alpha=1){
       "THRLBCL" = "#A5F2B3",
       "MM"="#CC9A42",
       "SCBC"="#8c9c90",
-      "UNSPECIFIED"="#cfba7c"
+      "UNSPECIFIED"="#cfba7c",
+      "MZL"="#065A7F"
   )
   all_colours[["coo"]] = c(
     "ABC" = "#05ACEF",
     "UNCLASS" = "#05631E",
+    "Unclass" = "#05631E",
     "U" = "#05631E",
     "UNC" = "#05631E",
     "GCB"= "#F58F20",
@@ -1626,7 +1632,8 @@ get_gambl_colours = function(classification="all",alpha=1){
     "DHITsigNeg"= "#F58F20",
     "DHITsig-IND" = "#003049",
     "DHITsig+" = "#D62828",
-    "DHITsigPos" = "#D62828"
+    "DHITsigPos" = "#D62828",
+    "NA" = "#ACADAF"
   )
   all_colours[["cohort"]] = c("Chapuy"="#8B0000",
                   "Arthur"= "#8845A8",
