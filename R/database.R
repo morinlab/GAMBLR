@@ -1,32 +1,36 @@
 #global variable
 coding_class = c("Frame_Shift_Del", "Frame_Shift_Ins", "In_Frame_Del", "In_Frame_Ins", "Missense_Mutation", "Nonsense_Mutation", "Nonstop_Mutation", "Silent", "Splice_Region", "Splice_Site", "Targeted_Region", "Translation_Start_Site")
 
-#' Get MAF-format data frame for more than one sample and combine together (wraps get_ssm_by_sample)
-#' See get_ssm_by_sample for more information
+#' Get MAF-format data frame for more than one sample and combine together (wraps get_ssm_by_sample).
+#' See get_ssm_by_sample for more information.
 #' @param these_sample_ids A vector of sample_id that you want results for. This is the only required argument.
-#' @param these_samples_metadata A vector of samples metadata (with sample IDs)
-#' @param tool_name The name of the variant calling pipeline (currently only slms-3 is supported)
+#' @param these_samples_metadata A vector of samples metadata (with sample IDs).
+#' @param tool_name The name of the variant calling pipeline (currently only slms-3 is supported).
 #' @param projection The projection genome build. Currently only grch37 is supported but hg38 should be easy to add.
-#' @param seq_type What type of sequencing data you want mutations from (e.g. genome, exome, mrna)
-#' @param flavour Specify this as either "augmented" or "force_unmatched" or leave out to get the default (original MAF)
+#' @param seq_type What type of sequencing data you want mutations from (e.g. genome, exome, mrna).
+#' @param flavour Specify this as either "augmented" or "force_unmatched" or leave out to get the default (original MAF).
 #'
-#' @return Returns a data frame of variants in MAF-like format
+#' @return Returns a data frame of variants in MAF-like format.
 #' @export
 #'
 #' @examples
 #' merged_maf_force_unmatched = get_ssm_by_samples(these_sample_ids=c("HTMCP-01-06-00485-01A-01D","14-35472_tumorA","14-35472_tumorB"))
+#'
 get_ssm_by_samples = function(these_sample_ids, 
                               these_samples_metadata, 
                               tool_name = "slms-3", 
                               projection = "grch37", 
                               seq_type = "genome", 
                               flavour = ""){
+
   if(missing(these_samples_metadata)){
     these_samples_metadata = get_gambl_metadata() %>% 
       dplyr::filter(sample_id %in% these_sample_ids)
+
   }else{
     these_samples_metadata = these_samples_metadata %>% 
       dplyr::filter(sample_id %in% these_sample_ids)
+
   }
   maf_df_list = list()
   for(this_sample in these_sample_ids){
@@ -42,20 +46,21 @@ get_ssm_by_samples = function(these_sample_ids,
 #' there are some samples that we may want to use a different set of variants than those in the main GAMBL merge.
 #' The current use case is to allow a force_unmatched output to be used to replace the SSMs from the merge for samples
 #' with known contamination in the normal. This will also be useful to apply a blacklist to individual MAFs when coupled with
-#' annotate_ssm_blacklist
+#' annotate_ssm_blacklist.
 #'
 #' @param this_sample_id Required. The sample_id you want the data from.
-#' @param these_samples_metadata A vector of samples metadata (with sample IDs)
-#' @param tool_name The name of the variant calling pipeline (currently only slms-3 is supported)
+#' @param these_samples_metadata A vector of samples metadata (with sample IDs).
+#' @param tool_name The name of the variant calling pipeline (currently only slms-3 is supported).
 #' @param projection The projection genome build. Currently only grch37 is supported but hg38 should be easy to add.
-#' @param seq_type What type of sequencing data you want mutations from (e.g. genome, exome, mrna)
-#' @param flavour Specify this as either "augmented" or "force_unmatched" or leave out to get the default (original MAF)
-#' @param verbose Set to TRUE to enable verbose mode (debugging messages)
+#' @param seq_type What type of sequencing data you want mutations from (e.g. genome, exome, mrna).
+#' @param flavour Specify this as either "augmented" or "force_unmatched" or leave out to get the default (original MAF).
+#' @param verbose Set to TRUE to enable verbose mode (debugging messages).
 #'
-#' @return data frame in MAF format
+#' @return data frame in MAF format.
 #' @export
 #'
-#' @examples Add examples?
+#' @examples
+#' ssm_sample = get_ssm_by_sample(this_sample_id = "HTMCP-01-06-00485-01A-01D", tool_name = "slims-3", projection = "grch37", seq_type = "genome")
 #'
 get_ssm_by_sample = function(this_sample_id,
                              these_samples_metadata,
@@ -64,10 +69,12 @@ get_ssm_by_sample = function(this_sample_id,
                              seq_type = "genome",
                              flavour = "",
                              verbose = FALSE){
+
  #figure out which unix_group this sample belongs to
   if(missing(these_samples_metadata)){
     these_samples_metadata = get_gambl_metadata() %>% 
       dplyr::filter(sample_id == this_sample_id)
+
   }else{
     these_samples_metadata = these_samples_metadata %>% 
       dplyr::filter(sample_id == this_sample_id)
@@ -97,12 +104,12 @@ get_ssm_by_sample = function(this_sample_id,
     }
     maf_path = dir(base_path, pattern = glob2rx(maf_pattern))
   }
-  if(length(maf_path)<1){
+  if(length(maf_path) < 1){
     message(paste("NO FILE FOUND FOR THIS SAMPLE (flavour):", this_sample_id, "(", flavour, ")"))
     print(paste(base_path, maf_pattern))
     return()
   }
-  if(length(maf_path)>1){
+  if(length(maf_path) > 1){
     message(paste("TOO MANY FILES FOR THIS SAMPLE (flavour):", this_sample_id, "(", flavour, ")"))
     return()
   }
@@ -110,29 +117,32 @@ get_ssm_by_sample = function(this_sample_id,
   return(sample_ssm)
 }
 
-#' Helper function to find the production merge for a pipeline and restrict to the right file based on file permissions
+#' Helper function to find the production merge for a pipeline and restrict to the right file based on file permissions.
 #'
-#' @param tool_name Lowercase name of the tool (e.g. manta, slms-3)
-#' @param projection Which genome you want your results projected (lifted) to
-#' @param seq_type The seq_type you want back (currently only genome is supported/available)
+#' @param tool_name Lowercase name of the tool (e.g. manta, slms-3).
+#' @param projection Which genome you want your results projected (lifted) to. Currently only grch37 is supported and is default.
+#' @param seq_type The seq_type you want back (currently only genome is supported/available).
 #'
-#' @return Add return?
+#' @return String that holds filepath, tool name, sequence type, projection and extension.
 #' @export
 #'
-#' @examples Add examples?
+#' @examples
+#' merged = get_merged_results("slims-3", "grch37", "genome")
+#'
 get_merged_result = function(tool_name, 
                              projection = "grch37", 
                              seq_type = "genome"){
+
   base_path = config::get("project_base")
   gambl_only = paste0(base_path, "gambl/gamblr/02-merge/", tool_name, "/", seq_type, "/")
   gambl_plus = paste0(base_path, "all_the_things/", tool_name, "/", seq_type, "--gambl,icgc_dart/")
   if(tool_name == "manta"){
     extension = ".bedpe"
   }
-  gambl_only = paste0(gambl_only,"all_", tool_name, "_merged_", projection,extension)
-  gambl_plus = paste0(gambl_plus,"all_", tool_name, "_merged_", projection,extension)
+  gambl_only = paste0(gambl_only, "all_", tool_name, "_merged_", projection, extension)
+  gambl_plus = paste0(gambl_plus, "all_", tool_name, "_merged_", projection, extension)
   permissions = file.access(gambl_plus, 4)
-  if(permissions == -1){
+  if(permissions == -1 ){
     message("restricting to non-ICGC data")
     return(gambl_only)
   }else{
@@ -141,16 +151,16 @@ get_merged_result = function(tool_name,
 }
 
 
-#' Get GAMBL metadata
+#' Get GAMBL metadata.
 #'
-#' @param seq_type_filter Filtering criteria (default: all genomes)
-#' @param tissue_status_filter Filtering criteria (default: only tumour genomes, can be "mrna" or "any" for the superset of cases)
-#' @param case_set optional short name for a pre-defined set of cases avoiding any
-#' @param remove_benchmarking By default the FFPE benchmarking duplicate samples will be dropped
-#' @param with_outcomes Optionally join to gambl outcome data
-#' @param from_flatfile New default is to use the metadata in the flatfiles from your clone of the repo. Can be over-ridden to use the database
-#' @param only_available If TRUE, will remove samples with FALSE or NA in the bam_available column (default: TRUE)
-#' embargoed cases (current options: 'BLGSP-study', 'FL-study', 'DLBCL-study', 'FL-DLBCL-study', 'FL-DLBCL-all', 'DLBCL-unembargoed', 'BL-DLBCL-manuscript', 'MCL','MCL-CLL')
+#' @param seq_type_filter Filtering criteria (default: all genomes).
+#' @param tissue_status_filter Filtering criteria (default: only tumour genomes, can be "mrna" or "any" for the superset of cases).
+#' @param case_set optional short name for a pre-defined set of cases avoiding any.
+#' @param remove_benchmarking By default the FFPE benchmarking duplicate samples will be dropped.
+#' @param with_outcomes Optionally join to gambl outcome data.
+#' @param from_flatfile New default is to use the metadata in the flatfiles from your clone of the repo. Can be over-ridden to use the database.
+#' @param only_available If TRUE, will remove samples with FALSE or NA in the bam_available column (default: TRUE).
+#' embargoed cases (current options: 'BLGSP-study', 'FL-study', 'DLBCL-study', 'FL-DLBCL-study', 'FL-DLBCL-all', 'DLBCL-unembargoed', 'BL-DLBCL-manuscript', 'MCL','MCL-CLL').
 #'
 #' @return A data frame with metadata for each biopsy in GAMBL
 #' @export
@@ -163,6 +173,7 @@ get_merged_result = function(tool_name,
 #' only_blgsp_metadata = get_gambl_metadata(case_set="BLGSP-study")
 #' override default filters and request metadata for samples other than tumour genomes, e.g. also get the normals
 #' only_normal_metadata = get_gambl_metadata(tissue_status_filter = c('tumour','normal'))
+#'
 get_gambl_metadata = function(seq_type_filter = "genome",
                               tissue_status_filter = c("tumour"),
                               case_set, 
@@ -175,29 +186,34 @@ get_gambl_metadata = function(seq_type_filter = "genome",
 
   if(from_flatfile){
     base = config::get("repo_base")
-    sample_flatfile = paste0(base,config::get("table_flatfiles")$samples)
+    sample_flatfile = paste0(base, config::get("table_flatfiles")$samples)
     sample_meta = suppressMessages(read_tsv(sample_flatfile, guess_max = 100000))
-    biopsy_flatfile = paste0(base,config::get("table_flatfiles")$biopsies)
+    biopsy_flatfile = paste0(base, config::get("table_flatfiles")$biopsies)
     biopsy_meta = suppressMessages(read_tsv(biopsy_flatfile, guess_max = 100000))
 
   }else{
-    db=config::get("database_name")
-    con <- DBI::dbConnect(RMariaDB::MariaDB(), dbname = db)
-    sample_meta = dplyr::tbl(con,"sample_metadata") %>% 
+    db = config::get("database_name")
+    con = DBI::dbConnect(RMariaDB::MariaDB(), dbname = db)
+    sample_meta = dplyr::tbl(con, "sample_metadata") %>% 
       as.data.frame()
-    biopsy_meta = dplyr::tbl(con,"biopsy_metadata") %>% 
+
+    biopsy_meta = dplyr::tbl(con, "biopsy_metadata") %>% 
       as.data.frame()
+
     DBI::dbDisconnect(con)
   }
-  sample_meta_normal_genomes = sample_meta %>% dplyr::filter(seq_type == "genome" & tissue_status == "normal") %>%
-      dplyr::select(patient_id,sample_id) %>% as.data.frame() %>%
-      dplyr::rename("normal_sample_id" = "sample_id")
+  sample_meta_normal_genomes = sample_meta %>%
+    dplyr::filter(seq_type == "genome" & tissue_status == "normal") %>%
+    dplyr::select(patient_id, sample_id) %>%
+    as.data.frame() %>%
+    dplyr::rename("normal_sample_id" = "sample_id")
 
   if(seq_type_filter == "any"){
     #only drop the normals/unavailable samples then pick one unique row per biopsy_id, preferring genome when available
     sample_meta = sample_meta %>%
       dplyr::filter(tissue_status %in% tissue_status_filter) %>%
       dplyr::select(-sex)
+
   }else{
     sample_meta = sample_meta %>%
       dplyr::filter(seq_type == seq_type_filter & tissue_status %in% tissue_status_filter) %>%
@@ -211,7 +227,6 @@ get_gambl_metadata = function(seq_type_filter = "genome",
 
   #if we only care about genomes, we can drop/filter anything that isn't a tumour genome
   #The key for joining this table to the mutation information is to use sample_id. Think of this as equivalent to a library_id. It will differ depending on what assay was done to the sample.
-
   biopsy_meta = biopsy_meta %>% 
     dplyr::select(-patient_id) %>%
     dplyr::select(-pathology) %>% 
@@ -220,7 +235,10 @@ get_gambl_metadata = function(seq_type_filter = "genome",
 
   all_meta = dplyr::left_join(sample_meta, biopsy_meta, by = "biopsy_id") %>% 
     as.data.frame()
-  all_meta = all_meta %>% mutate(bcl2_ba = ifelse(bcl2_ba == "POS_BCC", "POS", bcl2_ba))
+
+  all_meta = all_meta %>%
+    mutate(bcl2_ba = ifelse(bcl2_ba == "POS_BCC", "POS", bcl2_ba))
+
   if(seq_type_filter == "genome" & length(tissue_status_filter) == 1 & tissue_status_filter[1] == "tumour"){
     #join back the matched normal genome
     all_meta = left_join(all_meta, sample_meta_normal_genomes, by = "patient_id")
@@ -234,7 +252,6 @@ get_gambl_metadata = function(seq_type_filter = "genome",
   }
   if(seq_type_filter == "any"){
   #remove semi-redundant metadata rows so we have each biopsy represented only once
-
    all_meta = all_meta %>% 
     arrange(seq_type) %>% 
     group_by(biopsy_id) %>% 
@@ -242,18 +259,13 @@ get_gambl_metadata = function(seq_type_filter = "genome",
 
   }
   all_meta = add_icgc_metadata(all_meta) %>%
-    mutate(consensus_pathology = case_when(
-      ICGC_PATH == "FL-DLBCL" ~ "COM",
-      ICGC_PATH == "DH-BL" ~ pathology,
-      ICGC_PATH == "FL" | ICGC_PATH == "DLBCL" ~ ICGC_PATH,
-      pathology == "COMFL" ~ "COM",
-      TRUE ~ pathology
-    ))
+    mutate(consensus_pathology = case_when(ICGC_PATH == "FL-DLBCL" ~ "COM", ICGC_PATH == "DH-BL" ~ pathology, ICGC_PATH == "FL" | ICGC_PATH == "DLBCL" ~ ICGC_PATH, pathology == "COMFL" ~ "COM", TRUE ~ pathology))
   all_meta = unique(all_meta) #something in the ICGC code is causing this. Need to figure out what #should this be posted as an issue on Github?
   if(!missing(case_set)){
     if(case_set == "MCL"){
       all_meta = all_meta %>% 
         dplyr::filter(consensus_pathology %in% c("MCL"))
+
     }else if(case_set == "MCL-CLL"){
       all_meta = all_meta %>%
         dplyr::filter(consensus_pathology %in% c("MCL", "CLL")) %>%
@@ -269,9 +281,7 @@ get_gambl_metadata = function(seq_type_filter = "genome",
         group_by(patient_id) %>%
         mutate(FL = sum(pathology == "FL"), DLBCL = sum(pathology %in% c("COM", "DLBCL", "COMFL"))) %>%
         mutate(transformed = ifelse(FL > 0 & DLBCL > 0, TRUE, FALSE))  %>%
-        mutate(analysis_cohort = case_when(consensus_pathology == "FL" & transformed == TRUE ~ "pre-HT", 
-          consensus_pathology == "DLBCL" & transformed == TRUE ~ "ignore", 
-          TRUE ~ "no-HT")) %>%
+        mutate(analysis_cohort = case_when(consensus_pathology == "FL" & transformed == TRUE ~ "pre-HT", consensus_pathology == "DLBCL" & transformed == TRUE ~ "ignore", TRUE ~ "no-HT")) %>%
         dplyr::filter(cohort == "FL_Kridel") %>%
         dplyr::filter((analysis_cohort == "no-HT" & time_point == "A")|(analysis_cohort == "pre-HT")) %>%
         dplyr::select(-transformed, -FL, -DLBCL)
@@ -282,9 +292,7 @@ get_gambl_metadata = function(seq_type_filter = "genome",
         group_by(patient_id) %>%
         mutate(FL = sum(pathology == "FL"), DLBCL = sum(pathology %in% c("COM", "DLBCL", "COMFL"))) %>%
         mutate(transformed = ifelse(FL > 0 & DLBCL > 0, TRUE, FALSE))  %>%
-        mutate(analysis_cohort = case_when(consensus_pathology == "FL" & transformed == TRUE ~ "post-HT", 
-          consensus_pathology == "DLBCL" & transformed == TRUE ~ "ignore", 
-          TRUE ~ "post-HT")) %>%
+        mutate(analysis_cohort = case_when(consensus_pathology == "FL" & transformed == TRUE ~ "post-HT", consensus_pathology == "DLBCL" & transformed == TRUE ~ "ignore", TRUE ~ "post-HT")) %>%
         dplyr::filter((analysis_cohort == "post-HT" & time_point == "B"))
 
       fl_meta_other = all_meta %>% dplyr::filter(consensus_pathology %in% c("FL", "DLBCL", "COM")) %>%
@@ -298,11 +306,11 @@ get_gambl_metadata = function(seq_type_filter = "genome",
         slice_head()
       
       fl_transformation_meta = suppressMessages(read_tsv("/projects/rmorin/projects/gambl-repos/gambl-rmorin/shared/gambl_fl_transformed.tsv"))
-      transformed_cases = pull(gambl_transformations,res_id)
-      fl_meta_other[which(fl_meta_other$patient_id %in% transformed_cases),"analysis_cohort"] = "pre-HT"
-      fl_meta_other = mutate(fl_meta_other, analysis_cohort = ifelse(analysis_cohort=="FL", "no-HT", analysis_cohort))
+      transformed_cases = pull(gambl_transformations, res_id)
+      fl_meta_other[which(fl_meta_other$patient_id %in% transformed_cases), "analysis_cohort"] = "pre-HT"
+      fl_meta_other = mutate(fl_meta_other, analysis_cohort = ifelse(analysis_cohort == "FL", "no-HT", analysis_cohort))
+      
       #Finally over-ride analysis cohort with the outcome of clinical review
-
       dlbcl_meta = all_meta %>%
         dplyr::filter(consensus_pathology %in% c("FL", "DLBCL", "COM")) %>%
         dplyr::filter(!cohort %in% c("DLBCL_ctDNA", "DLBCL_BLGSP", "LLMPP_P01", "DLBCL_LSARP_Trios", "DLBCL_HTMCP", "FL_Kridel", "FFPE_Benchmarking")) %>%
@@ -319,6 +327,7 @@ get_gambl_metadata = function(seq_type_filter = "genome",
       
       all_meta[which(all_meta$is_tFL == 1), "analysis_cohort"] = "post-HT"
     } else if(case_set == "FL-DLBCL-study"){
+      
       #get FL cases and DLBCL cases not in special/embargoed cohorts
       fl_meta_kridel = all_meta %>% dplyr::filter(consensus_pathology %in% c("FL", "DLBCL", "COM")) %>%
         dplyr::filter(!cohort %in% c("DLBCL_ctDNA", "DLBCL_BLGSP", "LLMPP_P01", "DLBCL_LSARP_Trios", "DLBCL_HTMCP")) %>%
@@ -330,7 +339,8 @@ get_gambl_metadata = function(seq_type_filter = "genome",
         dplyr::filter((analysis_cohort == "FL" & time_point == "A")|(analysis_cohort == "tFL")) %>% 
         dplyr::select(-transformed, -FL, -DLBCL)
 
-      fl_meta_other = all_meta %>% dplyr::filter(consensus_pathology %in% c("FL", "DLBCL", "COM")) %>%
+      fl_meta_other = all_meta %>%
+        dplyr::filter(consensus_pathology %in% c("FL", "DLBCL", "COM")) %>%
         dplyr::filter(!cohort %in% c("DLBCL_ctDNA", "DLBCL_BLGSP", "LLMPP_P01", "DLBCL_LSARP_Trios", "DLBCL_HTMCP")) %>%
         dplyr::filter(cohort != "FL_Kridel") %>%
         dplyr::filter((consensus_pathology %in% c("FL", "COM"))) %>% mutate(analysis_cohort = consensus_pathology)
@@ -339,23 +349,30 @@ get_gambl_metadata = function(seq_type_filter = "genome",
       transformed_cases = fl_transformation_meta %>% 
         dplyr::filter(!is.na(PATHa.tr)) %>% pull(patient_id)
       
-      fl_meta_other[which(fl_meta_other$patient_id %in% transformed_cases),"analysis_cohort"]="tFL"
+      fl_meta_other[which(fl_meta_other$patient_id %in% transformed_cases), "analysis_cohort"] = "tFL"
 
-      dlbcl_meta = all_meta %>% dplyr::filter(consensus_pathology %in% c("FL", "DLBCL", "COM")) %>%
-       dplyr::filter(!cohort %in% c("DLBCL_ctDNA", "DLBCL_BLGSP", "LLMPP_P01", "DLBCL_LSARP_Trios", "DLBCL_HTMCP", "FL_Kridel", "FFPE_Benchmarking")) %>%
-       dplyr::filter(consensus_pathology == "DLBCL" & COO_final == "GCB") %>% mutate(analysis_cohort = "DLBCL")
+      dlbcl_meta = all_meta %>%
+        dplyr::filter(consensus_pathology %in% c("FL", "DLBCL", "COM")) %>%
+        dplyr::filter(!cohort %in% c("DLBCL_ctDNA", "DLBCL_BLGSP", "LLMPP_P01", "DLBCL_LSARP_Trios", "DLBCL_HTMCP", "FL_Kridel", "FFPE_Benchmarking")) %>%
+        dplyr::filter(consensus_pathology == "DLBCL" & COO_final == "GCB") %>% mutate(analysis_cohort = "DLBCL")
       
-      all_meta = bind_rows(dlbcl_meta, fl_meta_kridel, fl_meta_other) %>% unique()
+      all_meta = bind_rows(dlbcl_meta, fl_meta_kridel, fl_meta_other) %>%
+      unique()
+
     }else if(case_set == "FL-study"){
+      
       #get FL cases and DLBCL cases not in special/embargoed cohorts
       all_meta = all_meta %>% 
         dplyr::filter(consensus_pathology %in% c("FL", "DLBCL")) %>%
         dplyr::filter(!cohort %in% c("DLBCL_ctDNA", "DLBCL_BLGSP", "LLMPP_P01", "DLBCL_LSARP_Trios")) %>%
-        group_by(patient_id) %>% arrange(patient_id, pathology)  %>% 
+        group_by(patient_id) %>% 
+        arrange(patient_id, pathology)  %>% 
         dplyr::slice(1) %>% 
         dplyr::ungroup() %>%
         dplyr::filter(pathology == "FL")
+
     }else if(case_set == "DLBCL-study"){
+      
       #get FL cases and DLBCL cases not in special/embargoed cohorts
       all_meta = all_meta %>% 
         dplyr::filter(consensus_pathology %in% c("FL", "DLBCL")) %>%
@@ -365,104 +382,106 @@ get_gambl_metadata = function(seq_type_filter = "genome",
         dplyr::slice(1) %>% 
         dplyr::ungroup() %>%
         dplyr::filter(consensus_pathology %in% c("DLBCL", "FL"))
+
     }else if(case_set == "DLBCL-unembargoed"){
       #get DLBCL cases not in special/embargoed cohorts
       all_meta = all_meta %>% 
       dplyr::filter(consensus_pathology %in% c("DLBCL", "COM")) %>%
       dplyr::filter(!cohort %in% c("DLBCL_ctDNA", "DLBCL_BLGSP", "LLMPP_P01", "DLBCL_LSARP_Trios", "DLBCL_HTMCP"))
+
     }else if(case_set == "BLGSP-study"){
+      
       #get BL cases minus duplicates (i.e. drop benchmarking cases)
       all_meta = all_meta %>%
         dplyr::filter(cohort %in% c("BL_Adult", "BL_cell_lines", "BL_ICGC", "BLGSP_Bcell_UNC", "BL_Pediatric") | (sample_id == "06-29223T"))
+
     }else if(case_set == "BL-DLBCL-manuscript"){
-      adult_bl_manuscript_samples <- data.table::fread("/projects/rmorin/projects/gambl-repos/gambl-kdreval/data/metadata/BLGSP--DLBCL-case-set.tsv") %>%
+      adult_bl_manuscript_samples = data.table::fread("/projects/rmorin/projects/gambl-repos/gambl-kdreval/data/metadata/BLGSP--DLBCL-case-set.tsv") %>%
         pull(Tumor_Sample_Barcode)
+
       all_meta = all_meta %>% 
       dplyr::filter(sample_id %in% adult_bl_manuscript_samples)
+      
     }else if(case_set == "FL-DLBCL-all"){
-      fl_dlbcl_all_samples <- data.table::fread("/projects/rmorin/projects/gambl-repos/gambl-kdreval/data/metadata/FL--DLBCL--all-case-set.tsv") %>%
+      fl_dlbcl_all_samples = data.table::fread("/projects/rmorin/projects/gambl-repos/gambl-kdreval/data/metadata/FL--DLBCL--all-case-set.tsv") %>%
         pull(Tumor_Sample_Barcode)
+
       all_meta = all_meta %>% 
       dplyr::filter(sample_id %in% fl_dlbcl_all_samples)
+
     }else if(case_set == "GAMBL-all"){
+      
       #get all GAMBL but remove FFPE benchmarking cases and ctDNA
       all_meta = all_meta %>% 
       dplyr::filter(!cohort %in% c("FFPE_Benchmarking", "DLBCL_ctDNA"))
+
     }else{
       message(paste("case set", case_set, "not available"))
       return()
     }
   }
 
-  all_meta = mutate(all_meta, lymphgen = case_when(
-    !str_detect(lymphgen_cnv_noA53, "/")~lymphgen_cnv_noA53,
-    str_detect(lymphgen_cnv_noA53, "EZB")~"EZB-COMP",
-    str_detect(lymphgen_cnv_noA53, "MCD")~"MCD-COMP",
-    str_detect(lymphgen_cnv_noA53, "N1")~"N1-COMP",
-    str_detect(lymphgen_cnv_noA53, "ST2")~"ST2-COMP",
-    TRUE ~ "COMPOSITE"
-  ))
+  all_meta = mutate(all_meta, lymphgen = case_when(!str_detect(lymphgen_cnv_noA53, "/")~lymphgen_cnv_noA53,
+                                                   str_detect(lymphgen_cnv_noA53, "EZB")~"EZB-COMP",
+                                                   str_detect(lymphgen_cnv_noA53, "MCD")~"MCD-COMP",
+                                                   str_detect(lymphgen_cnv_noA53, "N1")~"N1-COMP",
+                                                   str_detect(lymphgen_cnv_noA53, "ST2")~"ST2-COMP",
+                                                   TRUE ~ "COMPOSITE"))
 
   all_meta = mutate(all_meta, Tumor_Sample_Barcode = sample_id) #duplicate for convenience
   all_meta = all_meta %>% 
-    dplyr::mutate(consensus_coo_dhitsig = case_when(
-    pathology != "DLBCL" ~ pathology,
-    COO_consensus == "ABC" ~ COO_consensus,
-    DLBCL90_dhitsig_call == "POS" ~ "DHITsigPos",
-    DLBCL90_dhitsig_call == "NEG" ~ "DHITsigNeg",
-    DHITsig_PRPS_class == "DHITsigPos" ~ "DHITsigPos",
-    DHITsig_PRPS_class == "DHITsig+" ~ "DHITsigPos",
-    DHITsig_PRPS_class == "DHITsigNeg" ~ "DHITsigNeg",
-    DHITsig_PRPS_class == "DHITsig-" ~ "DHITsigNeg",
-    DHITsig_PRPS_class == "UNCLASS" ~ "DHITsigPos",
-    TRUE ~ "NA"
-  ))
+    dplyr::mutate(consensus_coo_dhitsig = case_when(pathology != "DLBCL" ~ pathology,
+                                                    COO_consensus == "ABC" ~ COO_consensus,
+                                                    DLBCL90_dhitsig_call == "POS" ~ "DHITsigPos",
+                                                    DLBCL90_dhitsig_call == "NEG" ~ "DHITsigNeg",
+                                                    DHITsig_PRPS_class == "DHITsigPos" ~ "DHITsigPos",
+                                                    DHITsig_PRPS_class == "DHITsig+" ~ "DHITsigPos",
+                                                    DHITsig_PRPS_class == "DHITsigNeg" ~ "DHITsigNeg",
+                                                    DHITsig_PRPS_class == "DHITsig-" ~ "DHITsigNeg",
+                                                    DHITsig_PRPS_class == "UNCLASS" ~ "DHITsigPos",
+                                                    TRUE ~ "NA"))
+
   all_meta = all_meta %>% 
-    dplyr::mutate(DHITsig_consensus = case_when(
-    DHITsig_consensus == "NEG" ~ "DHITsigNeg",
-    DHITsig_consensus == "POS" ~ "DHITsigPos",
-    DHITsig_consensus == "UNCLASS" ~ "DHITsig-IND",
-    DHITsig_consensus == "DHITsigNeg" ~ DHITsig_consensus,
-    DHITsig_consensus == "DHITsigPos" ~ DHITsig_consensus,
-    TRUE ~ "NA"))
+    dplyr::mutate(DHITsig_consensus = case_when(DHITsig_consensus == "NEG" ~ "DHITsigNeg",
+                                                DHITsig_consensus == "POS" ~ "DHITsigPos",
+                                                DHITsig_consensus == "UNCLASS" ~ "DHITsig-IND",
+                                                DHITsig_consensus == "DHITsigNeg" ~ DHITsig_consensus,
+                                                DHITsig_consensus == "DHITsigPos" ~ DHITsig_consensus,
+                                                TRUE ~ "NA"))
 
   #assign a rank to each pathology for consistent and sensible ordering
   all_meta = all_meta %>% 
-    dplyr::mutate(pathology_rank = case_when(
-    pathology == "B-ALL" ~ 0,
-    pathology == "SCBC" ~ 2,
-    pathology == "CLL" ~ 3,
-    pathology == "MCL" ~ 4,
-    pathology == "BL" ~ 7,
-    pathology == "DLBCL-BL-like" ~ 10,
-    pathology == "HGBL" ~ 11,
-    pathology == "COMFL" ~ 13,
-    pathology == "FL" ~ 15,
-    pathology == "DLBCL" ~ 19,
-    pathology == "PBL" ~ 27,
-    pathology == "B-cell unclassified" ~ 29,
-    pathology == "MM" ~ 33,
-    TRUE ~ 35
-  ))
+    dplyr::mutate(pathology_rank = case_when(pathology == "B-ALL" ~ 0,
+                                             pathology == "SCBC" ~ 2,
+                                             pathology == "CLL" ~ 3,
+                                             pathology == "MCL" ~ 4,
+                                             pathology == "BL" ~ 7,
+                                             pathology == "DLBCL-BL-like" ~ 10,
+                                             pathology == "HGBL" ~ 11,
+                                             pathology == "COMFL" ~ 13,
+                                             pathology == "FL" ~ 15,
+                                             pathology == "DLBCL" ~ 19,
+                                             pathology == "PBL" ~ 27,
+                                             pathology == "B-cell unclassified" ~ 29,
+                                             pathology == "MM" ~ 33,
+                                             TRUE ~ 35))
+
   all_meta = all_meta %>% 
-    dplyr::mutate(lymphgen_rank = case_when(
-    pathology != "DLBCL" ~ pathology_rank,
-    lymphgen == "Other" ~ 16,
-    lymphgen == "COMPOSITE" ~ 17,
-    lymphgen == "N1" ~ 18,
-    lymphgen == "EZB" ~ 19,
-    lymphgen == "ST2" ~ 20,
-    lymphgen == "BN2" ~ 21,
-    lymphgen == "MCD" ~ 22,
-    TRUE ~ 50
-  ))
+    dplyr::mutate(lymphgen_rank = case_when(pathology != "DLBCL" ~ pathology_rank,
+                                            lymphgen == "Other" ~ 16,
+                                            lymphgen == "COMPOSITE" ~ 17,
+                                            lymphgen == "N1" ~ 18,
+                                            lymphgen == "EZB" ~ 19,
+                                            lymphgen == "ST2" ~ 20,
+                                            lymphgen == "BN2" ~ 21,
+                                            lymphgen == "MCD" ~ 22,
+                                            TRUE ~ 50))
   if(with_outcomes){
 
     all_meta = left_join(all_meta, outcome_table, by = "patient_id") %>%
       mutate(age_group = case_when(cohort == "BL_Adult"~"Adult_BL", cohort == "BL_Pediatric" | cohort == "BL_ICGC" ~ "BL_Pediatric", TRUE ~ "Other"))
 
   }
-
   return(all_meta)
 }
 
@@ -470,23 +489,28 @@ add_prps_result = function(incoming_metadata){
   prps_res = suppressMessages(read_tsv("/projects/rmorin/projects/gambl-repos/gambl-rmorin/results/icgc_dart/derived_and_curated_metadata/outputs/BL_dhitsig_PRPS.tsv"))
   colnames(prps_res)[1] = "sample_id"
   prps_res = dplyr::select(prps_res, sample_id, PRPS_score, PRPS_class)
+  
   #need to associate each sample with a patient ID then annotate the metadata based on patient ID
   patient_meta_g = get_gambl_metadata(seq_type_filter = "genome") %>% 
     dplyr::select(sample_id, patient_id)
+
   patient_meta_r = get_gambl_metadata(seq_type_filter = "mrna") %>% 
     dplyr::select(sample_id, patient_id)
+
   patient_meta = bind_rows(patient_meta_g, patient_meta_r)
 }
 
 
-#' Layer on ICGC metadata from a supplemental table to fill in missing COO
+#' Layer on ICGC metadata from a supplemental table to fill in missing COO.
 #'
-#' @param incoming_metadata A metadata table (probably output from get_gambl_metadata)
+#' @param incoming_metadata A metadata table (probably output from get_gambl_metadata).
 #'
-#' @return Add return?
+#' @return Meta data with layered information (ICGC).
 #' @export
 #'
 #' @examples Add examples?
+#' icgc_metadata = add_icgc_metadata(incoming_metadata = my_meta)
+#'
 add_icgc_metadata = function(incoming_metadata){
 
   #add trio metadata too!
@@ -515,86 +539,98 @@ add_icgc_metadata = function(incoming_metadata){
   #join with all metadata to fill in blanks
   #all_meta=get_gambl_metadata()
   rejoined = left_join(incoming_metadata, icgc_all,by = "sample_id") %>%
-    mutate(COO_final = case_when(
-      !is.na(COO_consensus) ~ COO_consensus,
-      COO != "n.a." & COO != "TypeIII" ~ COO,
-      TRUE ~ "NA"
-    )
-    ) %>% dplyr::select(-COO)
+    mutate(COO_final = case_when(!is.na(COO_consensus) ~ COO_consensus, COO != "n.a." & COO != "TypeIII" ~ COO, TRUE ~ "NA")) %>%
+    dplyr::select(-COO)
   return(rejoined)
 }
 
 
-#' Get the patient-centric clinical metadata
+#' Get the patient-centric clinical metadata.
 #'
-#' @param patient_ids Vector of patient IDs
-#' @param time_unit Return follow-up times in one of three time units: year, month or day
-#' @param censor_cbioportal Optionally request the censoring to be encoded in the specific style required by cBioPortal
-#' @param complete_missing Optionally fill in any gaps to ensure we have values for every patient (censor at 0 if missing)
-#' @param from_flatfile Optionally set to FALSE to use the database to get the survival data
+#' @param patient_ids Vector of patient IDs.
+#' @param time_unit Return follow-up times in one of three time units: year, month or day.
+#' @param censor_cbioportal Optionally request the censoring to be encoded in the specific style required by cBioPortal.
+#' @param complete_missing Optionally fill in any gaps to ensure we have values for every patient (censor at 0 if missing).
+#' @param from_flatfile Optionally set to FALSE to use the database to get the survival data.
 #'
-#' @return Data frame with one row for each patient_id
+#' @return Data frame with one row for each patient_id.
 #' @export
 #' @import tidyverse RMariaDB DBI dbplyr
 #'
 #' @examples
 #' outcome_df = get_gambl_outcomes()
+#'
 get_gambl_outcomes = function(patient_ids,
                               time_unit = "year",
                               censor_cbioportal = FALSE,
                               complete_missing = FALSE,
                               from_flatfile = TRUE){
+
   if(from_flatfile){
     outcome_flatfile = paste0(config::get("repo_base"), config::get("table_flatfiles")$outcomes)
     all_outcome = suppressMessages(read_tsv(outcome_flatfile))
 
   }else{
     db = config::get("database_name")
-    con <- DBI::dbConnect(RMariaDB::MariaDB(), dbname = db)
+    con = DBI::dbConnect(RMariaDB::MariaDB(), dbname = db)
     all_outcome = dplyr::tbl(con,"outcome_metadata") %>% 
       as.data.frame()
+
     DBI::dbDisconnect(con)
   }
   if(!missing(patient_ids)){
     all_outcome = all_outcome %>% 
       dplyr::filter(patient_id %in% patient_ids)
+
     if(complete_missing){
       #add NA values and censored outcomes for all missing patient_ids
       all_outcome = all_outcome %>% 
-        complete(patient_id = patient_ids, fill = list(OS_YEARS = 0, PFS_years = 0, TTP_YEARS = 0, DSS_YEARS = 0, CODE_OS = 0, CODE_PFS = 0, CODE_DSS = 0, CODE_TTP =0 ))
+        complete(patient_id = patient_ids, fill = list(OS_YEARS = 0, PFS_years = 0, TTP_YEARS = 0, DSS_YEARS = 0, CODE_OS = 0, CODE_PFS = 0, CODE_DSS = 0, CODE_TTP = 0))
     }
   }
   if(time_unit == "month"){
     all_outcome = all_outcome %>% 
-      mutate(OS_MONTHS=OS_YEARS * 12)
+      mutate(OS_MONTHS = OS_YEARS * 12)
+
     all_outcome = all_outcome %>% 
-      mutate(PFS_MONTHS=PFS_YEARS * 12)
+      mutate(PFS_MONTHS = PFS_YEARS * 12)
+
     all_outcome = all_outcome %>% 
-      mutate(TTP_MONTHS=TTP_YEARS * 12)
+      mutate(TTP_MONTHS = TTP_YEARS * 12)
+
     all_outcome = all_outcome %>% 
-      mutate(DSS_MONTHS=DSS_YEARS * 12)
+      mutate(DSS_MONTHS = DSS_YEARS * 12)
+
     all_outcome = all_outcome %>% 
       dplyr::select(-c("OS_YEARS", "PFS_YEARS", "TTP_YEARS", "DSS_YEARS"))
+
   }else if(time_unit == "day"){
     all_outcome = all_outcome %>% 
-      mutate(OS_DAYS=OS_YEARS * 365)
+      mutate(OS_DAYS = OS_YEARS * 365)
+
     all_outcome = all_outcome %>% 
-      mutate(PFS_DAYS=PFS_YEARS * 365)
+      mutate(PFS_DAYS = PFS_YEARS * 365)
+
     all_outcome = all_outcome %>% 
-      mutate(TTP_DAYS=TTP_YEARS * 365)
+      mutate(TTP_DAYS = TTP_YEARS * 365)
+
     all_outcome = all_outcome %>% 
-      mutate(DSS_DAYS=DSS_YEARS * 365)
+      mutate(DSS_DAYS = DSS_YEARS * 365)
+
     all_outcome = all_outcome %>% 
       dplyr::select(-c("OS_YEARS", "PFS_YEARS", "TTP_YEARS", "DSS_YEARS"))
   }
+  
   #if necessary, convert the censoring into the cBioPortal format for OS and PFS
   if(censor_cbioportal){
     all_outcome$OS_STATUS = as.character(all_outcome$CODE_OS)
     all_outcome = all_outcome %>% 
       mutate(OS_STATUS = case_when(OS_STATUS == "0" ~ "0:LIVING", OS_STATUS == "1"~"1:DECEASED"))
+
     all_outcome$DFS_STATUS = as.character(all_outcome$CODE_PFS)
     all_outcome = all_outcome %>% 
       mutate(DFS_STATUS = case_when(DFS_STATUS == "0" ~ "0:DiseaseFree", DFS_STATUS == "1"~"1:Recurred/Progressed"))
+
     all_outcome = all_outcome %>% 
       mutate(all_outcome, DFS_MONTHS = PFS_MONTHS)
   }
@@ -605,9 +641,9 @@ get_gambl_outcomes = function(patient_ids,
 }
 
 
-#' Retrieve Combined Manta and GRIDSS-derived SVs from a flatfile and filter
+#' Retrieve Combined Manta and GRIDSS-derived SVs from a flatfile and filter.
 #'
-#' The bedpe files used as input to this function were pre-filtered for a minimum VAF of 0.05, and SVs affecting
+#' The bedpe files used as input to this function were pre-filtered for a minimum VAF of 0.05, and SVs affecting.
 #' common translocation regions (BCL2, BCL6, MYC, CCND1) were whitelisted (e.g. no VAF filter applied).
 #' Therefore if you wish to post-filter the SVs we recommend doing so carefully after loading this data frame.
 #' Further, the input bedpe file is annotated with oncogenes and superenhancers from naive and germinal centre B-cells.
@@ -620,12 +656,13 @@ get_gambl_outcomes = function(patient_ids,
 #' @param oncogenes A character vector of genes commonly involved in translocations. Possible values: CCND1, CIITA, SOCS1, BCL2, RFTN1, BCL6, MYC, PAX5.
 #'
 #'
-#' @return A data frame in a bedpe-like format with additional columns that allow filtering of high-confidence SVs
+#' @return A data frame in a bedpe-like format with additional columns that allow filtering of high-confidence SVs.
 #' @export
 #' @import DBI RMariaDB tidyverse dbplyr
 #'
 #' @examples
 #' get_combined_sv(oncogenes = c("MYC", "BCL2", "BCL6"))
+#'
 get_combined_sv = function(min_vaf = 0,
                            sample_ids,
                            with_chr_prefix = FALSE,
@@ -635,11 +672,11 @@ get_combined_sv = function(min_vaf = 0,
   base_path = config::get("project_base")
   sv_file = config::get()$results_filatfiles$sv_combined$icgc_dart
   if(projection == "hg38"){
-    sv_file <- str_replace(sv_file, "--grch37", "--hg38")
+    sv_file = str_replace(sv_file, "--grch37", "--hg38")
   }
   sv_file = paste0(base_path, sv_file)
   permissions = file.access(sv_file, 4)
-  if(permissions == -1){
+  if(permissions == - 1){
     sv_file = config::get()$results_filatfiles$sv_combined$gambl
     sv_file = paste0(base_path, sv_file)
   }
@@ -659,33 +696,32 @@ get_combined_sv = function(min_vaf = 0,
 
   if(with_chr_prefix){
     #add chr prefix only if it's missing
-
     all_sv = all_sv %>% 
       dplyr::mutate(CHROM_A = case_when(str_detect(CHROM_A, "chr") ~ CHROM_A, TRUE ~ paste0("chr", CHROM_A)))
+
     all_sv = all_sv %>% 
       dplyr::mutate(CHROM_B = case_when(str_detect(CHROM_B, "chr") ~ CHROM_B, TRUE ~ paste0("chr", CHROM_B)))
-
   }
   return(all_sv)
 }
 
 
-#' Retrieve Manta SVs from the database and filter
+#' Retrieve Manta SVs from the database and filter.
 #'
-#' @param min_vaf The minimum tumour VAF for a SV to be returned
-#' @param min_score The lowest Manta somatic score for a SV to be returned
+#' @param min_vaf The minimum tumour VAF for a SV to be returned.
+#' @param min_score The lowest Manta somatic score for a SV to be returned.
 #' @param pass If set to TRUE, include SVs that are annotated with PASS in FILTER column. Default is TRUE.
-#' @param pair_status Use to restrict results (if desired) to matched or unmatched results (default is to return all)
-#' @param sample_id Filter on specific sample IDs in tumour_sample_id column
-#' @param chromosome The chromosome you are restricting to
-#' @param qstart Query start coordinate of the range you are restricting to
-#' @param qend Query end coordinate of the range you are restricting to
-#' @param region Region formatted like chrX:1234-5678 instead of specifying chromosome, start and end separately
-#' @param with_chr_prefix Prepend all chromosome names with chr (required by some downstream analyses)
-#' @param from_flatfile Set to FALSE by default
-#' @param projection The projection genome build. Currently only grch37 is supported
+#' @param pair_status Use to restrict results (if desired) to matched or unmatched results (default is to return all).
+#' @param sample_id Filter on specific sample IDs in tumour_sample_id column.
+#' @param chromosome The chromosome you are restricting to.
+#' @param qstart Query start coordinate of the range you are restricting to.
+#' @param qend Query end coordinate of the range you are restricting to.
+#' @param region Region formatted like chrX:1234-5678 instead of specifying chromosome, start and end separately.
+#' @param with_chr_prefix Prepend all chromosome names with chr (required by some downstream analyses).
+#' @param from_flatfile Set to FALSE by default.
+#' @param projection The projection genome build. Currently only grch37 is supported.
 #'
-#' @return A data frame in a bedpe-like format with additional columns that allow filtering of high-confidence SVs
+#' @return A data frame in a bedpe-like format with additional columns that allow filtering of high-confidence SVs.
 #' @export
 #' @import DBI RMariaDB tidyverse dbplyr
 #'
@@ -695,7 +731,7 @@ get_combined_sv = function(min_vaf = 0,
 #' #get all SVs for a single sample
 #' some_sv = get_manta_sv(sample_id="94-15772_tumorA")
 #' #get the SVs in a region around MYC
-#' myc_locus_sv = get_manta_sv(region="8:128723128-128774067")
+#' myc_locus_sv = get_manta_sv(region="8:128723128-128774067").#'
 get_manta_sv = function(min_vaf = 0.1,
                         min_score = 40,
                         pass = TRUE,
@@ -708,24 +744,25 @@ get_manta_sv = function(min_vaf = 0.1,
                         with_chr_prefix = FALSE,
                         from_flatfile = FALSE,
                         projection = "grch37"){
-  db=config::get("database_name")
-  table_name=config::get("results_tables")$sv
+
+  db = config::get("database_name")
+  table_name = config::get("results_tables")$sv
     if(!missing(region)){
       region = gsub(",", "", region)
       #format is chr6:37060224-37151701
       split_chunks = unlist(strsplit(region, ":"))
       chromosome = split_chunks[1]
       startend = unlist(strsplit(split_chunks[2], "-"))
-      qstart=startend[1]
-      qend=startend[2]
+      qstart = startend[1]
+      qend = startend[2]
     }
+  
   #this table stores chromosomes with un-prefixed names. Convert to prefixed chromosome if necessary
   if(from_flatfile){
     sv_file = get_merged_result(tool_name = "manta", projection = projection)
-
     all_sv = read_tsv(sv_file, col_types = "cnncnncnccccnnnnccc", col_names = cnames)
   }else{
-    con <- DBI::dbConnect(RMariaDB::MariaDB(), dbname = db)
+    con = DBI::dbConnect(RMariaDB::MariaDB(), dbname = db)
     all_sv = dplyr::tbl(con,table_name) %>% 
       as.data.frame()
   }
@@ -757,12 +794,11 @@ get_manta_sv = function(min_vaf = 0.1,
   all_sv = as.data.frame(all_sv)
   if(with_chr_prefix){
     #add chr prefix only if it's missing
-
     all_sv = all_sv %>% 
       dplyr::mutate(CHROM_A = case_when(str_detect(CHROM_A, "chr") ~ CHROM_A, TRUE ~ paste0("chr", CHROM_A)))
+
     all_sv = all_sv %>% 
       dplyr::mutate(CHROM_B = case_when(str_detect(CHROM_B, "chr") ~ CHROM_B, TRUE ~ paste0("chr", CHROM_B)))
-
   }
   if(!from_flatfile){
     DBI::dbDisconnect(con)
@@ -771,15 +807,15 @@ get_manta_sv = function(min_vaf = 0.1,
 }
 
 
-#' Get a copy number matrix for all samples based on segmented data in database
+#' Get a copy number matrix for all samples based on segmented data in database.
 #'
-#' @param regions_list A list of regions in the format chrom:start-end
-#' @param regions_bed A bed file with one row for each region you want to determine the CN state from
-#' @param region_names Subset CN states on specific regions (gene symbols e.g FCGR2B)
-#' @param all_cytobands Include all cytobands, default is set to FALSE. Currently only supports hg19
-#' @param use_cytoband_name Use cytoband names instad of region name, e.g p36.33
+#' @param regions_list A list of regions in the format chrom:start-end.
+#' @param regions_bed A bed file with one row for each region you want to determine the CN state from.
+#' @param region_names Subset CN states on specific regions (gene symbols e.g FCGR2B).
+#' @param all_cytobands Include all cytobands, default is set to FALSE. Currently only supports hg19.
+#' @param use_cytoband_name Use cytoband names instad of region name, e.g p36.33.
 #'
-#' @return
+#' @return Copy number matrix.
 #' @import tidyverse circlize
 #' @export
 #'
@@ -787,11 +823,13 @@ get_manta_sv = function(min_vaf = 0.1,
 #' #basic usage, generic lymphoma gene list
 #' cn_matrix = get_cn_states(regions_bed=grch37_lymphoma_genes_bed)
 #' single_gene_cn = get_cn_states(regions_list=c(this_region), region_names = c("FCGR2B"))
+#'
 get_cn_states = function(regions_list,
                          regions_bed,
                          region_names,
                          all_cytobands = FALSE,
                          use_cytoband_name = FALSE){
+
   #retrieve the CN value for this region for every segment that overlaps it
   bed2region=function(x){
     paste0(x[1], ":", as.numeric(x[2]), "-", as.numeric(x[3]))
@@ -806,7 +844,7 @@ get_cn_states = function(regions_list,
     }else{
       region_names = pull(regions_bed, region_name)
     }
-    regions= apply(regions_bed, 1, bed2region)
+    regions = apply(regions_bed, 1, bed2region)
     #use the cytobands from the circlize package (currently hg19 but can extend to hg38 once GAMBLR handles it) Has this been updated?
   }else if(missing(regions_list)){
     if(!missing(regions_bed)){
@@ -821,11 +859,10 @@ get_cn_states = function(regions_list,
   if(missing(region_names) & !use_cytoband_name){
     region_names = regions
   }
-
   tibbled_data = tibble(region_segs, region_name = region_names)
-
   unnested_df = tibbled_data %>% 
     unnest_longer(region_segs)
+
   seg_df = data.frame(ID = unnested_df$region_segs$ID, CN = unnested_df$region_segs$CN,region_name = unnested_df$region_name)
   #arbitrarily take the first segment for each region/ID combination
   seg_df = seg_df %>% 
@@ -841,36 +878,42 @@ get_cn_states = function(regions_list,
   eg = expand_grid(sample_id = pull(meta_arranged, sample_id), region_name = as.character(unique(seg_df$region_name)))
   all_cn = left_join(eg, seg_df, by = c("sample_id" = "sample_id", "region_name" = "region_name")) %>%
     mutate(CN = replace_na(CN, 2))
+
   cn_matrix = pivot_wider(all_cn, id_cols = "sample_id", names_from = "region_name", values_from = "CN") %>%
     column_to_rownames("sample_id")
+
   #order the regions the same way the user provided them for convenience
   return(cn_matrix[,region_names])
 }
 
 
-#' Get all segments for a single sample_id
+#' Get all segments for a single sample_id.
 #'
-#' @param this_sample_id The sample_id for the sample to retrieve segments for
-#' @param with_chr_prefix Set to TRUE to add a chr prefix to chromosome names
-#' @param streamlined Return a minimal output rather than full details
-#' @param from_flatfile Resort to a flat file instead of the database for retrieving the data
+#' @param this_sample_id The sample_id for the sample to retrieve segments for.
+#' @param with_chr_prefix Set to TRUE to add a chr prefix to chromosome names.
+#' @param streamlined Return a minimal output rather than full details.
+#' @param from_flatfile Resort to a flat file instead of the database for retrieving the data.
 #'
-#' @return
+#' @return A list of segments for a specific sample ID
 #' @export
 #'
 #' @examples
+#' sample_cn_seg = get_sample_cn_segments("some-sample-id", FALSE, FALSE, FALSE)
+#'
 get_sample_cn_segments = function(this_sample_id, 
                                   with_chr_prefix = FALSE, 
                                   streamlined = FALSE, 
                                   from_flatfile = FALSE){
+
   sample_status = get_gambl_metadata() %>% 
-  dplyr::filter(sample_id == this_sample_id) %>% 
-  pull(pairing_status)
+    dplyr::filter(sample_id == this_sample_id) %>% 
+    pull(pairing_status)
+
   if(!from_flatfile){
     db = config::get("database_name")
     table_name = config::get("results_tables")$copy_number
     table_name_unmatched = config::get("results_tables")$copy_number_unmatched
-    con <- DBI::dbConnect(RMariaDB::MariaDB(), dbname = db)
+    con = DBI::dbConnect(RMariaDB::MariaDB(), dbname = db)
 
     all_segs_matched = dplyr::tbl(con,table_name) %>%
       dplyr::filter(ID == this_sample_id) %>%
@@ -886,15 +929,14 @@ get_sample_cn_segments = function(this_sample_id,
   }else{
     #use flatfiles, preferring Battenberg and using Controlfreec when missing
     if(sample_status == "unmatched"){
-
       tool_name = config::get("analyses")$unmatched$copy_number
-
     }else{
       tool_name = config::get("analyses")$matched$copy_number
       battenberg_files = fetch_output_files(build = genome_build, base_path = "gambl/battenberg_current", tool = "battenberg", search_pattern = ".igv.seg")
       battenberg_file = dplyr::filter(battenberg_files, tumour_sample_id == this_sample) %>%
         dplyr::pull(full_path) %>% 
-          as.character()
+        as.character()
+
       message(paste("using flatfile:", battenberg_file))
       if(length(battenberg_file) > 1){
         print("WARNING: more than one SEG found for this sample. This shouldn't happen!")
@@ -906,12 +948,9 @@ get_sample_cn_segments = function(this_sample_id,
         dplyr::mutate(chrom = gsub("chr", "", chrom)) %>%
         dplyr::rename(Chromosome = chrom, Start_Position = start, End_Position = end)
     }
-
   }
   all_segs = rbind(all_segs_matched, all_segs_unmatched)
-
   all_segs = dplyr::mutate(all_segs, CN = round(2*2^log.ratio))
-
   if(! with_chr_prefix){
     all_segs = all_segs %>% 
       dplyr::mutate(chrom = gsub("chr", "", chrom))
@@ -924,17 +963,17 @@ get_sample_cn_segments = function(this_sample_id,
 }
 
 
-#' Retrieve all copy number segments from the GAMBL database that overlap with a single genomic coordinate range
+#' Retrieve all copy number segments from the GAMBL database that overlap with a single genomic coordinate range.
 #'
-#' @param chromosome The chromosome you are restricting to
-#' @param qstart Start coordinate of the range you are restricting to
-#' @param qend End coordinate of the range you are restricting to
-#' @param region Region formatted like chrX:1234-5678 instead of specifying chromosome, start and end separately
-#' @param with_chr_prefix Prepend all chromosome names with chr (required by some downstream analyses)
-#' @param streamlined Return a basic rather than full MAF format
-#' @param from_flatfile Set to FALSE by default
+#' @param chromosome The chromosome you are restricting to.
+#' @param qstart Start coordinate of the range you are restricting to.
+#' @param qend End coordinate of the range you are restricting to.
+#' @param region Region formatted like chrX:1234-5678 instead of specifying chromosome, start and end separately.
+#' @param with_chr_prefix Prepend all chromosome names with chr (required by some downstream analyses).
+#' @param streamlined Return a basic rather than full MAF format.
+#' @param from_flatfile Set to FALSE by default.
 #'
-#' @return A data frame containing all the MAF data columns (one row per mutation)
+#' @return A data frame containing all the MAF data columns (one row per mutation).
 #' @export
 #' @import tidyverse DBI RMariaDB
 #'
@@ -945,13 +984,15 @@ get_sample_cn_segments = function(this_sample_id,
 #' my_segments=get_cn_segments(chromosome="8",qstart=128723128,qend=128774067)
 #' #Asking for chromosome names to have a chr prefix (default is un-prefixed)
 #' prefixed_segments = get_cn_segments(chromosome="12",qstart=122456912,qend=122464036,with_chr_prefix = TRUE)
-get_cn_segments = function(chromosome="",
+#'
+get_cn_segments = function(chromosome = "",
                            qstart,
                            qend,
                            region,
                            with_chr_prefix = FALSE,
                            streamlined = FALSE,
                            from_flatfile = FALSE){
+
   db = config::get("database_name")
   table_name = config::get("results_tables")$copy_number
   table_name_unmatched = config::get("results_tables")$copy_number_unmatched
@@ -965,28 +1006,31 @@ get_cn_segments = function(chromosome="",
     qend = startend[2]
   }
   if(grepl("chr", chromosome)){
-
   }else{
     chromosome = paste0("chr", chromosome)
   }
+  
   #chr prefix the query chromosome to match how it's stored in the table.
   #This isn't yet standardized in the db so it's just a workaround "for now".
   if(from_flatfile){
     base_dir = config::get()$project_base
     unmatched_path = config::get()$results_directories$controlfreec
+    
     #separated by which genome the sample was aligned to
     unmatched_hg38_path = paste0(unmatched_path, "from--genome--hg38/")
     unmatched_grch37_path = paste0(unmatched_path, "from--genome--grch37/")
-
   }else{
-    con <- DBI::dbConnect(RMariaDB::MariaDB(), dbname = db)
+    con = DBI::dbConnect(RMariaDB::MariaDB(), dbname = db)
+    
     #remove the prefix if this is false (or leave as is otherwise)
     if(missing(qstart) & missing(region)){
       all_segs_matched = dplyr::tbl(con, table_name) %>% 
         as.data.frame()
+
       all_segs_unmatched = dplyr::tbl(con, table_name_unmatched) %>% 
         as.data.frame()
     }else{
+      
       #TODO improve this query to allow for partial overlaps, create Issue on Github?
       all_segs_matched = dplyr::tbl(con,table_name) %>%
         dplyr::filter((chrom == chromosome & start <= qstart & end >= qend) | (chrom == chromosome & start >= qstart & end <= qend)) %>%
@@ -999,14 +1043,12 @@ get_cn_segments = function(chromosome="",
         as.data.frame() %>%
         dplyr::filter(! ID %in% all_segs_matched$ID)  %>%
         dplyr::mutate(method = "controlfreec")
+        
       DBI::dbDisconnect(con)
     }
   }
-
   all_segs = rbind(all_segs_matched, all_segs_unmatched)
-
   all_segs = dplyr::mutate(all_segs, CN = round(2*2^log.ratio))
-
   if(! with_chr_prefix){
     all_segs = all_segs %>% 
       dplyr::mutate(chrom = gsub("chr", "", chrom))
@@ -1014,24 +1056,26 @@ get_cn_segments = function(chromosome="",
   if(streamlined){
     all_segs = dplyr::select(all_segs, ID, CN)
   }
-
   return(all_segs)
 }
 
 
-#' Housekeeping function to add results to a table
+#' Housekeeping function to add results to a table.
 #'
-#' @param table_name The name of the database table to update/populate
-#' @param data_df A dataframe of values to load into the table
+#' @param table_name The name of the database table to update/populate.
+#' @param data_df A dataframe of values to load into the table.
 #'
-#' @return
+#' @return Table
 #' @export
 #'
 #' @examples
+#' table_up = append_to_table("my_table", "my_df")
+#'
 append_to_table = function(table_name,
                            data_df){
+
   db = config::get("database_name")
-  con <- DBI::dbConnect(RMariaDB::MariaDB(), dbname = db)
+  con = DBI::dbConnect(RMariaDB::MariaDB(), dbname = db)
   dbWriteTable(con, table_name, table_data, append = TRUE)
 }
 
@@ -1039,23 +1083,26 @@ append_to_table = function(table_name,
 #' Prepare a matrix with one row per sample and one column per region using a set of hypermutated regions.
 #' Values are the number of mutations in that patient in the region.
 #'
-#' @param regions_bed A bed file with one row for each region
-#' @param maf_data Optionally provide a data frame in the MAF format, otherwise the database will be used
+#' @param regions_bed A bed file with one row for each region.
+#' @param maf_data Optionally provide a data frame in the MAF format, otherwise the database will be used.
 #' @param sample_metadata This is used to complete your matrix. All GAMBL samples will be used by default. Provide a data frame with at least sample_id for all samples if you are using non-GAMBL data.
-#' @param use_name_column Set this to true to force the function to use the value in column "name" to name each feature in the output
-#' @param from_indexed_flatfile Set to TRUE to avoid using the database and instead rely on flatfiles (only works for streamlined data, not full MAF details)
-#' @param allow_clustered Set to TRUE to utilize the latest SLMS-3 variant calls that allow clustered variants
+#' @param use_name_column Set this to true to force the function to use the value in column "name" to name each feature in the output.
+#' @param from_indexed_flatfile Set to TRUE to avoid using the database and instead rely on flatfiles (only works for streamlined data, not full MAF details).
+#' @param allow_clustered Set to TRUE to utilize the latest SLMS-3 variant calls that allow clustered variants.
 #'
-#' @return
+#' @return Matrix
 #' @export
 #'
 #' @examples
+#' matrix = get_ashm_count_matrix(regions_bed = "my_bed.bed", sample_metadata = "GAMBL-metadata")
+#'
 get_ashm_count_matrix = function(regions_bed,
                                  maf_data,
                                  sample_metadata,
                                  use_name_column = FALSE,
                                  from_indexed_flatfile = FALSE,
                                  allow_clustered = FALSE){
+
   if(missing(regions_bed)){
     regions_bed = grch37_ashm_regions
   }
@@ -1084,34 +1131,37 @@ get_ashm_count_matrix = function(regions_bed,
 
   all_counts_wide = pivot_wider(all_counts, id_cols = sample_id, names_from = region_name, values_from = n) %>%
     column_to_rownames(var = "sample_id")
+
   return(all_counts_wide)
 }
 
 
-#' Get all somatic mutations for a given gene or list of genes and optionally restrict to coding variants
+#' Get all somatic mutations for a given gene or list of genes and optionally restrict to coding variants.
 #'
-#' @param gene_symbol Character vector of gene symbols
-#' @param coding_only Logical parameter indicating whether to return only coding mutations. Default is FALSE
-#' @param include_silent Logical parameter indicating whether to include siment mutations into coding mutations. Default is TRUE
-#' @param rename_splice_region Logical parameter indicating whether to rename splice regions. Default is TRUE
+#' @param gene_symbol Character vector of gene symbols.
+#' @param coding_only Logical parameter indicating whether to return only coding mutations. Default is FALSE.
+#' @param include_silent Logical parameter indicating whether to include siment mutations into coding mutations. Default is TRUE.
+#' @param rename_splice_region Logical parameter indicating whether to rename splice regions. Default is TRUE.
 #'
-#' @return MAF-format data frame of mutations in query gene
+#' @return MAF-format data frame of mutations in query gene.
 #' @export
 #' @import tidyverse DBI RMariaDB dbplyr
 #'
 #' @examples
 #' #basic usage
 #' get_ssm_by_gene(gene_symbol=c("EZH2"),coding_only=TRUE)
+#'
 get_ssm_by_gene = function(gene_symbol,
                            coding_only = FALSE,
                            include_silent = TRUE,
                            rename_splice_region = TRUE){
+
   table_name = config::get("results_tables")$ssm
   db = config::get("database_name")
   if(!include_silent){
     coding_class = coding_class[coding_class != "Silent"]
   }
-  con <- DBI::dbConnect(RMariaDB::MariaDB(), dbname = db)
+  con = DBI::dbConnect(RMariaDB::MariaDB(), dbname = db)
   muts_gene = dplyr::tbl(con,table_name) %>%
     dplyr::filter(Hugo_Symbol %in% gene_symbol)
   if(coding_only){
@@ -1128,24 +1178,24 @@ get_ssm_by_gene = function(gene_symbol,
 }
 
 
-#' Efficiently retrieve all mutations across a range of genomic regions
+#' Efficiently retrieve all mutations across a range of genomic regions.
 #'
-#' @param regions_list Either provide a vector of regions in the chr:start-end format OR
-#' @param regions_bed Better yet, provide a bed file with the coordinates you want to retrieve
-#' @param streamlined Return a basic rather than full MAF format, default is FALSE
-#' @param use_name_column If your bed-format data frame has a name column (must be named "name") these can be used to name your regions
-#' @param from_indexed_flatfile Set to TRUE to avoid using the database and instead rely on flatfiles (only works for streamlined data, not full MAF details)
+#' @param regions_list Either provide a vector of regions in the chr:start-end format OR.
+#' @param regions_bed Better yet, provide a bed file with the coordinates you want to retrieve.
+#' @param streamlined Return a basic rather than full MAF format, default is FALSE.
+#' @param use_name_column If your bed-format data frame has a name column (must be named "name") these can be used to name your regions.
+#' @param from_indexed_flatfile Set to TRUE to avoid using the database and instead rely on flatfiles (only works for streamlined data, not full MAF details).
 #' @param mode Only works with indexed flatfiles. Accepts 2 options of "slms-3" and "strelka2" to indicate which variant caller to use. Default is "slms-3".
-#' @param allow_clustered Logical parameter indicating whether to use SLMS-3 results with clustered events. Default is FALSE
+#' @param allow_clustered Logical parameter indicating whether to use SLMS-3 results with clustered events. Default is FALSE.
 #'
-#' @return Returns a data frame of variants in MAF-like format
+#' @return Returns a data frame of variants in MAF-like format.
 #' @export
 #'
 #' @examples
 #' #basic usage, adding custom names from bundled ashm data frame
 #' regions_bed = grch37_ashm_regions %>% mutate(name=paste(gene,region,sep="_"))
 #' ashm_maf=get_ssm_by_regions(regions_bed=regions_bed,streamlined=TRUE,use_name_column=use_name_column)
-
+#'
 get_ssm_by_regions = function(regions_list,
                               regions_bed,
                               streamlined = FALSE,
@@ -1154,6 +1204,7 @@ get_ssm_by_regions = function(regions_list,
                               from_indexed_flatfile = FALSE,
                               mode = "slms-3",
                               allow_clustered = FALSE){
+
   bed2region = function(x){
     paste0(x[1], ":", as.numeric(x[2]), "-", as.numeric(x[3]))
   }
@@ -1166,17 +1217,17 @@ get_ssm_by_regions = function(regions_list,
   }
   if(missing(maf_data)){
     region_mafs = lapply(regions, function(x){get_ssm_by_region(region = x,
-                                                               streamlined = streamlined,
-                                                               from_indexed_flatfile = from_indexed_flatfile,
-                                                               mode = mode,
-                                                               allow_clustered = allow_clustered)})
+                                                                streamlined = streamlined,
+                                                                from_indexed_flatfile = from_indexed_flatfile,
+                                                                mode = mode,
+                                                                 allow_clustered = allow_clustered)})
   }else{
     region_mafs = lapply(regions, function(x){get_ssm_by_region(region = x,
-                                                               streamlined = streamlined,
-                                                               maf_data = maf_data,
-                                                               from_indexed_flatfile = from_indexed_flatfile,
-                                                               mode = mode,
-                                                               allow_clustered = allow_clustered)})
+                                                                streamlined = streamlined,
+                                                                maf_data = maf_data,
+                                                                from_indexed_flatfile = from_indexed_flatfile,
+                                                                mode = mode,
+                                                                allow_clustered = allow_clustered)})
   }
   if(!use_name_column){
     rn = regions
@@ -1184,7 +1235,6 @@ get_ssm_by_regions = function(regions_list,
     rn = regions_bed[["name"]]
   }
   tibbled_data = tibble(region_mafs, region_name = rn)
-
   unnested_df = tibbled_data %>% 
     unnest_longer(region_mafs)
   if(streamlined){
@@ -1196,25 +1246,24 @@ get_ssm_by_regions = function(regions_list,
   }
   #need to unlist but not using unlist
   #region_maf = reduce(region_mafs,rbind)
-
   return(unlisted_df)
 }
 
 
-#' Retrieve all SSMs from the GAMBL database within a single genomic coordinate range
+#' Retrieve all SSMs from the GAMBL database within a single genomic coordinate range.
 #'
-#' @param chromosome The chromosome you are restricting to (with or without a chr prefix)
-#' @param qstart Query start coordinate of the range you are restricting to
-#' @param qend Query end coordinate of the range you are restricting to
-#' @param region Region formatted like chrX:1234-5678 instead of specifying chromosome, start and end separately
-#' @param basic_columns Set to TRUE to override the default behaviour of returning only the first 45 columns of MAF data
-#' @param streamlined Return a basic rather than full MAF format, default is FALSE
-#' @param maf_data Parameter description
-#' @param from_indexed_flatfile Set to TRUE to avoid using the database and instead rely on flatfiles (only works for streamlined data, not full MAF details)
+#' @param chromosome The chromosome you are restricting to (with or without a chr prefix).
+#' @param qstart Query start coordinate of the range you are restricting to.
+#' @param qend Query end coordinate of the range you are restricting to.
+#' @param region Region formatted like chrX:1234-5678 instead of specifying chromosome, start and end separately.
+#' @param basic_columns Set to TRUE to override the default behaviour of returning only the first 45 columns of MAF data.
+#' @param streamlined Return a basic rather than full MAF format, default is FALSE.
+#' @param maf_data Parameter description.
+#' @param from_indexed_flatfile Set to TRUE to avoid using the database and instead rely on flatfiles (only works for streamlined data, not full MAF details).
 #' @param mode Only works with indexed flatfiles. Accepts 2 options of "slms-3" and "strelka2" to indicate which variant caller to use. Default is "slms-3".
-#' @param allow_clustered Logical parameter indicating whether to use SLMS-3 results with clustered events. Default is FALSE
+#' @param allow_clustered Logical parameter indicating whether to use SLMS-3 results with clustered events. Default is FALSE.
 #'
-#' @return A data frame containing all the MAF data columns (one row per mutation)
+#' @return A data frame containing all the MAF data columns (one row per mutation).
 #' @export
 #' @import tidyverse DBI RMariaDB dbplyr
 #'
@@ -1223,6 +1272,7 @@ get_ssm_by_regions = function(regions_list,
 #' my_mutations=get_ssm_by_region(region="chr8:128,723,128-128,774,067")
 #' #specifying chromosome, start and end individually
 #' my_mutations=get_ssm_by_region(chromosome="8",qstart=128723128,qend=128774067)
+#'
 get_ssm_by_region = function(chromosome,
                              qstart,
                              qend,
@@ -1233,11 +1283,13 @@ get_ssm_by_region = function(chromosome,
                              from_indexed_flatfile = FALSE,
                              mode = "slms-3",
                              allow_clustered = FALSE){
+
   tabix_bin = "/home/rmorin/miniconda3/bin/tabix"
   table_name = config::get("results_tables")$ssm
   db = config::get("database_name")
   if(from_indexed_flatfile){
     base_path = config::get("project_base")
+    
     #test if we have permissions for the full gambl + icgc merge
     if(mode == "slms-3"){
       if(allow_clustered){
@@ -1253,7 +1305,8 @@ get_ssm_by_region = function(chromosome,
     }
     maf_path = paste0(base_path, maf_partial_path)
     maf_permissions = file.access(maf_path, 4)
-    if(maf_permissions == -1){
+    if(maf_permissions == - 1){
+      
       #currently this will only return non-ICGC results
       if(mode == "slms-3"){
         if(allow_clustered){
@@ -1267,12 +1320,13 @@ get_ssm_by_region = function(chromosome,
         stop("You requested results from indexed flatfile. The mode should be set to either slms-3 (default) or strelka2. Please specify one of these modes.")
       }
       base_path = config::get("project_base")
+      
       #default is non-ICGC
       maf_path = paste0(base_path, maf_partial_path)
     }
+    
     #substitute maf with bed.gz for indexed flatfiles
     maf_path = stringr::str_replace(maf_path, ".maf$", ".bed.gz")
-
   }
   if(!region == ""){
     region = gsub(",", "", region)
@@ -1280,12 +1334,10 @@ get_ssm_by_region = function(chromosome,
     split_chunks = unlist(strsplit(region, ":"))
     region = stringr::str_replace(region, "chr", "")
     chromosome = split_chunks[1]
-
     startend = unlist(strsplit(split_chunks[2], "-"))
     qstart=as.numeric(startend[1])
     qend=as.numeric(startend[2])
   }
-
   chromosome = gsub("chr", "", chromosome)
   if(missing(maf_data)){
     if(from_indexed_flatfile){
@@ -1296,12 +1348,12 @@ get_ssm_by_region = function(chromosome,
 
       # this is necessary because when only one row is returned, read_tsv thinks it is a file name
       }else if (length(muts) == 1){
-        region_with_one_row <- stringr::str_split(muts, "\t", n=4)
-        muts_region = data.frame(Chromosome=unlist(region_with_one_row)[1],
-           Start_Position = as.numeric(unlist(region_with_one_row)[2]),
-           End_Position = as.numeric(unlist(region_with_one_row)[3]),
-           Tumor_Sample_Barcode = unlist(region_with_one_row)[4],
-           stringsAsFactors = FALSE)
+        region_with_one_row = stringr::str_split(muts, "\t", n = 4)
+        muts_region = data.frame(Chromosome = unlist(region_with_one_row)[1],
+                                 Start_Position = as.numeric(unlist(region_with_one_row)[2]),
+                                 End_Position = as.numeric(unlist(region_with_one_row)[3]),
+                                 Tumor_Sample_Barcode = unlist(region_with_one_row)[4],
+                                 stringsAsFactors = FALSE)
       } else {
         muts_region = data.frame(Chromosome = character(),
                                  Start_Position = character(),
@@ -1309,7 +1361,7 @@ get_ssm_by_region = function(chromosome,
                                  Tumor_Sample_Barcode = character())
       }
     }else{
-      con <- DBI::dbConnect(RMariaDB::MariaDB(), dbname = db)
+      con = DBI::dbConnect(RMariaDB::MariaDB(), dbname = db)
       muts_region = dplyr::tbl(con, table_name) %>%
         dplyr::filter(Chromosome == chromosome & Start_Position > qstart & Start_Position < qend)
       
@@ -1321,32 +1373,30 @@ get_ssm_by_region = function(chromosome,
     muts_region = dplyr::filter(maf_data, Chromosome == chromosome & Start_Position > qstart & Start_Position < qend)
     muts_region = dplyr::filter(maf_data, Chromosome == chromosome & Start_Position > qstart & Start_Position < qend)
   }
-
   if(streamlined){
     muts_region = muts_region %>% 
       dplyr::select(Start_Position, Tumor_Sample_Barcode)
   }else if(basic_columns){
     muts_region = muts_region[, c(1:45)]
   }
-
   return(muts_region)
 }
 
 
-#' Retrieve all coding SSMs from the GAMBL database in MAF-like format
+#' Retrieve all coding SSMs from the GAMBL database in MAF-like format.
 #'
-#' @param limit_cohort Supply this to restrict mutations to one or more cohorts in a list
-#' @param exclude_cohort  Supply this to exclude mutations from one or more cohorts in a list
-#' @param limit_pathology Supply this to restrict mutations to one pathology
-#' @param limit_samples Supply this to restrict mutations to one sample
-#' @param force_unmatched_samples Parameter description
-#' @param basic_columns Set to TRUE to override the default behaviour of returning only the first 45 columns of MAF data
+#' @param limit_cohort Supply this to restrict mutations to one or more cohorts in a list.
+#' @param exclude_cohort  Supply this to exclude mutations from one or more cohorts in a list.
+#' @param limit_pathology Supply this to restrict mutations to one pathology.
+#' @param limit_samples Supply this to restrict mutations to one sample.
+#' @param force_unmatched_samples Parameter description.
+#' @param basic_columns Set to TRUE to override the default behaviour of returning only the first 45 columns of MAF data.
 #' @param from_flatfile Set to TRUE to obtain mutations from a local flatfile instead of the database. This can be more efficient and is currently the only option for users who do not have ICGC data access.
-#' @param allow_clustered Logical parameter indicating whether to use SLMS-3 results with clustered events. Default is FALSE
-#' @param groups Unix groups for the samples to be included. Default is both gambl and icgc_dart samples
-#' @param include_silent Logical parameter indicating whether to include siment mutations into coding mutations. Default is TRUE
+#' @param allow_clustered Logical parameter indicating whether to use SLMS-3 results with clustered events. Default is FALSE.
+#' @param groups Unix groups for the samples to be included. Default is both gambl and icgc_dart samples.
+#' @param include_silent Logical parameter indicating whether to include siment mutations into coding mutations. Default is TRUE.
 #'
-#' @return A data frame containing all the MAF data columns (one row per mutation)
+#' @return A data frame containing all the MAF data columns (one row per mutation).
 #' @export
 #' @import tidyverse DBI RMariaDB dbplyr
 #'
@@ -1354,6 +1404,7 @@ get_ssm_by_region = function(chromosome,
 #' #basic usage
 #' maf_data = get_coding_ssm(limit_cohort=c("BL_ICGC"))
 #' maf_data = get_coding_ssm(limit_samples=my_sample_ids)
+#'
 get_coding_ssm = function(limit_cohort,
                           exclude_cohort,
                           limit_pathology,
@@ -1364,22 +1415,12 @@ get_coding_ssm = function(limit_cohort,
                           allow_clustered = FALSE,
                           groups = c("gambl", "icgc_dart"),
                           include_silent = TRUE){
-  coding_class = c("Frame_Shift_Del",
-                   "Frame_Shift_Ins",
-                   "In_Frame_Del",
-                   "In_Frame_Ins",
-                   "Missense_Mutation",
-                   "Nonsense_Mutation",
-                   "Nonstop_Mutation",
-                   "Silent",
-                   "Splice_Region",
-                   "Splice_Site",
-                   "Targeted_Region",
-                   "Translation_Start_Site")
+
   if(!include_silent){
     coding_class = coding_class[coding_class != "Silent"]
   }
   all_meta = get_gambl_metadata(from_flatfile = from_flatfile)
+  
   #do all remaining filtering on the metadata then add the remaining sample_id to the query
   all_meta = all_meta %>% 
     dplyr::filter(unix_group %in% groups)
@@ -1400,10 +1441,8 @@ get_coding_ssm = function(limit_cohort,
       dplyr::filter(sample_id %in% limit_samples)
   }
   sample_ids = pull(all_meta, sample_id)
-
   if(from_flatfile){
     base_path = config::get("project_base")
-
     if(allow_clustered){
       maf_partial_path = config::get("results_filatfiles")$ssm$all$clustered_cds
     }
@@ -1412,7 +1451,8 @@ get_coding_ssm = function(limit_cohort,
     }
     maf_path = paste0(base_path,maf_partial_path)
     maf_permissions = file.access(maf_path, 4)
-    if(maf_permissions == -1){
+    if(maf_permissions == - 1){
+      
       #currently this will only return non-ICGC results
       if(allow_clustered){
         maf_partial_path = config::get("results_filatfiles")$ssm$gambl$clustered_cds
@@ -1420,6 +1460,7 @@ get_coding_ssm = function(limit_cohort,
         maf_partial_path = config::get("results_filatfiles")$ssm$gambl$cds
       }
       base_path = config::get("project_base")
+      
       #default is non-ICGC
       maf_path = paste0(base_path, maf_partial_path)
     }
@@ -1427,71 +1468,78 @@ get_coding_ssm = function(limit_cohort,
     muts = fread_maf(maf_path) %>% 
       dplyr::filter(Variant_Classification %in% coding_class) %>% 
         as.data.frame()
+
     mutated_samples = length(unique(muts$Tumor_Sample_Barcode))
     message(paste("mutations from", mutated_samples, "samples"))
   }else{
     table_name = config::get("results_tables")$ssm
     db = config::get("database_name")
-    con <- DBI::dbConnect(RMariaDB::MariaDB(), dbname = db)
+    con = DBI::dbConnect(RMariaDB::MariaDB(), dbname = db)
     muts = tbl(con,table_name) %>%
       dplyr::filter(Variant_Classification %in% coding_class) %>% 
       as.data.frame()
+
     DBI::dbDisconnect(con)
   }
   muts = muts %>%
     dplyr::filter(Tumor_Sample_Barcode %in% sample_ids)
+
   mutated_samples = length(unique(muts$Tumor_Sample_Barcode))
   message(paste("after linking with metadata, we have mutations from", mutated_samples, "samples"))
   if(basic_columns){
     muts = muts[,c(1:45)]
   }
   if(!missing(force_unmatched_samples)){
+    
     #drop rows for these samples so we can swap in the force_unmatched outputs instead
     muts = muts %>% 
       dplyr::filter(!sample_id %in% force_unmatched_samples)
+
     nsamp = length(force_unmatched_samples)
     message(paste("dropping variants from", nsamp, "samples and replacing with force_unmatched outputs"))
+    
     #get replacements using get_ssm_by_samples
     fu_muts = get_ssm_by_samples(these_sample_ids = force_unmatched_samples)
     muts = bind_rows(muts, fu_muts)
-
   }
   return(muts)
 }
 
 
-#' Get the copy number and expression for a single gene
+#' Get the copy number and expression for a single gene.
 #'
-#' @param hugo_symbol One or more gene symbols. Should match the values in a maf file
-#' @param ensembl_gene_id One or more ensembl gene IDs. Only one of hugo_symbols or ensembl_gene_ids may be used
+#' @param hugo_symbol One or more gene symbols. Should match the values in a maf file.
+#' @param ensembl_gene_id One or more ensembl gene IDs. Only one of hugo_symbols or ensembl_gene_ids may be used.
 #'
-#' @return
+#' @return A list.
 #' @import tidyverse
 #' @export
 #'
 #' @examples
+#' MYC_cn_expression = get_gene_cn_and_expression("MYC")
+#'
 get_gene_cn_and_expression = function(gene_symbol,
-                                     ensembl_id){
+                                      ensembl_id){
 
     if(!missing(gene_symbol)){
       this_row = grch37_all_gene_coordinates %>% 
         dplyr::filter(hugo_symbol == gene_symbol)
-      
+
       this_region = paste0(this_row$chromosome, ":", this_row$start, "-", this_row$end)
       gene_name = gene_symbol
     }else{
       this_row = grch37_all_gene_coordinates %>% 
         dplyr::filter(ensembl_gene_id == ensembl_id)
-      
+
       this_region = paste0(this_row$chromosome, ":", this_row$start, "-",this_row$end)
       gene_name = ensembl_id
       gene_symbol = pull(this_row, hugo_symbol)
     }
-
   gene_cn = get_cn_states(regions_list = c(this_region), region_names = c(gene_name))
   colnames(gene_cn)[1] = paste(colnames(gene_cn)[1], "CN", sep = "_")
   gene_cn = gene_cn %>% 
     rownames_to_column("sample_id")
+
   gene_exp = get_gene_expression(hugo_symbols = c(gene_symbol), join_with = "genome")
   exp_copy = left_join(gene_cn, gene_exp, by = "sample_id")
   all_meta = get_gambl_metadata()
@@ -1508,11 +1556,11 @@ get_gene_cn_and_expression = function(gene_symbol,
 #' @param join_with How to restrict cases for the join. Can be one of genome, mrna or "any"
 #' @param from_flatfile Set to TRUE to obtain mutations from a local flatfile instead of the database.
 #'
-#' @return
+#' @return A list.
 #' @export
 #'
 #' @examples
-#' MYC_expr <- get_gene_expression(hugo_symbols = c("MYC"), join_with = "mrna")
+#' MYC_expr = get_gene_expression(hugo_symbols = c("MYC"), join_with = "mrna")
 #'
 get_gene_expression = function(hugo_symbols,
                                ensembl_gene_ids,
@@ -1526,18 +1574,19 @@ get_gene_expression = function(hugo_symbols,
       metadata = get_gambl_metadata(seq_type_filter = "mrna", only_available = FALSE)
       metadata = metadata %>% 
         dplyr::select(sample_id)
+
     }else if(join_with == "genome"){
       metadata = get_gambl_metadata(only_available = FALSE)
       metadata = metadata %>% 
         dplyr::select(sample_id)
     }else{
+      
       #use every unique biopsy_id in GAMBL regardless of seq_type
       metadata = get_gambl_metadata(seq_type_filter = "any", only_available = FALSE)
       metadata = metadata %>% 
         dplyr::select(sample_id, biopsy_id)
     }
   }
-
   if(missing(hugo_symbols) & missing(ensembl_gene_ids)){
     stop("ERROR: supply at least one gene symbol or Ensembl gene ID")
   }else if(!missing(hugo_symbols) & !missing(ensembl_gene_ids)){
@@ -1547,8 +1596,9 @@ get_gene_expression = function(hugo_symbols,
     tidy_expression_file = config::get("results_merged")$tidy_expression_file
     tidy_expression_data = read_tsv(tidy_expression_file)
   }else{
+    
     #load the tidy expression data from the database
-    con <- DBI::dbConnect(RMariaDB::MariaDB(), dbname = database_name)
+    con = DBI::dbConnect(RMariaDB::MariaDB(), dbname = database_name)
     tidy_expression_data = tbl(con, "expression_vst_hg38")
   }
   if(!missing(hugo_symbols)){
@@ -1565,16 +1615,18 @@ get_gene_expression = function(hugo_symbols,
       as.data.frame() %>%
       pivot_wider(names_from = ensembl_gene_id, values_from = expression)
   }
-
   if(join_with == "mrna"){
+    
     #join to metadata
     expression_wider = dplyr::select(tidy_expression_data, -biopsy_id, -genome_sample_id)
     expression_wider = left_join(metadata, expression_wider, by = c("sample_id" = "mrna_sample_id"))
   }else if(join_with == "genome"){
     expression_wider = dplyr::select(tidy_expression_data, -mrna_sample_id, -biopsy_id) %>%
       dplyr::filter(genome_sample_id != "NA")
+
     expression_wider = left_join(metadata, expression_wider, by = c("sample_id" = "genome_sample_id"))
   }else if(join_with == "any"){
+   
    #use biopsy_id to join
     expression_wider = dplyr::select(tidy_expression_data, -mrna_sample_id, -genome_sample_id)
     expression_wider = left_join(metadata, expression_wider, by = c("biopsy_id" = "biopsy_id"))
