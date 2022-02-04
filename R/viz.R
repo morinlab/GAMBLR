@@ -469,7 +469,6 @@ plot_mutation_dynamics_heatmap = function(maf1,
 #' @param annoAlpha Optional alpha to apply to annotation colours.
 #'
 #' @return Either a vector or list of colours.
-#' @export
 #' @import dplyr ggsci
 #'
 #' @examples

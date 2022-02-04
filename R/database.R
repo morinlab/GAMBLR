@@ -507,7 +507,6 @@ add_prps_result = function(incoming_metadata){
 #' @param incoming_metadata A metadata table (probably output from get_gambl_metadata).
 #'
 #' @return Meta data with layered information (ICGC).
-#' @export
 #'
 #' @examples
 #' icgc_metadata = add_icgc_metadata(incoming_metadata = my_meta)
@@ -556,7 +555,6 @@ add_icgc_metadata = function(incoming_metadata){
 #' @param from_flatfile Optionally set to FALSE to use the database to get the survival data.
 #'
 #' @return Data frame with one row for each patient_id.
-#' @export
 #' @import tidyverse RMariaDB DBI dbplyr
 #'
 #' @examples
@@ -1069,7 +1067,6 @@ get_cn_segments = function(chromosome = "",
 #' @param data_df A dataframe of values to load into the table.
 #'
 #' @return Table
-#' @export
 #'
 #' @examples
 #' table_up = append_to_table("my_table", "my_df")

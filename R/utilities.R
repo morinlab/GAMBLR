@@ -205,7 +205,6 @@ get_coding_ssm_status = function(gene_symbols,
 #' @param x
 #'
 #' @return Numeric value.
-#' @export
 #'
 #' @examples
 #' trimmed = trim_scale_expression(2)
@@ -411,7 +410,6 @@ sv_to_bedpe_file = function(sv_df,
 #' @param region A region string e.g. "chrX:12345-678910".
 #'
 #' @return A named list.
-#' @export
 #'
 #' @examples
 #' chr_start_end = region_to_chunks("chr1:1111-2222")
@@ -850,7 +848,6 @@ collate_derived_results = function(sample_table,
 #' @param sample_table A data frame with sample_id as the first column.
 #'
 #' @return The sample table with additional columns.
-#' @export
 #' @import tidyverse
 #'
 #' @examples
@@ -877,7 +874,6 @@ collate_csr_results = function(sample_table){
 #' @param include_silent Logical parameter indicating whether to include siment mutations into coding mutations. Default is FALSE.
 #'
 #' @return Sample table.
-#' @export
 #'
 #' @examples
 #' ssm_results = colalte_ssm_results(samples, TRUE, TRUE)
@@ -951,7 +947,6 @@ collate_ssm_results = function(sample_table,
 #' @param sample_table A data frame with sample_id as the first column.
 #'
 #' @return The sample table with additional columns.
-#' @export
 #' @import tidyverse
 #'
 #' @examples
@@ -1285,7 +1280,6 @@ estimate_purity = function(in_maf,
 #' @param file_path Path to the table contents to populate.
 #'
 #' @return Table.
-#' @export
 #'
 #' @examples
 #' refresh_full_table(table_x, con,file_x)
@@ -1304,7 +1298,6 @@ refresh_full_table = function(table_name,
 #' Refresh the contents of meta data table.
 #'
 #' @return Table.
-#' @export
 #'
 #' @examples
 #' ref_meta = referesh_metadata_tables()
@@ -1427,7 +1420,6 @@ collate_extra_metadata = function(sample_table,
 #' @param sbs_manipulation Optional variable for transforming sbs values (e.g log, scale).
 #'
 #' @return A data frame with new columns added.
-#' @export
 #' @import tidyverse
 #'
 #' @examples
@@ -1503,7 +1495,6 @@ collate_sbs_results = function(sample_table,
 #' @param sample_table A data frame with sample_id as the first column.
 #'
 #' @return Samples table.
-#' @export
 #' @import tidyverse
 #'
 #' @examples
@@ -1537,7 +1528,6 @@ collate_nfkbiz_results = function(sample_table){
 #' @param sample_table A data frame with sample_id as the first column.
 #'
 #' @return Samples table.
-#' @export
 #' @import tidyverse
 #'
 #' @examples
@@ -1577,7 +1567,6 @@ collate_ashm_results = function(sample_table){
 #' @param oncogenes Which oncogenes to collate SVs from.
 #'
 #' @return Data frame with additional columns ({tool}_{oncogene} and {tool}_{oncogene}_{partner}).
-#' @export
 #' @import tidyverse
 #'
 #' @examples
