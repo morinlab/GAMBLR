@@ -808,13 +808,13 @@ collate_results = function(sample_table,
 }
 
 
+#' INTERNAL FUNCTION called by collate_results, not meant for out-of-package usage.
 #' Extract derived results stored in the database (these are usually slower to derive on the fly).
 #'
 #' @param sample_table A data frame with sample_id as the first column.
 #' @param from_flatfile Optional argument whether to use database or flat file to retrieve mutations. Default is FALSE, TRUE is not yet implemented.
 #'
 #' @return Data frame with one row per sample. Contains the contents of the derived_data table in the database.
-#' @export
 #' @import tidyverse DBI RMariaDB dbplyr
 #'
 #' @examples
@@ -1365,13 +1365,12 @@ sanity_check_metadata = function(){
 }
 
 
-#' Helper function.
+#' INTERNAL FUNCTION called by collate_results, not meant for out-of-package usage.
 #' 
 #' @param sample_table A data frame with sample_id as the first column.
 #' @param somalier_output Somalier ancestery.tsv
 #' 
 #' @return Table.
-#' @export
 #'
 #' @examples
 #' table = collate_ancestry(sample_table = "my_sample_table.txt")
@@ -1391,13 +1390,12 @@ collate_ancestry = function(sample_table,
 }
 
 
-#' Helper function.
+#' INTERNAL FUNCTION called by collate_results, not meant for out-of-package usage.
 #' 
 #' @param sample_table A data frame with sample_id as the first column.
 #' @param file_path Path to extra emtadata.
 #' 
 #' @return Table.
-#' @export
 #'
 #' @examples
 #' table = collate_extra_metadata(sample_table = "my_sample_table.txt")

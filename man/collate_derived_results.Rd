@@ -2,7 +2,8 @@
 % Please edit documentation in R/utilities.R
 \name{collate_derived_results}
 \alias{collate_derived_results}
-\title{Extract derived results stored in the database (these are usually slower to derive on the fly).}
+\title{INTERNAL FUNCTION called by collate_results, not meant for out-of-package usage.
+Extract derived results stored in the database (these are usually slower to derive on the fly).}
 \usage{
 collate_derived_results(sample_table, from_flatfile = FALSE)
 }
@@ -15,6 +16,7 @@ collate_derived_results(sample_table, from_flatfile = FALSE)
 Data frame with one row per sample. Contains the contents of the derived_data table in the database.
 }
 \description{
+INTERNAL FUNCTION called by collate_results, not meant for out-of-package usage.
 Extract derived results stored in the database (these are usually slower to derive on the fly).
 }
 \examples{

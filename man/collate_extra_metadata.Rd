@@ -2,7 +2,7 @@
 % Please edit documentation in R/utilities.R
 \name{collate_extra_metadata}
 \alias{collate_extra_metadata}
-\title{Helper function.}
+\title{INTERNAL FUNCTION called by collate_results, not meant for out-of-package usage.}
 \usage{
 collate_extra_metadata(sample_table, file_path)
 }
@@ -15,7 +15,7 @@ collate_extra_metadata(sample_table, file_path)
 Table.
 }
 \description{
-Helper function.
+INTERNAL FUNCTION called by collate_results, not meant for out-of-package usage.
 }
 \examples{
 table = collate_extra_metadata(sample_table = "my_sample_table.txt")

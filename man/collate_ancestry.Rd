@@ -2,7 +2,7 @@
 % Please edit documentation in R/utilities.R
 \name{collate_ancestry}
 \alias{collate_ancestry}
-\title{Helper function.}
+\title{INTERNAL FUNCTION called by collate_results, not meant for out-of-package usage.}
 \usage{
 collate_ancestry(sample_table, somalier_output)
 }
@@ -15,7 +15,7 @@ collate_ancestry(sample_table, somalier_output)
 Table.
 }
 \description{
-Helper function.
+INTERNAL FUNCTION called by collate_results, not meant for out-of-package usage.
 }
 \examples{
 table = collate_ancestry(sample_table = "my_sample_table.txt")
