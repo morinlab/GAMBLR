@@ -23,7 +23,7 @@ focal_cn_plot = function(region,
                          segment_size = 1,
                          crop_segments = TRUE,
                          sort_by_annotation = c('pathology'),
-                         crop_distance = 1000 000 00){
+                         crop_distance = 100000000){
 
   if(!missing(gene)){
     region = gene_to_region(gene)
@@ -458,6 +458,7 @@ plot_mutation_dynamics_heatmap = function(maf1,
 }
 
 
+#' INTERNAL FUNCTION called by plot_sample_circos and get_mutation_frequency_bin_matrix, not meant for out-of-package usage.
 #' Assign a colour palette to metadata columns automatically and consistently.
 #'
 #' @param metadataColumns Names of the metadata columns to assign colours for.
@@ -639,28 +640,26 @@ plot_sample_circos = function(this_sample_id,
                               cnv_df,
                               ssm_df,
                               include_sv = TRUE,
-                              include_cnv = TRUE,
                               include_ssm = FALSE,
                               legend_metadata_columns,
-                              legend_metadata_names=c(),
+                              legend_metadata_names = c(),
+                              include_cnv = TRUE,
                               chrom_list,
                               label_genes,
                               auto_label_sv = FALSE){
 
-  add_cnv= function(cnv_df){
-
-    bed = data.frame(cnv_df[, c("chrom", "start", "end", "log.ratio")])
-    colnames(bed)=c("chr", "start", "end", "value1")
+  add_cnv = function(cnv_df){
+    bed = data.frame(cnv_df[,c("chrom", "start", "end", "log.ratio")])
+    colnames(bed) = c("chr", "start", "end", "value1")
     col_fun = colorRamp2(c(-1, 0, 1), c("blue", "white", "red"))
     circos.genomicTrackPlotRegion(bed, stack = TRUE, panel.fun = function(region, value, ...) {
-      circos.genomicRect(region, value, col = col_fun(value),
-                         border = NA, posTransform = NULL, ...)
+      circos.genomicRect(region, value, col = col_fun(value), border = NA, posTransform = NULL, ...)
       i = getI(...)
       cell.xlim = get.cell.meta.data("cell.xlim")
     }, bg.border = NA)
   }
   if(missing(cnv_df)){
-    cnv_df = get_sample_cn_segments(sample_id = this_sample_id, with_chr_prefix = TRUE)
+    cnv_df = get_sample_cn_segments(this_sample_id = this_sample_id, with_chr_prefix = TRUE)
   }
   if(missing(chrom_list)){
   
@@ -1946,7 +1945,7 @@ prettyForestPlot = function(maf,
       coord_flip() +
       scale_fill_manual(name = comparison_name, values = colours, labels = labels[levels(metadata$comparison)]) +
       cowplot::theme_cowplot() +
-      theme(axis.text.y = element_blank(), legend.position = "bottom", legend.justification = #condition missing?)
+      theme(axis.text.y = element_blank(), legend.position = "bottom", legend.justification = ) #condition missing?)
 
   legend = cowplot::get_legend(bar)
 
@@ -2160,6 +2159,7 @@ splendidHeatmap = function(this_matrix,
     as.data.frame(.) %>%
     dplyr::mutate_all(~(./i) / nrow(metadata_df)))
   }
+  
   m = t(apply(STACKED, 1, function(x) x/sum(x)))
 
   used_for_ordering_df = t(base::merge(mat_2 %>%
