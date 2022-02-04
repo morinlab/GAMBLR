@@ -199,6 +199,7 @@ get_coding_ssm_status = function(gene_symbols,
 }
 
 
+#' INTERNAL FUNCTION called by prettyOncoplot, not meant for out-of-package usage.
 #' Unsure what this function actually does, old helper function that is outdated?
 #'
 #' @param x
@@ -404,6 +405,7 @@ sv_to_bedpe_file = function(sv_df,
   write.table(sv_df, file = bed_file, sep = "\t", quote = F, row.names = F, col.names = F)
 }
 
+#' INTERNAL FUNCTION called by calc_mutation_frequency_sliding_windows, not meant for out-of-package usage.
 #' Parse a region string into chomosome, start and end.
 #'
 #' @param region A region string e.g. "chrX:12345-678910".
@@ -842,6 +844,7 @@ collate_derived_results = function(sample_table,
 }
 
 
+#' INTERNAL FUNCTION called by collate_results, not meant for out-of-package usage.
 #' Collate a few CSR annotations, including MiXCR.
 #'
 #' @param sample_table A data frame with sample_id as the first column.
@@ -866,6 +869,7 @@ collate_csr_results = function(sample_table){
 }
 
 
+#' INTERNAL FUNCTION called by collate_results, not meant for out-of-package usage.
 #' Compute some summary statistics based on SSM calls.
 #'
 #' @param sample_table A data frame with sample_id as the first column.
@@ -941,6 +945,7 @@ collate_ssm_results = function(sample_table,
 }
 
 
+#' INTERNAL FUNCTION called by collate_results, not meant for out-of-package usage.
 #' Collate all SV calls from the genome data and summarize for main oncogenes of interest per sample.
 #'
 #' @param sample_table A data frame with sample_id as the first column.
@@ -1272,6 +1277,7 @@ estimate_purity = function(in_maf,
 }
 
 
+#' INTERNAL FUNCTION called by referesh_metadata_tables, not meant for out-of-package usage.
 #' Refresh the contents of a database table.
 #'
 #' @param table_name Name of table to refresh.
@@ -1294,6 +1300,7 @@ refresh_full_table = function(table_name,
 }
 
 
+#' INTERNAL FUNCTION, not meant for out-of-package usage.
 #' Refresh the contents of meta data table.
 #'
 #' @return Table.
@@ -1411,6 +1418,7 @@ collate_extra_metadata = function(sample_table,
 }
 
 
+#' INTERNAL FUNCTION called by collate_results, not meant for out-of-package usage.
 #' Bring in the results from mutational signature analysis.
 #'
 #' @param sample_table A data frame with sample_id as the first column.
@@ -1489,6 +1497,7 @@ collate_sbs_results = function(sample_table,
 }
 
 
+#' INTERNAL FUNCTION called by collate_results, not meant for out-of-package usage.
 #' Determine which cases have NFKBIZ UTR mutations.
 #'
 #' @param sample_table A data frame with sample_id as the first column.
@@ -1522,6 +1531,7 @@ collate_nfkbiz_results = function(sample_table){
 }
 
 
+#' INTERNAL FUNCTION called by collate_results, not meant for out-of-package usage.
 #' Determine the hypermutation status of a few genes.
 #'
 #' @param sample_table A data frame with sample_id as the first column.
@@ -1559,6 +1569,7 @@ collate_ashm_results = function(sample_table){
 }
 
 
+#' INTERNAL FUNCTION called by collate_results, not meant for out-of-package usage.
 #' Determine and summarize which cases have specific oncogene SVs.
 #'
 #' @param sample_table A data frame with sample_id as the first column.
@@ -2065,7 +2076,6 @@ genome_to_exome = function(maf,
                            genome_build = "grch37",
                            padding = 100,
                            chr_prefixed = FALSE){
-
 
   if(missing(custom_bed)){
       # first check that the genome build provided is supported
