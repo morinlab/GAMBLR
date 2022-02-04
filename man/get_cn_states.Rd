@@ -2,7 +2,7 @@
 % Please edit documentation in R/database.R
 \name{get_cn_states}
 \alias{get_cn_states}
-\title{Get a copy number matrix for all samples based on segmented data in database}
+\title{Get a copy number matrix for all samples based on segmented data in database.}
 \usage{
 get_cn_states(
   regions_list,
@@ -13,20 +13,25 @@ get_cn_states(
 )
 }
 \arguments{
-\item{regions_list}{A list of regions in the format chrom:start-end}
+\item{regions_list}{A list of regions in the format chrom:start-end.}
 
-\item{regions_bed}{A bed file with one row for each region you want to determine the CN state from}
+\item{regions_bed}{A bed file with one row for each region you want to determine the CN state from.}
 
-\item{region_names}{}
+\item{region_names}{Subset CN states on specific regions (gene symbols e.g FCGR2B).}
+
+\item{all_cytobands}{Include all cytobands, default is set to FALSE. Currently only supports hg19.}
+
+\item{use_cytoband_name}{Use cytoband names instad of region name, e.g p36.33.}
 }
 \value{
-
+Copy number matrix.
 }
 \description{
-Get a copy number matrix for all samples based on segmented data in database
+Get a copy number matrix for all samples based on segmented data in database.
 }
 \examples{
 #basic usage, generic lymphoma gene list
 cn_matrix = get_cn_states(regions_bed=grch37_lymphoma_genes_bed)
-single_gene_cn = get_cn_states(regions_list=c(this_region),region_names = c("FCGR2B"))
+single_gene_cn = get_cn_states(regions_list=c(this_region), region_names = c("FCGR2B"))
+
 }

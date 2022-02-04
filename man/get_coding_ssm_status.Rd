@@ -2,7 +2,7 @@
 % Please edit documentation in R/utilities.R
 \name{get_coding_ssm_status}
 \alias{get_coding_ssm_status}
-\title{Tabulate mutation status for non-silent SSMs for a set of genes}
+\title{Tabulate mutation status for non-silent SSMs for a set of genes.}
 \usage{
 get_coding_ssm_status(
   gene_symbols,
@@ -23,27 +23,32 @@ get_coding_ssm_status(
 
 \item{these_samples_metadata}{The matedata for samples of interest to be included in the returned matrix. Only the column "sample_id" is required. If not provided, the matrix is tabulated for all available samples as default.}
 
-\item{from_flatfile}{Optional argument whether to use database or flat file to retrieve mutations.}
+\item{from_flatfile}{Optional argument whether to use database or flat file to retrieve mutations. Default is TRUE.}
 
 \item{maf_path}{If the status of coding SSM should be tabulated from a custom maf file, provide path to the maf in this argument. The default is set to NULL.}
 
+\item{maf_data}{Either a maf loaded from disk or from the database using a get_ssm function.}
+
 \item{include_hotspots}{Logical parameter indicating whether hotspots object should also be tabulated. Default is TRUE.}
 
-\item{recurrence_min}{Integer value indicating minimal recurrence level}
+\item{recurrence_min}{Integer value indicating minimal recurrence level.}
 
 \item{review_hotspots}{Logical parameter indicating whether hotspots object should be reviewed to include functionally relevant mutations or rare lymphoma-related genes. Default is TRUE.}
 
-\item{include_silent}{Logical parameter indicating whether to include siment mutations into coding mutations. Default is TRUE}
+\item{genes_of_interest}{List of genes for hotspot review. Currently only FOXO1, MYD88, and CREBBP are supported.}
 
-\item{...}{Other parameters accepted by the review_hotspots() function}
+\item{genome_build}{Reference genome build for the coordinates in the MAF file. The default is hg19 genome build.}
+
+\item{include_silent}{Logical parameter indicating whether to include siment mutations into coding mutations. Default is TRUE.}
 }
 \value{
-
+Data frame.
 }
 \description{
-Tabulate mutation status for non-silent SSMs for a set of genes
+Tabulate mutation status for non-silent SSMs for a set of genes.
 }
 \examples{
 coding_tabulated_df = get_coding_ssm_status(gene_symbols=c("MYC","KMT2D"))
 coding_tabulated_df = get_coding_ssm_status() #all lymphoma genes from bundled NHL gene list
+
 }

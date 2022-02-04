@@ -2,7 +2,7 @@
 % Please edit documentation in R/utilities.R
 \name{review_hotspots}
 \alias{review_hotspots}
-\title{Annotate MAF-like data frome with a hot_spot column indicating recurrent mutations}
+\title{Annotate MAF-like data frome with a hot_spot column indicating recurrent mutations.}
 \usage{
 review_hotspots(
   annotated_maf,
@@ -18,11 +18,12 @@ review_hotspots(
 \item{genome_build}{Reference genome build for the coordinates in the MAF file. The default is hg19 genome build.}
 }
 \value{
-The same data frame with reviewed column "hot_spot"
+The same data frame with reviewed column "hot_spot".
 }
 \description{
-Annotate MAF-like data frome with a hot_spot column indicating recurrent mutations
+Annotate MAF-like data frome with a hot_spot column indicating recurrent mutations.
 }
 \examples{
 hot_ssms = review_hotspots(annotate_hotspots(get_coding_ssm()), genes_of_interest=c("CREBBP"))
+
 }

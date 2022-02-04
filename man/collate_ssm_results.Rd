@@ -2,18 +2,26 @@
 % Please edit documentation in R/utilities.R
 \name{collate_ssm_results}
 \alias{collate_ssm_results}
-\title{Compute some summary statistics based on SSM calls}
+\title{INTERNAL FUNCTION called by collate_results, not meant for out-of-package usage.
+Compute some summary statistics based on SSM calls.}
 \usage{
 collate_ssm_results(sample_table, from_flatfile = TRUE, include_silent = FALSE)
 }
 \arguments{
-\item{from_flatfile}{Optional argument whether to use database or flat file to retrieve mutations}
+\item{sample_table}{A data frame with sample_id as the first column.}
 
-\item{include_silent}{Logical parameter indicating whether to include siment mutations into coding mutations. Default is FALSE}
+\item{from_flatfile}{Optional argument whether to use database or flat file to retrieve mutations, default is TRUE.}
+
+\item{include_silent}{Logical parameter indicating whether to include siment mutations into coding mutations. Default is FALSE.}
 }
 \value{
-
+Sample table.
 }
 \description{
-Compute some summary statistics based on SSM calls
+INTERNAL FUNCTION called by collate_results, not meant for out-of-package usage.
+Compute some summary statistics based on SSM calls.
+}
+\examples{
+ssm_results = colalte_ssm_results(samples, TRUE, TRUE)
+
 }

@@ -2,7 +2,7 @@
 % Please edit documentation in R/viz.R
 \name{get_mutation_frequency_bin_matrix}
 \alias{get_mutation_frequency_bin_matrix}
-\title{Count hypermutated bins and generate heatmaps/cluster the data}
+\title{Count hypermutated bins and generate heatmaps/cluster the data.}
 \usage{
 get_mutation_frequency_bin_matrix(
   regions,
@@ -32,43 +32,61 @@ get_mutation_frequency_bin_matrix(
 )
 }
 \arguments{
-\item{regions}{Vector of regions in the format "chr:start-end"}
+\item{regions}{Vector of regions in the format "chr:start-end".}
 
-\item{these_samples_metadata}{GAMBL metadata subset to the cases you want to process (or full metadata)}
+\item{regions_df}{Data frame of regions with four columns (chrom,start,end,gene_name).}
 
-\item{region_padding}{How many bases will be added on the left and right of the regions to ensure any small regions are sufficiently covered by bins}
+\item{these_samples_metadata}{GAMBL metadata subset to the cases you want to process (or full metadata).}
 
-\item{metadataColumns}{What metadata will be shown in the visualization}
+\item{region_padding}{How many bases will be added on the left and right of the regions to ensure any small regions are sufficiently covered by bins. Default is  1000.}
 
-\item{sortByColumns}{Which of the metadata to sort on for the heatmap}
+\item{metadataColumns}{What metadata will be shown in the visualization.}
 
-\item{customColour}{Optional named list of named vectors for specifying all colours for metadata. Can be generated with map_metadata_to_colours}
+\item{sortByColumns}{Which of the metadata to sort on for the heatmap.}
 
-\item{slide_by}{How far to shift before starting the next window}
+\item{expressionColumns}{Optional variable for retreiving expression values for a specific gene(s).}
 
-\item{window_size}{The width of your sliding window}
+\item{orientation}{Specify the sample orientation, default is sample_rows.}
 
-\item{min_bin_recurrence}{How many samples a bin must be mutated in to retain in the visualization}
+\item{customColour}{Optional named list of named vectors for specifying all colours for metadata. Can be generated with map_metadata_to_colours. Default is NULL.}
 
-\item{min_bin_patient}{How many bins must a patient mutated in to retain in the visualization}
+\item{slide_by}{How far to shift before starting the next window.}
 
-\item{cluster_rows_heatmap}{Optional parameter to enable/disable clustering of each dimension of the heatmap}
+\item{window_size}{The width of your sliding window.}
 
-\item{show_gene_colours}{Optional logical argument indicating whether regions should have associated colours plotted as annotation track of heatmap}
+\item{min_count_per_bin}{Minimum counts per bin, default is 3.}
 
-\item{legend_row}{Fiddle with these to widen or narrow your legend}
+\item{min_bin_recurrence}{How many samples a bin must be mutated in to retain in the visualization.}
 
-\item{legend_col}{Accepts one of "horizontal" (default) or "vertical" to indicate in which direction the legend will be drawn}
+\item{min_bin_patient}{How many bins must a patient mutated in to retain in the visualization.}
 
-\item{from_indexed_flatfile}{Set to TRUE to avoid using the database and instead rely on flatfiles (only works for streamlined data, not full MAF details)}
+\item{region_fontsize}{Fontsize of regions in plot, default is 8ppt.}
+
+\item{cluster_rows_heatmap}{Optional parameter to enable/disable clustering of each dimension of the heatmap. Default is FALSE.}
+
+\item{cluster_cols_heatmap}{Optional parameter to enable/disable clustering of each dimension of the heatmap. Default is FALSE.}
+
+\item{show_gene_colours}{Optional logical argument indicating whether regions should have associated colours plotted as annotation track of heatmap.}
+
+\item{legend_row}{Fiddle with these to widen or narrow your legend.}
+
+\item{legend_col}{Fiddle with these to widen or narrow your legend.}
+
+\item{legend_direction}{Accepts one of "horizontal" (default) or "vertical" to indicate in which direction the legend will be drawn.}
+
+\item{legendFontSize}{Fontsize of legend in plot,, defualt is 10ppt.}
+
+\item{from_indexed_flatfile}{Set to TRUE to avoid using the database and instead rely on flatfiles (only works for streamlined data, not full MAF details).}
 
 \item{mode}{Only works with indexed flatfiles. Accepts 2 options of "slms-3" and "strelka2" to indicate which variant caller to use. Default is "slms-3".}
-
-\item{region_df}{Data frame of regions with four columns (chrom,start,end,gene_name)}
 }
 \value{
-
+Nothing
 }
 \description{
-Count hypermutated bins and generate heatmaps/cluster the data
+Count hypermutated bins and generate heatmaps/cluster the data.
+}
+\examples{
+mut_freq = get_mutation_frequency_bin_matrix(regions = "mutations.bed", region_padding = 1500, show_gene_colours = TRUE, legendFontSize = 12)
+
 }

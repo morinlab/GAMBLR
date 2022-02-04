@@ -2,7 +2,7 @@
 % Please edit documentation in R/utilities.R
 \name{make_igv_snapshot}
 \alias{make_igv_snapshot}
-\title{Load bams and generate an IGV screenshot for one or more regions}
+\title{Load bams and generate an IGV screenshot for one or more regions.}
 \usage{
 make_igv_snapshot(
   bams,
@@ -18,33 +18,31 @@ make_igv_snapshot(
 )
 }
 \arguments{
-\item{bams}{Character vector containing the full path to one or more bam files}
+\item{bams}{Character vector containing the full path to one or more bam files.}
 
-\item{genome_build}{String specifying the genome build for the bam files provided}
+\item{genome_build}{String specifying the genome build for the bam files provided.}
 
-\item{region}{Optionally specify the region as a single string (e.g. "chr1:1234-1235")}
+\item{region}{Optionally specify the region as a single string (e.g. "chr1:1234-1235").}
 
-\item{padding}{Optionally specify a positive value to broaden the region around the specified position}
+\item{padding}{Optionally specify a positive value to broaden the region around the specified position. Default is 200.}
 
-\item{chrom}{Optionally specify the region by specifying the chromosome, start and end (see below)}
+\item{chrom}{Optionally specify the region by specifying the chromosome, start and end (see below).}
 
-\item{start}{Optionally specify the region by specifying the start}
+\item{start}{Optionally specify the region by specifying the start.}
 
-\item{end}{Optionally specify the region by specifying the end}
+\item{end}{Optionally specify the region by specifying the end.}
 
-\item{sample_id}{Specify the sample_id or any other string you want embedded in the file name}
+\item{sample_id}{Specify the sample_id or any other string you want embedded in the file name.}
 
-\item{out_path}{Specify the output directory where the snapshot will be written}
+\item{out_path}{Specify the output directory where the snapshot will be written.}
 
-\item{igv_port}{Specify the port IGV is listening on}
-
-\item{region_bed}{Optionally specify regions in bed format (column order is assumed)}
+\item{igv_port}{Specify the port IGV is listening on.}
 }
 \value{
-
+Path to file (.png)
 }
 \description{
-Load bams and generate an IGV screenshot for one or more regions
+Load bams and generate an IGV screenshot for one or more regions.
 }
 \examples{
 #IMPORTANT: you must be running IGV on the host that is running R and you need to have it listening on a port
@@ -55,4 +53,5 @@ Load bams and generate an IGV screenshot for one or more regions
 # this_sv = annotated_sv \%>\% filter(gene=="ETV6")
 # tumour_bam = get_bams(sample=this_sv$tumour_sample_id)
 # make_igv_snapshot(chrom=this_sv$chrom2, start=this_sv$start2, end=this_sv$end2, sample_id=this_sv$tumour_sample_id,out_path="~/IGV_snapshots/")
+
 }

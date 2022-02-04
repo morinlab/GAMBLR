@@ -2,13 +2,22 @@
 % Please edit documentation in R/utilities.R
 \name{collate_ashm_results}
 \alias{collate_ashm_results}
-\title{Determine the hypermutation status of a few genes}
+\title{INTERNAL FUNCTION called by collate_results, not meant for out-of-package usage.
+Determine the hypermutation status of a few genes.}
 \usage{
 collate_ashm_results(sample_table)
 }
+\arguments{
+\item{sample_table}{A data frame with sample_id as the first column.}
+}
 \value{
-
+Samples table.
 }
 \description{
-Determine the hypermutation status of a few genes
+INTERNAL FUNCTION called by collate_results, not meant for out-of-package usage.
+Determine the hypermutation status of a few genes.
+}
+\examples{
+sample_table = collate_ashm_results(sample_table=sample_table)
+
 }

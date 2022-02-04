@@ -6,7 +6,7 @@
 there are some samples that we may want to use a different set of variants than those in the main GAMBL merge.
 The current use case is to allow a force_unmatched output to be used to replace the SSMs from the merge for samples
 with known contamination in the normal. This will also be useful to apply a blacklist to individual MAFs when coupled with
-annotate_ssm_blacklist}
+annotate_ssm_blacklist.}
 \usage{
 get_ssm_by_sample(
   this_sample_id,
@@ -21,24 +21,29 @@ get_ssm_by_sample(
 \arguments{
 \item{this_sample_id}{Required. The sample_id you want the data from.}
 
-\item{tool_name}{The name of the variant calling pipeline (currently only slms-3 is supported)}
+\item{these_samples_metadata}{A vector of samples metadata (with sample IDs).}
+
+\item{tool_name}{The name of the variant calling pipeline (currently only slms-3 is supported).}
 
 \item{projection}{The projection genome build. Currently only grch37 is supported but hg38 should be easy to add.}
 
-\item{seq_type}{What type of sequencing data you want mutations from (e.g. genome, exome, mrna)}
+\item{seq_type}{What type of sequencing data you want mutations from (e.g. genome, exome, mrna).}
 
-\item{force_unmatched}{Defaults to TRUE and only supports this option curently (added option for anticipated future flexibility)}
+\item{flavour}{Specify this as either "augmented" or "force_unmatched" or leave out to get the default (original MAF).}
+
+\item{verbose}{Set to TRUE to enable verbose mode (debugging messages).}
 }
 \value{
-data frame in MAF format
+data frame in MAF format.
 }
 \description{
 Get the ssms (i.e. load MAF) for a single sample. This was implemented to allow flexibility because
 there are some samples that we may want to use a different set of variants than those in the main GAMBL merge.
 The current use case is to allow a force_unmatched output to be used to replace the SSMs from the merge for samples
 with known contamination in the normal. This will also be useful to apply a blacklist to individual MAFs when coupled with
-annotate_ssm_blacklist
+annotate_ssm_blacklist.
 }
 \examples{
+ssm_sample = get_ssm_by_sample(this_sample_id = "HTMCP-01-06-00485-01A-01D", tool_name = "slims-3", projection = "grch37", seq_type = "genome")
 
 }

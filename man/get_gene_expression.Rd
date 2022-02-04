@@ -9,8 +9,7 @@ get_gene_expression(
   ensembl_gene_ids,
   metadata,
   join_with = "mrna",
-  from_flatfile = TRUE,
-  drop_missing = FALSE
+  from_flatfile = TRUE
 )
 }
 \arguments{
@@ -21,10 +20,16 @@ get_gene_expression(
 \item{metadata}{GAMBL metadata.}
 
 \item{join_with}{How to restrict cases for the join. Can be one of genome, mrna or "any"}
+
+\item{from_flatfile}{Set to TRUE to obtain mutations from a local flatfile instead of the database.}
 }
 \value{
-
+A list.
 }
 \description{
 Get the expression for one or more genes for all GAMBL samples
+}
+\examples{
+MYC_expr = get_gene_expression(hugo_symbols = c("MYC"), join_with = "mrna")
+
 }

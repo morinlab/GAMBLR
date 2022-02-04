@@ -2,7 +2,7 @@
 % Please edit documentation in R/viz.R
 \name{prettyChromoplot}
 \alias{prettyChromoplot}
-\title{Use GISTIC2.0 scores output to reproduce maftools::chromoplot with more flexibility}
+\title{Use GISTIC2.0 scores output to reproduce maftools::chromoplot with more flexibility.}
 \usage{
 prettyChromoplot(
   scores,
@@ -39,15 +39,16 @@ prettyChromoplot(
 \item{segment.angle}{optional. Numeric value in the range 0-180, where less than 90 skews control points of the arrow from label to data point toward the start point. Default 25}
 }
 \value{
-nothing
+Nothing
 }
 \description{
-Use GISTIC2.0 scores output to reproduce maftools::chromoplot with more flexibility
+Use GISTIC2.0 scores output to reproduce maftools::chromoplot with more flexibility.
 }
 \examples{
-# basic usage
+#basic usage
 prettyChromoplot("path_to_gistic_results/scores.gistic")
-# advanced usages
+#advanced usages
 prettyChromoplot("path_to_gistic_results/scores.gistic", genes_to_label="path_to_gene_coordinates_table.tsv", cutoff=0.75) +
 ...(any ggplot options to customize plot appearance)
+
 }

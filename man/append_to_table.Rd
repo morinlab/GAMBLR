@@ -2,18 +2,24 @@
 % Please edit documentation in R/database.R
 \name{append_to_table}
 \alias{append_to_table}
-\title{Housekeeping function to add results to a table}
+\title{INTERNAL FUNCTION, not meant for out-of-package usage.
+Housekeeping function to add results to a table.}
 \usage{
 append_to_table(table_name, data_df)
 }
 \arguments{
-\item{table_name}{The name of the database table to update/populate}
+\item{table_name}{The name of the database table to update/populate.}
 
-\item{data_df}{A dataframe of values to load into the table}
+\item{data_df}{A dataframe of values to load into the table.}
 }
 \value{
-
+Table
 }
 \description{
-Housekeeping function to add results to a table
+INTERNAL FUNCTION, not meant for out-of-package usage.
+Housekeeping function to add results to a table.
+}
+\examples{
+table_up = append_to_table("my_table", "my_df")
+
 }

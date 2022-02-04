@@ -2,7 +2,7 @@
 % Please edit documentation in R/database.R
 \name{get_ssm_by_regions}
 \alias{get_ssm_by_regions}
-\title{Efficiently retrieve all mutations across a range of genomic regions}
+\title{Efficiently retrieve all mutations across a range of genomic regions.}
 \usage{
 get_ssm_by_regions(
   regions_list,
@@ -16,26 +16,29 @@ get_ssm_by_regions(
 )
 }
 \arguments{
-\item{regions_list}{Either provide a vector of regions in the chr:start-end format OR}
+\item{regions_list}{Either provide a vector of regions in the chr:start-end format OR.}
 
-\item{regions_bed}{Better yet, provide a bed file with the coordinates you want to retrieve}
+\item{regions_bed}{Better yet, provide a bed file with the coordinates you want to retrieve.}
 
-\item{streamlined}{Return a basic rather than full MAF format}
+\item{streamlined}{Return a basic rather than full MAF format, default is FALSE.}
 
-\item{use_name_column}{If your bed-format data frame has a name column (must be named "name") these can be used to name your regions}
+\item{use_name_column}{If your bed-format data frame has a name column (must be named "name") these can be used to name your regions.}
 
-\item{from_indexed_flatfile}{Set to TRUE to avoid using the database and instead rely on flatfiles (only works for streamlined data, not full MAF details)}
+\item{from_indexed_flatfile}{Set to TRUE to avoid using the database and instead rely on flatfiles (only works for streamlined data, not full MAF details).}
 
 \item{mode}{Only works with indexed flatfiles. Accepts 2 options of "slms-3" and "strelka2" to indicate which variant caller to use. Default is "slms-3".}
+
+\item{allow_clustered}{Logical parameter indicating whether to use SLMS-3 results with clustered events. Default is FALSE.}
 }
 \value{
-
+Returns a data frame of variants in MAF-like format.
 }
 \description{
-Efficiently retrieve all mutations across a range of genomic regions
+Efficiently retrieve all mutations across a range of genomic regions.
 }
 \examples{
 #basic usage, adding custom names from bundled ashm data frame
 regions_bed = grch37_ashm_regions \%>\% mutate(name=paste(gene,region,sep="_"))
 ashm_maf=get_ssm_by_regions(regions_bed=regions_bed,streamlined=TRUE,use_name_column=use_name_column)
+
 }

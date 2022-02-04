@@ -2,19 +2,22 @@
 % Please edit documentation in R/utilities.R
 \name{collate_derived_results}
 \alias{collate_derived_results}
-\title{Extract derived results stored in the database (these are usually slower to derive on the fly)}
+\title{Extract derived results stored in the database (these are usually slower to derive on the fly).}
 \usage{
 collate_derived_results(sample_table, from_flatfile = FALSE)
 }
 \arguments{
-\item{sample_table}{A data frame with sample_id as the first column}
+\item{sample_table}{A data frame with sample_id as the first column.}
+
+\item{from_flatfile}{Optional argument whether to use database or flat file to retrieve mutations. Default is FALSE, TRUE is not yet implemented.}
 }
 \value{
-Data frame with one row per sample. Contains the contents of the derived_data table in the database
+Data frame with one row per sample. Contains the contents of the derived_data table in the database.
 }
 \description{
-Extract derived results stored in the database (these are usually slower to derive on the fly)
+Extract derived results stored in the database (these are usually slower to derive on the fly).
 }
 \examples{
 gambl_results_derived = collate_derived_results(samples_df)
+
 }

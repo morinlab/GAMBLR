@@ -2,7 +2,7 @@
 % Please edit documentation in R/annotation.R
 \name{annotate_ssm_blacklist}
 \alias{annotate_ssm_blacklist}
-\title{Annotate and auto-drop a MAF data frame with existing blacklists to remove variants that would be dropped during the merge process}
+\title{Annotate and auto-drop a MAF data frame with existing blacklists to remove variants that would be dropped during the merge process.}
 \usage{
 annotate_ssm_blacklist(
   mutations_df,
@@ -18,18 +18,33 @@ annotate_ssm_blacklist(
 )
 }
 \arguments{
-\item{flavour}{Set to "clustered" if you want to use the blacklist for the new and improved SLMS-3 outputs (otherwise leave empty)}
+\item{mutations_df}{Data frame with mutations, main input.}
 
-\item{genome_build}{The genome build projection for the variants you want (grch37 is the only one currently supported)}
+\item{unix_group}{Unix groups for the samples to be included. Default is gambl samples.}
 
-\item{drop_threshold}{The minimum count from one of the blacklists to drop a variant}
+\item{tool_name}{The name of the variant calling pipeline (currently only slms-3 is supported).}
+
+\item{tool_version}{The version of variant calling tool, default is 1.0.}
+
+\item{annotator_name}{The name of annotator used, default is vcf2maf.}
+
+\item{annotator_version}{The version of annotator tool used, default is 1.2.}
+
+\item{flavour}{Set to "clustered" if you want to use the blacklist for the new and improved SLMS-3 outputs (otherwise leave empty).}
+
+\item{genome_build}{The genome build projection for the variants you want (grch37 is the only one currently supported).}
+
+\item{drop_threshold}{The minimum count from one of the blacklists to drop a variant.}
+
+\item{return_blacklist}{Boolean parameter to return Black list, default is FALSE.}
 }
 \value{
-A MAF format data frame with two new columns indicating the number of occurrences of each variant in the two blacklists
+A MAF format data frame with two new columns indicating the number of occurrences of each variant in the two blacklists.
 }
 \description{
-Annotate and auto-drop a MAF data frame with existing blacklists to remove variants that would be dropped during the merge process
+Annotate and auto-drop a MAF data frame with existing blacklists to remove variants that would be dropped during the merge process.
 }
 \examples{
 deblacklisted_maf_df = annotate_ssm_blacklist(original_maf_df)
+
 }

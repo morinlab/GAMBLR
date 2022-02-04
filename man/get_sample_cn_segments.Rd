@@ -2,7 +2,7 @@
 % Please edit documentation in R/database.R
 \name{get_sample_cn_segments}
 \alias{get_sample_cn_segments}
-\title{Get all segments for a single sample_id}
+\title{Get all segments for a single sample_id.}
 \usage{
 get_sample_cn_segments(
   this_sample_id,
@@ -12,15 +12,21 @@ get_sample_cn_segments(
 )
 }
 \arguments{
-\item{with_chr_prefix}{Set to TRUE to add a chr prefix to chromosome names}
+\item{this_sample_id}{The sample_id for the sample to retrieve segments for.}
 
-\item{streamlined}{Return a minimal output rather than full details}
+\item{with_chr_prefix}{Set to TRUE to add a chr prefix to chromosome names.}
 
-\item{sample_id}{The sample_id for the sample to retrieve segments for}
+\item{streamlined}{Return a minimal output rather than full details.}
+
+\item{from_flatfile}{Resort to a flat file instead of the database for retrieving the data.}
 }
 \value{
-
+A list of segments for a specific sample ID
 }
 \description{
-Get all segments for a single sample_id
+Get all segments for a single sample_id.
+}
+\examples{
+sample_cn_seg = get_sample_cn_segments("some-sample-id", FALSE, FALSE, FALSE)
+
 }

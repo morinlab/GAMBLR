@@ -21,7 +21,11 @@ prettyForestPlot(
 \arguments{
 \item{maf}{A maf data frame. Minimum required columns are Hugo_Symbol and Tumor_Sample_Barcode.}
 
+\item{mutmat}{Optional argument for binary mutation matrix. If not supplied, function will generate this amtrix from the file used in argument "maf".}
+
 \item{metadata}{Metadata for the comparisons. Minimum required columns are Tumor_Sample_Barcode and the column assigning each case to one of two groups.}
+
+\item{genes}{An optional list of genes to restrict your plot to.}
 
 \item{comparison_column}{Mandatory: the name of the metadata column containing the comparison values.}
 
@@ -34,6 +38,8 @@ prettyForestPlot(
 \item{custom_colours}{Optional: Specify a named vector of colours that match the values in the comparison column.}
 
 \item{custom_labels}{Optional: Specify custom labels for the legend categories. Must be in the same order as comparison_values.}
+
+\item{max_q}{}
 }
 \value{
 A ggplot object with a side-by-side forest plot and bar plot showing mutation incidences across two groups.
@@ -42,15 +48,16 @@ A ggplot object with a side-by-side forest plot and bar plot showing mutation in
 Create a forest plot comparing mutation frequencies for a set of genes between two groups.
 }
 \examples{
-metadata <- get_gambl_metadata(case_set = "tFL-study") #\%>\%
+metadata = get_gambl_metadata(case_set = "tFL-study") #\%>\%
   dplyr::filter(pairing_status == "matched") \%>\%
   dplyr::filter(consensus_pathology \%in\% c("FL", "DLBCL"))
 
-maf <- get_coding_ssm(limit_samples = metadata$sample_id, basic_columns = TRUE)
-genes <- c("ATP6V1B2", "EZH2", "TNFRSF14", "RRAGC")
+maf = get_coding_ssm(limit_samples = metadata$sample_id, basic_columns = TRUE)
+genes = c("ATP6V1B2", "EZH2", "TNFRSF14", "RRAGC")
 comparison_column = "consensus_pathology"
 comparison_values = c("DLBCL", "FL")
 comparison_name = "FL vs DLBCL"
 
 prettyForestPlot(maf, metadata, genes, comparison_column, comparison_values, separate_hotspots = FALSE, comparison_name)
+
 }

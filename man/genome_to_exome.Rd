@@ -2,7 +2,7 @@
 % Please edit documentation in R/utilities.R
 \name{genome_to_exome}
 \alias{genome_to_exome}
-\title{Subset maf file to only features that would be available in the WEX data}
+\title{Subset maf file to only features that would be available in the WEX data.}
 \usage{
 genome_to_exome(
   maf,
@@ -24,13 +24,14 @@ genome_to_exome(
 \item{chr_prefixed}{Is the data chr-prefixed or not? Default is FALSE.}
 }
 \value{
-a data frame of maf-like object with same columns as in input, but where rows are only kept for features that would be present as if the sample is WEX.
+Aa data frame of maf-like object with same columns as in input, but where rows are only kept for features that would be present as if the sample is WEX.
 }
 \description{
-Subset maf file to only features that would be available in the WEX data
+Subset maf file to only features that would be available in the WEX data.
 }
 \examples{
 myc_ashm_maf = get_ssm_by_region(region="8:128748352-128749427") # get all ssm in the MYC aSHM region
 GAMBLR::genome_to_exome(maf=myc_ashm_maf) # get mutations with 100 bp padding (default)
 GAMBLR::genome_to_exome(maf=myc_ashm_maf, padding = 0) # get mutations covered in WEX with no padding
+
 }

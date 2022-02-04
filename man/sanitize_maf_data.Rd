@@ -17,18 +17,18 @@ sanitize_maf_data(
 )
 }
 \arguments{
-\item{mutation_maf_path}{Provide either the full path to a MAF file or}
+\item{mutation_maf_path}{Provide either the full path to a MAF file.}
 
-\item{mutation_maf_data}{Otherwise provide a data frame of the MAF data}
+\item{mutation_maf_data}{Otherwise provide a data frame of the MAF data.}
 
-\item{output_oncomatrix}{Optionally provide the path for your sanitized output file (otherwise it writes to working directory)}
+\item{output_oncomatrix}{Optionally provide the path for your sanitized output file (otherwise it writes to working directory).}
 
-\item{genes_keep}{Specify which genes you want to remain in the output}
+\item{genes_keep}{Specify which genes you want to remain in the output.}
 
-\item{genes_drop}{Optionally specify which genes to drop (this doesn't mean all other genes will remain. Maftools decides that part)}
+\item{genes_drop}{Optionally specify which genes to drop (this doesn't mean all other genes will remain. Maftools decides that part).}
 }
 \value{
-The full path to the oncomatrix file (a matrix with Variant_Classification or Multi_Hit indicating coding mutation status per patient)
+The full path to the oncomatrix file (a matrix with Variant_Classification or Multi_Hit indicating coding mutation status per patient).
 }
 \description{
 Write an oncomatrix from a MAF File for further plotting. This is meant to be run by individuals who have access to data sets to

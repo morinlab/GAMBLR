@@ -2,7 +2,7 @@
 % Please edit documentation in R/annotation.R
 \name{annotate_driver_ssm}
 \alias{annotate_driver_ssm}
-\title{Retrieve data or use supplied data frame of genes to get/annotate MAF data indicating which rows are putative driver mutations}
+\title{Retrieve data or use supplied data frame of genes to get/annotate MAF data indicating which rows are putative driver mutations.}
 \usage{
 annotate_driver_ssm(
   maf_df,
@@ -14,22 +14,23 @@ annotate_driver_ssm(
 )
 }
 \arguments{
-\item{maf_df}{Optional data frame of MAF-format mutations (default is to retrieve automatically)}
+\item{maf_df}{Optional data frame of MAF-format mutations (default is to retrieve automatically).}
 
-\item{lymphoma_type}{Optional keyword to find genes for annotation (e.g. "BL","DLBCL","FL") is not specifying driver genes}
+\item{lymphoma_type}{Optional keyword to find genes for annotation (e.g. "BL","DLBCL","FL") is not specifying driver genes.}
 
-\item{driver_genes}{Optional vector of Hugo_Symbol of genes for coding mutations}
+\item{driver_genes}{Optional vector of Hugo_Symbol of genes for coding mutations.}
 
-\item{include_noncoding}{Optional named vector of genes listing the Variant_Classification of noncoding mutations to retain}
+\item{include_noncoding}{Optional named vector of genes listing the Variant_Classification of noncoding mutations to retain.}
 
-\item{noncoding_regions}{Optional named vector of regions to use to further restrict noncoding mutations per gene}
+\item{noncoding_regions}{Optional named vector of regions to use to further restrict noncoding mutations per gene.}
 }
 \value{
-
+Driver ssm kepts from maf.
 }
 \description{
-Retrieve data or use supplied data frame of genes to get/annotate MAF data indicating which rows are putative driver mutations
+Retrieve data or use supplied data frame of genes to get/annotate MAF data indicating which rows are putative driver mutations.
 }
 \examples{
 driver_ssm = annotate_driver_ssm(include_noncoding=c("NFKBIZ"="3'UTR"),noncoding_regions=c("NFKBIZ"="chr3:101578206-101578365"))
+
 }

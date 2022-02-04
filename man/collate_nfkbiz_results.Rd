@@ -2,16 +2,22 @@
 % Please edit documentation in R/utilities.R
 \name{collate_nfkbiz_results}
 \alias{collate_nfkbiz_results}
-\title{Determine which cases have NFKBIZ UTR mutations}
+\title{INTERNAL FUNCTION called by collate_results, not meant for out-of-package usage.
+Determine which cases have NFKBIZ UTR mutations.}
 \usage{
 collate_nfkbiz_results(sample_table)
 }
+\arguments{
+\item{sample_table}{A data frame with sample_id as the first column.}
+}
 \value{
-
+Samples table.
 }
 \description{
-Determine which cases have NFKBIZ UTR mutations
+INTERNAL FUNCTION called by collate_results, not meant for out-of-package usage.
+Determine which cases have NFKBIZ UTR mutations.
 }
 \examples{
 sample_table = collate_nfkbiz_results(sample_table=sample_table)
+
 }

@@ -2,19 +2,22 @@
 % Please edit documentation in R/utilities.R
 \name{collate_csr_results}
 \alias{collate_csr_results}
-\title{Collate a few CSR annotations, including MiXCR}
+\title{INTERNAL FUNCTION called by collate_results, not meant for out-of-package usage.
+Collate a few CSR annotations, including MiXCR.}
 \usage{
 collate_csr_results(sample_table)
 }
 \arguments{
-\item{sample_table}{A data frame with sample_id as the first column}
+\item{sample_table}{A data frame with sample_id as the first column.}
 }
 \value{
-The sample table with additional columns
+The sample table with additional columns.
 }
 \description{
-Collate a few CSR annotations, including MiXCR
+INTERNAL FUNCTION called by collate_results, not meant for out-of-package usage.
+Collate a few CSR annotations, including MiXCR.
 }
 \examples{
 gambl_results_derived = collate_csr_results(gambl_results_derived)
+
 }

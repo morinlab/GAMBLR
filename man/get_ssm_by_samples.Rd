@@ -2,8 +2,8 @@
 % Please edit documentation in R/database.R
 \name{get_ssm_by_samples}
 \alias{get_ssm_by_samples}
-\title{Get MAF-format data frame for more than one sample and combine together (wraps get_ssm_by_sample)
-See get_ssm_by_sample for more information}
+\title{Get MAF-format data frame for more than one sample and combine together (wraps get_ssm_by_sample).
+See get_ssm_by_sample for more information.}
 \usage{
 get_ssm_by_samples(
   these_sample_ids,
@@ -17,15 +17,24 @@ get_ssm_by_samples(
 \arguments{
 \item{these_sample_ids}{A vector of sample_id that you want results for. This is the only required argument.}
 
-\item{flavour}{Specify this as either "augmented" or "force_unmatched" or leave out to get the default (original MAF)}
+\item{these_samples_metadata}{A vector of samples metadata (with sample IDs).}
+
+\item{tool_name}{The name of the variant calling pipeline (currently only slms-3 is supported).}
+
+\item{projection}{The projection genome build. Currently only grch37 is supported but hg38 should be easy to add.}
+
+\item{seq_type}{What type of sequencing data you want mutations from (e.g. genome, exome, mrna).}
+
+\item{flavour}{Specify this as either "augmented" or "force_unmatched" or leave out to get the default (original MAF).}
 }
 \value{
-
+Returns a data frame of variants in MAF-like format.
 }
 \description{
-Get MAF-format data frame for more than one sample and combine together (wraps get_ssm_by_sample)
-See get_ssm_by_sample for more information
+Get MAF-format data frame for more than one sample and combine together (wraps get_ssm_by_sample).
+See get_ssm_by_sample for more information.
 }
 \examples{
 merged_maf_force_unmatched = get_ssm_by_samples(these_sample_ids=c("HTMCP-01-06-00485-01A-01D","14-35472_tumorA","14-35472_tumorB"))
+
 }

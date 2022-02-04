@@ -2,21 +2,24 @@
 % Please edit documentation in R/utilities.R
 \name{get_gambl_colours}
 \alias{get_gambl_colours}
-\title{Get some colour schemes for annotating figures}
+\title{Get some colour schemes for annotating figures.}
 \usage{
 get_gambl_colours(classification = "all", alpha = 1)
 }
 \arguments{
-\item{classification}{(optionally request only colours for pathology, lymphgen, mutation or copy_number)}
+\item{classification}{(optionally request only colours for pathology, lymphgen, mutation or copy_number).}
+
+\item{alpha}{alpha of plotted colours.}
 }
 \value{
 A named vector of colour codes for lymphgen classes and pathology
 }
 \description{
-Get some colour schemes for annotating figures
+Get some colour schemes for annotating figures.
 }
 \examples{
 lymphgen_cols=get_gambl_colours("lymphgen")
 # be sure to install ggsci from https://github.com/morinlab/ggsci
 # install_github("morinlab/ggsci")
+
 }

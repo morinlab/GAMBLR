@@ -2,7 +2,7 @@
 % Please edit documentation in R/viz.R
 \name{copy_number_vaf_plot}
 \alias{copy_number_vaf_plot}
-\title{Create a genome-wide copy number plot for one sample and (optionally) display mutation VAF}
+\title{Create a genome-wide copy number plot for one sample and (optionally) display mutation VAF.}
 \usage{
 copy_number_vaf_plot(
   this_sample,
@@ -16,19 +16,36 @@ copy_number_vaf_plot(
 )
 }
 \arguments{
-\item{this_sample}{The sample_id for the sample to plot}
+\item{this_sample}{The sample_id for the sample to plot.}
 
-\item{just_segments}{Specify whether only the segments will be plotted (instead of mutation VAF)}
+\item{just_segments}{Specify whether only the segments will be plotted (instead of mutation VAF).}
 
-\item{coding_only}{optional. Set to TRUE to restrict to plotting only coding mutations}
+\item{coding_only}{Optional. Set to TRUE to restrict to plotting only coding mutations.}
 
-\item{genes_to_label}{optional. Provide a list of genes to label (if mutated). Can only be used with coding_only (see below)}
+\item{one_chrom}{Subset plot to one chromosome.}
 
-\item{from_flatfile}{If set to true the function will use flatfiles instead of the database}
+\item{genes_to_label}{Optional. Provide a list of genes to label (if mutated). Can only be used with coding_only (see above).}
+
+\item{from_flatfile}{If set to true the function will use flatfiles instead of the database.}
+
+\item{use_augmented_maf}{Boolean statement if to use augmented maf, default is FALSE.}
+
+\item{add_chr_prefix}{If TRUE, "chr" prefix will be added to chr column. Default is FALSE.}
 }
 \value{
-nothing
+Nothing
 }
 \description{
-Create a genome-wide copy number plot for one sample and (optionally) display mutation VAF
+Create a genome-wide copy number plot for one sample and (optionally) display mutation VAF.
+}
+\examples{
+cnv_vaf_plot = copy_number_vaf_plot(this_sample = "some-sample-name",
+                                    just_segments = TRUE, 
+                                    coding_only = FALSE, 
+                                    one_chrom = "chr2", 
+                                    genes_to_label = "MYC", 
+                                    from_flatfile = FALSE, 
+                                    use_augmented_maf = FALSE, 
+                                    add_chr_prefix = TRUE)
+
 }

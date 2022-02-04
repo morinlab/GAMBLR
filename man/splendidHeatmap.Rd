@@ -3,8 +3,8 @@
 \name{splendidHeatmap}
 \alias{splendidHeatmap}
 \title{Make an heatmap that is looking cute using ComplexHeatmap. The metadata is expected to follow the structure and column naming used in GAMBL.
-If you provide your own non-GAMBL samples and metadata, you must include at least the columns with names corresponding to annotation tracks and column "Tumor_Sample_Barcode"
-showing sample ids. The metadata can contain numeric columns, which will be plotted as numeric variables in the annotation. The efature matrix is supplied in this_matrix argument
+If you provide your own non-GAMBL samples and metadata, you must include at least the columns with names corresponding to annotation tracks and column "Tumor_Sample_Barcode".
+showing sample ids. The metadata can contain numeric columns, which will be plotted as numeric variables in the annotation. The efature matrix is supplied in this_matrix argument.
 and is expected to have samples in rows, and features in columns. The argument importance_values is similar to the widths of NMF object or importance values for feature/group from RF models.
 It is also expected to have column names (having names of the groups that will be shown on heatmap) and rownames (corresponding to feature ids).}
 \usage{
@@ -32,47 +32,47 @@ splendidHeatmap(
 \arguments{
 \item{this_matrix}{A data frame with column Tumor_Sample_Barcode and a column for each feature. Can be binary. Expected to not contain negative values.}
 
-\item{importance_values}{Provide a data frame of feature (in rows) by group (in columns) with numeric values representative of feature importance. Can be obtained from rf$inportance or basis(NMF)}
+\item{importance_values}{Provide a data frame of feature (in rows) by group (in columns) with numeric values representative of feature importance. Can be obtained from rf$inportance or basis(NMF).}
 
-\item{these_samples_metadata}{Data frame containing metadata for your samples}
+\item{these_samples_metadata}{Data frame containing metadata for your samples.}
 
-\item{max_number_of_features_per_group}{Optional argument to indicate how many features from each group to be considered for display. Default is 10}
+\item{max_number_of_features_per_group}{Optional argument to indicate how many features from each group to be considered for display. Default is 10.}
 
-\item{splitColumnName}{Optional argument to indicate which metadata column to split on. Default is set to pathology}
+\item{splitColumnName}{Optional argument to indicate which metadata column to split on. Default is set to pathology.}
 
-\item{metadataColumns}{A vector containing the categorical column names you want to plot below}
+\item{metadataColumns}{A vector containing the categorical column names you want to plot below.}
 
-\item{numericMetadataColumns}{A vector containing the numeric columns you want to plot below}
+\item{numericMetadataColumns}{A vector containing the numeric columns you want to plot below.}
 
-\item{numericMetadataMax}{A numeric vector of cutoffs to apply to numeric columns above}
+\item{numericMetadataMax}{A numeric vector of cutoffs to apply to numeric columns above.}
 
-\item{custom_colours}{Provide named vector (or named list of vectors) containing custom annotation colours if you do not want to use standartized pallette}
+\item{custom_colours}{Provide named vector (or named list of vectors) containing custom annotation colours if you do not want to use standartized pallette.}
 
-\item{legend_direction}{Optional argument to indicate whether legend should be in horizontal (default) or vertical position}
+\item{legend_direction}{Optional argument to indicate whether legend should be in horizontal (default) or vertical position.}
 
 \item{legend_position}{Optional argument to indicate where the legend should be drawn. The default is set to bottom, but can also accept top, right, and left.}
 
-\item{legend_row}{Fiddle with these to widen or narrow your legend (default 3)}
+\item{legend_row}{Fiddle with these to widen or narrow your legend (default 3).}
 
-\item{legend_col}{Fiddle with these to widen or narrow your legend (default 3)}
+\item{legend_col}{Fiddle with these to widen or narrow your legend (default 3).}
 
-\item{fontSizeGene}{Font size for gene labels (default 6)}
+\item{fontSizeGene}{Font size for gene labels (default 6).}
 
 \item{metadataBarHeight}{Optional argument to adjust the height of bar with annotations. The default is 1.5}
 
-\item{leftStackedWidth}{Optional argument to control how wide should the stacked plot on the left be. The default is 4}
+\item{leftStackedWidth}{Optional argument to control how wide should the stacked plot on the left be. The default is 4.}
 
-\item{metadataBarFontsize}{Optional argument to control for the font size of metadata annotations. The default is 5}
+\item{metadataBarFontsize}{Optional argument to control for the font size of metadata annotations. The default is 5.}
 
-\item{groupNames}{optional vector of group names to be displayed above heatmap. Should be the same length as the number of groups that will be shown. Default is NULL (no labels)}
+\item{groupNames}{optional vector of group names to be displayed above heatmap. Should be the same length as the number of groups that will be shown. Default is NULL (no labels).}
 }
 \value{
-
+Nothing
 }
 \description{
 Make an heatmap that is looking cute using ComplexHeatmap. The metadata is expected to follow the structure and column naming used in GAMBL.
-If you provide your own non-GAMBL samples and metadata, you must include at least the columns with names corresponding to annotation tracks and column "Tumor_Sample_Barcode"
-showing sample ids. The metadata can contain numeric columns, which will be plotted as numeric variables in the annotation. The efature matrix is supplied in this_matrix argument
+If you provide your own non-GAMBL samples and metadata, you must include at least the columns with names corresponding to annotation tracks and column "Tumor_Sample_Barcode".
+showing sample ids. The metadata can contain numeric columns, which will be plotted as numeric variables in the annotation. The efature matrix is supplied in this_matrix argument.
 and is expected to have samples in rows, and features in columns. The argument importance_values is similar to the widths of NMF object or importance values for feature/group from RF models.
 It is also expected to have column names (having names of the groups that will be shown on heatmap) and rownames (corresponding to feature ids).
 }
@@ -86,4 +86,5 @@ splendidHeatmap(
  numericMetadataColumns = ".",
  numericMetadataMax = 0.7,
  custom_colours=custom_colours)
+
 }

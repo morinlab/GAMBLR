@@ -2,7 +2,7 @@
 % Please edit documentation in R/utilities.R
 \name{calc_mutation_frequency_sliding_windows}
 \alias{calc_mutation_frequency_sliding_windows}
-\title{Count the number of mutations in a sliding window across a region for all samples. Unlikely to be used directly in most cases. See get_mutation_frequency_bin_matrix instead}
+\title{Count the number of mutations in a sliding window across a region for all samples. Unlikely to be used directly in most cases. See get_mutation_frequency_bin_matrix instead.}
 \usage{
 calc_mutation_frequency_sliding_windows(
   this_region,
@@ -24,21 +24,45 @@ calc_mutation_frequency_sliding_windows(
 )
 }
 \arguments{
-\item{plot_type}{Set to true for a plot of your bins. By default no plots are made.}
+\item{this_region}{Genomic region in bed format.}
+
+\item{chromosome}{Chromosome name in region.}
+
+\item{start_pos}{Start coordinate of region.}
+
+\item{end_pos}{End coordinate of region.}
+
+\item{metadata}{Data frame containing sample ids and column with annotated data for the 2 groups of interest. All other columns are ignored. Currently, function exits if asked to compare more than 2 groups.}
+
+\item{slide_by}{Slide size for sliding window, default is 100.}
+
+\item{window_size}{Size of sliding window, default is 1000.}
+
+\item{plot_type}{Set to TRUE for a plot of your bins. By default no plots are made.}
 
 \item{sortByColumns}{Which of the metadata to sort on for the heatmap}
 
-\item{drop_unmutated}{This may not currently work properly.}
+\item{return_format}{Return format of mutations. Accepted inputs are "long" and "long-simple". Default is "long-simple".}
 
-\item{classification_column}{Only used for plotting}
+\item{min_count_per_bin}{Minimum counts per bin, default is 3.}
 
-\item{from_indexed_flatfile}{Set to TRUE to avoid using the database and instead rely on flatfiles (only works for streamlined data, not full MAF details)}
+\item{return_count}{Boolean statement to return count. Default is FALSE.}
+
+\item{drop_unmutated}{This may not currently work properly. Default is FALSE. Not a very good parameter desciption?}
+
+\item{classification_column}{Only used for plotting, default is "lymphgen"}
+
+\item{from_indexed_flatfile}{Set to TRUE to avoid using the database and instead rely on flatfiles (only works for streamlined data, not full MAF details). Default is FALSE.}
 
 \item{mode}{Only works with indexed flatfiles. Accepts 2 options of "slms-3" and "strelka2" to indicate which variant caller to use. Default is "slms-3".}
 }
 \value{
-
+Count matrix.
 }
 \description{
-Count the number of mutations in a sliding window across a region for all samples. Unlikely to be used directly in most cases. See get_mutation_frequency_bin_matrix instead
+Count the number of mutations in a sliding window across a region for all samples. Unlikely to be used directly in most cases. See get_mutation_frequency_bin_matrix instead.
+}
+\examples{
+chr11_mutation_freq = calc_mutation_frequency_sliding_windows(this_region = "chr11:69455000-69459900", metadata = meta_df, slide_by = 10, window_size = 10000, plot_type = TRUE)
+
 }

@@ -2,7 +2,7 @@
 % Please edit documentation in R/viz.R
 \name{ashm_rainbow_plot}
 \alias{ashm_rainbow_plot}
-\title{Make a rainbow plot of all mutations in a region, ordered and coloured by metadata}
+\title{Make a rainbow plot of all mutations in a region, ordered and coloured by metadata.}
 \usage{
 ashm_rainbow_plot(
   mutations_maf,
@@ -17,24 +17,35 @@ ashm_rainbow_plot(
 )
 }
 \arguments{
-\item{mutations_maf}{A data frame containing mutations (MAF format) within a region of interest (i.e. use the get_ssm_by_region)}
+\item{mutations_maf}{A data frame containing mutations (MAF format) within a region of interest (i.e. use the get_ssm_by_region).}
 
-\item{metadata}{should be a data frame with sample_id as a column that should match Tumor_Sample_Barcode in the database}
+\item{metadata}{should be a data frame with sample_id as a column that should match Tumor_Sample_Barcode in the database.}
 
-\item{classification_column}{The name of the metadata column to use for ordering and colouring samples}
+\item{exclude_classifications}{Optional argument for excluding specific classifications from a metadeta file.}
 
-\item{bed}{Optional data frame specifying the regions to annotate (required columns: start, end, name)}
+\item{drop_unmutated}{Boolean argument for removing unmutated sample ids in mutated cases.}
+
+\item{classification_column}{The name of the metadata column to use for ordering and colouring samples.}
+
+\item{bed}{Optional data frame specifying the regions to annotate (required columns: start, end, name).}
+
+\item{region}{Genomic region for plotting in bed format.}
+
+\item{custom_colours}{Provide named vector (or named list of vectors) containing custom annotation colours if you do not want to use standartized pallette.}
+
+\item{hide_ids}{Boolean argument, if TRUE, ids will be removed.}
 }
 \value{
 ggplot2 object
 }
 \description{
-Make a rainbow plot of all mutations in a region, ordered and coloured by metadata
+Make a rainbow plot of all mutations in a region, ordered and coloured by metadata.
 }
 \examples{
-# basic usage
+#basic usage
 ashm_rainbow_plot(mutations_maf=get_ssm_by_region(region="chr8:128806578-128806992"),metadata=get_gambl_metadata())
-# advanced usages
+#advanced usages
 mybed = data.frame(start=c(128806578,128805652,128748315), end=c(128806992,128809822,128748880), name=c("TSS","enhancer","MYC-e1"))
 ashm_rainbow_plot(mutations_maf=my_mutations,metadata=my_metadata,bed=mybed)
+
 }

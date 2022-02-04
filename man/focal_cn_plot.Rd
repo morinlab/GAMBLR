@@ -2,7 +2,7 @@
 % Please edit documentation in R/viz.R
 \name{focal_cn_plot}
 \alias{focal_cn_plot}
-\title{Generate a plot of all CN segments}
+\title{Generate a plot of all CN segments.}
 \usage{
 focal_cn_plot(
   region,
@@ -16,11 +16,28 @@ focal_cn_plot(
 )
 }
 \arguments{
-\item{crop_distance}{}
+\item{region}{Genomic region for plotting in bed format.}
+
+\item{gene}{Optional variable, converts gene to region if region not supplied.}
+
+\item{these_samples_metadata}{GAMBL metadata subset to the cases you want to process (or full metadata)}
+
+\item{type}{Type of CN segment to be ploitted. Default is gain (CN > 2).}
+
+\item{crop_segments}{Boolean statement that crops segment by first checking if crop segment is smaller than lef/right distance, then adds or subtracts  crop distance to end/start coordiantes. Default is TRUE.}
+
+\item{sort_by_annotation}{Sort CN by annotation, default is "pthology".}
+
+\item{crop_distance}{Crop distance for cropping segments. Default value is 10000000 bp.}
 }
 \value{
-
+Nothing
 }
 \description{
-Generate a plot of all CN segments
+Generate a plot of all CN segments.
+}
+\examples{
+plot = focal_cn_plot(gene = "BCL2", type = "gain", segmentsize = 2, crop_distance = 1000000)
+plot = focal_cn_plot(region = "chr4:100154645-5488465512", type = "loss", crop_distance = 100000000)
+
 }

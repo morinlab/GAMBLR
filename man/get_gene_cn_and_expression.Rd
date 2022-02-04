@@ -2,16 +2,22 @@
 % Please edit documentation in R/database.R
 \name{get_gene_cn_and_expression}
 \alias{get_gene_cn_and_expression}
-\title{Get the copy number and expression for a single gene}
+\title{Get the copy number and expression for a single gene.}
 \usage{
 get_gene_cn_and_expression(gene_symbol, ensembl_id)
 }
 \arguments{
-\item{ensembl_gene_id}{}
+\item{hugo_symbol}{One or more gene symbols. Should match the values in a maf file.}
+
+\item{ensembl_gene_id}{One or more ensembl gene IDs. Only one of hugo_symbols or ensembl_gene_ids may be used.}
 }
 \value{
-
+A list.
 }
 \description{
-Get the copy number and expression for a single gene
+Get the copy number and expression for a single gene.
+}
+\examples{
+MYC_cn_expression = get_gene_cn_and_expression("MYC")
+
 }

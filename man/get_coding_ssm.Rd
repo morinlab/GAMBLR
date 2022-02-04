@@ -2,7 +2,7 @@
 % Please edit documentation in R/database.R
 \name{get_coding_ssm}
 \alias{get_coding_ssm}
-\title{Retrieve all coding SSMs from the GAMBL database in MAF-like format}
+\title{Retrieve all coding SSMs from the GAMBL database in MAF-like format.}
 \usage{
 get_coding_ssm(
   limit_cohort,
@@ -18,30 +18,35 @@ get_coding_ssm(
 )
 }
 \arguments{
-\item{limit_cohort}{Supply this to restrict mutations to one or more cohorts in a list}
+\item{limit_cohort}{Supply this to restrict mutations to one or more cohorts in a list.}
 
-\item{exclude_cohort}{Supply this to exclude mutations from one or more cohorts in a list}
+\item{exclude_cohort}{Supply this to exclude mutations from one or more cohorts in a list.}
 
-\item{limit_pathology}{Supply this to restrict mutations to one pathology}
+\item{limit_pathology}{Supply this to restrict mutations to one pathology.}
 
-\item{basic_columns}{Set to TRUE to override the default behaviour of returning only the first 45 columns of MAF data}
+\item{limit_samples}{Supply this to restrict mutations to one sample.}
+
+\item{force_unmatched_samples}{Parameter description.}
+
+\item{basic_columns}{Set to TRUE to override the default behaviour of returning only the first 45 columns of MAF data.}
 
 \item{from_flatfile}{Set to TRUE to obtain mutations from a local flatfile instead of the database. This can be more efficient and is currently the only option for users who do not have ICGC data access.}
 
-\item{allow_clustered}{Logical parameter indicating whether to use SLMS-3 results with clustered events. Default is FALSE}
+\item{allow_clustered}{Logical parameter indicating whether to use SLMS-3 results with clustered events. Default is FALSE.}
 
-\item{groups}{Unix groups for the samples to be included. Default is both gambl and icgc_dart samples}
+\item{groups}{Unix groups for the samples to be included. Default is both gambl and icgc_dart samples.}
 
-\item{include_silent}{Logical parameter indicating whether to include siment mutations into coding mutations. Default is TRUE}
+\item{include_silent}{Logical parameter indicating whether to include siment mutations into coding mutations. Default is TRUE.}
 }
 \value{
-A data frame containing all the MAF data columns (one row per mutation)
+A data frame containing all the MAF data columns (one row per mutation).
 }
 \description{
-Retrieve all coding SSMs from the GAMBL database in MAF-like format
+Retrieve all coding SSMs from the GAMBL database in MAF-like format.
 }
 \examples{
 #basic usage
 maf_data = get_coding_ssm(limit_cohort=c("BL_ICGC"))
 maf_data = get_coding_ssm(limit_samples=my_sample_ids)
+
 }

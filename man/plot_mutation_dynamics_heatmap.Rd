@@ -2,7 +2,7 @@
 % Please edit documentation in R/viz.R
 \name{plot_mutation_dynamics_heatmap}
 \alias{plot_mutation_dynamics_heatmap}
-\title{Plot a heatmap comparing the VAF of mutations in T1/T2 pairs}
+\title{Plot a heatmap comparing the VAF of mutations in T1/T2 pairs.}
 \usage{
 plot_mutation_dynamics_heatmap(
   maf1,
@@ -18,16 +18,48 @@ plot_mutation_dynamics_heatmap(
   top_n_genes,
   drop_unless_lowvaf = FALSE,
   vaf_cutoff_to_drop = 0.05,
-  cluster_columns = F,
-  cluster_rows = F
+  cluster_columns = FALSE,
+  cluster_rows = FALSE
 )
 }
 \arguments{
-\item{cluster_rows}{}
+\item{maf1}{Data frame 1 with mutations (maf format).}
+
+\item{maf2}{Data frame 2 with mutations (maf format).}
+
+\item{vafcolname}{Name of variable that holds VAF in maf. If not supplied, vaf will be calcualted.}
+
+\item{patient_colname}{Column name that holds patient name (default is "patient_id").}
+
+\item{these_samples_metadata}{GAMBL metadata subset to the cases you want to process (or full metadata).}
+
+\item{sortByColumns}{Which of the metadata to sort on for the heatmap.}
+
+\item{metadata_columns}{A vector containing the categorical column names you want to plot below.}
+
+\item{gene_orientation}{Where genes would be plotted. Default is "bottom".}
+
+\item{annotate_zero}{Indicate a variant that had VAF = 0 in one of the two time points. Default is FALSE.}
+
+\item{genes}{An optional list of genes to restrict your plot to.}
+
+\item{top_n_genes}{How many genes to be added to the plot.}
+
+\item{drop_unless_lowvaf}{Will drop some genes where VAF is low, default is FALSE.}
+
+\item{vaf_cutoff_to_drop}{Which VAF cut-off value to use when dropping variants before plotting.}
+
+\item{cluster_columns}{Boolean statement for clustering by columns, defaults to FALSE.}
+
+\item{cluster_rows}{Boolean statement for clustering by rows, defaults to FALSE.}
 }
 \value{
-
+Nothing
 }
 \description{
-Plot a heatmap comparing the VAF of mutations in T1/T2 pairs
+Plot a heatmap comparing the VAF of mutations in T1/T2 pairs.
+}
+\examples{
+plot = plot_mutation_dynamics_heatmap(maf_df1, maf_df2, "patient_id", gene_orientation = "bottom", annotate_zero = TRUE, top_genes = 100, drop_inless_lowvaf = TRUE, vaf_cutoff_to_drop = 0.04, cluster_rows = TRUE)
+
 }
