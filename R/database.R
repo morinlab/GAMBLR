@@ -194,10 +194,10 @@ get_gambl_metadata = function(seq_type_filter = "genome",
   }else{
     db = config::get("database_name")
     con = DBI::dbConnect(RMariaDB::MariaDB(), dbname = db)
-    sample_meta = dplyr::tbl(con, "sample_metadata") %>% 
+    sample_meta = dplyr::tbl(con, "sample_metadata") %>%
       as.data.frame()
 
-    biopsy_meta = dplyr::tbl(con, "biopsy_metadata") %>% 
+    biopsy_meta = dplyr::tbl(con, "biopsy_metadata") %>%
       as.data.frame()
 
     DBI::dbDisconnect(con)
@@ -501,6 +501,7 @@ add_prps_result = function(incoming_metadata){
 }
 
 
+#' INTERNAL FUNCTION called by get_gambl_metadata, not meant for out-of-package usage.
 #' Layer on ICGC metadata from a supplemental table to fill in missing COO.
 #'
 #' @param incoming_metadata A metadata table (probably output from get_gambl_metadata).
@@ -508,7 +509,7 @@ add_prps_result = function(incoming_metadata){
 #' @return Meta data with layered information (ICGC).
 #' @export
 #'
-#' @examples Add examples?
+#' @examples
 #' icgc_metadata = add_icgc_metadata(incoming_metadata = my_meta)
 #'
 add_icgc_metadata = function(incoming_metadata){
@@ -545,6 +546,7 @@ add_icgc_metadata = function(incoming_metadata){
 }
 
 
+#' INTERNAL FUNCTION called by get_gambl_metadata, not meant for out-of-package usage.
 #' Get the patient-centric clinical metadata.
 #'
 #' @param patient_ids Vector of patient IDs.
@@ -573,7 +575,7 @@ get_gambl_outcomes = function(patient_ids,
   }else{
     db = config::get("database_name")
     con = DBI::dbConnect(RMariaDB::MariaDB(), dbname = db)
-    all_outcome = dplyr::tbl(con,"outcome_metadata") %>% 
+    all_outcome = dplyr::tbl(con, "outcome_metadata") %>% 
       as.data.frame()
 
     DBI::dbDisconnect(con)
@@ -763,7 +765,7 @@ get_manta_sv = function(min_vaf = 0.1,
     all_sv = read_tsv(sv_file, col_types = "cnncnncnccccnnnnccc", col_names = cnames)
   }else{
     con = DBI::dbConnect(RMariaDB::MariaDB(), dbname = db)
-    all_sv = dplyr::tbl(con,table_name) %>% 
+    all_sv = dplyr::tbl(con, table_name) %>% 
       as.data.frame()
   }
   if(!missing(region) || !missing(chromosome)){
@@ -915,7 +917,7 @@ get_sample_cn_segments = function(this_sample_id,
     table_name_unmatched = config::get("results_tables")$copy_number_unmatched
     con = DBI::dbConnect(RMariaDB::MariaDB(), dbname = db)
 
-    all_segs_matched = dplyr::tbl(con,table_name) %>%
+    all_segs_matched = dplyr::tbl(con, table_name) %>%
       dplyr::filter(ID == this_sample_id) %>%
       as.data.frame() %>%
       dplyr::mutate(method = "battenberg")
@@ -1032,13 +1034,13 @@ get_cn_segments = function(chromosome = "",
     }else{
       
       #TODO improve this query to allow for partial overlaps, create Issue on Github?
-      all_segs_matched = dplyr::tbl(con,table_name) %>%
+      all_segs_matched = dplyr::tbl(con, table_name) %>%
         dplyr::filter((chrom == chromosome & start <= qstart & end >= qend) | (chrom == chromosome & start >= qstart & end <= qend)) %>%
         as.data.frame() %>%
         dplyr::mutate(method = "battenberg")
 
       # get controlfreec segments for samples with missing battenberg results like unpaired
-      all_segs_unmatched = dplyr::tbl(con,table_name_unmatched) %>%
+      all_segs_unmatched = dplyr::tbl(con, table_name_unmatched) %>%
         dplyr::filter((chrom == chromosome & start <= qstart & end >= qend) | (chrom == chromosome & start >= qstart & end <= qend)) %>%
         as.data.frame() %>%
         dplyr::filter(! ID %in% all_segs_matched$ID)  %>%
@@ -1060,6 +1062,7 @@ get_cn_segments = function(chromosome = "",
 }
 
 
+#' INTERNAL FUNCTION, not meant for out-of-package usage.
 #' Housekeeping function to add results to a table.
 #'
 #' @param table_name The name of the database table to update/populate.
@@ -1162,7 +1165,7 @@ get_ssm_by_gene = function(gene_symbol,
     coding_class = coding_class[coding_class != "Silent"]
   }
   con = DBI::dbConnect(RMariaDB::MariaDB(), dbname = db)
-  muts_gene = dplyr::tbl(con,table_name) %>%
+  muts_gene = dplyr::tbl(con, table_name) %>%
     dplyr::filter(Hugo_Symbol %in% gene_symbol)
   if(coding_only){
     muts_gene = muts_gene %>% 
@@ -1475,7 +1478,7 @@ get_coding_ssm = function(limit_cohort,
     table_name = config::get("results_tables")$ssm
     db = config::get("database_name")
     con = DBI::dbConnect(RMariaDB::MariaDB(), dbname = db)
-    muts = tbl(con,table_name) %>%
+    muts = tbl(con, table_name) %>%
       dplyr::filter(Variant_Classification %in% coding_class) %>% 
       as.data.frame()
 
