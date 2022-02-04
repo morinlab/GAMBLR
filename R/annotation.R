@@ -77,7 +77,7 @@ annotate_ssm_blacklist = function(mutations_df,
 }
 
 
-#' Add description of function, annotates recurrent CNVs, but unsure what the required inputs are.
+#' Annotates recurrent CNVs.
 #'
 #' @param seq_df Data frame of sequences with start and end coordinates.
 #' @param seq_file Optional argument to read sequences from file (currently not used in function).
@@ -207,7 +207,6 @@ annotate_driver_ssm = function(maf_df,
       message(paste("adding", unname(include_noncoding[gene]), "for", gene))
       nc_ssm = get_ssm_by_gene(gene_symbol = "NFKBIZ") %>%
         dplyr::filter(Variant_Classification == unname(include_noncoding[gene]))
-        
       if(!is.na(noncoding_regions[gene])){
         #also restrict to coordinates
         chunks = region_to_chunks(noncoding_regions[gene])
@@ -228,7 +227,7 @@ annotate_driver_ssm = function(maf_df,
       message(paste("adding", unname(include_noncoding[gene]), "for", gene))
       nc_ssm = maf_df %>% 
       dplyr::filter(Variant_Classification == unname(include_noncoding[gene]))
-
+      
       if(!is.na(noncoding_regions[gene])){
         #also restrict to coordinates
         chunks = region_to_chunks(noncoding_regions[gene])
