@@ -516,41 +516,116 @@ annotate_hotspots = function(mutation_maf,recurrence_min = 5,analysis_base=c("FL
 #' @examples
 #' hot_ssms = review_hotspots(annotate_hotspots(get_coding_ssm()), genes_of_interest=c("CREBBP"))
 
-review_hotspots = function(annotated_maf, genes_of_interest=c("FOXO1", "MYD88", "CREBBP"), genome_build="hg19"){
+review_hotspots = function(annotated_maf,
+                          genes_of_interest=c("FOXO1", "MYD88", "CREBBP", "NOTCH1", "NOTCH2", "CD79B", "EZH2"),
+                          genome_build="hg19"){
+
+  # define the list of genes currently supported for review
+  supported_genes = c("FOXO1", "MYD88", "CREBBP", "NOTCH1", "NOTCH2", "CD79B", "EZH2")
 
   # check genome build because CREBBP coordinates are hg19-based or hg38-based
-  coordinates <- list()
+  coordinates = list()
   if (genome_build %in% c("hg19", "grch37", "hs37d5", "GRCh37")){
-    coordinates$start <- 3785000
-    coordinates$end <- 3791000
+    coordinates$start$CREBBP = 3785000
+    coordinates$end$CREBBP = 3791000
+    coordinates$start$EZH2 = 148508764
+    coordinates$end$EZH2 = 148506238
+    coordinates$start$NOTCH1 = 139391455
+    coordinates$start$NOTCH2 = 120459150
+    coordinates$start$CD79B_trunc = 62007172
+    coordinates$start$CD79B_NONtrunc = 62006800
   }else if(genome_build %in% c("hg38", "grch38", "GRCh38")){
-    coordinates$start <- 3734999
-    coordinates$end <- 3740999
+    coordinates$start$CREBBP = 3734999
+    coordinates$end$CREBBP = 3740999
+    coordinates$start$EZH2 = 148809146
+    coordinates$end$EZH2 = 148811672
+    coordinates$start$NOTCH1 = 136497003
+    coordinates$start$NOTCH2 = 119916527
+    coordinates$start$CD79B_trunc = 63929812
+    coordinates$start$CD79B_NONtrunc = 63929440
   }else{
     stop("The genome build specified is not currently supported. Please provide MAF file in one of the following cordinates: hg19, grch37, hs37d5, GRCh37, hg38, grch38, or GRCh38")
   }
 
   # check that at least one of the currently supported genes are present
-  if (sum(c("FOXO1", "MYD88", "CREBBP") %in% genes_of_interest)<1){
-      stop("Currently only FOXO1, MYD88, and CREBBP are supported. Please specify one of these genes.")
+  if (length(intersect(supported_genes,
+                       genes_of_interest))==0){
+      stop(paste0("Currently only ",  paste(supported_genes, collapse=", "), " are supported. Please specify one of these genes."))
   }
 
   # notify user that there is limited number of genes currently supported
-  if (sum(c("FOXO1", "MYD88", "CREBBP") %in% genes_of_interest)>1 & length(genes_of_interest) > 3 ){
-      print("Currently only FOXO1, MYD88, and CREBBP are supported. By default only these genes from the supplied list will be reviewed.")
+  if (length(setdiff(genes_of_interest,
+                     supported_genes))>0){
+      message(strwrap(
+        paste0("Currently only ",
+        paste(supported_genes, collapse=", "),
+        " are supported. By default only these genes from the supplied list will be reviewed.
+        Reviewing hotspots for genes ", paste(intersect(supported_genes,
+                                                       genes_of_interest),
+                                       collapse=", "),
+        ", it will take a second ...")))
   }
 
   if("FOXO1" %in% genes_of_interest){
-      annotated_maf <- annotated_maf %>%
-          dplyr::mutate(hot_spot=ifelse(Hugo_Symbol=="FOXO1" & HGVSp_Short == "p.M1?", "TRUE" , hot_spot))
+      annotated_maf = annotated_maf %>%
+          dplyr::mutate(hot_spot=ifelse(Hugo_Symbol=="FOXO1" &
+                                        HGVSp_Short == "p.M1?",
+                                  "TRUE",
+                                  hot_spot))
   }
   if("CREBBP" %in% genes_of_interest){
-      annotated_maf <- annotated_maf %>%
-          dplyr::mutate(hot_spot=ifelse(Hugo_Symbol=="CREBBP" & Start_Position > coordinates$start & End_Position < coordinates$end & Variant_Classification == "Missense_Mutation", "TRUE" , hot_spot))
+      annotated_maf = annotated_maf %>%
+          dplyr::mutate(hot_spot=ifelse(Hugo_Symbol=="CREBBP" &
+                                        Start_Position > coordinates$start$CREBBP &
+                                        End_Position < coordinates$end$CREBBP &
+                                        Variant_Classification == "Missense_Mutation",
+                                  "TRUE",
+                                  hot_spot))
+  }
+  if("EZH2" %in% genes_of_interest){
+      annotated_maf = annotated_maf %>%
+          dplyr::mutate(hot_spot=ifelse(Hugo_Symbol=="EZH2" &
+                                        Start_Position > coordinates$start$EZH2 &
+                                        End_Position < coordinates$end$EZH2,
+                                  "TRUE",
+                                  hot_spot))
   }
   if("MYD88" %in% genes_of_interest){
-      annotated_maf <- annotated_maf %>%
-          dplyr::mutate(hot_spot=ifelse(Hugo_Symbol=="MYD88" & HGVSp_Short %in% c("p.L273P", "p.L265P"), "TRUE" , hot_spot))
+      annotated_maf = annotated_maf %>%
+          dplyr::mutate(hot_spot=ifelse(Hugo_Symbol=="MYD88" &
+                                        HGVSp_Short %in% c("p.L273P", "p.L265P"),
+                                  "TRUE",
+                                  hot_spot))
+  }
+  if("NOTCH1" %in% genes_of_interest){
+      annotated_maf = annotated_maf %>%
+          dplyr::mutate(hot_spot=ifelse(Hugo_Symbol=="NOTCH1" &
+                                        Start_Position < coordinates$start$NOTCH1,
+                                  "TRUE",
+                                  hot_spot))
+  }
+  if("NOTCH2" %in% genes_of_interest){
+      annotated_maf = annotated_maf %>%
+          dplyr::mutate(hot_spot=ifelse(Hugo_Symbol=="NOTCH2" &
+                                        Start_Position < coordinates$start$NOTCH2,
+                                  "TRUE",
+                                  hot_spot))
+  }
+
+  if("CD79B" %in% genes_of_interest){
+      truncating_variants = c("Frame_Shift_Del", "Frame_Shift_Ins", "Nonsense_Mutation", "Splice_Region", "Splice_Site")
+      annotated_maf = annotated_maf %>%
+          dplyr::mutate(hot_spot=ifelse(Hugo_Symbol=="CD79B" &
+                                        Start_Position < coordinates$start$CD79B_trunc &
+                                        Variant_Classification %in% truncating_variants,
+                                  "TRUE",
+                                  hot_spot)) %>%
+          dplyr::mutate(hot_spot=ifelse(Hugo_Symbol=="CD79B" &
+                                        Start_Position < coordinates$start$CD79B_NONtrunc &
+                                        ! Variant_Classification %in% truncating_variants,
+                                  "TRUE",
+                                  hot_spot))
+
   }
   return(annotated_maf)
 }
