@@ -952,9 +952,9 @@ prettyOncoplot = function(maftools_obj,
     }
 
     mutation_counts = maftools_obj@gene.summary %>%
-      mutate(fake_column=1) %>%
-      complete(., tidyr::expand(., crossing(fake_column), Hugo_Symbol = genes)) %>%
-      select(-fake_column) %>%
+      dplyr::mutate(fake_column=1) %>%
+      tidyr::complete(., tidyr::expand(., crossing(fake_column), Hugo_Symbol = genes)) %>%
+      dplyr::select(-fake_column) %>%
       replace(is.na(.), 0) %>%
       dplyr::select(Hugo_Symbol,MutatedSamples) %>%
       as.data.frame()
