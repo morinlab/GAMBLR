@@ -851,7 +851,8 @@ prettyOncoplot = function(maftools_obj,
       lg = length(genes)
       message(paste("creating oncomatrix with",lg,"genes"))
       om = maftools:::createOncoMatrix(m = maftools_obj,
-                                     g = genes)
+                                     g = genes,
+                                     add_missing = TRUE)
       mat_origin = om$oncoMatrix
       tsbs = levels(maftools:::getSampleSummary(x = maftools_obj)[,Tumor_Sample_Barcode])
       print(paste("numcases:",length(tsbs)))
@@ -867,7 +868,8 @@ prettyOncoplot = function(maftools_obj,
 
     }else{
       om = maftools:::createOncoMatrix(m = maftools_obj,
-                                       g = genes)
+                                       g = genes,
+                                       add_missing = TRUE)
       mat_origin = om$oncoMatrix
       tsbs = levels(maftools:::getSampleSummary(x = maftools_obj)[,Tumor_Sample_Barcode])
       print(paste("numcases:",length(tsbs)))
@@ -950,7 +952,10 @@ prettyOncoplot = function(maftools_obj,
     }
 
     mutation_counts = maftools_obj@gene.summary %>%
-      #dplyr::filter(Hugo_Symbol %in% genes) %>%
+      mutate(fake_column=1) %>%
+      complete(., tidyr::expand(., crossing(fake_column), Hugo_Symbol = genes)) %>%
+      select(-fake_column) %>%
+      replace(is.na(.), 0) %>%
       dplyr::select(Hugo_Symbol,MutatedSamples) %>%
       as.data.frame()
     numpat=length(patients)
@@ -1244,7 +1249,7 @@ prettyOncoplot = function(maftools_obj,
     top_annotation = HeatmapAnnotation(cbar = anno_oncoprint_barplot())
   }
 
-  ch = ComplexHeatmap::oncoPrint(mat[genes,patients_kept],
+  ch = ComplexHeatmap::oncoPrint(mat[intersect(genes, genes_kept),patients_kept],
                                    alter_fun = alter_fun,
                                    top_annotation=top_annotation,
                                    right_annotation=NULL,
@@ -1256,7 +1261,7 @@ prettyOncoplot = function(maftools_obj,
                                    column_split=column_split,
                                    column_title=column_title,
                                    row_title=NULL,
-                                   row_split=row_split,
+                                   row_split=row_split[intersect(genes, genes_kept)],
                                    heatmap_legend_param = heatmap_legend_param,
                                    row_names_gp = gpar(fontsize = fontSizeGene),
                                    pct_gp = gpar(fontsize = fontSizeGene),
