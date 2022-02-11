@@ -808,15 +808,9 @@ liftover_bedpe = function(bedpe_file,bedpe_df,target_build="grch37",col_names,co
     original_bedpe = as.data.frame(original_bedpe)
     original_bedpe=original_bedpe %>% mutate_if(is.numeric, as.integer)
     #print(head(original_bedpe))
-    original_bedpe =
-      original_bedpe %>%
-      mutate(CHROM_A = ifelse(!grepl("chr",CHROM_A),
-                          paste0("chr",CHROM_A),
-                          CHROM_A),
-            CHROM_B= ifelse(!grepl("chr",CHROM_B),
-                          paste0("chr",CHROM_B),
-                          CHROM_B)
-            )
+    original_bedpe = original_bedpe %>%
+      dplyr::mutate(CHROM_A = ifelse(!grepl("chr",CHROM_A), paste0("chr",CHROM_A),CHROM_A),
+                    CHROM_B= ifelse(!grepl("chr",CHROM_B), paste0("chr",CHROM_B), CHROM_B))
     print(head(original_bedpe))
     char_vec = original_bedpe %>% tidyr::unite(united,sep="\t") %>% dplyr::pull(united)
     bedpe_obj <- rtracklayer::import(text=char_vec,format="bedpe")
