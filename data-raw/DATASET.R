@@ -73,3 +73,13 @@ usethis::use_data(target_regions_hg38, overwrite = TRUE)
 target_regions_grch37 = system.file("extdata","target_regions_grch37.txt",package="GAMBLR") %>%
   read.table(sep="\t",header=1)
 usethis::use_data(target_regions_grch37, overwrite = TRUE)
+
+hotspot_regions_grch37 = system.file("extdata","hotspot_regions.grch37.tsv",package="GAMBLR") %>%
+  read.table(sep="\t",header=1) %>%
+  column_to_rownames("gene")
+usethis::use_data(hotspot_regions_grch37, overwrite = TRUE)
+
+hotspot_regions_hg38 = system.file("extdata","hotspot_regions.hg38.tsv",package="GAMBLR") %>%
+  read.table(sep="\t",header=1) %>%
+  column_to_rownames("gene")
+usethis::use_data(hotspot_regions_hg38, overwrite = TRUE)
