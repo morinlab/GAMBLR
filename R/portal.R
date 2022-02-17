@@ -2,8 +2,8 @@ require("dbplyr")
 require("tidyverse")
 require("data.table")
 
-#functions for creating a cBioportal instance using GAMBL data
-#some global variables that we will probably change later
+# Define functions for creating a cBioportal instance using GAMBL data
+# Set some global variables that we will probably change later
 gambl_db = "gambl_test"
 gambl_maf = "maf_slms3_hg19"
 gambl_icgc_maf = "maf_slms3_hg19_icgc"
@@ -33,12 +33,13 @@ setup_fusions = function(short_name="GAMBL",
   caselist_fusion = paste0(out_dir,"case_lists/cases_fusion.txt")
 
   #determine what table to query and what restrictions to use for the MAF data
-  #TODO: fix this once we have the ICGC SV data in the database
+
   if(include_icgc_data){
     maf_table = gambl_icgc_maf
   }else{
     maf_table = gambl_maf
   }
+  #NOTES. Leave here until the code is robust
   #obligatory file for fusions
   #cancer_study_identifier: test_gambl
   #genetic_alteration_type: FUSION
@@ -61,7 +62,7 @@ setup_fusions = function(short_name="GAMBL",
   )
   cat(meta_fusion_content,file=meta_fusions)
 
-  #get SV breakpoints and annotate them
+  #now get SV breakpoints and annotate them
 
   unannotated_sv = get_manta_sv() #no filters
 
@@ -71,7 +72,7 @@ setup_fusions = function(short_name="GAMBL",
   fusion_samples = pull(annotated_sv,tumour_sample_id) %>% unique()
 
 
-  #deal with any cases not in metadata
+  #deal with any cases not represented in the metadata
   fusions_df =  data.frame(Hugo_Symbol=annotated_sv$gene,
                            Entrez_Gene_Id=annotated_sv$entrez,
                            Center = "BCGSC",
@@ -85,30 +86,14 @@ setup_fusions = function(short_name="GAMBL",
 
   fusions_df = distinct(fusions_df,Tumor_Sample_Barcode,Fusion,.keep_all = TRUE)
 
-  #hnrnph1_chr = "5"
-  #hnrnph1_start = 179046257
-  #hnrnph1_end  = 179046427
-  #mafdat_chrom = filter(mafdat_full,Chromosome == hnrnph1_chr)
-  #h1.maf = filter(mafdat_chrom, Start_Position > hnrnph1_start & Start_Position < hnrnph1_end)
-  #h1.muts = h1.maf$Tumor_Sample_Barcode
-  #hnrnph1_entrez = "3187"
-  #h1.mut.df = data.frame(Hugo_Symbol = "HNRNPH1",
-  #                       Entrez_Gene_Id = hnrnph1_entrez,
-  #                       Center = "BCGSC",
-  #                       Tumor_Sample_Barcode = h1.muts,
-  #                       Fusion = "HNRNPH1-E5",
-  #                       DNA_support = "yes",
-  #                       RNA_support="no",
-  #                       Method = "SLMS-3",
-  #                       Frame = "in-frame")
-
-
-  #determine what table to query and what restrictions to use for the MAF data
+  # determine what table to query and what restrictions to use for the MAF data
+  # We should eventually fix how this is done to allow more flexibility (e.g. using GAMBL sample sets?)
   if(include_icgc_data){
     maf_table = gambl_icgc_maf
   }else{
     maf_table = gambl_maf
   }
+
 
   nfkbiz_entrez = 64332
   nfkbiz_utr_ssm = get_ssm_by_gene(table=maf_table,gene_symbol = "NFKBIZ") %>%
@@ -123,11 +108,15 @@ setup_fusions = function(short_name="GAMBL",
                              RNA_support="no",
                              Method = "SLMS-3",
                              Frame = "in-frame")
-  #get any SV breakpoints that are in the 3'UTR of NFKBIZ
+
+  # get any SV breakpoints that are in the 3'UTR of NFKBIZ, which aren't annotated by the function called above
+  # additional custom code for other SVs could be added here but we'd need to get rid of hard-coding and generalize it
+  # easiest fix would be a BED file defining each region of interest
   nfkbiz_utr_region = "chr3:101,578,185-101,579,902"
 
 
-  nfkbiz.svs= get_manta_sv(region=nfkbiz_utr_region) %>% pull(tumour_sample_id) %>% unique()
+  nfkbiz.svs= get_manta_sv(region=nfkbiz_utr_region) %>%
+    pull(tumour_sample_id) %>% unique()
 
 
   nfkbiz.sv.df = data.frame(Hugo_Symbol = "NFKBIZ",
@@ -139,7 +128,7 @@ setup_fusions = function(short_name="GAMBL",
                             RNA_support="no",
                             Method = "Manta",
                             Frame = "in-frame")
-
+  # combine the NFKBIZ SVs with the rest
   all_fusions = rbind(fusions_df,nfkbiz.sv.df,nfkbiz.mut.df)
 
   fusion.cases= as.character(unique(all_fusions$Tumor_Sample_Barcode))
