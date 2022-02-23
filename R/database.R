@@ -1550,10 +1550,12 @@ get_gene_cn_and_expression = function(gene_symbol,
 
 #' Get the expression for one or more genes for all GAMBL samples
 #'
+#' @param metadata # GAMBL metadata.
 #' @param hugo_symbols One or more gene symbols. Should match the values in a maf file.
 #' @param ensembl_gene_ids One or more ensembl gene IDs. Only one of hugo_symbols or ensembl_gene_ids may be used.
-#' @param metadata # GAMBL metadata.
 #' @param join_with How to restrict cases for the join. Can be one of genome, mrna or "any"
+#' @param all_genes Set to TRUE to return full expression data frame without any subsetting.
+#' @param expression_data Optional argument to use an already loaded expression data frame (prevent function to re-load full df from flat file or database)
 #' @param from_flatfile Set to TRUE to obtain mutations from a local flatfile instead of the database.
 #'
 #' @return A list.
@@ -1561,75 +1563,98 @@ get_gene_cn_and_expression = function(gene_symbol,
 #'
 #' @examples
 #' MYC_expr = get_gene_expression(hugo_symbols = c("MYC"), join_with = "mrna")
-#'
-get_gene_expression = function(hugo_symbols,
-                               ensembl_gene_ids,
-                               metadata,
-                               join_with = "mrna",
-                               from_flatfile = TRUE){
+#' Read full expression values df (no subsetting on genes)
+#' full_expression_df = get_gene_expression_new(all_genes = TRUE, join_with = "genome")
+#' Use loaded df (in previous step) to get expression values for IRF4 and MYC.
+#' irf4_myc_expressions = get_gene_expression_new(hugo_symbols = c("IRF4", "MYC"), all_genes = FALSE, join_with = "genome", from_flatfile = FALSE, expression_data = full_expression_df) 
 
+get_gene_expression = function(metadata,
+                               hugo_symbols,
+                               ensembl_gene_ids,
+                               join_with = "mrna",
+                               all_genes = FALSE,
+                               expression_data,
+                               from_flatfile = TRUE){
+  
   database_name = config::get("database_name")
   if(missing(metadata)){
     if(join_with == "mrna"){
       metadata = get_gambl_metadata(seq_type_filter = "mrna", only_available = FALSE)
       metadata = metadata %>% 
         dplyr::select(sample_id)
-
-    }else if(join_with == "genome"){
+      
+      }else if(join_with == "genome"){
       metadata = get_gambl_metadata(only_available = FALSE)
       metadata = metadata %>% 
         dplyr::select(sample_id)
-    }else{
-      
-      #use every unique biopsy_id in GAMBL regardless of seq_type
+    
+      }else{
       metadata = get_gambl_metadata(seq_type_filter = "any", only_available = FALSE)
       metadata = metadata %>% 
         dplyr::select(sample_id, biopsy_id)
     }
   }
-  if(missing(hugo_symbols) & missing(ensembl_gene_ids)){
+  
+  if(missing(hugo_symbols) & missing(ensembl_gene_ids) & !all_genes){
     stop("ERROR: supply at least one gene symbol or Ensembl gene ID")
   }else if(!missing(hugo_symbols) & !missing(ensembl_gene_ids)){
-    stop("ERROR: Both hugo_symbols and ensembl_gene_ids were provided. Please provide only one type of ID. ")
+    stop("ERROR: Both hugo_symbols and ensembl_gene_ids were provided. Please provide only one type of ID.")
   }
-  if(from_flatfile){
+  
+  if(from_flatfile & missing(expression_data)){
     tidy_expression_file = config::get("results_merged")$tidy_expression_file
     tidy_expression_data = read_tsv(tidy_expression_file)
-  }else{
+  }
     
-    #load the tidy expression data from the database
+  if(!from_flatfile & !missing(expression_data)){
+    tidy_expression_data = as.data.frame(expression_data)
+  }
+    
+  if(!from_flatfile & missing(expression_data)){
     con = DBI::dbConnect(RMariaDB::MariaDB(), dbname = database_name)
     tidy_expression_data = tbl(con, "expression_vst_hg38")
   }
-  if(!missing(hugo_symbols)){
-    tidy_expression_data = tidy_expression_data %>%
-      dplyr::filter(Hugo_Symbol %in% hugo_symbols) %>%
-      dplyr::select(-ensembl_gene_id) %>%
-      as.data.frame() %>%
+  
+  if(all_genes & missing(ensembl_gene_ids) & missing(hugo_symbols)){
+    tidy_expression_data = tidy_expression_data %>% as.data.frame()
+  }
+  
+  if(!missing(hugo_symbols) & !all_genes){
+    tidy_expression_data = tidy_expression_data %>% 
+      dplyr::filter(Hugo_Symbol %in% hugo_symbols) %>% 
+      dplyr::select(-ensembl_gene_id) %>% 
+      as.data.frame() %>% 
       pivot_wider(names_from = Hugo_Symbol, values_from = expression)
   }
-  if(!missing(ensembl_gene_ids)){
-    tidy_expression_data = tidy_expression_data %>%
-      dplyr::filter(ensembl_gene_id %in% ensembl_gene_ids) %>%
-      dplyr::select(-Hugo_Symbol) %>%
-      as.data.frame() %>%
+  
+  if(!missing(ensembl_gene_ids) & !all_genes){
+    tidy_expression_data = tidy_expression_data %>% 
+      dplyr::filter(ensembl_gene_id %in% ensembl_gene_ids) %>% 
+      dplyr::select(-Hugo_Symbol) %>% 
+      as.data.frame() %>% 
       pivot_wider(names_from = ensembl_gene_id, values_from = expression)
   }
-  if(join_with == "mrna"){
-    
-    #join to metadata
+  
+  if(join_with == "mrna" & missing(expression_data)){
     expression_wider = dplyr::select(tidy_expression_data, -biopsy_id, -genome_sample_id)
     expression_wider = left_join(metadata, expression_wider, by = c("sample_id" = "mrna_sample_id"))
-  }else if(join_with == "genome"){
-    expression_wider = dplyr::select(tidy_expression_data, -mrna_sample_id, -biopsy_id) %>%
-      dplyr::filter(genome_sample_id != "NA")
-
+  
+    }else if(join_with == "genome" & missing(expression_data)){
+    expression_wider = dplyr::select(tidy_expression_data, -mrna_sample_id, -biopsy_id) %>% dplyr::filter(genome_sample_id != "NA")
     expression_wider = left_join(metadata, expression_wider, by = c("sample_id" = "genome_sample_id"))
-  }else if(join_with == "any"){
-   
-   #use biopsy_id to join
+  
+    }else if(join_with == "any" & missing(expression_data)){
     expression_wider = dplyr::select(tidy_expression_data, -mrna_sample_id, -genome_sample_id)
     expression_wider = left_join(metadata, expression_wider, by = c("biopsy_id" = "biopsy_id"))
+    
+    }else if(join_with == "mrna" & !missing(expression_data)){
+      expression_wider = tidy_expression_data
+      
+    }else if(join_with == "genome" & !missing(expression_data)){
+      expression_wider = tidy_expression_data
+      
+    }else if(join_with == "any" & !missing(expression_data)){
+      expression_wider = tidy_expression_data
   }
   return(expression_wider)
 }
