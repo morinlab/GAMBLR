@@ -1788,7 +1788,7 @@ theme_Morons = function(base_size = 14,
 #' @param comparison_name Optional: Specify the legend title if different from the comparison column name.
 #' @param custom_colours Optional: Specify a named vector of colours that match the values in the comparison column.
 #' @param custom_labels Optional: Specify custom labels for the legend categories. Must be in the same order as comparison_values.
-#' @param max_q
+#' @param max_q cut off for q values to be filtered in fish test
 #'
 #' @return A ggplot object with a side-by-side forest plot and bar plot showing mutation incidences across two groups.
 #' @export
@@ -1800,12 +1800,14 @@ theme_Morons = function(base_size = 14,
 #'   dplyr::filter(consensus_pathology %in% c("FL", "DLBCL"))
 #'
 #' maf = get_coding_ssm(limit_samples = metadata$sample_id, basic_columns = TRUE)
-#' genes = c("ATP6V1B2", "EZH2", "TNFRSF14", "RRAGC")
-#' comparison_column = "consensus_pathology"
-#' comparison_values = c("DLBCL", "FL")
-#' comparison_name = "FL vs DLBCL"
 #'
-#' prettyForestPlot(maf, metadata, genes, comparison_column, comparison_values, separate_hotspots = FALSE, comparison_name)
+#' prettyForestPlot(maf, 
+#'                  metadata, 
+#'                  genes = c("ATP6V1B2", "EZH2", "TNFRSF14", "RRAGC"),
+#'                  comparison_column = "consensus_pathology", 
+#'                  comparison_values = c("DLBCL", "FL"), 
+#'                  separate_hotspots = FALSE, 
+#'                  comparison_name = "FL vs DLBCL")
 #'
 prettyForestPlot = function(maf,
                             mutmat, 
