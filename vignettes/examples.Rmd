@@ -13,6 +13,7 @@ knitr::opts_chunk$set(
   comment = "#>"
 )
 ```
+
 If you haven't already, clone the github repo:
 `git clone git@github.com:morinlab/GAMBLR.git`
 Run this vignette using the base directory of the GAMBLR repository as your working directory. See the Readme in the repository for more tips on getting set up.
@@ -28,6 +29,11 @@ require(rtracklayer)
 require(RMariaDB)
 require(DBI)
 require(ComplexHeatmap)
+require(kableExtra)
+require(ggsci)
+require(gridExtra)
+require(conflicted)
+conflict_prefer("filter", "dplyr")
 ```
 
 The key level-1 GAMBL outputs are making their way into a MySQL (a.k.a. MariaDB) database. The most intuitive way to query the data is using the dbplyr R package. The initial connection and a method to determine what each table contains is shown below. 
@@ -47,7 +53,8 @@ for(table_name in all_table_names){
 }
 ```
 
-Get the metadata, automagically joining both tables and dropping normals and RNA-seq samples. 
+Get the metadata, automatically joining both tables and dropping normal and RNA-seq samples.
+
 ```{r metadata, message = FALSE}
 my_metadata = get_gambl_metadata()
 
@@ -130,7 +137,7 @@ myc_locus_sv = myc_locus_sv %>%
 print(head(myc_locus_sv))
 
 circos.initializeWithIdeogram()
-circos.genomicLink(bed1, bed2,col = rand_color(nrow(bed1), transparency = 0.5))
+circos.genomicLink(bed1, bed2, col = rand_color(nrow(bed1), transparency = 0.5))
 ```
 
 There is also a function that generates a sample overview with SV and CNV data displayed and it labels oncogene rearrangements. 
@@ -139,7 +146,9 @@ There is also a function that generates a sample overview with SV and CNV data d
 this_samp = "13-38657_tumorB"
 GAMBLR::plot_sample_circos(this_sample_id = this_samp)
 ```
+
 This package also includes a convenience function to facilitate annotation of common oncogene fusions/SVs in B-cell lymphomas. 
+
 ```{r oncogene_annotations, out.width="100%", warning = FALSE}
 unannotated_sv = get_manta_sv() 
 
@@ -172,7 +181,7 @@ circos.clear()
 circos.initializeWithIdeogram(plotType = NULL, chromosome.index = paste0("chr", c(1:22, "X")))
 circos.genomicLabels(partner_label, labels.column = 4, side = "outside", cex = 0.4, col = "black")
 circos.genomicIdeogram()
-circos.genomicLink(bed1, bed2,col = rand_color(nrow(bed1), transparency = 0.5))
+circos.genomicLink(bed1, bed2, col = rand_color(nrow(bed1), transparency = 0.5))
 ```
 
 ```{r oncogene_annotations_myc, out.width = "100%", warning = FALSE}
@@ -292,6 +301,7 @@ ashm_multi_rainbow_plot(regions_to_display = c("BCL2-TSS", "MYC-TSS", "SGK1-TSS"
 ```
 
 Get all CN segments that overlap with a gene of interest and annotate them using the metadata. 
+
 ```{r get_seg_data}
 my_segments = get_cn_segments(chromosome = "4", qstart = 83274467, qend = 83295149)
 print(head(my_segments))
@@ -363,64 +373,210 @@ prettyOncoplot(maftools_obj = maf,
                removeNonMutated = FALSE)
 ```
 
-Maftools Oncoplots leave much to be desired. ComplexHeatmap has a function that overcomes many of these. GAMBLR has a front-end to ComplexHeatmap::oncoPrint, which we've named prettyOncoplot. This is one example that shows off some of its functionality. 
+Create a forest plot comparing mutation frequencies for a set of genes between two groups.
 
-#```{r tabulate_genes}
-# BL_genes_all = lymphoma_genes %>% 
-#   dplyr::filter(BL == TRUE) %>% 
-#   pull(Gene)
+```{r prettyForestplot, warning = FALSE, message = FALSE, out.width = "100%", fig.dim = c(8,3)}
+#load metadata
+metadata = get_gambl_metadata(case_set = "tFL-study") %>%
+  dplyr::filter(pairing_status == "matched") %>%
+  dplyr::filter(consensus_pathology %in% c("FL", "DLBCL"))
 
-# print(BL_genes_all)
+#load maf data frame
+maf = get_coding_ssm(limit_samples = metadata$sample_id, basic_columns = TRUE)
 
-# Determine what frequency each gene is mutated in across the extracted data set
+#constructing plot
+prettyForestPlot(maf = maf,
+                 metadata = metadata,
+                 genes = c("ATP6V1B2", "EZH2", "TNFRSF14", "RRAGC"),
+                 comparison_column = "consensus_pathology",
+                 comparison_values = c("DLBCL", "FL"),
+                 separate_hotspots = FALSE,
+                 comparison_name = "FL vs DLBCL")
+```
 
-# n = maf_data %>% 
-#   dplyr::select(Tumor_Sample_Barcode) %>%
-#   unique() %>%
-#   count()
+Create an appealing, flexible and interactive HTML-style lollipop plot from mutational data using a modified version of g3Lollipop function from g3viz package.
 
-# gene_sample_mut_freq = maf_data %>%
-#   dplyr::filter(Hugo_Symbol %in% BL_genes_all) %>% 
-#   dplyr::select(Hugo_Symbol, Tumor_Sample_Barcode) %>% 
-#   unique() %>% 
-#   dplyr::group_by(Hugo_Symbol) %>% 
-#   dplyr::tally() %>% 
-#   dplyr::mutate(frequency= 100 * n / 222)
+```{r pretty_lollipop_plot, warning = FALSE, message = FALSE, out.width = "100%", fig.dim = c(8,3)}
+#load maf data.
+maf = get_coding_ssm(limit_samples = metadata$sample_id, basic_columns = TRUE)
 
-# Which genes are mutated in at least 10% of patients?
-# gene_sample_mut_freq %>%
-#   filter(frequency >= 10)
+#construct pretty_lollipop_plot.
+pretty_lollipop_plot(maf_df = maf, #a data frame containing the mutation data (from a MAF).
+                     gene = "MYC", #the gene symbol to plot.
+                     plot_title = "Mutation data for MYC", #optional (defaults to gene name).
+                     plot_theme = "blue") #Options: cbioportal(default), blue, simple, nature, nature2, ggplot2, and dark.
+```
 
-# top_BL_genes = gene_sample_mut_freq %>%
-#   dplyr::filter(frequency >= 10) %>% 
-#   dplyr::pull(Hugo_Symbol)
+Generate a colourful multi-panel overview of hypermutation in regions of interest across many samples.
 
-# maftools::oncoplot(maf, clinicalFeatures = c("sex", "cohort"), sortByAnnotation = TRUE, genes = top_BL_genes)
-#```
+```{r ashm, warning = FALSE, message = FALSE, out.width = "100%", fig.dim = c(8,3)}
+#get one of the custom colour palettes or all colours together.
+cols = get_gambl_colours()
 
-#```{r igv}
-# WARNING: this code chunk will fail unless you have IGV running and listening on port 60506
-# The simplest scenario is to run this command on a terminal (if using a Mac), assuming you are using R on gphost10 and you have a ssh config that routes gp10 to that host. 
-# Stretch goal/TODO: get this working with a headless igv
-# ssh -X gp10
-# then launch IGV (e.e. from a conda installation):
-# conda activate igv; igv &
-# hg19/grch37 example 
-# this_sv = annotated_sv %>% 
-#   dplyr::filter(partner == "HIST1H2BK") %>%
-#   head(1)
+#get meta data.
+some_meta = get_gambl_metadata() %>%
+  dplyr::filter(pathology %in% c("DLBCL", "BL", "FL", "HGBL")) %>% #subset metadata on specific pathologies.
+  arrange(bcl2_ba, myc_ba) #arrange meta data .
 
-# bam_details = get_bams(sample = this_sv$tumour_sample_id)
-# snapshot_home = "/home/rmorin/IGV_snapshots/"
-# snapshot = make_igv_snapshot(chrom = this_sv$chrom2, start = this_sv$start2, 
-#                             end = this_sv$end2,
-#                             sample_id = this_sv$tumour_sample_id,
-#                             genome_build = bam_details$igv_build,
-#                             bams = #c(bam_details$tumour_bams, 
-#                             bam_details$normal_genome_bams),
-#                             out_path = snapshot_home)
+#construct ashm_multi_rainbow_plot.
+ashm_multi_rainbow_plot(regions_to_display = c("BCL2-TSS", "MYC-TSS"), #what reagions we want to display .
+                        custom_colours = cols, #using the defined colours from line 409.
+                        metadata = some_meta, #calling loaded metadata.
+                        classification_column = "lymphgen") #override default column for assigning the labels used for colouring in the figure.
+```
 
-# library(imager)
-# snapshot_image = imager::load.image(snapshot)
-# plot(snapshot_image, axes = FALSE)
-#```
+Count hypermutated bins and generate heatmaps/cluster the data.
+
+```{r get_mutation_frequency_bin_matrix, warning = FALSE, message = FALSE, out.width = "100%", fig.dim = c(8,3)}
+#load metadata.
+some_meta = get_gambl_metadata() %>% 
+    dplyr::filter(pathology %in% c("DLBCL","BL")) #subset on specific pathology.
+
+#bring together all derived sample-level results from many GAMBL pipelines.
+collated = collate_results()
+
+#join metadata and collated data.
+some_meta = left_join(some_meta, collated) %>%
+    filter(genetic_subgroup != "0") #remove genetic subgroups eqaul to 0.
+
+#get ashm regions (grch37) and filter out a set of genes.
+some_regions = grch37_ashm_regions %>%
+  dplyr::filter(!gene %in% c("BCL11A", "CD44", "CD74", "IRF1", "IRF4", "PTPN1", "KLHL6", "ZCCHC7", 
+                             "ITPKB", "IL4R", "NCOA3", "MYO1E", "ETV6", "FOXP1", "MEF2C", "MS4A1", 
+                             "SEPT9", "P2RX5", "BCL2L11", "POU2AF1", "RFTN1", "C13orf18", "MIR155HG", 
+                             "EBF1", "LRMP", "BLK", "NFKBIZ", "BCL2")) %>% select(1:4)
+
+#reorder factor levels of genetic subgroups.
+some_regions$gene = factor(some_regions$gene, levels = c("BACH2", "TCL1A", "MYC", "PAX5", "ST6GAL1", "BCL6",
+                                                         "BCL7A", "BIRC3", "BTG1", "BTG2", "CD83", "CIITA",
+                                                         "CXCR4", "DTX1", "FANK1", "IRF8", "PIM1", "PIM2", 
+                                                         "S1PR2", "SERPINA9", "TMSB4X", "ZFP36L1", "RHOH", 
+                                                         "MEF2B", "GRHPR", "LPP", "SGK1", "IGLL5"))
+
+#reorder factor levels of genetic subgroups.
+some_meta$genetic_subgroup = factor(some_meta$genetic_subgroup, levels = c("M53-BL", "DGG-BL", "IC-BL", 
+                                                                           "DLBCL-1", "DLBCL-2", "DLBCL-3",
+                                                                           "ST2", "ST2-COMP", "EZB", 
+                                                                           "EZB-COMP", "BN2", "MCD", 
+                                                                           "MCD-COMP", "N1-COMP", "N1", "Other"))
+
+get_mutation_frequency_bin_matrix(these_samples_metadata = some_meta, #GAMBL metadata subset to the cases you want to process.
+                                  regions_df = some_regions, #data frame of regions with four columns (chrom, start, end, gene_name).
+                                  min_bin_recurrence = 5, #how many samples a bin must be mutated in to retain in the visualization.
+                                  region_fontsize = 12, #fontsize of regions in plot, default is 8ppt.
+                                  window_size = 1000, #the width of your sliding window.
+                                  slide_by = 500, #how far to shift before starting the next window.
+                                  orientation = "sample_rows", #sample orientation.
+                                  min_count_per_bin = 1, #minimum counts per bin, default is 3.
+                                  sortByColumns = c("pathology","genetic_subgroup","manta_MYC_sv"), #which of the metadata to sort on for the heatmap.
+                                  metadataColumns = c("manta_MYC_sv","genetic_subgroup","pathology")) #what metadata will be shown in the visualization.
+
+```
+
+Hex codes for B-cell lymphomas.
+
+```{r full_image, echo = FALSE, message = FALSE}
+#define some variables
+remove_composite = TRUE
+include_nhl = TRUE
+exclude = c("M", "F", "A", "B", "C", "D", "E", "I", "II", "IIIA", "IIIB", "FF", "unknown", "FAIL", "alive", "dead", "deceased", "adult", "ctDNA", "pediatric", "NA")
+
+#get B-NHL palette
+path_cols = ggsci::get_ash("b-cell")
+path_df = data.frame(Pathology = factor(names(path_cols), levels = names(path_cols)), hex = path_cols) %>%
+  filter(!Pathology %in% c("B-ALL", "PMBCL"))
+
+nhl = ggplot(path_df, aes(x = Pathology, y = 0, fill = hex, label = Pathology)) +
+        geom_tile(width = 0.9, height = 1) +
+        geom_text(color = "white", fontface = "bold") +
+        scale_fill_identity(guide = "none") +
+        coord_flip() +
+        theme_void() +
+        labs(title = "B-NHL") + 
+        theme(plot.title = element_text(lineheight = 0.9, hjust = 0.5, face = "bold"))
+
+#get COO palette
+coo_cols = ggsci::get_ash("coo")
+coo_df = data.frame(COO = factor(names(coo_cols), levels = names(coo_cols)), hex = coo_cols) %>%
+  filter(!COO=="U" & !COO=="UNC")
+
+coo = ggplot(coo_df, aes(x = COO, y = 0, fill = hex, label = COO)) +
+        geom_tile(width = 0.9, height = 1) +
+        geom_text(color = "white", fontface = "bold") +
+        scale_fill_identity(guide = "none") +
+        coord_flip() + 
+        theme_void() +
+        labs(title = "COO") + 
+        theme(plot.title = element_text(lineheight = 0.9, hjust = 0.5, face = "bold"))
+
+#get Harvard palette
+harvard_cols = ggsci::get_ash("harvard")
+harvard_df = data.frame(Harvard = factor(names(harvard_cols), levels = names(harvard_cols)), hex = harvard_cols)
+harvard = ggplot(harvard_df, aes(x = Harvard, y = 0, fill = hex, label = Harvard)) +
+            geom_tile(width = 0.9, height = 1) +
+            geom_text(color = "white", fontface = "bold") +
+            scale_fill_identity(guide = "none") +
+            coord_flip() + 
+            theme_void() +
+            labs(title = "Harvard") +
+            theme(plot.title = element_text(lineheight = 0.9, hjust = 0.5, face = "bold"))
+
+#get LymphGen palette
+lymphgen_cols = ggsci::get_ash("lymphgen")
+lymphgen_df = data.frame(LymphGen = factor(names(lymphgen_cols), levels = names(lymphgen_cols)), hex = lymphgen_cols)
+if(remove_composite){lymphgen_df = filter(lymphgen_df, LymphGen %in% c("Other", "A53", "N1", "BN2", "MCD", "ST2", "EZB", "EZB-MYC"))}
+
+lymphgen = ggplot(lymphgen_df, aes(x = LymphGen, y = 0, fill = hex, label = LymphGen)) +
+             geom_tile(width = 0.9, height = 1) +
+             geom_text(color = "white", fontface = "bold") +
+             scale_fill_identity(guide = "none") +
+             coord_flip() +
+             theme_void() +
+             labs(title = "LymphGen") + 
+             theme(plot.title = element_text(lineheight = 0.9, hjust = 0.5, face = "bold"))
+
+#get HMRN palette
+hmrn_cols = ggsci::get_ash("hmrn")
+hmrn_df = data.frame(HMRN = factor(names(hmrn_cols), levels = names(hmrn_cols)), hex = hmrn_cols)
+hmrn = ggplot(hmrn_df, aes(x = HMRN, y = 0, fill = hex, label = HMRN)) +
+         geom_tile(width = 0.9, height = 1) +
+         geom_text(color = "white", fontface = "bold") +
+         scale_fill_identity(guide = "none") +
+         coord_flip() +
+         theme_void() +
+         labs(title = "HMRN") +
+         theme(plot.title = element_text(lineheight = 0.9, hjust = 0.5, face = "bold"))
+
+#get Clinical palette
+clin_cols = ggsci::get_ash("clinical") 
+clin_df = data.frame(Clinical = factor(names(clin_cols), levels = rev(names(clin_cols))), hex = clin_cols) %>%
+  filter(!Clinical %in% exclude)
+
+#clinical 1
+clin1 = head(clin_df, 13) %>% 
+  ggplot(aes(x = Clinical, y = 0, fill = hex, label = Clinical)) +
+    geom_tile(width = 0.9, height = 1) +
+    geom_text(color = "white", fontface = "bold") +
+    scale_fill_identity(guide = "none") +
+    coord_flip() +
+    theme_void() +
+    labs(title = "Clinical") +
+    theme(plot.title = element_text(lineheight = 0.9, hjust = 0.5, face = "bold"))
+
+#clinical 2
+clin2 = tail(clin_df, 13) %>% 
+  ggplot(aes(x = Clinical, y = 0, fill = hex, label = Clinical)) +
+    geom_tile(width = 0.9, height = 1) +
+    geom_text(color = "white", fontface = "bold") +
+    scale_fill_identity(guide = "none") +
+    coord_flip() +
+    theme_void() +
+    labs(title = "Clinical") +
+    theme(plot.title = element_text(lineheight = 0.9, hjust = 0.5, face = "bold"))
+
+#arrange retrieved palettes into a grid object
+if(include_nhl){
+  grid.arrange(clin1, clin2, nhl, ncol = 3)
+  grid.arrange(coo, harvard, lymphgen, hmrn, ncol = 4)
+  }else{grid.arrange(coo, harvard, lymphgen, hmrn, ncol = 5)}
+```
