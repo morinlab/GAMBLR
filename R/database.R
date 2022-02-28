@@ -887,78 +887,84 @@ get_cn_states = function(regions_list,
 }
 
 
-#' Get all segments for a single sample_id.
+#' Get all segments for a single (or multiple) sample_id(s).
 #'
-#' @param this_sample_id The sample_id for the sample to retrieve segments for.
+#' @param this_sample_id Optional argument, single sample_id for the sample to retrieve segments for.
+#' @param multiple_samples Set to TRUE to return cn segments for multiple samples (list) pf samples to be specified in samples_list parameter.
+#' @param samples_list Optional vector of type character with one sample per row, rewuired if multiple_samples is set to TRUE.
 #' @param with_chr_prefix Set to TRUE to add a chr prefix to chromosome names.
 #' @param streamlined Return a minimal output rather than full details.
-#' @param from_flatfile Resort to a flat file instead of the database for retrieving the data.
 #'
-#' @return A list of segments for a specific sample ID
+#' @return A list of segments for a specific or multiple sample ID(s)
 #' @export
 #'
 #' @examples
-#' sample_cn_seg = get_sample_cn_segments("some-sample-id", FALSE, FALSE, FALSE)
+#' Return cn segments for one sample:
+#' sample_cn_seg = get_sample_cn_segments(this_sample_id = "some-sample-id", multiple_samples = FALSE)
+#' 
+#' Return cn segments for multiple samples (provided as list):
+#' samples = get_sample_cn_segments(multiple_samples = TRUE, sample_list = c("some_sample", "another_sample"))
 #'
-get_sample_cn_segments = function(this_sample_id, 
-                                  with_chr_prefix = FALSE, 
-                                  streamlined = FALSE, 
-                                  from_flatfile = FALSE){
-
-  sample_status = get_gambl_metadata() %>% 
-    dplyr::filter(sample_id == this_sample_id) %>% 
-    pull(pairing_status)
-
-  if(!from_flatfile){
+#' Return cn segments for multiple samples (read csv with one sample per line):
+#' sample_list = readLines("../samples-test.csv")
+#' multiple_samples = get_sample_cn_segments(multiple_samples = TRUE, sample_list = sample_list)
+#'
+get_sample_cn_segments = function(this_sample_id,
+                                  multiple_samples = FALSE,
+                                  sample_list,
+                                  with_chr_prefix = FALSE,
+                                  streamlined = FALSE){
+  
+  if(!missing(this_sample_id) & !multiple_samples){
+    sample_status = get_gambl_metadata() %>% 
+      dplyr::filter(sample_id == this_sample_id) %>% 
+      pull(pairing_status)
+    
     db = config::get("database_name")
     table_name = config::get("results_tables")$copy_number
     table_name_unmatched = config::get("results_tables")$copy_number_unmatched
     con = DBI::dbConnect(RMariaDB::MariaDB(), dbname = db)
-
+    
     all_segs_matched = dplyr::tbl(con, table_name) %>%
       dplyr::filter(ID == this_sample_id) %>%
       as.data.frame() %>%
       dplyr::mutate(method = "battenberg")
-
-    # get controlfreec segments for samples with missing battenberg results like unpaired
+    
     all_segs_unmatched = dplyr::tbl(con, table_name_unmatched) %>%
       dplyr::filter(ID == this_sample_id) %>%
       as.data.frame() %>%
       dplyr::filter(! ID %in% all_segs_matched$ID) %>%
       dplyr::mutate(method = "controlfreec")
-  }else{
-    #use flatfiles, preferring Battenberg and using Controlfreec when missing
-    if(sample_status == "unmatched"){
-      tool_name = config::get("analyses")$unmatched$copy_number
-    }else{
-      tool_name = config::get("analyses")$matched$copy_number
-      battenberg_files = fetch_output_files(build = genome_build, base_path = "gambl/battenberg_current", tool = "battenberg", search_pattern = ".igv.seg")
-      battenberg_file = dplyr::filter(battenberg_files, tumour_sample_id == this_sample) %>%
-        dplyr::pull(full_path) %>% 
-        as.character()
-
-      message(paste("using flatfile:", battenberg_file))
-      if(length(battenberg_file) > 1){
-        print("WARNING: more than one SEG found for this sample. This shouldn't happen!")
-        battenberg_file = battenberg_file[1]
-      }
-      seg_sample = read_tsv(battenberg_file) %>%
-        as.data.table() %>% dplyr::mutate(size = end - start) %>%
-        dplyr::filter(size > 100) %>%
-        dplyr::mutate(chrom = gsub("chr", "", chrom)) %>%
-        dplyr::rename(Chromosome = chrom, Start_Position = start, End_Position = end)
-    }
   }
+  
+  if(multiple_samples & missing(this_sample_id)){
+    sample_status = get_gambl_metadata() %>% 
+      dplyr::filter(sample_id %in% sample_list) %>% 
+      pull(pairing_status)
+  
+  db = config::get("database_name")
+  table_name = config::get("results_tables")$copy_number
+  table_name_unmatched = config::get("results_tables")$copy_number_unmatched
+  con = DBI::dbConnect(RMariaDB::MariaDB(), dbname = db)
+    
+  all_segs_matched = dplyr::tbl(con, table_name) %>%
+    dplyr::filter(ID %in% sample_list) %>%
+    as.data.frame() %>%
+    dplyr::mutate(method = "battenberg")
+    
+  all_segs_unmatched = dplyr::tbl(con, table_name_unmatched) %>%
+    dplyr::filter(ID %in% sample_list) %>%
+    as.data.frame() %>%
+    dplyr::filter(! ID %in% all_segs_matched$ID) %>%
+    dplyr::mutate(method = "controlfreec")
+  }
+  
   all_segs = rbind(all_segs_matched, all_segs_unmatched)
   all_segs = dplyr::mutate(all_segs, CN = round(2*2^log.ratio))
-  if(! with_chr_prefix){
-    all_segs = all_segs %>% 
-      dplyr::mutate(chrom = gsub("chr", "", chrom))
-  }
-  if(streamlined){
-    all_segs = dplyr::select(all_segs, ID, CN)
-  }
-  DBI::dbDisconnect(con)
+  
+  if(!with_chr_prefix){all_segs = all_segs %>% dplyr::mutate(chrom = gsub("chr", "", chrom))}
+  if(streamlined){all_segs = dplyr::select(all_segs, ID, CN)}
+  
   return(all_segs)
 }
 
