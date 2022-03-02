@@ -54,7 +54,7 @@ find_expected_outputs = function(targ_df,
     targ_df = read_tsv(target_path, col_names = c("file")) %>%
       dplyr::filter(str_detect(file, pattern = filename_end_pattern))
     
-    targ_df = mutate(targ_df, file_path = paste0(repo_base,f ile)) %>%
+    targ_df = mutate(targ_df, file_path = paste0(repo_base, file)) %>%
       separate(file, sep = "/", into =c("results", "unix_group", "tool_version", "outputs", "type", "seq_genome", "detail", "filename"))
     
     targ_df = separate(targ_df, seq_genome, sep = "--", into = c("seq_type", "genome_build")) %>%
@@ -389,8 +389,8 @@ populate_each_tool_result = function(tool,
 #'
 #' @examples
 read_merge_manta_with_liftover = function(bedpe_paths = c(),
-                                          pattern = "--matched",o
-                                          ut_dir){
+                                          pattern = "--matched",
+                                          out_dir){
 
   to_merge = list()
   print(head(bedpe_paths))
