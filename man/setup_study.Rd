@@ -37,3 +37,7 @@ a vector of sample_id for the patients that have been included
 \description{
 Initialize a new cBioPortal instance or update existing portal data set
 }
+\examples{
+
+
+}

@@ -39,7 +39,7 @@ prettyForestPlot(
 
 \item{custom_labels}{Optional: Specify custom labels for the legend categories. Must be in the same order as comparison_values.}
 
-\item{max_q}{}
+\item{max_q}{cut off for q values to be filtered in fish test}
 }
 \value{
 A ggplot object with a side-by-side forest plot and bar plot showing mutation incidences across two groups.
@@ -53,11 +53,13 @@ metadata = get_gambl_metadata(case_set = "tFL-study") #\%>\%
   dplyr::filter(consensus_pathology \%in\% c("FL", "DLBCL"))
 
 maf = get_coding_ssm(limit_samples = metadata$sample_id, basic_columns = TRUE)
-genes = c("ATP6V1B2", "EZH2", "TNFRSF14", "RRAGC")
-comparison_column = "consensus_pathology"
-comparison_values = c("DLBCL", "FL")
-comparison_name = "FL vs DLBCL"
 
-prettyForestPlot(maf, metadata, genes, comparison_column, comparison_values, separate_hotspots = FALSE, comparison_name)
+prettyForestPlot(maf, 
+                 metadata, 
+                 genes = c("ATP6V1B2", "EZH2", "TNFRSF14", "RRAGC"),
+                 comparison_column = "consensus_pathology", 
+                 comparison_values = c("DLBCL", "FL"), 
+                 separate_hotspots = FALSE, 
+                 comparison_name = "FL vs DLBCL")
 
 }
