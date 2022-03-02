@@ -350,7 +350,7 @@ oncoplot(blgsp_maf, clinicalFeatures = c("sex", "cohort"), sortByAnnotation = TR
 
 Commonly, we will want to generate visualizations that only show genes deemed relevant for a given malignancy (and above some frequency threshold). There is a lymphoma_genes data frame bundled with this package that allows us a quick way to get a list of genes that are recurrently mutated in that disease. This list is quite long for most because it includes anything mutated at a frequency of at least (roughly) 0.5% in GAMBL. 
 
-```{r pretty_oncoplot}
+```{r pretty_oncoplot, warning = FALSE, message = FALSE, out.width = "100%", fig.dim = c(8,3)}
 bl_genes = c("MYC", "ID3", "TP53", "ARID1A", "FBXO11", "GNA13", "TCF3", "TFAP4", "HNRNPU", "FOXO1", "CCND3", "SMARCA4", "DDX3X")
 dlbcl_genes = c("EZH2", "KMT2D", "MEF2B", "CREBBP", "MYD88")
 gene_groups = c(rep("BL", length(bl_genes)), rep("DLBCL", length(dlbcl_genes)))
@@ -370,6 +370,54 @@ prettyOncoplot(maftools_obj = maf,
                metadataBarFontsize = 8,
                fontSizeGene = 11,
                recycleOncomatrix = TRUE,
+               removeNonMutated = FALSE)
+```
+
+Sometimes it can be useful to specify the order of how a specific metadata column is represented. For demonstration, in the prettyOncoplot bellow the pathology column in the metadata is reordered so that DLBCL is shown before BL. This is achieved by first converting the desired metadata column into a factor and then specifying the order of those factors. 
+
+```{r pretty_oncoplot_reordered, warning = FALSE, message = FALSE, out.width = "100%", fig.dim = c(8,3)}
+#load meta data
+just_metadata = get_gambl_metadata()
+
+#load maf data
+maf_data = get_coding_ssm()
+
+#create maf object
+maf_obj2 = read.maf(maf_data, clinicalData = some_meta) 
+
+#define some genes of interest
+bl_genes=c("MYC", "ID3", "TP53", "ARID1A", "FBXO11", "GNA13", "TCF3", "TFAP4", "HNRNPU", "FOXO1", "CCND3", "SMARCA4", "DDX3X")
+dlbcl_genes = c("EZH2", "KMT2D", "MEF2B", "CREBBP", "MYD88")
+genes = c(bl_genes, dlbcl_genes)
+
+#define gene groups
+gene_groups = c(rep("BL", length(bl_genes)), rep("DLBCL", length(dlbcl_genes)))
+names(gene_groups) = genes
+
+#filter metadata
+just_metadata = dplyr::filter(just_metadata,!lymphgen %in% c("COMPOSITE"))
+
+#convert metadata column into factor
+just_metadata$pathology = as.factor(just_metadata$pathology)
+
+#define order of factors for selected metadata column
+just_metadata$pathology = factor(just_metadata$pathology, levels = c("DLBCL", "BL", "B-ALL", "CLL", "COMFL", "DLBCL-BL-like", "FL", "HGBL", "MCL", "PBL", "SCBC", "UNSPECIFIED"))
+just_metadata = with(just_metadata, just_metadata[order(pathology),])
+
+#create prettyOncoplot
+prettyOncoplot(maftools_obj = maf_obj,
+               genes = genes,
+               these_samples_metadata = just_metadata,
+               metadataColumns = c("pathology", "lymphgen", "sex", "EBV_status_inf", "cohort"),
+               sortByColumns = c("pathology", "lymphgen", "sex", "EBV_status_inf", "cohort"),
+               keepGeneOrder = TRUE, 
+               splitGeneGroups = gene_groups,
+               splitColumnName = "pathology",
+               metadataBarHeight = 5,
+               metadataBarFontsize = 8,
+               fontSizeGene = 11,
+               recycleOncomatrix = TRUE,
+               include_noncoding = NULL,
                removeNonMutated = FALSE)
 ```
 
