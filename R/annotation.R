@@ -251,7 +251,7 @@ annotate_driver_ssm = function(maf_df,
 #' @param partner_bed Optional bed-format data frame to use for annotating oncogene partners (e.g. enhancers). required columns are: chrom,start,end,gene
 #' @param with_chr_prefix Optionally request that chromosome names are returned with a chr prefix.
 #' @param collapse_redundant Remove reciprocal events and only return one per event.
-#' @param return_as Stated format for returned output, default is bedpe. Other accepted output format is bed.
+#' @param return_as Stated format for returned output, default is bedpe. Other accepted output format is bed and bedpe_entrez (to keep entrez_ids for compatabillity with portal.R and cBioPortal).
 #' @param genome_build Reference genome build parameter, default is grch37 (hg38 is also accepted).
 #'
 #' @return A data frame with annotated SVs (gene symbol and entrez ID)
@@ -263,20 +263,25 @@ annotate_driver_ssm = function(maf_df,
 #' # Basic usage
 #' sv_df = get_manta_sv()
 #' annotated_sv = annotate_sv(sv_df)
+#' annotated_entrez = annotate_sv(sv_data = sv_df, 
+#'                                with_chr_prefix = FALSE, 
+#'                                collapse_redundant = FALSE, 
+#'                                return_as = "bedpe_entrez", 
+#'                                genome_build = "grch37")
 #'
 annotate_sv = function(sv_data, 
                        partner_bed, 
                        with_chr_prefix = FALSE, 
                        collapse_redundant = FALSE, 
-                       return_as = "bedpe", 
+                       return_as = "bedpe_entrez", 
                        genome_build = "grch37"){
-
+  
   bedpe1 = sv_data %>%
     dplyr::select("CHROM_A", "START_A", "END_A", "tumour_sample_id", "SOMATIC_SCORE", "STRAND_A")
-
+  
   bedpe2 = sv_data %>%
     dplyr::select("CHROM_B", "START_B", "END_B", "tumour_sample_id", "SOMATIC_SCORE", "STRAND_B")
-
+  
   colnames(bedpe1) = c("chrom", "start", "end", "tumour_sample_id", "score", "strand1")
   colnames(bedpe2) = c("chrom", "start", "end", "tumour_sample_id", "score", "strand2")
   suppressWarnings({
@@ -308,67 +313,71 @@ annotate_sv = function(sv_data,
   #use foverlaps to get oncogene SVs
   a = data.table::as.data.table(bedpe1)
   a.onco = data.table::foverlaps(a, y, type = "any", mult = "first") #oncogene-annotated bedpe for the first breakpoints
-
+  
   b = data.table::as.data.table(bedpe2)
   b.onco = data.table::foverlaps(b, y, type = "any", mult = "first") #oncogene-annotated bedpe for the first breakpoints
-
+  
   #insist oncogene breakpoints are anchored in an IG or superenhancer region (currently just IG or BCL6)
   #other end of breakpoint
   a.onco.break = a.onco[which(!is.na(a.onco$start)), c("chrom", "i.start", "i.end", "tumour_sample_id", "gene", "entrez", "score", "strand1")]
   b.onco.break = b.onco[which(!is.na(b.onco$start)), c("chrom", "i.start", "i.end", "tumour_sample_id", "gene", "entrez", "score", "strand2")]
-
+  
   a.partner = b[which(!is.na(a.onco$start)),]
   b.partner = a[which(!is.na(b.onco$start)),]
-
+  
   y = data.table::as.data.table(ig_regions)
   data.table::setkey(y, chrom, start, end)
-
+  
   a.ig = data.table::foverlaps(a.partner, y, type = "any", mult = "first")
   b.ig = data.table::foverlaps(b.partner, y, type = "any", mult = "first")
-
+  
   a.ig = a.ig[,c("chrom", "i.start", "i.end", "strand2", "gene")]
   b.ig = b.ig[,c("chrom", "i.start", "i.end", "strand1", "gene")]
-
+  
   a.annotated.both = cbind(a.onco.break, a.ig)
   colnames(a.annotated.both) = c("chrom1", "start1", "end1", "tumour_sample_id", "gene", "entrez", "score", "strand1", "chrom2", "start2", "end2", "strand2", "partner")
-
+  
   b.annotated.both = cbind(b.onco.break, b.ig)
   colnames(b.annotated.both) = c("chrom2", "start2", "end2", "tumour_sample_id", "gene", "entrez", "score", "strand2", "chrom1", "start1", "end1", "strand1", "partner")
-
+  
   all.annotated = rbind(a.annotated.both, b.annotated.both)
+  
   all.annotated$fusion = dplyr::pull(tidyr::unite(all.annotated, fusion, partner, gene, sep = "-"), fusion)
   all.annotated = dplyr::filter(all.annotated, !fusion %in% c("BCL6-BCL6", "CIITA-CIITA", "FOXP1-FOXP1"))
-
+  
   #TODO: need a better system for cataloguing and using these but this works for our current data (hg19 coordinates)
   blacklist = c(60565248, 30303126, 187728894, 101357565, 101359747, 161734970, 69400840, 65217851, 187728889, 188305164)
-
+  
   all.annotated = dplyr::filter(all.annotated, !start1 %in% blacklist)
   all.annotated = dplyr::filter(all.annotated, !start2 %in% blacklist)
-
+  
   if(return_as == "bedpe"){
     all.annotated$name = "."
     all.annotated = dplyr::select(all.annotated, chrom1, start1, end1, chrom2, start2, end2, name, score, strand1, strand2, tumour_sample_id, gene, partner, fusion)
+  }else if(return_as == "bedpe_entrez"){
+    all.annotated$name = "."
+    all.annotated = dplyr::select(all.annotated, chrom1, start1, end1, chrom2, start2, end2, name, score, strand1, strand2, tumour_sample_id, gene, entrez, partner, fusion)
   }else if(return_as == "bed"){
     
     #lose the linkage but add a name that somewhat retains it
     if(!grepl("chr", all.annotated$chrom1)){
       all.annotated = all.annotated %>%
         dplyr::mutate(chrom1 = paste0("chr", chrom1))
-
+      
       all.annotated = all.annotated %>%
         dplyr::mutate(chrom2 = paste0("chr", chrom2))
     }
     bed1 = dplyr::mutate(all.annotated, name = paste(tumour_sample_id, fusion, sep = "_")) %>%
       dplyr::select(chrom1, start1, end1, name, score, strand1)
-
+    
     bed2 = dplyr::mutate(all.annotated, name = paste(tumour_sample_id, fusion, sep = "_")) %>%
       dplyr::select(chrom2, start2, end2, name, score, strand2)
-
+    
     colnames(bed1) = c("chrom", "start", "end", "name", "score", "strand")
     colnames(bed2) = c("chrom", "start", "end", "name", "score", "strand")
     return(dplyr::arrange(rbind(bed1, bed2), name))
   }else{
-        if(collapse_redundant){
+    if(collapse_redundant){
       all.annotated = dplyr::distinct(all.annotated, tumour_sample_id, fusion, .keep_all = TRUE)
     }
   }
@@ -378,7 +387,7 @@ annotate_sv = function(sv_data,
     if(!grepl("chr", all.annotated$chrom1)){
       all.annotated = all.annotated %>%
         dplyr::mutate(chrom1 = paste0("chr", chrom1))
-
+      
       all.annotated = all.annotated %>%
         dplyr::mutate(chrom2 = paste0("chr", chrom2))
     }
