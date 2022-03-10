@@ -50,6 +50,8 @@ get_ssm_by_sample = function(this_sample_id,
                              tool_name="slms-3",
                              projection="grch37",
                              seq_type="genome",
+                             deblacklisted=TRUE,
+                             augmented=TRUE,
                              flavour="",
                              verbose=FALSE){
  #figure out which unix_group this sample belongs to
@@ -61,38 +63,48 @@ get_ssm_by_sample = function(this_sample_id,
 
   this_unix_group = pull(these_samples_metadata,unix_group)
   this_genome_build = pull(these_samples_metadata,genome_build)
+  this_seq_type = pull(these_samples_metadata,seq_type)
+  this_pair_status = pull(these_samples_metadata,pairing_status)
   if(verbose){
     print(paste("group:",this_unix_group,"genome:",this_genome_build))
   }
+  # get unmatched normal if necessary
+  if(pair_status == "unmatched"){
+    normal_sample_id = config::get("unmatched_normal_ids")[[this_unix_group]][[this_seq_type]][[this_genome_build]]
+    print(paste("NORMAL:",normal_sample_id))
+    return()
+  }
+  base_path=""
   if(flavour=="force_unmatched"){
     base_path = paste0(config::get("project_base"),this_unix_group,"/force_unmatched/",tool_name,"_vcf2maf_current/99-outputs/",seq_type,"--",this_genome_build)
   }else if(flavour=="augmented"){
     base_path = paste0(config::get("project_base"),this_unix_group,"/",tool_name,"_vcf2maf_current/level_3/augmented_mafs/99-outputs/",seq_type,"--",this_genome_build)
   }else if(flavour == "clustered"){
-    base_path = paste0(config::get("project_base"),this_unix_group,"/","slms_3-1.0_vcf2maf-1.3/99-outputs/",seq_type,"--",this_genome_build)
+    if(deblacklisted){
+      base_path = paste0(config::get("project_base"),this_unix_group,"/","slms_3-1.0_vcf2maf-1.3/99-outputs/raw/")
+    }else{
+
+      path_template = config::get("results_filatfiles")$ssm$template$clustered
+      base_path = paste0(config::get("project_base"),this_unix_group,"/","slms_3-1.0_vcf2maf-1.3/99-outputs/deblacklisted/")
+    }
   }else{
     base_path = paste0(config::get("project_base"),this_unix_group,"/",tool_name,"_vcf2maf_current/99-outputs/",seq_type,"--",this_genome_build)
   }
-  if(projection == "grch37"){
-    if(this_genome_build != projection){
-      maf_pattern = paste0(this_sample_id,"--*converted*maf")
+  maf_pattern = paste0(this_sample_id,"*",projection,".maf")
+  maf_path = paste0(base_path,"maf/",seq_type,"--projection/")
+  aug_maf_path = paste0(base_path,"augmented_maf/",seq_type,"--projection/")
+  maf_files = dir(maf_path,pattern=glob2rx(maf_pattern))
+  aug_maf_files = dir(aug_maf_path,pattern=glob2rx(maf_pattern))
 
-    }else{
-      maf_pattern = paste0(this_sample_id,"--*final.maf")
+  if(augmented && length(aug_maf_files)){
+    full_maf_path = paste0(aug_maf_path,aug_maf_files)
+  }else{
+    #when augmented maf is missing, use the default
+    full_maf_path = paste0(maf_path,maf_files)
+  }
+  print(paste("using:",full_maf_path))
 
-    }
-    maf_path = dir(base_path,pattern=glob2rx(maf_pattern))
-  }
-  if(length(maf_path)<1){
-    message(paste("NO FILE FOUND FOR THIS SAMPLE (flavour):",this_sample_id, "(",flavour,")"))
-    print(paste(base_path,maf_pattern))
-    return()
-  }
-  if(length(maf_path)>1){
-    message(paste("TOO MANY FILES FOR THIS SAMPLE (flavour):",this_sample_id, "(",flavour,")"))
-    return()
-  }
-  sample_ssm = fread_maf(paste0(base_path,"/",maf_path))
+  sample_ssm = fread_maf(full_maf_path)
   return(sample_ssm)
 }
 
@@ -145,18 +157,25 @@ get_merged_result = function(tool_name,projection="grch37",seq_type="genome"){
 #' only_blgsp_metadata = get_gambl_metadata(case_set="BLGSP-study")
 #' # override default filters and request metadata for samples other than tumour genomes, e.g. also get the normals
 #' only_normal_metadata = get_gambl_metadata(tissue_status_filter = c('tumour','normal'))
-get_gambl_metadata = function(seq_type_filter = "genome",
+get_gambl_metadata = function(seq_type_filter = c("genome","capture"),
                               tissue_status_filter=c("tumour"),
                               case_set, remove_benchmarking = TRUE,
-                              with_outcomes=TRUE,from_flatfile=TRUE){
+                              with_outcomes=TRUE,
+                              from_flatfile=TRUE,
+                              sample_flatfile="",
+                              biopsy_flatfile=""){
 
   outcome_table = get_gambl_outcomes(from_flatfile=from_flatfile)
 
   if(from_flatfile){
     base = config::get("repo_base")
-    sample_flatfile = paste0(base,config::get("table_flatfiles")$samples)
+    if(sample_flatfile == ""){
+      sample_flatfile = paste0(base,config::get("table_flatfiles")$samples)
+    }
+    if(biopsy_flatfile==""){
+      biopsy_flatfile = paste0(base,config::get("table_flatfiles")$biopsies)
+    }
     sample_meta = suppressMessages(read_tsv(sample_flatfile,guess_max=100000))
-    biopsy_flatfile = paste0(base,config::get("table_flatfiles")$biopsies)
     biopsy_meta = suppressMessages(read_tsv(biopsy_flatfile,guess_max=100000))
 
   }else{
@@ -166,18 +185,18 @@ get_gambl_metadata = function(seq_type_filter = "genome",
     biopsy_meta = dplyr::tbl(con,"biopsy_metadata") %>% as.data.frame()
     DBI::dbDisconnect(con)
   }
-  sample_meta_normal_genomes =  sample_meta %>% dplyr::filter(seq_type == "genome" & tissue_status=="normal") %>%
+  sample_meta_normal_genomes =  sample_meta %>% dplyr::filter(seq_type %in% c("genome","capture") & tissue_status=="normal") %>%
       dplyr::select(patient_id,sample_id) %>% as.data.frame() %>%
     dplyr::rename("normal_sample_id"="sample_id")
 
-  if(seq_type_filter == "any"){
+  if(seq_type %in% seq_type_filter){
     #only drop the normals/unavailable samples then pick one unique row per biopsy_id, preferring genome when available
     sample_meta = sample_meta %>%
       dplyr::filter(tissue_status %in% tissue_status_filter & bam_available %in% c(1,"TRUE")) %>%
       dplyr::select(-sex)
   }else{
     sample_meta = sample_meta %>%
-      dplyr::filter(seq_type == seq_type_filter & tissue_status %in% tissue_status_filter & bam_available %in% c(1,"TRUE")) %>%
+      dplyr::filter(seq_type %in% seq_type_filter & tissue_status %in% tissue_status_filter & bam_available %in% c(1,"TRUE")) %>%
       dplyr::select(-sex)
   }
 
@@ -191,7 +210,7 @@ get_gambl_metadata = function(seq_type_filter = "genome",
 
   all_meta = dplyr::left_join(sample_meta,biopsy_meta,by="biopsy_id") %>% as.data.frame()
   all_meta = all_meta %>% mutate(bcl2_ba=ifelse(bcl2_ba=="POS_BCC","POS",bcl2_ba))
-  if(seq_type_filter == "genome" & length(tissue_status_filter) == 1 & tissue_status_filter[1] == "tumour"){
+  if(!"mrna" %in% seq_type_filter & length(tissue_status_filter) == 1 & tissue_status_filter[1] == "tumour"){
     #join back the matched normal genome
     all_meta = left_join(all_meta,sample_meta_normal_genomes,by="patient_id")
     all_meta = all_meta %>% mutate(pairing_status=case_when(is.na(normal_sample_id)~"unmatched",TRUE~"matched"))
@@ -200,7 +219,7 @@ get_gambl_metadata = function(seq_type_filter = "genome",
   if(remove_benchmarking){
     all_meta = all_meta %>% dplyr::filter(cohort != "FFPE_Benchmarking")
   }
-  if(seq_type_filter == "any"){
+  if("any" %in% seq_type_filter){
    #remove semi-redundant metadata rows so we have each biopsy represented only once
    #2834 rows originally
    #genome   mrna
