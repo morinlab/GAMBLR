@@ -9,7 +9,7 @@ annotate_sv(
   partner_bed,
   with_chr_prefix = FALSE,
   collapse_redundant = FALSE,
-  return_as = "bedpe",
+  return_as = "bedpe_entrez",
   genome_build = "grch37"
 )
 }
@@ -26,7 +26,7 @@ CHROM_A  START_A    END_A CHROM_B  START_B    END_B NAME SOMATIC_SCORE STRAND_A 
 
 \item{collapse_redundant}{Remove reciprocal events and only return one per event.}
 
-\item{return_as}{Stated format for returned output, default is bedpe. Other accepted output format is bed.}
+\item{return_as}{Stated format for returned output, default is bedpe. Other accepted output format is bed and bedpe_entrez (to keep entrez_ids for compatabillity with portal.R and cBioPortal).}
 
 \item{genome_build}{Reference genome build parameter, default is grch37 (hg38 is also accepted).}
 }
@@ -40,5 +40,10 @@ Annotate a data frame of SV breakpoints after retrieval from the database.
 # Basic usage
 sv_df = get_manta_sv()
 annotated_sv = annotate_sv(sv_df)
+annotated_entrez = annotate_sv(sv_data = sv_df, 
+                               with_chr_prefix = FALSE, 
+                               collapse_redundant = FALSE, 
+                               return_as = "bedpe_entrez", 
+                               genome_build = "grch37")
 
 }

@@ -2,7 +2,7 @@
 % Please edit documentation in R/portal.R
 \name{finalize_study}
 \alias{finalize_study}
-\title{Finish setting up a new cBioPortal instance or updating an existing portal data set}
+\title{Finish setting up a new cBioPortal instance or updating an existing portal data set.}
 \usage{
 finalize_study(
   short_name = "GAMBL",
@@ -11,33 +11,33 @@ finalize_study(
   project_name = "gambl_minus_icgc",
   description = "GAMBL data without ICGC",
   cancer_type = "mixed",
-  out_dir,
-  overwrite = FALSE,
-  sample_ids
+  sample_ids,
+  overwrite = TRUE,
+  out_dir
 )
 }
 \arguments{
-\item{short_name}{a concise name for your portal project}
+\item{short_name}{A concise name for your portal project.}
 
-\item{include_icgc_data}{whether or not you want ICGC and other external data included}
+\item{include_icgc_data}{Whether or not you want ICGC and other external data included.}
 
-\item{human_friendly_name}{a slightly more verbose name for your project}
+\item{human_friendly_name}{A slightly more verbose name for your project.}
 
-\item{project_name}{unique ID for your project}
+\item{project_name}{Unique ID for your project.}
 
-\item{description}{A verbose description of your data set}
+\item{description}{A verbose description of your data set.}
 
-\item{out_dir}{The full path to the base directory where the files are being created}
+\item{cancer_type}{Cancer types included in study, default is "mixed".}
 
-\item{sample_ids}{A vector of all the sample_id that were included in any of the data files for cbioportal}
+\item{sample_ids}{A vector of all the sample_id that were included in any of the data files for cbioportal.}
+
+\item{overwrite}{Flag to specify that files should be overwritten if they exist. Default is TRUE.}
+
+\item{out_dir}{The full path to the base directory where the files are being created.}
 }
 \value{
-nothing
+Nothing.
 }
 \description{
-Finish setting up a new cBioPortal instance or updating an existing portal data set
-}
-\examples{
-
-
+Finish setting up a new cBioPortal instance or updating an existing portal data set.
 }
