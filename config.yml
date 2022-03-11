@@ -8,7 +8,17 @@ default:
     results_merged:
         tidy_expression_file: "/projects/rmorin/projects/gambl-repos/gambl-rmorin/results/icgc_dart/DESeq2-0.0_salmon-1.0/mrna--gambl-icgc-all/vst-matrix-Hugo_Symbol_tidy.tsv"
         ex_matrix_file: "/projects/rmorin/projects/gambl-repos/gambl-rmorin/results/icgc_dart/DESeq2-0.0_salmon-1.0/mrna--gambl-icgc-all/vst-matrix.tsv"
-
+    resources:
+        whitelist:
+            template: all_the_things/slms_3-1.0_vcf2maf-1.3/level_3/{projection}_whitelist.txt
+        blacklist:
+            template: all_the_things/slms_3-1.0_vcf2maf-1.3/level_3/{seq_type}--{projection}_clean_blacklist.txt
+            capture:
+                grch37: all_the_things/slms_3-1.0_vcf2maf-1.3/level_3/capture--grch37_clean_blacklist.txt
+                hg38: all_the_things/slms_3-1.0_vcf2maf-1.3/level_3/capture--hg38_clean_blacklist.txt
+            genome:
+                grch37: all_the_things/slms_3-1.0_vcf2maf-1.3/level_3/genome--grch37_clean_blacklist.txt
+                hg38: all_the_things/slms_3-1.0_vcf2maf-1.3/level_3/genome--hg38_clean_blacklist.txt
 #results from every combination of each of these will be included in the database
     unix_groups: "gambl,icgc_dart"
     genome_builds: "grch37,hg38,hs37d5"
