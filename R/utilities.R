@@ -1113,7 +1113,7 @@ estimate_purity = function(in_maf,
   }else{
     # If no seg file was provided and assume_diploid paramtere is set to true,
     if(assume_diploid){
-      CN_new <- assign_cn_to_ssm(maf_file = in_maf, assume_diploid = TRUE,coding_only=coding_only,genes=genes)
+      CN_new <- assign_cn_to_ssm(maf_file = in_maf, assume_diploid = TRUE,coding_only=coding_only,genes=genes)$maf
     }
   }
 
@@ -1157,10 +1157,11 @@ estimate_purity = function(in_maf,
   # Calculate purity, and if the number is larger 1 (100%) use the VAF calue instead
   merged_CN_neut <- merged_CN %>%
     dplyr::filter(merged_CN$CN < 3) %>%
-    dplyr::mutate(Purity = (CN*VAF)/Ploidy) %>%
-    dplyr::mutate(Purity = ifelse(Purity > 1, VAF, Purity))
+    dplyr::mutate(Purity = (CN*VAF)/Ploidy) #%>%
+    #dplyr::mutate(Purity = ifelse(Purity > 1, VAF, Purity))
 
     # Calculate a temporary purity based on the mean of these purity values
+    merged_CN_neut <- merged_CN_neut %>% drop_na(Purity)
     mean_neut_purity = mean(merged_CN_neut$Purity)
 
   # For CN of 3 or larger:
@@ -1172,7 +1173,7 @@ estimate_purity = function(in_maf,
     merged_CN_gain <- merged_CN %>%
       dplyr::filter(merged_CN$CN > 2) %>%
       dplyr::mutate(Purity = (VAF*2)) %>%
-      dplyr::mutate(Purity = ifelse(Purity > 1, VAF, Purity)) %>%
+      #dplyr::mutate(Purity = ifelse(Purity > 1, VAF, Purity)) %>%
       group_by(Chrom_pos) %>%
       slice_head() %>%
       dplyr::mutate(Assumed_CN = 2) %>%
@@ -1181,7 +1182,7 @@ estimate_purity = function(in_maf,
     merged_CN_gain <- merged_CN %>%
       dplyr::filter(merged_CN$CN > 2) %>%
       dplyr::mutate(Purity = (CN*VAF)/Ploidy) %>%
-      dplyr::mutate(Purity = ifelse(Purity > 1, VAF, Purity)) %>%
+      #dplyr::mutate(Purity = ifelse(Purity > 1, VAF, Purity)) %>%
       group_by(Chrom_pos) %>%
       slice(which.min(abs(Purity - mean_neut_purity)))
   }
@@ -1191,6 +1192,11 @@ estimate_purity = function(in_maf,
 
   # Estimate the mean of all purity values from all available copy number states
   sample_purity_estimation = mean(CN_final$Purity)
+  
+  # If the final sample purity is above 1, make it equal to 1
+  if(sample_purity_estimation > 1){
+    sample_purity_estimation = 1
+  }
 
   # Calculate CCF (cancer cell fraction) 2 ways:
    ## With the maximum purity estimation for the mutations in the same (largest value will be 1 for the mutation with the highest purity estimation)
