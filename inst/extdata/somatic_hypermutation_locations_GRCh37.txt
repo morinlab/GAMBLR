@@ -75,3 +75,4 @@ chr11	111248078	111250224	POU2AF1	TSS	active_promoter
 chr20	49120482	49140477	PTPN1	TSS	active_promoter
 chr17	75424734	75471471	SEPT9	intronic	active_promoter
 chr6	134487960	134499859	SGK1	TSS-1	active_promoter
+chr7	5568297	5570856	ACTB	TSS	active_promoter

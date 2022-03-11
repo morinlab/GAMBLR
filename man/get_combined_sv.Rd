@@ -5,26 +5,32 @@
 \title{Retrieve Combined Manta and GRIDSS-derived SVs from a flatfile and filter}
 \usage{
 get_combined_sv(
-  min_vaf = 0.1,
-  min_score = 40,
-  pass = TRUE,
-  this_sample_id,
+  min_vaf = 0,
+  sample_ids,
   with_chr_prefix = FALSE,
-  projection = "grch37"
+  projection = "grch37",
+  oncogenes
 )
 }
 \arguments{
-\item{min_vaf}{The minimum tumour VAF for a SV to be returned}
+\item{min_vaf}{The minimum tumour VAF for a SV to be returned. Recommended: 0. (default: 0)}
 
-\item{min_score}{The lowest Manta somatic score for a SV to be returned}
-
-\item{this_sample_id}{}
+\item{sample_ids}{A character vector of tumour sample IDs you wish to retrieve SVs for.}
 
 \item{with_chr_prefix}{Prepend all chromosome names with chr (required by some downstream analyses)}
+
+\item{oncogenes}{A character vector of genes commonly involved in translocations. Possible values: CCND1, CIITA, SOCS1, BCL2, RFTN1, BCL6, MYC, PAX5.}
 }
 \value{
 A data frame in a bedpe-like format with additional columns that allow filtering of high-confidence SVs
 }
 \description{
-Retrieve Combined Manta and GRIDSS-derived SVs from a flatfile and filter
+The bedpe files used as input to this function were pre-filtered for a minimum VAF of 0.05, and SVs affecting
+common translocation regions (BCL2, BCL6, MYC, CCND1) were whitelisted (e.g. no VAF filter applied).
+Therefore if you wish to post-filter the SVs we recommend doing so carefully after loading this data frame.
+Further, the input bedpe file is annotated with oncogenes and superenhancers from naive and germinal centre B-cells.
+You can subset to events affecting certain loci using the "oncogenes" argument.
+}
+\examples{
+get_combined_sv(oncogenes = c("MYC", "BCL2", "BCL6"))
 }

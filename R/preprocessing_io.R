@@ -681,86 +681,67 @@ fread_maf = function(maf_file_path){
 #' @export
 #'
 #' @examples
-tidy_gene_expression = function(){
+tidy_gene_expression = function(return_df = FALSE){
   #read in the full matrix
   ex_matrix_file = config::get("results_merged")$ex_matrix_file
   tidy_expression_file = config::get("results_merged")$tidy_expression_file
-  ex_matrix_full = read_tsv(ex_matrix_file)
-  ex_matrix_full = dplyr::select(ex_matrix_full,-gene_id,-ensembl_gene_id) %>%
-    dplyr::rename("Hugo_Symbol"="hgnc_symbol")
-
-  ex_tidy = pivot_longer(ex_matrix_full,-Hugo_Symbol,names_to="sample_id",values_to="expression")
-  ex_tidy_nfkbiz = dplyr::filter(ex_tidy,Hugo_Symbol=="NFKBIZ")
-  all_samples = pull(ex_tidy_nfkbiz,sample_id) %>% unique
+  print("Loading and tidying the full matrix file...")
+  ex_tidy = read_tsv(ex_matrix_file) %>%
+    dplyr::select(-gene_id) %>%
+    dplyr::rename("Hugo_Symbol" = "hgnc_symbol") %>%
+    pivot_longer(-c(Hugo_Symbol, ensembl_gene_id),
+                 names_to = "sample_id",
+                 values_to = "expression")
+  all_samples = distinct(ex_tidy, sample_id) %>% pull(sample_id)
   #retrieve the full list of sample_id for RNA-seq libraries that have data in this matrix
 
   #pull the full metadata for all RNA-seq samples in GAMBL
   #under the hood this is a join of the sample and biopsy tables but subset for RNA-seq
-  rna_meta = get_gambl_metadata(seq_type_filter = "mrna")
+  print("Loading the mrna metadata...")
+  rna_meta = get_gambl_metadata(seq_type_filter = "mrna", tissue_status_filter = c("tumour", "normal"), only_available = FALSE)
   #subset to just the ones in the matrix and keep only the relevant rows
-  rm_dupes = c("08-15460_tumorA","05-32150_tumorA") #toss two duplicated cases AND FFPE_Benchmarking
-  #rna_meta[which(rna_meta$sample_id %in% rm_dupes,"cohort"]= "FFPE_Benchmarking"
   rna_meta_existing = rna_meta %>%
     dplyr::filter(sample_id %in% all_samples) %>%
-    dplyr::select(sample_id,patient_id,biopsy_id,protocol)
+    dplyr::select(sample_id,patient_id,biopsy_id,protocol, cohort, tissue_status) %>%
+    mutate(biopsy_id = ifelse(tissue_status == "normal", sample_id, biopsy_id))
 
 
+  print("Selecting one library per biopsy...")
   selected_libraries = rna_meta_existing %>%
     group_by(biopsy_id) %>%
     # Take the biopsy_id with the longest string length (e.g PolyA vs. Ribodepletion)
     slice_max(str_length(protocol), n = 1,with_ties=FALSE) %>%
     ungroup()
-  #this brings the total from 1399 to 1298
+  #this brings the total from 1423 to 1322
 
-  #set the canonical library per biopsy_id by picking the ribominus for cases with more than one
-  #duplicated = rna_meta_existing %>% group_by(biopsy_id) %>% tally() %>% filter(n>1) %>% select(biopsy_id)
-  #singleton = rna_meta_existing %>% group_by(biopsy_id) %>% tally() %>% filter(n==1) %>% select(-n)
 
-  #selected_duplicated = left_join(duplicated,rna_meta_existing,by="biopsy_id") %>%
-  #  arrange(desc(protocol)) %>% arrange(biopsy_id) %>% group_by(biopsy_id) %>% filter(row_number()==1) %>% ungroup()
-  #selected_singleton = left_join(singleton,rna_meta_existing,by="biopsy_id") %>% ungroup()
-  #selected_all=rbind(selected_duplicated,selected_singleton)
-  #put everything back together
-  #at this point I have 1206 sample_ids
   ex_tidy = ex_tidy %>% dplyr::rename(mrna_sample_id = sample_id)
 
   ex_tidy = ex_tidy %>% dplyr::filter(mrna_sample_id %in% selected_libraries$sample_id)
   rna_meta = rna_meta %>% dplyr::select(sample_id,biopsy_id)
 
   ex_tidy_final = left_join(ex_tidy,rna_meta,by=c("mrna_sample_id"="sample_id"))
-  #this still has the mrna sample ID. Need to add the tumour_sample_id from this biopsy (where available)
+  #this still has the mrna sample ID. Need to add the genome sample_id from this biopsy (where available)
+  print("Loading the genome metadata...")
   genome_meta = get_gambl_metadata() %>%
     dplyr::select(biopsy_id,sample_id,patient_id,ffpe_or_frozen) %>%
     dplyr::rename("genome_sample_id" = "sample_id")
   #this gets the metadata in the same format but restricted to genome samples
-  #REMOVE ANNOYING DUPLICATE GENOMES!
-  duplicated_cases = genome_meta %>% group_by(biopsy_id) %>% tally() %>% dplyr::filter(n>1)
-
-  selected_genomes = genome_meta %>%
-    group_by(biopsy_id) %>%
-    # Take the biopsy_id with the longest string length (e.g frozen)
-    slice_max(str_length(ffpe_or_frozen), n = 1,with_ties=FALSE) %>%
-    ungroup() %>% dplyr::select(-patient_id,-ffpe_or_frozen)
 
   #join to genome metadata based on biopsy_id (should be the same for RNA-seq and tumour genomes)
-  ex_tidy_genome = left_join(ex_tidy_final,selected_genomes,by="biopsy_id")
+  ex_tidy_genome = left_join(ex_tidy_final,genome_meta,by="biopsy_id")
 
-  ex_tidy_genome = dplyr::select(ex_tidy_genome,Hugo_Symbol,mrna_sample_id,expression,biopsy_id,genome_sample_id) %>%
-    dplyr::filter(!is.na(Hugo_Symbol))
+  ex_tidy_genome = dplyr::select(ex_tidy_genome,ensembl_gene_id,Hugo_Symbol,mrna_sample_id,expression,biopsy_id,genome_sample_id)
+
   #write the data back out for use by others and loading into the database.
-  tidy_expression_file = config::get("tidy_expression_file")
+  if(return_df){
+    return(ex_tidy_genome)
+  }else{
+    print("Writing the tidy data to file...")
+    write_tsv(ex_tidy_genome,file=tidy_expression_file)
+  }
 
-  #drop genes that are duplicated
-  #table_out = pull(ex_tidy_genome,Hugo_Symbol) %>% table
-  #badgenes = names(which(table_out>1803))
-  #tidy_expression_data_nobadgenes = dplyr::filter(ex_tidy_genome,!Hugo_Symbol %in% badgenes)
-  #full_expression_wider = dplyr::select(tidy_expression_data_nobadgenes,-mrna_sample_id,-genome_sample_id) %>%
-  #    pivot_wider(names_from=Hugo_Symbol,values_from=expression)
-  #transpose it
-  #full_expression_wider = column_to_rownames(full_expression_wider,var="biopsy_id")
-  #full_expression_wider_t = t(full_expression_wider)
-  write_tsv(ex_tidy_genome,file=tidy_expression_file)
-
+  print("Done!")
 
 }
 
@@ -827,11 +808,9 @@ liftover_bedpe = function(bedpe_file,bedpe_df,target_build="grch37",col_names,co
     original_bedpe = as.data.frame(original_bedpe)
     original_bedpe=original_bedpe %>% mutate_if(is.numeric, as.integer)
     #print(head(original_bedpe))
-    if(!grepl("chr",original_bedpe$CHROM_A)){
-      #add chr prefix
-      original_bedpe = original_bedpe %>% mutate(CHROM_A = paste0("chr",CHROM_A)) %>%
-      mutate(CHROM_B = paste0("chr",CHROM_B))
-    }
+    original_bedpe = original_bedpe %>%
+      dplyr::mutate(CHROM_A = ifelse(!grepl("chr",CHROM_A), paste0("chr",CHROM_A),CHROM_A),
+                    CHROM_B= ifelse(!grepl("chr",CHROM_B), paste0("chr",CHROM_B), CHROM_B))
     print(head(original_bedpe))
     char_vec = original_bedpe %>% tidyr::unite(united,sep="\t") %>% dplyr::pull(united)
     bedpe_obj <- rtracklayer::import(text=char_vec,format="bedpe")
@@ -864,15 +843,21 @@ liftover_bedpe = function(bedpe_file,bedpe_df,target_build="grch37",col_names,co
     no_problem = !((elementNROWS(first_sv_lifted) != 1) | (elementNROWS(second_sv_lifted) != 1))
     first_ok = subset(first_sv_lifted,no_problem)
     second_ok = subset(second_sv_lifted,no_problem)
-    first_ok_df = rtracklayer::export(first_ok,format="bed") %>%
-    read_tsv(col_names = c("CHROM_A","START_A","END_A","name_A","score_A","STRAND_A")) %>%
-    dplyr::select(-score_A) %>% dplyr::select(-name_A)
-    second_ok_df = rtracklayer::export(second_ok,format="bed") %>%
-    read_tsv(col_names = c("CHROM_B","START_B","END_B","name_B","score_B","STRAND_B")) %>%
-    dplyr::select(-score_B) %>% dplyr::select(-name_B)
+    first_ok_df = data.frame(first_ok@unlistData) %>%
+                  dplyr::select(seqnames,start,end,strand) %>%
+                  dplyr::mutate(start=start-1, # since bed coordinates are 0-based
+                                end=as.numeric(end)) %>%
+                  `names<-`(c("CHROM_A","START_A","END_A","STRAND_A"))
+    second_ok_df = data.frame(second_ok@unlistData) %>%
+                  dplyr::select(seqnames,start,end,strand) %>%
+                  dplyr::mutate(start=start-1, # since bed coordinates are 0-based
+                                end=as.numeric(end)) %>%
+                  `names<-`(c("CHROM_B","START_B","END_B","STRAND_B"))
     ok_bedpe = original_bedpe[no_problem,]
     kept_cols = ok_bedpe %>% dplyr::select(-c("CHROM_A","START_A","END_A","CHROM_B","START_B","END_B","STRAND_A","STRAND_B"))
-    fully_lifted = bind_cols(first_ok_df,second_ok_df,kept_cols) %>% dplyr::select(all_of(original_columns))
+    fully_lifted = bind_cols(first_ok_df,second_ok_df,kept_cols) %>%
+                  dplyr::select(all_of(original_columns)) %>%
+                  dplyr::mutate_if(is.factor, as.character)
     return(fully_lifted)
   }else{
     lifted = rtracklayer::liftOver(bedpe_obj,chain)
