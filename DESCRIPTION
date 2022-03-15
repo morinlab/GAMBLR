@@ -29,7 +29,10 @@ Imports:
     circlize,
     rtracklayer,
     config,
-    tidyverse
+    tidyverse,
+    g3viz
+Remotes: 
+    morinlab/g3viz
 VignetteBuilder: knitr
 Depends: 
     R (>= 2.10)
