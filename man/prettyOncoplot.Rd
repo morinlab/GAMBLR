@@ -30,7 +30,7 @@ prettyOncoplot(
   box_col = NA,
   metadataBarHeight = 1.5,
   metadataBarFontsize = 5,
-  hideTopBarplot = FALSE,
+  hideTopBarplot = TRUE,
   hideSideBarplot = FALSE,
   splitColumnName,
   splitGeneGroups,
@@ -39,7 +39,13 @@ prettyOncoplot(
   showTumorSampleBarcode = FALSE,
   groupNames,
   verbose = FALSE,
-  hide_annotations
+  hide_annotations,
+  custom_colours = NULL,
+  legend_direction = "horizontal",
+  legend_position = "bottom",
+  annotation_row = 2,
+  annotation_col = 1,
+  legendFontSize = 10
 )
 }
 \arguments{
@@ -80,6 +86,8 @@ prettyOncoplot(
 \item{legend_row}{Fiddle with these to widen or narrow your legend}
 
 \item{legend_col}{Fiddle with these to widen or narrow your legend}
+
+\item{custom_colours}{Provide named vector (or named list of vectors) containing custom annotation colours if you do not want to use standartized pallette}
 }
 \value{
 

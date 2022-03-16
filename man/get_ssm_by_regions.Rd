@@ -9,7 +9,10 @@ get_ssm_by_regions(
   regions_bed,
   streamlined = FALSE,
   maf_data = maf_data,
-  use_name_column = FALSE
+  use_name_column = FALSE,
+  from_indexed_flatfile = FALSE,
+  mode = "slms-3",
+  allow_clustered = FALSE
 )
 }
 \arguments{
@@ -20,6 +23,10 @@ get_ssm_by_regions(
 \item{streamlined}{Return a basic rather than full MAF format}
 
 \item{use_name_column}{If your bed-format data frame has a name column (must be named "name") these can be used to name your regions}
+
+\item{from_indexed_flatfile}{Set to TRUE to avoid using the database and instead rely on flatfiles (only works for streamlined data, not full MAF details)}
+
+\item{mode}{Only works with indexed flatfiles. Accepts 2 options of "slms-3" and "strelka2" to indicate which variant caller to use. Default is "slms-3".}
 }
 \value{
 

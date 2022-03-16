@@ -1,3 +1,164 @@
+
+#' Annotate and auto-drop a MAF data frame with existing blacklists to remove variants that would be dropped during the merge process
+#'
+#' @param mutations_df
+#' @param unix_group
+#' @param tool_name
+#' @param flavour Set to "clustered" if you want to use the blacklist for the new and improved SLMS-3 outputs (otherwise leave empty)
+#' @param genome_build The genome build projection for the variants you want (grch37 is the only one currently supported)
+#' @param drop_threshold The minimum count from one of the blacklists to drop a variant
+#'
+#' @return A MAF format data frame with two new columns indicating the number of occurrences of each variant in the two blacklists
+#' @export
+#'
+#' @examples deblacklisted_maf_df = annotate_ssm_blacklist(original_maf_df)
+annotate_ssm_blacklist = function(mutations_df,
+                                  unix_group="gambl",
+                                  tool_name="slms_3",
+                                  tool_version="1.0",
+                                  annotator_name="vcf2maf",
+                                  annotator_version="1.2",
+                                  flavour="",
+                                  genome_build="grch37",
+                                  drop_threshold = 4,
+                                  return_blacklist = FALSE){
+  if(flavour=="clustered"){
+    native_blacklist_path = paste0(config::get("project_base"),unix_group,"/",tool_name,"-",tool_version,"_",annotator_name,"-",annotator_version,"/level_3/variants_",genome_build,"_native_clean_blacklist.txt")
+    lifted_blacklist_path = paste0(config::get("project_base"),unix_group,"/",tool_name,"-",tool_version,"_",annotator_name,"-",annotator_version,"/level_3/variants_",genome_build, "_lifted_clean_blacklist.txt")
+  }else{
+    annotator_version="1.2"
+    native_blacklist_path = paste0(config::get("project_base"),unix_group,"/",tool_name,"-",tool_version,"_",annotator_name,"-",annotator_version,"/level_3/variants_",genome_build,"_native_clean_blacklist.txt")
+    lifted_blacklist_path = paste0(config::get("project_base"),unix_group,"/",tool_name,"-",tool_version,"_",annotator_name,"-",annotator_version,"/level_3/variants_",genome_build, "_lifted_clean_blacklist.txt")
+  }
+  lifted_blacklist=read_tsv(lifted_blacklist_path,col_names = c("chrpos","lifted_blacklist_count"),show_col_types = FALSE)
+  native_blacklist=read_tsv(native_blacklist_path,col_names = c("chrpos","native_blacklist_count"),show_col_types = FALSE)
+  native_blacklist = native_blacklist %>% separate(chrpos,into=c("Chromosome","Start_Position"),sep=":")
+  lifted_blacklist = lifted_blacklist %>% separate(chrpos,into=c("Chromosome","Start_Position"),sep=":")
+
+  lifted_blacklist = mutate(lifted_blacklist,Start_Position = as.integer(Start_Position))
+  native_blacklist = mutate(native_blacklist,Start_Position = as.integer(Start_Position))
+  if(return_blacklist){
+    return(native_blacklist)
+  }
+  #join using chromosome and position
+  print(mutations_df)
+  print(native_blacklist)
+  if(genome_build == "hg38"){
+    native_blacklist = mutate(native_blacklist,Chromosome = paste0("chr",Chromosome))
+    lifted_blacklist = mutate(lifted_blacklist,Chromosome = paste0("chr",Chromosome))
+
+  }
+  mutations_df = left_join(mutations_df,native_blacklist,by=c("Chromosome", "Start_Position"))
+  mutations_df = left_join(mutations_df,lifted_blacklist,by=c("Chromosome", "Start_Position"))
+  #drop anything that exceeds our threshold but keep NA
+  mutations_df = dplyr::filter(mutations_df,is.na(native_blacklist_count) | native_blacklist_count < drop_threshold)
+  mutations_df = dplyr::filter(mutations_df,is.na(lifted_blacklist_count) | lifted_blacklist_count < drop_threshold)
+  return(mutations_df)
+}
+
+annotate_recurrent_cnv = function(seg_df,seg_file){
+  cnv_coord_df = data.frame(chrom=c("18"),
+                            start=c(60000000),
+                            end=c(61000000),
+                            anchor=c("right"),
+                            min_cn=c(3),
+                            name="18der_gain")
+  cnv_dt = as.data.table(cnv_coord_df)
+  seg_dt = as.data.table(seg_df)
+  setkey(cnv_dt,chrom,start,end)
+  setkey(seg_dt,start,end)
+
+}
+
+#' Add annotation to IGH breakpoints to infer mechanism based on location within IGH
+#'
+#' @param annotated_df Previously annotated data frame of SVs
+#'
+#' @return A slightly modified bedpe with some added columns. The most useful columns that are added are mechanism (one of CSR, AID, VDJ) and label (NA if unmatched, otherwise one of Emu, Smu, one of the J segments or switch regions)
+#' @export
+#'
+#' @examples
+#' all_annotated = get_manta_sv() %>% annotate_sv()
+#' ig_annotated = annotate_igh_breakpoints(all_annotated)
+annotate_igh_breakpoints = function(annotated_df,genome_build="grch37"){
+  if(genome_build != "grch37"){
+    message("No other references are currently supported")
+    return()
+  }
+  sv_igh = dplyr::filter(annotated_df,partner=="IGH")
+
+  switch_end = 106327893 #hg19 coordinate
+  vdj_start = 106330635
+  # chr14:106329398-106329467 #J6
+  # chr14:106329625-106329676 #J3P
+  # chr14:106330010-106330075 J5
+  # chr14:106330412-106330479 J4
+  # chr14:106330789-106330851 J3
+  emu_start= 106327853
+  emu_end = 106330900
+  #these coordinates are all somewhat manually determined via UCSC and won't
+  #perfectly match any one annotation. They get the job done, though. Note that
+  #to find overlaps I pad the outer boundaries anyway so exact coordinates aren't the real point, it's proximity to the nearest feature
+  j_segs = data.frame(start=c(106329408,106330010,
+                              106330412,106330789,emu_start,
+                              106323800,106054077,106320301,
+                              106304755,106231780,106206750,
+                              106172700,106107740,106066513,
+                              106089185,106134348),
+                      end = c(106329487,106330175,
+                              106330579,106330991,emu_end,
+                              106327600,106058458,106322397,
+                              106312100,106237884,106209489,
+                              106174976,106112209,106068295,
+                              106092889,106136399),
+                      label=c("J6","J5","J4","J3","Emu",
+                              "Smu","A2","M","D","G3","G1","A1",
+                              "G2","E","G4","GP"),
+                      y=c(-0.5,-0.5,-0.5,-0.5,0,0.5,0.5,
+                          0.5,0.5,0.5,0.5,0.5,0.5,0.5,0.5,0.5))
+  annoying_segments = c("J6","J3P","J5","J4","J3","Smu","M")
+  j_segs = mutate(j_segs,
+                  start_wide= ifelse(
+                    ! label %in% annoying_segments, start-3500,start),
+                  end_wide  = ifelse(
+                    ! label %in% annoying_segments, end+5000,end))
+
+  sv_igh_anno = mutate(sv_igh,
+                       mechanism=case_when(
+                         chrom2 %in% c("14","chr14") & start2 < switch_end ~ "CSR",
+                         chrom2 %in% c("14","chr14") & start2 < vdj_start ~ "AID",
+                         chrom2 %in% c("14","chr14") & start2 >= vdj_start ~ "VDJ",
+                         chrom1 %in% c("14","chr14") & start1 < switch_end ~ "CSR",
+                         chrom1 %in% c("14","chr14") & start1 < vdj_start ~ "AID",
+                         chrom1 %in% c("14","chr14") & start1 >= vdj_start ~ "VDJ",
+                         TRUE ~ "OTHER"
+                       ))
+  sv_igh_anno = sv_igh_anno %>%
+                      mutate(
+                       IGH_start=ifelse(chrom2 %in% c("14","chr14"),start2,start1)
+                       ) %>%
+                      mutate(
+                         IGH_end = IGH_start+1
+                       )
+
+  #assign a higher resolution position by matching to nearest annotation
+
+  sv_igh_anno_dt = as.data.table(sv_igh_anno)
+
+  j_segs_dt = dplyr::filter(j_segs, label != "Emu") %>% as.data.table()
+  #annotate Emu separately because it overlaps with some annoying J segments
+  setkey(sv_igh_anno_dt,IGH_start,IGH_end)
+  setkey(j_segs_dt,start_wide,end_wide)
+  foverlaps(sv_igh_anno_dt,j_segs_dt,
+            by.x=c("IGH_start","IGH_end"),
+            by.y=c("start_wide","end_wide"))
+  annotated = foverlaps(sv_igh_anno_dt,j_segs_dt,
+                        by.x=c("IGH_start","IGH_end"),
+                        by.y=c("start_wide","end_wide"))
+  annotated[is.na(label) & IGH_start > emu_start & IGH_end < emu_end,"label"] = "Emu"
+  return(annotated)
+}
+
 #functions for custom annotation of mutations such as SV, CNV
 
 #some data frames specifying the locations of oncogenes and common partners are included with this package
@@ -91,7 +252,7 @@ annotate_driver_ssm = function(maf_df,lymphoma_type,driver_genes,
 #' # Basic usage
 #' sv_df = get_manta_sv()
 #' annotated_sv = annotate_sv(sv_df)
-annotate_sv = function(sv_data,partner_bed,with_chr_prefix=FALSE,collapse_redundant=FALSE,return_as="bedpe"){
+annotate_sv = function(sv_data,partner_bed,with_chr_prefix=FALSE,collapse_redundant=FALSE,return_as="bedpe",genome_build="grch37"){
   bedpe1 = sv_data %>% dplyr::select("CHROM_A","START_A","END_A","tumour_sample_id","SOMATIC_SCORE","STRAND_A")
   bedpe2 = sv_data %>% dplyr::select("CHROM_B","START_B","END_B","tumour_sample_id","SOMATIC_SCORE","STRAND_B")
 
@@ -104,14 +265,22 @@ annotate_sv = function(sv_data,partner_bed,with_chr_prefix=FALSE,collapse_redund
     }
   })
   if(missing(partner_bed)){
-    ig_regions = grch37_partners
+    if(genome_build == "hg38"){
+      ig_regions = hg38_partners
+    }else{
+      ig_regions = grch37_partners
+    }
   }else{
     ig_regions = partner_bed
     if(!"entrez" %in% colnames(ig_regions)){
       ig_regions$entrez = 0
     }
   }
-  oncogene_regions = grch37_oncogene
+  if(genome_build == "hg38"){
+    oncogene_regions = hg38_oncogene
+  }else{
+    oncogene_regions = grch37_oncogene
+  }
   y = data.table::as.data.table(oncogene_regions)
 
   data.table::setkey(y, chrom, start, end)

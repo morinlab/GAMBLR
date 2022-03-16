@@ -4,10 +4,16 @@
 \alias{process_all_manta_bedpe}
 \title{This is a helper function that is not meant to be used routinely}
 \usage{
-process_all_manta_bedpe(file_df, out_dir)
+process_all_manta_bedpe(
+  file_df,
+  out_dir,
+  group,
+  genome_build,
+  projection_build = "grch37"
+)
 }
 \arguments{
-\item{out_dir}{}
+\item{projection_build}{The genome we want all results to be relative to (lifted if necessary)}
 }
 \value{
 

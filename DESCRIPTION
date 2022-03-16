@@ -12,15 +12,14 @@ License: `use_mit_license()`
 Encoding: UTF-8
 LazyData: true
 Roxygen: list(markdown = TRUE)
-RoxygenNote: 7.1.1
+RoxygenNote: 7.1.2
 Suggests: 
     knitr,
     rmarkdown,
     testthat
 biocViews:
 Imports:
-    tidyverse,
-    data.table,
+    metaviz,
     RMariaDB,
     DBI,
     maftools,
@@ -29,7 +28,8 @@ Imports:
     GenomeInfoDb,
     circlize,
     rtracklayer,
-    config
+    config,
+    tidyverse
 VignetteBuilder: knitr
 Depends: 
     R (>= 2.10)

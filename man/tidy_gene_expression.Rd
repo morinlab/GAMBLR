@@ -2,13 +2,13 @@
 % Please edit documentation in R/preprocessing_io.R
 \name{tidy_gene_expression}
 \alias{tidy_gene_expression}
-\title{Title}
+\title{Read a full expression matrix and subset to samples in GAMBL that have metadata (remove duplicates with consistent preferences)}
 \usage{
-tidy_gene_expression()
+tidy_gene_expression(return_df = FALSE)
 }
 \value{
 
 }
 \description{
-Title
+Read a full expression matrix and subset to samples in GAMBL that have metadata (remove duplicates with consistent preferences)
 }

@@ -8,7 +8,13 @@ assign_cn_to_ssm(
   this_sample,
   coding_only = FALSE,
   from_flatfile = FALSE,
-  use_augmented_maf = FALSE
+  use_augmented_maf = FALSE,
+  maf_file,
+  seg_file,
+  seg_file_source = "ichorCNA",
+  assume_diploid = FALSE,
+  genes,
+  include_silent = FALSE
 )
 }
 \arguments{
@@ -16,7 +22,13 @@ assign_cn_to_ssm(
 
 \item{coding_only}{Optional. set to TRUE to rescrict to only coding variants}
 
-\item{from_flatfile}{Optional. instead of the database, load the data from a local MAF and seg file}
+\item{from_flatfile}{Optional. Instead of the database, load the data from a local MAF and seg file}
+
+\item{seg_file_source}{Specify what copy number calling program the input seg file is from, as it handles ichorCNA differently than WisecondorX, Battenberg, etc.}
+
+\item{assume_diploid}{Optional. If no local seg file is provided, instead of defaulting to a GAMBL sample, this parameter annotates every mutation as copy neutral.}
+
+\item{include_silent}{Logical parameter indicating whether to include siment mutations into coding mutations. Default is FALSE}
 }
 \value{
 A list containing a data frame (MAF-like format) with two extra columns:

@@ -4,7 +4,18 @@
 \alias{prettyChromoplot}
 \title{Use GISTIC2.0 scores output to reproduce maftools::chromoplot with more flexibility}
 \usage{
-prettyChromoplot(scores, genes_to_label, cutoff = 0.5)
+prettyChromoplot(
+  scores,
+  genes_to_label,
+  cutoff = 0.5,
+  adjust_amps = 0.5,
+  adjust_dels = 2.75,
+  label_size = 3,
+  force_pull = 0,
+  segment.curvature = 0.25,
+  segment.ncp = 4,
+  segment.angle = 25
+)
 }
 \arguments{
 \item{scores}{output file scores.gistic from the run of GISTIC2.0}
@@ -12,6 +23,20 @@ prettyChromoplot(scores, genes_to_label, cutoff = 0.5)
 \item{genes_to_label}{optional. Provide a data frame of genes to label (if mutated). The first 3 columns must contain chromosome, start, and end coordinates. Another required column must contain gene names and be named \code{gene}. All other columns are ignored. If no data frame provided, oncogenes from GAMBLR packages are used by default to annotate on the plot.}
 
 \item{cutoff}{optional. Used to determine which regions to color as aberrant. Must be float in the range \link{0-1}. The higher the number, the less regions will be considered as aberrant. The default is 0.5.}
+
+\item{adjust_amps}{optional. The value of G-score for highest amplification peak will be multiplied by this value to determine how far up the gene label will be displayed. Default 0.5.}
+
+\item{adjust_dels}{optional. The value of G-score for highest deletion peak will be multiplied by this value to determine how far down the gene label will be displayed. Default 2.75.}
+
+\item{label_size}{optional. The font size for the gene label to be displayed. Default 3.}
+
+\item{force_pull}{optional. How strong the gene name label will be pulled towards a data point. Default 0 (no pulling).}
+
+\item{segment.curvature}{optional. Indicates whether arrow to the data point should be curved. Accepts numeric value, where negative is for left-hand and positive for right-hand curves, and 0 for straight lines. Default 0.25}
+
+\item{segment.ncp}{optional. Indicates number of control points to make a smoother curve. Higher value allows for more flexibility for the curve. Default 4}
+
+\item{segment.angle}{optional. Numeric value in the range 0-180, where less than 90 skews control points of the arrow from label to data point toward the start point. Default 25}
 }
 \value{
 nothing

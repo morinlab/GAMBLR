@@ -4,7 +4,7 @@
 \alias{collate_derived_results}
 \title{Extract derived results stored in the database (these are usually slower to derive on the fly)}
 \usage{
-collate_derived_results(sample_table)
+collate_derived_results(sample_table, from_flatfile = FALSE)
 }
 \arguments{
 \item{sample_table}{A data frame with sample_id as the first column}

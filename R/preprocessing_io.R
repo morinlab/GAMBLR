@@ -106,12 +106,13 @@ populate_tool_results = function(){
 #' @param tool
 #' @param genome_build A list of all genome builds to process
 #' @param unix_group A list of all unix groups to process
+#' @param include_silent Logical parameter indicating whether to include siment mutations into coding mutations. Default is FALSE
 #'
 #' @return
 #' @export
 #'
 #' @examples
-populate_each_tool_result = function(tool,genome_builds,unix_groups){
+populate_each_tool_result = function(tool,genome_builds,unix_groups,include_silent=FALSE){
   database_name = config::get("database_name")
   con <- dbConnect(RMariaDB::MariaDB(), dbname = database_name)
   all_meta = get_gambl_metadata()
@@ -261,7 +262,22 @@ populate_each_tool_result = function(tool,genome_builds,unix_groups){
     #update all vafs at once
     generic_update(sample_id=vaf_tbl$Tumor_Sample_Barcode,field_name="slms3_mean_vaf",field_value=vaf_tbl$vaf)
 
-    coding_class = c("Frame_Shift_Del","Frame_Shift_Ins","In_Frame_Del","In_Frame_Ins","Missense_Mutation","Nonsense_Mutation","Nonstop_Mutation","Splice_Region","Splice_Site","Targeted_Region","Translation_Start_Site")
+    coding_class = c("Frame_Shift_Del",
+                     "Frame_Shift_Ins",
+                     "In_Frame_Del",
+                     "In_Frame_Ins",
+                     "Missense_Mutation",
+                     "Nonsense_Mutation",
+                     "Nonstop_Mutation",
+                     "Silent",
+                     "Splice_Region",
+                     "Splice_Site",
+                     "Targeted_Region",
+                     "Translation_Start_Site")
+
+    if(!include_silent){
+      coding_class=coding_class[coding_class != "Silent"]
+    }
 
     #this is where things get SLOW! It seems the most efficient here to do this query per sample.
     for(sam in gambl_counts$Tumor_Sample_Barcode){
@@ -293,11 +309,13 @@ populate_each_tool_result = function(tool,genome_builds,unix_groups){
 
 
     for(unix_group in unix_groups){
+      message(unix_group)
       for(genome_build in genome_builds){
+        message(genome_build)
         files = fetch_output_files(build=genome_build,unix_group=unix_group,
                                              base_path = paste0(unix_group,"/battenberg_current"),
                                              results_dir="02-battenberg",tool="battenberg_ploidy")
-        print(head(files))
+
         results_table = files %>% mutate(parse_batt(full_path))
         generic_update(sample_id=results_table$tumour_sample_id,field_name="battenberg_psi",field_value=results_table$battenberg_psi)
         generic_update(sample_id=results_table$tumour_sample_id,field_name="battenberg_ploidy",field_value=results_table$battenberg_ploidy)
@@ -414,7 +432,7 @@ process_all_manta_bedpe = function(file_df,out_dir,group,genome_build,projection
     out_dir = paste0(project_base,group,"/",base_out_dir)
   }
 
-  process_manta = function(bedpe_file,liftover_to_hg19=FALSE,liftover_to_hg38=FALSE,only_return_missing=FALSE){
+  process_manta = function(bedpe_file,liftover_to_hg19=FALSE,liftover_to_hg38=FALSE,only_return_missing=FALSE,projection="grch37"){
     cnames = c("CHROM_A","START_A","END_A","CHROM_B","START_B","END_B","NAME","SOMATIC_SCORE","STRAND_A","STRAND_B","TYPE","FILTER","VAF_tumour","VAF_normal","DP_tumour","DP_normal","tumour_sample_id","normal_sample_id","pair_status")
 
     svbed=read_tsv(bedpe_file,comment = "##",col_types="cddcddccccccccccccccccc")
@@ -432,15 +450,13 @@ process_all_manta_bedpe = function(file_df,out_dir,group,genome_build,projection
     if(liftover_to_hg19 || liftover_to_hg38){
       is_lifted = "lifted"
     }
-    projection = "grch37"
-    if(liftover_to_hg38){
-      projection = "hg38"
-    }
-    if(genome_build == projection){
+
+    if(genome_build == projection | (genome_build == "hs37d5" & projection == "grch37")){
       is_lifted = "native"
     }
     out_file = paste0(out_dir,"/",this_patient,"--",this_normal,"--",pair_status,"--", is_lifted,"--genome--",genome_build,"--",projection_build,"_sv.tsv")
     message("working on OVER HERE:",bedpe_file)
+    print(paste("output:",out_file))
     if(file.exists(out_file)){
       if(!only_return_missing){
         print(paste("LOADING",out_file))
@@ -490,24 +506,24 @@ process_all_manta_bedpe = function(file_df,out_dir,group,genome_build,projection
     if(genome_build == "hg38"){
       hg38_files = dplyr::filter(file_df,genome_build == "hg38" & unix_group == group) %>% pull(file_path)
       bed_data_lifted = hg38_files %>%
-        purrr::map(process_manta,liftover_to_hg19=TRUE) %>%
+        purrr::map(process_manta,liftover_to_hg19=TRUE,projection=projection_build) %>%
         purrr::reduce(rbind)
     }else{
       not_hg38_files = dplyr::filter(file_df,genome_build != "hg38" & unix_group == group) %>% pull(file_path)
       bed_data_not_lifted =not_hg38_files %>%
-        purrr::map(process_manta,liftover_to_hg19=FALSE) %>%
+        purrr::map(process_manta,liftover_to_hg19=FALSE,projection=projection_build) %>%
         purrr::reduce(rbind)
     }
   }else if(projection_build == "hg38"){
     if(genome_build == "hg38"){
       hg38_files = dplyr::filter(file_df,genome_build == "hg38" & unix_group == group) %>% pull(file_path)
-      bed_data_lifted = hg38_files %>%
-        purrr::map(process_manta,liftover_to_hg38=FALSE) %>%
+      bed_data_not_lifted = hg38_files %>%
+        purrr::map(process_manta,liftover_to_hg38=FALSE,liftover_to_hg19=FALSE,projection=projection_build) %>%
         purrr::reduce(rbind)
     }else{
       not_hg38_files = dplyr::filter(file_df,genome_build != "hg38" & unix_group == group) %>% pull(file_path)
-      bed_data_not_lifted =not_hg38_files %>%
-        purrr::map(process_manta,liftover_to_hg38=TRUE) %>%
+      bed_data_lifted =not_hg38_files %>%
+        purrr::map(process_manta,liftover_to_hg38=TRUE,liftover_to_hg19=FALSE,projection=projection_build) %>%
         purrr::reduce(rbind)
     }
   }
@@ -532,19 +548,26 @@ process_all_manta_bedpe = function(file_df,out_dir,group,genome_build,projection
 #' @import tidyverse
 #'
 #' @examples
-fetch_output_files = function(tool,unix_group,base_path,results_dir="99-outputs",seq_type="genome",build="hg38",search_pattern="cellularity_ploidy.txt"){
+fetch_output_files = function(tool,unix_group,base_path,results_dir="99-outputs",
+                              seq_type="genome",build="hg38",
+                              search_pattern="cellularity_ploidy.txt"){
   if(!grepl("^/",base_path)){
     project_base = config::get("project_base")
     #project_base = "/projects/nhl_meta_analysis_scratch/gambl/results_local/"
     base_path = paste0(project_base,base_path)
   }
-  results_path = paste0(base_path,"/",results_dir,"/",seq_type,"--",build,"/")
-
+  if(tool == "battenberg"){
+    results_path = paste0(base_path,"/",results_dir,"/seg/",seq_type,"--",build,"/")
+  }else{
+    results_path = paste0(base_path,"/",results_dir,"/",seq_type,"--",build,"/")
+  }
   #path may contain either directories or files named after the sample pair
+
   dir_listing = dir(results_path,pattern="--")
   #start a data frame for tidy collation of details
   dir_df = tibble(short_path=dir_listing)  %>% mutate(sample = strsplit(short_path,"--"))
-  unnested_df = dir_df %>% unnest_wider(sample,names_sep="_") %>% dplyr::rename(tumour_sample_id=sample_1,normal_sample_id=sample_2)
+  unnested_df = dir_df %>% unnest_wider(sample,names_sep="_") %>%
+    dplyr::rename(tumour_sample_id=sample_1,normal_sample_id=sample_2)
   #find file with search_pattern per directory and handle any missing files. This is a bit slow.
   #unnested_df = unnested_df %>% head() %>% mutate(output_file = dir(paste0(results_path,short_path),pattern=search_pattern))
   #This still fails when a matching file isn't found. No clue why this doesn't work
@@ -652,74 +675,73 @@ fread_maf = function(maf_file_path){
   return(maf_dt)
 }
 
-#Not meant to be used routinely
-#' Title
+#' Read a full expression matrix and subset to samples in GAMBL that have metadata (remove duplicates with consistent preferences)
 #'
 #' @return
 #' @export
 #'
 #' @examples
-tidy_gene_expression = function(){
+tidy_gene_expression = function(return_df = FALSE){
   #read in the full matrix
-  ex_matrix_file=config::get("ex_matrix_file")
-  ex_matrix_full = read_tsv(ex_matrix_file)
-
-  ex_tidy = pivot_longer(ex_matrix_full,-Hugo_Symbol,names_to="sample_id",values_to="expression")
-  ex_tidy_nfkbiz = dplyr::filter(ex_tidy,Hugo_Symbol=="NFKBIZ")
-  all_samples = pull(ex_tidy_nfkbiz,sample_id) %>% unique
+  ex_matrix_file = config::get("results_merged")$ex_matrix_file
+  tidy_expression_file = config::get("results_merged")$tidy_expression_file
+  print("Loading and tidying the full matrix file...")
+  ex_tidy = read_tsv(ex_matrix_file) %>%
+    dplyr::select(-gene_id) %>%
+    dplyr::rename("Hugo_Symbol" = "hgnc_symbol") %>%
+    pivot_longer(-c(Hugo_Symbol, ensembl_gene_id),
+                 names_to = "sample_id",
+                 values_to = "expression")
+  all_samples = distinct(ex_tidy, sample_id) %>% pull(sample_id)
   #retrieve the full list of sample_id for RNA-seq libraries that have data in this matrix
 
   #pull the full metadata for all RNA-seq samples in GAMBL
   #under the hood this is a join of the sample and biopsy tables but subset for RNA-seq
-  rna_meta = get_gambl_metadata(seq_type_filter = "mrna")
+  print("Loading the mrna metadata...")
+  rna_meta = get_gambl_metadata(seq_type_filter = "mrna", tissue_status_filter = c("tumour", "normal"), only_available = FALSE)
   #subset to just the ones in the matrix and keep only the relevant rows
-  rm_dupes = c("08-15460_tumorA","05-32150_tumorA") #toss two duplicated cases AND FFPE_Benchmarking
-  #rna_meta[which(rna_meta$sample_id %in% rm_dupes,"cohort"]= "FFPE_Benchmarking"
-  rna_meta_existing = rna_meta %>% dplyr::filter(sample_id %in% all_samples) %>% dplyr::select(sample_id,patient_id,biopsy_id,protocol)
+  rna_meta_existing = rna_meta %>%
+    dplyr::filter(sample_id %in% all_samples) %>%
+    dplyr::select(sample_id,patient_id,biopsy_id,protocol, cohort, tissue_status) %>%
+    mutate(biopsy_id = ifelse(tissue_status == "normal", sample_id, biopsy_id))
 
 
+  print("Selecting one library per biopsy...")
   selected_libraries = rna_meta_existing %>%
     group_by(biopsy_id) %>%
     # Take the biopsy_id with the longest string length (e.g PolyA vs. Ribodepletion)
     slice_max(str_length(protocol), n = 1,with_ties=FALSE) %>%
     ungroup()
+  #this brings the total from 1423 to 1322
 
 
-  #set the canonical library per biopsy_id by picking the ribominus for cases with more than one
-  #duplicated = rna_meta_existing %>% group_by(biopsy_id) %>% tally() %>% filter(n>1) %>% select(biopsy_id)
-  #singleton = rna_meta_existing %>% group_by(biopsy_id) %>% tally() %>% filter(n==1) %>% select(-n)
-
-  #selected_duplicated = left_join(duplicated,rna_meta_existing,by="biopsy_id") %>%
-  #  arrange(desc(protocol)) %>% arrange(biopsy_id) %>% group_by(biopsy_id) %>% filter(row_number()==1) %>% ungroup()
-  #selected_singleton = left_join(singleton,rna_meta_existing,by="biopsy_id") %>% ungroup()
-  #selected_all=rbind(selected_duplicated,selected_singleton)
-  #put everything back together
-  #at this point I have 1206 sample_ids
   ex_tidy = ex_tidy %>% dplyr::rename(mrna_sample_id = sample_id)
 
   ex_tidy = ex_tidy %>% dplyr::filter(mrna_sample_id %in% selected_libraries$sample_id)
   rna_meta = rna_meta %>% dplyr::select(sample_id,biopsy_id)
-  ex_tidy_final = left_join(ex_tidy,rna_meta,by=c("mrna_sample_id"="sample_id"))
-  #this still has the mrna sample ID. Need to add the tumour_sample_id from this biopsy (where available)
-  genome_meta = get_gambl_metadata() %>% dplyr::select(biopsy_id,sample_id,patient_id,ffpe_or_frozen) %>% dplyr::rename("genome_sample_id" = "sample_id")
-  #this gets the metadata in the same format but restricted to genome samples
-  #REMOVE ANNOYING DUPLICATE GENOMES!
-  duplicated_cases = genome_meta %>% group_by(biopsy_id) %>% tally() %>% dplyr::filter(n>1)
 
-  selected_genomes = genome_meta %>%
-    group_by(biopsy_id) %>%
-    # Take the biopsy_id with the longest string length (e.g frozen)
-    slice_max(str_length(ffpe_or_frozen), n = 1,with_ties=FALSE) %>%
-    ungroup() %>% dplyr::select(-patient_id,-ffpe_or_frozen)
+  ex_tidy_final = left_join(ex_tidy,rna_meta,by=c("mrna_sample_id"="sample_id"))
+  #this still has the mrna sample ID. Need to add the genome sample_id from this biopsy (where available)
+  print("Loading the genome metadata...")
+  genome_meta = get_gambl_metadata() %>%
+    dplyr::select(biopsy_id,sample_id,patient_id,ffpe_or_frozen) %>%
+    dplyr::rename("genome_sample_id" = "sample_id")
+  #this gets the metadata in the same format but restricted to genome samples
 
   #join to genome metadata based on biopsy_id (should be the same for RNA-seq and tumour genomes)
-  ex_tidy_genome = left_join(ex_tidy_final,selected_genomes,by="biopsy_id")
+  ex_tidy_genome = left_join(ex_tidy_final,genome_meta,by="biopsy_id")
 
-  ex_tidy_genome = dplyr::select(ex_tidy_genome,Hugo_Symbol,mrna_sample_id,expression,biopsy_id,genome_sample_id)
+  ex_tidy_genome = dplyr::select(ex_tidy_genome,ensembl_gene_id,Hugo_Symbol,mrna_sample_id,expression,biopsy_id,genome_sample_id)
+
   #write the data back out for use by others and loading into the database.
-  tidy_expression_file = config::get("tidy_expression_file")
-  write_tsv(ex_tidy_genome,file=tidy_expression_file)
+  if(return_df){
+    return(ex_tidy_genome)
+  }else{
+    print("Writing the tidy data to file...")
+    write_tsv(ex_tidy_genome,file=tidy_expression_file)
+  }
 
+  print("Done!")
 
 }
 
@@ -767,7 +789,7 @@ assemble_file_details = function(file_details_df,file_paths,tool_name,unix_group
 #' @examples
 #' hg19_sv = get_manta_sv() %>% head(100)
 #' hg38_sv = liftover_bedpe(bedpe_df=hg19_sv,target_build="hg38")
-liftover_bedpe = function(bedpe_file,bedpe_df,target_build="grch37",col_names,col_types){
+liftover_bedpe = function(bedpe_file,bedpe_df,target_build="grch37",col_names,col_types,standard_bed=FALSE){
 
   if(!missing(bedpe_file)){
     if(missing(col_names)){
@@ -781,48 +803,71 @@ liftover_bedpe = function(bedpe_file,bedpe_df,target_build="grch37",col_names,co
     original_bedpe = bedpe_df
 
   }
-  colnames(original_bedpe)[1]="CHROM_A"
-  original_bedpe = as.data.frame(original_bedpe)
-  original_bedpe=original_bedpe %>% mutate_if(is.numeric, as.integer)
-  #print(head(original_bedpe))
-  if(!grepl("chr",original_bedpe$CHROM_A)){
-    #add chr prefix
-    original_bedpe = original_bedpe %>% mutate(CHROM_A = paste0("chr",CHROM_A)) %>%
-      mutate(CHROM_B = paste0("chr",CHROM_B))
-  }
-  print(head(original_bedpe))
-  char_vec = original_bedpe %>% tidyr::unite(united,sep="\t") %>% dplyr::pull(united)
-  bedpe_obj <- rtracklayer::import(text=char_vec,format="bedpe")
-  if(length(colnames(original_bedpe))>22){
-    this_patient = colnames(original_bedpe)[23]
-    this_normal = colnames(original_bedpe)[22]
+  if(!standard_bed){
+    colnames(original_bedpe)[1]="CHROM_A"
+    original_bedpe = as.data.frame(original_bedpe)
+    original_bedpe=original_bedpe %>% mutate_if(is.numeric, as.integer)
+    #print(head(original_bedpe))
+    original_bedpe = original_bedpe %>%
+      dplyr::mutate(CHROM_A = ifelse(!grepl("chr",CHROM_A), paste0("chr",CHROM_A),CHROM_A),
+                    CHROM_B= ifelse(!grepl("chr",CHROM_B), paste0("chr",CHROM_B), CHROM_B))
+    print(head(original_bedpe))
+    char_vec = original_bedpe %>% tidyr::unite(united,sep="\t") %>% dplyr::pull(united)
+    bedpe_obj <- rtracklayer::import(text=char_vec,format="bedpe")
+    if(length(colnames(original_bedpe))>22){
+      this_patient = colnames(original_bedpe)[23]
+      this_normal = colnames(original_bedpe)[22]
+    }else{
+      this_patient = original_bedpe$tumour_sample_id
+      this_normal = original_bedpe$normal_sample_id
+    }
   }else{
-    this_patient = original_bedpe$tumour_sample_id
-    this_normal = original_bedpe$normal_sample_id
+    colnames(original_bedpe)[1]="chrom"
+    if(!grepl("chr",original_bedpe$chrom)){
+      original_bedpe = mutate(original_bedpe,chrom=paste0("chr",chrom))
+    }
+    char_vec = original_bedpe %>% tidyr::unite(united,sep="\t") %>% dplyr::pull(united)
+    bedpe_obj <- rtracklayer::import(text=char_vec,format="bed")
   }
   if(target_build == "grch37" | target_build == "hg19"){
     chain = rtracklayer::import.chain(system.file("extdata","hg38ToHg19.over.chain",package="GAMBLR"))
   }else if(target_build == "grch38" | target_build == "hg38"){
     chain = rtracklayer::import.chain(system.file("extdata","hg19ToHg38.over.chain",package="GAMBLR"))
   }
-  colnames(original_bedpe)[1]="CHROM_A"
-  original_columns = colnames(original_bedpe)
+  if(!standard_bed){
+    colnames(original_bedpe)[1]="CHROM_A"
+    original_columns = colnames(original_bedpe)
 
-  first_sv_lifted = rtracklayer::liftOver(bedpe_obj@first,chain)
-  second_sv_lifted = rtracklayer::liftOver(bedpe_obj@second,chain)
-  no_problem = !((elementNROWS(first_sv_lifted) != 1) | (elementNROWS(second_sv_lifted) != 1))
-  first_ok = subset(first_sv_lifted,no_problem)
-  second_ok = subset(second_sv_lifted,no_problem)
-  first_ok_df = rtracklayer::export(first_ok,format="bed") %>%
-    read_tsv(col_names = c("CHROM_A","START_A","END_A","name_A","score_A","STRAND_A")) %>%
-    dplyr::select(-score_A) %>% dplyr::select(-name_A)
-  second_ok_df = rtracklayer::export(second_ok,format="bed") %>%
-    read_tsv(col_names = c("CHROM_B","START_B","END_B","name_B","score_B","STRAND_B")) %>%
-    dplyr::select(-score_B) %>% dplyr::select(-name_B)
-  ok_bedpe = original_bedpe[no_problem,]
-  kept_cols = ok_bedpe %>% dplyr::select(-c("CHROM_A","START_A","END_A","CHROM_B","START_B","END_B","STRAND_A","STRAND_B"))
-  fully_lifted = bind_cols(first_ok_df,second_ok_df,kept_cols) %>% dplyr::select(all_of(original_columns))
-  return(fully_lifted)
+    first_sv_lifted = rtracklayer::liftOver(bedpe_obj@first,chain)
+    second_sv_lifted = rtracklayer::liftOver(bedpe_obj@second,chain)
+    no_problem = !((elementNROWS(first_sv_lifted) != 1) | (elementNROWS(second_sv_lifted) != 1))
+    first_ok = subset(first_sv_lifted,no_problem)
+    second_ok = subset(second_sv_lifted,no_problem)
+    first_ok_df = data.frame(first_ok@unlistData) %>%
+                  dplyr::select(seqnames,start,end,strand) %>%
+                  dplyr::mutate(start=start-1, # since bed coordinates are 0-based
+                                end=as.numeric(end)) %>%
+                  `names<-`(c("CHROM_A","START_A","END_A","STRAND_A"))
+    second_ok_df = data.frame(second_ok@unlistData) %>%
+                  dplyr::select(seqnames,start,end,strand) %>%
+                  dplyr::mutate(start=start-1, # since bed coordinates are 0-based
+                                end=as.numeric(end)) %>%
+                  `names<-`(c("CHROM_B","START_B","END_B","STRAND_B"))
+    ok_bedpe = original_bedpe[no_problem,]
+    kept_cols = ok_bedpe %>% dplyr::select(-c("CHROM_A","START_A","END_A","CHROM_B","START_B","END_B","STRAND_A","STRAND_B"))
+    fully_lifted = bind_cols(first_ok_df,second_ok_df,kept_cols) %>%
+                  dplyr::select(all_of(original_columns)) %>%
+                  dplyr::mutate_if(is.factor, as.character)
+    return(fully_lifted)
+  }else{
+    lifted = rtracklayer::liftOver(bedpe_obj,chain)
+    no_problem = !((elementNROWS(lifted) != 1))
+    first_ok = subset(lifted,no_problem)
+    output = rtracklayer::export(first_ok,format="bed") %>%
+      read_tsv(col_names = c("chrom","start","end","score","strand","nothing","s1","e1","junk","more","stuff","nada")) %>%
+      dplyr::select("chrom","start","end")
+    return(output)
+  }
 }
 
 

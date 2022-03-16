@@ -3,11 +3,11 @@ default:
     repo_base: "/projects/rmorin/projects/gambl-repos/gambl-rmorin/"
     derived_and_curated: "icgc_dart/derived_and_curated_metadata/"
     database_name: "gambl_test"
-    results_staging:
+    results_staging:        
         manta: "manta_current/level_3/01-gamblr_preprocess/"
     results_merged:
         tidy_expression_file: "/projects/rmorin/projects/gambl-repos/gambl-rmorin/results/icgc_dart/DESeq2-0.0_salmon-1.0/mrna--gambl-icgc-all/vst-matrix-Hugo_Symbol_tidy.tsv"
-        ex_matrix_file: "/projects/rmorin/projects/gambl-repos/gambl-rmorin/results/icgc_dart/DESeq2-0.0_salmon-1.0/mrna--gambl-icgc-all/vst-matrix-Hugo_Symbol.tsv.gz"
+        ex_matrix_file: "/projects/rmorin/projects/gambl-repos/gambl-rmorin/results/icgc_dart/DESeq2-0.0_salmon-1.0/mrna--gambl-icgc-all/vst-matrix.tsv"
 
 #results from every combination of each of these will be included in the database
     unix_groups: "gambl,icgc_dart"
@@ -32,17 +32,30 @@ default:
         copy_number_unmatched: "seg_controlfreec_hg19"
 
     results_filatfiles:
+        cnv: 
+            gambl:
+                unmatched: "controlfreec_liftover_current/99-outputs/"
         sv: "icgc_dart/cbioportal-1.0/01-filtered-manta/genome-grch37/all_merged_sv_info.tsv"
+        sv_combined:
+            gambl: "gambl/svar_master-1.0/merges/gridss_manta.genome--grch37.bedpe"
+            icgc_dart: "all_the_things/svar_master-1.0/merges/gridss_manta.genome--grch37.bedpe"
         ssm:
             all:
-                full: "icgc_dart/slms-3_vcf2maf_current/level_3/final_merged_grch37.maf"
-                cds: "icgc_dart/slms-3_vcf2maf_current/level_3/final_merged_grch37.CDS.maf"
+                full: "icgc_dart/slms_3-1.0_vcf2maf-1.2/level_3/final_merged_grch37.maf"
+                clustered: "icgc_dart/slms_3-1.0_vcf2maf-1.3/level_3/final_merged_grch37.maf"
+                clustered_cds: "icgc_dart/slms_3-1.0_vcf2maf-1.3/level_3/final_merged_grch37.CDS.maf"
+                cds: "icgc_dart/slms_3-1.0_vcf2maf-1.2/level_3/final_merged_grch37.CDS.maf"
+                strelka2: "icgc_dart/strelka-1.1_vcf2maf-1.2/level_3/final_merged_grch37.maf"
             gambl:
-                full: "gambl/slms-3_vcf2maf_current/level_3/final_merged_grch37.maf"
-                cds: "gambl/slms-3_vcf2maf_current/level_3/final_merged_grch37.CDS.maf"
+                full: "gambl/slms_3-1.0_vcf2maf-1.2/level_3/final_merged_grch37.maf"
+                clustered: "gambl/slms_3-1.0_vcf2maf-1.3/level_3/final_merged_grch37.maf"
+                clustered_cds: "gambl/slms_3-1.0_vcf2maf-1.3/level_3/final_merged_grch37.CDS.maf"
+                cds: "gambl/slms_3-1.0_vcf2maf-1.2/level_3/final_merged_grch37.CDS.maf"
+                strelka2: "gambl/strelka-1.1_vcf2maf-1.2/level_3/final_merged_grch37.maf"
 
     results_directories:
         manta: "manta_current/99-outputs/bedpe/"
+        controlfreec: "controlfreec_liftover_current/99-outputs/"
 
     tables:
         biopsies: "biopsy_metadata"
@@ -93,11 +106,11 @@ testing:
         sv: "icgc_dart/cbioportal-1.0/01-filtered-manta/genome-grch37/all_merged_sv_info.tsv"
         ssm:
             all:
-                full: "icgc_dart/slms-3_vcf2maf_current/level_3/final_merged_grch37.maf"
-                cds: "icgc_dart/slms-3_vcf2maf_current/level_3/final_merged_grch37.CDS.maf"
+                full: "icgc_dart/slms_3-1.0_vcf2maf-1.2/level_3/final_merged_grch37.maf"
+                cds: "icgc_dart/slms_3-1.0_vcf2maf-1.2/level_3/final_merged_grch37.CDS.maf"
             gambl:
-                full: "gambl/slms-3_vcf2maf_current/level_3/final_merged_grch37.maf"
-                cds: "gambl/slms-3_vcf2maf_current/level_3/final_merged_grch37.CDS.maf"
+                full: "gambl/slms_3-1.0_vcf2maf-1.2/level_3/final_merged_grch37.maf"
+                cds: "gambl/slms_3-1.0_vcf2maf-1.2/level_3/final_merged_grch37.CDS.maf"
 
     results_directories:
         manta: "manta_current/99-outputs/bedpe/"

@@ -9,7 +9,9 @@ get_ashm_count_matrix(
   regions_bed,
   maf_data,
   sample_metadata,
-  use_name_column = FALSE
+  use_name_column = FALSE,
+  from_indexed_flatfile = FALSE,
+  allow_clustered = FALSE
 )
 }
 \arguments{
@@ -18,6 +20,10 @@ get_ashm_count_matrix(
 \item{sample_metadata}{This is used to complete your matrix. All GAMBL samples will be used by default. Provide a data frame with at least sample_id for all samples if you are using non-GAMBL data.}
 
 \item{use_name_column}{Set this to true to force the function to use the value in column "name" to name each feature in the output}
+
+\item{from_indexed_flatfile}{Set to TRUE to avoid using the database and instead rely on flatfiles (only works for streamlined data, not full MAF details)}
+
+\item{allow_clustered}{Set to TRUE to utilize the latest SLMS-3 variant calls that allow clustered variants}
 }
 \value{
 

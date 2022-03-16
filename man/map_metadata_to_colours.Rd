@@ -7,6 +7,7 @@
 map_metadata_to_colours(
   metadataColumns,
   these_samples_metadata,
+  column_alias = list(),
   as_vector = TRUE,
   verbose = F,
   annoAlpha = 1
@@ -16,6 +17,8 @@ map_metadata_to_colours(
 \item{metadataColumns}{Names of the metadata columns to assign colours for}
 
 \item{these_samples_metadata}{Metadata for just the samples you need colours for}
+
+\item{column_alias}{A list of column_names with values indicating what gambl colour scheme they should use (e.g. pos_neg, pathology, lymphgen)}
 
 \item{annoAlpha}{Optional alpha to apply to annotation colours}
 }
@@ -27,4 +30,5 @@ Assign a colour palette to metadata columns automatically and consistently
 }
 \examples{
 all_cols=map_metadata_to_colours(legend_metadata_columns,these_meta,verbose=T)
+all_cols=map_metadata_to_colours(c("lymphgen","pathology","genetic_subgroup"),these_samples_metadata = all_meta,column_alias=list("nothing"="FL"),as_vector = F)
 }
