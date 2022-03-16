@@ -578,10 +578,6 @@ annotate_hotspots = function(mutation_maf,
 #' @examples
 #' hot_ssms = review_hotspots(annotate_hotspots(get_coding_ssm()), genes_of_interest=c("CREBBP"))
 review_hotspots = function(annotated_maf,
-                           genes_of_interest = c("FOXO1", "MYD88", "CREBBP", "NOTCH1", "NOTCH2", "CD79B", "EZH2"),
-                           genome_build = "hg19"){
-
-review_hotspots = function(annotated_maf,
                           genes_of_interest = c("FOXO1", "MYD88", "CREBBP", "NOTCH1", "NOTCH2", "CD79B", "EZH2"),
                           genome_build = "hg19"){
 
