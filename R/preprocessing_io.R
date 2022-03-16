@@ -908,7 +908,7 @@ liftover_bedpe = function(bedpe_file,
     original_bedpe = original_bedpe %>%
       dplyr::mutate(CHROM_A = ifelse(!grepl("chr", CHROM_A), paste0("chr", CHROM_A), CHROM_A),
                     CHROM_B = ifelse(!grepl("chr", CHROM_B), paste0("chr", CHROM_B), CHROM_B))
-
+    
     print(head(original_bedpe))
     
     char_vec = original_bedpe %>%
@@ -946,7 +946,7 @@ liftover_bedpe = function(bedpe_file,
     first_sv_lifted = rtracklayer::liftOver(bedpe_obj@first, chain)
     second_sv_lifted = rtracklayer::liftOver(bedpe_obj@second, chain)
     no_problem = !((elementNROWS(first_sv_lifted) != 1) | (elementNROWS(second_sv_lifted) != 1))
-  
+
     first_ok = subset(first_sv_lifted, no_problem)
     second_ok = subset(second_sv_lifted, no_problem)
     
@@ -961,6 +961,7 @@ liftover_bedpe = function(bedpe_file,
       `names<-`(c("CHROM_B", "START_B", "END_B", "STRAND_B"))
     
     ok_bedpe = original_bedpe[no_problem,]
+    
     kept_cols = ok_bedpe %>% 
       dplyr::select(-c("CHROM_A", "START_A", "END_A", "CHROM_B", "START_B", "END_B", "STRAND_A", "STRAND_B"))
     
@@ -969,6 +970,7 @@ liftover_bedpe = function(bedpe_file,
       dplyr::mutate_if(is.factor, as.character)
     
     return(fully_lifted)
+    
   }else{
     lifted = rtracklayer::liftOver(bedpe_obj, chain)
     no_problem = !((elementNROWS(lifted) != 1))

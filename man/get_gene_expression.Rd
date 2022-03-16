@@ -11,7 +11,6 @@ get_gene_expression(
   join_with = "mrna",
   all_genes = FALSE,
   expression_data,
-
   from_flatfile = TRUE
 )
 }
