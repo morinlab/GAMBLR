@@ -905,12 +905,10 @@ liftover_bedpe = function(bedpe_file,
       mutate_if(is.numeric, as.integer)
     
     #print(head(original_bedpe))
-    if(!grepl("chr", original_bedpe$CHROM_A)){
-      #add chr prefix
-      original_bedpe = original_bedpe %>%
-        mutate(CHROM_A = paste0("chr", CHROM_A)) %>%
-        mutate(CHROM_B = paste0("chr", CHROM_B))
-    }
+    original_bedpe = original_bedpe %>%
+      dplyr::mutate(CHROM_A = ifelse(!grepl("chr", CHROM_A), paste0("chr", CHROM_A), CHROM_A),
+                    CHROM_B = ifelse(!grepl("chr", CHROM_B), paste0("chr", CHROM_B), CHROM_B))
+
     print(head(original_bedpe))
     
     char_vec = original_bedpe %>%
@@ -948,26 +946,27 @@ liftover_bedpe = function(bedpe_file,
     first_sv_lifted = rtracklayer::liftOver(bedpe_obj@first, chain)
     second_sv_lifted = rtracklayer::liftOver(bedpe_obj@second, chain)
     no_problem = !((elementNROWS(first_sv_lifted) != 1) | (elementNROWS(second_sv_lifted) != 1))
+  
     first_ok = subset(first_sv_lifted, no_problem)
     second_ok = subset(second_sv_lifted, no_problem)
-
-    first_ok_df = rtracklayer::export(first_ok, format = "bed") %>%
-      read_tsv(col_names = c("CHROM_A", "START_A", "END_A", "name_A", "score_A", "STRAND_A")) %>%
-      dplyr::select(-score_A) %>%
-      dplyr::select(-name_A)
     
-    second_ok_df = rtracklayer::export(second_ok, format = "bed") %>%
-      read_tsv(col_names = c("CHROM_B", "START_B", "END_B", "name_B", "score_B", "STRAND_B")) %>%
-      dplyr::select(-score_B) %>%
-      dplyr::select(-name_B)
-
+    first_ok_df = data.frame(first_ok@unlistData) %>%
+      dplyr::select(seqnames, start, end, strand) %>%
+      dplyr::mutate(start = start - 1, end = as.numeric(end)) %>%
+      `names<-`(c("CHROM_A", "START_A", "END_A", "STRAND_A"))
+    
+    second_ok_df = data.frame(second_ok@unlistData) %>%
+      dplyr::select(seqnames, start, end, strand) %>%
+      dplyr::mutate(start = start - 1, end = as.numeric(end)) %>%
+      `names<-`(c("CHROM_B", "START_B", "END_B", "STRAND_B"))
+    
     ok_bedpe = original_bedpe[no_problem,]
-    
-    kept_cols = ok_bedpe %>%
+    kept_cols = ok_bedpe %>% 
       dplyr::select(-c("CHROM_A", "START_A", "END_A", "CHROM_B", "START_B", "END_B", "STRAND_A", "STRAND_B"))
-
+    
     fully_lifted = bind_cols(first_ok_df, second_ok_df, kept_cols) %>%
-      dplyr::select(all_of(original_columns))
+      dplyr::select(all_of(original_columns)) %>%
+      dplyr::mutate_if(is.factor, as.character)
     
     return(fully_lifted)
   }else{

@@ -25,7 +25,6 @@ require("data.table")
 #' @export
 #'
 #' @examples
-#'
 #' Setup study and save included ids as a vector of characters:
 #' ids = setup_study(out_dir = "GAMBLR/cBioPortal/instance01/")
 #'
@@ -171,7 +170,6 @@ setup_study = function(short_name = "GAMBL",
 #' @export
 #'
 #' @examples
-#'
 #' Setup fusions and save included sample ids into a vector of character
 #' fusion_ids = setup_fusions(out_dir = "GAMBLR/cBioPortal/instance01/)
 #' 

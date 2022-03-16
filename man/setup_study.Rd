@@ -60,7 +60,6 @@ A vector of sample_id for the patients that have been included.
 Initialize a new cBioPortal instance or update existing portal data set, can also be used to retrieve sample ids included in study.
 }
 \examples{
-
 Setup study and save included ids as a vector of characters:
 ids = setup_study(out_dir = "GAMBLR/cBioPortal/instance01/")
 

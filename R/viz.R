@@ -888,10 +888,11 @@ prettyOncoplot = function(maftools_obj,
       genes = genes[fractMutated * 100 >= minMutationPercent, Hugo_Symbol]
       lg = length(genes)
       message(paste("creating oncomatrix with", lg, "genes"))
-      om = maftools:::createOncoMatrix(m = maftools_obj, g = genes)
+      om = maftools:::createOncoMatrix(m = maftools_obj, g = genes, add_missing = TRUE)
       mat_origin = om$oncoMatrix
       tsbs = levels(maftools:::getSampleSummary(x = maftools_obj)[,Tumor_Sample_Barcode])
       print(paste("numcases:", length(tsbs)))
+      
       if(!removeNonMutated){
         tsb.include = matrix(data = 0, nrow = nrow(mat_origin), ncol = length(tsbs[!tsbs %in% colnames(mat_origin)]))
         colnames(tsb.include) = tsbs[!tsbs %in% colnames(mat_origin)]
@@ -900,7 +901,7 @@ prettyOncoplot = function(maftools_obj,
       }
       write.table(mat_origin, file = onco_matrix_path, quote = F, sep = "\t")
     }else{
-      om = maftools:::createOncoMatrix(m = maftools_obj, g = genes)
+      om = maftools:::createOncoMatrix(m = maftools_obj, g = genes, add_missing = TRUE)
       mat_origin = om$oncoMatrix
       tsbs = levels(maftools:::getSampleSummary(x = maftools_obj)[,Tumor_Sample_Barcode])
       print(paste("numcases:", length(tsbs)))
@@ -974,7 +975,11 @@ prettyOncoplot = function(maftools_obj,
       return()
     }
     mutation_counts = maftools_obj@gene.summary %>%
-      dplyr::select(Hugo_Symbol,MutatedSamples) %>%
+      dplyr::mutate(fake_column=1) %>%
+      tidyr::complete(., tidyr::expand(., crossing(fake_column), Hugo_Symbol = genes)) %>%
+      dplyr::select(-fake_column) %>%
+      replace(is.na(.), 0) %>%
+      dplyr::select(Hugo_Symbol, MutatedSamples) %>%
       as.data.frame()
 
     numpat = length(patients)
@@ -1254,34 +1259,35 @@ prettyOncoplot = function(maftools_obj,
   }else{
     top_annotation = HeatmapAnnotation(cbar = anno_oncoprint_barplot())
   }
-  ch = ComplexHeatmap::oncoPrint(mat[genes, patients_kept],
-                                alter_fun = alter_fun,
-                                top_annotation = top_annotation,
-                                right_annotation = NULL,
-                                col = col,
-                                row_order = gene_order,
-                                column_order = column_order,
-                                column_labels = NULL,
-                                show_column_names = showTumorSampleBarcode,
-                                column_split = column_split,
-                                column_title = column_title,
-                                row_title = NULL,
-                                row_split = row_split,
-                                heatmap_legend_param = heatmap_legend_param,
-                                row_names_gp = gpar(fontsize = fontSizeGene),
-                                pct_gp = gpar(fontsize = fontSizeGene),
-  bottom_annotation = ComplexHeatmap::HeatmapAnnotation(df = metadata_df,
-                                                        show_legend = show_legend,
-                                                        col = colours,
-                                                        simple_anno_size = unit(metadataBarHeight, "mm"),
-                                                        gap = unit(0.25 * metadataBarHeight, "mm"),
-                                                        annotation_name_gp = gpar(fontsize = metadataBarFontsize),
-                                                        annotation_legend_param = list(nrow = legend_row,
-                                                                                       col_fun = col_fun,
-                                                                                       ncol = legend_col,
-                                                                                       direction = legend_direction,
-                                                                                       labels_gp = gpar(fontsize = legendFontSize))))
-  draw(ch, heatmap_legend_side = legend_position, annotation_legend_side = legend_position)
+  ch = ComplexHeatmap::oncoPrint(mat[intersect(genes, genes_kept), patients_kept],
+                                     alter_fun = alter_fun,
+                                     top_annotation = top_annotation,
+                                     right_annotation = NULL,
+                                     col = col,
+                                     row_order = gene_order,
+                                     column_order = column_order,
+                                     column_labels = NULL,
+                                     show_column_names = showTumorSampleBarcode,
+                                     column_split = column_split,
+                                     column_title = column_title,
+                                     row_title = NULL,
+                                     row_split = row_split[intersect(genes, genes_kept)],
+                                     heatmap_legend_param = heatmap_legend_param,
+                                     row_names_gp = gpar(fontsize = fontSizeGene),
+                                     pct_gp = gpar(fontsize = fontSizeGene),
+                                     bottom_annotation = ComplexHeatmap::HeatmapAnnotation(df = metadata_df,
+                                                                                           show_legend = show_legend,
+                                                                                           col = colours,
+                                                                                           simple_anno_size = unit(metadataBarHeight, "mm"),
+                                                                                           gap = unit(0.25 * metadataBarHeight, "mm"),
+                                                                                           annotation_name_gp = gpar(fontsize = metadataBarFontsize),
+                                                                                           annotation_legend_param = list(nrow = legend_row,
+                                                                                                                          col_fun = col_fun,
+                                                                                                                          ncol = legend_col,
+                                                                                                                          direction = legend_direction,
+                                                                                                                          labels_gp = gpar(fontsize = legendFontSize))))
+      
+    draw(ch, heatmap_legend_side = legend_position, annotation_legend_side = legend_position)
 }
 
 
