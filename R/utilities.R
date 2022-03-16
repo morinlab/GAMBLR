@@ -1079,3 +1079,204 @@ FtestCNV <- function(gistic_lesions, metadata, comparison, fdr.method="fdr", fdr
   return(OUTPUT)
   message("Done!")
 }
+
+
+
+#' If some samples are missing from the matrix, add them with filled in 0 as value and normalize their ordering for consistency
+#'
+#' @param incoming_matrix A matrix or data frame that should be filled. Required parameter.
+#' @param list_of_samples Vector specifying all desired samples to be present in the resulting matrix. Required parameter.
+#' @param fill_in_values Value that will be used to fill in the matrix.
+#' @param normalize_order Logical parameter specifying whether sample order should be according to the supplied list. Default is TRUE.
+#' @param samples_in_rows Logical argument indicating whether samples are in rows or columns. Default assumes samples are in rows and columns are features.
+#'
+#' @return a data frame with maintained orientation (rows and columns) where samples from the supplied list are present and reordered according to the specified order
+#' @export
+#'
+#' @examples
+#' partial_matrix = get_coding_ssm_status(these_samples_metadata = (get_gambl_metadata(case_set = "BL--DLBCL") %>% filter(pairing_status=="unmatched")), include_hotspots = FALSE)
+#' complete_matrix = complete_missing_from_matrix(partial_matrix, get_gambl_metadata() %>% pull(sample_id))
+complete_missing_from_matrix = function(incoming_matrix,
+                                        list_of_samples,
+                                        fill_in_values = 0,
+                                        normalize_order=TRUE,
+                                        samples_in_rows=TRUE){
+
+  # check for required arguments
+  if (missing(incoming_matrix)){
+      stop("Please provide initial matrix to fill.")
+  }
+
+  if (missing(list_of_samples)){
+      stop("Please provide list of samples to complete the matrix and normalize order.")
+  }
+
+  # is samples are in columns, transpose the matrix so code below is generalizable
+  if(!samples_in_rows){
+    incoming_matrix = as.data.frame(incoming_matrix) %>% t()
+  }
+
+  matrix_with_all_samples <- rbind(incoming_matrix,
+        matrix(fill_in_values:fill_in_values, # populate matrix with all 0
+               length(setdiff(list_of_samples, rownames(incoming_matrix))), # how many rows
+               ncol(incoming_matrix), # how many columns
+               dimnames = list(setdiff(list_of_samples, rownames(incoming_matrix)), # name rows with sample IDs
+                               colnames(incoming_matrix))) %>% # name columns with gene names
+          as.data.frame(.))
+
+  # this is very helpful in clustering
+  if(normalize_order){
+    matrix_with_all_samples = matrix_with_all_samples[ order(match(rownames(matrix_with_all_samples), list_of_samples)),]
+  }
+
+  # transpose matrix back to the initial format supplied by user (samples in columns)
+  if(!samples_in_rows){
+    matrix_with_all_samples = as.data.frame(matrix_with_all_samples) %>% t()
+  }
+
+  return(matrix_with_all_samples)
+}
+
+
+#' Subset maf file to only features that would be available in the WEX data
+#'
+#' @param maf Incoming maf object. Can be maf-like data frame or maftools maf object. Required parameter. Minimum columns that should be present are Chromosome, Start_Position, and End_Position.
+#' @param custom_bed Optional argument specifying a path to custom bed file for covered regions. Must be bed-like and contain chrom, start, and end position information in first 3 columns. Other columns are disregarded if provided.
+#' @param genome_build String indicating genome build of the maf file. Default is grch37, but can accept modifications of both grch37- and hg38-based duilds.
+#' @param padding Numeric value that will be used to pad probes in WEX data from both ends. Default is 100. After padding, overlapping features are squished together.
+#' @param chr_prefixed Is the data chr-prefixed or not? Default is FALSE.
+#'
+#' @return a data frame of maf-like object with same columns as in input, but where rows are only kept for features that would be present as if the sample is WEX.
+#' @export
+#' @import tidyverse data.table
+#'
+#' @examples
+#' myc_ashm_maf = get_ssm_by_region(region="8:128748352-128749427") # get all ssm in the MYC aSHM region
+#' GAMBLR::genome_to_exome(maf=myc_ashm_maf) # get mutations with 100 bp padding (default)
+#' GAMBLR::genome_to_exome(maf=myc_ashm_maf, padding = 0) # get mutations covered in WEX with no padding
+
+genome_to_exome = function(maf,
+                           custom_bed,
+                           genome_build="grch37",
+                           padding=100,
+                           chr_prefixed=FALSE){
+
+
+  if(missing(custom_bed)){
+      # first check that the genome build provided is supported
+      if(! genome_build %in% c("hg19", "grch37", "hs37d5", "GRCh37", "hg38", "GRCh38", "grch38")){
+        stop("The genome build specified is not currently supported. Please refer to genome build in one of the following cordinates: hg19, grch37, hs37d5, GRCh37, hg38, grch38, or GRCh38.")
+      }else if(genome_build %in% c("hg19", "grch37", "hs37d5", "GRCh37")){
+        this_genome_coordinates = target_regions_grch37 # if the genome build is a flavour of hg19, get its exome space
+      }else if(genome_build %in% c("hg38", "GRCh38", "grch38")){
+        this_genome_coordinates = target_regions_hg38 # exome space for the variations of hg38
+      }
+  }else{
+      this_genome_coordinates = fread(custom_bed)
+      this_genome_coordinates = this_genome_coordinates[,1:3]
+      colnames(this_genome_coordinates) = c("chrom", "start", "end")
+  }
+
+  # pad the ends of the probes with the padding length
+  this_genome_coordinates = this_genome_coordinates %>%
+                                        dplyr::mutate(chrom=as.character(chrom),
+                                        start=start-padding,
+                                        end=end+padding)
+
+  # collapse regions if the padding results in 2 features that are overlapping
+  this_genome_coordinates = this_genome_coordinates %>%
+    dplyr::arrange(chrom, start) %>%
+    group_by(chrom) %>%
+    dplyr::mutate(indx = c(0, cumsum(as.numeric(lead(start)) >
+                                cummax(as.numeric(end)))[-n()])) %>%
+    group_by(chrom, indx) %>%
+    dplyr::summarise(start = first(start), end = last(end)) %>%
+    dplyr::select(-indx) %>%
+    ungroup %>%
+    dplyr::mutate_if(is.factor, as.character)
+
+  # handle the chr prefixes
+  if(chr_prefixed & ! str_detect(this_genome_coordinates$chrom[1],"chr")){
+    this_genome_coordinates = this_genome_coordinates %>%
+      dplyr::mutate(chrom=paste0("chr",chrom))
+  }else if(!chr_prefixed & str_detect(this_genome_coordinates$chrom[1],"chr")){
+    this_genome_coordinates = this_genome_coordinates %>%
+      dplyr::mutate(chrom=gsub("chr", "", chrom, ignore.case = TRUE))
+  }
+
+  # make the coordinates as data table and set keys
+  this_genome_coordinates = data.table::as.data.table(this_genome_coordinates)
+  setkey(this_genome_coordinates)
+
+  # now the maf file
+  # in case the maf file is from maftools, get the ssm as data table and set keys
+  if (class(maf)[1] == "MAF"){
+    maf=maf@data
+  }
+  maf=as.data.table(maf)
+  setkey(maf, Chromosome, Start_Position, End_Position)
+
+  # subset to only features covered in exome with provided padding
+  features_in_exome = foverlaps(maf,
+                                this_genome_coordinates,
+                                mult="first",
+                                nomatch = 0L) %>% # nomatch automatically drops those that do not overlap between DTs
+    as.data.frame() %>%
+    dplyr::select(colnames(maf)) # make sure columns and their order is consitent with the input maf
+  return(features_in_exome)
+}
+
+
+#' Consolidate a column of LymphGen data in the original Subtype.Prediction output format to the GAMBLR tidy format
+#'
+#' @param df Input data frame. 
+#' @param lymphgen_column_in The name of the column with lymphgen data to be processed. 
+#' @param lymphgen_column_out The name of the column to write the tidied results (optional). 
+#' @param relevel If TRUE, will return the output column as a factor with plot-friendly levels. 
+#'
+#' @return A data frame with a tidied lymphGen column
+#' @export
+#' @import tidyverse 
+#'
+#' @examples
+#' metadata <- get_gamble_metadata
+#' GAMBLR::tidy_lymphgen(metadata,  lymphgen_with_cnv, lymphgen_with_cnv_tidy, relevel = TRUE) 
+#' 
+tidy_lymphgen = function(df, 
+                         lymphgen_column_in = "Subtype.Prediction", 
+                         lymphgen_column_out = "Subtype.Prediction", 
+                         relevel = FALSE){
+  df = mutate(df, {{ lymphgen_column_out }} := case_when(
+    !str_detect(.data[[lymphgen_column_in]],"/")~.data[[lymphgen_column_in]],
+    str_detect(.data[[lymphgen_column_in]],"EZB")~"EZB-COMP",
+    str_detect(.data[[lymphgen_column_in]],"MCD")~"MCD-COMP",
+    str_detect(.data[[lymphgen_column_in]],"N1")~"N1-COMP",
+    str_detect(.data[[lymphgen_column_in]],"ST2")~"ST2-COMP"
+  )) 
+  if(relevel){
+    df <- df %>%
+      mutate({
+        {
+          lymphgen_column_out
+        }
+      } := factor(
+        .data[[lymphgen_column_out]], 
+        levels = c(
+          "EZB",
+          "EZB-COMP", 
+          "ST2", 
+          "ST2-COMP", 
+          "BN2", 
+          "BN2-COMP", 
+          "N1", 
+          "N1-COMP", 
+          "MCD", 
+          "MCD-COMP", 
+          "A53", 
+          "Other"
+        )
+      ))
+  }
+  return(df)
+}
+
