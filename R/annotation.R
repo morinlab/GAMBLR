@@ -7,6 +7,8 @@
 #' @param tool_name
 #' @param flavour Set to "clustered" if you want to use the blacklist for the new and improved SLMS-3 outputs (otherwise leave empty)
 #' @param genome_build The genome build projection for the variants you are working with (default is grch37)
+#' @param project_base Optional: A full path to the directory that your blacklist_file_pattern is relative to
+#' @param blacklist_file_pattern Optional: A string that contains the relative path to your blacklist file from after the project_base (i.e. results) with any wildcards surrounded with curly braces
 #' @param drop_threshold The minimum count from one of the blacklists to drop a variant
 #' @param verbose For debugging, print out a bunch of possibly useful information
 #' @param invert USE WITH CAUTION! This returns only the variants that would be dropped in the process (opposite of what you want, probably)
@@ -22,6 +24,8 @@ annotate_ssm_blacklist = function(mutations_df,
                                   annotator_name="vcf2maf",
                                   annotator_version="1.2",
                                   genome_build="grch37",
+                                  project_base,
+                                  blacklist_file_template,
                                   drop_threshold = 4,
                                   return_blacklist = FALSE,
                                   verbose = FALSE,
@@ -31,17 +35,18 @@ annotate_ssm_blacklist = function(mutations_df,
     return()
   }
   projection = genome_build
-  blacklist_template = config::get("resources")$blacklist$template
-  #whitelist_template = config::get("resources")$whitelist$template
-  #whitelist_path = glue(whitelist_template)
-  #full_whitelist_path = paste0(config::get("project_base"),whitelist_path)
-  #whitelist = read_delim(full_whitelist_path,col_names = c("whitelist_count","chrpos"),delim=" ",show_col_types = FALSE)
-  #whitelist = whitelist %>% separate(chrpos,into=c("Chromosome","Start_Position"),sep=":")
-  #whitelist = mutate(whitelist,Start_Position = as.integer(Start_Position))
+  if(missing(blacklist_file_template)){
+    blacklist_template = config::get("resources")$blacklist$template
+  }else{
+    blacklist_template = blacklist_file_template
+  }
+  if(missing(project_base)){
+    project_base = config::get("project_base")
+  }
   blacklist_files = glue(blacklist_template)
   blacklist_list = list()
   for(b in blacklist_files){
-    full_path = paste0(config::get("project_base"),b)
+    full_path = paste0(project_base,b)
     lifted_blacklist=read_tsv(full_path,col_names = c("chrpos","blacklist_count"),show_col_types = FALSE)
     lifted_blacklist = lifted_blacklist %>% separate(chrpos,into=c("Chromosome","Start_Position"),sep=":")
 
@@ -60,10 +65,8 @@ annotate_ssm_blacklist = function(mutations_df,
   if(genome_build == "hg38"){
     combined_blacklist = mutate(combined_blacklist,Chromosome = paste0("chr",Chromosome))
 
-    #whitelist = mutate(whitelist,Chromosome = paste0("chr",Chromosome))
   }
   mutations_df = left_join(mutations_df,combined_blacklist,by=c("Chromosome", "Start_Position"))
-  #mutations_df = left_join(mutations_df,whitelist,by=c("Chromosome", "Start_Position"))
 
   dropped = dplyr::filter(mutations_df,blacklist_count > drop_threshold)
   if(verbose){
