@@ -22,6 +22,8 @@ Imports:
     metaviz,
     RMariaDB,
     DBI,
+    g3viz, 
+    ggthemes, 
     maftools,
     ggbeeswarm,
     SRAdb,
