@@ -376,15 +376,6 @@ prettyOncoplot(maftools_obj = maf,
 Sometimes it can be useful to specify the order of how a specific metadata column is represented. For demonstration, in the prettyOncoplot bellow the pathology column in the metadata is reordered so that DLBCL is shown before BL. This is achieved by first converting the desired metadata column into a factor and then specifying the order of those factors. 
 
 ```{r pretty_oncoplot_reordered, warning = FALSE, message = FALSE, out.width = "100%", fig.dim = c(8,3)}
-#load meta data
-just_metadata = get_gambl_metadata()
-
-#load maf data
-maf_data = get_coding_ssm()
-
-#create maf object
-maf_obj2 = read.maf(maf_data, clinicalData = some_meta) 
-
 #define some genes of interest
 bl_genes=c("MYC", "ID3", "TP53", "ARID1A", "FBXO11", "GNA13", "TCF3", "TFAP4", "HNRNPU", "FOXO1", "CCND3", "SMARCA4", "DDX3X")
 dlbcl_genes = c("EZH2", "KMT2D", "MEF2B", "CREBBP", "MYD88")
@@ -395,19 +386,19 @@ gene_groups = c(rep("BL", length(bl_genes)), rep("DLBCL", length(dlbcl_genes)))
 names(gene_groups) = genes
 
 #filter metadata
-just_metadata = dplyr::filter(just_metadata,!lymphgen %in% c("COMPOSITE"))
+maf_metadata = dplyr::filter(maf_metadata,!lymphgen %in% c("COMPOSITE"))
 
 #convert metadata column into factor
-just_metadata$pathology = as.factor(just_metadata$pathology)
+maf_metadata$pathology = as.factor(maf_metadata$pathology)
 
 #define order of factors for selected metadata column
-just_metadata$pathology = factor(just_metadata$pathology, levels = c("DLBCL", "BL", "B-ALL", "CLL", "COMFL", "DLBCL-BL-like", "FL", "HGBL", "MCL", "PBL", "SCBC", "UNSPECIFIED"))
-just_metadata = with(just_metadata, just_metadata[order(pathology),])
+maf_metadata$pathology = factor(maf_metadata$pathology, levels = c("DLBCL", "BL", "B-ALL", "CLL", "COMFL", "DLBCL-BL-like", "FL", "HGBL", "MCL", "PBL", "SCBC", "UNSPECIFIED"))
+maf_metadata = with(maf_metadata, maf_metadata[order(pathology),])
 
 #create prettyOncoplot
-prettyOncoplot(maftools_obj = maf_obj,
+prettyOncoplot(maftools_obj = maf,
                genes = genes,
-               these_samples_metadata = just_metadata,
+               these_samples_metadata = maf_metadata,
                metadataColumns = c("pathology", "lymphgen", "sex", "EBV_status_inf", "cohort"),
                sortByColumns = c("pathology", "lymphgen", "sex", "EBV_status_inf", "cohort"),
                keepGeneOrder = TRUE, 
@@ -485,7 +476,7 @@ collated = collate_results()
 
 #join metadata and collated data.
 some_meta = left_join(some_meta, collated) %>%
-    filter(genetic_subgroup != "0") #remove genetic subgroups eqaul to 0.
+    dplyr::filter(genetic_subgroup != "0") #remove genetic subgroups eqaul to 0.
 
 #get ashm regions (grch37) and filter out a set of genes.
 some_regions = grch37_ashm_regions %>%
@@ -532,7 +523,7 @@ exclude = c("M", "F", "A", "B", "C", "D", "E", "I", "II", "IIIA", "IIIB", "FF", 
 #get B-NHL palette
 path_cols = ggsci::get_ash("b-cell")
 path_df = data.frame(Pathology = factor(names(path_cols), levels = names(path_cols)), hex = path_cols) %>%
-  filter(!Pathology %in% c("B-ALL", "PMBCL"))
+  dplyr::filter(!Pathology %in% c("B-ALL", "PMBCL"))
 
 nhl = ggplot(path_df, aes(x = Pathology, y = 0, fill = hex, label = Pathology)) +
         geom_tile(width = 0.9, height = 1) +
@@ -546,7 +537,7 @@ nhl = ggplot(path_df, aes(x = Pathology, y = 0, fill = hex, label = Pathology)) 
 #get COO palette
 coo_cols = ggsci::get_ash("coo")
 coo_df = data.frame(COO = factor(names(coo_cols), levels = names(coo_cols)), hex = coo_cols) %>%
-  filter(!COO=="U" & !COO=="UNC")
+  dplyr::filter(!COO=="U" & !COO=="UNC")
 
 coo = ggplot(coo_df, aes(x = COO, y = 0, fill = hex, label = COO)) +
         geom_tile(width = 0.9, height = 1) +
@@ -572,7 +563,7 @@ harvard = ggplot(harvard_df, aes(x = Harvard, y = 0, fill = hex, label = Harvard
 #get LymphGen palette
 lymphgen_cols = ggsci::get_ash("lymphgen")
 lymphgen_df = data.frame(LymphGen = factor(names(lymphgen_cols), levels = names(lymphgen_cols)), hex = lymphgen_cols)
-if(remove_composite){lymphgen_df = filter(lymphgen_df, LymphGen %in% c("Other", "A53", "N1", "BN2", "MCD", "ST2", "EZB", "EZB-MYC"))}
+if(remove_composite){lymphgen_df = dplyr::filter(lymphgen_df, LymphGen %in% c("Other", "A53", "N1", "BN2", "MCD", "ST2", "EZB", "EZB-MYC"))}
 
 lymphgen = ggplot(lymphgen_df, aes(x = LymphGen, y = 0, fill = hex, label = LymphGen)) +
              geom_tile(width = 0.9, height = 1) +
@@ -598,7 +589,7 @@ hmrn = ggplot(hmrn_df, aes(x = HMRN, y = 0, fill = hex, label = HMRN)) +
 #get Clinical palette
 clin_cols = ggsci::get_ash("clinical") 
 clin_df = data.frame(Clinical = factor(names(clin_cols), levels = rev(names(clin_cols))), hex = clin_cols) %>%
-  filter(!Clinical %in% exclude)
+  dplyr::filter(!Clinical %in% exclude)
 
 #clinical 1
 clin1 = head(clin_df, 13) %>% 
