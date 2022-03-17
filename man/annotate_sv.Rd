@@ -10,6 +10,8 @@ annotate_sv(
   with_chr_prefix = FALSE,
   collapse_redundant = FALSE,
   return_as = "bedpe_entrez",
+  blacklist = c(60565248, 30303126, 187728894, 101357565, 101359747, 161734970,
+    69400840, 65217851, 187728889, 188305164),
   genome_build = "grch37"
 )
 }
@@ -27,6 +29,8 @@ CHROM_A  START_A    END_A CHROM_B  START_B    END_B NAME SOMATIC_SCORE STRAND_A 
 \item{collapse_redundant}{Remove reciprocal events and only return one per event.}
 
 \item{return_as}{Stated format for returned output, default is bedpe. Other accepted output format is bed and bedpe_entrez (to keep entrez_ids for compatabillity with portal.R and cBioPortal).}
+
+\item{blacklist}{A list of regions to be removed from annotations. Default coordinates are in respect to hg19.}
 
 \item{genome_build}{Reference genome build parameter, default is grch37 (hg38 is also accepted).}
 }
