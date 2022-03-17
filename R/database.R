@@ -22,6 +22,11 @@ get_ssm_by_samples = function(these_sample_ids,
                               projection = "grch37", 
                               seq_type = "genome", 
                               flavour = ""){
+  
+  if(projection != "grch37"){
+    message("Currently, only grch37 is supported")
+    return()
+  }
 
   if(missing(these_samples_metadata)){
     these_samples_metadata = get_gambl_metadata() %>% 
@@ -69,6 +74,11 @@ get_ssm_by_sample = function(this_sample_id,
                              seq_type = "genome",
                              flavour = "",
                              verbose = FALSE){
+  
+  if(projection != "grch37"){
+    message("Currently, only grch37 is supported")
+    return()
+  }
 
  #figure out which unix_group this sample belongs to
   if(missing(these_samples_metadata)){
@@ -117,6 +127,7 @@ get_ssm_by_sample = function(this_sample_id,
   return(sample_ssm)
 }
 
+
 #' Helper function to find the production merge for a pipeline and restrict to the right file based on file permissions.
 #'
 #' @param tool_name Lowercase name of the tool (e.g. manta, slms-3).
@@ -132,6 +143,11 @@ get_ssm_by_sample = function(this_sample_id,
 get_merged_result = function(tool_name, 
                              projection = "grch37", 
                              seq_type = "genome"){
+  
+  if(projection != "grch37"){
+  message("Currently, only grch37 is supported")
+  return()
+  }
 
   base_path = config::get("project_base")
   gambl_only = paste0(base_path, "gambl/gamblr/02-merge/", tool_name, "/", seq_type, "/")
@@ -668,7 +684,12 @@ get_combined_sv = function(min_vaf = 0,
                            with_chr_prefix = FALSE,
                            projection = "grch37",
                            oncogenes){
-
+  
+  if(projection != "grch37"){
+  message("Currently, only grch37 is supported")
+  return()
+  }
+   
   base_path = config::get("project_base")
   sv_file = config::get()$results_filatfiles$sv_combined$icgc_dart
   if(projection == "hg38"){
@@ -744,6 +765,11 @@ get_manta_sv = function(min_vaf = 0.1,
                         with_chr_prefix = FALSE,
                         from_flatfile = FALSE,
                         projection = "grch37"){
+
+  if(projection != "grch37"){
+    message("Currently, only grch37 is supported")
+    return()
+  }
 
   db = config::get("database_name")
   table_name = config::get("results_tables")$sv
@@ -829,13 +855,15 @@ get_cn_states = function(regions_list,
                          region_names,
                          all_cytobands = FALSE,
                          use_cytoband_name = FALSE){
-
+  if(all_cytobands){
+    message("Currently, only grch37 is supported")
+  }
   #retrieve the CN value for this region for every segment that overlaps it
   bed2region=function(x){
     paste0(x[1], ":", as.numeric(x[2]), "-", as.numeric(x[3]))
   }
   if(all_cytobands){
-    message("this will take awhile but it does work, trust me!")
+    message("Cytobands are in respect to hg19. This will take awhile but it does work, trust me!")
     regions_bed = circlize::read.cytoband(species = "hg19")$df
     colnames(regions_bed) = c("chromosome_name", "start_position", "end_position", "name", "dunno")
     if(use_cytoband_name){

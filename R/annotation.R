@@ -122,7 +122,7 @@ annotate_igh_breakpoints = function(annotated_df,
                                     genome_build = "grch37"){
 
   if(genome_build != "grch37"){
-    message("No other references are currently supported")
+    message("Currently, only grch37 is supported")
     return()
   }
   sv_igh = dplyr::filter(annotated_df, partner == "IGH")
