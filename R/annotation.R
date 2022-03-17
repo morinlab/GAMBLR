@@ -66,7 +66,7 @@ annotate_ssm_blacklist = function(mutations_df,
     print(head(mutations_df))
     print(head(combined_blacklist))
   }
-  if(str_detect(maf_df$Chromosome, "chr")[1]){
+  if(str_detect(mutations_df$Chromosome, "chr")[1]){
     combined_blacklist = mutate(combined_blacklist,Chromosome = paste0("chr",Chromosome))
 
   }
@@ -76,7 +76,7 @@ annotate_ssm_blacklist = function(mutations_df,
 
   dropped = dplyr::filter(mutations_df,blacklist_count > drop_threshold)
   if(verbose){
-    if(length(dropped)) > 0 {
+    if(length(dropped) > 0 ){
       ndrop = length(dropped$Tumor_Sample_Barcode)
       print(dropped)
       message(paste(ndrop,"variants were dropped"))
