@@ -78,10 +78,9 @@ annotate_ssm_blacklist = function(mutations_df,
   if(verbose){
     if(length(dropped) > 0 ){
       ndrop = length(dropped$Tumor_Sample_Barcode)
-      print(dropped)
       message(paste(ndrop,"variants were dropped"))
     } else {
-      print("0 variants were dropped")
+      message("0 variants were dropped")
     }
 
   }
