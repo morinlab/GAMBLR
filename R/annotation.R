@@ -76,7 +76,7 @@ annotate_ssm_blacklist = function(mutations_df,
 
   dropped = dplyr::filter(mutations_df,blacklist_count > drop_threshold)
   if(verbose){
-    if(length(dropped)) > 0 {
+    if(length(dropped) > 0 ){
       ndrop = length(dropped$Tumor_Sample_Barcode)
       print(dropped)
       message(paste(ndrop,"variants were dropped"))
