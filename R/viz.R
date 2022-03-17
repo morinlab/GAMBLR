@@ -1564,7 +1564,7 @@ ashm_rainbow_plot = function(mutations_maf,
     }
   }
   if(!missing(classification_column)){
-    meta_arranged = arrange(metadata, pathology_rank, lymphgen) #fix this to use the actual column, FIXED?
+    meta_arranged = arrange(metadata, pathology_rank, lymphgen)
     if(!missing(exclude_classifications)){
       meta_arranged = dplyr::filter(meta_arranged,!get(classification_column) %in% exclude_classifications)
     }

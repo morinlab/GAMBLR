@@ -31,8 +31,7 @@ Imports:
     config,
     tidyverse,
     g3viz
-Remotes: 
-    morinlab/g3viz
+Remotes: morinlab/g3viz
 VignetteBuilder: knitr
 Depends: 
     R (>= 2.10)

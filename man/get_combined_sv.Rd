@@ -35,4 +35,5 @@ You can subset to events affecting certain loci using the "oncogenes" argument.
 }
 \examples{
 get_combined_sv(oncogenes = c("MYC", "BCL2", "BCL6"))
+
 }

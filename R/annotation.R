@@ -252,6 +252,7 @@ annotate_driver_ssm = function(maf_df,
 #' @param with_chr_prefix Optionally request that chromosome names are returned with a chr prefix.
 #' @param collapse_redundant Remove reciprocal events and only return one per event.
 #' @param return_as Stated format for returned output, default is bedpe. Other accepted output format is bed and bedpe_entrez (to keep entrez_ids for compatabillity with portal.R and cBioPortal).
+#' @param blacklist A list of regions to be removed from annotations. Default coordinates are in respect to hg19.
 #' @param genome_build Reference genome build parameter, default is grch37 (hg38 is also accepted).
 #'
 #' @return A data frame with annotated SVs (gene symbol and entrez ID)
@@ -273,7 +274,8 @@ annotate_sv = function(sv_data,
                        partner_bed, 
                        with_chr_prefix = FALSE, 
                        collapse_redundant = FALSE, 
-                       return_as = "bedpe_entrez", 
+                       return_as = "bedpe_entrez",
+                       blacklist = c(60565248, 30303126, 187728894, 101357565, 101359747, 161734970, 69400840, 65217851, 187728889, 188305164),
                        genome_build = "grch37"){
   
   bedpe1 = sv_data %>%
@@ -345,16 +347,13 @@ annotate_sv = function(sv_data,
   all.annotated$fusion = dplyr::pull(tidyr::unite(all.annotated, fusion, partner, gene, sep = "-"), fusion)
   all.annotated = dplyr::filter(all.annotated, !fusion %in% c("BCL6-BCL6", "CIITA-CIITA", "FOXP1-FOXP1"))
   
-  #TODO: need a better system for cataloguing and using these but this works for our current data (hg19 coordinates)
-  blacklist = c(60565248, 30303126, 187728894, 101357565, 101359747, 161734970, 69400840, 65217851, 187728889, 188305164)
-  
   all.annotated = dplyr::filter(all.annotated, !start1 %in% blacklist)
   all.annotated = dplyr::filter(all.annotated, !start2 %in% blacklist)
   
   if(return_as == "bedpe"){
     all.annotated$name = "."
     all.annotated = dplyr::select(all.annotated, chrom1, start1, end1, chrom2, start2, end2, name, score, strand1, strand2, tumour_sample_id, gene, partner, fusion)
-  }else if(return_as == "bedpe_entrez"){
+  }else if(return_as == "bedpe_entrez"){ #necessary for setting up cBioPOrtal instances (setup_study from portal.R)
     all.annotated$name = "."
     all.annotated = dplyr::select(all.annotated, chrom1, start1, end1, chrom2, start2, end2, name, score, strand1, strand2, tumour_sample_id, gene, entrez, partner, fusion)
   }else if(return_as == "bed"){

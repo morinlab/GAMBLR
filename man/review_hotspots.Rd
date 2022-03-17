@@ -26,5 +26,4 @@ Annotate MAF-like data frome with a hot_spot column indicating recurrent mutatio
 }
 \examples{
 hot_ssms = review_hotspots(annotate_hotspots(get_coding_ssm()), genes_of_interest=c("CREBBP"))
-
 }
