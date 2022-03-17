@@ -331,7 +331,7 @@ calc_mutation_frequency_sliding_windows = function(this_region,
     windows_tallied = arrange(windows_tallied, classification)
     annos = arrange(annos, classification)
   }
-  annos$sample_id = factor(annos$sample_id, levels = vunique(annos$sample_id))
+  annos$sample_id = factor(annos$sample_id, levels = unique(annos$sample_id))
   windows_tallied$sample_id = factor(windows_tallied$sample_id, levels = unique(windows_tallied$sample_id))
   if(plot_type %in% c("points", "point")){
     #add a bin at position 1 for pathology
