@@ -22,7 +22,7 @@ Imports:
     broom,
     circlize,
     ComplexHeatmap,
-    config
+    config,
     cowplot,
     data.table,
     DBI,
