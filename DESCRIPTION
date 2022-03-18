@@ -19,17 +19,33 @@ Suggests:
     testthat
 biocViews:
 Imports:
-    metaviz,
-    RMariaDB,
-    DBI,
-    maftools,
-    ggbeeswarm,
-    SRAdb,
-    GenomeInfoDb,
+    broom,
     circlize,
-    rtracklayer,
+    ComplexHeatmap,
     config,
-    tidyverse
+    cowplot,
+    data.table,
+    DBI,
+    dbplyr,
+    dplyr,
+    g3viz,
+    GenomeInfoDb,
+    ggbeeswarm,
+    ggplot2,
+    ggrepel,
+    ggsci,
+    ggthemes,
+    grid,
+    maftools,
+    metaviz,
+    reshape2,
+    RMariaDB,
+    rtracklayer,
+    S4Vectors,
+    SRAdb,
+    stats,
+    tidyverse,
+    workflowr
 VignetteBuilder: knitr
 Depends: 
     R (>= 2.10)

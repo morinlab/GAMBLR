@@ -52,7 +52,11 @@ annotate_ssm_blacklist = function(mutations_df,
     blacklist_list[[b]] = lifted_blacklist
   }
   combined_blacklist = do.call("rbind",blacklist_list)
-  combined_blacklist = mutate(combined_blacklist,Start_Position = as.integer(Start_Position))
+  # Collapse variant counts per Start_Position
+  combined_blacklist = mutate(combined_blacklist,Start_Position = as.integer(Start_Position)) %>%
+    group_by(Start_Position, Chromosome) %>%
+    summarize(blacklist_count = sum(blacklist_count)) %>%
+    ungroup()
   if(return_blacklist){
     return(combined_blacklist)
   }
@@ -61,18 +65,23 @@ annotate_ssm_blacklist = function(mutations_df,
     print(head(mutations_df))
     print(head(combined_blacklist))
   }
-  if(genome_build == "hg38"){
+  if(str_detect(mutations_df$Chromosome, "chr")[1]){
     combined_blacklist = mutate(combined_blacklist,Chromosome = paste0("chr",Chromosome))
 
   }
-  mutations_df = left_join(mutations_df,combined_blacklist,by=c("Chromosome", "Start_Position"))
+  mutations_df = left_join(mutations_df,combined_blacklist,by=c("Chromosome", "Start_Position")) %>%
+    mutate(blacklist_count = replace_na(blacklist_count, 0))
+
 
   dropped = dplyr::filter(mutations_df,blacklist_count > drop_threshold)
   if(verbose){
+    if(length(dropped) > 0 ){
+      ndrop = length(dropped$Tumor_Sample_Barcode)
+      message(paste(ndrop,"variants were dropped"))
+    } else {
+      message("0 variants were dropped")
+    }
 
-    ndrop = length(dropped$Tumor_Sample_Barcode)
-    print(dropped)
-    message(paste(ndrop,"variants were dropped"))
   }
   #drop anything that exceeds our threshold but keep NA
   mutations_df = dplyr::filter(mutations_df,is.na(blacklist_count) | blacklist_count < drop_threshold)
