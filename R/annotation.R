@@ -49,7 +49,6 @@ annotate_ssm_blacklist = function(mutations_df,
     full_path = paste0(project_base,b)
     lifted_blacklist=read_tsv(full_path,col_names = c("chrpos","blacklist_count"),show_col_types = FALSE)
     lifted_blacklist = lifted_blacklist %>% separate(chrpos,into=c("Chromosome","Start_Position"),sep=":")
-
     blacklist_list[[b]] = lifted_blacklist
   }
   combined_blacklist = do.call("rbind",blacklist_list)

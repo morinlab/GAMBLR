@@ -13,9 +13,10 @@ get_ssm_by_sample(
   these_samples_metadata,
   tool_name = "slms-3",
   projection = "grch37",
-  seq_type = "genome",
-  flavour = "",
-  verbose = FALSE
+  augmented = TRUE,
+  flavour = "clustered",
+  verbose = FALSE,
+  blacklist_
 )
 }
 \arguments{
