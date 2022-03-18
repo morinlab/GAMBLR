@@ -79,6 +79,8 @@ get_ssm_by_sample = function(this_sample_id,
   base_path=""
   if(flavour=="legacy"){
     warning("Access to the old variant calls is not currently supported in this function")
+    #To be fixed maybe if we decide it's needed. Implementation will be a lot harder
+    return()
   }else if(flavour == "clustered"){
     path_template = config::get("results_filatfiles")$ssm$template$clustered$deblacklisted
     path_complete = unname(unlist(glue(path_template)))
@@ -88,20 +90,14 @@ get_ssm_by_sample = function(this_sample_id,
       path_template = config::get("results_filatfiles")$ssm$template$clustered$augmented
       path_complete = unname(unlist(glue(path_template)))
       aug_maf_path = paste0(config::get("project_base"),path_complete)
-      print(paste("AUG:",full_maf_path))
+      print(paste("AUG:",aug_maf_path))
     }
   }else{
     warning("Currently the only flavour available to this function is 'clustered'")
   }
-
-  #maf_files = dir(maf_path,pattern=glob2rx(maf_pattern))
-  #aug_maf_files = dir(aug_maf_path,pattern=glob2rx(maf_pattern))
-
-  if(augmented && length(aug_maf_files)){
-    full_maf_path = paste0(aug_maf_path,aug_maf_files)
-  }else{
-    #when augmented maf is missing, use the default
-    full_maf_path = paste0(maf_path,maf_files)
+  if(augmented && file.exists(aug_maf_path)){
+    print(paste("augmented"))
+    full_maf_path = aug_maf_path
   }
   print(paste("using:",full_maf_path))
 
