@@ -210,8 +210,6 @@ get_ssm_by_sample = function(this_sample_id,
       message(paste(sample_ssm,"PHENO class is double"))
     }
   }
-
-
   return(sample_ssm)
 }
 
