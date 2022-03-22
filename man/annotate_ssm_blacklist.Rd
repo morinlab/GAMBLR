@@ -6,23 +6,36 @@
 \usage{
 annotate_ssm_blacklist(
   mutations_df,
-  unix_group = "gambl",
+  seq_type,
   tool_name = "slms_3",
   tool_version = "1.0",
   annotator_name = "vcf2maf",
   annotator_version = "1.2",
-  flavour = "",
   genome_build = "grch37",
+  project_base,
+  blacklist_file_template,
   drop_threshold = 4,
-  return_blacklist = FALSE
+  return_blacklist = FALSE,
+  verbose = FALSE,
+  invert = FALSE
 )
 }
 \arguments{
-\item{flavour}{Set to "clustered" if you want to use the blacklist for the new and improved SLMS-3 outputs (otherwise leave empty)}
+\item{seq_type}{The seq_type of your mutations if you prefer to apply only the corresponding blacklist (default is to use all available)}
 
-\item{genome_build}{The genome build projection for the variants you want (grch37 is the only one currently supported)}
+\item{genome_build}{The genome build projection for the variants you are working with (default is grch37)}
+
+\item{project_base}{Optional: A full path to the directory that your blacklist_file_pattern is relative to}
 
 \item{drop_threshold}{The minimum count from one of the blacklists to drop a variant}
+
+\item{verbose}{For debugging, print out a bunch of possibly useful information}
+
+\item{invert}{USE WITH CAUTION! This returns only the variants that would be dropped in the process (opposite of what you want, probably)}
+
+\item{flavour}{Set to "clustered" if you want to use the blacklist for the new and improved SLMS-3 outputs (otherwise leave empty)}
+
+\item{blacklist_file_pattern}{Optional: A string that contains the relative path to your blacklist file from after the project_base (i.e. results) with any wildcards surrounded with curly braces}
 }
 \value{
 A MAF format data frame with two new columns indicating the number of occurrences of each variant in the two blacklists

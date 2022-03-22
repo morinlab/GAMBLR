@@ -2,57 +2,92 @@
 #' Annotate and auto-drop a MAF data frame with existing blacklists to remove variants that would be dropped during the merge process
 #'
 #' @param mutations_df
+#' @param seq_type The seq_type of your mutations if you prefer to apply only the corresponding blacklist (default is to use all available)
 #' @param unix_group
 #' @param tool_name
 #' @param flavour Set to "clustered" if you want to use the blacklist for the new and improved SLMS-3 outputs (otherwise leave empty)
-#' @param genome_build The genome build projection for the variants you want (grch37 is the only one currently supported)
+#' @param genome_build The genome build projection for the variants you are working with (default is grch37)
+#' @param project_base Optional: A full path to the directory that your blacklist_file_pattern is relative to
+#' @param blacklist_file_pattern Optional: A string that contains the relative path to your blacklist file from after the project_base (i.e. results) with any wildcards surrounded with curly braces
 #' @param drop_threshold The minimum count from one of the blacklists to drop a variant
+#' @param verbose For debugging, print out a bunch of possibly useful information
+#' @param invert USE WITH CAUTION! This returns only the variants that would be dropped in the process (opposite of what you want, probably)
 #'
 #' @return A MAF format data frame with two new columns indicating the number of occurrences of each variant in the two blacklists
 #' @export
 #'
 #' @examples deblacklisted_maf_df = annotate_ssm_blacklist(original_maf_df)
 annotate_ssm_blacklist = function(mutations_df,
-                                  unix_group="gambl",
+                                  seq_type,
                                   tool_name="slms_3",
                                   tool_version="1.0",
                                   annotator_name="vcf2maf",
                                   annotator_version="1.2",
-                                  flavour="",
                                   genome_build="grch37",
+                                  project_base,
+                                  blacklist_file_template,
                                   drop_threshold = 4,
-                                  return_blacklist = FALSE){
-  if(flavour=="clustered"){
-    native_blacklist_path = paste0(config::get("project_base"),unix_group,"/",tool_name,"-",tool_version,"_",annotator_name,"-",annotator_version,"/level_3/variants_",genome_build,"_native_clean_blacklist.txt")
-    lifted_blacklist_path = paste0(config::get("project_base"),unix_group,"/",tool_name,"-",tool_version,"_",annotator_name,"-",annotator_version,"/level_3/variants_",genome_build, "_lifted_clean_blacklist.txt")
-  }else{
-    annotator_version="1.2"
-    native_blacklist_path = paste0(config::get("project_base"),unix_group,"/",tool_name,"-",tool_version,"_",annotator_name,"-",annotator_version,"/level_3/variants_",genome_build,"_native_clean_blacklist.txt")
-    lifted_blacklist_path = paste0(config::get("project_base"),unix_group,"/",tool_name,"-",tool_version,"_",annotator_name,"-",annotator_version,"/level_3/variants_",genome_build, "_lifted_clean_blacklist.txt")
+                                  return_blacklist = FALSE,
+                                  verbose = FALSE,
+                                  invert = FALSE){
+  if(missing(seq_type)){
+    message("User must specify seq_type of the mutations to select the right blacklist file. More than one seq_type can be specified as a vector if desired.")
+    return()
   }
-  lifted_blacklist=read_tsv(lifted_blacklist_path,col_names = c("chrpos","lifted_blacklist_count"),show_col_types = FALSE)
-  native_blacklist=read_tsv(native_blacklist_path,col_names = c("chrpos","native_blacklist_count"),show_col_types = FALSE)
-  native_blacklist = native_blacklist %>% separate(chrpos,into=c("Chromosome","Start_Position"),sep=":")
-  lifted_blacklist = lifted_blacklist %>% separate(chrpos,into=c("Chromosome","Start_Position"),sep=":")
-
-  lifted_blacklist = mutate(lifted_blacklist,Start_Position = as.integer(Start_Position))
-  native_blacklist = mutate(native_blacklist,Start_Position = as.integer(Start_Position))
+  projection = genome_build
+  if(missing(blacklist_file_template)){
+    blacklist_template = config::get("resources")$blacklist$template
+  }else{
+    blacklist_template = blacklist_file_template
+  }
+  if(missing(project_base)){
+    project_base = config::get("project_base")
+  }
+  blacklist_files = glue(blacklist_template)
+  blacklist_list = list()
+  for(b in blacklist_files){
+    full_path = paste0(project_base,b)
+    lifted_blacklist=read_tsv(full_path,col_names = c("chrpos","blacklist_count"),show_col_types = FALSE)
+    lifted_blacklist = lifted_blacklist %>% separate(chrpos,into=c("Chromosome","Start_Position"),sep=":")
+    blacklist_list[[b]] = lifted_blacklist
+  }
+  combined_blacklist = do.call("rbind",blacklist_list)
+  # Collapse variant counts per Start_Position
+  combined_blacklist = mutate(combined_blacklist,Start_Position = as.integer(Start_Position)) %>%
+    group_by(Start_Position, Chromosome) %>%
+    summarize(blacklist_count = sum(blacklist_count)) %>%
+    ungroup()
   if(return_blacklist){
-    return(native_blacklist)
+    return(combined_blacklist)
   }
   #join using chromosome and position
-  print(mutations_df)
-  print(native_blacklist)
-  if(genome_build == "hg38"){
-    native_blacklist = mutate(native_blacklist,Chromosome = paste0("chr",Chromosome))
-    lifted_blacklist = mutate(lifted_blacklist,Chromosome = paste0("chr",Chromosome))
+  if(verbose){
+    print(head(mutations_df))
+    print(head(combined_blacklist))
+  }
+  if(str_detect(mutations_df$Chromosome, "chr")[1]){
+    combined_blacklist = mutate(combined_blacklist,Chromosome = paste0("chr",Chromosome))
 
   }
-  mutations_df = left_join(mutations_df,native_blacklist,by=c("Chromosome", "Start_Position"))
-  mutations_df = left_join(mutations_df,lifted_blacklist,by=c("Chromosome", "Start_Position"))
+  mutations_df = left_join(mutations_df,combined_blacklist,by=c("Chromosome", "Start_Position")) %>%
+    mutate(blacklist_count = replace_na(blacklist_count, 0))
+
+
+  dropped = dplyr::filter(mutations_df,blacklist_count > drop_threshold)
+  if(verbose){
+    if(length(dropped) > 0 ){
+      ndrop = length(dropped$Tumor_Sample_Barcode)
+      message(paste(ndrop,"variants were dropped"))
+    } else {
+      message("0 variants were dropped")
+    }
+
+  }
   #drop anything that exceeds our threshold but keep NA
-  mutations_df = dplyr::filter(mutations_df,is.na(native_blacklist_count) | native_blacklist_count < drop_threshold)
-  mutations_df = dplyr::filter(mutations_df,is.na(lifted_blacklist_count) | lifted_blacklist_count < drop_threshold)
+  mutations_df = dplyr::filter(mutations_df,is.na(blacklist_count) | blacklist_count < drop_threshold)
+  if(invert){
+    return(dropped)
+  }
   return(mutations_df)
 }
 

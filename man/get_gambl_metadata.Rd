@@ -5,12 +5,14 @@
 \title{Get GAMBL metadata}
 \usage{
 get_gambl_metadata(
-  seq_type_filter = "genome",
+  seq_type_filter = c("genome", "capture"),
   tissue_status_filter = c("tumour"),
   case_set,
   remove_benchmarking = TRUE,
   with_outcomes = TRUE,
   from_flatfile = TRUE,
+  sample_flatfile = "",
+  biopsy_flatfile = "",
   only_available = TRUE
 )
 }
@@ -27,6 +29,10 @@ get_gambl_metadata(
 
 \item{from_flatfile}{New default is to use the metadata in the flatfiles from your clone of the repo. Can be over-ridden to use the database
 embargoed cases (current options: 'BLGSP-study', 'FL-study', 'DLBCL-study', 'FL-DLBCL-study', 'FL-DLBCL-all', 'DLBCL-unembargoed', 'BL-DLBCL-manuscript', 'MCL','MCL-CLL')}
+
+\item{sample_flatfile}{Optionally provide the full path to a samples table to use instead of the default}
+
+\item{biopsy_flatfile}{Optionally provide the full path to a biopsy table to use instead of the default}
 
 \item{only_available}{If TRUE, will remove samples with FALSE or NA in the bam_available column (default: TRUE)}
 }
