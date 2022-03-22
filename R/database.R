@@ -38,6 +38,9 @@ get_ssm_by_patients = function(these_patient_ids,
                               flavour="clustered",
                               min_read_support=3,
                               subset_from_merge=TRUE){
+  if(!subset_from_merge){
+    message("WARNING: on-the-fly merges can be extremely slow and consume a lot of memory. Use at your own risk. ")
+  }
   augmented = TRUE
   #always requires augmented MAFs to ensure all variants from the patient are included
   to_exclude = get_excluded_samples(tool_name)
@@ -97,24 +100,26 @@ get_ssm_by_samples = function(these_sample_ids,
   }
   #ensure we only have sample_id that are in the remaining metadata (no excluded/unavailable samples)
   these_sample_ids = these_sample_ids[which(these_sample_ids %in% these_samples_metadata$sample_id)]
-  if(subset_from_merge){
-    # TODO: Fix this to refer to the full merge instead of one sample per patient once that merge exists.
-    maf_template = "all_the_things/slms_3-1.0_vcf2maf-1.3/{seq_type}--projection/deblacklisted/maf/all_slms-3--{projection}.maf"
-    maf_path = glue::glue(maf_template)
-    message(paste("using existing merge:",maf_path))
-    full_maf_path =  paste0(config::get("project_base"),maf_path)
-    message(paste("using existing merge:",full_maf_path))
-    maf_df_merge = fread_maf(full_maf_path) %>% dplyr::filter(Tumor_Sample_Barcode %in% these_sample_ids)
-  }else{
-    maf_df_list = list()
-    for(this_sample in these_sample_ids){
-      maf_df = get_ssm_by_sample(this_sample,these_samples_metadata,tool_name,projection,augmented,flavour,min_read_support)
-      if(class(maf_df$PHENO)=="double"){
-        message(paste(maf_df,"PHENO class is double"))
+  if(flavour=="legacy"){
+    warning("I lied. Access to the old variant calls is not currently supported in this function")
+    # TODO: implement loading of the old merged MAF under icgc_dart... vcf2maf-1.2 ..level_3 as per the other from_flatfile functions
+    return()
+  }else if(flavour=="clustered"){
+    if(subset_from_merge){
+      maf_template = "all_the_things/slms_3-1.0_vcf2maf-1.3/{seq_type}--projection/deblacklisted/augmented_maf/all_slms-3--{projection}.maf"
+      maf_path = glue::glue(maf_template)
+      message(paste("using existing merge:",maf_path))
+      full_maf_path =  paste0(config::get("project_base"),maf_path)
+      message(paste("using existing merge:",full_maf_path))
+      maf_df_merge = fread_maf(full_maf_path) %>% dplyr::filter(Tumor_Sample_Barcode %in% these_sample_ids)
+    }else{
+      maf_df_list = list()
+      for(this_sample in these_sample_ids){
+        maf_df = get_ssm_by_sample(this_sample,these_samples_metadata,tool_name,projection,augmented,flavour,min_read_support)
+        maf_df_list[[this_sample]]=maf_df
       }
-      maf_df_list[[this_sample]]=maf_df
+      maf_df_merge = bind_rows(maf_df_list)
     }
-    maf_df_merge = bind_rows(maf_df_list)
   }
   return(maf_df_merge)
 }
@@ -174,6 +179,7 @@ get_ssm_by_sample = function(this_sample_id,
   base_path=""
   if(flavour=="legacy"){
     warning("Access to the old variant calls is not currently supported in this function")
+    warning("Use get_ssm_by_samples to access the legacy flavour")
     # To be fixed maybe if we decide it's needed.
     # Implementation of backwards compatability will be a lot harder because of the old naming scheme.
     return()
@@ -193,9 +199,6 @@ get_ssm_by_sample = function(this_sample_id,
   if(augmented && file.exists(aug_maf_path)){
     full_maf_path = aug_maf_path
     sample_ssm = fread_maf(full_maf_path)
-    if(class(sample_ssm$PHENO)=="double"){
-      message(paste(sample_ssm,"PHENO class is double"))
-    }
     if(min_read_support){
       # drop poorly supported reads but only from augmented MAF
       sample_ssm = dplyr::filter(sample_ssm,t_alt_count >= min_read_support)
@@ -206,9 +209,6 @@ get_ssm_by_sample = function(this_sample_id,
       return()
     }
     sample_ssm = fread_maf(full_maf_path)
-    if(class(sample_ssm$PHENO)=="double"){
-      message(paste(sample_ssm,"PHENO class is double"))
-    }
   }
   return(sample_ssm)
 }
