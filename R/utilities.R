@@ -861,7 +861,7 @@ collate_ssm_results = function(sample_table,from_flatfile=TRUE,include_silent=FA
   if(!include_silent){
     coding_class=coding_class[coding_class != "Silent"]
   }
-  
+
   #iterate over every sample and compute some summary stats from its MAF
   if(from_flatfile){
     base_path = config::get("project_base")
@@ -986,7 +986,7 @@ assign_cn_to_ssm = function(this_sample,
   if(!include_silent){
     coding_class=coding_class[coding_class != "Silent"]
   }
-  
+
   if(!missing(maf_file)){
     maf_sample = fread_maf(maf_file) %>%
       dplyr::mutate(Chromosome = gsub("chr","",Chromosome))
@@ -1664,6 +1664,7 @@ get_gambl_colours = function(classification="all",alpha=1){
       "DLBCL-BL-like"="#34C7F4",
       "pre-HT"="#754F5B",
       "PMBL"= "#227C9D",
+      "PMBCL"="#227C9D",
       "FL"="#EA8368",
       "no-HT"="#EA8368",
       "COMFL"="#8BBC98",
