@@ -475,14 +475,12 @@ get_gambl_metadata = function(seq_type_filter = c("genome","capture"),
   #  TRUE ~ lymphgen_cnv_noA53
   #))
 
-  all_meta = mutate(all_meta,lymphgen=case_when(
-    !str_detect(lymphgen_cnv_noA53,"/")~lymphgen_cnv_noA53,
-    str_detect(lymphgen_cnv_noA53,"EZB")~"EZB-COMP",
-    str_detect(lymphgen_cnv_noA53,"MCD")~"MCD-COMP",
-    str_detect(lymphgen_cnv_noA53,"N1")~"N1-COMP",
-    str_detect(lymphgen_cnv_noA53,"ST2")~"ST2-COMP",
-    TRUE ~ "COMPOSITE"
-  ))
+  all_meta = GAMBLR::tidy_lymphgen(all_meta,
+              lymphgen_column_in = "lymphgen_cnv_noA53",
+              lymphgen_column_out = "lymphgen",
+              relevel=TRUE)
+
+  all_meta = GAMBLR::collate_lymphgen(all_meta, verbose=FALSE)
 
   all_meta = mutate(all_meta,Tumor_Sample_Barcode=sample_id) #duplicate for convenience
   all_meta = all_meta %>% dplyr::mutate(consensus_coo_dhitsig = case_when(

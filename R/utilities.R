@@ -2144,18 +2144,18 @@ genome_to_exome = function(maf,
 
 #' Consolidate a column of LymphGen data in the original Subtype.Prediction output format to the GAMBLR tidy format
 #'
-#' @param df Input data frame. 
-#' @param lymphgen_column_in The name of the column with lymphgen data to be processed. 
-#' @param lymphgen_column_out The name of the column to write the tidied results (optional). 
-#' @param relevel If TRUE, will return the output column as a factor with plot-friendly levels. 
+#' @param df Input data frame.
+#' @param lymphgen_column_in The name of the column with lymphgen data to be processed.
+#' @param lymphgen_column_out The name of the column to write the tidied results (optional).
+#' @param relevel If TRUE, will return the output column as a factor with plot-friendly levels.
 #'
 #' @return A data frame with a tidied lymphGen column
 #' @export
-#' @import tidyverse 
+#' @import tidyverse
 #'
 #' @examples
-#' metadata <- get_gamble_metadata
-#' GAMBLR::tidy_lymphgen(metadata,  lymphgen_with_cnv, lymphgen_with_cnv_tidy, relevel = TRUE) 
+#' metadata <- get_gambl_metadata()
+#' GAMBLR::tidy_lymphgen(metadata,  "lymphgen_with_cnv", "lymphgen_with_cnv_tidy", relevel = TRUE)
 #' 
 tidy_lymphgen = function(df, 
                          lymphgen_column_in = "Subtype.Prediction", 
@@ -2166,8 +2166,9 @@ tidy_lymphgen = function(df,
     str_detect(.data[[lymphgen_column_in]],"EZB")~"EZB-COMP",
     str_detect(.data[[lymphgen_column_in]],"MCD")~"MCD-COMP",
     str_detect(.data[[lymphgen_column_in]],"N1")~"N1-COMP",
-    str_detect(.data[[lymphgen_column_in]],"ST2")~"ST2-COMP"
-  )) 
+    str_detect(.data[[lymphgen_column_in]],"ST2")~"ST2-COMP",
+    str_detect(.data[[lymphgen_column_in]],"BN2")~"BN2-COMP"
+  ))
   if(relevel){
     df <- df %>%
       mutate({
@@ -2175,19 +2176,19 @@ tidy_lymphgen = function(df,
           lymphgen_column_out
         }
       } := factor(
-        .data[[lymphgen_column_out]], 
+        .data[[lymphgen_column_out]],
         levels = c(
           "EZB",
-          "EZB-COMP", 
-          "ST2", 
-          "ST2-COMP", 
-          "BN2", 
-          "BN2-COMP", 
-          "N1", 
-          "N1-COMP", 
-          "MCD", 
-          "MCD-COMP", 
-          "A53", 
+          "EZB-COMP",
+          "ST2",
+          "ST2-COMP",
+          "BN2",
+          "BN2-COMP",
+          "N1",
+          "N1-COMP",
+          "MCD",
+          "MCD-COMP",
+          "A53",
           "Other"
         )
       ))
@@ -2195,3 +2196,84 @@ tidy_lymphgen = function(df,
   return(df)
 }
 
+#' Supplement the "lymphgen" column of the metadata with classification for additional samples.
+#' Expects at least to have columns "patient_id" to bind on, and "lymphgen" to supplement the data on.
+#'
+#'
+#' @param sample_table Input data frame with metadata.
+#' @param derived_data_path Optional argument specifying the path to a folder with files following the pattern *lymphgen.txt
+#'
+#' @return A data frame with a supplemented lymphGen column
+#' @export
+#' @import tidyverse
+#'
+#' @examples
+#' metadata <- get_gambl_metadata()
+#' GAMBLR::collate_lymphgen(metadata)
+#'
+collate_lymphgen = function(sample_table,
+                            derived_data_path = "",
+                            verbose = TRUE) {
+  if (derived_data_path == "") {
+    path_to_files = config::get("derived_and_curated")
+    project_base = config::get("project_base")
+    derived_data_path = paste0(project_base, path_to_files)
+    if (verbose) {
+      message(
+        paste0(
+          "No external data path was provided, using default path ",
+          derived_data_path
+        )
+      )
+    }
+  } else{
+    if (verbose) {
+      message(paste0("Using the specified path ", derived_data_path))
+    }
+  }
+
+  lymphgen_files = dir(derived_data_path, pattern = "*lymphgen.txt")
+  if (length(lymphgen_files) > 0) {
+    if (verbose) {
+      message(paste0(
+        "Found these file(s) with lymphgen information: ",
+        lymphgen_files
+      ))
+    }
+  } else{
+    if (verbose) {
+      message(
+        paste0(
+          "No file(s) with lymphgen information were found at the path",
+          lymphgen_files
+        )
+      )
+      message(
+        "If you expected the data to be present at the specified location, please ensure they follow naming convention *.lymphgen.txt"
+      )
+    }
+  }
+
+  for (f in lymphgen_files) {
+    full = paste0(project_base, path_to_files, f)
+    this_data = suppressMessages(read_tsv(full, comment = "#"))
+    sample_table =
+      sample_table %>% left_join(this_data, by = 'patient_id', suffix = c(".X", ".Y")) %>%
+      split.default(gsub('.[XY]', '', names(.))) %>%
+      map_dfc(~ if (ncol(.x) == 1)
+        .x
+        else
+          mutate(.x, !!sym(gsub(
+            '.X', '', names(.x)[1]
+          )) := coalesce(!!!syms(names(
+            .x
+          ))))) %>%
+      select(-contains('.'))
+    sample_table = tidy_lymphgen(sample_table,
+                                 lymphgen_column_in = "lymphgen",
+                                 lymphgen_column_out = "lymphgen",
+                                 relevel=TRUE)
+  }
+
+  return(sample_table)
+}
