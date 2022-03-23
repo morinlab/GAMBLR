@@ -1216,7 +1216,7 @@ estimate_purity = function(in_maf,
   }else{
     # If no seg file was provided and assume_diploid paramtere is set to true,
     if(assume_diploid){
-      CN_new = assign_cn_to_ssm(maf_file = in_maf, assume_diploid = TRUE, coding_only = coding_only, genes = genes)
+      CN_new <- assign_cn_to_ssm(maf_file = in_maf, assume_diploid = TRUE,coding_only=coding_only,genes=genes)$maf
     }
   }
   # Change any homozygous deletions (CN = 0) to 1 for calculation purposes
@@ -1251,10 +1251,11 @@ estimate_purity = function(in_maf,
   # Calculate purity, and if the number is larger 1 (100%) use the VAF calue instead
   merged_CN_neut = merged_CN %>%
     dplyr::filter(merged_CN$CN < 3) %>%
-    dplyr::mutate(Purity = (CN*VAF)/Ploidy) %>%
-    dplyr::mutate(Purity = ifelse(Purity > 1, VAF, Purity))
+    dplyr::mutate(Purity = (CN*VAF)/Ploidy) #%>%
+    #dplyr::mutate(Purity = ifelse(Purity > 1, VAF, Purity))
 
     # Calculate a temporary purity based on the mean of these purity values
+    merged_CN_neut <- merged_CN_neut %>% drop_na(Purity)
     mean_neut_purity = mean(merged_CN_neut$Purity)
 
   # For CN of 3 or larger:
@@ -1266,7 +1267,7 @@ estimate_purity = function(in_maf,
     merged_CN_gain = merged_CN %>%
       dplyr::filter(merged_CN$CN > 2) %>%
       dplyr::mutate(Purity = (VAF*2)) %>%
-      dplyr::mutate(Purity = ifelse(Purity > 1, VAF, Purity)) %>%
+      #dplyr::mutate(Purity = ifelse(Purity > 1, VAF, Purity)) %>%
       group_by(Chrom_pos) %>%
       slice_head() %>%
       dplyr::mutate(Assumed_CN = 2) %>%
@@ -1275,7 +1276,7 @@ estimate_purity = function(in_maf,
     merged_CN_gain = merged_CN %>%
       dplyr::filter(merged_CN$CN > 2) %>%
       dplyr::mutate(Purity = (CN*VAF)/Ploidy) %>%
-      dplyr::mutate(Purity = ifelse(Purity > 1, VAF, Purity)) %>%
+      #dplyr::mutate(Purity = ifelse(Purity > 1, VAF, Purity)) %>%
       group_by(Chrom_pos) %>%
       slice(which.min(abs(Purity - mean_neut_purity)))
   }
@@ -1285,6 +1286,11 @@ estimate_purity = function(in_maf,
 
   # Estimate the mean of all purity values from all available copy number states
   sample_purity_estimation = mean(CN_final$Purity)
+  
+  # If the final sample purity is above 1, make it equal to 1
+  if(sample_purity_estimation > 1){
+    sample_purity_estimation = 1
+  }
 
   # Calculate CCF (cancer cell fraction) 2 ways:
    ## With the maximum purity estimation for the mutations in the same (largest value will be 1 for the mutation with the highest purity estimation)
@@ -1810,6 +1816,7 @@ get_gambl_colours = function(classification = "all",
       "MM"="#CC9A42",
       "SCBC"="#8c9c90",
       "UNSPECIFIED"="#cfba7c",
+      "OTHER"="#cfba7c",
       "MZL"="#065A7F"
   )
   all_colours[["coo"]] = c(
@@ -2304,4 +2311,141 @@ genome_to_exome = function(maf,
     as.data.frame() %>%
     dplyr::select(colnames(maf)) # make sure columns and their order is consitent with the input maf
   return(features_in_exome)
+}
+
+
+#' Consolidate a column of LymphGen data in the original Subtype.Prediction output format to the GAMBLR tidy format
+#'
+#' @param df Input data frame.
+#' @param lymphgen_column_in The name of the column with lymphgen data to be processed.
+#' @param lymphgen_column_out The name of the column to write the tidied results (optional).
+#' @param relevel If TRUE, will return the output column as a factor with plot-friendly levels.
+#'
+#' @return A data frame with a tidied lymphGen column
+#' @export
+#' @import tidyverse
+#'
+#' @examples
+#' metadata <- get_gambl_metadata()
+#' GAMBLR::tidy_lymphgen(metadata,  "lymphgen_with_cnv", "lymphgen_with_cnv_tidy", relevel = TRUE)
+#' 
+tidy_lymphgen = function(df, 
+                         lymphgen_column_in = "Subtype.Prediction", 
+                         lymphgen_column_out = "Subtype.Prediction", 
+                         relevel = FALSE){
+  df = mutate(df, {{ lymphgen_column_out }} := case_when(
+    !str_detect(.data[[lymphgen_column_in]],"/")~.data[[lymphgen_column_in]],
+    str_detect(.data[[lymphgen_column_in]],"EZB")~"EZB-COMP",
+    str_detect(.data[[lymphgen_column_in]],"MCD")~"MCD-COMP",
+    str_detect(.data[[lymphgen_column_in]],"N1")~"N1-COMP",
+    str_detect(.data[[lymphgen_column_in]],"ST2")~"ST2-COMP",
+    str_detect(.data[[lymphgen_column_in]],"BN2")~"BN2-COMP"
+  ))
+  if(relevel){
+    df <- df %>%
+      mutate({
+        {
+          lymphgen_column_out
+        }
+      } := factor(
+        .data[[lymphgen_column_out]],
+        levels = c(
+          "EZB",
+          "EZB-COMP",
+          "ST2",
+          "ST2-COMP",
+          "BN2",
+          "BN2-COMP",
+          "N1",
+          "N1-COMP",
+          "MCD",
+          "MCD-COMP",
+          "A53",
+          "Other"
+        )
+      ))
+  }
+  return(df)
+}
+
+#' Supplement the "lymphgen" column of the metadata with classification for additional samples.
+#' Expects at least to have columns "patient_id" to bind on, and "lymphgen" to supplement the data on.
+#'
+#'
+#' @param sample_table Input data frame with metadata.
+#' @param derived_data_path Optional argument specifying the path to a folder with files following the pattern *lymphgen.txt
+#'
+#' @return A data frame with a supplemented lymphGen column
+#' @export
+#' @import tidyverse
+#'
+#' @examples
+#' metadata <- get_gambl_metadata()
+#' GAMBLR::collate_lymphgen(metadata)
+#'
+collate_lymphgen = function(sample_table,
+                            derived_data_path = "",
+                            verbose = TRUE) {
+  if (derived_data_path == "") {
+    path_to_files = config::get("derived_and_curated")
+    project_base = config::get("project_base")
+    derived_data_path = paste0(project_base, path_to_files)
+    if (verbose) {
+      message(
+        paste0(
+          "No external data path was provided, using default path ",
+          derived_data_path
+        )
+      )
+    }
+  } else{
+    if (verbose) {
+      message(paste0("Using the specified path ", derived_data_path))
+    }
+  }
+
+  lymphgen_files = dir(derived_data_path, pattern = "*lymphgen.txt")
+  if (length(lymphgen_files) > 0) {
+    if (verbose) {
+      message(paste0(
+        "Found these file(s) with lymphgen information: ",
+        lymphgen_files
+      ))
+    }
+  } else{
+    if (verbose) {
+      message(
+        paste0(
+          "No file(s) with lymphgen information were found at the path",
+          lymphgen_files
+        )
+      )
+      message(
+        "If you expected the data to be present at the specified location, please ensure they follow naming convention *.lymphgen.txt"
+      )
+    }
+  }
+
+  for (f in lymphgen_files) {
+    full = paste0(project_base, path_to_files, f)
+    this_data = suppressMessages(read_tsv(full, comment = "#"))
+    sample_table =
+      sample_table %>% left_join(this_data, by = 'patient_id', suffix = c(".X", ".Y")) %>%
+      split.default(gsub('.[XY]', '', names(.))) %>%
+      map_dfc(~ if (ncol(.x) == 1)
+        .x
+        else
+          mutate(.x, !!sym(gsub(
+            '.X', '', names(.x)[1]
+          )) := coalesce(!!!syms(names(
+            .x
+          ))))) %>%
+      select(-contains('.'))
+    sample_table = tidy_lymphgen(sample_table,
+                                 lymphgen_column_in = "lymphgen",
+                                 lymphgen_column_out = "lymphgen",
+                                 relevel=TRUE)
+  }
+
+  return(sample_table)
 }

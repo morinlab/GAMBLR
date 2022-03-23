@@ -525,33 +525,44 @@ get_gambl_metadata = function(seq_type_filter = c("genome","capture"),
     }
   }
 
-  all_meta = mutate(all_meta, lymphgen = case_when(!str_detect(lymphgen_cnv_noA53, "/")~lymphgen_cnv_noA53,
-                                                   str_detect(lymphgen_cnv_noA53, "EZB")~"EZB-COMP",
-                                                   str_detect(lymphgen_cnv_noA53, "MCD")~"MCD-COMP",
-                                                   str_detect(lymphgen_cnv_noA53, "N1")~"N1-COMP",
-                                                   str_detect(lymphgen_cnv_noA53, "ST2")~"ST2-COMP",
-                                                   TRUE ~ "COMPOSITE"))
+  #add some derivative columns that simplify and consolidate some of the others (DLBCL-specific)
+  #all_meta = all_meta %>% dplyr::mutate(lymphgen = case_when(
+  #  pathology != "DLBCL" ~ pathology,
+  #  str_detect(lymphgen_cnv_noA53,"/") ~ "COMPOSITE",
+  #  TRUE ~ lymphgen_cnv_noA53
+  #))
 
-  all_meta = mutate(all_meta, Tumor_Sample_Barcode = sample_id) #duplicate for convenience
-  all_meta = all_meta %>% 
-    dplyr::mutate(consensus_coo_dhitsig = case_when(pathology != "DLBCL" ~ pathology,
-                                                    COO_consensus == "ABC" ~ COO_consensus,
-                                                    DLBCL90_dhitsig_call == "POS" ~ "DHITsigPos",
-                                                    DLBCL90_dhitsig_call == "NEG" ~ "DHITsigNeg",
-                                                    DHITsig_PRPS_class == "DHITsigPos" ~ "DHITsigPos",
-                                                    DHITsig_PRPS_class == "DHITsig+" ~ "DHITsigPos",
-                                                    DHITsig_PRPS_class == "DHITsigNeg" ~ "DHITsigNeg",
-                                                    DHITsig_PRPS_class == "DHITsig-" ~ "DHITsigNeg",
-                                                    DHITsig_PRPS_class == "UNCLASS" ~ "DHITsigPos",
-                                                    TRUE ~ "NA"))
+  all_meta = GAMBLR::tidy_lymphgen(all_meta,
+              lymphgen_column_in = "lymphgen_cnv_noA53",
+              lymphgen_column_out = "lymphgen",
+              relevel=TRUE)
 
-  all_meta = all_meta %>% 
-    dplyr::mutate(DHITsig_consensus = case_when(DHITsig_consensus == "NEG" ~ "DHITsigNeg",
-                                                DHITsig_consensus == "POS" ~ "DHITsigPos",
-                                                DHITsig_consensus == "UNCLASS" ~ "DHITsig-IND",
-                                                DHITsig_consensus == "DHITsigNeg" ~ DHITsig_consensus,
-                                                DHITsig_consensus == "DHITsigPos" ~ DHITsig_consensus,
-                                                TRUE ~ "NA"))
+  all_meta = GAMBLR::collate_lymphgen(all_meta, verbose=FALSE)
+
+# "catchall" pathology for those that need review
+all_meta = all_meta %>%
+  mutate(pathology = ifelse(nchar(pathology) > 15, "OTHER", pathology))
+
+  all_meta = mutate(all_meta,Tumor_Sample_Barcode=sample_id) #duplicate for convenience
+  all_meta = all_meta %>% dplyr::mutate(consensus_coo_dhitsig = case_when(
+    pathology != "DLBCL" ~ pathology,
+    COO_consensus == "ABC" ~ COO_consensus,
+    DLBCL90_dhitsig_call == "POS" ~ "DHITsigPos",
+    DLBCL90_dhitsig_call == "NEG" ~ "DHITsigNeg",
+    DHITsig_PRPS_class == "DHITsigPos" ~ "DHITsigPos",
+    DHITsig_PRPS_class == "DHITsig+" ~ "DHITsigPos",
+    DHITsig_PRPS_class == "DHITsigNeg" ~ "DHITsigNeg",
+    DHITsig_PRPS_class == "DHITsig-" ~ "DHITsigNeg",
+    DHITsig_PRPS_class == "UNCLASS" ~ "DHITsigPos",
+    TRUE ~ "NA"
+  ))
+  all_meta = all_meta %>% dplyr::mutate(DHITsig_consensus = case_when(
+    DHITsig_consensus == "NEG" ~ "DHITsigNeg",
+    DHITsig_consensus == "POS" ~ "DHITsigPos",
+    DHITsig_consensus == "UNCLASS" ~ "DHITsig-IND",
+    DHITsig_consensus == "DHITsigNeg" ~ DHITsig_consensus,
+    DHITsig_consensus == "DHITsigPos" ~ DHITsig_consensus,
+    TRUE ~ "NA"))
 
   #assign a rank to each pathology for consistent and sensible ordering
   all_meta = all_meta %>% 
