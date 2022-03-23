@@ -131,11 +131,13 @@ get_coding_ssm_status = function(gene_symbols,
   # call it once so the object can be reused if user wants to annotate hotspots
   if(! missing(maf_data)){
     coding_ssm = maf_data %>%
-                        dplyr::filter(Variant_Classification %in% coding_class)
+      dplyr::filter(Variant_Classification %in% coding_class)
+
   }else if (! is.null(maf_path) ){
     coding_ssm = fread_maf(maf_path)
     coding_ssm = coding_ssm %>%
       dplyr::filter(Variant_Classification %in% coding_class)
+
   }else{
     coding_ssm = maf_data
   }
@@ -509,6 +511,7 @@ annotate_hotspots = function(mutation_maf,
     all_full_path = paste0(base_path, abase, "/NO_SILENT_MUTS/", abase, "_elements_results.txt")
     clust_hotspot = read_tsv(clust_full_path)
     all_hotspot = read_tsv(all_full_path)
+
   clustered_hotspots = clust_hotspot %>% 
     dplyr::select(-RANK) %>% 
     dplyr::filter(N_SAMPLES > recurrence_min & P < p_thresh)
@@ -690,7 +693,7 @@ sv_to_custom_track = function(sv_bedpe,
   print(head(sv_data1))
   print(head(sv_data2))
   colnames(sv_data1) = c("chrom", "start", "end", "sample_id", "annotation", "fusion")
-  colnames(sv_data2)=c("chrom", "start", "end", "sample_id", "annotation", "fusion")
+  colnames(sv_data2) = c("chrom", "start", "end", "sample_id", "annotation", "fusion")
   sv_data = bind_rows(sv_data1, sv_data2)
   sv_data = mutate(sv_data, end = end + 10)
   }else{
@@ -1216,7 +1219,7 @@ estimate_purity = function(in_maf,
   }else{
     # If no seg file was provided and assume_diploid paramtere is set to true,
     if(assume_diploid){
-      CN_new <- assign_cn_to_ssm(maf_file = in_maf, assume_diploid = TRUE,coding_only=coding_only,genes=genes)$maf
+      CN_new = assign_cn_to_ssm(maf_file = in_maf, assume_diploid = TRUE, coding_only = coding_only, genes = genes)$maf
     }
   }
   # Change any homozygous deletions (CN = 0) to 1 for calculation purposes
@@ -1255,7 +1258,9 @@ estimate_purity = function(in_maf,
     #dplyr::mutate(Purity = ifelse(Purity > 1, VAF, Purity))
 
     # Calculate a temporary purity based on the mean of these purity values
-    merged_CN_neut <- merged_CN_neut %>% drop_na(Purity)
+    merged_CN_neut <- merged_CN_neut %>% 
+      drop_na(Purity)
+
     mean_neut_purity = mean(merged_CN_neut$Purity)
 
   # For CN of 3 or larger:
@@ -1681,7 +1686,7 @@ get_gambl_colours = function(classification = "all",
 
   all_colours = list()
   everything = c()
-  blood_cols=ggsci::get_ash("blood")
+  blood_cols = ggsci::get_ash("blood")
 
   all_colours[["hmrn"]] = c("BCL2-MYC" = "#52000F",
                             "BCL2" = "#721F0F",

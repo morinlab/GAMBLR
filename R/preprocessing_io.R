@@ -4,16 +4,19 @@ coding_class = c("Frame_Shift_Del", "Frame_Shift_Ins", "In_Frame_Del", "In_Frame
 
 #' Get the details including file paths for the anticipated outputs from a pipeline or tool
 #'
-#' @param Optionally provide a data frame with all file details
-#' @param tool_name
-#' @param unix_group
+#' @param targ_df Optionally provide a data frame with all file details
+#' @param tool_name The tool or pipeline that generated the files (should be the same for all)
+#' @param unix_group The unix group (should be the same for all)
 #' @param filename_end_pattern Optionally specify a pattern to search for the files among a longer set of files in the outputs
 #' @param update_db Set to TRUE to overwrite any existing rows in the table for this tool/unix_group combination
+#' @param target_path Path to targets.
 #'
 #' @return
 #' @export
 #'
 #' @examples
+#' ex_outs = find_expected_outputs(my_df, "slims_3", gambl")
+#'
 find_expected_outputs = function(targ_df,
                                  tool_name,
                                  unix_group,
@@ -48,6 +51,7 @@ find_expected_outputs = function(targ_df,
     targ_df$output_type = "bedpe"
     print(targ_df)
     print(target_path)
+
   }else if(tool_name == "gridss"){
     filename_end_pattern = ".gridss_somatic_filtered.bedpe"
     
@@ -55,7 +59,7 @@ find_expected_outputs = function(targ_df,
       dplyr::filter(str_detect(file, pattern = filename_end_pattern))
     
     targ_df = mutate(targ_df, file_path = paste0(repo_base, file)) %>%
-      separate(file, sep = "/", into =c("results", "unix_group", "tool_version", "outputs", "type", "seq_genome", "detail", "filename"))
+      separate(file, sep = "/", into = c("results", "unix_group", "tool_version", "outputs", "type", "seq_genome", "detail", "filename"))
     
     targ_df = separate(targ_df, seq_genome, sep = "--", into = c("seq_type", "genome_build")) %>%
       dplyr::select(-results, -type, -detail, -outputs) %>%
@@ -82,12 +86,12 @@ find_expected_outputs = function(targ_df,
 
     #merge with incoming data
     print(summarized)
-    #to_write = rbind(something,targ_df)
+    #to_write = rbind(something, targ_df)
     dbExecute(con, update_q, immediate = TRUE)
     dbWriteTable(con, table_name, targ_df, append = TRUE)
 
-    #dbExecute(con, update_q,immediate=TRUE)
-    #dbWriteTable(con,table_name,expected_manta,append=TRUE)
+    #dbExecute(con, update_q, immediate = TRUE)
+    #dbWriteTable(con, table_name, expected_manta, append = TRUE)
     DBI::dbDisconnect(con)
   }
   return(targ_df)
@@ -103,6 +107,8 @@ find_expected_outputs = function(targ_df,
 #' @import tidyverse DBI
 #'
 #' @examples
+#' results = populate_tool_results("slims_3")
+#'
 populate_tool_results = function(){
 
   #IMPORTANT TODO: This function should only ever work with samples that exist in the metadata
@@ -122,7 +128,7 @@ populate_tool_results = function(){
 
 #' Title
 #'
-#' @param tool
+#' @param tool Name of tool to get results from
 #' @param genome_build A list of all genome builds to process
 #' @param unix_group A list of all unix groups to process
 #' @param include_silent Logical parameter indicating whether to include siment mutations into coding mutations. Default is FALSE
@@ -131,6 +137,8 @@ populate_tool_results = function(){
 #' @export
 #'
 #' @examples
+#' tool_results = populate_each_tool_result("smlims_3", "grch37", "gambl", FALSE)
+#'
 populate_each_tool_result = function(tool,
                                      genome_builds,
                                      unix_groups,
@@ -183,9 +191,9 @@ populate_each_tool_result = function(tool,
       
       seq_data=sequenza_files %>%
         purrr::map(read_tsv) %>% #read each file into a list of tibbles
-        purrr::map(head,1) %>% #just keep the first line
+        purrr::map(head, 1) %>% #just keep the first line
         purrr::reduce(rbind) %>% #rbind the elements all back into one
-        dplyr::rename(sequenza_cellularity=cellularity,sequenza_ploidy = ploidy) #change the column names
+        dplyr::rename(sequenza_cellularity = cellularity, sequenza_ploidy = ploidy) #change the column names
 
       return(seq_data)
     }
@@ -336,6 +344,7 @@ populate_each_tool_result = function(tool,
         purrr::map(read_tsv) %>%
         purrr::reduce(rbind) %>%
         dplyr::rename(battenberg_cellularity = cellularity, battenberg_ploidy = ploidy, battenberg_psi = psi)
+
       return(batt_data)
     }
 
@@ -388,6 +397,8 @@ populate_each_tool_result = function(tool,
 #' @import tidyverse
 #'
 #' @examples
+#'
+#'
 read_merge_manta_with_liftover = function(bedpe_paths = c(),
                                           pattern = "--matched",
                                           out_dir){
@@ -536,6 +547,7 @@ process_all_manta_bedpe = function(file_df,
     svbed$NAME = "."
     svbed = svbed %>%
       dplyr::select(CHROM_A, START_A, END_A, CHROM_B, START_B, END_B, NAME, SOMATIC_SCORE, STRAND_A, STRAND_B, TYPE, FILTER, VAF_tumour, VAF_normal, DP_tumour, DP_normal, tumour_sample_id, normal_sample_id, pair_status)
+
     #remove chr prefix from both chromosome names
     svbed = svbed %>% 
       mutate(CHROM_A = gsub("chr", "", CHROM_A)) %>%
@@ -598,6 +610,7 @@ process_all_manta_bedpe = function(file_df,
 #' @import tidyverse
 #'
 #' @examples
+#'
 fetch_output_files = function(tool,
                               unix_group,
                               base_path,
@@ -701,6 +714,7 @@ fetch_output_files = function(tool,
 #'
 #' @examples
 #' file_details_manta = find_files_extract_wildcards(tool_name = "manta", genome_build = c("hg38", "grch37"), search_pattern = ".bed")
+#'
 find_files_extract_wildcards = function(tool_results_path,
                                         search_pattern,
                                         genome_build,
@@ -739,6 +753,7 @@ find_files_extract_wildcards = function(tool_results_path,
 #' @export
 #'
 #' @examples
+#'
 fread_maf = function(maf_file_path){
                      maf_dt = data.table::fread(
                      file = maf_file_path,
@@ -762,6 +777,7 @@ fread_maf = function(maf_file_path){
 #' @export
 #'
 #' @examples
+#'
 tidy_gene_expression = function(return_df = FALSE){
 
   #read in the full matrix
@@ -843,6 +859,7 @@ tidy_gene_expression = function(return_df = FALSE){
 #' @export
 #'
 #' @examples
+#'
 assemble_file_details = function(file_details_df,
                                  file_paths,
                                  tool_name,
@@ -879,7 +896,8 @@ assemble_file_details = function(file_details_df,
 #'
 #' @examples
 #' hg19_sv = get_manta_sv() %>% head(100)
-#' hg38_sv = liftover_bedpe(bedpe_df=hg19_sv,target_build="hg38")
+#' hg38_sv = liftover_bedpe(bedpe_df = hg19_sv, target_build = "hg38")
+#'
 liftover_bedpe = function(bedpe_file,
                           bedpe_df,
                           target_build = "grch37",

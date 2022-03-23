@@ -3,10 +3,10 @@ coding_vc = c("Frame_Shift_Del", "Frame_Shift_Ins", "In_Frame_Del", "In_Frame_In
 
 #' Annotate and auto-drop a MAF data frame with existing blacklists to remove variants that would be dropped during the merge process.
 #'
-#' @param mutations_df
+#' @param mutations_df df with mutation data.
 #' @param seq_type The seq_type of your mutations if you prefer to apply only the corresponding blacklist (default is to use all available)
-#' @param unix_group
-#' @param tool_name
+#' @param unix_group The unix group (should be the same for all)
+#' @param tool_name The tool or pipeline that generated the files (should be the same for all)
 #' @param flavour Set to "clustered" if you want to use the blacklist for the new and improved SLMS-3 outputs (otherwise leave empty)
 #' @param genome_build The genome build projection for the variants you are working with (default is grch37)
 #' @param project_base Optional: A full path to the directory that your blacklist_file_pattern is relative to
@@ -22,11 +22,11 @@ coding_vc = c("Frame_Shift_Del", "Frame_Shift_Ins", "In_Frame_Del", "In_Frame_In
 #'
 annotate_ssm_blacklist = function(mutations_df,
                                   seq_type,
-                                  tool_name="slms_3",
-                                  tool_version="1.0",
-                                  annotator_name="vcf2maf",
-                                  annotator_version="1.2",
-                                  genome_build="grch37",
+                                  tool_name = "slms_3",
+                                  tool_version = "1.0",
+                                  annotator_name = "vcf2maf",
+                                  annotator_version = "1.2",
+                                  genome_build = "grch37",
                                   project_base,
                                   blacklist_file_template,
                                   drop_threshold = 4,
@@ -50,13 +50,16 @@ annotate_ssm_blacklist = function(mutations_df,
   blacklist_list = list()
   for(b in blacklist_files){
     full_path = paste0(project_base,b)
-    lifted_blacklist=read_tsv(full_path,col_names = c("chrpos","blacklist_count"),show_col_types = FALSE)
-    lifted_blacklist = lifted_blacklist %>% separate(chrpos,into=c("Chromosome","Start_Position"),sep=":")
+    lifted_blacklist = read_tsv(full_path, col_names = c("chrpos", "blacklist_count"), show_col_types = FALSE)
+    lifted_blacklist = lifted_blacklist %>% 
+      separate(chrpos, into = c("Chromosome", "Start_Position"), sep = ":")
+    
     blacklist_list[[b]] = lifted_blacklist
   }
-  combined_blacklist = do.call("rbind",blacklist_list)
+  combined_blacklist = do.call("rbind", blacklist_list)
+
   # Collapse variant counts per Start_Position
-  combined_blacklist = mutate(combined_blacklist,Start_Position = as.integer(Start_Position)) %>%
+  combined_blacklist = mutate(combined_blacklist, Start_Position = as.integer(Start_Position)) %>%
     group_by(Start_Position, Chromosome) %>%
     summarize(blacklist_count = sum(blacklist_count)) %>%
     ungroup()
@@ -71,25 +74,25 @@ annotate_ssm_blacklist = function(mutations_df,
     print(head(combined_blacklist))
   }
   if(str_detect(mutations_df$Chromosome, "chr")[1]){
-    combined_blacklist = mutate(combined_blacklist,Chromosome = paste0("chr",Chromosome))
+    combined_blacklist = mutate(combined_blacklist, Chromosome = paste0("chr", Chromosome))
 
   }
-  mutations_df = left_join(mutations_df,combined_blacklist,by=c("Chromosome", "Start_Position")) %>%
+  mutations_df = left_join(mutations_df,combined_blacklist,by = c("Chromosome", "Start_Position")) %>%
     mutate(blacklist_count = replace_na(blacklist_count, 0))
 
 
-  dropped = dplyr::filter(mutations_df,blacklist_count > drop_threshold)
+  dropped = dplyr::filter(mutations_df, blacklist_count > drop_threshold)
   if(verbose){
     if(length(dropped) > 0 ){
       ndrop = length(dropped$Tumor_Sample_Barcode)
-      message(paste(ndrop,"variants were dropped"))
+      message(paste(ndrop, "variants were dropped"))
     } else {
       message("0 variants were dropped")
     }
 
   }
   #drop anything that exceeds our threshold but keep NA
-  mutations_df = dplyr::filter(mutations_df,is.na(blacklist_count) | blacklist_count < drop_threshold)
+  mutations_df = dplyr::filter(mutations_df, is.na(blacklist_count) | blacklist_count < drop_threshold)
   if(invert){
     return(dropped)
   }
@@ -158,12 +161,12 @@ annotate_igh_breakpoints = function(annotated_df,
   
   annoying_segments = c("J6", "J3P", "J5", "J4", "J3", "Smu", "M")
   j_segs = mutate(j_segs, start_wide = ifelse(!label %in% annoying_segments, start - 3500, start), end_wide = ifelse(!label %in% annoying_segments, end + 5000, end))
-  sv_igh_anno = mutate(sv_igh, mechanism = case_when(chrom2 %in% c("14","chr14") & start2 < switch_end ~ "CSR",
-                                                     chrom2 %in% c("14","chr14") & start2 < vdj_start ~ "AID",
-                                                     chrom2 %in% c("14","chr14") & start2 >= vdj_start ~ "VDJ",
-                                                     chrom1 %in% c("14","chr14") & start1 < switch_end ~ "CSR",
-                                                     chrom1 %in% c("14","chr14") & start1 < vdj_start ~ "AID",
-                                                     chrom1 %in% c("14","chr14") & start1 >= vdj_start ~ "VDJ",
+  sv_igh_anno = mutate(sv_igh, mechanism = case_when(chrom2 %in% c("14", "chr14") & start2 < switch_end ~ "CSR",
+                                                     chrom2 %in% c("14", "chr14") & start2 < vdj_start ~ "AID",
+                                                     chrom2 %in% c("14", "chr14") & start2 >= vdj_start ~ "VDJ",
+                                                     chrom1 %in% c("14", "chr14") & start1 < switch_end ~ "CSR",
+                                                     chrom1 %in% c("14", "chr14") & start1 < vdj_start ~ "AID",
+                                                     chrom1 %in% c("14", "chr14") & start1 >= vdj_start ~ "VDJ",
                                                      TRUE ~ "OTHER"))
   sv_igh_anno = sv_igh_anno %>%
     mutate(IGH_start = ifelse(chrom2 %in% c("14", "chr14"), start2, start1)) %>%
@@ -308,8 +311,8 @@ annotate_sv = function(sv_data,
   colnames(bedpe2) = c("chrom", "start", "end", "tumour_sample_id", "score", "strand2")
   suppressWarnings({
     if(grepl("chr", bedpe1$chrom)){
-      bedpe1 = dplyr::mutate(bedpe1,chrom = str_replace(chrom, "chr", ""))
-      bedpe2 = dplyr::mutate(bedpe2,chrom = str_replace(chrom, "chr", ""))
+      bedpe1 = dplyr::mutate(bedpe1, chrom = str_replace(chrom, "chr", ""))
+      bedpe2 = dplyr::mutate(bedpe2, chrom = str_replace(chrom, "chr", ""))
     }
   })
   if(missing(partner_bed)){
