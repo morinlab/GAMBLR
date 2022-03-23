@@ -6,37 +6,38 @@
 \usage{
 annotate_ssm_blacklist(
   mutations_df,
-  unix_group = "gambl",
+  seq_type,
   tool_name = "slms_3",
   tool_version = "1.0",
   annotator_name = "vcf2maf",
   annotator_version = "1.2",
-  flavour = "",
   genome_build = "grch37",
+  project_base,
+  blacklist_file_template,
   drop_threshold = 4,
-  return_blacklist = FALSE
+  return_blacklist = FALSE,
+  verbose = FALSE,
+  invert = FALSE
 )
 }
 \arguments{
-\item{mutations_df}{Data frame with mutations, main input.}
 
-\item{unix_group}{Unix groups for the samples to be included. Default is gambl samples.}
+\item{seq_type}{The seq_type of your mutations if you prefer to apply only the corresponding blacklist (default is to use all available)}
 
-\item{tool_name}{The name of the variant calling pipeline (currently only slms-3 is supported).}
+\item{genome_build}{The genome build projection for the variants you are working with (default is grch37)}
 
-\item{tool_version}{The version of variant calling tool, default is 1.0.}
+\item{project_base}{Optional: A full path to the directory that your blacklist_file_pattern is relative to}
 
-\item{annotator_name}{The name of annotator used, default is vcf2maf.}
+\item{drop_threshold}{The minimum count from one of the blacklists to drop a variant}
 
-\item{annotator_version}{The version of annotator tool used, default is 1.2.}
+\item{verbose}{For debugging, print out a bunch of possibly useful information}
 
-\item{flavour}{Set to "clustered" if you want to use the blacklist for the new and improved SLMS-3 outputs (otherwise leave empty).}
+\item{invert}{USE WITH CAUTION! This returns only the variants that would be dropped in the process (opposite of what you want, probably)}
 
-\item{genome_build}{The genome build projection for the variants you want (grch37 is the only one currently supported).}
+\item{flavour}{Set to "clustered" if you want to use the blacklist for the new and improved SLMS-3 outputs (otherwise leave empty)}
 
-\item{drop_threshold}{The minimum count from one of the blacklists to drop a variant.}
+\item{blacklist_file_pattern}{Optional: A string that contains the relative path to your blacklist file from after the project_base (i.e. results) with any wildcards surrounded with curly braces}
 
-\item{return_blacklist}{Boolean parameter to return Black list, default is FALSE.}
 }
 \value{
 A MAF format data frame with two new columns indicating the number of occurrences of each variant in the two blacklists.

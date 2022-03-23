@@ -13,25 +13,29 @@ get_ssm_by_sample(
   these_samples_metadata,
   tool_name = "slms-3",
   projection = "grch37",
-  seq_type = "genome",
-  flavour = "",
+  augmented = TRUE,
+  flavour = "clustered",
+  min_read_support = 3,
   verbose = FALSE
 )
 }
 \arguments{
 \item{this_sample_id}{Required. The sample_id you want the data from.}
 
-\item{these_samples_metadata}{A vector of samples metadata (with sample IDs).}
+\item{these_samples_metadata}{Either a single row or entire metadata table containing your sample_id}
 
-\item{tool_name}{The name of the variant calling pipeline (currently only slms-3 is supported).}
+\item{tool_name}{The name of the variant calling pipeline (currently only slms-3 is supported)}
 
-\item{projection}{The projection genome build. Currently only grch37 is supported but hg38 should be easy to add.}
+\item{projection}{The projection genome build. Supports hg38 and grch37.}
 
-\item{seq_type}{What type of sequencing data you want mutations from (e.g. genome, exome, mrna).}
+\item{augmented}{default: TRUE. Set to FALSE if you instead want the original MAF from each sample for multi-sample patients instead of the augmented MAF}
 
-\item{flavour}{Specify this as either "augmented" or "force_unmatched" or leave out to get the default (original MAF).}
+\item{flavour}{Currently this function only supports one flavour option but this feature is meant for eventual compatability with additional variant calling parameters/versions}
 
-\item{verbose}{Set to TRUE to enable verbose mode (debugging messages).}
+\item{min_read_support}{Only returns variants with at least this many reads in t_alt_count (for cleaning up augmented MAFs)}
+
+\item{verbose}{Enable for debugging/noisier output}
+                                                                                            
 }
 \value{
 data frame in MAF format.

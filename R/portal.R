@@ -234,6 +234,7 @@ setup_fusions = function(short_name = "GAMBL",
     maf_table = gambl_maf
   }
 
+
   nfkbiz_entrez = 64332
   
   nfkbiz_utr_ssm = get_ssm_by_gene(gene_symbol = "NFKBIZ") %>%
@@ -284,7 +285,6 @@ setup_fusions = function(short_name = "GAMBL",
                    paste0(c("case_list_ids:", tabseplist), collapse = " "))
   
   cat(caselistdata, sep = "\n", file = caselist_fusion)
-  
   return(fusion.cases)
 }
 

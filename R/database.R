@@ -1,48 +1,128 @@
 #global variable
 coding_class = c("Frame_Shift_Del", "Frame_Shift_Ins", "In_Frame_Del", "In_Frame_Ins", "Missense_Mutation", "Nonsense_Mutation", "Nonstop_Mutation", "Silent", "Splice_Region", "Splice_Site", "Targeted_Region", "Translation_Start_Site")
 
-#' Get MAF-format data frame for more than one sample and combine together (wraps get_ssm_by_sample).
-#' See get_ssm_by_sample for more information.
+#' Exclude samples that have been excluded from certain analyses and drop from merges
+#'
+#' @param tool_name
+#'
+#' @return
+#' @export
+#'
+#' @examples
+get_excluded_samples = function(tool_name="slms-3"){
+  excluded_df = read_tsv("/projects/rmorin/projects/gambl-repos/gambl-rmorin/config/exclude.tsv",show_col_types = FALSE)
+  excluded_samples = dplyr::filter(excluded_df,pipeline_exclude==tool_name) %>% pull(sample_id)
+  return(excluded_samples)
+}
+
+#' Get MAF-format data frame for more than one patient using at most one augmented_maf  per patient(i.e. unique superset of variants)
+#' and combine or subset from a merged MAF (wraps get_ssm_by_samples)
+#' See get_ssm_by_samples for more information
+#' @param these_patient_ids A vector of sample_id that you want results for. This is the only required argument.
+#' @param these_samples_metadata Optional metadata table
+#' @param tool_name Only supports slms-3 currently
+#' @param projection Obtain variants projected to this reference (one of grch37 or hg38)
+#' @param flavour Currently this function only supports one flavour option but this feature is meant for eventual compatability with additional variant calling parameters/versions
+#' @param min_read_support Only returns variants with at least this many reads in t_alt_count (for cleaning up augmented MAFs)
+#' @param subset_from_merge Instead of merging individual MAFs, the data will be subset from a pre-merged MAF of samples with the specified seq_type
+
+#'
+#' @return
+#' @export
+#'
+#' @examples
+#' merged_maf_force_unmatched = get_ssm_by_samples(these_sample_ids=c("HTMCP-01-06-00485-01A-01D","14-35472_tumorA","14-35472_tumorB"))
+get_ssm_by_patients = function(these_patient_ids,
+                              these_samples_metadata,
+                              tool_name="slms-3",
+                              projection="grch37",
+                              seq_type="genome",
+                              flavour="clustered",
+                              min_read_support=3,
+                              subset_from_merge=TRUE){
+  if(!subset_from_merge){
+    message("WARNING: on-the-fly merges can be extremely slow and consume a lot of memory. Use at your own risk. ")
+  }
+  augmented = TRUE
+  #always requires augmented MAFs to ensure all variants from the patient are included
+  to_exclude = get_excluded_samples(tool_name)
+  if(missing(these_samples_metadata)){
+    these_samples_metadata = get_gambl_metadata() %>%
+      dplyr::filter(patient_id %in% these_patient_ids) %>%
+      dplyr::filter(!sample_id %in% to_exclude)
+  }else{
+    these_samples_metadata = these_samples_metadata %>%
+      dplyr::filter(patient_id %in% these_patient_ids) %>%
+      dplyr::filter(!sample_id %in% to_exclude)
+  }
+  these_samples_metadata = group_by(these_samples_metadata,patient_id) %>% slice_head() %>% ungroup()
+
+  these_sample_ids = pull(these_samples_metadata,sample_id)
+  return(get_ssm_by_samples(these_sample_ids,these_samples_metadata,tool_name,projection,seq_type,flavour,min_read_support,subset_from_merge))
+}
+
+#' Get MAF-format data frame for more than one sample and combine together (wraps get_ssm_by_sample)
+#' See get_ssm_by_sample for more information
 #' @param these_sample_ids A vector of sample_id that you want results for. This is the only required argument.
-#' @param these_samples_metadata A vector of samples metadata (with sample IDs).
-#' @param tool_name The name of the variant calling pipeline (currently only slms-3 is supported).
-#' @param projection The projection genome build. Currently only grch37 is supported but hg38 should be easy to add.
-#' @param seq_type What type of sequencing data you want mutations from (e.g. genome, exome, mrna).
-#' @param flavour Specify this as either "augmented" or "force_unmatched" or leave out to get the default (original MAF).
+#' @param these_samples_metadata Optional metadata table
+#' @param tool_name Only supports slms-3 currently
+#' @param augmented default: TRUE. Set to FALSE if you instead want the original MAF from each sample for multi-sample patients instead
+#' @param projection Obtain variants projected to this reference (one of grch37 or hg38)
+#' @param flavour Currently this function only supports one flavour option but this feature is meant for eventual compatability with additional variant calling parameters/versions
+#' @param min_read_support Only returns variants with at least this many reads in t_alt_count (for cleaning up augmented MAFs)
+#' @param subset_from_merge Instead of merging individual MAFs, the data will be subset from a pre-merged MAF of samples with the specified seq_type
 #'
 #' @return Returns a data frame of variants in MAF-like format.
 #' @export
 #'
 #' @examples
 #' merged_maf_force_unmatched = get_ssm_by_samples(these_sample_ids=c("HTMCP-01-06-00485-01A-01D","14-35472_tumorA","14-35472_tumorB"))
-#'
-get_ssm_by_samples = function(these_sample_ids, 
-                              these_samples_metadata, 
-                              tool_name = "slms-3", 
-                              projection = "grch37", 
-                              seq_type = "genome", 
-                              flavour = ""){
-  
-  if(projection != "grch37"){
-    message("Currently, only grch37 is supported")
-    return()
-  }
 
+get_ssm_by_samples = function(these_sample_ids,
+                              these_samples_metadata,
+                              tool_name="slms-3",
+                              projection="grch37",
+                              seq_type="genome",
+                              flavour="clustered",
+                              min_read_support=3,
+                              subset_from_merge=TRUE,
+                              augmented=TRUE){
+  if(!subset_from_merge){
+    message("WARNING: on-the-fly merges can be extremely slow and consume a lot of memory. Use at your own risk. ")
+  }
+  to_exclude = get_excluded_samples(tool_name)
   if(missing(these_samples_metadata)){
-    these_samples_metadata = get_gambl_metadata() %>% 
-      dplyr::filter(sample_id %in% these_sample_ids)
-
+    these_samples_metadata = get_gambl_metadata() %>%
+      dplyr::filter(sample_id %in% these_sample_ids) %>%
+      dplyr::filter(!sample_id %in% to_exclude)
   }else{
-    these_samples_metadata = these_samples_metadata %>% 
-      dplyr::filter(sample_id %in% these_sample_ids)
-
+    these_samples_metadata = these_samples_metadata %>%
+      dplyr::filter(sample_id %in% these_sample_ids) %>%
+      dplyr::filter(!sample_id %in% to_exclude)
   }
-  maf_df_list = list()
-  for(this_sample in these_sample_ids){
-    maf_df = get_ssm_by_sample(this_sample, these_samples_metadata, tool_name, projection, seq_type, flavour)
-    maf_df_list[[this_sample]] = maf_df
+  #ensure we only have sample_id that are in the remaining metadata (no excluded/unavailable samples)
+  these_sample_ids = these_sample_ids[which(these_sample_ids %in% these_samples_metadata$sample_id)]
+  if(flavour=="legacy"){
+    warning("I lied. Access to the old variant calls is not currently supported in this function")
+    # TODO: implement loading of the old merged MAF under icgc_dart... vcf2maf-1.2 ..level_3 as per the other from_flatfile functions
+    return()
+  }else if(flavour=="clustered"){
+    if(subset_from_merge){
+      maf_template = "all_the_things/slms_3-1.0_vcf2maf-1.3/{seq_type}--projection/deblacklisted/augmented_maf/all_slms-3--{projection}.maf"
+      maf_path = glue::glue(maf_template)
+      message(paste("using existing merge:",maf_path))
+      full_maf_path =  paste0(config::get("project_base"),maf_path)
+      message(paste("using existing merge:",full_maf_path))
+      maf_df_merge = fread_maf(full_maf_path) %>% dplyr::filter(Tumor_Sample_Barcode %in% these_sample_ids)
+    }else{
+      maf_df_list = list()
+      for(this_sample in these_sample_ids){
+        maf_df = get_ssm_by_sample(this_sample,these_samples_metadata,tool_name,projection,augmented,flavour,min_read_support)
+        maf_df_list[[this_sample]]=maf_df
+      }
+      maf_df_merge = bind_rows(maf_df_list)
+    }
   }
-  maf_df_merge = bind_rows(maf_df_list)
   return(maf_df_merge)
 }
 
@@ -54,12 +134,13 @@ get_ssm_by_samples = function(these_sample_ids,
 #' annotate_ssm_blacklist.
 #'
 #' @param this_sample_id Required. The sample_id you want the data from.
-#' @param these_samples_metadata A vector of samples metadata (with sample IDs).
-#' @param tool_name The name of the variant calling pipeline (currently only slms-3 is supported).
-#' @param projection The projection genome build. Currently only grch37 is supported but hg38 should be easy to add.
-#' @param seq_type What type of sequencing data you want mutations from (e.g. genome, exome, mrna).
-#' @param flavour Specify this as either "augmented" or "force_unmatched" or leave out to get the default (original MAF).
-#' @param verbose Set to TRUE to enable verbose mode (debugging messages).
+#' @param these_samples_metadata Either a single row or entire metadata table containing your sample_id
+#' @param tool_name The name of the variant calling pipeline (currently only slms-3 is supported)
+#' @param projection The projection genome build. Supports hg38 and grch37.
+#' @param augmented default: TRUE. Set to FALSE if you instead want the original MAF from each sample for multi-sample patients instead of the augmented MAF
+#' @param flavour Currently this function only supports one flavour option but this feature is meant for eventual compatability with additional variant calling parameters/versions
+#' @param min_read_support Only returns variants with at least this many reads in t_alt_count (for cleaning up augmented MAFs)
+#' @param verbose Enable for debugging/noisier output
 #'
 #' @return data frame in MAF format.
 #' @export
@@ -69,16 +150,12 @@ get_ssm_by_samples = function(these_sample_ids,
 #'
 get_ssm_by_sample = function(this_sample_id,
                              these_samples_metadata,
-                             tool_name = "slms-3",
-                             projection = "grch37",
-                             seq_type = "genome",
-                             flavour = "",
-                             verbose = FALSE){
-  
-  if(projection != "grch37"){
-    message("Currently, only grch37 is supported")
-    return()
-  }
+                             tool_name="slms-3",
+                             projection="grch37",
+                             augmented=TRUE,
+                             flavour="clustered",
+                             min_read_support=3,
+                             verbose=FALSE){
 
  #figure out which unix_group this sample belongs to
   if(missing(these_samples_metadata)){
@@ -89,41 +166,58 @@ get_ssm_by_sample = function(this_sample_id,
     these_samples_metadata = these_samples_metadata %>% 
       dplyr::filter(sample_id == this_sample_id)
   }
-
-  this_unix_group = pull(these_samples_metadata, unix_group)
-  this_genome_build = pull(these_samples_metadata, genome_build)
+  sample_id = this_sample_id
+  tumour_sample_id = sample_id
+  unix_group = pull(these_samples_metadata,unix_group)
+  genome_build = pull(these_samples_metadata,genome_build)
+  target_builds = projection
+  seq_type = pull(these_samples_metadata,seq_type)
+  pair_status = pull(these_samples_metadata,pairing_status)
   if(verbose){
-    print(paste("group:", this_unix_group, "genome:", this_genome_build))
+    print(paste("group:",unix_group,"genome:",genome_build))
   }
-  if(flavour == "force_unmatched"){
-    base_path = paste0(config::get("project_base"), this_unix_group, "/force_unmatched/", tool_name, "_vcf2maf_current/99-outputs/", seq_type, "--", this_genome_build)
-  }else if(flavour == "augmented"){
-    base_path = paste0(config::get("project_base"), this_unix_group, "/", tool_name, "_vcf2maf_current/level_3/augmented_mafs/99-outputs/", seq_type,"--", this_genome_build)
-  }else if(flavour == "clustered"){
-    base_path = paste0(config::get("project_base"), this_unix_group, "/", "slms_3-1.0_vcf2maf-1.3/99-outputs/", seq_type, "--", this_genome_build)
+  # Get unmatched normal if necessary. This is done using the unmatched normals that were added to the GAMBLR config.
+  # That will need to be kept up to date if/when any new references are added.
+  if(pair_status == "unmatched"){
+    normal_sample_id = config::get("unmatched_normal_ids")[[unix_group]][[seq_type]][[genome_build]]
+
   }else{
-    base_path = paste0(config::get("project_base"), this_unix_group, "/", tool_name, "_vcf2maf_current/99-outputs/", seq_type, "--", this_genome_build)
+    normal_sample_id = pull(these_samples_metadata,normal_sample_id)
   }
-  if(projection == "grch37"){
-    if(this_genome_build != projection){
-      maf_pattern = paste0(this_sample_id, "--*converted*maf")
-
-    }else{
-      maf_pattern = paste0(this_sample_id, "--*final.maf")
-
+  base_path=""
+  if(flavour=="legacy"){
+    warning("Access to the old variant calls is not currently supported in this function")
+    warning("Use get_ssm_by_samples to access the legacy flavour")
+    # To be fixed maybe if we decide it's needed.
+    # Implementation of backwards compatability will be a lot harder because of the old naming scheme.
+    return()
+  }else if(flavour == "clustered"){
+    vcf_base_name = "slms-3.final"
+    path_template = config::get("results_filatfiles")$ssm$template$clustered$deblacklisted
+    path_complete = unname(unlist(glue::glue(path_template)))
+    full_maf_path = paste0(config::get("project_base"),path_complete)
+    if(augmented){
+      path_template = config::get("results_filatfiles")$ssm$template$clustered$augmented
+      path_complete = unname(unlist(glue::glue(path_template)))
+      aug_maf_path = paste0(config::get("project_base"),path_complete)
     }
-    maf_path = dir(base_path, pattern = glob2rx(maf_pattern))
+  }else{
+    warning("Currently the only flavour available to this function is 'clustered'")
   }
-  if(length(maf_path) < 1){
-    message(paste("NO FILE FOUND FOR THIS SAMPLE (flavour):", this_sample_id, "(", flavour, ")"))
-    print(paste(base_path, maf_pattern))
-    return()
+  if(augmented && file.exists(aug_maf_path)){
+    full_maf_path = aug_maf_path
+    sample_ssm = fread_maf(full_maf_path)
+    if(min_read_support){
+      # drop poorly supported reads but only from augmented MAF
+      sample_ssm = dplyr::filter(sample_ssm,t_alt_count >= min_read_support)
+    }
+  }else{
+    if(!file.exists(full_maf_path)){
+      message(paste("ERROR: file does not exist",full_maf_path))
+      return()
+    }
+    sample_ssm = fread_maf(full_maf_path)
   }
-  if(length(maf_path) > 1){
-    message(paste("TOO MANY FILES FOR THIS SAMPLE (flavour):", this_sample_id, "(", flavour, ")"))
-    return()
-  }
-  sample_ssm = fread_maf(paste0(base_path, "/", maf_path))
   return(sample_ssm)
 }
 
@@ -169,14 +263,16 @@ get_merged_result = function(tool_name,
 
 #' Get GAMBL metadata.
 #'
-#' @param seq_type_filter Filtering criteria (default: all genomes).
-#' @param tissue_status_filter Filtering criteria (default: only tumour genomes, can be "mrna" or "any" for the superset of cases).
-#' @param case_set optional short name for a pre-defined set of cases avoiding any.
-#' @param remove_benchmarking By default the FFPE benchmarking duplicate samples will be dropped.
-#' @param with_outcomes Optionally join to gambl outcome data.
-#' @param from_flatfile New default is to use the metadata in the flatfiles from your clone of the repo. Can be over-ridden to use the database.
-#' @param only_available If TRUE, will remove samples with FALSE or NA in the bam_available column (default: TRUE).
-#' embargoed cases (current options: 'BLGSP-study', 'FL-study', 'DLBCL-study', 'FL-DLBCL-study', 'FL-DLBCL-all', 'DLBCL-unembargoed', 'BL-DLBCL-manuscript', 'MCL','MCL-CLL').
+#' @param seq_type_filter Filtering criteria (default: all genomes)
+#' @param tissue_status_filter Filtering criteria (default: only tumour genomes, can be "mrna" or "any" for the superset of cases)
+#' @param case_set optional short name for a pre-defined set of cases avoiding any
+#' @param remove_benchmarking By default the FFPE benchmarking duplicate samples will be dropped
+#' @param sample_flatfile Optionally provide the full path to a samples table to use instead of the default
+#' @param biopsy_flatfile Optionally provide the full path to a biopsy table to use instead of the default
+#' @param with_outcomes Optionally join to gambl outcome data
+#' @param only_available If TRUE, will remove samples with FALSE or NA in the bam_available column (default: TRUE)
+#' @param from_flatfile New default is to use the metadata in the flatfiles from your clone of the repo. Can be over-ridden to use the database
+#' embargoed cases (current options: 'BLGSP-study', 'FL-study', 'DLBCL-study', 'FL-DLBCL-study', 'FL-DLBCL-all', 'DLBCL-unembargoed', 'BL-DLBCL-manuscript', 'MCL','MCL-CLL')
 #'
 #' @return A data frame with metadata for each biopsy in GAMBL
 #' @export
@@ -189,23 +285,28 @@ get_merged_result = function(tool_name,
 #' only_blgsp_metadata = get_gambl_metadata(case_set="BLGSP-study")
 #' override default filters and request metadata for samples other than tumour genomes, e.g. also get the normals
 #' only_normal_metadata = get_gambl_metadata(tissue_status_filter = c('tumour','normal'))
-#'
-get_gambl_metadata = function(seq_type_filter = "genome",
-                              tissue_status_filter = c("tumour"),
-                              case_set, 
-                              remove_benchmarking = TRUE,
-                              with_outcomes = TRUE, 
-                              from_flatfile = TRUE, 
-                              only_available = TRUE){
+
+get_gambl_metadata = function(seq_type_filter = c("genome","capture"),
+                              tissue_status_filter=c("tumour"),
+                              case_set, remove_benchmarking = TRUE,
+                              with_outcomes=TRUE,
+                              from_flatfile=TRUE,
+                              sample_flatfile="",
+                              biopsy_flatfile="",
+                              only_available=TRUE){
 
   outcome_table = get_gambl_outcomes(from_flatfile = from_flatfile)
 
   if(from_flatfile){
     base = config::get("repo_base")
-    sample_flatfile = paste0(base, config::get("table_flatfiles")$samples)
-    sample_meta = suppressMessages(read_tsv(sample_flatfile, guess_max = 100000))
-    biopsy_flatfile = paste0(base, config::get("table_flatfiles")$biopsies)
-    biopsy_meta = suppressMessages(read_tsv(biopsy_flatfile, guess_max = 100000))
+    if(sample_flatfile == ""){
+      sample_flatfile = paste0(base,config::get("table_flatfiles")$samples)
+    }
+    if(biopsy_flatfile==""){
+      biopsy_flatfile = paste0(base,config::get("table_flatfiles")$biopsies)
+    }
+    sample_meta = suppressMessages(read_tsv(sample_flatfile,guess_max=100000))
+    biopsy_meta = suppressMessages(read_tsv(biopsy_flatfile,guess_max=100000))
 
   }else{
     db = config::get("database_name")
@@ -218,28 +319,19 @@ get_gambl_metadata = function(seq_type_filter = "genome",
 
     DBI::dbDisconnect(con)
   }
-  sample_meta_normal_genomes = sample_meta %>%
-    dplyr::filter(seq_type == "genome" & tissue_status == "normal") %>%
-    dplyr::select(patient_id, sample_id) %>%
-    as.data.frame() %>%
-    dplyr::rename("normal_sample_id" = "sample_id")
-
-  if(seq_type_filter == "any"){
-    #only drop the normals/unavailable samples then pick one unique row per biopsy_id, preferring genome when available
-    sample_meta = sample_meta %>%
-      dplyr::filter(tissue_status %in% tissue_status_filter) %>%
-      dplyr::select(-sex)
-
-  }else{
-    sample_meta = sample_meta %>%
-      dplyr::filter(seq_type == seq_type_filter & tissue_status %in% tissue_status_filter) %>%
-      dplyr::select(-sex)
-  }
 
   # Conditionally remove samples without bam_available == TRUE
   if(only_available == TRUE){
     sample_meta = dplyr::filter(sample_meta, bam_available %in% c(1, "TRUE"))
   }
+  sample_meta_normal_genomes =  sample_meta %>%
+    dplyr::filter(seq_type %in% seq_type_filter & tissue_status=="normal") %>%
+    dplyr::select(patient_id,sample_id,seq_type) %>% as.data.frame() %>%
+    dplyr::rename("normal_sample_id"="sample_id")
+
+  sample_meta = sample_meta %>%
+    dplyr::filter(seq_type %in% seq_type_filter & tissue_status %in% tissue_status_filter & bam_available %in% c(1,"TRUE")) %>%
+    dplyr::select(-sex)
 
   #if we only care about genomes, we can drop/filter anything that isn't a tumour genome
   #The key for joining this table to the mutation information is to use sample_id. Think of this as equivalent to a library_id. It will differ depending on what assay was done to the sample.
@@ -249,30 +341,26 @@ get_gambl_metadata = function(seq_type_filter = "genome",
     dplyr::select(-time_point) %>%
     dplyr::select(-EBV_status_inf) #drop duplicated columns
 
-  all_meta = dplyr::left_join(sample_meta, biopsy_meta, by = "biopsy_id") %>% 
-    as.data.frame()
-
-  all_meta = all_meta %>%
-    mutate(bcl2_ba = ifelse(bcl2_ba == "POS_BCC", "POS", bcl2_ba))
-
-  if(seq_type_filter == "genome" & length(tissue_status_filter) == 1 & tissue_status_filter[1] == "tumour"){
+  all_meta = dplyr::left_join(sample_meta,biopsy_meta,by="biopsy_id") %>% as.data.frame()
+  all_meta = all_meta %>% mutate(bcl2_ba=ifelse(bcl2_ba=="POS_BCC","POS",bcl2_ba))
+  if(!"mrna" %in% seq_type_filter & length(tissue_status_filter) == 1 & tissue_status_filter[1] == "tumour"){
     #join back the matched normal genome
-    all_meta = left_join(all_meta, sample_meta_normal_genomes, by = "patient_id")
-    all_meta = all_meta %>% 
-      mutate(pairing_status = case_when(is.na(normal_sample_id)~"unmatched", TRUE~"matched"))
+    all_meta = left_join(all_meta,sample_meta_normal_genomes,by=c("patient_id","seq_type"))
+    all_meta = all_meta %>% mutate(pairing_status=case_when(is.na(normal_sample_id)~"unmatched",TRUE~"matched"))
   }
   #all_meta[all_meta$pathology == "B-cell unclassified","pathology"] = "HGBL"  #TODO fix this in the metadata
   if(remove_benchmarking){
     all_meta = all_meta %>% 
       dplyr::filter(cohort != "FFPE_Benchmarking")
   }
-  if(seq_type_filter == "any"){
-  #remove semi-redundant metadata rows so we have each biopsy represented only once
-   all_meta = all_meta %>% 
-    arrange(seq_type) %>% 
-    group_by(biopsy_id) %>% 
-    slice_head()
-
+  if("any" %in% seq_type_filter){
+   #remove semi-redundant metadata rows so we have each biopsy represented only once
+   #2834 rows originally
+   #genome   mrna
+   # 1405   1429
+   all_meta = all_meta %>% arrange(seq_type) %>% group_by(biopsy_id) %>% slice_head()
+   #genome   mrna
+   #1405    398
   }
   all_meta = add_icgc_metadata(all_meta) %>%
     mutate(consensus_pathology = case_when(ICGC_PATH == "FL-DLBCL" ~ "COM", ICGC_PATH == "DH-BL" ~ pathology, ICGC_PATH == "FL" | ICGC_PATH == "DLBCL" ~ ICGC_PATH, pathology == "COMFL" ~ "COM", TRUE ~ pathology))

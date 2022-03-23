@@ -904,7 +904,8 @@ prettyOncoplot = function(maftools_obj,
       om = maftools:::createOncoMatrix(m = maftools_obj, g = genes, add_missing = TRUE)
       mat_origin = om$oncoMatrix
       tsbs = levels(maftools:::getSampleSummary(x = maftools_obj)[,Tumor_Sample_Barcode])
-      print(paste("numcases:", length(tsbs)))
+      print(paste("numcases:",length(tsbs)))
+      print(paste("numgenes:",length(mat_origin[,1])))
       if(!removeNonMutated){
         tsb.include = matrix(data = 0, nrow = nrow(mat_origin), ncol = length(tsbs[!tsbs %in% colnames(mat_origin)]))
         colnames(tsb.include) = tsbs[!tsbs %in% colnames(mat_origin)]
@@ -1247,7 +1248,7 @@ prettyOncoplot = function(maftools_obj,
   }
   heatmap_legend_param = list(title = "Alterations",
                          at = c("RNA", "3'UTR" , "Nonsense_Mutation", "Splice_Site","Splice_Region", "Nonstop_Mutation", "Translation_Start_Site",
-                         "In_Frame_Ins", "In_Frame_Del", "Frame_Shift_Ins", "Frame_Shift_Del", "Multi_Hit", "Missense_Mutation", "hot_spot"), 
+                         "In_Frame_Ins", "In_Frame_Del", "Frame_Shift_Ins", "Frame_Shift_Del", "Multi_Hit", "Missense_Mutation", "hot_spot"),
                          labels = c("RNA", "3'UTR", "Nonsense Mutation", "Splice Site","Splice Region", "Nonstop Mutation", "Translation Start Site",
                          "In Frame Insertion", "In Frame Deletion", "Frame Shift Insertion", "Frame Shift Deletion",
                          "Multi Hit", "Missense Mutation", "Hotspot"),
@@ -2021,8 +2022,7 @@ splendidHeatmap = function(this_matrix,
                            leftStackedWidth = 4,
                            metadataBarFontsize = 5,
                            groupNames = NULL){
-  
-  comparison_groups = unique(these_samples_metadata[,splitColumnName])
+  comparison_groups <- unique(these_samples_metadata[,splitColumnName])
 
   if(!is.null(splitColumnName) & (splitColumnName %in% metadataColumns)){
     metadataColumns = c(splitColumnName, metadataColumns[!metadataColumns == splitColumnName])
@@ -2068,10 +2068,10 @@ splendidHeatmap = function(this_matrix,
   w = as.data.frame(w) %>%
     dplyr::mutate_if(is.character,as.numeric)
 
-  #extract most important features, while taking the feature with highest weight for a particular cluster if it was seen before for other cluster with lower weight
-  FEATURES = w[,1] %>%
-    as.data.frame() %>% 
-    `rownames = `(rownames(w)) %>%
+  # extract most important features, while taking the feature with highest weight for a particular cluster if it was seen before for other cluster with lower weight
+  FEATURES <- w[,1] %>%
+    as.data.frame() %>%
+    `rownames<-`(rownames(w)) %>%
     dplyr::arrange(desc(.)) %>%
     head(., max_number_of_features_per_group) %>%
     rownames_to_column(., var = "Feature") %>%
@@ -2174,13 +2174,13 @@ splendidHeatmap = function(this_matrix,
     column_to_rownames(., var = "Tumor_Sample_Barcode") %>%
     dplyr::arrange(!!!syms(metadataColumns), desc(!!!syms(numericMetadataColumns))) %>%
     dplyr::select(FEATURES$Feature))
-  
-  used_for_ordering = colnames(used_for_ordering_df)
 
-  #left annotation: stacked feature weights
-  ha = rowAnnotation(`feature abundance` = anno_barplot(m, gp = gpar(fill = my_palette[1:length(comparison_groups) + 1]),
-                                                        bar_width = 1, width = unit(leftStackedWidth, "cm"), 
-                                                        axis_param = list(side = legend_position, labels_rot = 0)))
+  used_for_ordering <- colnames(used_for_ordering_df)
+
+  # left annotation: stacked feature weights
+  ha = rowAnnotation(`feature abundance` = anno_barplot(m, gp = gpar(fill = my_palette[1:length(comparison_groups)+1]),
+                                                      bar_width = 1, width = unit(leftStackedWidth, "cm"),
+                                                      axis_param = list(side = legend_position, labels_rot = 0)))
 
   #bottom annotation: tracks indicating metadata
   ha_bottom = HeatmapAnnotation(df = metadata_df[ (order(match(rownames(metadata_df), used_for_ordering))), ] %>%

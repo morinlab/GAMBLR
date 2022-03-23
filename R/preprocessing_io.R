@@ -750,7 +750,8 @@ fread_maf = function(maf_file_path){
                      header = TRUE,
                      fill = TRUE,
                      skip = "Hugo_Symbol",
-                     quote = "")
+                     quote = "",
+                     colClasses=c(Chromosome="character",PHENO="character",PUBMED="character",gnomADg_AF="character",SOMATIC="character",HGNC_ID="character"))
   return(maf_dt)
 }
 
