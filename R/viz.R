@@ -2370,3 +2370,325 @@ plot_multi_timepoint = function(mafs,
   }
   return(FALSE)
 }
+
+#' Generate a plot for structural variant sub type distribution sorted per chromosome
+#'
+#' @param this_sample Sample to be plotted.
+#' @param plot_subtitle Subtitle for created plot.
+#' @param chr_select vector of chromosomes to be included in plot, defaults to autosomes.
+#' @param coding_only Optional. Set to TRUE to restrict to plotting only coding mutations.
+#' @param from_flatfile If set to true the function will use flat files instead of the database.
+#' @param use_augmented Boolean statement if to use augmented maf, default is FALSE.
+#'
+#' @return Nothing.
+#' @export
+#'
+#' @examples
+#' sv_plot = fancy_sv_chrdistplot(this_sample = "HTMCP-01-06-00422-01A-01D")
+#' 
+fancy_sv_chrdistplot = function(this_sample,
+                                plot_subtitle = "Structural Variant Distribution Per Chromosome",
+                                chr_select = paste0("chr", c(1:22)),
+                                coding_only = FALSE,
+                                from_flatfile = FALSE,
+                                use_augmented_maf = FALSE){
+  
+  #get maf data for a specific sample.  
+  maf = assign_cn_to_ssm(this_sample = this_sample, coding_only = coding_only, from_flatfile = from_flatfile, use_augmented_maf = use_augmented_maf)$maf
+  
+  #convert variables to factors
+  maf$Variant_Type = as.factor(maf$Variant_Type)
+  maf$Chromosome = as.factor(maf$Chromosome)
+  
+  #add chr prefix if missing
+  if(!str_detect(maf$Chromosome, "chr")[5]){
+    maf = mutate(maf, Chromosome = paste0("chr", Chromosome))
+  }
+  
+  #subset data frame on sv sub type
+  maf_del = dplyr::filter(maf, Variant_Type == "DEL") %>% 
+    add_count(Chromosome) %>%
+    distinct(Chromosome, .keep_all = TRUE) %>%
+    dplyr::select(Chromosome, Variant_Type, n)
+  
+  maf_ins = dplyr::filter(maf, Variant_Type == "INS") %>% 
+    add_count(Chromosome) %>%
+    distinct(Chromosome, .keep_all = TRUE) %>%
+    dplyr::select(Chromosome, Variant_Type, n)
+  
+  #combine data frames
+  maf.count = rbind(maf_del, maf_ins)
+  
+  #get max number of mutations for the chromosome harboring most variants (for setting y-axis value).
+  ymax = max(maf_del$n) + max(maf_ins$n)
+  
+  #plot
+  ggplot(maf.count, aes(x = Chromosome, y = n, fill = Variant_Type, label = n)) +
+    labs(title = paste0(this_sample), subtitle = plot_subtitle, x = "Chromsomes", y = "Variants (n)", fill = "") +
+    scale_x_discrete(expand = c(0, 0.58), limits = chr_select) +
+    geom_bar(position = "stack", stat = "identity") +
+    scale_y_continuous(expand = c(0, 0), breaks = seq(0, ymax, by = 2)) +
+    scale_fill_manual("", values = c("DEL" = "#E6856F", "INS" = "#3A8799")) +
+    theme_cowplot() +
+    theme(axis.text.x = element_text(angle = 45, hjust = 1))
+}
+
+#' Generate a plot with SNP distribution per chromosome.
+#'
+#' @param this_sample Sample to be plotted.
+#' @param plot_subtitle Subtitle for created plot.
+#' @param chr_select vector of chromosomes to be included in plot, defaults to autosomes.
+#' @param include_dnp Optional argument for including DNPs. Default is FALSE.
+#' @param coding_only Optional. Set to TRUE to restrict to plotting only coding mutations.
+#' @param from_flatfile If set to true the function will use flat files instead of the database.
+#' @param use_augmented Boolean statement if to use augmented maf, default is FALSE.
+#'
+#' @return Nothing.
+#' @export
+#'
+#' @examples
+#' snp_plot = fancy_snp_chrdistplot(this_sample = "HTMCP-01-06-00422-01A-01D")
+#' snp_dnp_plot = fancy_snp_chrdistplot(this_sample = "HTMCP-01-06-00422-01A-01D", include_dnp = TRUE, plot_subtitle = "SNP + DNP Distribution Per Chromosome")
+#' 
+fancy_snp_chrdistplot = function(this_sample,
+                                 plot_subtitle = "SNP Distribution Per Chromosome",
+                                 chr_select = paste0("chr", c(1:22)),
+                                 include_dnp = FALSE,
+                                 coding_only = FALSE,
+                                 from_flatfile = FALSE,
+                                 use_augmented_maf = FALSE){
+  
+  #get maf data for a specific sample.  
+  maf = assign_cn_to_ssm(this_sample = this_sample, coding_only = coding_only, from_flatfile = from_flatfile, use_augmented_maf = use_augmented_maf)$maf
+  
+  #add chr prefix if missing
+  if(!str_detect(maf$Chromosome, "chr")[5]){
+    maf = mutate(maf, Chromosome = paste0("chr", Chromosome))
+  }
+  
+  #subset data frame on snp sub type
+  maf_snp = dplyr::filter(maf, Variant_Type == "SNP") %>% 
+    add_count(Chromosome) %>%
+    distinct(Chromosome, .keep_all = TRUE) %>%
+    dplyr::select(Chromosome, Variant_Type, n)
+  
+  if(!include_dnp){
+    #get max number of SNP for the chromosome harboring most variants (for setting y-axis value).
+    ymax = max(maf_snp$n)
+    
+    #plot
+    ggplot(maf_snp, aes(x = Chromosome, y = n)) +
+      labs(title = paste0(this_sample), subtitle = plot_subtitle, x = "Chromsomes", y = "SNP Count (n)", fill = "") +
+      scale_x_discrete(expand = c(0, 0.7), limits = chr_select) +
+      geom_bar(position = "stack", stat = "identity", fill = "#2B9971", width = 0.75) +
+      scale_y_continuous(expand = c(0, 0)) +
+      theme_cowplot() +
+      coord_flip()
+  }
+  
+  else{
+    #subset data frame on snp sub type
+    maf_dnp = dplyr::filter(maf, Variant_Type == "DNP") %>% 
+      add_count(Chromosome) %>%
+      distinct(Chromosome, .keep_all = TRUE) %>%
+      dplyr::select(Chromosome, Variant_Type, n)
+    
+    #combine data frames
+    maf.count = rbind(maf_snp, maf_dnp)
+    
+    #get max number of mutations for the chromosome harboring most variants (for setting y-axis value).
+    ymax = max(maf_snp$n) + max(maf_dnp$n)
+    
+    #plot
+    ggplot(maf.count, aes(x = Chromosome, y = n, fill = Variant_Type)) +
+      labs(title = paste0(this_sample), subtitle = plot_subtitle, x = "Chromsomes", y = "SNP Count (n)", fill = "") +
+      scale_x_discrete(expand = c(0, 0.7), limits = chr_select) +
+      geom_bar(position = "stack", stat = "identity", width = 0.75) +
+      scale_fill_manual("", values = c("SNP" = "#2B9971", "DNP" = "#993F2B")) +
+      scale_y_continuous(expand = c(0, 0)) +
+      theme_cowplot() +
+      theme(axis.text.x = element_text(angle = 45, hjust = 1)) +
+      coord_flip()
+  }
+}
+
+#' Generate a bar plot visualizing structural variant subtype distributions
+#'
+#' @param this_sample Sample to be plotted.
+#' @param plot_subtitle Subtitle for created plot.
+#' @param chr_select vector of chromosomes to be included in plot, defaults to autosomes.
+#' @param variant_select Subtypes of SVs to be incldued in plot, default is DEL and INS.
+#' @param coding_only Optional. Set to TRUE to restrict to plotting only coding mutations.
+#' @param from_flatfile If set to true the function will use flat files instead of the database.
+#' @param use_augmented Boolean statement if to use augmented maf, default is FALSE.
+#'
+#' @return Nothing.
+#' @export
+#'
+#' @examples
+#' chr1_sv = fancy_svbar(this_sample = "HTMCP-01-06-00422-01A-01D", chr_select = c(1))
+#' svs = fancy_svbar(this_sample = "HTMCP-01-06-00422-01A-01D")
+#' 
+fancy_svbar = function(this_sample,
+                       plot_subtitle = "Structural Variant Subtype Distribution",
+                       chr_select = paste0("chr", c(1:22)),
+                       variant_select = c("DEL", "INS"),
+                       coding_only = FALSE,
+                       from_flatfile = FALSE,
+                       use_augmented_maf = FALSE){
+  
+  #get maf data for a specific sample.  
+  maf = assign_cn_to_ssm(this_sample = this_sample, coding_only = coding_only, from_flatfile = from_flatfile, use_augmented_maf = use_augmented_maf)$maf
+  
+  #add chr prefix if missing
+  if(!str_detect(maf$Chromosome, "chr")[5]){
+    maf = mutate(maf, Chromosome = paste0("chr", Chromosome))
+  }
+  
+  #read maf into R and select relevant variables and transform to factor.
+  maf_df = dplyr::select(maf, Chromosome, Start_Position, End_Position, Variant_Type, LOH, CN) %>%
+    mutate_at(vars(Chromosome, Variant_Type), list(factor))
+  
+  #sub-setting maf based on user-defined parameters
+  maf_df = maf_df[maf_df$Chromosome %in% chr_select, ] 
+  maf_df = maf_df[maf_df$Variant_Type %in% variant_select, ] 
+  
+  #subset variant data
+  sv_count = maf_df %>%
+    group_by(Variant_Type) %>%
+    summarize(count = n())
+  
+  #plot
+  ggplot(sv_count, aes(x = Variant_Type, y = count, fill = Variant_Type, label = count)) +
+    geom_bar(position = "stack", stat = "identity") +
+    labs(title = paste0(this_sample), subtitle = plot_subtitle, x = "SVs", y = "Variant Count (n)", fill = "") +
+    scale_fill_manual("", values = c("DEL" = "#E6856F", "INS" = "#3A8799")) +
+    geom_text(size = 5, position = position_stack(vjust = 0.5)) +
+    scale_y_continuous(expand = c(0, 0)) +
+    theme_cowplot()
+}
+
+
+#' Generate a bar plot visualizing sample-specific copy number states and n loh regions.
+#'
+#' @param this_sample Sample to be plotted.
+#' @param plot_subtitle Subtitle for created plot.
+#' @param chr_select vector of chromosomes to be included in plot, defaults to autosomes.
+#' @param coding_only Optional. Set to TRUE to restrict to plotting only coding mutations.
+#' @param from_flatfile If set to true the function will use flat files instead of the database.
+#' @param use_augmented Boolean statement if to use augmented maf, default is FALSE.
+#'
+#' @return Nothing.
+#' @export
+#'
+#' @examples
+#' chr1_cns = fancy_cnlohbar(this_sample = "HTMCP-01-06-00422-01A-01D", chr_select = c(1))
+#' cns = fancy_cnlohbar(this_sample = "HTMCP-01-06-00422-01A-01D")
+#' 
+fancy_cnlohbar = function(this_sample,
+                          plot_subtitle = "CNV states and LOH Regions For Selected Contigs",
+                          chr_select = paste0("chr", c(1:22)),
+                          coding_only = FALSE,
+                          from_flatfile = FALSE,
+                          use_augmented_maf = FALSE){
+  
+  #get maf data for a specific sample.  
+  maf = assign_cn_to_ssm(this_sample = this_sample, coding_only = coding_only, from_flatfile = from_flatfile, use_augmented_maf = use_augmented_maf)$maf
+  
+  #add chr prefix if missing
+  if(!str_detect(maf$Chromosome, "chr")[5]){
+    maf = mutate(maf, Chromosome = paste0("chr", Chromosome))
+  }
+  
+  #read maf into R and select relevant variables and transformt to factor.
+  maf_df = dplyr::select(maf, Chromosome, Start_Position, End_Position, Variant_Type, LOH, CN) %>%
+    mutate_at(vars(Chromosome, Variant_Type), list(factor))
+  
+  #subsetting maf based on user-defined parameters
+  maf_df = maf_df[maf_df$Chromosome %in% chr_select, ] 
+  
+  #transform data type
+  maf_df$LOH = as.factor(maf_df$LOH)
+  maf_df$CN = as.factor(maf_df$CN)
+  
+  #count levels of factor
+  loh_count = dplyr::filter(maf_df, LOH == 1) %>%
+    group_by(LOH) %>%
+    summarize(count = n())
+  
+  loh_count$Type = paste0("LOH-", loh_count$LOH)
+  loh_count = dplyr::select(loh_count, count, Type)
+  
+  cns_count = dplyr::filter(maf_df, CN == 1 | CN == 3 | CN == 4) %>%
+    group_by(CN) %>%
+    summarize(count = n())
+  
+  cns_count$Type = paste0("CNV-", cns_count$CN)
+  cns_count = dplyr::select(cns_count, count, Type)
+  
+  #join loh and cnvs
+  loh_cn = rbind(loh_count, cns_count)
+  
+  #plot
+  ggplot(loh_cn, aes(x = Type, y = count, fill = Type, label = count)) +
+    geom_bar(position = "stack", stat = "identity") +
+    labs(title = paste0(this_sample), subtitle = plot_subtitle, x = "", y = "Count (n)", fill = "Legend") +
+    scale_fill_manual("", values = c("CNV-1" = "#663B31", "CNV-3" = "#A65F50", "CNV-4" = "#E6856F", "LOH-1" = "#E6DD85")) +
+    scale_y_continuous(expand = c(0, 0)) +
+    geom_text(size = 5, position = position_stack(vjust = 0.5)) +
+    theme_cowplot()
+}
+
+#' Generate a violine plot for structural variant size distribution.
+#'
+#' @param this_sample Sample to be plotted.
+#' @param plot_subtitle Subtitle for created plot.
+#' @param chr_select vector of chromosomes to be included in plot, defaults to autosomes.
+#' @param coding_only Optional. Set to TRUE to restrict to plotting only coding mutations.
+#' @param from_flatfile If set to true the function will use flat files instead of the database.
+#' @param use_augmented Boolean statement if to use augmented maf, default is FALSE.
+#'
+#' @return Nothing.
+#' @export
+#'
+#' @examples
+#' violine_plot = fancy_vplot(this_sample = "HTMCP-01-06-00422-01A-01D")
+#' 
+fancy_vplot = function(this_sample,
+                       plot_subtitle = "Structural Variant Size Distribution",
+                       chr_select = paste0("chr", c(1:22)),
+                       coding_only = FALSE,
+                       from_flatfile = FALSE,
+                       use_augmented_maf = FALSE){
+  
+  #get maf data for a specific sample.  
+  maf = assign_cn_to_ssm(this_sample = this_sample, coding_only = coding_only, from_flatfile = from_flatfile, use_augmented_maf = use_augmented_maf)$maf
+  
+  #add chr prefix if missing
+  if(!str_detect(maf$Chromosome, "chr")[5]){
+    maf = mutate(maf, Chromosome = paste0("chr", Chromosome))
+  }
+  
+  #read maf into R and select relevant variables and transform to factor.
+  maf_df = dplyr::select(maf, Chromosome, Start_Position, End_Position, Variant_Type, LOH, CN) %>%
+    mutate_at(vars(Chromosome, Variant_Type), list(factor))
+  
+  #calculate variant size
+  maf_df$Size = maf_df$End_Position - maf_df$Start_Position
+  maf_df$Size = as.factor(maf_df$Size)
+  maf_df = maf_df[maf_df$Variant_Type %in% c("DEL", "INS"), ] 
+  levels(maf_df$Size)[levels(maf_df$Size) == "0"] = "1"
+  maf_df$Size = as.numeric(maf_df$Size)
+  
+  #sub-setting maf based on user-defined parameters
+  maf_df = maf_df[maf_df$Chromosome %in% chr_select, ] 
+  
+  ggplot(maf_df, aes(x = Variant_Type, y = Size, fill = Variant_Type)) + 
+    labs(title = paste0(this_sample), subtitle = plot_subtitle, x = "", y = "Variant Size") +
+    geom_violin(trim = FALSE, scale = "width", color = NA) +
+    stat_summary(fun = mean, geom = "point", shape = 20, size = 3, color = "black") +
+    scale_fill_manual("", values = c("DEL" = "#E6856F", "INS" = "#3A8799")) +
+    scale_y_log10() +
+    theme_cowplot() +
+    theme(legend.position = "none") 
+}
