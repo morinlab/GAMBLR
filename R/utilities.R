@@ -1681,6 +1681,7 @@ get_gambl_colours = function(classification="all",alpha=1){
       "MM"="#CC9A42",
       "SCBC"="#8c9c90",
       "UNSPECIFIED"="#cfba7c",
+      "OTHER"="#cfba7c",
       "MZL"="#065A7F"
   )
   all_colours[["coo"]] = c(

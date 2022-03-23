@@ -482,6 +482,10 @@ get_gambl_metadata = function(seq_type_filter = c("genome","capture"),
 
   all_meta = GAMBLR::collate_lymphgen(all_meta, verbose=FALSE)
 
+# "catchall" pathology for those that need review
+all_meta = all_meta %>%
+  mutate(pathology = ifelse(nchar(pathology) > 15, "OTHER", pathology))
+
   all_meta = mutate(all_meta,Tumor_Sample_Barcode=sample_id) #duplicate for convenience
   all_meta = all_meta %>% dplyr::mutate(consensus_coo_dhitsig = case_when(
     pathology != "DLBCL" ~ pathology,
