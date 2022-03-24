@@ -2091,7 +2091,7 @@ splendidHeatmap = function(this_matrix,
   FEATURES = as.data.frame(FEATURES)
 
   mat = this_matrix %>%
-    merge(., metadata_df %>%
+    base::merge(., metadata_df %>%
     rownames_to_column(., "Tumor_Sample_Barcode") %>%
     dplyr::select(Tumor_Sample_Barcode, splitColumnName)) %>%
     as.data.frame()
