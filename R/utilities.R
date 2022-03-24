@@ -11,8 +11,8 @@ coding_class = c("Frame_Shift_Del", "Frame_Shift_Ins", "In_Frame_Del", "In_Frame
 #' @export
 #'
 #' @examples
-#' bcl2_region = gene_to_region("BCL2", "grch37")
-#' bcl2_region = gene_to_region("ENSG00000171791", "grch37")
+#' bcl2_region = gene_to_region(gene_symbol = "BCL2", genome_build = "grch37")
+#' bcl2_region = gene_to_region(ensembl_id = "ENSG00000171791", genome_build = "grch37")
 #'
 gene_to_region = function(gene_symbol,
                           ensembl_id,
@@ -103,7 +103,7 @@ intersect_maf = function(maf1,
 #' @export
 #'
 #' @examples
-#' coding_tabulated_df = get_coding_ssm_status(gene_symbols=c("MYC","KMT2D"))
+#' coding_tabulated_df = get_coding_ssm_status(maf_data = "maf", gene_symbols=c("MYC","KMT2D"))
 #' coding_tabulated_df = get_coding_ssm_status() #all lymphoma genes from bundled NHL gene list
 #'
 get_coding_ssm_status = function(gene_symbols,
@@ -129,11 +129,11 @@ get_coding_ssm_status = function(gene_symbols,
     coding_class=coding_class[coding_class != "Silent"]
   }
   # call it once so the object can be reused if user wants to annotate hotspots
-  if(! missing(maf_data)){
+  if(!missing(maf_data)){
     coding_ssm = maf_data %>%
       dplyr::filter(Variant_Classification %in% coding_class)
 
-  }else if (! is.null(maf_path) ){
+  }else if (!is.null(maf_path) ){
     coding_ssm = fread_maf(maf_path)
     coding_ssm = coding_ssm %>%
       dplyr::filter(Variant_Classification %in% coding_class)
@@ -245,7 +245,7 @@ trim_scale_expression = function(x){
 #' @import dplyr data.table ggplot2 cowplot
 #'
 #' @examples
-#' chr11_mutation_freq = calc_mutation_frequency_sliding_windows(this_region = "chr11:69455000-69459900", metadata = meta_df, slide_by = 10, window_size = 10000, plot_type = TRUE)
+#' chr11_mutation_freq = calc_mutation_frequency_sliding_windows(this_region = "chr11:69455000-69459900", metadata = meta_df, slide_by = 10, window_size = 10000)
 #'
 calc_mutation_frequency_sliding_windows = function(this_region,
                                                    chromosome,
@@ -449,7 +449,7 @@ region_to_chunks = function(region){
 #' @examples
 #' lymph_genes = lymphoma_genes$Gene #note, this will be used by default if the user wants to be lazy
 #' secure_maf = "/projects/rmorin/projects/gambl-repos/gambl-rmorin/results/icgc_dart/slms-3_vcf2maf_current/level_3/final_merged_grch37.CDS.maf"
-#' safe_oncomatrix_path = sanitize_maf_data(mutation_maf_path=secure_maf,genes_keep=lymph_genes)
+#' safe_oncomatrix_path = sanitize_maf_data(mutation_maf_path = secure_maf, genes_keep = lymph_genes)
 #'
 sanitize_maf_data = function(mutation_maf_path,
                              mutation_maf_data,
@@ -579,7 +579,7 @@ annotate_hotspots = function(mutation_maf,
 #' @import dplyr
 #'
 #' @examples
-#' hot_ssms = review_hotspots(annotate_hotspots(get_coding_ssm()), genes_of_interest=c("CREBBP"))
+#' hot_ssms = review_hotspots(annotate_hotspots(get_coding_ssm()), genes_of_interest = c("CREBBP"))
 review_hotspots = function(annotated_maf,
                           genes_of_interest = c("FOXO1", "MYD88", "CREBBP", "NOTCH1", "NOTCH2", "CD79B", "EZH2"),
                           genome_build = "hg19"){
@@ -675,7 +675,7 @@ review_hotspots = function(annotated_maf,
 #'
 #' @examples
 #' all_sv = get_manta_sv()
-#' sv_to_custom_track(all_sv, output_file = "GAMBL_sv_custom_track.bed")
+#' sv_to_custom_track(all_sv, output_file = "GAMBL_sv_custom_track.bed", is_annotated = FALSE)
 #'
 sv_to_custom_track = function(sv_bedpe,
                               output_file,
@@ -1035,7 +1035,7 @@ collate_curated_sv_results = function(sample_table){
 #' @import tidyverse data.table RMariaDB DBI dbplyr
 #'
 #' @examples
-#' cn_list = assign_cn_to_ssm(this_sample="HTMCP-01-06-00422-01A-01D",coding_only=TRUE)
+#' cn_list = assign_cn_to_ssm(this_sample = "HTMCP-01-06-00422-01A-01D", coding_only = TRUE)
 #'
 assign_cn_to_ssm = function(this_sample,
                             coding_only = FALSE,
@@ -1195,7 +1195,7 @@ assign_cn_to_ssm = function(this_sample,
 #' @import tidyverse
 #'
 #' @examples
-#' tumour_purity = estimate_purity(in_maf="path/to/file.maf", in_seg="path/to/file.seg", seg_file_source="ichorCNA", show_plots=TRUE)
+#' tumour_purity = estimate_purity(in_maf = "path/to/file.maf", in_seg = "path/to/file.seg", seg_file_source = "ichorCNA", show_plots = TRUE)
 #' tumour_purity = estimate_purity(in_maf="path/to/file.maf", assume_diploid = TRUE)
 #'
 estimate_purity = function(in_maf,
@@ -1677,7 +1677,7 @@ collate_sv_results = function(sample_table,
 #' @import tidyverse
 #'
 #' @examples
-#' lymphgen_cols=get_gambl_colours("lymphgen")
+#' lymphgen_cols = get_gambl_colours("lymphgen")
 #' # be sure to install ggsci from https://github.com/morinlab/ggsci
 #' # install_github("morinlab/ggsci")
 #'
@@ -2193,8 +2193,8 @@ FtestCNV = function(gistic_lesions,
 #' @export
 #'
 #' @examples
-#' partial_matrix = get_coding_ssm_status(these_samples_metadata = (get_gambl_metadata(case_set = "BL--DLBCL") %>% filter(pairing_status=="unmatched")), include_hotspots = FALSE)
-#' complete_matrix = complete_missing_from_matrix(partial_matrix, get_gambl_metadata() %>% pull(sample_id))
+#' partial_matrix = get_coding_ssm_status(these_samples_metadata = (get_gambl_metadata(case_set = "BL--DLBCL") %>% filter(pairing_status == "unmatched")), include_hotspots = FALSE)
+#' complete_matrix = complete_missing_from_matrix(partial_matrix, get_gambl_metadata() %>% pull(sample_id)) 
 #'
 complete_missing_from_matrix = function(incoming_matrix,
                                         list_of_samples,
@@ -2252,8 +2252,8 @@ complete_missing_from_matrix = function(incoming_matrix,
 #'
 #' @examples
 #' myc_ashm_maf = get_ssm_by_region(region="8:128748352-128749427") # get all ssm in the MYC aSHM region
-#' GAMBLR::genome_to_exome(maf=myc_ashm_maf) # get mutations with 100 bp padding (default)
-#' GAMBLR::genome_to_exome(maf=myc_ashm_maf, padding = 0) # get mutations covered in WEX with no padding
+#' GAMBLR::genome_to_exome(maf = myc_ashm_maf) # get mutations with 100 bp padding (default)
+#' GAMBLR::genome_to_exome(maf = myc_ashm_maf, padding = 0) # get mutations covered in WEX with no padding
 #'
 genome_to_exome = function(maf,
                            custom_bed,

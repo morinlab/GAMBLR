@@ -153,7 +153,7 @@ get_ssm_by_samples = function(these_sample_ids,
 #' @export
 #'
 #' @examples
-#' ssm_sample = get_ssm_by_sample(this_sample_id = "HTMCP-01-06-00485-01A-01D", tool_name = "slims-3", projection = "grch37", seq_type = "genome")
+#' ssm_sample = get_ssm_by_sample(this_sample_id = "HTMCP-01-06-00485-01A-01D", tool_name = "slims-3", projection = "grch37")
 #'
 get_ssm_by_sample = function(this_sample_id,
                              these_samples_metadata,
@@ -239,7 +239,7 @@ get_ssm_by_sample = function(this_sample_id,
 #' @export
 #'
 #' @examples
-#' merged = get_merged_results("slims-3", "grch37", "genome")
+#' merged = get_merged_result("manta", "grch37", "genome")
 #'
 get_merged_result = function(tool_name, 
                              projection = "grch37", 
@@ -1132,11 +1132,11 @@ get_sample_cn_segments = function(this_sample_id,
 #'
 #' @examples
 #' #basic usage
-#' my_segments=get_cn_segments(region="chr8:128,723,128-128,774,067")
+#' my_segments = get_cn_segments(region="chr8:128,723,128-128,774,067")
 #' #specifying chromosome, start and end individually
-#' my_segments=get_cn_segments(chromosome="8",qstart=128723128,qend=128774067)
+#' my_segments = get_cn_segments(chromosome="8",qstart=128723128,qend=128774067)
 #' #Asking for chromosome names to have a chr prefix (default is un-prefixed)
-#' prefixed_segments = get_cn_segments(chromosome="12",qstart=122456912,qend=122464036,with_chr_prefix = TRUE)
+#' prefixed_segments = get_cn_segments(chromosome ="12",qstart = 122456912, qend = 122464036, with_chr_prefix = TRUE)
 #'
 get_cn_segments = function(chromosome = "",
                            qstart,
@@ -1302,7 +1302,7 @@ get_ashm_count_matrix = function(regions_bed,
 #'
 #' @examples
 #' #basic usage
-#' get_ssm_by_gene(gene_symbol=c("EZH2"),coding_only=TRUE)
+#' ssm_ezh2 = get_ssm_by_gene(gene_symbol=c("EZH2"),coding_only=TRUE)
 #'
 get_ssm_by_gene = function(gene_symbol,
                            coding_only = FALSE,
@@ -1346,8 +1346,8 @@ get_ssm_by_gene = function(gene_symbol,
 #'
 #' @examples
 #' #basic usage, adding custom names from bundled ashm data frame
-#' regions_bed = grch37_ashm_regions %>% mutate(name=paste(gene,region,sep="_"))
-#' ashm_maf=get_ssm_by_regions(regions_bed=regions_bed,streamlined=TRUE,use_name_column=use_name_column)
+#' regions_bed = grch37_ashm_regions %>% mutate(name = paste(gene, region, sep = "_"))
+#' ashm_maf = get_ssm_by_regions(regions_bed = regions_bed, streamlined = TRUE, use_name_column = FALSE)
 #'
 get_ssm_by_regions = function(regions_list,
                               regions_bed,
@@ -1424,9 +1424,9 @@ get_ssm_by_regions = function(regions_list,
 #'
 #' @examples
 #' #basic usage
-#' my_mutations=get_ssm_by_region(region="chr8:128,723,128-128,774,067")
+#' my_mutations = get_ssm_by_region(region = "chr8:128,723,128-128,774,067")
 #' #specifying chromosome, start and end individually
-#' my_mutations=get_ssm_by_region(chromosome="8",qstart=128723128,qend=128774067)
+#' my_mutations = get_ssm_by_region(chromosome = "8", qstart = 128723128, qend = 128774067)
 #'
 get_ssm_by_region = function(chromosome,
                              qstart,
@@ -1557,8 +1557,8 @@ get_ssm_by_region = function(chromosome,
 #'
 #' @examples
 #' #basic usage
-#' maf_data = get_coding_ssm(limit_cohort=c("BL_ICGC"))
-#' maf_data = get_coding_ssm(limit_samples=my_sample_ids)
+#' maf_data = get_coding_ssm(limit_cohort = c("BL_ICGC"))
+#' maf_data = get_coding_ssm(limit_samples = my_sample_ids)
 #'
 get_coding_ssm = function(limit_cohort,
                           exclude_cohort,
@@ -1682,7 +1682,9 @@ get_gene_cn_and_expression = function(gene_symbol,
 
       this_region = paste0(this_row$chromosome, ":", this_row$start, "-", this_row$end)
       gene_name = gene_symbol
-    }else{
+      }
+  
+    else{
       this_row = grch37_all_gene_coordinates %>% 
         dplyr::filter(ensembl_gene_id == ensembl_id)
 
@@ -1690,7 +1692,9 @@ get_gene_cn_and_expression = function(gene_symbol,
       gene_name = ensembl_id
       gene_symbol = pull(this_row, hugo_symbol)
     }
-  gene_cn = get_cn_states(regions_list = c(this_region), region_names = c(gene_name))
+  gene_cn = get_cn_states(regions_list = c(this_region), region_names = c(gene_name)) %>%
+    as.data.frame()
+  
   colnames(gene_cn)[1] = paste(colnames(gene_cn)[1], "CN", sep = "_")
   gene_cn = gene_cn %>% 
     rownames_to_column("sample_id")

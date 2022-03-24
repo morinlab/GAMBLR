@@ -200,7 +200,7 @@ annotate_igh_breakpoints = function(annotated_df,
 #' @export
 #'
 #' @examples
-#' driver_ssm = annotate_driver_ssm(include_noncoding=c("NFKBIZ"="3'UTR"),noncoding_regions=c("NFKBIZ"="chr3:101578206-101578365"))
+#' driver_ssm = annotate_driver_ssm(maf_df = maf, lymphoma_type = "DLBCL", include_noncoding=c("NFKBIZ"="3'UTR"),noncoding_regions=c("NFKBIZ"="chr3:101578206-101578365"))
 #'
 annotate_driver_ssm = function(maf_df, 
                                lymphoma_type, 
@@ -287,11 +287,7 @@ annotate_driver_ssm = function(maf_df,
 #' # Basic usage
 #' sv_df = get_manta_sv()
 #' annotated_sv = annotate_sv(sv_df)
-#' annotated_entrez = annotate_sv(sv_data = sv_df, 
-#'                                with_chr_prefix = FALSE, 
-#'                                collapse_redundant = FALSE, 
-#'                                return_as = "bedpe_entrez", 
-#'                                genome_build = "grch37")
+#' annotated_entrez = annotate_sv(sv_data = sv_df, with_chr_prefix = FALSE, collapse_redundant = FALSE, return_as = "bedpe_entrez", genome_build = "grch37")
 #'
 annotate_sv = function(sv_data, 
                        partner_bed, 
