@@ -31,6 +31,6 @@ Driver ssm kepts from maf.
 Retrieve data or use supplied data frame of genes to get/annotate MAF data indicating which rows are putative driver mutations.
 }
 \examples{
-driver_ssm = annotate_driver_ssm(include_noncoding=c("NFKBIZ"="3'UTR"),noncoding_regions=c("NFKBIZ"="chr3:101578206-101578365"))
+driver_ssm = annotate_driver_ssm(maf_df = maf, lymphoma_type = "DLBCL", include_noncoding=c("NFKBIZ"="3'UTR"),noncoding_regions=c("NFKBIZ"="chr3:101578206-101578365"))
 
 }

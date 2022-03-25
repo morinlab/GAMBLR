@@ -15,3 +15,7 @@ Nothing
 \description{
 Populate the database with the per-sample summarized results of various tools
 }
+\examples{
+results = populate_tool_results("slims_3")
+
+}

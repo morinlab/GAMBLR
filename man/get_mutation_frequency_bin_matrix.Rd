@@ -74,7 +74,7 @@ get_mutation_frequency_bin_matrix(
 
 \item{legend_direction}{Accepts one of "horizontal" (default) or "vertical" to indicate in which direction the legend will be drawn.}
 
-\item{legendFontSize}{Fontsize of legend in plot,, defualt is 10ppt.}
+\item{legendFontSize}{Fontsize of legend in plot, defualt is 10ppt.}
 
 \item{from_indexed_flatfile}{Set to TRUE to avoid using the database and instead rely on flatfiles (only works for streamlined data, not full MAF details).}
 
@@ -87,6 +87,7 @@ Nothing
 Count hypermutated bins and generate heatmaps/cluster the data.
 }
 \examples{
-mut_freq = get_mutation_frequency_bin_matrix(regions = "mutations.bed", region_padding = 1500, show_gene_colours = TRUE, legendFontSize = 12)
+roi = c("chr1:102502-130210")
+mut_freq = get_mutation_frequency_bin_matrix(regions = roi, region_padding = 1500, show_gene_colours = TRUE, legendFontSize = 12)
 
 }

@@ -48,6 +48,6 @@ CN is the rounded absolute copy number estimate of the region based on log.ratio
 Annotate mutations with their copy number information.
 }
 \examples{
-cn_list = assign_cn_to_ssm(this_sample="HTMCP-01-06-00422-01A-01D",coding_only=TRUE)
+cn_list = assign_cn_to_ssm(this_sample = "HTMCP-01-06-00422-01A-01D", coding_only = TRUE)
 
 }

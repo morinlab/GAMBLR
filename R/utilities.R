@@ -126,7 +126,7 @@ get_coding_ssm_status = function(gene_symbols,
     these_samples_metadata = get_gambl_metadata()
   }
   if(!include_silent){
-    coding_class=coding_class[coding_class != "Silent"]
+    coding_class = coding_class[coding_class != "Silent"]
   }
   # call it once so the object can be reused if user wants to annotate hotspots
   if(!missing(maf_data)){
@@ -1236,6 +1236,15 @@ estimate_purity = function(in_maf,
   # Create an empty list
   indiv_CN = list()
 
+  # For each copy number state, separate mutations in each CN state into separate datatables
+    ## "for" loop, and this function to get different copy number states: unique(CN_new$CN)
+  # Duplicate rows based on the copy number value (CN of 2 = 2 rows, etc):
+    ##CN_maf[rep(seq(nrow(CN_maf)), CN_maf$CN),]
+  # Fill out the ploidy column for each duplicated column:
+    ##rep(seq(i),nrow(CN_max))
+  # Add a column for Purity and Calculate for CNs 3 or larger:
+    ##mutate(CN_max_dup, Purity = (CN*VAF)/Ploidy)
+
   for(i in unique(CN_new$CN)){
     CN_max = CN_new %>% 
       dplyr::filter(CN == i)
@@ -1687,6 +1696,9 @@ get_gambl_colours = function(classification = "all",
   all_colours = list()
   everything = c()
   blood_cols = ggsci::get_ash("blood")
+
+  all_colours[["type"]] = c("gain" = "blue",
+                            "loss" = "red")
 
   all_colours[["hmrn"]] = c("BCL2-MYC" = "#52000F",
                             "BCL2" = "#721F0F",

@@ -35,7 +35,6 @@ get_ssm_by_sample(
 \item{min_read_support}{Only returns variants with at least this many reads in t_alt_count (for cleaning up augmented MAFs)}
 
 \item{verbose}{Enable for debugging/noisier output}
-                                                                                            
 }
 \value{
 data frame in MAF format.
@@ -48,6 +47,6 @@ with known contamination in the normal. This will also be useful to apply a blac
 annotate_ssm_blacklist.
 }
 \examples{
-ssm_sample = get_ssm_by_sample(this_sample_id = "HTMCP-01-06-00485-01A-01D", tool_name = "slims-3", projection = "grch37", seq_type = "genome")
+ssm_sample = get_ssm_by_sample(this_sample_id = "HTMCP-01-06-00485-01A-01D", tool_name = "slims-3", projection = "grch37")
 
 }

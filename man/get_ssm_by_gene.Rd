@@ -28,6 +28,6 @@ Get all somatic mutations for a given gene or list of genes and optionally restr
 }
 \examples{
 #basic usage
-get_ssm_by_gene(gene_symbol=c("EZH2"),coding_only=TRUE)
+ssm_ezh2 = get_ssm_by_gene(gene_symbol=c("EZH2"),coding_only=TRUE)
 
 }

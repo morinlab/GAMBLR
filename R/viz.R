@@ -6,14 +6,15 @@
 #' @param these_samples_metadata GAMBL metadata subset to the cases you want to process (or full metadata)
 #' @param type Type of CN segment to be ploitted. Default is gain (CN > 2).
 #' @param crop_segments Boolean statement that crops segment by first checking if crop segment is smaller than lef/right distance, then adds or subtracts  crop distance to end/start coordiantes. Default is TRUE.
-#' @param sort_by_annotation Sort CN by annotation, default is "pthology".
+#' @param sort_by_annotation Sort CN by annotation, default is "pathology".
 #' @param crop_distance Crop distance for cropping segments. Default value is 10000000 bp.
 #'
 #' @return Nothing
+#' @import tidyverse
 #' @export
 #'
 #' @examples
-#' plot = focal_cn_plot(gene = "BCL2", type = "gain", segmentsize = 2, crop_distance = 1000000)
+#' plot = focal_cn_plot(gene = "BCL2", type = "gain", segment_size = 2, crop_distance = 1000000)
 #' plot = focal_cn_plot(region = "chr4:100154645-5488465512", type = "loss", crop_distance = 100000000)
 #'
 focal_cn_plot = function(region,
@@ -57,7 +58,7 @@ focal_cn_plot = function(region,
   all_not_dip$ID = factor(all_not_dip$ID, levels = unique(all_not_dip$ID))
   
   ggplot(all_not_dip, aes(x = start, xend = end, y = ID, yend = ID, colour = lymphgen)) +
-    geom_vline(aes(xintercept = as.numeric(chunks$start)), alpha = 0.5, colour = "red") +
+    geom_vline(aes(xintercept = as.numeric(chunks$start)), alpha = 0.5, colour = get_gambl_colours()[type]) +
     geom_segment(size = segment_size) + theme_cowplot() +
     theme(axis.text.y = element_blank())
 }
@@ -72,7 +73,7 @@ focal_cn_plot = function(region,
 #'
 #' @return Nothing
 #' @export
-#' @import g3viz
+#' @import g3viz, tidyverse
 #'
 #' @examples
 #' plot_lollipop = (mutation_df, "MYC", "Mutation data for MYC", "blue")
@@ -121,16 +122,18 @@ pretty_lollipop_plot = function(maf_df,
 #' @param legend_row Fiddle with these to widen or narrow your legend.
 #' @param legend_col Fiddle with these to widen or narrow your legend.
 #' @param legend_direction Accepts one of "horizontal" (default) or "vertical" to indicate in which direction the legend will be drawn.
-#' @param legendFontSize Fontsize of legend in plot,, defualt is 10ppt.
+#' @param legendFontSize Fontsize of legend in plot, defualt is 10ppt.
 #' @param from_indexed_flatfile Set to TRUE to avoid using the database and instead rely on flatfiles (only works for streamlined data, not full MAF details).
 #' @param mode Only works with indexed flatfiles. Accepts 2 options of "slms-3" and "strelka2" to indicate which variant caller to use. Default is "slms-3".
 #'
 #'
 #' @return Nothing
+#' @import tidyverse ComplexHeatmap
 #' @export
 #'
 #' @examples
-#' mut_freq = get_mutation_frequency_bin_matrix(regions = "mutations.bed", region_padding = 1500, show_gene_colours = TRUE, legendFontSize = 12)
+#' roi = c("chr1:102502-130210")
+#' mut_freq = get_mutation_frequency_bin_matrix(regions = roi, region_padding = 1500, show_gene_colours = TRUE, legendFontSize = 12)
 #'
 get_mutation_frequency_bin_matrix = function(regions,
                                              regions_df,
@@ -303,8 +306,8 @@ get_mutation_frequency_bin_matrix = function(regions,
 
 #' Plot a heatmap comparing the VAF of mutations in T1/T2 pairs.
 #'
-#' @param maf1 Data frame 1 with mutations (maf format).
-#' @param maf2 Data frame 2 with mutations (maf format).
+#' @param maf1 Data frame of simple somatic mutations at time point A.
+#' @param maf2 Data frame of simple somatic mutations at time point B.
 #' @param vafcolname Name of variable that holds VAF in maf. If not supplied, vaf will be calcualted.
 #' @param patient_colname Column name that holds patient name (default is "patient_id").
 #' @param these_samples_metadata GAMBL metadata subset to the cases you want to process (or full metadata).
@@ -320,6 +323,7 @@ get_mutation_frequency_bin_matrix = function(regions,
 #' @param cluster_rows Boolean statement for clustering by rows, defaults to FALSE.
 #'
 #' @return Nothing
+#' @import tidyverse ComplexHeatmap
 #' @export
 #'
 #' @examples
@@ -362,7 +366,8 @@ plot_mutation_dynamics_heatmap = function(maf1,
     dplyr::rename("patient_id" = patient_colname)
 
   both_vaf_all = full_join(t1_pair_mafdat, t2_pair_mafdat, by = c("patient_id", "Start_Position")) %>%
-    dplyr::select(patient_id, HGVSp_Short.x, Hugo_Symbol.x, Hugo_Symbol.y, Tumor_Sample_Barcode.x, Tumor_Sample_Barcode.y, HGVSp_Short.y, vaf.x, vaf.y, hot_spot.x, hot_spot.y) %>%
+    dplyr::select(patient_id, HGVSp_Short.x, Hugo_Symbol.x, Hugo_Symbol.y, Tumor_Sample_Barcode.x, 
+                  Tumor_Sample_Barcode.y, HGVSp_Short.y, vaf.x, vaf.y, hot_spot.x, hot_spot.y) %>%
     mutate(ANNO = ifelse(is.na(vaf.x), HGVSp_Short.y, HGVSp_Short.x)) %>%
     mutate(GENE = ifelse(is.na(vaf.x), Hugo_Symbol.y, Hugo_Symbol.x)) %>%
     mutate(VAF1 = ifelse(is.na(vaf.x), 0, vaf.x)) %>%
@@ -403,8 +408,8 @@ plot_mutation_dynamics_heatmap = function(maf1,
     column_to_rownames("patient_id")
 
   zeroes[is.na(zeroes)] = 0.001
-  hotspots[is.na(hotspots)] = - 1
-  hotspots[hotspots == 0] = - 1
+  hotspots[is.na(hotspots)] = -1
+  hotspots[hotspots == 0] = -1
   hotspots[hotspots == 1] = 0
   zeroes[zeroes > 0] = 1
   print(head(hotspots))
@@ -663,7 +668,7 @@ plot_sample_circos = function(this_sample_id,
   if(missing(chrom_list)){
   
   #should we add chr list for males as well? Sex could then also be added as a paramter for the function were the appropiate chr list is called if not stated?
-   chrom_list = c("chr1", "chr2", "chr3", "chr4", "chr5", "chr6", "chr7", "chr8", "chr9", "chr10", "chr11", "chr12", "chr13", "chr14", "chr15", "chr16", "chr17", "chr18", "chr19", "chr20", "chr21", "chr22", "chrX")
+   chrom_list = paste0("chr", c(1:22,"X"))
   }
   if(!missing(label_genes)){
     gene_bed = grch37_gene_coordinates %>%
@@ -831,7 +836,7 @@ prettyOncoplot = function(maftools_obj,
                           onco_matrix_path,
                           genes,
                           include_noncoding = list("NFKBIZ" = c("3'UTR"), "HNRNPH1" = "Splice_Region"),
-                          keepGeneOrder = TRUE,
+                          keepGeneOrder = FALSE,
                           keepSampleOrder = TRUE,
                           highlightHotspots = FALSE,
                           these_samples_metadata,
@@ -1287,6 +1292,7 @@ prettyOncoplot = function(maftools_obj,
                                                                                                                       ncol = legend_col,
                                                                                                                       direction = legend_direction,
                                                                                                                       labels_gp = gpar(fontsize = legendFontSize))))
+
     draw(ch, heatmap_legend_side = legend_position, annotation_legend_side = legend_position)
 }
 
@@ -1615,6 +1621,163 @@ ashm_rainbow_plot = function(mutations_maf,
     p = p + theme(axis.text.y = element_text(size = 5))
   }
   return(p)
+}
+
+  #' This function doesn't do anything yet
+#'
+#' @param mafs TODO
+#' @param sample_id TODO
+#' @param genes TODO
+#' @param show_noncoding TODO
+#' @param detail TODO
+#'
+#' @return
+#' @export
+#' @import tidyverse
+#'
+#' @examples
+plot_multi_timepoint = function(mafs,
+                                sample_id,
+                                genes,
+                                show_noncoding = FALSE,
+                                detail){
+
+  tp = c("A","B","C")
+  title = paste(sample_id, detail, sep = "\n")
+  i = 1
+  for (i in c(1:length(mafs))){
+    maf_file = mafs[i]
+    time_point = tp[i]
+    print(paste(maf_file, time_point))
+  }
+  if(length(mafs)==2){
+    A.maf = fread_maf(mafs[1])
+    B.maf = fread_maf(mafs[2])
+
+    A.maf = A.maf %>% 
+      dplyr::select(c(Hugo_Symbol, Chromosome, Start_Position, End_Position, Variant_Classification, Tumor_Sample_Barcode, HGVSp_Short, t_ref_count, t_alt_count)) %>%
+      mutate(VAF = t_alt_count/(t_ref_count + t_alt_count)) %>%
+      mutate(time_point = 1) %>% 
+      mutate(coord = paste(Chromosome, Start_Position, sep = ":"))
+    
+    B.maf = B.maf %>% 
+      dplyr::select(c(Hugo_Symbol, Chromosome, Start_Position, End_Position, Variant_Classification, Tumor_Sample_Barcode, HGVSp_Short, t_ref_count, t_alt_count)) %>%
+      mutate(VAF = t_alt_count/(t_ref_count + t_alt_count)) %>%
+      mutate(time_point = 2) %>% 
+      mutate(coord = paste(Chromosome, Start_Position, sep = ":"))
+    
+    all.maf = rbind(A.maf, B.maf)
+    if(show_noncoding){
+      coding.maf = subset_regions(all.maf, shm_regions)
+    }
+    else{
+      coding.maf = dplyr::filter(all.maf, !Variant_Classification %in% c("Silent", "RNA", "IGR", "Intron", "5'Flank", "3'Flank", "5'UTR"))
+      #keep certain 3' UTR mutations, toss the rest
+      coding.maf = dplyr::filter(coding.maf, (Variant_Classification == "3'UTR" & Hugo_Symbol == "NFKBIZ") | (Variant_Classification != "3'UTR"))
+    }
+    A.rows = which(coding.maf$time_point==1)
+    A.zero.coords = pull(unique(coding.maf[which(coding.maf$time_point==1 & VAF == 0), "coord"]))
+    A.zero = dplyr::filter(coding.maf, coord %in% A.zero.coords)
+
+    B.rows = which(coding.maf$time_point==2)
+    B.zero.coords = pull(unique(coding.maf[which(coding.maf$time_point==2 & VAF == 0), "coord"]))
+    B.zero = dplyr::filter(coding.maf, coord %in% B.zero.coords)
+
+    coding.maf$category = "trunk"
+    coding.maf[which(coord %in% A.zero.coords), "category"] = "not-A"
+    coding.maf[which(coord %in% B.zero.coords), "category"] = "not-B"
+
+    #actually this is changed in eitehr direction, not just gained
+    just_gained_lg_all = dplyr::filter(coding.maf, Hugo_Symbol %in% genes & category != "trunk" )
+
+    #just_gained_lg = filter(coding.maf, Hugo_Symbol %in% genes & category != "trunk" & time_point !=2) %>%
+    #  mutate(time_point = time_point +0.4)
+
+    just_gained_lg = dplyr::filter(coding.maf, Hugo_Symbol %in% genes & category != "trunk" & time_point == 2 & VAF > 0) %>%
+      mutate(time_point = time_point +0.4)
+
+    print(just_gained_lg)
+
+    just_trunk = dplyr::filter(coding.maf, Hugo_Symbol %in% genes & category == "trunk" & time_point ==1) %>%
+      mutate(time_point = time_point-0.4)
+
+    ggplot(coding.maf, aes(x = time_point, y = VAF, group = coord, colour = category)) +
+      geom_point() + 
+      geom_line(alpha = 0.5) +
+      geom_text_repel(data = just_gained_lg, aes(label = Hugo_Symbol), size = 4,segment.linetype = 0) +
+      geom_text_repel(data = just_trunk, aes(label = Hugo_Symbol), size = 4, segment.linetype = 0) +
+      ggtitle(title) +
+      theme_minimal()
+    return(TRUE)
+  }
+  if(length(mafs)==3){
+    A.maf = fread_maf(mafs[1])
+    B.maf = fread_maf(mafs[2])
+    C.maf = fread_maf(mafs[3])
+
+    A.maf = A.maf %>% 
+      dplyr::select(c(Hugo_Symbol, Chromosome, Start_Position, End_Position, Variant_Classification, Tumor_Sample_Barcode, HGVSp_Short, t_ref_count, t_alt_count))  %>%
+      mutate(VAF = t_alt_count/(t_ref_count + t_alt_count)) %>%
+      mutate(time_point = 1) %>% 
+      mutate(coord = paste(Chromosome, Start_Position, sep = ":"))
+
+    B.maf = B.maf %>% 
+      dplyr::select(c(Hugo_Symbol, Chromosome, Start_Position, End_Position, Variant_Classification, Tumor_Sample_Barcode, HGVSp_Short, t_ref_count, t_alt_count))  %>%
+      mutate(VAF = t_alt_count/(t_ref_count + t_alt_count)) %>%
+      mutate(time_point = 2) %>% 
+      mutate(coord = paste(Chromosome, Start_Position,sep = ":"))
+
+    C.maf = C.maf %>%
+      dplyr::select(c(Hugo_Symbol, Chromosome, Start_Position, End_Position, Variant_Classification, Tumor_Sample_Barcode, HGVSp_Short, t_ref_count, t_alt_count))  %>%
+      mutate(VAF = t_alt_count/(t_ref_count + t_alt_count)) %>%
+      mutate(time_point = 3) %>%
+      mutate(coord = paste(Chromosome, Start_Position, sep = ":"))
+    
+    all.maf = rbind(A.maf, B.maf, C.maf)
+    if(show_noncoding){
+      coding.maf = subset_regions(all.maf, shm_regions)
+    }
+    else{
+      coding.maf = dplyr::filter(all.maf, !Variant_Classification %in% c("Silent", "RNA", "IGR", "Intron", "5'Flank", "3'Flank", "5'UTR"))
+      #keep certain 3' UTR mutations, toss the rest
+      coding.maf = dplyr::filter(coding.maf, (Variant_Classification == "3'UTR" & Hugo_Symbol == "NFKBIZ") | (Variant_Classification != "3'UTR"))
+    }
+
+    A.rows = which(coding.maf$time_point==1)
+    A.zero.coords = pull(unique(coding.maf[which(coding.maf$time_point==1 & VAF == 0), "coord"]))
+    A.zero = dplyr::filter(coding.maf, coord %in% A.zero.coords)
+
+    B.rows = which(coding.maf$time_point==2)
+    B.zero.coords = pull(unique(coding.maf[which(coding.maf$time_point==2 & VAF == 0), "coord"]))
+    B.zero = dplyr::filter(coding.maf, coord %in% B.zero.coords)
+
+    C.rows = which(coding.maf$time_point==3)
+    C.zero.coords = pull(unique(coding.maf[which(coding.maf$time_point==3 & VAF == 0), "coord"]))
+    C.zero = dplyr::filter(coding.maf, coord %in% C.zero.coords)
+
+    coding.maf$category = "trunk"
+    coding.maf[which(coord %in% A.zero.coords), "category"] = "not-A"
+    coding.maf[which(coord %in% B.zero.coords), "category"] = "not-B"
+    coding.maf[which(coord %in% C.zero.coords), "category"] = "not-C"
+
+    just_gained_lg_all = dplyr::filter(coding.maf, Hugo_Symbol %in% lg & category != "trunk" )
+
+    just_gained_lg = dplyr::filter(coding.maf, Hugo_Symbol %in% lg & category != "trunk" & time_point ==3) %>%
+      mutate(time_point = time_point +0.4)
+
+    just_trunk = dplyr::filter(coding.maf, Hugo_Symbol %in% lg & category == "trunk" & time_point ==1) %>%
+      mutate(time_point = time_point-0.4)
+
+    ggplot(coding.maf, aes(x = time_point, y = VAF, group = coord, colour = category)) +
+      geom_point() + 
+      geom_line(alpha = 0.3) +
+      geom_text_repel(data = just_gained_lg, aes(label = Hugo_Symbol), size = 4, segment.linetype = 0) +
+      geom_text_repel(data = just_trunk, aes(label = Hugo_Symbol), size = 4, segment.linetype = 0) +
+      ggtitle(title) +
+      theme_minimal()
+    return(TRUE)
+  }
+  return(FALSE)
 }
 
 
@@ -2219,158 +2382,6 @@ splendidHeatmap = function(this_matrix,
 }
 
 
-#' This function doesn't do anything yet, this should be updated ;)
-#'
-#' @param mafs A maf data frame. Minimum required columns are Hugo_Symbol and Tumor_Sample_Barcode.
-#' @param sample_id Specify the sample_id or any other string you want embedded in the file name.
-#' @param genes An optional list of genes to restrict your plot to.
-#' @param show_noncoding Set to TRUE to show noncoding regions. Default is FALSE.
-#' @param detail Argument for specifying detail that geos with sample ID in the title.
-#'
-#' @return Nothing
-#' @export
-#' @import tidyverse
-#'
-#' @examples
-#' plot = plot_multi_timepoint(mafs = "my_maf", sample_id = "some-sample-id", genes = "MYC", show_noncoding = TRUE, detail = "MYC")
-#'
-plot_multi_timepoint = function(mafs,
-                                sample_id,
-                                genes,
-                                show_noncoding = FALSE,
-                                detail){
-
-  tp = c("A","B","C")
-  title = paste(sample_id, detail, sep = "\n")
-  i = 1
-  for (i in c(1:length(mafs))){
-    maf_file = mafs[i]
-    time_point = tp[i]
-    print(paste(maf_file, time_point))
-  }
-  if(length(mafs) == 2){
-    A.maf = fread_maf(mafs[1])
-    B.maf = fread_maf(mafs[2])
-
-    A.maf = A.maf %>% 
-      dplyr::select(c(Hugo_Symbol, Chromosome, Start_Position, End_Position, Variant_Classification, Tumor_Sample_Barcode, HGVSp_Short, t_ref_count, t_alt_count)) %>%
-      mutate(VAF = t_alt_count / (t_ref_count + t_alt_count)) %>%
-      mutate(time_point = 1) %>%
-      mutate(coord = paste(Chromosome, Start_Position, sep = ":"))
-    
-    B.maf = B.maf %>%
-      dplyr::select(c(Hugo_Symbol, Chromosome, Start_Position, End_Position, Variant_Classification, Tumor_Sample_Barcode, HGVSp_Short, t_ref_count, t_alt_count)) %>%
-      mutate(VAF = t_alt_count / (t_ref_count + t_alt_count)) %>%
-      mutate(time_point = 2) %>%
-      mutate(coord = paste(Chromosome, Start_Position, sep = ":"))
-
-    all.maf = rbind(A.maf, B.maf)
-    if(show_noncoding){
-      coding.maf = subset_regions(all.maf, shm_regions)
-    }
-    else{
-      coding.maf = dplyr::filter(all.maf, !Variant_Classification %in% c("Silent", "RNA", "IGR", "Intron", "5'Flank", "3'Flank", "5'UTR"))
-      #keep certain 3' UTR mutations, toss the rest
-      coding.maf = dplyr::filter(coding.maf, (Variant_Classification == "3'UTR" & Hugo_Symbol == "NFKBIZ") | (Variant_Classification != "3'UTR"))
-    }
-    A.rows = which(coding.maf$time_point == 1)
-    A.zero.coords = pull(unique(coding.maf[which(coding.maf$time_point == 1 & VAF == 0), "coord"]))
-    A.zero = dplyr::filter(coding.maf, coord %in% A.zero.coords)
-
-    B.rows = which(coding.maf$time_point == 2)
-    B.zero.coords = pull(unique(coding.maf[which(coding.maf$time_point == 2 & VAF == 0), "coord"]))
-    B.zero = dplyr::filter(coding.maf, coord %in% B.zero.coords)
-    
-    coding.maf$category = "trunk"
-    coding.maf[which(coord %in% A.zero.coords), "category"] = "not-A"
-    coding.maf[which(coord %in% B.zero.coords), "category"] = "not-B"
-
-    #actually this is changed in eitehr direction, not just gained
-    just_gained_lg_all = dplyr::filter(coding.maf, Hugo_Symbol %in% genes & category != "trunk" )
-    #just_gained_lg = filter(coding.maf, Hugo_Symbol %in% genes & category != "trunk" & time_point !=2) %>%
-    #mutate(time_point = time_point +0.4)
-
-    just_gained_lg = dplyr::filter(coding.maf, Hugo_Symbol %in% genes & category != "trunk" & time_point == 2 & VAF > 0) %>%
-      mutate(time_point = time_point +0.4)
-    print(just_gained_lg)
-    just_trunk = dplyr::filter(coding.maf, Hugo_Symbol %in% genes & category == "trunk" & time_point ==1) %>%
-      mutate(time_point = time_point-0.4)
-    ggplot(coding.maf,aes(x=time_point,y=VAF,group=coord,colour=category)) +
-      geom_point() + geom_line(alpha=0.5) +
-      geom_text_repel(data=just_gained_lg,aes(label=Hugo_Symbol),size=4,segment.linetype=0) +
-      geom_text_repel(data=just_trunk,aes(label=Hugo_Symbol),size=4,segment.linetype=0) +
-      ggtitle(title) +
-      theme_minimal()
-    return(TRUE)
-  }
-  if(length(mafs) ==3 ){
-    A.maf = fread_maf(mafs[1])
-    B.maf = fread_maf(mafs[2])
-    C.maf = fread_maf(mafs[3])
-    A.maf = A.maf %>% 
-      dplyr::select(c(Hugo_Symbol, Chromosome, Start_Position, End_Position, Variant_Classification, Tumor_Sample_Barcode, HGVSp_Short, t_ref_count, t_alt_count)) %>%
-      mutate(VAF = t_alt_count / (t_ref_count + t_alt_count)) %>%
-      mutate(time_point = 1) %>%
-      mutate(coord = paste(Chromosome, Start_Position, sep = ":"))
-
-    B.maf = B.maf %>%
-      dplyr::select(c(Hugo_Symbol, Chromosome, Start_Position, End_Position, Variant_Classification, Tumor_Sample_Barcode, HGVSp_Short, t_ref_count, t_alt_count)) %>%
-      mutate(VAF = t_alt_count / (t_ref_count + t_alt_count)) %>%
-      mutate(time_point = 2) %>%
-      mutate(coord = paste(Chromosome, Start_Position, sep = ":"))
-
-    C.maf = C.maf %>% 
-      dplyr::select(c(Hugo_Symbol, Chromosome, Start_Position, End_Position, Variant_Classification, Tumor_Sample_Barcode, HGVSp_Short, t_ref_count, t_alt_count)) %>%
-      mutate(VAF = t_alt_count / (t_ref_count + t_alt_count)) %>%
-      mutate(time_point = 3) %>%
-      mutate(coord = paste(Chromosome, Start_Position, sep = ":"))
-
-    all.maf = rbind(A.maf, B.maf, C.maf)
-    if(show_noncoding){
-      coding.maf = subset_regions(all.maf, shm_regions)
-    }
-    else{
-      coding.maf = dplyr::filter(all.maf, !Variant_Classification %in% c("Silent", "RNA", "IGR", "Intron", "5'Flank", "3'Flank", "5'UTR"))
-      #keep certain 3' UTR mutations, toss the rest
-      coding.maf = dplyr::filter(coding.maf, (Variant_Classification == "3'UTR" & Hugo_Symbol == "NFKBIZ") | (Variant_Classification != "3'UTR"))
-    }
-
-    A.rows = which(coding.maf$time_point == 1)
-    A.zero.coords = pull(unique(coding.maf[which(coding.maf$time_point == 1 & VAF == 0), "coord"]))
-    A.zero = dplyr::filter(coding.maf, coord %in% A.zero.coords)
-
-    B.rows = which(coding.maf$time_point == 2)
-    B.zero.coords = pull(unique(coding.maf[which(coding.maf$time_point == 2 & VAF == 0), "coord"]))
-    B.zero = dplyr::filter(coding.maf, coord %in% B.zero.coords)
-
-    C.rows = which(coding.maf$time_point == 3)
-    C.zero.coords = pull(unique(coding.maf[which(coding.maf$time_point == 3 & VAF == 0), "coord"]))
-    C.zero = dplyr::filter(coding.maf, coord %in% C.zero.coords)
-
-    coding.maf$category = "trunk"
-    coding.maf[which(coord %in% A.zero.coords), "category"] = "not-A"
-    coding.maf[which(coord %in% B.zero.coords), "category"] = "not-B"
-    coding.maf[which(coord %in% C.zero.coords), "category"] = "not-C"
-
-    just_gained_lg_all = dplyr::filter(coding.maf, Hugo_Symbol %in% lg & category != "trunk" )
-    just_gained_lg = dplyr::filter(coding.maf, Hugo_Symbol %in% lg & category != "trunk" & time_point == 3) %>%
-      mutate(time_point = time_point + 0.4)
-
-    just_trunk = dplyr::filter(coding.maf, Hugo_Symbol %in% lg & category == "trunk" & time_point == 1) %>%
-      mutate(time_point = time_point - 0.4)
-
-    ggplot(coding.maf, aes(x = time_point, y = VAF, group = coord, colour = category)) +
-      geom_point() +
-      geom_line(alpha = 0.3) +
-      geom_text_repel(data = just_gained_lg, aes(label = Hugo_Symbol), size = 4, segment.linetype = 0) +
-      geom_text_repel(data = just_trunk, aes(label = Hugo_Symbol), size = 4, segment.linetype = 0) +
-      ggtitle(title) +
-      theme_minimal()
-    return(TRUE)
-  }
-  return(FALSE)
-}
-
 #' Generate a plot for structural variant sub type distribution sorted per chromosome
 #'
 #' @param this_sample Sample to be plotted.
@@ -2381,6 +2392,7 @@ plot_multi_timepoint = function(mafs,
 #' @param use_augmented Boolean statement if to use augmented maf, default is FALSE.
 #'
 #' @return Nothing.
+#' @import tidyverse cowplot
 #' @export
 #'
 #' @examples
@@ -2444,6 +2456,7 @@ fancy_sv_chrdistplot = function(this_sample,
 #' @param use_augmented Boolean statement if to use augmented maf, default is FALSE.
 #'
 #' @return Nothing.
+#' @import tidyverse cowplot
 #' @export
 #'
 #' @examples
@@ -2523,6 +2536,7 @@ fancy_snp_chrdistplot = function(this_sample,
 #' @param use_augmented Boolean statement if to use augmented maf, default is FALSE.
 #'
 #' @return Nothing.
+#' @import tidyverse cowplot
 #' @export
 #'
 #' @examples
@@ -2579,6 +2593,7 @@ fancy_svbar = function(this_sample,
 #' @param use_augmented Boolean statement if to use augmented maf, default is FALSE.
 #'
 #' @return Nothing.
+#' @import tidyverse cowplot
 #' @export
 #'
 #' @examples
@@ -2649,6 +2664,7 @@ fancy_cnlohbar = function(this_sample,
 #' @param use_augmented Boolean statement if to use augmented maf, default is FALSE.
 #'
 #' @return Nothing.
+#' @import tidyverse cowplot
 #' @export
 #'
 #' @examples

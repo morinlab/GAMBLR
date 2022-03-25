@@ -20,6 +20,6 @@ String that holds filepath, tool name, sequence type, projection and extension.
 Helper function to find the production merge for a pipeline and restrict to the right file based on file permissions.
 }
 \examples{
-merged = get_merged_results("slims-3", "grch37", "genome")
+merged = get_merged_result("manta", "grch37", "genome")
 
 }

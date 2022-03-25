@@ -2,8 +2,8 @@
 % Please edit documentation in R/database.R
 \name{get_ssm_by_samples}
 \alias{get_ssm_by_samples}
-\title{Get MAF-format data frame for more than one sample and combine together (wraps get_ssm_by_sample).
-See get_ssm_by_sample for more information.}
+\title{Get MAF-format data frame for more than one sample and combine together (wraps get_ssm_by_sample)
+See get_ssm_by_sample for more information}
 \usage{
 get_ssm_by_samples(
   these_sample_ids,
@@ -33,14 +33,13 @@ get_ssm_by_samples(
 \item{subset_from_merge}{Instead of merging individual MAFs, the data will be subset from a pre-merged MAF of samples with the specified seq_type}
 
 \item{augmented}{default: TRUE. Set to FALSE if you instead want the original MAF from each sample for multi-sample patients instead}
-
 }
 \value{
 Returns a data frame of variants in MAF-like format.
 }
 \description{
-Get MAF-format data frame for more than one sample and combine together (wraps get_ssm_by_sample).
-See get_ssm_by_sample for more information.
+Get MAF-format data frame for more than one sample and combine together (wraps get_ssm_by_sample)
+See get_ssm_by_sample for more information
 }
 \examples{
 merged_maf_force_unmatched = get_ssm_by_samples(these_sample_ids=c("HTMCP-01-06-00485-01A-01D","14-35472_tumorA","14-35472_tumorB"))

@@ -17,24 +17,24 @@ get_gambl_metadata(
 )
 }
 \arguments{
-\item{seq_type_filter}{Filtering criteria (default: all genomes).}
+\item{seq_type_filter}{Filtering criteria (default: all genomes)}
 
-\item{tissue_status_filter}{Filtering criteria (default: only tumour genomes, can be "mrna" or "any" for the superset of cases).}
+\item{tissue_status_filter}{Filtering criteria (default: only tumour genomes, can be "mrna" or "any" for the superset of cases)}
 
-\item{case_set}{optional short name for a pre-defined set of cases avoiding any.}
+\item{case_set}{optional short name for a pre-defined set of cases avoiding any}
 
-\item{remove_benchmarking}{By default the FFPE benchmarking duplicate samples will be dropped.}
+\item{remove_benchmarking}{By default the FFPE benchmarking duplicate samples will be dropped}
 
-\item{with_outcomes}{Optionally join to gambl outcome data.}
+\item{with_outcomes}{Optionally join to gambl outcome data}
 
-\item{from_flatfile}{New default is to use the metadata in the flatfiles from your clone of the repo. Can be over-ridden to use the database.}
+\item{from_flatfile}{New default is to use the metadata in the flatfiles from your clone of the repo. Can be over-ridden to use the database
+embargoed cases (current options: 'BLGSP-study', 'FL-study', 'DLBCL-study', 'FL-DLBCL-study', 'FL-DLBCL-all', 'DLBCL-unembargoed', 'BL-DLBCL-manuscript', 'MCL','MCL-CLL')}
 
 \item{sample_flatfile}{Optionally provide the full path to a samples table to use instead of the default}
 
 \item{biopsy_flatfile}{Optionally provide the full path to a biopsy table to use instead of the default}
 
 \item{only_available}{If TRUE, will remove samples with FALSE or NA in the bam_available column (default: TRUE)}
-
 }
 \value{
 A data frame with metadata for each biopsy in GAMBL

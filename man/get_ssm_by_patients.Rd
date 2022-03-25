@@ -42,4 +42,5 @@ See get_ssm_by_samples for more information
 }
 \examples{
 merged_maf_force_unmatched = get_ssm_by_samples(these_sample_ids=c("HTMCP-01-06-00485-01A-01D","14-35472_tumorA","14-35472_tumorB"))
+
 }

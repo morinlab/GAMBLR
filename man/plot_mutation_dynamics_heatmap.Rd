@@ -23,9 +23,9 @@ plot_mutation_dynamics_heatmap(
 )
 }
 \arguments{
-\item{maf1}{Data frame 1 with mutations (maf format).}
+\item{maf1}{Data frame of simple somatic mutations at time point A.}
 
-\item{maf2}{Data frame 2 with mutations (maf format).}
+\item{maf2}{Data frame of simple somatic mutations at time point B.}
 
 \item{vafcolname}{Name of variable that holds VAF in maf. If not supplied, vaf will be calcualted.}
 

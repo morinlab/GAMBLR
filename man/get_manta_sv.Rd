@@ -56,5 +56,6 @@ all_sv = get_manta_sv()
 #get all SVs for a single sample
 some_sv = get_manta_sv(sample_id="94-15772_tumorA")
 #get the SVs in a region around MYC
-myc_locus_sv = get_manta_sv(region="8:128723128-128774067").#'
+myc_locus_sv = get_manta_sv(region="8:128723128-128774067").
+
 }

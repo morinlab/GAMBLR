@@ -42,7 +42,7 @@ Final_purity is the finalized purity estimation per mutation after considering d
 Estimate purity.
 }
 \examples{
-tumour_purity = estimate_purity(in_maf="path/to/file.maf", in_seg="path/to/file.seg", seg_file_source="ichorCNA", show_plots=TRUE)
+tumour_purity = estimate_purity(in_maf = "path/to/file.maf", in_seg = "path/to/file.seg", seg_file_source = "ichorCNA", show_plots = TRUE)
 tumour_purity = estimate_purity(in_maf="path/to/file.maf", assume_diploid = TRUE)
 
 }

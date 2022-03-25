@@ -12,6 +12,8 @@ populate_each_tool_result(
 )
 }
 \arguments{
+\item{tool}{Name of tool to get results from}
+
 \item{include_silent}{Logical parameter indicating whether to include siment mutations into coding mutations. Default is FALSE}
 
 \item{genome_build}{A list of all genome builds to process}
@@ -23,4 +25,8 @@ populate_each_tool_result(
 }
 \description{
 Title
+}
+\examples{
+tool_results = populate_each_tool_result("smlims_3", "grch37", "gambl", FALSE)
+
 }

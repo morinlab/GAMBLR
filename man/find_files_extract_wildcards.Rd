@@ -24,4 +24,5 @@ Title
 }
 \examples{
 file_details_manta = find_files_extract_wildcards(tool_name = "manta", genome_build = c("hg38", "grch37"), search_pattern = ".bed")
+
 }

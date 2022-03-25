@@ -95,6 +95,7 @@ get_ssm_by_samples = function(these_sample_ids,
                               augmented = TRUE){
   if(!subset_from_merge){
     message("WARNING: on-the-fly merges can be extremely slow and consume a lot of memory. Use at your own risk. ")
+    message("If you do not have permissions to access ICGC data then this is unfortunately your only option, currently")
   }
   to_exclude = get_excluded_samples(tool_name)
   if(missing(these_samples_metadata)){
@@ -380,7 +381,12 @@ get_gambl_metadata = function(seq_type_filter = c("genome","capture"),
     slice_head()
   }
   all_meta = add_icgc_metadata(all_meta) %>%
-    mutate(consensus_pathology = case_when(ICGC_PATH == "FL-DLBCL" ~ "COM", ICGC_PATH == "DH-BL" ~ pathology, ICGC_PATH == "FL" | ICGC_PATH == "DLBCL" ~ ICGC_PATH, pathology == "COMFL" ~ "COM", TRUE ~ pathology))
+    mutate(consensus_pathology = case_when(ICGC_PATH == "FL-DLBCL" ~ "COM", 
+                                           ICGC_PATH == "DH-BL" ~ pathology, 
+                                           ICGC_PATH == "FL" | ICGC_PATH == "DLBCL" ~ ICGC_PATH, 
+                                           pathology == "COMFL" ~ "COM", 
+                                           TRUE ~ pathology))
+
   all_meta = unique(all_meta) #something in the ICGC code is causing this. Need to figure out what #should this be posted as an issue on Github?
   if(!missing(case_set)){
     if(case_set == "MCL"){
@@ -402,7 +408,9 @@ get_gambl_metadata = function(seq_type_filter = c("genome","capture"),
         group_by(patient_id) %>%
         mutate(FL = sum(pathology == "FL"), DLBCL = sum(pathology %in% c("COM", "DLBCL", "COMFL"))) %>%
         mutate(transformed = ifelse(FL > 0 & DLBCL > 0, TRUE, FALSE))  %>%
-        mutate(analysis_cohort = case_when(consensus_pathology == "FL" & transformed == TRUE ~ "pre-HT", consensus_pathology == "DLBCL" & transformed == TRUE ~ "ignore", TRUE ~ "no-HT")) %>%
+        mutate(analysis_cohort = case_when(consensus_pathology == "FL" & transformed == TRUE ~ "pre-HT", 
+                                           consensus_pathology == "DLBCL" & transformed == TRUE ~ "ignore", 
+                                           TRUE ~ "no-HT")) %>%
         dplyr::filter(cohort == "FL_Kridel") %>%
         dplyr::filter((analysis_cohort == "no-HT" & time_point == "A")|(analysis_cohort == "pre-HT")) %>%
         dplyr::select(-transformed, -FL, -DLBCL)
@@ -413,7 +421,9 @@ get_gambl_metadata = function(seq_type_filter = c("genome","capture"),
         group_by(patient_id) %>%
         mutate(FL = sum(pathology == "FL"), DLBCL = sum(pathology %in% c("COM", "DLBCL", "COMFL"))) %>%
         mutate(transformed = ifelse(FL > 0 & DLBCL > 0, TRUE, FALSE))  %>%
-        mutate(analysis_cohort = case_when(consensus_pathology == "FL" & transformed == TRUE ~ "post-HT", consensus_pathology == "DLBCL" & transformed == TRUE ~ "ignore", TRUE ~ "post-HT")) %>%
+        mutate(analysis_cohort = case_when(consensus_pathology == "FL" & transformed == TRUE ~ "post-HT", 
+                                           consensus_pathology == "DLBCL" & transformed == TRUE ~ "ignore", 
+                                           TRUE ~ "post-HT")) %>%
         dplyr::filter((analysis_cohort == "post-HT" & time_point == "B"))
 
       fl_meta_other = all_meta %>% dplyr::filter(consensus_pathology %in% c("FL", "DLBCL", "COM")) %>%
@@ -804,7 +814,8 @@ get_combined_sv = function(min_vaf = 0,
                            oncogenes){
   
   if(projection != "grch37"){
-  message("Currently, only grch37 is supported")
+    message("Currently, only grch37 is supported")
+
   return()
   }
    

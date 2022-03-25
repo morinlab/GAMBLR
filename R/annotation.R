@@ -264,7 +264,7 @@ annotate_driver_ssm = function(maf_df,
 }
 
 
-#' Annotate a data frame of SV breakpoints after retrieval from the database.
+#' Annotate a data frame of SV breakpoints represented in an extended BEDPE format.
 #'
 #' @param sv_data A data frame of SVs. This should be the output of get_manta_sv. If you aren't using the database backend you can supply your own data frame in the format show below.
 #' Most of this data is directly from the bedpe files that are obtained by converting the Manta outputs from VCF.

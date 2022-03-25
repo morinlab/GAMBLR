@@ -15,3 +15,6 @@ a data table containing MAF data from a MAF file
 \description{
 Title
 }
+\examples{
+
+}

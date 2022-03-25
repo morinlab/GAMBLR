@@ -2,28 +2,24 @@
 % Please edit documentation in R/viz.R
 \name{plot_multi_timepoint}
 \alias{plot_multi_timepoint}
-\title{This function doesn't do anything yet, this should be updated ;)}
+\title{This function doesn't do anything yet}
 \usage{
 plot_multi_timepoint(mafs, sample_id, genes, show_noncoding = FALSE, detail)
 }
 \arguments{
-\item{mafs}{A maf data frame. Minimum required columns are Hugo_Symbol and Tumor_Sample_Barcode.}
+\item{mafs}{TODO}
 
-\item{sample_id}{Specify the sample_id or any other string you want embedded in the file name.}
+\item{sample_id}{TODO}
 
-\item{genes}{An optional list of genes to restrict your plot to.}
+\item{genes}{TODO}
 
-\item{show_noncoding}{Set to TRUE to show noncoding regions. Default is FALSE.}
+\item{show_noncoding}{TODO}
 
-\item{detail}{Argument for specifying detail that geos with sample ID in the title.}
+\item{detail}{TODO}
 }
 \value{
-Nothing
+
 }
 \description{
-This function doesn't do anything yet, this should be updated ;)
-}
-\examples{
-plot = plot_multi_timepoint(mafs = "my_maf", sample_id = "some-sample-id", genes = "MYC", show_noncoding = TRUE, detail = "MYC")
-
+This function doesn't do anything yet
 }

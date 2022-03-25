@@ -12,7 +12,7 @@ prettyOncoplot(
   onco_matrix_path,
   genes,
   include_noncoding = list(NFKBIZ = c("3'UTR"), HNRNPH1 = "Splice_Region"),
-  keepGeneOrder = TRUE,
+  keepGeneOrder = FALSE,
   keepSampleOrder = TRUE,
   highlightHotspots = FALSE,
   these_samples_metadata,

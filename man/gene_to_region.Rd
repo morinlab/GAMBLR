@@ -20,7 +20,7 @@ Gene coordinates in the format "chr:start-end" format.
 Get regions (bed format) from genes.
 }
 \examples{
-bcl2_region = gene_to_region("BCL2", "grch37")
-bcl2_region = gene_to_region("ENSG00000171791", "grch37")
+bcl2_region = gene_to_region(gene_symbol = "BCL2", genome_build = "grch37")
+bcl2_region = gene_to_region(ensembl_id = "ENSG00000171791", genome_build = "grch37")
 
 }

@@ -2,7 +2,7 @@
 % Please edit documentation in R/annotation.R
 \name{annotate_sv}
 \alias{annotate_sv}
-\title{Annotate a data frame of SV breakpoints after retrieval from the database.}
+\title{Annotate a data frame of SV breakpoints represented in an extended BEDPE format.}
 \usage{
 annotate_sv(
   sv_data,
@@ -38,16 +38,12 @@ CHROM_A  START_A    END_A CHROM_B  START_B    END_B NAME SOMATIC_SCORE STRAND_A 
 A data frame with annotated SVs (gene symbol and entrez ID)
 }
 \description{
-Annotate a data frame of SV breakpoints after retrieval from the database.
+Annotate a data frame of SV breakpoints represented in an extended BEDPE format.
 }
 \examples{
 # Basic usage
 sv_df = get_manta_sv()
 annotated_sv = annotate_sv(sv_df)
-annotated_entrez = annotate_sv(sv_data = sv_df, 
-                               with_chr_prefix = FALSE, 
-                               collapse_redundant = FALSE, 
-                               return_as = "bedpe_entrez", 
-                               genome_build = "grch37")
+annotated_entrez = annotate_sv(sv_data = sv_df, with_chr_prefix = FALSE, collapse_redundant = FALSE, return_as = "bedpe_entrez", genome_build = "grch37")
 
 }
