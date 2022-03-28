@@ -46,6 +46,7 @@ Imports:
     stats,
     tidyverse,
     workflowr
+Remotes: morinlab/g3viz
 VignetteBuilder: knitr
 Depends: 
     R (>= 2.10)

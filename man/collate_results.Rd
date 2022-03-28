@@ -2,7 +2,7 @@
 % Please edit documentation in R/utilities.R
 \name{collate_results}
 \alias{collate_results}
-\title{Bring together all derived sample-level results from many GAMBL pipelines}
+\title{Bring together all derived sample-level results from many GAMBL pipelines.}
 \usage{
 collate_results(
   sample_table,
@@ -14,12 +14,28 @@ collate_results(
   from_cache = TRUE
 )
 }
+\arguments{
+\item{sample_table}{A data frame with sample_id as the first column.}
+
+\item{write_to_file}{Boolean statement that outputs tsv file if TRUE, default is FALSE.}
+
+\item{join_with_full_metadata}{Join with all columns of meta data, default is FALSE.}
+
+\item{case_set}{Optional short name for a pre-defined set of cases.}
+
+\item{sbs_manipulation}{Optional variable for transforming sbs values (e.g log, scale).}
+
+\item{seq_type_filter}{Filtering criteria, default is genomes.}
+
+\item{from_cache}{Boolean variable for using cached results, default is TRUE.}
+}
 \value{
 A table keyed on biopsy_id that contains a bunch of per-sample results from GAMBL
 }
 \description{
-Bring together all derived sample-level results from many GAMBL pipelines
+Bring together all derived sample-level results from many GAMBL pipelines.
 }
 \examples{
-everything_collated = collate_results(join_with_full_metadata=TRUE)
+everything_collated = collate_results(join_with_full_metadata = TRUE)
+
 }

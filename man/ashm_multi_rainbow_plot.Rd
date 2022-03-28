@@ -2,7 +2,7 @@
 % Please edit documentation in R/viz.R
 \name{ashm_multi_rainbow_plot}
 \alias{ashm_multi_rainbow_plot}
-\title{Generate a colourful multi-panel overview of hypermutation in regions of interest across many samples}
+\title{Generate a colourful multi-panel overview of hypermutation in regions of interest across many samples.}
 \usage{
 ashm_multi_rainbow_plot(
   regions_bed,
@@ -15,17 +15,33 @@ ashm_multi_rainbow_plot(
 )
 }
 \arguments{
-\item{regions_bed}{Bed file with chromosome coordinates, should contain columns chr, start, end, name (with these exact names)}
+\item{regions_bed}{Bed file with chromosome coordinates, should contain columns chr, start, end, name (with these exact names).}
 
-\item{regions_to_display}{Optional vector of names from default regions_bed to use}
+\item{regions_to_display}{Optional vector of names from default regions_bed to use.}
 
-\item{metadata}{A metadata file already subsetted and arranged on the order you want the samples vertically displayed}
+\item{exclude_classifications}{Optional argument for excluding specific classifications from a metadeta file.}
 
-\item{classification_column}{optional. Override default column for assigning the labels used for colouring in the figure.}
+\item{metadata}{A metadata file already subsetted and arranged on the order you want the samples vertically displayed.}
+
+\item{custom_colours}{Provide named vector (or named list of vectors) containing custom annotation colours if you do not want to use standartized pallette.}
+
+\item{classification_column}{Optional. Override default column for assigning the labels used for colouring in the figure.}
+
+\item{maf_data}{Either a maf loaded from disk or from the database using a get_ssm function.}
 }
 \value{
-nothing
+Nothing
 }
 \description{
-Generate a colourful multi-panel overview of hypermutation in regions of interest across many samples
+Generate a colourful multi-panel overview of hypermutation in regions of interest across many samples.
+}
+\examples{
+my_plot = ashm_multi_rainbow_plot(regions_bed = "my_bed.bed", 
+                                  regions_to_display = "chr3", 
+                                  exclude_classification = "some-classification", 
+                                  metadata = "my_metadata", 
+                                  custom_colours = c("#onecolour, "#anothercolour", "athirdcolour"), 
+                                  classification_column = "lymphgen", 
+                                  maf_data = my_maf)
+
 }

@@ -14,11 +14,17 @@ find_expected_outputs(
 )
 }
 \arguments{
+\item{targ_df}{Optionally provide a data frame with all file details}
+
+\item{tool_name}{The tool or pipeline that generated the files (should be the same for all)}
+
+\item{unix_group}{The unix group (should be the same for all)}
+
 \item{filename_end_pattern}{Optionally specify a pattern to search for the files among a longer set of files in the outputs}
 
 \item{update_db}{Set to TRUE to overwrite any existing rows in the table for this tool/unix_group combination}
 
-\item{Optionally}{provide a data frame with all file details}
+\item{target_path}{Path to targets.}
 }
 \value{
 

@@ -2,22 +2,27 @@
 % Please edit documentation in R/viz.R
 \name{pretty_lollipop_plot}
 \alias{pretty_lollipop_plot}
-\title{Generate a more visually appealing and flexible lollipop plot}
+\title{Generate a more visually appealing and flexible lollipop plot.}
 \usage{
 pretty_lollipop_plot(maf_df, gene, plot_title, plot_theme = "cbioportal")
 }
 \arguments{
-\item{maf_df}{A data frame containing the mutation data (from a MAF)}
+\item{maf_df}{A data frame containing the mutation data (from a MAF).}
 
-\item{gene}{The gene symbol to plot}
+\item{gene}{The gene symbol to plot.}
 
-\item{plot_title}{Optional (defaults to gene name)}
+\item{plot_title}{Optional (defaults to gene name).}
 
-\item{plot_theme}{Options: default, blue, simple, cbioportal, nature, nature2, ggplot2, and dark}
+\item{plot_theme}{Options: cbioportal(default), blue, simple, nature, nature2, ggplot2, and dark.}
 }
 \value{
-
+Nothing
 }
 \description{
-Generate a more visually appealing and flexible lollipop plot
+Generate a more visually appealing and flexible lollipop plot.
+}
+\examples{
+plot_lollipop = (mutation_df, "MYC", "Mutation data for MYC", "blue")
+plot_lollipop = (mutation_df, "BCL2")
+
 }

@@ -2,7 +2,7 @@
 % Please edit documentation in R/database.R
 \name{get_ssm_by_gene}
 \alias{get_ssm_by_gene}
-\title{Get all somatic mutations for a given gene or list of genes and optionally restrict to coding variants}
+\title{Get all somatic mutations for a given gene or list of genes and optionally restrict to coding variants.}
 \usage{
 get_ssm_by_gene(
   gene_symbol,
@@ -12,21 +12,22 @@ get_ssm_by_gene(
 )
 }
 \arguments{
-\item{gene_symbol}{Character vector of gene symbols}
+\item{gene_symbol}{Character vector of gene symbols.}
 
-\item{coding_only}{Logical parameter indicating whether to return only coding mutations. Default is FALSE}
+\item{coding_only}{Logical parameter indicating whether to return only coding mutations. Default is FALSE.}
 
-\item{include_silent}{Logical parameter indicating whether to include siment mutations into coding mutations. Default is TRUE}
+\item{include_silent}{Logical parameter indicating whether to include siment mutations into coding mutations. Default is TRUE.}
 
-\item{rename_splice_region}{Logical parameter indicating whether to rename splice regions. Default is TRUE}
+\item{rename_splice_region}{Logical parameter indicating whether to rename splice regions. Default is TRUE.}
 }
 \value{
-MAF-format data frame of mutations in query gene
+MAF-format data frame of mutations in query gene.
 }
 \description{
-Get all somatic mutations for a given gene or list of genes and optionally restrict to coding variants
+Get all somatic mutations for a given gene or list of genes and optionally restrict to coding variants.
 }
 \examples{
 #basic usage
-get_ssm_by_gene(gene_symbol=c("EZH2"),coding_only=TRUE)
+ssm_ezh2 = get_ssm_by_gene(gene_symbol=c("EZH2"),coding_only=TRUE)
+
 }

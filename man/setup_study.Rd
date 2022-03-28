@@ -2,7 +2,7 @@
 % Please edit documentation in R/portal.R
 \name{setup_study}
 \alias{setup_study}
-\title{Initialize a new cBioPortal instance or update existing portal data set}
+\title{Initialize a new cBioPortal instance or update existing portal data set, can also be used to retrieve sample ids included in study.}
 \usage{
 setup_study(
   short_name = "GAMBL",
@@ -11,29 +11,56 @@ setup_study(
   project_name = "gambl_minus_icgc",
   description = "GAMBL data without ICGC",
   cancer_type = "mixed",
-  out_dir,
-  overwrite = FALSE,
-  exclude_cohorts = c("FFPE_Benchmarking")
+  data_cancer_type = "brca",
+  data_cancer_name = "Invasive Breast Carcinoma",
+  data_dedicated_colour = "HotPink",
+  data_cancer_parent_type = "Breast",
+  exclude_cohorts = c("FFPE_Benchmarking"),
+  gambl_maf = "maf_slms3_hg19",
+  gambl_icgc_maf = "maf_slms3_hg19_icgc",
+  overwrite = TRUE,
+  out_dir
 )
 }
 \arguments{
-\item{short_name}{a concise name for your portal project}
+\item{short_name}{A concise name for your portal project.}
 
-\item{include_icgc_data}{whether or not you want ICGC and other external data included}
+\item{include_icgc_data}{Whether or not you want ICGC and other external data included.}
 
-\item{human_friendly_name}{a slightly more verbose name for your project}
+\item{human_friendly_name}{A slightly more verbose name for your project.}
 
-\item{project_name}{unique ID for your project}
+\item{project_name}{Unique ID for your project.}
 
-\item{description}{A verbose description of your data set}
+\item{description}{A verbose description of your data set.}
 
-\item{out_dir}{The full path to the base directory where the files are being created}
+\item{cancer_type}{Cancer types included in study, default is "mixed".}
 
-\item{overwrite}{Flag to specify that files should be overwritten if they exist}
+\item{data_cancer_type}{The cancer type abbreviation, e.g., "brca". (for data_cancer_type file).}
+
+\item{data_cancer_name}{The name of the cancer type, e.g., "Breast Invasive Carcinoma". (for data_cancer_type file).}
+
+\item{data_dedicated_colour}{CSS color name of the color associated with this cancer study, e.g., "HotPink". (for data_cancer_type file).}
+
+\item{data_cancer_parent_type}{The type_of_cancer field of the cancer type of which this is a subtype, e.g., "Breast". You can set parent to tissue, which is the reserved word to place the given cancer type at "root" level in the "studies oncotree" that will be generated in the homepage (aka query page) of the portal. (for data_cancer_type file).}
+
+\item{exclude_cohorts}{Cohorts to be excluded.}
+
+\item{gambl_maf}{maf origin.}
+
+\item{gambl_icgc_maf}{Icgc maf origin.}
+
+\item{overwrite}{Flag to specify that files should be overwritten if they exist. Default is TRUE.}
+
+\item{out_dir}{The full path to the base directory where the files are being created.}
 }
 \value{
-a vector of sample_id for the patients that have been included
+A vector of sample_id for the patients that have been included.
 }
 \description{
-Initialize a new cBioPortal instance or update existing portal data set
+Initialize a new cBioPortal instance or update existing portal data set, can also be used to retrieve sample ids included in study.
+}
+\examples{
+Setup study and save included ids as a vector of characters:
+ids = setup_study(out_dir = "GAMBLR/cBioPortal/instance01/")
+
 }

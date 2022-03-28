@@ -25,3 +25,6 @@ A data frame with one row per file and sample IDs parsed from the file name alon
 \description{
 Title
 }
+\examples{
+
+}

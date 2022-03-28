@@ -2,19 +2,22 @@
 % Please edit documentation in R/utilities.R
 \name{region_to_chunks}
 \alias{region_to_chunks}
-\title{Parse a region string into chomosome, start and end}
+\title{INTERNAL FUNCTION called by calc_mutation_frequency_sliding_windows, not meant for out-of-package usage.
+Parse a region string into chomosome, start and end.}
 \usage{
 region_to_chunks(region)
 }
 \arguments{
-\item{region}{A region string e.g. "chrX:12345-678910"}
+\item{region}{A region string e.g. "chrX:12345-678910".}
 }
 \value{
-A named list
+A named list.
 }
 \description{
-Parse a region string into chomosome, start and end
+INTERNAL FUNCTION called by calc_mutation_frequency_sliding_windows, not meant for out-of-package usage.
+Parse a region string into chomosome, start and end.
 }
 \examples{
 chr_start_end = region_to_chunks("chr1:1111-2222")
+
 }

@@ -2,7 +2,7 @@
 % Please edit documentation in R/utilities.R
 \name{assign_cn_to_ssm}
 \alias{assign_cn_to_ssm}
-\title{Annotate mutations with their copy number information}
+\title{Annotate mutations with their copy number information.}
 \usage{
 assign_cn_to_ssm(
   this_sample,
@@ -18,17 +18,25 @@ assign_cn_to_ssm(
 )
 }
 \arguments{
-\item{this_sample}{Sample ID of the sample you want to annotate}
+\item{this_sample}{Sample ID of the sample you want to annotate.}
 
-\item{coding_only}{Optional. set to TRUE to rescrict to only coding variants}
+\item{coding_only}{Optional. set to TRUE to rescrict to only coding variants.}
 
-\item{from_flatfile}{Optional. Instead of the database, load the data from a local MAF and seg file}
+\item{from_flatfile}{Optional. Instead of the database, load the data from a local MAF and seg file.}
+
+\item{use_augmented_maf}{Boolean statement if to use augmented maf, default is FALSE.}
+
+\item{maf_file}{Path to maf file.}
 
 \item{seg_file_source}{Specify what copy number calling program the input seg file is from, as it handles ichorCNA differently than WisecondorX, Battenberg, etc.}
 
 \item{assume_diploid}{Optional. If no local seg file is provided, instead of defaulting to a GAMBL sample, this parameter annotates every mutation as copy neutral.}
 
+\item{genes}{Genes of interest.}
+
 \item{include_silent}{Logical parameter indicating whether to include siment mutations into coding mutations. Default is FALSE}
+
+\item{seq_file}{path to seq file.}
 }
 \value{
 A list containing a data frame (MAF-like format) with two extra columns:
@@ -37,8 +45,9 @@ as well as the segmented copy number data with the same copy number information
 CN is the rounded absolute copy number estimate of the region based on log.ratio (NA when no overlap was found)
 }
 \description{
-Annotate mutations with their copy number information
+Annotate mutations with their copy number information.
 }
 \examples{
-cn_list = assign_cn_to_ssm(this_sample="HTMCP-01-06-00422-01A-01D",coding_only=TRUE)
+cn_list = assign_cn_to_ssm(this_sample = "HTMCP-01-06-00422-01A-01D", coding_only = TRUE)
+
 }

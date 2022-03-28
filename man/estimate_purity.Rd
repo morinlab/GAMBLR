@@ -2,7 +2,7 @@
 % Please edit documentation in R/utilities.R
 \name{estimate_purity}
 \alias{estimate_purity}
-\title{Estimate purity}
+\title{Estimate purity.}
 \usage{
 estimate_purity(
   in_maf,
@@ -16,15 +16,21 @@ estimate_purity(
 )
 }
 \arguments{
-\item{in_maf}{Path to a local maf file}
+\item{in_maf}{Path to a local maf file.}
 
-\item{in_seg}{Path to a local corresponding seg file for the same sample ID as the input maf}
+\item{in_seg}{Path to a local corresponding seg file for the same sample ID as the input maf.}
+
+\item{sample_id}{Specify the sample_id or any other string you want embedded in the file name.}
 
 \item{seg_file_source}{Specify what copy number calling program the input seg file is from, as it handles ichorCNA differently than WisecondorX, battenberg, etc.}
 
-\item{show_plots}{Optional. Show two faceted plots that display the VAF and purity distributions for each copy number state in the sample}
+\item{show_plots}{Optional. Show two faceted plots that display the VAF and purity distributions for each copy number state in the sample.}
 
 \item{assume_diploid}{Optional. If no local seg file is provided, instead of defaulting to a GAMBL sample, this parameter annotates every mutation as copy neutral.}
+
+\item{coding_only}{Optional. set to TRUE to rescrict to only coding variants.}
+
+\item{genes}{Genes of interest.}
 }
 \value{
 A list containing a data frame (MAF-like format) with the segmented absolute copy number data and three extra columns:
@@ -33,9 +39,10 @@ Ploidy is the number of copies of an allele in the tumour cell
 Final_purity is the finalized purity estimation per mutation after considering different copy number states and LOH events
 }
 \description{
-Estimate purity
+Estimate purity.
 }
 \examples{
-tumour_purity = estimate_purity(in_maf="path/to/file.maf", in_seg="path/to/file.seg", seg_file_source="ichorCNA", show_plots=TRUE)
+tumour_purity = estimate_purity(in_maf = "path/to/file.maf", in_seg = "path/to/file.seg", seg_file_source = "ichorCNA", show_plots = TRUE)
 tumour_purity = estimate_purity(in_maf="path/to/file.maf", assume_diploid = TRUE)
+
 }

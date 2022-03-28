@@ -6,7 +6,7 @@
 there are some samples that we may want to use a different set of variants than those in the main GAMBL merge.
 The current use case is to allow a force_unmatched output to be used to replace the SSMs from the merge for samples
 with known contamination in the normal. This will also be useful to apply a blacklist to individual MAFs when coupled with
-annotate_ssm_blacklist}
+annotate_ssm_blacklist.}
 \usage{
 get_ssm_by_sample(
   this_sample_id,
@@ -37,15 +37,16 @@ get_ssm_by_sample(
 \item{verbose}{Enable for debugging/noisier output}
 }
 \value{
-data frame in MAF format
+data frame in MAF format.
 }
 \description{
 Get the ssms (i.e. load MAF) for a single sample. This was implemented to allow flexibility because
 there are some samples that we may want to use a different set of variants than those in the main GAMBL merge.
 The current use case is to allow a force_unmatched output to be used to replace the SSMs from the merge for samples
 with known contamination in the normal. This will also be useful to apply a blacklist to individual MAFs when coupled with
-annotate_ssm_blacklist
+annotate_ssm_blacklist.
 }
 \examples{
+ssm_sample = get_ssm_by_sample(this_sample_id = "HTMCP-01-06-00485-01A-01D", tool_name = "slims-3", projection = "grch37")
 
 }

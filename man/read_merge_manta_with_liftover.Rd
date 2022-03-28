@@ -19,3 +19,7 @@ read_merge_manta_with_liftover(
 \description{
 This is a helper function that is not meant to be used routinely
 }
+\examples{
+
+
+}

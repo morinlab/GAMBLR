@@ -2,7 +2,7 @@
 % Please edit documentation in R/database.R
 \name{get_cn_segments}
 \alias{get_cn_segments}
-\title{Retrieve all copy number segments from the GAMBL database that overlap with a single genomic coordinate range}
+\title{Retrieve all copy number segments from the GAMBL database that overlap with a single genomic coordinate range.}
 \usage{
 get_cn_segments(
   chromosome = "",
@@ -15,27 +15,32 @@ get_cn_segments(
 )
 }
 \arguments{
-\item{chromosome}{The chromosome you are restricting to}
+\item{chromosome}{The chromosome you are restricting to.}
 
-\item{region}{Region formatted like chrX:1234-5678 instead of specifying chromosome, start and end separately}
+\item{qstart}{Start coordinate of the range you are restricting to.}
 
-\item{with_chr_prefix}{Prepend all chromosome names with chr (required by some downstream analyses)}
+\item{qend}{End coordinate of the range you are restricting to.}
 
-\item{start}{Start coordinate of the range you are restricting to}
+\item{region}{Region formatted like chrX:1234-5678 instead of specifying chromosome, start and end separately.}
 
-\item{end}{End coordinate of the range you are restricting to}
+\item{with_chr_prefix}{Prepend all chromosome names with chr (required by some downstream analyses).}
+
+\item{streamlined}{Return a basic rather than full MAF format.}
+
+\item{from_flatfile}{Set to FALSE by default.}
 }
 \value{
-A data frame containing all the MAF data columns (one row per mutation)
+A data frame containing all the MAF data columns (one row per mutation).
 }
 \description{
-Retrieve all copy number segments from the GAMBL database that overlap with a single genomic coordinate range
+Retrieve all copy number segments from the GAMBL database that overlap with a single genomic coordinate range.
 }
 \examples{
-# basic usage
-my_segments=get_cn_segments(region="chr8:128,723,128-128,774,067")
-# specifying chromosome, start and end individually
-my_segments=get_cn_segments(chromosome="8",qstart=128723128,qend=128774067)
-# Asking for chromosome names to have a chr prefix (default is un-prefixed)
-prefixed_segments = get_cn_segments(chromosome="12",qstart=122456912,qend=122464036,with_chr_prefix = TRUE)
+#basic usage
+my_segments = get_cn_segments(region="chr8:128,723,128-128,774,067")
+#specifying chromosome, start and end individually
+my_segments = get_cn_segments(chromosome="8",qstart=128723128,qend=128774067)
+#Asking for chromosome names to have a chr prefix (default is un-prefixed)
+prefixed_segments = get_cn_segments(chromosome ="12",qstart = 122456912, qend = 122464036, with_chr_prefix = TRUE)
+
 }

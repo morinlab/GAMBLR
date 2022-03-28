@@ -12,3 +12,6 @@ tidy_gene_expression(return_df = FALSE)
 \description{
 Read a full expression matrix and subset to samples in GAMBL that have metadata (remove duplicates with consistent preferences)
 }
+\examples{
+
+}

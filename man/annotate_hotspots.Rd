@@ -2,7 +2,7 @@
 % Please edit documentation in R/utilities.R
 \name{annotate_hotspots}
 \alias{annotate_hotspots}
-\title{Annotate MAF-like data frome with a hot_spot column indicating recurrent mutations}
+\title{Annotate MAF-like data frome with a hot_spot column indicating recurrent mutations.}
 \usage{
 annotate_hotspots(
   mutation_maf,
@@ -12,18 +12,23 @@ annotate_hotspots(
 )
 }
 \arguments{
-\item{mutation_maf}{A data frame in MAF format}
+\item{mutation_maf}{A data frame in MAF format.}
 
-\item{analysis_base}{Base name for hot spot output directory}
+\item{recurrence_min}{minimum number of recurrences for mutation to be included, default is 5.}
+
+\item{analysis_base}{Base name for hot spot output directory.}
+
+\item{p_thresh}{P value threshold, default is 0.05.}
 }
 \value{
-The same data frame with one additional column "hot_spot"
+The same data frame with one additional column "hot_spot".
 }
 \description{
-Annotate MAF-like data frome with a hot_spot column indicating recurrent mutations
+Annotate MAF-like data frome with a hot_spot column indicating recurrent mutations.
 }
 \examples{
 hot_ssms = annotate_hotspots(all_ssm)
 hot_maf = read.maf(hot_ssms)
 oncoplot(hot_maf,genes=c("MEF2B","TP53","MYD88"),additionalFeature = c("hot_spot",TRUE))
+
 }

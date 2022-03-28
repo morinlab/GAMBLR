@@ -2,7 +2,8 @@
 % Please edit documentation in R/utilities.R
 \name{trim_scale_expression}
 \alias{trim_scale_expression}
-\title{Title}
+\title{INTERNAL FUNCTION called by prettyOncoplot, not meant for out-of-package usage.
+Unsure what this function actually does, old helper function that is outdated?}
 \usage{
 trim_scale_expression(x)
 }
@@ -10,8 +11,13 @@ trim_scale_expression(x)
 \item{x}{}
 }
 \value{
-
+Numeric value.
 }
 \description{
-Title
+INTERNAL FUNCTION called by prettyOncoplot, not meant for out-of-package usage.
+Unsure what this function actually does, old helper function that is outdated?
+}
+\examples{
+trimmed = trim_scale_expression(2)
+
 }

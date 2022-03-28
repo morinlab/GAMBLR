@@ -2,23 +2,26 @@
 % Please edit documentation in R/utilities.R
 \name{refresh_full_table}
 \alias{refresh_full_table}
-\title{Refresh the contents of a database table}
+\title{INTERNAL FUNCTION called by referesh_metadata_tables, not meant for out-of-package usage.
+Refresh the contents of a database table.}
 \usage{
 refresh_full_table(table_name, connection, file_path)
 }
 \arguments{
-\item{table_name}{Name of table to refresh}
+\item{table_name}{Name of table to refresh.}
 
-\item{connection}{Database connection object}
+\item{connection}{Database connection object.}
 
-\item{file_path}{Path to the table contents to populate}
+\item{file_path}{Path to the table contents to populate.}
 }
 \value{
-
+Table.
 }
 \description{
-Refresh the contents of a database table
+INTERNAL FUNCTION called by referesh_metadata_tables, not meant for out-of-package usage.
+Refresh the contents of a database table.
 }
 \examples{
-refresh_full_table(table_x,con,file_x)
+refresh_full_table(table_x, con,file_x)
+
 }

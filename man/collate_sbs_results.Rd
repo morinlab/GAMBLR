@@ -2,7 +2,8 @@
 % Please edit documentation in R/utilities.R
 \name{collate_sbs_results}
 \alias{collate_sbs_results}
-\title{Bring in the results from mutational signature analysis}
+\title{INTERNAL FUNCTION called by collate_results, not meant for out-of-package usage.
+Bring in the results from mutational signature analysis.}
 \usage{
 collate_sbs_results(
   sample_table,
@@ -12,16 +13,22 @@ collate_sbs_results(
 )
 }
 \arguments{
-\item{sample_table}{A data frame with sample_id as the first column}
+\item{sample_table}{A data frame with sample_id as the first column.}
 
-\item{file_path}{Optional path to SBS file}
+\item{file_path}{Optional path to SBS file.}
+
+\item{scale_vals}{Parameter not used?}
+
+\item{sbs_manipulation}{Optional variable for transforming sbs values (e.g log, scale).}
 }
 \value{
-A data frame with new columns added
+A data frame with new columns added.
 }
 \description{
-Bring in the results from mutational signature analysis
+INTERNAL FUNCTION called by collate_results, not meant for out-of-package usage.
+Bring in the results from mutational signature analysis.
 }
 \examples{
 collated = collate_sbs_results(sample_table=sample_table,sbs_manipulation=sbs_manipulation)
+
 }

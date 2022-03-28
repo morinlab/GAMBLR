@@ -2,7 +2,7 @@
 % Please edit documentation in R/database.R
 \name{get_manta_sv}
 \alias{get_manta_sv}
-\title{Retrieve Manta SVs from the database and filter}
+\title{Retrieve Manta SVs from the database and filter.}
 \usage{
 get_manta_sv(
   min_vaf = 0.1,
@@ -20,29 +20,35 @@ get_manta_sv(
 )
 }
 \arguments{
-\item{min_vaf}{The minimum tumour VAF for a SV to be returned}
+\item{min_vaf}{The minimum tumour VAF for a SV to be returned.}
 
-\item{min_score}{The lowest Manta somatic score for a SV to be returned}
+\item{min_score}{The lowest Manta somatic score for a SV to be returned.}
 
-\item{chromosome}{The chromosome you are restricting to}
+\item{pass}{If set to TRUE, include SVs that are annotated with PASS in FILTER column. Default is TRUE.}
 
-\item{qstart}{Query start coordinate of the range you are restricting to}
+\item{sample_id}{Filter on specific sample IDs in tumour_sample_id column.}
 
-\item{qend}{Query end coordinate of the range you are restricting to}
+\item{chromosome}{The chromosome you are restricting to.}
 
-\item{region}{Region formatted like chrX:1234-5678 instead of specifying chromosome, start and end separately}
+\item{qstart}{Query start coordinate of the range you are restricting to.}
 
-\item{with_chr_prefix}{Prepend all chromosome names with chr (required by some downstream analyses)}
+\item{qend}{Query end coordinate of the range you are restricting to.}
 
-\item{table_name}{The table we are querying}
+\item{region}{Region formatted like chrX:1234-5678 instead of specifying chromosome, start and end separately.}
 
-\item{pair_status}{Use to restrict results (if desired) to matched or unmatched results (default is to return all)}
+\item{with_chr_prefix}{Prepend all chromosome names with chr (required by some downstream analyses).}
+
+\item{from_flatfile}{Set to FALSE by default.}
+
+\item{projection}{The projection genome build. Currently only grch37 is supported.}
+
+\item{pair_status}{Use to restrict results (if desired) to matched or unmatched results (default is to return all).}
 }
 \value{
-A data frame in a bedpe-like format with additional columns that allow filtering of high-confidence SVs
+A data frame in a bedpe-like format with additional columns that allow filtering of high-confidence SVs.
 }
 \description{
-Retrieve Manta SVs from the database and filter
+Retrieve Manta SVs from the database and filter.
 }
 \examples{
 #lazily get every SV in the table with default quality filters
@@ -50,5 +56,6 @@ all_sv = get_manta_sv()
 #get all SVs for a single sample
 some_sv = get_manta_sv(sample_id="94-15772_tumorA")
 #get the SVs in a region around MYC
-myc_locus_sv = get_manta_sv(region="8:128723128-128774067")
+myc_locus_sv = get_manta_sv(region="8:128723128-128774067").
+
 }

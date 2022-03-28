@@ -2,7 +2,7 @@
 % Please edit documentation in R/utilities.R
 \name{compare_mutation_flavour}
 \alias{compare_mutation_flavour}
-\title{Get a MAF that is just the variants unique to one of two flavours of variant calls available}
+\title{Get a MAF that is just the variants unique to one of two flavours of variant calls available.}
 \usage{
 compare_mutation_flavour(
   these_sample_ids,
@@ -11,11 +11,19 @@ compare_mutation_flavour(
 )
 }
 \arguments{
-\item{flavour2}{}
+\item{these_sample_ids}{sample IDs to be included.}
+
+\item{flavour1}{First flavour of variant calls, to be returned as unique if not present in flavour2. Default is "clustered".}
+
+\item{flavour2}{Second flavour of variant calls.}
 }
 \value{
-
+a list with MAFs that are only present in flavour1.
 }
 \description{
-Get a MAF that is just the variants unique to one of two flavours of variant calls available
+Get a MAF that is just the variants unique to one of two flavours of variant calls available.
+}
+\examples{
+comp_flav = compare_mutation_flavour("clustered", "another_flavour")
+
 }

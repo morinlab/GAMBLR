@@ -2,7 +2,7 @@
 % Please edit documentation in R/utilities.R
 \name{complete_missing_from_matrix}
 \alias{complete_missing_from_matrix}
-\title{If some samples are missing from the matrix, add them with filled in 0 as value and normalize their ordering for consistency}
+\title{If some samples are missing from the matrix, add them with filled in 0 as value and normalize their ordering for consistency.}
 \usage{
 complete_missing_from_matrix(
   incoming_matrix,
@@ -24,12 +24,13 @@ complete_missing_from_matrix(
 \item{samples_in_rows}{Logical argument indicating whether samples are in rows or columns. Default assumes samples are in rows and columns are features.}
 }
 \value{
-a data frame with maintained orientation (rows and columns) where samples from the supplied list are present and reordered according to the specified order
+A data frame with maintained orientation (rows and columns) where samples from the supplied list are present and reordered according to the specified order.
 }
 \description{
-If some samples are missing from the matrix, add them with filled in 0 as value and normalize their ordering for consistency
+If some samples are missing from the matrix, add them with filled in 0 as value and normalize their ordering for consistency.
 }
 \examples{
-partial_matrix = get_coding_ssm_status(these_samples_metadata = (get_gambl_metadata(case_set = "BL--DLBCL") \%>\% filter(pairing_status=="unmatched")), include_hotspots = FALSE)
-complete_matrix = complete_missing_from_matrix(partial_matrix, get_gambl_metadata() \%>\% pull(sample_id))
+partial_matrix = get_coding_ssm_status(these_samples_metadata = (get_gambl_metadata(case_set = "BL--DLBCL") \%>\% filter(pairing_status == "unmatched")), include_hotspots = FALSE)
+complete_matrix = complete_missing_from_matrix(partial_matrix, get_gambl_metadata() \%>\% pull(sample_id)) 
+
 }

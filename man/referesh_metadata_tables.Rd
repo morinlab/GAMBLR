@@ -2,16 +2,19 @@
 % Please edit documentation in R/utilities.R
 \name{referesh_metadata_tables}
 \alias{referesh_metadata_tables}
-\title{Title}
+\title{INTERNAL FUNCTION, not meant for out-of-package usage.
+Refresh the contents of meta data table.}
 \usage{
 referesh_metadata_tables()
 }
 \value{
-
+Table.
 }
 \description{
-Title
+INTERNAL FUNCTION, not meant for out-of-package usage.
+Refresh the contents of meta data table.
 }
 \examples{
-referesh_metadata_tables()
+ref_meta = referesh_metadata_tables()
+
 }

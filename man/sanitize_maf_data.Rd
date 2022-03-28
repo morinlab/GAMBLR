@@ -17,18 +17,18 @@ sanitize_maf_data(
 )
 }
 \arguments{
-\item{mutation_maf_path}{Provide either the full path to a MAF file or}
+\item{mutation_maf_path}{Provide either the full path to a MAF file.}
 
-\item{mutation_maf_data}{Otherwise provide a data frame of the MAF data}
+\item{mutation_maf_data}{Otherwise provide a data frame of the MAF data.}
 
-\item{output_oncomatrix}{Optionally provide the path for your sanitized output file (otherwise it writes to working directory)}
+\item{output_oncomatrix}{Optionally provide the path for your sanitized output file (otherwise it writes to working directory).}
 
-\item{genes_keep}{Specify which genes you want to remain in the output}
+\item{genes_keep}{Specify which genes you want to remain in the output.}
 
-\item{genes_drop}{Optionally specify which genes to drop (this doesn't mean all other genes will remain. Maftools decides that part)}
+\item{genes_drop}{Optionally specify which genes to drop (this doesn't mean all other genes will remain. Maftools decides that part).}
 }
 \value{
-The full path to the oncomatrix file (a matrix with Variant_Classification or Multi_Hit indicating coding mutation status per patient)
+The full path to the oncomatrix file (a matrix with Variant_Classification or Multi_Hit indicating coding mutation status per patient).
 }
 \description{
 Write an oncomatrix from a MAF File for further plotting. This is meant to be run by individuals who have access to data sets to
@@ -40,6 +40,6 @@ User J can run this function on a maf file and provide the path of the output to
 \examples{
 lymph_genes = lymphoma_genes$Gene #note, this will be used by default if the user wants to be lazy
 secure_maf = "/projects/rmorin/projects/gambl-repos/gambl-rmorin/results/icgc_dart/slms-3_vcf2maf_current/level_3/final_merged_grch37.CDS.maf"
-safe_oncomatrix_path = sanitize_maf_data(mutation_maf_path=secure_maf,genes_keep=lymph_genes)
+safe_oncomatrix_path = sanitize_maf_data(mutation_maf_path = secure_maf, genes_keep = lymph_genes)
 
 }

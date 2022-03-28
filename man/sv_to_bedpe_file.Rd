@@ -2,20 +2,24 @@
 % Please edit documentation in R/utilities.R
 \name{sv_to_bedpe_file}
 \alias{sv_to_bedpe_file}
-\title{Write bedpe format data frame to a file that will work with IGV}
+\title{Write bedpe format data frame to a file that will work with IGV.}
 \usage{
 sv_to_bedpe_file(sv_df, filename = "something.bedpe", add_chr_prefix = TRUE)
 }
 \arguments{
-\item{sv_df}{data frame of bedpe formatted SV data}
+\item{sv_df}{data frame of bedpe formatted SV data.}
 
-\item{filename}{File name (will be written to results/icgc_dart/misc/FILENAME )}
+\item{filename}{File name (will be written to results/icgc_dart/misc/FILENAME). Default is "something.bedpe". Maybe not a very good default name?}
 
-\item{add_chr_prefix}{Whether to force chr to be added to chromosome names}
+\item{add_chr_prefix}{Whether to force chr to be added to chromosome names. Default is TRUE.}
 }
 \value{
-
+bedpe data frame that is compatible with IGN browser.
 }
 \description{
-Write bedpe format data frame to a file that will work with IGV
+Write bedpe format data frame to a file that will work with IGV.
+}
+\examples{
+SVs_bedpe = sv_to_bedpe_file(sv_dataframe, "SVs.bedpe", TRUE)
+
 }

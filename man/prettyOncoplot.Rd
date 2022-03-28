@@ -12,7 +12,7 @@ prettyOncoplot(
   onco_matrix_path,
   genes,
   include_noncoding = list(NFKBIZ = c("3'UTR"), HNRNPH1 = "Splice_Region"),
-  keepGeneOrder = TRUE,
+  keepGeneOrder = FALSE,
   keepSampleOrder = TRUE,
   highlightHotspots = FALSE,
   these_samples_metadata,
@@ -23,74 +23,110 @@ prettyOncoplot(
   sortByColumns,
   removeNonMutated = FALSE,
   minMutationPercent,
-  fontSizeGene = 6,
-  annoAlpha = 1,
   mutAlpha = 1,
   recycleOncomatrix = FALSE,
-  box_col = NA,
-  metadataBarHeight = 1.5,
-  metadataBarFontsize = 5,
-  hideTopBarplot = TRUE,
-  hideSideBarplot = FALSE,
   splitColumnName,
   splitGeneGroups,
-  legend_row = 3,
-  legend_col = 3,
   showTumorSampleBarcode = FALSE,
   groupNames,
-  verbose = FALSE,
   hide_annotations,
   custom_colours = NULL,
+  hideTopBarplot = TRUE,
+  hideSideBarplot = FALSE,
+  box_col = NA,
+  annoAlpha = 1,
   legend_direction = "horizontal",
   legend_position = "bottom",
+  legend_row = 3,
+  legend_col = 3,
+  metadataBarHeight = 1.5,
+  metadataBarFontsize = 5,
+  legendFontSize = 10,
+  fontSizeGene = 6,
   annotation_row = 2,
   annotation_col = 1,
-  legendFontSize = 10
+  verbose = FALSE
 )
 }
 \arguments{
-\item{maftools_obj}{A maftools object containing the mutations you want to plot}
+\item{maftools_obj}{A maftools object containing the mutations you want to plot.}
 
-\item{onco_matrix_path}{Provide a path to an onco_matrix file instead of a MAF object if the former is unavailable (this limits functionality a bit)}
+\item{onco_matrix_path}{Provide a path to an onco_matrix file instead of a MAF object if the former is unavailable (this limits functionality a bit).}
 
-\item{genes}{An optional list of genes to restrict your plot to}
+\item{genes}{An optional list of genes to restrict your plot to.}
 
-\item{keepGeneOrder}{Set to TRUE if you want to preserve the gene order specified}
+\item{include_noncoding}{List of non-coding regions to be included, default is "NFKBIZ - 3'UTR" and "HNRNPH1 - Splice_Region").}
 
-\item{keepSampleOrder}{Set to TRUE if you want to preserve the sample order specified}
+\item{keepGeneOrder}{Set to TRUE if you want to preserve the gene order specified.}
 
-\item{these_samples_metadata}{Data frame containing metadata for your samples}
+\item{keepSampleOrder}{Set to TRUE if you want to preserve the sample order specified.}
 
-\item{metadataColumns}{A vector containing the categorical column names you want to plot below}
+\item{highlightHotspots}{Set to TRUE to highlight hot spots. Default is FALSE.}
 
-\item{numericMetadataColumns}{A vector containing the numeric columns you want to plot below}
+\item{these_samples_metadata}{Data frame containing metadata for your samples.}
 
-\item{numericMetadataMax}{A numeric vector of cutoffs to apply to numeric columns above}
+\item{metadataColumns}{A vector containing the categorical column names you want to plot below.}
 
-\item{sortByColumns}{A vector containing the column names you want to sort columns (patients) on}
+\item{numericMetadataColumns}{A vector containing the numeric columns you want to plot below.}
 
-\item{removeNonMutated}{Set to TRUE to drop unmutated cases}
+\item{expressionColumns}{Optional variable for retreiving expression values for a specific gene(s).}
 
-\item{minMutationPercent}{Only genes mutated in more than minMutationPercent \% patients will be included}
+\item{numericMetadataMax}{A numeric vector of cutoffs to apply to numeric columns above.}
 
-\item{fontSizeGene}{Font size for gene labels (default 6)}
+\item{sortByColumns}{A vector containing the column names you want to sort columns (patients) on.}
 
-\item{annoAlpha}{Optional alpha to apply to annotation colours}
+\item{removeNonMutated}{Set to TRUE to drop unmutated cases.}
 
-\item{mutAlpha}{Optional alpha to apply to mutation colours}
+\item{minMutationPercent}{Only genes mutated in more than minMutationPercent \% patients will be included.}
 
-\item{recycleOncomatrix}{Set to TRUE most of the time to reuse the oncomatrix saved by maftools}
+\item{mutAlpha}{Optional alpha to apply to mutation colours.}
 
-\item{box_col}{Colour of boxes for outlining mutations (can be problematic with larger oncoprints)}
+\item{recycleOncomatrix}{Set to TRUE most of the time to reuse the oncomatrix saved by maftools.}
 
-\item{legend_row}{Fiddle with these to widen or narrow your legend}
+\item{splitColumnName}{Optional argument to indicate which metadata column to split on. Default is set to pathology.}
 
-\item{legend_col}{Fiddle with these to widen or narrow your legend}
+\item{splitGeneGroups}{Split genes into groups for better seperation (between different gene-groups) in prettyOncoplot.}
 
-\item{custom_colours}{Provide named vector (or named list of vectors) containing custom annotation colours if you do not want to use standartized pallette}
+\item{showTumorSampleBarcode}{Optional argument for showing tumor barcode. Default is FALSE.}
+
+\item{groupNames}{optional vector of group names to be displayed above heatmap. Should be the same length as the number of groups that will be shown. Default is NULL (no labels).}
+
+\item{hide_annotations}{Hide annotations for specifc ashms. argument takes a list with annotations.}
+
+\item{custom_colours}{Provide named vector (or named list of vectors) containing custom annotation colours if you do not want to use standartized pallette.}
+
+\item{hideTopBarplot}{Optional argument for removing top bar plot. Default value is TRUE.}
+
+\item{hideSideBarplot}{Optional argument for removing side bar plot. Default value is FALSE.}
+
+\item{box_col}{Colour of boxes for outlining mutations (can be problematic with larger oncoprints).}
+
+\item{annoAlpha}{Optional alpha to apply to annotation colours.}
+
+\item{legend_direction}{Direction of lgend, defualt is "horizontal".}
+
+\item{legend_position}{Position of legend, default is "bottom".}
+
+\item{legend_row}{Fiddle with these to widen or narrow your legend.}
+
+\item{legend_col}{Fiddle with these to widen or narrow your legend.}
+
+\item{metadataBarHeight}{Optional argument to adjust the height of bar with annotations. The default is 1.5.}
+
+\item{metadataBarFontsize}{Optional argument to control for the font size of metadata annotations. The default is 5.}
+
+\item{legendFontSize}{Font size for legend, default is 10.}
+
+\item{fontSizeGene}{Font size for gene labels (default 6).}
+
+\item{annotation_row}{Row for annotations, default is 2.}
+
+\item{annotation_col}{Column for annotations, default is 1.}
+
+\item{verbose}{Set to TRUE to enable verbose mode (debugging messages.}
 }
 \value{
-
+Nothing
 }
 \description{
 Make an oncoplot that is pretty using ComplexHeatmap. The metadata is expected to follow the structure and column naming used in GAMBL.
@@ -101,15 +137,13 @@ sample_id, pathology
 \examples{
 prettyOncoplot(maftools_obj = maf_obj,genes = bl_genes,
 these_samples_metadata = extra_meta,
-metadataColumns = c("pathology","COO_consensus",
-                    "cluster_name", "lymphgen","EBV_status_inf",
-                    "manta_BCL6_sv"),
-hide_annotations = c(some_ashm,"lymphgen","COO_consensus",
-                     "pathology","manta_BCL6_sv"),
+metadataColumns = c("pathology","COO_consensus", "cluster_name", "lymphgen","EBV_status_inf", "manta_BCL6_sv"),
+hide_annotations = c(some_ashm,"lymphgen","COO_consensus", "pathology","manta_BCL6_sv"),
 expressionColumns = c("IRF4",some_ashm),
 sortByColumns = c("IRF4"),
 keepGeneOrder = FALSE,splitGeneGroups = groups,
 splitColumnName = "cluster_name",
 metadataBarHeight = 2.5,metadataBarFontsize = 6,fontSizeGene = 8,
 recycleOncomatrix = TRUE,removeNonMutated = FALSE)
+
 }

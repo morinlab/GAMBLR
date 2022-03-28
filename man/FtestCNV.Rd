@@ -2,7 +2,7 @@
 % Please edit documentation in R/utilities.R
 \name{FtestCNV}
 \alias{FtestCNV}
-\title{Using GISTIC2.0 outputs, perform Fisher's exact test to compare CNV frequencies between 2 groups}
+\title{Using GISTIC2.0 outputs, perform Fisher's exact test to compare CNV frequencies between 2 groups.}
 \usage{
 FtestCNV(
   gistic_lesions,
@@ -25,9 +25,9 @@ FtestCNV(
 
 \item{fdr.cutoff}{Specify FDR significance cut-off. By default, this function uses 0.1.}
 
-\item{text_size}{Size of the text on the forest plot of differentially enriched CNV.}
+\item{text_size}{Size of the text on the forest plot of differentially enriched CNV. Default text-size is 7.}
 
-\item{blacklisted_regions}{Optionally, specify any descriptors (value from column \code{Descriptor} of GISTIC2.0 all_lesions output file) to filter out before amy comparisons are done. It is possible to specify list of multiple descriptors, for example, c("3p12.3", "12p13.2").}
+\item{blacklisted_regions}{Optionally, specify any descriptors (value from column \code{Descriptor} of GISTIC2.0 all_lesions output file) to filter out before amy comparisons are done. It is possible to specify list of multiple descriptors, for example, c("3p12.3", "12p13.2"). Default is NULL.}
 }
 \value{
 list of 3 objects:
@@ -37,7 +37,7 @@ GRAPH - forest plot visualization of distinct CNV between 2 groups.
 Output can be accessed by index (e.g.\link{3}), or by name (e.g.\link{"GRAPH"})
 }
 \description{
-Using GISTIC2.0 outputs, perform Fisher's exact test to compare CNV frequencies between 2 groups
+Using GISTIC2.0 outputs, perform Fisher's exact test to compare CNV frequencies between 2 groups.
 }
 \examples{
 # basic usage
@@ -45,4 +45,5 @@ FtestCNV(gistic_lesions = "path_to_GISTIC2.0_output/all_lesions.conf_{confidence
 # advanced usage
 FtestCNV(gistic_lesions = "path_to_GISTIC2.0_output/all_lesions.conf_{confidence_level}.txt", metadata = derived_data,
 comparison = "pathology", fdr.method = "bonferroni", fdr.cutoff = 0.05, blacklisted_regions = c("3p12.3", "12p13.2"))
+
 }

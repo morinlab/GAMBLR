@@ -2,7 +2,7 @@
 % Please edit documentation in R/annotation.R
 \name{annotate_ssm_blacklist}
 \alias{annotate_ssm_blacklist}
-\title{Annotate and auto-drop a MAF data frame with existing blacklists to remove variants that would be dropped during the merge process}
+\title{Annotate and auto-drop a MAF data frame with existing blacklists to remove variants that would be dropped during the merge process.}
 \usage{
 annotate_ssm_blacklist(
   mutations_df,
@@ -21,7 +21,11 @@ annotate_ssm_blacklist(
 )
 }
 \arguments{
+\item{mutations_df}{df with mutation data.}
+
 \item{seq_type}{The seq_type of your mutations if you prefer to apply only the corresponding blacklist (default is to use all available)}
+
+\item{tool_name}{The tool or pipeline that generated the files (should be the same for all)}
 
 \item{genome_build}{The genome build projection for the variants you are working with (default is grch37)}
 
@@ -33,16 +37,19 @@ annotate_ssm_blacklist(
 
 \item{invert}{USE WITH CAUTION! This returns only the variants that would be dropped in the process (opposite of what you want, probably)}
 
+\item{unix_group}{The unix group (should be the same for all)}
+
 \item{flavour}{Set to "clustered" if you want to use the blacklist for the new and improved SLMS-3 outputs (otherwise leave empty)}
 
 \item{blacklist_file_pattern}{Optional: A string that contains the relative path to your blacklist file from after the project_base (i.e. results) with any wildcards surrounded with curly braces}
 }
 \value{
-A MAF format data frame with two new columns indicating the number of occurrences of each variant in the two blacklists
+A MAF format data frame with two new columns indicating the number of occurrences of each variant in the two blacklists.
 }
 \description{
-Annotate and auto-drop a MAF data frame with existing blacklists to remove variants that would be dropped during the merge process
+Annotate and auto-drop a MAF data frame with existing blacklists to remove variants that would be dropped during the merge process.
 }
 \examples{
 deblacklisted_maf_df = annotate_ssm_blacklist(original_maf_df)
+
 }

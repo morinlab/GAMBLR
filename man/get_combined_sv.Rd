@@ -2,7 +2,7 @@
 % Please edit documentation in R/database.R
 \name{get_combined_sv}
 \alias{get_combined_sv}
-\title{Retrieve Combined Manta and GRIDSS-derived SVs from a flatfile and filter}
+\title{Retrieve Combined Manta and GRIDSS-derived SVs from a flatfile and filter.}
 \usage{
 get_combined_sv(
   min_vaf = 0,
@@ -19,13 +19,15 @@ get_combined_sv(
 
 \item{with_chr_prefix}{Prepend all chromosome names with chr (required by some downstream analyses)}
 
+\item{projection}{The projection genome build. Currently only grch37 is supported but hg38 should be easy to add.}
+
 \item{oncogenes}{A character vector of genes commonly involved in translocations. Possible values: CCND1, CIITA, SOCS1, BCL2, RFTN1, BCL6, MYC, PAX5.}
 }
 \value{
-A data frame in a bedpe-like format with additional columns that allow filtering of high-confidence SVs
+A data frame in a bedpe-like format with additional columns that allow filtering of high-confidence SVs.
 }
 \description{
-The bedpe files used as input to this function were pre-filtered for a minimum VAF of 0.05, and SVs affecting
+The bedpe files used as input to this function were pre-filtered for a minimum VAF of 0.05, and SVs affecting.
 common translocation regions (BCL2, BCL6, MYC, CCND1) were whitelisted (e.g. no VAF filter applied).
 Therefore if you wish to post-filter the SVs we recommend doing so carefully after loading this data frame.
 Further, the input bedpe file is annotated with oncogenes and superenhancers from naive and germinal centre B-cells.
@@ -33,4 +35,5 @@ You can subset to events affecting certain loci using the "oncogenes" argument.
 }
 \examples{
 get_combined_sv(oncogenes = c("MYC", "BCL2", "BCL6"))
+
 }

@@ -2,25 +2,42 @@
 % Please edit documentation in R/database.R
 \name{get_sample_cn_segments}
 \alias{get_sample_cn_segments}
-\title{Get all segments for a single sample_id}
+\title{Get all segments for a single (or multiple) sample_id(s).}
 \usage{
 get_sample_cn_segments(
   this_sample_id,
+  multiple_samples = FALSE,
+  sample_list,
   with_chr_prefix = FALSE,
-  streamlined = FALSE,
-  from_flatfile = FALSE
+  streamlined = FALSE
 )
 }
 \arguments{
-\item{with_chr_prefix}{Set to TRUE to add a chr prefix to chromosome names}
+\item{this_sample_id}{Optional argument, single sample_id for the sample to retrieve segments for.}
 
-\item{streamlined}{Return a minimal output rather than full details}
+\item{multiple_samples}{Set to TRUE to return cn segments for multiple samples (list) pf samples to be specified in samples_list parameter.}
 
-\item{sample_id}{The sample_id for the sample to retrieve segments for}
+\item{with_chr_prefix}{Set to TRUE to add a chr prefix to chromosome names.}
+
+\item{streamlined}{Return a minimal output rather than full details.}
+
+\item{samples_list}{Optional vector of type character with one sample per row, rewuired if multiple_samples is set to TRUE.}
 }
 \value{
-
+A list of segments for a specific or multiple sample ID(s)
 }
 \description{
-Get all segments for a single sample_id
+Get all segments for a single (or multiple) sample_id(s).
+}
+\examples{
+Return cn segments for one sample:
+sample_cn_seg = get_sample_cn_segments(this_sample_id = "some-sample-id", multiple_samples = FALSE)
+
+Return cn segments for multiple samples (provided as list):
+samples = get_sample_cn_segments(multiple_samples = TRUE, sample_list = c("some_sample", "another_sample"))
+
+Return cn segments for multiple samples (read csv with one sample per line):
+sample_list = readLines("../samples-test.csv")
+multiple_samples = get_sample_cn_segments(multiple_samples = TRUE, sample_list = sample_list)
+
 }

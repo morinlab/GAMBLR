@@ -2,20 +2,24 @@
 % Please edit documentation in R/database.R
 \name{get_merged_result}
 \alias{get_merged_result}
-\title{Helper function to find the production merge for a pipeline and restrict to the right file based on file permissions}
+\title{Helper function to find the production merge for a pipeline and restrict to the right file based on file permissions.}
 \usage{
 get_merged_result(tool_name, projection = "grch37", seq_type = "genome")
 }
 \arguments{
-\item{tool_name}{Lowercase name of the tool (e.g. manta, slms-3)}
+\item{tool_name}{Lowercase name of the tool (e.g. manta, slms-3).}
 
-\item{projection}{Which genome you want your results projected (lifted) to}
+\item{projection}{Which genome you want your results projected (lifted) to. Currently only grch37 is supported and is default.}
 
-\item{seq_type}{The seq_type you want back (currently only genome is supported/available)}
+\item{seq_type}{The seq_type you want back (currently only genome is supported/available).}
 }
 \value{
-
+String that holds filepath, tool name, sequence type, projection and extension.
 }
 \description{
-Helper function to find the production merge for a pipeline and restrict to the right file based on file permissions
+Helper function to find the production merge for a pipeline and restrict to the right file based on file permissions.
+}
+\examples{
+merged = get_merged_result("manta", "grch37", "genome")
+
 }

@@ -2,7 +2,7 @@
 % Please edit documentation in R/database.R
 \name{get_gambl_metadata}
 \alias{get_gambl_metadata}
-\title{Get GAMBL metadata}
+\title{Get GAMBL metadata.}
 \usage{
 get_gambl_metadata(
   seq_type_filter = c("genome", "capture"),
@@ -40,13 +40,14 @@ embargoed cases (current options: 'BLGSP-study', 'FL-study', 'DLBCL-study', 'FL-
 A data frame with metadata for each biopsy in GAMBL
 }
 \description{
-Get GAMBL metadata
+Get GAMBL metadata.
 }
 \examples{
-# basic usage
+basic usage
 my_metadata = get_gambl_metadata()
-# use pre-defined custom sample sets
+use pre-defined custom sample sets
 only_blgsp_metadata = get_gambl_metadata(case_set="BLGSP-study")
-# override default filters and request metadata for samples other than tumour genomes, e.g. also get the normals
+override default filters and request metadata for samples other than tumour genomes, e.g. also get the normals
 only_normal_metadata = get_gambl_metadata(tissue_status_filter = c('tumour','normal'))
+
 }

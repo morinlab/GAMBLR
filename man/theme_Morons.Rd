@@ -2,7 +2,7 @@
 % Please edit documentation in R/viz.R
 \name{theme_Morons}
 \alias{theme_Morons}
-\title{Define function for consistent plot theme}
+\title{Define function for consistent plot theme.}
 \usage{
 theme_Morons(
   base_size = 14,
@@ -12,22 +12,23 @@ theme_Morons(
 )
 }
 \arguments{
-\item{base_size}{Size of the font on the plot. Defaults to 14}
+\item{base_size}{Size of the font on the plot. Defaults to 14.}
 
 \item{base_family}{Font family to be used on the plot. Defaults to Arial. Always use cairo device when saving the resulting plot!}
 
-\item{my_legend_position}{Where to draw the legend? Defaults to the bottom of the plot}
+\item{my_legend_position}{Where to draw the legend? Defaults to the bottom of the plot.}
 
-\item{my_legend_direction}{Which direction to draw the legend? Defaults to horizontal}
+\item{my_legend_direction}{Which direction to draw the legend? Defaults to horizontal.}
 }
 \value{
-nothing
+Nothing.
 }
 \description{
-Define function for consistent plot theme
+Define function for consistent plot theme.
 }
 \examples{
 ggplot(mpg, aes(displ, hwy, colour = class)) +
 geom_point() +
 theme_Morons()
+
 }

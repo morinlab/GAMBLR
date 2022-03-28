@@ -2,7 +2,7 @@
 % Please edit documentation in R/database.R
 \name{get_ssm_by_region}
 \alias{get_ssm_by_region}
-\title{Retrieve all SSMs from the GAMBL database within a single genomic coordinate range}
+\title{Retrieve all SSMs from the GAMBL database within a single genomic coordinate range.}
 \usage{
 get_ssm_by_region(
   chromosome,
@@ -18,29 +18,36 @@ get_ssm_by_region(
 )
 }
 \arguments{
-\item{chromosome}{The chromosome you are restricting to (with or without a chr prefix)}
+\item{chromosome}{The chromosome you are restricting to (with or without a chr prefix).}
 
-\item{qstart}{Query start coordinate of the range you are restricting to}
+\item{qstart}{Query start coordinate of the range you are restricting to.}
 
-\item{qend}{Query end coordinate of the range you are restricting to}
+\item{qend}{Query end coordinate of the range you are restricting to.}
 
-\item{region}{Region formatted like chrX:1234-5678 instead of specifying chromosome, start and end separately}
+\item{region}{Region formatted like chrX:1234-5678 instead of specifying chromosome, start and end separately.}
 
-\item{basic_columns}{Set to TRUE to override the default behaviour of returning only the first 45 columns of MAF data}
+\item{basic_columns}{Set to TRUE to override the default behaviour of returning only the first 45 columns of MAF data.}
 
-\item{from_indexed_flatfile}{Set to TRUE to avoid using the database and instead rely on flatfiles (only works for streamlined data, not full MAF details)}
+\item{streamlined}{Return a basic rather than full MAF format, default is FALSE.}
+
+\item{maf_data}{Parameter description.}
+
+\item{from_indexed_flatfile}{Set to TRUE to avoid using the database and instead rely on flatfiles (only works for streamlined data, not full MAF details).}
 
 \item{mode}{Only works with indexed flatfiles. Accepts 2 options of "slms-3" and "strelka2" to indicate which variant caller to use. Default is "slms-3".}
+
+\item{allow_clustered}{Logical parameter indicating whether to use SLMS-3 results with clustered events. Default is FALSE.}
 }
 \value{
-A data frame containing all the MAF data columns (one row per mutation)
+A data frame containing all the MAF data columns (one row per mutation).
 }
 \description{
-Retrieve all SSMs from the GAMBL database within a single genomic coordinate range
+Retrieve all SSMs from the GAMBL database within a single genomic coordinate range.
 }
 \examples{
 #basic usage
-my_mutations=get_ssm_by_region(region="chr8:128,723,128-128,774,067")
+my_mutations = get_ssm_by_region(region = "chr8:128,723,128-128,774,067")
 #specifying chromosome, start and end individually
-my_mutations=get_ssm_by_region(chromosome="8",qstart=128723128,qend=128774067)
+my_mutations = get_ssm_by_region(chromosome = "8", qstart = 128723128, qend = 128774067)
+
 }

@@ -2,21 +2,22 @@
 % Please edit documentation in R/utilities.R
 \name{maf_to_custom_track}
 \alias{maf_to_custom_track}
-\title{Convert a maf-formatted data frame into a bed custom track file for UCSC}
+\title{Convert a maf-formatted data frame into a bed custom track file for UCSC.}
 \usage{
 maf_to_custom_track(maf_data, output_file)
 }
 \arguments{
-\item{maf_data}{Either a maf loaded from disk or from the database using a get_ssm function}
+\item{maf_data}{Either a maf loaded from disk or from the database using a get_ssm function.}
 
-\item{output_file}{Name for your new bed file that can be uploaded as a custom track to UCSC}
+\item{output_file}{Name for your new bed file that can be uploaded as a custom track to UCSC.}
 }
 \value{
-Nothing
+Nothing.
 }
 \description{
-Convert a maf-formatted data frame into a bed custom track file for UCSC
+Convert a maf-formatted data frame into a bed custom track file for UCSC.
 }
 \examples{
-maf_to_custom_track(my_maf_data,"/home/rmorin/private/some_mutations.bed")
+maf_to_custom_track(my_maf_data, "/home/rmorin/private/some_mutations.bed")
+
 }

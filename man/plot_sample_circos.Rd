@@ -2,7 +2,7 @@
 % Please edit documentation in R/viz.R
 \name{plot_sample_circos}
 \alias{plot_sample_circos}
-\title{Plot a sample-centric circos overview}
+\title{Plot a sample-centric circos overview.}
 \usage{
 plot_sample_circos(
   this_sample_id,
@@ -20,23 +20,38 @@ plot_sample_circos(
 )
 }
 \arguments{
-\item{sv_df}{Optional data frame of SVs (default is to use the database)}
+\item{this_sample_id}{Sample ID for the sample to plot.}
 
-\item{cnv_df}{Optional data frame of CNVs (default is to use the database)}
+\item{sv_df}{Optional data frame of SVs (default is to use the database).}
 
-\item{include_sv}{Default TRUE}
+\item{cnv_df}{Optional data frame of CNVs (default is to use the database).}
 
-\item{include_cnv}{Default TRUE}
+\item{ssm_df}{Optional data frame of SSMs (default is to use the database).}
 
-\item{sample_id}{Sample ID for the sample to plot}
+\item{include_sv}{Default TRUE.}
+
+\item{include_ssm}{Defaul FALSE.}
+
+\item{legend_metadata_columns}{Column names from meta data}
+
+\item{legend_metadata_names}{List of meta data names to be plotted.}
+
+\item{include_cnv}{Default TRUE.}
+
+\item{chrom_list}{List of chromosomes to be plotted. If not stated, chr1-22+X will bes used.}
+
+\item{label_genes}{Gene labels (df, list or what type?)}
+
+\item{auto_label_sv}{Default is FALSE}
 }
 \value{
 Nothing
 }
 \description{
-Plot a sample-centric circos overview
+Plot a sample-centric circos overview.
 }
 \examples{
 this_samp = "13-38657_tumorB"
 GAMBLR::plot_sample_circos(this_sample_id=this_samp,legend_metadata_columns = c("pathology","lymphgen","COO_consensus","DHITsig_consensus","bcl2_ba","myc_ba"),legend_metadata_names = c("pathology","LymphGen","COO","DHITsig","BCL2","MYC"),auto_label_sv = TRUE,chrom_list = c("chr2","chr3","chr8","chr14","chr18"))
+
 }

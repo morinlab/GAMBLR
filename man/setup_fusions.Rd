@@ -2,7 +2,7 @@
 % Please edit documentation in R/portal.R
 \name{setup_fusions}
 \alias{setup_fusions}
-\title{Annotate SVs and create the input for fusions to be displayed in cBioPortal instance}
+\title{Annotate SVs and create the input for fusions to be displayed in cBioPortal instance.}
 \usage{
 setup_fusions(
   short_name = "GAMBL",
@@ -10,25 +10,31 @@ setup_fusions(
   human_friendly_name = "GAMBL data",
   project_name = "gambl_minus_icgc",
   description = "GAMBL data without ICGC",
+  gambl_maf = "maf_slms3_hg19",
+  gambl_icgc_maf = "maf_slms3_hg19_icgc",
   out_dir
 )
 }
 \arguments{
-\item{short_name}{a concise name for your portal project}
+\item{short_name}{A concise name for your portal project.}
 
-\item{include_icgc_data}{whether or not you want ICGC and other external data included}
+\item{include_icgc_data}{Whether or not you want ICGC and other external data included.}
 
-\item{human_friendly_name}{a slightly more verbose name for your project}
+\item{human_friendly_name}{A slightly more verbose name for your project.}
 
-\item{project_name}{unique ID for your project}
+\item{project_name}{Unique ID for your project.}
 
-\item{description}{A verbose description of your data set}
+\item{description}{A verbose description of your data set.}
 
-\item{out_dir}{The full path to the base directory where the files are being created}
+\item{gambl_maf}{maf origin.}
+
+\item{gambl_icgc_maf}{Icgc maf origin.}
+
+\item{out_dir}{The full path to the base directory where the files are being created.}
 }
 \value{
-a vector of sample_id for the patients that have been included
+A vector of sample_id for the patients that have been included.
 }
 \description{
-Annotate SVs and create the input for fusions to be displayed in cBioPortal instance
+Annotate SVs and create the input for fusions to be displayed in cBioPortal instance.
 }

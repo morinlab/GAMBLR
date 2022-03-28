@@ -2,19 +2,22 @@
 % Please edit documentation in R/utilities.R
 \name{collate_curated_sv_results}
 \alias{collate_curated_sv_results}
-\title{Collate all SV calls from the genome data and summarize for main oncogenes of interest per sample}
+\title{INTERNAL FUNCTION called by collate_results, not meant for out-of-package usage.
+Collate all SV calls from the genome data and summarize for main oncogenes of interest per sample.}
 \usage{
 collate_curated_sv_results(sample_table)
 }
 \arguments{
-\item{sample_table}{A data frame with sample_id as the first column}
+\item{sample_table}{A data frame with sample_id as the first column.}
 }
 \value{
-The sample table with additional columns
+The sample table with additional columns.
 }
 \description{
-Collate all SV calls from the genome data and summarize for main oncogenes of interest per sample
+INTERNAL FUNCTION called by collate_results, not meant for out-of-package usage.
+Collate all SV calls from the genome data and summarize for main oncogenes of interest per sample.
 }
 \examples{
 gambl_results_derived = collate_curated_sv_results(gambl_results_derived)
+
 }

@@ -5,29 +5,40 @@
 \title{Get the expression for one or more genes for all GAMBL samples}
 \usage{
 get_gene_expression(
+  metadata,
   hugo_symbols,
   ensembl_gene_ids,
-  metadata,
   join_with = "mrna",
+  all_genes = FALSE,
+  expression_data,
   from_flatfile = TRUE
 )
 }
 \arguments{
+\item{metadata}{GAMBL metadata.}
+
 \item{hugo_symbols}{One or more gene symbols. Should match the values in a maf file.}
 
 \item{ensembl_gene_ids}{One or more ensembl gene IDs. Only one of hugo_symbols or ensembl_gene_ids may be used.}
 
-\item{metadata}{GAMBL metadata.}
-
 \item{join_with}{How to restrict cases for the join. Can be one of genome, mrna or "any"}
+
+\item{all_genes}{Set to TRUE to return full expression data frame without any subsetting.}
+
+\item{expression_data}{Optional argument to use an already loaded expression data frame (prevent function to re-load full df from flat file or database)}
+
+\item{from_flatfile}{Set to TRUE to obtain mutations from a local flatfile instead of the database.}
 }
 \value{
-
+A list.
 }
 \description{
 Get the expression for one or more genes for all GAMBL samples
 }
 \examples{
-MYC_expr <- get_gene_expression(hugo_symbols = c("MYC"), join_with = "mrna")
-
+MYC_expr = get_gene_expression(hugo_symbols = c("MYC"), join_with = "mrna")
+Read full expression values df (no subsetting on genes)
+full_expression_df = get_gene_expression_new(all_genes = TRUE, join_with = "genome")
+Use loaded df (in previous step) to get expression values for IRF4 and MYC.
+irf4_myc_expressions = get_gene_expression_new(hugo_symbols = c("IRF4", "MYC"), all_genes = FALSE, join_with = "genome", from_flatfile = FALSE, expression_data = full_expression_df) 
 }

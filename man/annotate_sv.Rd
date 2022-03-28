@@ -2,38 +2,48 @@
 % Please edit documentation in R/annotation.R
 \name{annotate_sv}
 \alias{annotate_sv}
-\title{Annotate a data frame of SV breakpoints after retrieval from the database}
+\title{Annotate a data frame of SV breakpoints represented in an extended BEDPE format.}
 \usage{
 annotate_sv(
   sv_data,
   partner_bed,
   with_chr_prefix = FALSE,
   collapse_redundant = FALSE,
-  return_as = "bedpe",
+  return_as = "bedpe_entrez",
+  blacklist = c(60565248, 30303126, 187728894, 101357565, 101359747, 161734970,
+    69400840, 65217851, 187728889, 188305164),
   genome_build = "grch37"
 )
 }
 \arguments{
 \item{sv_data}{A data frame of SVs. This should be the output of get_manta_sv. If you aren't using the database backend you can supply your own data frame in the format show below.
 Most of this data is directly from the bedpe files that are obtained by converting the Manta outputs from VCF.
-Only the columns for both chromosomes, coordinates and strand plus SOMATIC_SCORE and tumour_sample_id are absolutely required
+Only the columns for both chromosomes, coordinates and strand plus SOMATIC_SCORE and tumour_sample_id are absolutely required.
 CHROM_A  START_A    END_A CHROM_B  START_B    END_B NAME SOMATIC_SCORE STRAND_A STRAND_B TYPE FILTER VAF_tumour VAF_normal DP_tumour DP_normal tumour_sample_id normal_sample_id pair_status
 1  1556541  1556547       1  1556664  1556670    .            40        -        -  BND   PASS      0.145          0        55        73  00-14595_tumorA  00-14595_normal     matched}
 
 \item{partner_bed}{Optional bed-format data frame to use for annotating oncogene partners (e.g. enhancers). required columns are: chrom,start,end,gene}
 
-\item{with_chr_prefix}{Optionally request that chromosome names are returned with a chr prefix}
+\item{with_chr_prefix}{Optionally request that chromosome names are returned with a chr prefix.}
 
-\item{collapse_redundant}{Remove reciprocal events and only return one per event}
+\item{collapse_redundant}{Remove reciprocal events and only return one per event.}
+
+\item{return_as}{Stated format for returned output, default is bedpe. Other accepted output format is bed and bedpe_entrez (to keep entrez_ids for compatabillity with portal.R and cBioPortal).}
+
+\item{blacklist}{A list of regions to be removed from annotations. Default coordinates are in respect to hg19.}
+
+\item{genome_build}{Reference genome build parameter, default is grch37 (hg38 is also accepted).}
 }
 \value{
 A data frame with annotated SVs (gene symbol and entrez ID)
 }
 \description{
-Annotate a data frame of SV breakpoints after retrieval from the database
+Annotate a data frame of SV breakpoints represented in an extended BEDPE format.
 }
 \examples{
 # Basic usage
 sv_df = get_manta_sv()
 annotated_sv = annotate_sv(sv_df)
+annotated_entrez = annotate_sv(sv_data = sv_df, with_chr_prefix = FALSE, collapse_redundant = FALSE, return_as = "bedpe_entrez", genome_build = "grch37")
+
 }

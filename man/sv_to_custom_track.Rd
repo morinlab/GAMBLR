@@ -2,22 +2,27 @@
 % Please edit documentation in R/utilities.R
 \name{sv_to_custom_track}
 \alias{sv_to_custom_track}
-\title{Make a UCSC-ready custom track file from SV data}
+\title{Make a UCSC-ready custom track file from SV data.}
 \usage{
 sv_to_custom_track(sv_bedpe, output_file, is_annotated = TRUE, sv_name = "all")
 }
 \arguments{
-\item{sv_bedpe}{A bedpe formatted data frame of SVs}
+\item{sv_bedpe}{A bedpe formatted data frame of SVs.}
 
-\item{output_file}{A bed file with UCSC custom header}
+\item{output_file}{A bed file with UCSC custom header.}
+
+\item{is_annotated}{Set to TRUE if input SV bedpe is annotated, default is TRUE.}
+
+\item{sv_name}{SV name. Default is set to "all" = include all subtypes of SVs.}
 }
 \value{
-nothing
+Nothing.
 }
 \description{
-Make a UCSC-ready custom track file from SV data
+Make a UCSC-ready custom track file from SV data.
 }
 \examples{
 all_sv = get_manta_sv()
-sv_to_custom_track(all_sv,output_file="GAMBL_sv_custom_track.bed")
+sv_to_custom_track(all_sv, output_file = "GAMBL_sv_custom_track.bed", is_annotated = FALSE)
+
 }
