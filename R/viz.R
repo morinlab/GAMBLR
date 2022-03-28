@@ -73,7 +73,7 @@ focal_cn_plot = function(region,
 #'
 #' @return Nothing
 #' @export
-#' @import g3viz, tidyverse
+#' @import g3viz tidyverse
 #'
 #' @examples
 #' plot_lollipop = (mutation_df, "MYC", "Mutation data for MYC", "blue")
