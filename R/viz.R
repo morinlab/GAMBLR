@@ -2356,10 +2356,12 @@ splendidHeatmap = function(this_matrix,
                                      gap = unit(0.25 * metadataBarHeight, "mm"), 
                                      annotation_name_gp = gpar(fontsize = metadataBarFontsize),
                                      annotation_legend_param = list(nrow = legend_row, ncol = legend_col, direction = legend_direction))
+
+  #top annotation: groups of interest to split on
   top_bar_colors = list(my_colours[[splitColumnName]] %>% rev)
   names(top_bar_colors) = splitColumnName
   names(top_bar_colors[[splitColumnName]]) = names(top_bar_colors[[splitColumnName]]) %>% rev()
-  #top annotation: groups of interest to split on
+
   ha_top = HeatmapAnnotation(df = metadata_df[ (order(match(rownames(metadata_df), used_for_ordering))), ] %>%
     dplyr::arrange(!!!syms(metadataColumns), desc(!!!syms(numericMetadataColumns))) %>%
     dplyr::select(splitColumnName), col = top_bar_colors,
