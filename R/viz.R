@@ -2185,7 +2185,7 @@ splendidHeatmap = function(this_matrix,
                            leftStackedWidth = 4,
                            metadataBarFontsize = 5,
                            groupNames = NULL){
-  comparison_groups <- unique(these_samples_metadata[,splitColumnName])
+  comparison_groups = colnames(importance_values)
 
   if(!is.null(splitColumnName) & (splitColumnName %in% metadataColumns)){
     metadataColumns = c(splitColumnName, metadataColumns[!metadataColumns == splitColumnName])
@@ -2235,7 +2235,8 @@ splendidHeatmap = function(this_matrix,
   FEATURES <- w[,1] %>%
     as.data.frame() %>%
     `rownames<-`(rownames(w)) %>%
-    dplyr::arrange(desc(.)) %>%
+    `names<-`("importance") %>%
+    dplyr::arrange(desc(importance)) %>%
     head(., max_number_of_features_per_group) %>%
     rownames_to_column(., var = "Feature") %>%
     dplyr::mutate(group = comparison_groups[1])
@@ -2243,12 +2244,14 @@ splendidHeatmap = function(this_matrix,
     FEATURES = rbind(as.data.frame(FEATURES), w[,i] %>% 
       as.data.frame() %>%
       `rownames<-`(rownames(w)) %>%
-       dplyr::arrange(desc(.)) %>%
+      `names<-`("importance") %>%
+       arrange(desc(importance)) %>%
        head(., max_number_of_features_per_group + 3) %>%
        rownames_to_column(., var = "Feature") %>%
        dplyr::mutate(group = comparison_groups[i])) %>%
+       dplyr::mutate(importance=as.numeric(importance)) %>%
        dplyr::group_by(Feature) %>%
-       dplyr::filter(. == max(.)) %>%
+       dplyr::filter(importance == max(importance)) %>%
        dplyr::arrange(group)
   }
   FEATURES = as.data.frame(FEATURES)
@@ -2353,11 +2356,13 @@ splendidHeatmap = function(this_matrix,
                                      gap = unit(0.25 * metadataBarHeight, "mm"), 
                                      annotation_name_gp = gpar(fontsize = metadataBarFontsize),
                                      annotation_legend_param = list(nrow = legend_row, ncol = legend_col, direction = legend_direction))
-
+  top_bar_colors = list(my_colours[[splitColumnName]] %>% rev)
+  names(top_bar_colors) = splitColumnName
+  names(top_bar_colors[[splitColumnName]]) = names(top_bar_colors[[splitColumnName]]) %>% rev()
   #top annotation: groups of interest to split on
   ha_top = HeatmapAnnotation(df = metadata_df[ (order(match(rownames(metadata_df), used_for_ordering))), ] %>%
     dplyr::arrange(!!!syms(metadataColumns), desc(!!!syms(numericMetadataColumns))) %>%
-    dplyr::select(splitColumnName), col = my_colours[splitColumnName],
+    dplyr::select(splitColumnName), col = top_bar_colors,
                                     simple_anno_size = unit(metadataBarHeight, "mm"),
                                     gap = unit(0.25*metadataBarHeight, "mm"),
                                     annotation_name_gp = gpar(fontsize = fontSizeGene * 1.5),
