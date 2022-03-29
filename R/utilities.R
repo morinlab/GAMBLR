@@ -2098,8 +2098,8 @@ FtestCNV = function(gistic_lesions,
 
   # rename columns to match with comparison groups and save resulting df as part of the output
   DISTINCT = GROUP1_vs_GROUP2.PASSED %>% 
-    `colnames=`(gsub("GROUP1", GROUPS.TO.COMPARE[1], colnames(.))) %>%
-    `colnames=`(gsub("GROUP2", GROUPS.TO.COMPARE[2], colnames(.)))
+    `colnames<-`(gsub("GROUP1", GROUPS.TO.COMPARE[1], colnames(.))) %>%
+    `colnames<-`(gsub("GROUP2", GROUPS.TO.COMPARE[2], colnames(.)))
 
   message("Successfully completed step 1/3...")
 
@@ -2171,8 +2171,8 @@ FtestCNV = function(gistic_lesions,
 
   # rename columns to match with comparison groups
   study_table = study_table %>% 
-    `colnames =`(gsub("GROUP1", GROUPS.TO.COMPARE[1], colnames(.))) %>%
-    `colnames =`(gsub("GROUP2", GROUPS.TO.COMPARE[2], colnames(.)))
+    `colnames<-`(gsub("GROUP1", GROUPS.TO.COMPARE[1], colnames(.))) %>%
+    `colnames<-`(gsub("GROUP2", GROUPS.TO.COMPARE[2], colnames(.)))
 
   # actual plot
   GRAPH = metaviz::viz_forest(x = mergedPassed[, c("OddsRatio", "SE")],

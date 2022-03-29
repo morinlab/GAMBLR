@@ -2242,7 +2242,7 @@ splendidHeatmap = function(this_matrix,
   for (i in 2:length(comparison_groups)){
     FEATURES = rbind(as.data.frame(FEATURES), w[,i] %>% 
       as.data.frame() %>%
-      `rownames = `(rownames(w)) %>%
+      `rownames<-`(rownames(w)) %>%
        dplyr::arrange(desc(.)) %>%
        head(., max_number_of_features_per_group + 3) %>%
        rownames_to_column(., var = "Feature") %>%
@@ -2324,7 +2324,7 @@ splendidHeatmap = function(this_matrix,
     dplyr::select(-Tumor_Sample_Barcode, -splitColumnName) %>%
     dplyr::summarise_all(funs(sum)) %>%
     t(.) %>%
-    `colnames=`(comparison_groups[i]) %>%
+    `colnames<-`(comparison_groups[i]) %>%
     as.data.frame(.) %>%
     dplyr::mutate_all(~(./i) / nrow(metadata_df)))
   }
