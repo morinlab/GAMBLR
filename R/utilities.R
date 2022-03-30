@@ -1697,6 +1697,10 @@ get_gambl_colours = function(classification = "all",
   everything = c()
   blood_cols = ggsci::get_ash("blood")
 
+  all_colours[["seq_type"]] = c("mrna" = "#E41A1C",
+                                "genome" = "#377EB8",
+                                "capture" = "#4DAF4A")
+
   all_colours[["type"]] = c("gain" = "blue",
                             "loss" = "red")
 
