@@ -2492,6 +2492,7 @@ collate_lymphgen = function(sample_table,
 #' @import tidyverse
 #'
 #' @examples
+#' data = system.file("extdata", "sample_matrix.tsv", package = "GAMBLR") %>% read_tsv() %>% column_to_rownames("Feature")
 #' NMF_input = massage_matrix_for_clustering(data)
 #'
 
@@ -2512,7 +2513,7 @@ massage_matrix_for_clustering = function(incoming_data,
     if(length(red_features)>1){
       message(paste0("Found redundant features for gene ", red_features[1], ", processing ..."))
       output_data[,output_data[red_features[2],]>0][red_features,][red_features[1],] = 1
-      rownames(output_data)[rownames(output_data)==red_features[1]] = paste0(red_features[1],
+      rownames(output_data)[rownames(output_data)==red_features[1]] = paste0(this_feature[1],
                                                                "-MUTor",
                                                                this_feature[2])
       output_data = output_data[!rownames(output_data) %in% red_features[2],]
@@ -2559,15 +2560,28 @@ massage_matrix_for_clustering = function(incoming_data,
   
   # drop features that are occuring at a very low frequency
   low_feat = which(rowSums(output_data) <= floor(ncol(output_data)*min_feature_percent))
-  message(paste0 ("There are ", length(low_feat), " features underrepresented and not meeting the minimum frequency of ", min_feature_percent))
-  print(names(low_feat))
+  if (length(low_feat)>0){
+    message(paste0 ("There are ", length(low_feat), " features underrepresented and not meeting the minimum frequency of ", min_feature_percent))
+    print(names(low_feat))
+    output_data = output_data[-c(low_feat),]
+  }else{
+    message(paste0 ("There are ", length(low_feat), " features not meeting the minimum frequency of ", min_feature_percent))
+    message("Proceeding without dropping any feature ...")
+  }
 
   # are there any samples with 0 features? Yes, 1 exome and 1 genome
   samples_with_zero_feat = which(colSums(output_data) == 0)
-  message(paste0 ("There are ", length(samples_with_zero_feat), " samples with no features and they will be dropped from matrix: "))
-  print(names(samples_with_zero_feat))
+  if (length(samples_with_zero_feat)>0){
+    message(paste0 ("There are ", length(samples_with_zero_feat), " samples with no features and they will be dropped from matrix: "))
+    print(names(samples_with_zero_feat))
+    output_data = output_data[, -c(samples_with_zero_feat)]
+  }else{
+    message("All samples in your matrix are having at least one feature. Proceeding without dropping any samples ...")
+  }
 
-  output_data = output_data[-c(low_feat), -c(samples_with_zero_feat)]
+
+
+
 
   # convert to matrix explicitly to make it NMF-input compatible
   output_data = as.matrix(output_data)
