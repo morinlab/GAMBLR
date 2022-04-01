@@ -44,7 +44,7 @@ prettyRainfallPlot = function(this_sample_id,label_ashm_genes=TRUE,chrom,project
   }else{
     p = ggplot(rainfall_points) + geom_point(aes(x=Start_Position,y=log(IMD))) + theme_cowplot() + facet_wrap(~Chromosome)
   }
-  print(head(rainfall_points))
+  #print(head(rainfall_points))
   return(p)
 }
 

@@ -1,4 +1,5 @@
 chr_name	hg19_start	hg19_end	gene	region	regulatory_comment
+chr19	16434978	16439011	KLF2	TSS	intronic
 chr9	37023396	37027663	PAX5	intron-1	intronic
 chr9	37192080	37207549	ZCCHC7	intron-3	intronic
 chr9	37282092	37309161	ZCCHC7	intron-2	intronic
