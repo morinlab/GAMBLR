@@ -1697,6 +1697,10 @@ get_gambl_colours = function(classification = "all",
   everything = c()
   blood_cols = ggsci::get_ash("blood")
 
+  all_colours[["seq_type"]] = c("mrna" = "#E41A1C",
+                                "genome" = "#377EB8",
+                                "capture" = "#4DAF4A")
+
   all_colours[["type"]] = c("gain" = "blue",
                             "loss" = "red")
 
@@ -1717,7 +1721,7 @@ get_gambl_colours = function(classification = "all",
   all_colours[["BL"]] = c("M53-BL" = "#A6CEE3",
                           "DLBCL-1" = "#721F0F",
                           "IC-BL" = "#45425A",
-                          "DGG-BL" = "#33A02C",
+                          "DGG-BL" = "#E90C8BFF",
                           "DLBCL-2" = "#FB9A99",
                           "DLBCL-3" = "#C41230")
 
@@ -2098,8 +2102,8 @@ FtestCNV = function(gistic_lesions,
 
   # rename columns to match with comparison groups and save resulting df as part of the output
   DISTINCT = GROUP1_vs_GROUP2.PASSED %>% 
-    `colnames=`(gsub("GROUP1", GROUPS.TO.COMPARE[1], colnames(.))) %>%
-    `colnames=`(gsub("GROUP2", GROUPS.TO.COMPARE[2], colnames(.)))
+    `colnames<-`(gsub("GROUP1", GROUPS.TO.COMPARE[1], colnames(.))) %>%
+    `colnames<-`(gsub("GROUP2", GROUPS.TO.COMPARE[2], colnames(.)))
 
   message("Successfully completed step 1/3...")
 
@@ -2171,8 +2175,8 @@ FtestCNV = function(gistic_lesions,
 
   # rename columns to match with comparison groups
   study_table = study_table %>% 
-    `colnames =`(gsub("GROUP1", GROUPS.TO.COMPARE[1], colnames(.))) %>%
-    `colnames =`(gsub("GROUP2", GROUPS.TO.COMPARE[2], colnames(.)))
+    `colnames<-`(gsub("GROUP1", GROUPS.TO.COMPARE[1], colnames(.))) %>%
+    `colnames<-`(gsub("GROUP2", GROUPS.TO.COMPARE[2], colnames(.)))
 
   # actual plot
   GRAPH = metaviz::viz_forest(x = mergedPassed[, c("OddsRatio", "SE")],
@@ -2465,4 +2469,123 @@ collate_lymphgen = function(sample_table,
   }
 
   return(sample_table)
+}
+
+
+#' Will prepare the data frame of binary matrix to be used as NMF input. This means that for the features with SSM and CNV,
+#' they will be squished together as one feature named GeneName-MUTorAMP or GeneName-MUTorLOSS, so the CNV features in the input data frame are expected
+#' to be named GeneName_AMP or GeneName_LOSS. Next, for the genes with hotspot mutations labelled in the input data as
+#' GeneNameHOTSPOT, the feature for hotspot mutation will be given preference and SSM with/without CNV will be set to 0 for that sample.
+#' The naming scheme of the features as in this description is important, because the function uses regex to searh for these patters as specified.
+#' Finally, if any features are provided to be dropped explicitly, they will be removed, and then the features not meeting the specified minimal
+#' frequency will be removed, as well as any samples with 0 features.
+#' Consistent with NMF input, in the input data frame each row is a feature, and each column is a sample. The input is expected to be numeric 1/0 with row and column names.
+#'
+#'
+#' @param incoming_data Input data frame or matrix to prepare for NMF.
+#' @param blacklisted_cnv_regex Regular expression to match in feature names when considering SSM/CNV overlap.
+#' @param drop_these_features Optional argument with features to drop from resulting matrix.
+#' @param min_feature_percent Minimum frequency for the feature to be returned in the resulting matrix. By default, features present in less than 0.5% of samples will be discarded.
+#'
+#' @return A matrix compatible with NMF input.
+#' @export
+#' @import tidyverse
+#'
+#' @examples
+#' data = system.file("extdata", "sample_matrix.tsv", package = "GAMBLR") %>% read_tsv() %>% column_to_rownames("Feature")
+#' NMF_input = massage_matrix_for_clustering(data)
+#'
+
+massage_matrix_for_clustering = function(incoming_data,
+                                         blacklisted_cnv_regex="3UTR|SV|HOTSPOT|TP53BP1|intronic",
+                                         drop_these_features,
+                                         min_feature_percent = 0.005){
+
+  # if there is a CNV and mutation at the same gene, squish these features together
+  message("Searching for overlapping CNV and mutation features to squish together ...")
+  feat_with_cnv_data = rownames(incoming_data)[grepl("AMP|LOSS", rownames(incoming_data))]
+  output_data = incoming_data
+
+  for (g in feat_with_cnv_data){
+    this_feature = unlist(strsplit(g, split='_', fixed=TRUE))
+    red_features <- rownames(output_data)[grepl(this_feature[1], rownames(output_data))]
+    red_features <- red_features[!grepl(blacklisted_cnv_regex, red_features)] # these features to be kept separately
+    if(length(red_features)>1){
+      message(paste0("Found redundant features for gene ", red_features[1], ", processing ..."))
+      output_data[,output_data[red_features[2],]>0][red_features,][red_features[1],] = 1
+      rownames(output_data)[rownames(output_data)==red_features[1]] = paste0(this_feature[1],
+                                                               "-MUTor",
+                                                               this_feature[2])
+      output_data = output_data[!rownames(output_data) %in% red_features[2],]
+
+    }
+  }
+
+  message("Success")
+
+  # if there is a hotspot and SSM for same gene, give priority to hotspot
+  message("Searching for overlapping HOTSPOT and mutation features to squish together ...")
+  feat_with_hotspot_data = rownames(output_data)[grepl("HOTSPOT", rownames(output_data))]
+  for (hot in feat_with_hotspot_data){
+    this_gene=gsub("HOTSPOT","", hot)
+    # this gene may also have CNV data already squished
+    maybe_cnv = grepl("MUTor",
+                      rownames(output_data[grepl(this_gene,
+                                          rownames(output_data)),]))
+    if("TRUE" %in% maybe_cnv){ # if it has the cnv data then use the name of gene with LOSS or AMP respectively
+      this_gene = rownames(output_data[grepl(this_gene, rownames(output_data)),])[maybe_cnv]
+      message(paste0("Found hotspot for gene ", this_gene, " that also has CNV data, processing ..."))
+      output_data[,(output_data[c(this_gene),]>0 & output_data[c(hot),]==1)][c(this_gene, hot),][c(this_gene),] = 0
+    }else{ # otherwise just use the gene nae
+      message(paste0("Found hotspot for gene ", this_gene, ", processing ..."))
+      output_data[,(output_data[c(this_gene),]>0 & output_data[c(hot),]==1)][c(this_gene, hot),][c(this_gene),] = 0
+    }
+    # if the above statement work, then there should be no overlaps between hotspot and any other mutations
+    # for the same gene
+    if(length(output_data[,(output_data[c(this_gene),]>0 & output_data[c(hot),]==1)][c(this_gene, hot),][c(this_gene),])==0){
+      message("Success")
+    }else{
+      message(paste0("Problem occured with the ", feat_with_hotspot_data, " and the gene ", this_gene, "and there is still overlap between mutation and hotspot."))
+      break
+    }
+  }
+
+  # did user provide any features they would like to drop from matrix?
+  if(!missing(drop_these_features)){
+    message("You provided features to be dropped from matrix, removing them ...")
+    output_data = 
+      output_data[!rownames(output_data) %in% drop_these_features,]
+    message("Success")
+  }
+  
+  # drop features that are occuring at a very low frequency
+  low_feat = which(rowSums(output_data) <= floor(ncol(output_data)*min_feature_percent))
+  if (length(low_feat)>0){
+    message(paste0 ("There are ", length(low_feat), " features underrepresented and not meeting the minimum frequency of ", min_feature_percent))
+    print(names(low_feat))
+    output_data = output_data[-c(low_feat),]
+  }else{
+    message(paste0 ("There are ", length(low_feat), " features not meeting the minimum frequency of ", min_feature_percent))
+    message("Proceeding without dropping any feature ...")
+  }
+
+  # are there any samples with 0 features? Yes, 1 exome and 1 genome
+  samples_with_zero_feat = which(colSums(output_data) == 0)
+  if (length(samples_with_zero_feat)>0){
+    message(paste0 ("There are ", length(samples_with_zero_feat), " samples with no features and they will be dropped from matrix: "))
+    print(names(samples_with_zero_feat))
+    output_data = output_data[, -c(samples_with_zero_feat)]
+  }else{
+    message("All samples in your matrix are having at least one feature. Proceeding without dropping any samples ...")
+  }
+
+
+
+
+
+  # convert to matrix explicitly to make it NMF-input compatible
+  output_data = as.matrix(output_data)
+
+  return(output_data)
+
 }
