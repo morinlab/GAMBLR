@@ -1,13 +1,13 @@
 
-#' Plot a rainfall plot for one sample
+#' Plot a rainfall plot for one sample. This function takes in MAF data frame, or path to custom MAF file.
+#' If non are specified, the SSM will be obtained though GAMBLR directly.
 #'
-#' @param this_sample_id
-#' @param label_ashm_genes
-#' @param chrom
-#' @param projection
-#' @param chromosome
-#' @param this_maf
-#' @param maf_path
+#' @param this_sample_id Sample id for the sample to display. This is the only required argument.
+#' @param label_ashm_genes Boolean argument indicating whether the aSHM regions will be labeled or not.
+#' @param projection Specify projection (grch37 or hg38) of mutations. Default is grch37.
+#' @param chromosome Provide one or more chromosomes to plot. The chr prefix can be inconsistent with projection and will be handled.
+#' @param this_maf Specify custom MAF data frame of mutations.
+#' @param maf_path Specify path to MAF file if it is not already loaded into data frame.
 #'
 #'
 #' @return a ggplot2 plot. Print it using print() or save it using ggsave()
@@ -15,9 +15,12 @@
 #' @import ggplot2 dplyr ggrepel
 #'
 #' @examples
+#' prettyRainfallPlot("Raji")
+#' prettyRainfallPlot("Raji", chromosome = c(3,9,"chr14",22,"X"))
+#' prettyRainfallPlot("Raji", chromosome = c(3,9), projection = "hg38", label_ashm_genes = FALSE)
+#'
 prettyRainfallPlot = function(this_sample_id,
                               label_ashm_genes = TRUE,
-                              chrom,
                               projection = "grch37",
                               chromosome,
                               this_maf,

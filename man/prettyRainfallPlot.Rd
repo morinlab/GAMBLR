@@ -2,12 +2,12 @@
 % Please edit documentation in R/viz.R
 \name{prettyRainfallPlot}
 \alias{prettyRainfallPlot}
-\title{Plot a rainfall plot for one sample}
+\title{Plot a rainfall plot for one sample. This function takes in MAF data frame, or path to custom MAF file.
+If non are specified, the SSM will be obtained though GAMBLR directly.}
 \usage{
 prettyRainfallPlot(
   this_sample_id,
   label_ashm_genes = TRUE,
-  chrom,
   projection = "grch37",
   chromosome,
   this_maf,
@@ -15,11 +15,28 @@ prettyRainfallPlot(
 )
 }
 \arguments{
-\item{maf_path}{}
+\item{this_sample_id}{Sample id for the sample to display. This is the only required argument.}
+
+\item{label_ashm_genes}{Boolean argument indicating whether the aSHM regions will be labeled or not.}
+
+\item{projection}{Specify projection (grch37 or hg38) of mutations. Default is grch37.}
+
+\item{chromosome}{Provide one or more chromosomes to plot. The chr prefix can be inconsistent with projection and will be handled.}
+
+\item{this_maf}{Specify custom MAF data frame of mutations.}
+
+\item{maf_path}{Specify path to MAF file if it is not already loaded into data frame.}
 }
 \value{
 a ggplot2 plot. Print it using print() or save it using ggsave()
 }
 \description{
-Plot a rainfall plot for one sample
+Plot a rainfall plot for one sample. This function takes in MAF data frame, or path to custom MAF file.
+If non are specified, the SSM will be obtained though GAMBLR directly.
+}
+\examples{
+prettyRainfallPlot("Raji")
+prettyRainfallPlot("Raji", chromosome = c(3,9,"chr14",22,"X"))
+prettyRainfallPlot("Raji", chromosome = c(3,9), projection = "hg38", label_ashm_genes = FALSE)
+
 }
