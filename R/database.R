@@ -1422,10 +1422,10 @@ get_ssm_by_region = function(chromosome,
                              maf_data,
                              seq_type = "genome",
                              projection = "grch37",
-                             from_indexed_flatfile = FALSE,
+                             from_indexed_flatfile = TRUE,
                              min_read_support = 3,
                              mode = "slms-3",
-                             allow_clustered = FALSE){
+                             allow_clustered = TRUE){
   
   tabix_bin = "/home/rmorin/miniconda3/bin/tabix"
   table_name = config::get("results_tables")$ssm
@@ -1436,18 +1436,19 @@ get_ssm_by_region = function(chromosome,
     #test if we have permissions for the full gambl + icgc merge
     if(mode == "slms-3"){
       if(allow_clustered){
-        maf_partial_path = config::get("results_filatfiles")$ssm$template$merged$deblacklisted
+        maf_partial_path = config::get("results_flatfiles")$ssm$template$merged$deblacklisted
       }
       else{
-        maf_partial_path = config::get("results_filatfiles")$ssm$template$merged$deblacklisted
+        maf_partial_path = config::get("results_flatfiles")$ssm$template$merged$deblacklisted
       }
     }else if (mode == "strelka2"){
-      maf_partial_path = config::get("results_filatfiles")$ssm$all$strelka2
+      maf_partial_path = config::get("results_flatfiles")$ssm$all$strelka2
     }else{
       stop("You requested results from indexed flatfile. The mode should be set to either slms-3 (default) or strelka2. Please specify one of these modes.")
     }
     
-    maf_path = paste0(base_path, maf_partial_path)
+    maf_path = glue::glue(maf_partial_path)
+    full_maf_path = paste0(base_path, maf_path)
     
     maf_permissions = file.access(maf_path, 4)
     if(maf_permissions == - 1){
@@ -1455,23 +1456,24 @@ get_ssm_by_region = function(chromosome,
       #currently this will only return non-ICGC results
       if(mode == "slms-3"){
         if(allow_clustered){
-          maf_partial_path = config::get("results_filatfiles")$ssm$template$merged$deblacklisted
+          maf_partial_path = config::get("results_flatfiles")$ssm$template$merged$deblacklisted
         }else{
-          maf_partial_path = config::get("results_filatfiles")$ssm$template$merged$deblacklisted
+          maf_partial_path = config::get("results_flatfiles")$ssm$template$merged$deblacklisted
         }
       }else if (mode == "strelka2"){
-        maf_partial_path = config::get("results_filatfiles")$ssm$gambl$strelka2
+        maf_partial_path = config::get("results_flatfiles")$ssm$gambl$strelka2
       }else{
         stop("You requested results from indexed flatfile. The mode should be set to either slms-3 (default) or strelka2. Please specify one of these modes.")
       }
       base_path = config::get("project_base")
       
       #default is non-ICGC
-      maf_path = paste0(base_path, maf_partial_path)
+      maf_path = glue::glue(maf_partial_path)
+      full_maf_path = paste0(base_path, maf_path)
     }
     
     #substitute maf with bed.gz for indexed flatfiles
-    maf_path = stringr::str_replace(maf_path, ".maf$", ".bed.gz")
+    full_maf_path = stringr::str_replace(full_maf_path, ".maf$", ".bed.gz")
   }
   
   if(!region == ""){
@@ -1489,7 +1491,7 @@ get_ssm_by_region = function(chromosome,
   if(missing(maf_data)){
     if(from_indexed_flatfile){
       streamlined = TRUE
-      muts = system(paste(tabix_bin, maf_path, region), intern = TRUE)
+      muts = system(paste(tabix_bin, full_maf_path, region), intern = TRUE)
       
       if(length(muts) > 1){
         muts_region = readr::read_tsv(I(muts), col_names = c("Chromosome", "Start_Position", "End_Position", "Tumor_Sample_Barcode"))
