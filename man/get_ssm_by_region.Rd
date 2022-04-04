@@ -13,6 +13,7 @@ get_ssm_by_region(
   streamlined = FALSE,
   maf_data,
   from_indexed_flatfile = FALSE,
+  min_read_support = 3,
   mode = "slms-3",
   allow_clustered = FALSE
 )
@@ -32,7 +33,9 @@ get_ssm_by_region(
 
 \item{maf_data}{Parameter description.}
 
-\item{from_indexed_flatfile}{Set to TRUE to avoid using the database and instead rely on flatfiles (only works for streamlined data, not full MAF details).}
+\item{from_indexed_flatfile}{Set to TRUE to avoid using the database and instead rely on flatfiles (only works for streamlined data, not full MAF details).#'}
+
+\item{min_read_support}{Only returns variants with at least this many reads in t_alt_count (for cleaning up augmented MAFs)}
 
 \item{mode}{Only works with indexed flatfiles. Accepts 2 options of "slms-3" and "strelka2" to indicate which variant caller to use. Default is "slms-3".}
 

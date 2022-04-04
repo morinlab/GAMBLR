@@ -12,6 +12,7 @@ get_coding_ssm_status(
   maf_data,
   include_hotspots = TRUE,
   recurrence_min = 5,
+  seq_type = "genome",
   review_hotspots = TRUE,
   genes_of_interest = c("FOXO1", "MYD88", "CREBBP"),
   genome_build = "hg19",
