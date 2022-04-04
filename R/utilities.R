@@ -943,12 +943,12 @@ collate_ssm_results = function(sample_table,
   if(from_flatfile){
     base_path = config::get("project_base")
     #test if we have permissions for the full gambl + icgc merge
-    maf_partial_path = config::get("results_filatfiles")$ssm$all$full
+    maf_partial_path = config::get("results_flatfiles")$ssm$all$full
     maf_path = paste0(base_path, maf_partial_path)
     maf_permissions = file.access(maf_path, 4)
     if(maf_permissions == -1){
       #currently this will only return non-ICGC results
-      maf_partial_path = config::get("results_filatfiles")$ssm$gambl$full
+      maf_partial_path = config::get("results_flatfiles")$ssm$gambl$full
       base_path = config::get("project_base")
       #default is non-ICGC
       maf_path = paste0(base_path, maf_partial_path)

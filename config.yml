@@ -41,7 +41,7 @@ default:
         sv: "bedpe_manta_hg19"
         copy_number_unmatched: "seg_controlfreec_hg19"
 
-    results_filatfiles:
+    results_flatfiles:
         cnv: 
             gambl:
                 unmatched: "controlfreec_liftover_current/99-outputs/"
@@ -54,13 +54,16 @@ default:
                 clustered:
                     deblacklisted: "{unix_group}/slms_3-1.0_vcf2maf-1.3/99-outputs/deblacklisted/maf/{seq_type}--projection/{tumour_sample_id}--{normal_sample_id}--{pair_status}.{vcf_base_name}.{target_builds}.maf"
                     augmented: "{unix_group}/slms_3-1.0_vcf2maf-1.3/99-outputs/deblacklisted/augmented_maf/{seq_type}--projection/{tumour_sample_id}--{normal_sample_id}--{pair_status}.{vcf_base_name}.{target_builds}.maf"
+                merged: 
+                    deblacklisted: "all_the_things/slms_3-1.0_vcf2maf-1.3/{seq_type}--projection/deblacklisted/augmented_maf/all_slms-3--{projection}.maf"
+                cds:
+                    deblacklisted: "all_the_things/slms_3-1.0_vcf2maf-1.3/{seq_type}--projection/deblacklisted/augmented_maf/all_slms-3--{projection}.CDS.maf"
             all:
                 full: "icgc_dart/slms_3-1.0_vcf2maf-1.2/level_3/final_merged_grch37.maf"
                 clustered: "icgc_dart/slms_3-1.0_vcf2maf-1.3/level_3/final_merged_grch37.maf"
                 clustered_cds: "icgc_dart/slms_3-1.0_vcf2maf-1.3/level_3/final_merged_grch37.CDS.maf"
                 cds: "icgc_dart/slms_3-1.0_vcf2maf-1.2/level_3/final_merged_grch37.CDS.maf"
                 strelka2: "icgc_dart/strelka-1.1_vcf2maf-1.2/level_3/final_merged_grch37.maf"
-                blacklisted: "all_the_things/slms_3-1.0_vcf2maf-1.3/genome--projection/deblacklisted/augmented_maf/all_slms-3--grch37.maf"
             gambl:
                 full: "gambl/slms_3-1.0_vcf2maf-1.2/level_3/final_merged_grch37.maf"
                 clustered: "gambl/slms_3-1.0_vcf2maf-1.3/level_3/final_merged_grch37.maf"

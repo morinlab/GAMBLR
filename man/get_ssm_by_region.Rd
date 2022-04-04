@@ -12,6 +12,8 @@ get_ssm_by_region(
   basic_columns = TRUE,
   streamlined = FALSE,
   maf_data,
+  seq_type = "genome",
+  projection = "grch37",
   from_indexed_flatfile = FALSE,
   min_read_support = 3,
   mode = "slms-3",
