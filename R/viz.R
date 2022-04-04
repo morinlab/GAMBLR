@@ -8,6 +8,7 @@
 #' @param chromosome Provide one or more chromosomes to plot. The chr prefix can be inconsistent with projection and will be handled.
 #' @param this_maf Specify custom MAF data frame of mutations.
 #' @param maf_path Specify path to MAF file if it is not already loaded into data frame.
+#' @param zoom_in_region Provide a specific region in the format "chromosome:start-end" to zoom in to a specific region.
 #'
 #'
 #' @return a ggplot2 plot. Print it using print() or save it using ggsave()
@@ -24,19 +25,23 @@ prettyRainfallPlot = function(this_sample_id,
                               projection = "grch37",
                               chromosome,
                               this_maf,
-                              maf_path) {
+                              maf_path,
+                              zoom_in_region) {
   if (missing(this_sample_id)) {
     stop("You must provide a sample_id to plot")
   }
 
   # allow user to specify chromosome prefix inconsistent with chromosome names
   if (!missing(chromosome)) {
-    if (projection == "grch37") {
-      chromosome = gsub("chr", "", chromosome)
-    } else {
-      chromosome = gsub("chr", "", chromosome) # if there is amix of prefixed and non-prefixed options
-      chromosome = paste0("chr", chromosome)
-    }
+    chromosome = standardize_chr_prefix(incoming_vector = chromosome, projection = projection)
+  }
+
+  # allow to zoom in to a specific region
+  if (! missing(zoom_in_region)) {
+    zoom_in_region = region_to_chunks(zoom_in_region)
+    zoom_in_region$chromosome = standardize_chr_prefix(incoming_vector = zoom_in_region$chromosome, projection = projection)
+    zoom_in_region$start = as.numeric(zoom_in_region$start)
+    zoom_in_region$end = as.numeric(zoom_in_region$end)
   }
 
   if (label_ashm_genes) {
@@ -57,6 +62,11 @@ prettyRainfallPlot = function(this_sample_id,
     if (!missing(chromosome)) {
       ashm_regions = dplyr::filter(ashm_regions, Chromosome %in% chromosome)
     }
+    if (!missing(zoom_in_region)) {
+      ashm_regions = dplyr::filter(ashm_regions, (Chromosome %in% zoom_in_region$chromosome &
+                                                    start >= zoom_in_region$start &
+                                                    end <= zoom_in_region$end))
+    }
     ashm_regions = ashm_regions %>%
       group_by(gene) %>%
       slice_head() %>%
@@ -70,6 +80,13 @@ prettyRainfallPlot = function(this_sample_id,
       ))
     ashm_regions = ashm_regions %>%
       mutate(Chromosome_f = factor(Chromosome, levels = unique(ashm_regions$Chromosome)))
+  }
+
+  # if user is subsetting by chromosome or zooming in to a specific region, it is possible there are no aSHM features to show
+  # handle this case separately
+  if (nrow(ashm_regions) == 0) {
+    message("Warning: after subsetting to a regions you requested to plot, there are no aSHM features to overlap on the final graph.")
+    label_ashm_genes = FALSE
   }
 
   # get ssm for the requested sample
@@ -93,6 +110,7 @@ prettyRainfallPlot = function(this_sample_id,
     Hugo_Symbol,
     Chromosome,
     Start_Position,
+    End_Position,
     Reference_Allele,
     Tumor_Seq_Allele2
   ) %>%
@@ -128,11 +146,20 @@ prettyRainfallPlot = function(this_sample_id,
   if (!missing(chromosome)) {
     rainfall_points = dplyr::filter(rainfall_points, Chromosome %in% chromosome)
   }
+  if (!missing(zoom_in_region)) {
+    rainfall_points = dplyr::filter(rainfall_points, (Chromosome %in% zoom_in_region$chromosome &
+                                                        Start_Position >= zoom_in_region$start &
+                                                        End_Position <= zoom_in_region$end))
+  }
+
+  # if user is subsetting by chromosome or zooming in to a specific region, are there any SSM left to plot?
+  if (nrow(rainfall_points) == 0) {
+    stop("After subsetting to a regions you requested to plot, there are no SSM to display.")
+  }
 
   p = ggplot(rainfall_points) +
     geom_point(aes(x = Start_Position, y = IMD, color = Substitution)) +
     scale_color_manual(values = get_gambl_colours("rainfall")) +
-    guides(x = "none") +
     ylab("log(IMD)") +
     theme_Morons() +
     facet_wrap(~ Chromosome_f, scales = "free_x") +
@@ -154,6 +181,11 @@ prettyRainfallPlot = function(this_sample_id,
         segment.ncp = 4,
         segment.angle = 25
       )
+  }
+
+  # show x-axis coordinates if zooming in to a specific region, but not if looking chromosome/genome-wide
+  if (missing(zoom_in_region)) {
+    p = p + guides(x = "none")
   }
 
   return(p)

@@ -11,7 +11,8 @@ prettyRainfallPlot(
   projection = "grch37",
   chromosome,
   this_maf,
-  maf_path
+  maf_path,
+  zoom_in_region
 )
 }
 \arguments{
@@ -26,6 +27,8 @@ prettyRainfallPlot(
 \item{this_maf}{Specify custom MAF data frame of mutations.}
 
 \item{maf_path}{Specify path to MAF file if it is not already loaded into data frame.}
+
+\item{zoom_in_region}{Provide a specific region in the format "chromosome:start-end" to zoom in to a specific region.}
 }
 \value{
 a ggplot2 plot. Print it using print() or save it using ggsave()

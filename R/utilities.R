@@ -2603,3 +2603,32 @@ massage_matrix_for_clustering = function(incoming_data,
   return(output_data)
 
 }
+
+
+#' Standartize the chr prefix in a vector of chromosome names based on projection.
+#' Internal helper function not meant for out-of-package use.
+#'
+#'
+#' @param incoming_vector Input vector of any length with chromosome names.
+#' @param projection Projection to which chr prefix should be standardized.
+#'
+#' @return A vector of chromosome names with prefix standardized to projection
+#'
+#' @examples
+#' these_chrs = c(8, "13", "chr4", "chrY")
+#' standardize_chr_prefix(these_chrs, projection = "hg38")
+#'
+
+standardize_chr_prefix = function(incoming_vector,
+                                  projection){
+
+  if (projection %in% c("grch37", "grch38")) {
+    output_vector = gsub("chr", "", incoming_vector)
+  } else {
+    output_vector = gsub("chr", "", incoming_vector) # if there is a mix of prefixed and non-prefixed options
+    output_vector = paste0("chr", output_vector)
+  }
+
+  return(output_vector)
+
+}
