@@ -114,6 +114,9 @@ prettyRainfallPlot = function(this_sample_id,
     ungroup() %>%
     drop_na(IMD) # for the first point of each chromosome, NAs are produced generating a warning message
 
+  # collapse substitutions into classes
+  rainfall_points$Substitution = rainfall_conv[as.character(rainfall_points$Substitution)]
+
   # ensure order of grids in the plot is sorted
   rainfall_points = rainfall_points %>%
     arrange(match(

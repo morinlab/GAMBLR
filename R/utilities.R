@@ -1,5 +1,8 @@
 #global environment
 coding_class = c("Frame_Shift_Del", "Frame_Shift_Ins", "In_Frame_Del", "In_Frame_Ins", "Missense_Mutation", "Nonsense_Mutation", "Nonstop_Mutation", "Silent", "Splice_Region", "Splice_Site", "Targeted_Region", "Translation_Start_Site")
+rainfall_conv = c("T>C", "T>C", "C>T", "C>T", "T>A", "T>A", "T>G", "T>G", "C>A", "C>A", "C>G", "C>G", "InDel")
+names(rainfall_conv) = c('A>G', 'T>C', 'C>T', 'G>A', 'A>T', 'T>A', 'A>C', 'T>G', 'C>A', 'G>T', 'C>G', 'G>C', 'InDel')
+
 
 #' Get regions (bed format) from genes.
 #'
@@ -1764,19 +1767,13 @@ get_gambl_colours = function(classification = "all",
 
   all_colours[["rainfall"]] =
     c(
-      "A>C" = "#FD8D3C",
-      "A>G" = "#E6550D",
-      "A>T" = "#A63603",
-      "C>A" = "#6BAED6",
-      "C>G" = "#3182BD",
-      "C>T" = "#08519C",
-      "G>A" = "#74C476",
-      "G>C" = "#31A354",
-      "G>T" = "#006D2C",
+      "C>A" = "#2196F3FF",
+      "C>G" = "#3F51B5FF",
+      "C>T" = "#F44336FF",
       "InDel" = "purple",
-      "T>A" = "#FB6A4A",
-      "T>C" = "#DE2D26",
-      "T>G" = "#A50F15"
+      "T>A" = "#4CAF50FF",
+      "T>C" = "#FFC107FF",
+      "T>G" = "#FF9800FF"
     )
 
   all_colours[["pos_neg"]]=c(
