@@ -6,45 +6,150 @@
 #' @param chrom
 #' @param projection
 #' @param chromosome
+#' @param this_maf
+#' @param maf_path
 #'
 #'
 #' @return a ggplot2 plot. Print it using print() or save it using ggsave()
 #' @export
-#' @import ggplot2 dplyr cowplot
+#' @import ggplot2 dplyr ggrepel
 #'
 #' @examples
-prettyRainfallPlot = function(this_sample_id,label_ashm_genes=TRUE,chrom,projection="grch37",chromosome){
-  if(missing(this_sample_id)){
-    message("You must provide a sample_id to plot")
+prettyRainfallPlot = function(this_sample_id,
+                              label_ashm_genes = TRUE,
+                              chrom,
+                              projection = "grch37",
+                              chromosome,
+                              this_maf,
+                              maf_path) {
+  if (missing(this_sample_id)) {
+    stop("You must provide a sample_id to plot")
   }
-  # TODO:
-  # Some labels are overlapping due to being in close proximity (e.g. on chr9 and chr3)
-  # We should also colour points based on the substitution type (i.e. like MAFtools does)
 
-  if(label_ashm_genes){
-    ashm_regions = grch37_ashm_regions %>%
-      group_by(gene) %>% slice_head() %>%
-      ungroup() %>% mutate(chr_name = str_remove(chr_name,pattern = "chr"))
-  }
-  these_ssm = get_ssm_by_sample(this_sample_id,projection = projection)
-  # do rainfall calculation using lag
-  rainfall_points = select(these_ssm,Hugo_Symbol,Chromosome,Start_Position,Reference_Allele,Tumor_Seq_Allele2) %>%
-    mutate(IMD=Start_Position - dplyr::lag(Start_Position)) # really need to do this per chromosome though
-
-  if(!missing(chromosome)){
-    rainfall_points = dplyr::filter(rainfall_points,Chromosome %in% chromosome)
-    ashm_regions = dplyr::filter(ashm_regions,chr_name %in% chromosome)
-    if(label_ashm_genes){
-      p = ggplot(rainfall_points) + geom_point(aes(x=Start_Position,y=log(IMD))) +
-        geom_text(data=ashm_regions,aes(x=hg19_start,y=1,label=gene),angle=90) +
-      theme_cowplot()
-    }else{
-      p = ggplot(rainfall_points) + geom_point(aes(x=Start_Position,y=log(IMD))) + theme_cowplot()
+  # allow user to specify chromosome prefix inconsistent with chromosome names
+  if (!missing(chromosome)) {
+    if (projection == "grch37") {
+      chromosome = gsub("chr", "", chromosome)
+    } else {
+      chromosome = gsub("chr", "", chromosome) # if there is amix of prefixed and non-prefixed options
+      chromosome = paste0("chr", chromosome)
     }
-  }else{
-    p = ggplot(rainfall_points) + geom_point(aes(x=Start_Position,y=log(IMD))) + theme_cowplot() + facet_wrap(~Chromosome)
   }
-  #print(head(rainfall_points))
+
+  if (label_ashm_genes) {
+    if (projection == "grch37") {
+      ashm_regions = grch37_ashm_regions %>%
+        dplyr::rename("start" = "hg19_start",
+                      "end" = "hg19_end",
+                      "Chromosome" = "chr_name") %>%
+        dplyr::mutate(Chromosome = str_remove(Chromosome, pattern = "chr"))
+    } else if (projection == "hg38") {
+      ashm_regions = hg38_ashm_regions %>%
+        rename("start" = "hg38_start",
+               "end" = "hg38_end",
+               "Chromosome" = "chr_name")
+    } else {
+      stop("Please specify one of grch37 or hg38 projections")
+    }
+    if (!missing(chromosome)) {
+      ashm_regions = dplyr::filter(ashm_regions, Chromosome %in% chromosome)
+    }
+    ashm_regions = ashm_regions %>%
+      group_by(gene) %>%
+      slice_head() %>%
+      ungroup()
+
+    # this will be needed for consistent labeling with rainfall plots
+    ashm_regions = ashm_regions %>%
+      arrange(match(
+        Chromosome,
+        str_sort(ashm_regions$Chromosome, numeric = TRUE)
+      ))
+    ashm_regions = ashm_regions %>%
+      mutate(Chromosome_f = factor(Chromosome, levels = unique(ashm_regions$Chromosome)))
+  }
+
+  # get ssm for the requested sample
+  if (!missing(this_maf)) {
+    message ("Using the suppplied MAF df to obrain ser of SSM for the specified sample ...")
+    these_ssm = this_maf %>%
+      filter(Tumor_Sample_Barcode %in% this_sample_id)
+  } else if (!missing (maf_path)) {
+    message ("Path to custom MAF file was provided, reading SSM using the custom path ...")
+    this_maf = read_tsv(maf_path) %>%
+      filter(Tumor_Sample_Barcode %in% this_sample_id)
+  } else {
+    message ("MAF df or path to custom MAF file was not provided, getting SSM using GAMBLR ...")
+    these_ssm = get_ssm_by_sample(this_sample_id,
+                                  projection = projection)
+  }
+
+  # do rainfall calculation using lag
+  rainfall_points = dplyr::select(
+    these_ssm,
+    Hugo_Symbol,
+    Chromosome,
+    Start_Position,
+    Reference_Allele,
+    Tumor_Seq_Allele2
+  ) %>%
+    arrange(Chromosome, Start_Position) %>%
+    group_by(Chromosome) %>%  # group by chromosome to calculate lag per chromosome
+    dplyr::mutate(
+      IMD = Start_Position - dplyr::lag(Start_Position),
+      # used for coloring
+      # all indels are squished to the same color
+      Substitution = ifelse((
+        Reference_Allele %in% c("A", "T",  "C", "G") &
+          Tumor_Seq_Allele2 %in% c("A", "T",  "C", "G")
+      ),
+      paste(Reference_Allele, Tumor_Seq_Allele2, sep = '>'),
+      "InDel"
+      )
+    ) %>%
+    dplyr::mutate(IMD = log(IMD)) %>%
+    ungroup() %>%
+    drop_na(IMD) # for the first point of each chromosome, NAs are produced generating a warning message
+
+  # ensure order of grids in the plot is sorted
+  rainfall_points = rainfall_points %>%
+    arrange(match(
+      Chromosome,
+      str_sort(rainfall_points$Chromosome, numeric = TRUE)
+    ))
+  rainfall_points = rainfall_points %>%
+    mutate(Chromosome_f = factor(Chromosome, levels = unique(rainfall_points$Chromosome)))
+  if (!missing(chromosome)) {
+    rainfall_points = dplyr::filter(rainfall_points, Chromosome %in% chromosome)
+  }
+
+  p = ggplot(rainfall_points) +
+    geom_point(aes(x = Start_Position, y = IMD, color = Substitution)) +
+    scale_color_manual(values = get_gambl_colours("rainfall")) +
+    guides(x = "none") +
+    ylab("log(IMD)") +
+    theme_Morons() +
+    facet_wrap(~ Chromosome_f, scales = "free_x") +
+    ggtitle(this_sample_id) +
+    theme(plot.title = element_text(hjust = 0)) # left-align title plot
+
+  if (label_ashm_genes) {
+    p = p +
+      ggrepel::geom_text_repel(
+        data = ashm_regions,
+        aes(start, 1, label = gene),
+        size = 4,
+        segment.size = 0.5,
+        segment.color = "#000000",
+        force_pull = 0,
+        arrow = arrow(length = unit(0.05, "inches"), type = "closed"),
+        max.overlaps = 15,
+        segment.curvature = 0.25,
+        segment.ncp = 4,
+        segment.angle = 25
+      )
+  }
+
   return(p)
 }
 
