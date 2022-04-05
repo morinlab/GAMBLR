@@ -9,6 +9,7 @@
 #' @param this_maf Specify custom MAF data frame of mutations.
 #' @param maf_path Specify path to MAF file if it is not already loaded into data frame.
 #' @param zoom_in_region Provide a specific region in the format "chromosome:start-end" to zoom in to a specific region.
+#' @param label_sv Boolean argument to specify whether label SVs or not. Only supported if a specific chromosome or zoom in region are specified.
 #'
 #'
 #' @return a ggplot2 plot. Print it using print() or save it using ggsave()
@@ -19,6 +20,8 @@
 #' prettyRainfallPlot("Raji")
 #' prettyRainfallPlot("Raji", chromosome = c(3,9,"chr14",22,"X"))
 #' prettyRainfallPlot("Raji", chromosome = c(3,9), projection = "hg38", label_ashm_genes = FALSE)
+#' prettyRainfallPlot("Raji", zoom_in_region = "8:125252796-135253201", label_sv = TRUE)
+#' prettyRainfallPlot("Raji", chromosome = 6, label_sv = TRUE)
 #'
 prettyRainfallPlot = function(this_sample_id,
                               label_ashm_genes = TRUE,
@@ -26,7 +29,8 @@ prettyRainfallPlot = function(this_sample_id,
                               chromosome,
                               this_maf,
                               maf_path,
-                              zoom_in_region) {
+                              zoom_in_region,
+                              label_sv = FALSE) {
   if (missing(this_sample_id)) {
     stop("You must provide a sample_id to plot")
   }
@@ -37,9 +41,10 @@ prettyRainfallPlot = function(this_sample_id,
   }
 
   # allow to zoom in to a specific region
-  if (! missing(zoom_in_region)) {
+  if (!missing(zoom_in_region)) {
     zoom_in_region = region_to_chunks(zoom_in_region)
-    zoom_in_region$chromosome = standardize_chr_prefix(incoming_vector = zoom_in_region$chromosome, projection = projection)
+    zoom_in_region$chromosome = standardize_chr_prefix(incoming_vector = zoom_in_region$chromosome,
+                                                       projection = projection)
     zoom_in_region$start = as.numeric(zoom_in_region$start)
     zoom_in_region$end = as.numeric(zoom_in_region$end)
   }
@@ -63,9 +68,14 @@ prettyRainfallPlot = function(this_sample_id,
       ashm_regions = dplyr::filter(ashm_regions, Chromosome %in% chromosome)
     }
     if (!missing(zoom_in_region)) {
-      ashm_regions = dplyr::filter(ashm_regions, (Chromosome %in% zoom_in_region$chromosome &
-                                                    start >= zoom_in_region$start &
-                                                    end <= zoom_in_region$end))
+      ashm_regions = dplyr::filter(
+        ashm_regions,
+        (
+          Chromosome %in% zoom_in_region$chromosome &
+            start >= zoom_in_region$start &
+            end <= zoom_in_region$end
+        )
+      )
     }
     ashm_regions = ashm_regions %>%
       group_by(gene) %>%
@@ -85,7 +95,9 @@ prettyRainfallPlot = function(this_sample_id,
   # if user is subsetting by chromosome or zooming in to a specific region, it is possible there are no aSHM features to show
   # handle this case separately
   if (nrow(ashm_regions) == 0) {
-    message("Warning: after subsetting to a regions you requested to plot, there are no aSHM features to overlap on the final graph.")
+    message(
+      "Warning: after subsetting to a regions you requested to plot, there are no aSHM features to overlap on the final graph."
+    )
     label_ashm_genes = FALSE
   }
 
@@ -147,9 +159,14 @@ prettyRainfallPlot = function(this_sample_id,
     rainfall_points = dplyr::filter(rainfall_points, Chromosome %in% chromosome)
   }
   if (!missing(zoom_in_region)) {
-    rainfall_points = dplyr::filter(rainfall_points, (Chromosome %in% zoom_in_region$chromosome &
-                                                        Start_Position >= zoom_in_region$start &
-                                                        End_Position <= zoom_in_region$end))
+    rainfall_points = dplyr::filter(
+      rainfall_points,
+      (
+        Chromosome %in% zoom_in_region$chromosome &
+          Start_Position >= zoom_in_region$start &
+          End_Position <= zoom_in_region$end
+      )
+    )
   }
 
   # if user is subsetting by chromosome or zooming in to a specific region, are there any SSM left to plot?
@@ -157,12 +174,118 @@ prettyRainfallPlot = function(this_sample_id,
     stop("After subsetting to a regions you requested to plot, there are no SSM to display.")
   }
 
+  # label SVs if user wants to overlap this data
+  if (!missing(chromosome) & label_sv) {
+    sv_chromosome = chromosome
+  } else if (!missing(zoom_in_region) & label_sv) {
+    sv_chromosome = zoom_in_region$chromosome
+  } else if (label_sv) {
+    stop(
+      "Labeling SV is only supported when a particular chromosome or zoomed region is plotted."
+    )
+  }
+
+  if (label_sv) {
+    message("Getting combined manta + GRIDSS SVs using GAMBLR ...")
+    these_sv = get_combined_sv(sample_ids = this_sample_id)
+    if ("SCORE" %in% colnames(these_sv)) {
+      these_sv = these_sv %>%
+        rename("SOMATIC_SCORE" = "SCORE")
+    }
+    # annotate SV
+    these_sv = annotate_sv(these_sv)
+
+    # make SVs a long df with 1 record per SV corresponding to the strand
+    sv_to_label =
+      melt(
+        these_sv %>% select(
+          chrom1,
+          start1,
+          end1,
+          chrom2,
+          start2,
+          end2,
+          tumour_sample_id,
+          gene,
+          partner,
+          fusion
+        ),
+        id.vars = c(
+          "tumour_sample_id",
+          "gene",
+          "partner",
+          "fusion",
+          "start1",
+          "end1",
+          "start2",
+          "end2"
+        ),
+        variable.name = "chromosomeN",
+        value.name = "Chromosome"
+      ) %>%
+      dplyr::filter(Chromosome %in% sv_chromosome)
+
+    # are there any SVs on this chromosome/region?
+    if (nrow(sv_to_label) > 0) {
+      sv_to_label =
+        sv_to_label %>%
+        melt(
+          .,
+          id.vars = c(
+            "tumour_sample_id",
+            "gene",
+            "partner",
+            "fusion",
+            "chromosomeN",
+            "Chromosome"
+          )
+        ) %>%
+        group_by(fusion, chromosomeN) %>%
+        dplyr::filter(if (grepl("1", chromosomeN))
+          variable %in% c("start1", "end1")
+          else
+            variable %in% c("start2", "end2")) %>%
+        dplyr::mutate(variable = gsub("1|2", "", variable)) %>%
+        distinct(fusion, Chromosome, variable, .keep_all = TRUE) %>%
+        spread(., variable, value) %>%
+        dplyr::rename("End_Position" = "end",
+                      "Start_Position" = "start") %>%
+        ungroup
+    } else {
+      message(
+        "Warning: after subsetting to a regions you requested to plot, there are no SV features to overlap on the final graph."
+      )
+      label_sv = FALSE
+    }
+
+    # when we are plotting region and not whole chromosome, ensure SV is within that region
+    if (!missing(zoom_in_region) & label_sv) {
+      sv_to_label = dplyr::filter(
+        sv_to_label,
+        (
+          Start_Position >= zoom_in_region$start &
+            End_Position <= zoom_in_region$end
+        )
+      )
+      # When we did filtering to start/end for a region, are there any SV to plot?
+      if (nrow(sv_to_label) == 0) {
+        message(
+          "Warning: after subsetting to a regions you requested to plot, there are no SV features to overlap on the final graph."
+        )
+        label_sv = FALSE
+      }
+    }
+
+    sv_to_label = sv_to_label %>%
+      mutate(Chromosome_f = factor(Chromosome))
+  }
+
   p = ggplot(rainfall_points) +
     geom_point(aes(x = Start_Position, y = IMD, color = Substitution)) +
     scale_color_manual(values = get_gambl_colours("rainfall")) +
     ylab("log(IMD)") +
     theme_Morons() +
-    facet_wrap(~ Chromosome_f, scales = "free_x") +
+    facet_wrap( ~ Chromosome_f, scales = "free_x") +
     ggtitle(this_sample_id) +
     theme(plot.title = element_text(hjust = 0)) # left-align title plot
 
@@ -181,6 +304,18 @@ prettyRainfallPlot = function(this_sample_id,
         segment.ncp = 4,
         segment.angle = 25
       )
+  }
+
+  if (label_sv) {
+    p = p +
+      geom_vline(
+        data = sv_to_label,
+        aes(xintercept = Start_Position),
+        color = "lightgreen",
+        alpha = .7
+      ) +
+      geom_text(data = sv_to_label,
+                aes(End_Position, 15, label = fusion, color = "lightgreen"))
   }
 
   # show x-axis coordinates if zooming in to a specific region, but not if looking chromosome/genome-wide

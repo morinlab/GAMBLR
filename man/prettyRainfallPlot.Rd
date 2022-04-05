@@ -12,7 +12,8 @@ prettyRainfallPlot(
   chromosome,
   this_maf,
   maf_path,
-  zoom_in_region
+  zoom_in_region,
+  label_sv = FALSE
 )
 }
 \arguments{
@@ -29,6 +30,8 @@ prettyRainfallPlot(
 \item{maf_path}{Specify path to MAF file if it is not already loaded into data frame.}
 
 \item{zoom_in_region}{Provide a specific region in the format "chromosome:start-end" to zoom in to a specific region.}
+
+\item{label_sv}{Boolean argument to specify whether label SVs or not. Only supported if a specific chromosome or zoom in region are specified.}
 }
 \value{
 a ggplot2 plot. Print it using print() or save it using ggsave()
@@ -41,5 +44,7 @@ If non are specified, the SSM will be obtained though GAMBLR directly.
 prettyRainfallPlot("Raji")
 prettyRainfallPlot("Raji", chromosome = c(3,9,"chr14",22,"X"))
 prettyRainfallPlot("Raji", chromosome = c(3,9), projection = "hg38", label_ashm_genes = FALSE)
+prettyRainfallPlot("Raji", zoom_in_region = "8:125252796-135253201", label_sv = TRUE)
+prettyRainfallPlot("Raji", chromosome = 6, label_sv = TRUE)
 
 }
