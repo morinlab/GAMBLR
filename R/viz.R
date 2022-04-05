@@ -2629,6 +2629,11 @@ splendidHeatmap = function(this_matrix,
     dplyr::select(Tumor_Sample_Barcode, splitColumnName), by = "Tumor_Sample_Barcode")
 
   #specify where row breaks should be on heatmap
+  FEATURES = FEATURES %>%
+    arrange(match(
+      group,
+      str_sort(FEATURES$group, numeric = TRUE)
+    ))
   breaks = 0
   for (this_group in comparison_groups){
     N = (nrow(FEATURES %>%
