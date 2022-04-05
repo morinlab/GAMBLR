@@ -14,10 +14,11 @@ get_ssm_by_region(
   maf_data,
   seq_type = "genome",
   projection = "grch37",
-  from_indexed_flatfile = FALSE,
+  from_indexed_flatfile = TRUE,
+  augmented = TRUE,
   min_read_support = 3,
   mode = "slms-3",
-  allow_clustered = FALSE
+  allow_clustered = TRUE
 )
 }
 \arguments{
@@ -35,9 +36,15 @@ get_ssm_by_region(
 
 \item{maf_data}{Parameter description.}
 
-\item{from_indexed_flatfile}{Set to TRUE to avoid using the database and instead rely on flatfiles (only works for streamlined data, not full MAF details).#'}
+\item{seq_type}{The seq_type you want back, default is genome.}
 
-\item{min_read_support}{Only returns variants with at least this many reads in t_alt_count (for cleaning up augmented MAFs)}
+\item{projection}{Obtain variants projected to this reference (one of grch37 or hg38).}
+
+\item{from_indexed_flatfile}{Set to TRUE to avoid using the database and instead rely on flatfiles (only works for streamlined data, not full MAF details).}
+
+\item{augmented}{default: TRUE. Set to FALSE if you instead want the original MAF from each sample for multi-sample patients instead of the augmented MAF .}
+
+\item{min_read_support}{Only returns variants with at least this many reads in t_alt_count (for cleaning up augmented MAFs).}
 
 \item{mode}{Only works with indexed flatfiles. Accepts 2 options of "slms-3" and "strelka2" to indicate which variant caller to use. Default is "slms-3".}
 

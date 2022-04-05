@@ -90,6 +90,8 @@ intersect_maf = function(maf1,
 #' @param gene_symbols List of gene symbols for which the mutation status will be tabulated. If not provided, lymphoma genes will be returned by default.
 #' @param these_samples_metadata The matedata for samples of interest to be included in the returned matrix. Only the column "sample_id" is required. If not provided, the matrix is tabulated for all available samples as default.
 #' @param from_flatfile Optional argument whether to use database or flat file to retrieve mutations. Default is TRUE.
+#' @param augmented default: TRUE. Set to FALSE if you instead want the original MAF from each sample for multi-sample patients instead of the augmented MAF.
+#' @param min_read_support Only returns variants with at least this many reads in t_alt_count (for cleaning up augmented MAFs).
 #' @param maf_path If the status of coding SSM should be tabulated from a custom maf file, provide path to the maf in this argument. The default is set to NULL.
 #' @param maf_data Either a maf loaded from disk or from the database using a get_ssm function.
 #' @param include_hotspots Logical parameter indicating whether hotspots object should also be tabulated. Default is TRUE.
@@ -109,11 +111,14 @@ intersect_maf = function(maf1,
 get_coding_ssm_status = function(gene_symbols,
                                  these_samples_metadata,
                                  from_flatfile = TRUE,
+                                 augmented = TRUE,
+                                 min_read_support = 3,
                                  maf_path = NULL,
                                  maf_data,
                                  include_hotspots = TRUE,
                                  recurrence_min = 5,
                                  seq_type = "genome",
+                                 projection = "grch37",
                                  review_hotspots = TRUE,
                                  genes_of_interest = c("FOXO1", "MYD88", "CREBBP"),
                                  genome_build = "hg19",
@@ -139,14 +144,28 @@ get_coding_ssm_status = function(gene_symbols,
     coding_ssm = coding_ssm %>%
       dplyr::filter(Variant_Classification %in% coding_class)
     
-  }else{
-    maf_template = "all_the_things/slms_3-1.0_vcf2maf-1.3/{seq_type}--projection/deblacklisted/augmented_maf/all_slms-3--grch37.CDS.maf"
-    maf_path = glue::glue(maf_template)
-    full_maf_path =  paste0(config::get("project_base"), maf_path)
+  }else if (from_flatfile && !augmented){
+    base_path = config::get("project_base")
+    maf_partial_path = config::get("results_flatfiles")$ssm$template$cds$deblacklisted
+    maf_path = glue::glue(maf_partial_path)
+    full_maf_path = paste0(base_path, maf_path)
+    message(paste("reading from:", full_maf_path))
     maf_data = fread_maf(full_maf_path)
     coding_ssm = maf_data %>%
-      dplyr::filter(Variant_Classification %in% coding_class)
+      dplyr::filter(Variant_Classification %in% coding_class) 
+    
+  }else if (from_flatfile && augmented){
+    base_path = config::get("project_base")
+    maf_partial_path = config::get("results_flatfiles")$ssm$template$cds$augmented
+    maf_path = glue::glue(maf_partial_path)
+    full_maf_path = paste0(base_path, maf_path)
+    message(paste("reading from:", full_maf_path))
+    maf_data = fread_maf(full_maf_path)
+    coding_ssm = maf_data %>%
+      dplyr::filter(Variant_Classification %in% coding_class) %>%
+      dplyr::filter(t_alt_count >= min_read_support)
   }
+  
   coding = coding_ssm %>%
     dplyr::filter(Hugo_Symbol %in% gene_symbols & Variant_Classification != "Synonymous") %>%
     dplyr::select(Tumor_Sample_Barcode, Hugo_Symbol) %>%
@@ -206,7 +225,6 @@ get_coding_ssm_status = function(gene_symbols,
   }
   return(all_tabulated)
 }
-
 
 
 #' INTERNAL FUNCTION called by prettyOncoplot, not meant for out-of-package usage.

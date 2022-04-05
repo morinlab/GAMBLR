@@ -7,12 +7,16 @@
 get_ssm_by_regions(
   regions_list,
   regions_bed,
-  streamlined = FALSE,
+  streamlined = TRUE,
   maf_data = maf_data,
   use_name_column = FALSE,
-  from_indexed_flatfile = FALSE,
+  from_indexed_flatfile = TRUE,
   mode = "slms-3",
-  allow_clustered = FALSE
+  augmented = TRUE,
+  seq_type = "genome",
+  projection = "grch37",
+  min_read_support = 4,
+  allow_clustered = TRUE
 )
 }
 \arguments{
@@ -28,6 +32,14 @@ get_ssm_by_regions(
 
 \item{mode}{Only works with indexed flatfiles. Accepts 2 options of "slms-3" and "strelka2" to indicate which variant caller to use. Default is "slms-3".}
 
+\item{augmented}{default: TRUE. Set to FALSE if you instead want the original MAF from each sample for multi-sample patients instead of the augmented MAF}
+
+\item{seq_type}{The seq_type you want back, default is genome.}
+
+\item{projection}{Obtain variants projected to this reference (one of grch37 or hg38).}
+
+\item{min_read_support}{Only returns variants with at least this many reads in t_alt_count (for cleaning up augmented MAFs).}
+
 \item{allow_clustered}{Logical parameter indicating whether to use SLMS-3 results with clustered events. Default is FALSE.}
 }
 \value{
@@ -39,6 +51,6 @@ Efficiently retrieve all mutations across a range of genomic regions.
 \examples{
 #basic usage, adding custom names from bundled ashm data frame
 regions_bed = grch37_ashm_regions \%>\% mutate(name = paste(gene, region, sep = "_"))
-ashm_maf = get_ssm_by_regions(regions_bed = regions_bed, streamlined = TRUE, use_name_column = FALSE)
+ashm_maf = get_ssm_by_regions(regions_bed = regions_bed)
 
 }
