@@ -40,12 +40,12 @@ Create a genome-wide copy number plot for one sample and (optionally) display mu
 }
 \examples{
 cnv_vaf_plot = copy_number_vaf_plot(this_sample = "some-sample-name",
-                                    just_segments = TRUE, 
-                                    coding_only = FALSE, 
-                                    one_chrom = "chr2", 
-                                    genes_to_label = "MYC", 
-                                    from_flatfile = FALSE, 
-                                    use_augmented_maf = FALSE, 
+                                    just_segments = TRUE,
+                                    coding_only = FALSE,
+                                    one_chrom = "chr2",
+                                    genes_to_label = "MYC",
+                                    from_flatfile = FALSE,
+                                    use_augmented_maf = FALSE,
                                     add_chr_prefix = TRUE)
 
 }
