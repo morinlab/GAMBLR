@@ -961,7 +961,7 @@ collate_ssm_results = function(sample_table,
   if(from_flatfile){
     base_path = config::get("project_base")
     #test if we have permissions for the full gambl + icgc merge
-    maf_partial_path = config::get("results_flatfiles")$ssm$all$full
+    maf_partial_path = config::get("results_flatfiles")$ssm$template$cds$deblacklisted
     maf_path = paste0(base_path, maf_partial_path)
     maf_permissions = file.access(maf_path, 4)
     if(maf_permissions == -1){
@@ -1087,14 +1087,7 @@ assign_cn_to_ssm = function(this_sample,
     bam_info = get_bams(this_sample)
     genome_build = bam_info$genome_build
     unix_group = bam_info$unix_group
-    
-    #maf path for a single file is easy to predict. This really should be generalized for all tools
-    if(use_augmented_maf){
-      maf_sample = get_ssm_by_sample(this_sample_id = this_sample)
-    }else{
-      message("Only augmented maf is currently supported")
-      return()
-    }
+    maf_sample = get_ssm_by_sample(this_sample_id = this_sample, augmented = use_augmented_maf)
  
   }else{
     #get all the segments for a sample and filter the small ones then assign CN value from the segment to all SSMs in that region

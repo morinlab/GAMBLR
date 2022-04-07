@@ -10,7 +10,7 @@ get_ssm_by_region(
   qend,
   region = "",
   basic_columns = TRUE,
-  streamlined = FALSE,
+  streamlined = TRUE,
   maf_data,
   seq_type = "genome",
   projection = "grch37",
