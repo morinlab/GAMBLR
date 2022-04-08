@@ -2632,3 +2632,136 @@ standardize_chr_prefix = function(incoming_vector,
   return(output_vector)
 
 }
+
+
+#' This function calculates the percent of genome altered (PGA) by CNV. It takes into account the total length of
+#' sample's CNV and relates it to the total genome length to return the proportion affected by CNV. The input is expected to be seg file.
+#' The path to a local SEG file can be provided instead. If The custom seg file is provided, the minimum required columns are
+#' sample, chrom, start, end, and log.ratio. The function can work with either individual or multi-sample seg file. The telomeres are always
+#' excluded from calculation, and centromeres/sex chromosomes can be optionally included or excluded.
+#'
+#' @param this_seg Input data frame of seg file.
+#' @param seg_path Optionally, specify the path to a local seg file.
+#' @param projection Argument specifying the projection of seg file, which will determine chr prefix, chromosome coordinates, and genome size. Default is grch37, but hg38 is also accepted.
+#' @param cutoff The minimum log.ratio for the segment to be considered as CNV. Default is 0.56, which is 1 copy. This value is expected to be positive float of log.ratio for both deletions and amplifications.
+#' @param exclude_sex Boolean argument specifying whether to exclude sex chromosomes from calculation. Default is TRUE.
+#' @param exclude_centromeres Boolean argument specifyng whether to exclude centromeres from calculation. Default is TRUE.
+#'
+#' @return A data frame of sample_id and a float in the range [0..1] indicating the fraction of genome altered by CNV.
+#' @export
+#' @import data.table tidyverse
+#'
+#' @examples
+#' sample_seg = get_sample_cn_segments(this_sample_id = "14-36022T") %>% rename("sample"="ID")
+#' calculate_pga(this_seg = sample_seg)
+#' calculate_pga(this_seg = sample_seg, exclude_sex = FALSE)
+#'
+#' multi_sample_seg = rbind(get_sample_cn_segments(this_sample_id = "14-36022T"),
+#'                          get_sample_cn_segments(this_sample_id = "BLGSP-71-21-00243-01A-11E")) %>%
+#'                          rename("sample"="ID")
+#' GAMBLR::calculate_pga(this_seg = multi_sample_seg)
+#'
+
+calculate_pga = function(this_seg,
+                         seg_path,
+                         projection = "grch37",
+                         cutoff = 0.56,
+                         exclude_sex = TRUE,
+                         exclude_centromeres = TRUE) {
+  # check for required argument
+  if (missing(this_seg) & missing (seg_path)) {
+    stop("Please provide the data frame of seg file or path to the local seg.")
+  }
+
+  # ensure the specified projection is correct and define chromosome coordinates
+  if (projection == "grch37") {
+    chr_coordinates = chromosome_arms_grch37
+  } else if (projection == "hg38") {
+    chr_coordinates = chromosome_arms_hg38
+  } else {
+    stop(
+      "You specified projection that is currently not supported. Please provide seg files in either hg38 or grch37."
+    )
+  }
+
+  # exclude sex chromosomes
+  if (exclude_sex) {
+    chr_coordinates = chr_coordinates %>%
+      dplyr::filter(!grepl("X|Y", chromosome))
+  }
+
+  # does the user's seg file contain centromeres?
+  if (exclude_centromeres) {
+    chr_coordinates = chr_coordinates %>%
+      group_by(chromosome) %>%
+      mutate(start = min(start),
+             end = max(end)) %>%
+      ungroup
+  }
+
+  # total size of genome in this projection
+  genome_size = chr_coordinates %>%
+    mutate(size = end - start) %>%
+    summarise(genome_size = sum(size)) %>%
+    pull(genome_size)
+
+  # prepare for the overlaps
+  chr_coordinates = as.data.table(chr_coordinates)  %>%
+    rename("arm_start" = "start",
+           "arm_end" = "end")
+  setkey(chr_coordinates, chromosome, arm_start, arm_end)
+
+  # work out the seg file
+  if (!missing(seg_path)) {
+    message(paste0("Reading thhe seg file from ", seg_path))
+    this_seg = read_tsv(seg_path)
+  }
+
+  this_seg = this_seg %>%
+    dplyr::filter(abs(log.ratio) >= cutoff) %>%
+    dplyr::relocate(sample, .after = last_col())
+
+  # ensure consistent chromosome prefixing
+  if (projection == "grch37") {
+    this_seg$chrom = gsub("chr", "", this_seg$chrom)
+  } else {
+    this_seg$chrom = gsub("chr", "", this_seg$chrom) # if there is a mish-mash of prefixes, strip them all
+    this_seg$chrom = paste0("chr", this_seg$chrom)
+  }
+
+  # exclude sex chromosomes
+  if (exclude_sex) {
+    this_seg = this_seg %>%
+      dplyr::filter(!grepl("X|Y", chrom))
+  }
+
+  # prepare for the overlaps
+  this_seg = as.data.table(this_seg)
+  setkey(this_seg, chrom, start, end)
+
+  # what are the segments that overlap good regions in chromosome coordinates?
+  this_seg = foverlaps(
+    this_seg,
+    chr_coordinates,
+    by.x = c("chrom", "start", "end"),
+    by.y = c('chromosome', 'arm_start', 'arm_end'),
+    nomatch = 0L
+  ) %>%
+    as.data.frame %>%
+    arrange(sample, chrom, start)
+
+  # calculate total length of CNV
+  affected_regions = this_seg %>%
+    dplyr::mutate(size = end - start) %>%
+    group_by(sample) %>%
+    summarise(total = sum(size))
+
+  affected_regions$PGA = affected_regions$total / genome_size
+  affected_regions = affected_regions %>%
+    select(-total) %>%
+    `names<-`(c("sample_id", "PGA")) %>%
+    as.data.frame()
+
+  return(affected_regions)
+
+}
