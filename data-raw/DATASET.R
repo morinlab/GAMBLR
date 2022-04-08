@@ -83,3 +83,11 @@ hotspot_regions_hg38 = system.file("extdata","hotspot_regions.hg38.tsv",package=
   read.table(sep="\t",header=1) %>%
   column_to_rownames("gene")
 usethis::use_data(hotspot_regions_hg38, overwrite = TRUE)
+
+chromosome_arms_grch37 = system.file("extdata","chromosome_arms_grch37.tsv",package="GAMBLR") %>%
+  read.table(sep="\t",header=1)
+usethis::use_data(chromosome_arms_grch37, overwrite = TRUE)
+
+chromosome_arms_hg38 = system.file("extdata","chromosome_arms_hg38.tsv",package="GAMBLR") %>%
+  read.table(sep="\t",header=1)
+usethis::use_data(chromosome_arms_hg38, overwrite = TRUE)
