@@ -2717,6 +2717,9 @@ calculate_pga = function(this_seg,
     this_seg = read_tsv(seg_path)
   }
 
+  # preserve the sample ids to account later for those with 0 PGA
+  sample_set = this_seg %>% distinct(sample)
+
   this_seg = this_seg %>%
     dplyr::filter(abs(log.ratio) >= cutoff) %>%
     dplyr::relocate(sample, .after = last_col())
@@ -2757,6 +2760,13 @@ calculate_pga = function(this_seg,
     summarise(total = sum(size))
 
   affected_regions$PGA = affected_regions$total / genome_size
+
+  # now add any samples that can have 0 PGA
+  affected_regions = base::merge(sample_set,
+                                 affected_regions,
+                                 all.x = TRUE) %>%
+    replace_na(list(PGA = 0))
+
   affected_regions = affected_regions %>%
     select(-total) %>%
     `names<-`(c("sample_id", "PGA")) %>%
@@ -2765,5 +2775,3 @@ calculate_pga = function(this_seg,
   return(affected_regions)
 
 }
-
-
