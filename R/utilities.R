@@ -2776,23 +2776,22 @@ calculate_pga = function(this_seg,
 
 }
 
-#' This function calculates the percent of genome altered (PGA) by CNV. It takes into account the total length of
-#' sample's CNV and relates it to the total genome length to return the proportion affected by CNV. The input is expected to be seg file.
-#' The path to a local SEG file can be provided instead. If The custom seg file is provided, the minimum required columns are
-#' sample, chrom, start, end, and log.ratio. The function can work with either individual or multi-sample seg file. The telomeres are always
-#' excluded from calculation, and centromeres/sex chromosomes can be optionally included or excluded.
+#' This function adjusts ploidy of the sample using the percent of genome altered (PGA). The PGA is calculated internally, but can also be optionally provided as data frame
+#' if calculated from other sources. Only the samples above the threshold-provided PGA will have ploidy adjusted. The function can work with either individual or
+#' multi-sample seg file. The telomeres are always excluded from calculation, and sex chromosomes can be optionally included or excluded. The supported projections are grch37 and hg38.
+#' The chromosome prefix is handled internally per projection and does not need to be consistent.
 #'
 #' @param this_seg Input data frame of seg file.
 #' @param seg_path Optionally, specify the path to a local seg file.
-#' @param projection Argument specifying the projection of seg file, which will determine chr prefix, chromosome coordinates, and genome size. Default is grch37, but hg38 is also accepted.
-#' @param pga The minimum log.ratio for the segment to be considered as CNV. Default is 0.56, which is 1 copy. This value is expected to be positive float of log.ratio for both deletions and amplifications.
-#' @param pga_cutoff
+#' @param projection Argument specifying the projection of seg file, which will determine chr prefix and genome size. Default is grch37, but hg38 is also accepted.
+#' @param pga If PGA is calculated through other sources, the data frame with columns sample_id and PGA can be provided in this argument.
+#' @param pga_cutoff Minimum PGA for the sample to adjust ploidy. Default is 0.05 (5%).
 #' @param exclude_sex Boolean argument specifying whether to exclude sex chromosomes from calculation. Default is TRUE.
-#' @param return_seg Boolean argument specifyng whether to exclude centromeres from calculation. Default is TRUE.
+#' @param return_seg Boolean argument specifying whether to return a data frame in seg-consistent format, or a raw data frame with all step-by-step transformations. Default is TRUE.
 #'
-#' @return A data frame of sample_id and a float in the range [0..1] indicating the fraction of genome altered by CNV.
+#' @return A data frame in seg-consistent format with ploidy-adjusted log ratios.
 #' @export
-#' @import data.table tidyverse
+#' @import tidyverse
 #'
 #' @examples
 #' sample_seg = get_sample_cn_segments(this_sample_id = "14-36022T") %>% rename("sample"="ID")
@@ -2877,12 +2876,12 @@ adjust_ploidy = function(this_seg,
   # Adjust ploidy
   this_seg = this_seg %>%
     ungroup() %>%
-    mutate(cn = (2 * 2 ^ log.ratio), .before = log.ratio) %>% # convert log.ratios to absolute CN
+    mutate(cn = (2*2^log.ratio), .before = log.ratio) %>% # convert log.ratios to absolute CN
     mutate(new_cn = ifelse(need_to_adjust == "TRUE", # always round to the integer, but adjust only if needed
-                           round(cn - adjust),
+                           round(cn-adjust),
                            round(cn))) %>%
     mutate(new_log.ratio = ifelse(need_to_adjust == "TRUE", # log transform the new CN states
-                                  (log(abs(new_cn), 2) - 1),
+                                  (log(abs(new_cn),2)-1),
                                   log.ratio)) %>%
     mutate(new_log.ratio = ifelse(new_log.ratio == -Inf,-10, new_log.ratio)) # deal with the -Inf for low negative numbers
 
