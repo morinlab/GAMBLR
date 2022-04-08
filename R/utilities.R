@@ -2475,7 +2475,7 @@ collate_lymphgen = function(sample_table,
           )) := coalesce(!!!syms(names(
             .x
           ))))) %>%
-      select(-contains('.'))
+      select(colnames(sample_table))
     sample_table = tidy_lymphgen(sample_table,
                                  lymphgen_column_in = "lymphgen",
                                  lymphgen_column_out = "lymphgen",
