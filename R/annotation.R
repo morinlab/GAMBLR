@@ -190,22 +190,20 @@ annotate_igh_breakpoints = function(annotated_df,
 
 #' Retrieve data or use supplied data frame of genes to get/annotate MAF data indicating which rows are putative driver mutations.
 #'
-#' @param maf_df Optional data frame of MAF-format mutations (default is to retrieve automatically).
+#' @param maf_df Data frame of MAF-format mutations (default is to retrieve automatically).
 #' @param lymphoma_type Optional keyword to find genes for annotation (e.g. "BL","DLBCL","FL") is not specifying driver genes.
 #' @param driver_genes Optional vector of Hugo_Symbol of genes for coding mutations.
-#' @param include_noncoding Optional named vector of genes listing the Variant_Classification of noncoding mutations to retain.
 #' @param noncoding_regions Optional named vector of regions to use to further restrict noncoding mutations per gene.
 #'
 #' @return Driver ssm kepts from maf.
 #' @export
 #'
 #' @examples
-#' driver_ssm = annotate_driver_ssm(maf_df = maf, lymphoma_type = "DLBCL", include_noncoding=c("NFKBIZ"="3'UTR"),noncoding_regions=c("NFKBIZ"="chr3:101578206-101578365"))
+#' driver_ssm = annotate_driver_ssm(maf_df = maf, lymphoma_type = "DLBCL", noncoding_regions=c("NFKBIZ"="chr3:101578206-101578365"))
 #'
 annotate_driver_ssm = function(maf_df, 
                                lymphoma_type, 
                                driver_genes,
-                               include_noncoding = c("NFKBIZ" = "3'UTR", "HNRNPH1" = "Intron"),
                                noncoding_regions = c("NFKBIZ" = "chr3:101578206-101578365", "HNRNPH1" = "chr5:179,045,946-179,046,683")){
 
   #get the gene list if missing
@@ -217,29 +215,8 @@ annotate_driver_ssm = function(maf_df,
     message(paste("using", ngene, "genes"))
   }
   if(missing(maf_df)){
-    #use the database to get the coding and noncoding variants for the user
-    kept_ssm = get_coding_ssm() %>%
-      dplyr::filter(Variant_Classification %in% coding_vc) %>%
-      dplyr::filter(Hugo_Symbol %in% driver_genes)
-
-    message("starting with:")
-    print(dim(kept_ssm))
-    
-    #this doesn't yet have any of our noncoding variants
-    for(gene in names(include_noncoding)){
-      message(paste("adding", unname(include_noncoding[gene]), "for", gene))
-      nc_ssm = get_ssm_by_gene(gene_symbol = "NFKBIZ") %>%
-        dplyr::filter(Variant_Classification == unname(include_noncoding[gene]))
-      if(!is.na(noncoding_regions[gene])){
-        #also restrict to coordinates
-        chunks = region_to_chunks(noncoding_regions[gene])
-        nc_ssm = dplyr::filter(nc_ssm, Start_Position >= chunks$start & Start_Position <= chunks$end)
-        message(gene)
-        print(dim(nc_ssm))
-      }
-      kept_ssm = bind_rows(kept_ssm, nc_ssm)
-      print(dim(kept_ssm))
-    }
+    warning("Please specify mutations data frame (MAF-format)")
+    return()
   }else{
     #this all assumes the user has left the noncoding variants in their MAF
     kept_ssm = maf_df %>% 

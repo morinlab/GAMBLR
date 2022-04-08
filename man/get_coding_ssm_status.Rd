@@ -8,10 +8,14 @@ get_coding_ssm_status(
   gene_symbols,
   these_samples_metadata,
   from_flatfile = TRUE,
+  augmented = TRUE,
+  min_read_support = 3,
   maf_path = NULL,
   maf_data,
   include_hotspots = TRUE,
   recurrence_min = 5,
+  seq_type = "genome",
+  projection = "grch37",
   review_hotspots = TRUE,
   genes_of_interest = c("FOXO1", "MYD88", "CREBBP"),
   genome_build = "hg19",
@@ -24,6 +28,10 @@ get_coding_ssm_status(
 \item{these_samples_metadata}{The matedata for samples of interest to be included in the returned matrix. Only the column "sample_id" is required. If not provided, the matrix is tabulated for all available samples as default.}
 
 \item{from_flatfile}{Optional argument whether to use database or flat file to retrieve mutations. Default is TRUE.}
+
+\item{augmented}{default: TRUE. Set to FALSE if you instead want the original MAF from each sample for multi-sample patients instead of the augmented MAF.}
+
+\item{min_read_support}{Only returns variants with at least this many reads in t_alt_count (for cleaning up augmented MAFs).}
 
 \item{maf_path}{If the status of coding SSM should be tabulated from a custom maf file, provide path to the maf in this argument. The default is set to NULL.}
 
