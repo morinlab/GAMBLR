@@ -36,12 +36,12 @@ Nothing
 Generate a colourful multi-panel overview of hypermutation in regions of interest across many samples.
 }
 \examples{
-my_plot = ashm_multi_rainbow_plot(regions_bed = "my_bed.bed", 
-                                  regions_to_display = "chr3", 
-                                  exclude_classification = "some-classification", 
-                                  metadata = "my_metadata", 
-                                  custom_colours = c("#onecolour, "#anothercolour", "athirdcolour"), 
-                                  classification_column = "lymphgen", 
+my_plot = ashm_multi_rainbow_plot(regions_bed = "my_bed.bed",
+                                  regions_to_display = "chr3",
+                                  exclude_classification = "some-classification",
+                                  metadata = "my_metadata",
+                                  custom_colours = c("#onecolour, "#anothercolour", "athirdcolour"),
+                                  classification_column = "lymphgen",
                                   maf_data = my_maf)
 
 }

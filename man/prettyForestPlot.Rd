@@ -42,7 +42,9 @@ prettyForestPlot(
 \item{max_q}{cut off for q values to be filtered in fish test}
 }
 \value{
-A ggplot object with a side-by-side forest plot and bar plot showing mutation incidences across two groups.
+A convenient list containing all the data frames that were created in making the plot, including the mutation matrix.
+
+It also produces (and returns) ggplot object with a side-by-side forest plot and bar plot showing mutation incidences across two groups.
 }
 \description{
 Create a forest plot comparing mutation frequencies for a set of genes between two groups.
@@ -54,12 +56,12 @@ metadata = get_gambl_metadata(case_set = "tFL-study") #\%>\%
 
 maf = get_coding_ssm(limit_samples = metadata$sample_id, basic_columns = TRUE)
 
-prettyForestPlot(maf, 
-                 metadata, 
+prettyForestPlot(maf,
+                 metadata,
                  genes = c("ATP6V1B2", "EZH2", "TNFRSF14", "RRAGC"),
-                 comparison_column = "consensus_pathology", 
-                 comparison_values = c("DLBCL", "FL"), 
-                 separate_hotspots = FALSE, 
+                 comparison_column = "consensus_pathology",
+                 comparison_values = c("DLBCL", "FL"),
+                 separate_hotspots = FALSE,
                  comparison_name = "FL vs DLBCL")
 
 }

@@ -1,8 +1,335 @@
 
+#' Plot a rainfall plot for one sample. This function takes in MAF data frame, or path to custom MAF file.
+#' If non are specified, the SSM will be obtained though GAMBLR directly.
+#'
+#' @param this_sample_id Sample id for the sample to display. This is the only required argument.
+#' @param label_ashm_genes Boolean argument indicating whether the aSHM regions will be labeled or not.
+#' @param projection Specify projection (grch37 or hg38) of mutations. Default is grch37.
+#' @param chromosome Provide one or more chromosomes to plot. The chr prefix can be inconsistent with projection and will be handled.
+#' @param this_maf Specify custom MAF data frame of mutations.
+#' @param maf_path Specify path to MAF file if it is not already loaded into data frame.
+#' @param zoom_in_region Provide a specific region in the format "chromosome:start-end" to zoom in to a specific region.
+#' @param label_sv Boolean argument to specify whether label SVs or not. Only supported if a specific chromosome or zoom in region are specified.
+#'
+#'
+#' @return a ggplot2 plot. Print it using print() or save it using ggsave()
+#' @export
+#' @import ggplot2 dplyr ggrepel
+#'
+#' @examples
+#' prettyRainfallPlot("Raji")
+#' prettyRainfallPlot("Raji", chromosome = c(3,9,"chr14",22,"X"))
+#' prettyRainfallPlot("Raji", chromosome = c(3,9), projection = "hg38", label_ashm_genes = FALSE)
+#' prettyRainfallPlot("Raji", zoom_in_region = "8:125252796-135253201", label_sv = TRUE)
+#' prettyRainfallPlot("Raji", chromosome = 6, label_sv = TRUE)
+#'
+prettyRainfallPlot = function(this_sample_id,
+                              label_ashm_genes = TRUE,
+                              projection = "grch37",
+                              chromosome,
+                              this_maf,
+                              maf_path,
+                              zoom_in_region,
+                              label_sv = FALSE) {
+  if (missing(this_sample_id)) {
+    stop("You must provide a sample_id to plot")
+  }
+
+  # allow user to specify chromosome prefix inconsistent with chromosome names
+  if (!missing(chromosome)) {
+    chromosome = standardize_chr_prefix(incoming_vector = chromosome, projection = projection)
+  }
+
+  # allow to zoom in to a specific region
+  if (!missing(zoom_in_region)) {
+    zoom_in_region = region_to_chunks(zoom_in_region)
+    zoom_in_region$chromosome = standardize_chr_prefix(incoming_vector = zoom_in_region$chromosome,
+                                                       projection = projection)
+    zoom_in_region$start = as.numeric(zoom_in_region$start)
+    zoom_in_region$end = as.numeric(zoom_in_region$end)
+  }
+
+  if (label_ashm_genes) {
+    if (projection == "grch37") {
+      ashm_regions = grch37_ashm_regions %>%
+        dplyr::rename("start" = "hg19_start",
+                      "end" = "hg19_end",
+                      "Chromosome" = "chr_name") %>%
+        dplyr::mutate(Chromosome = str_remove(Chromosome, pattern = "chr"))
+    } else if (projection == "hg38") {
+      ashm_regions = hg38_ashm_regions %>%
+        rename("start" = "hg38_start",
+               "end" = "hg38_end",
+               "Chromosome" = "chr_name")
+    } else {
+      stop("Please specify one of grch37 or hg38 projections")
+    }
+    if (!missing(chromosome)) {
+      ashm_regions = dplyr::filter(ashm_regions, Chromosome %in% chromosome)
+    }
+    if (!missing(zoom_in_region)) {
+      ashm_regions = dplyr::filter(
+        ashm_regions,
+        (
+          Chromosome %in% zoom_in_region$chromosome &
+            start >= zoom_in_region$start &
+            end <= zoom_in_region$end
+        )
+      )
+    }
+    ashm_regions = ashm_regions %>%
+      group_by(gene) %>%
+      slice_head() %>%
+      ungroup()
+
+    # this will be needed for consistent labeling with rainfall plots
+    ashm_regions = ashm_regions %>%
+      arrange(match(
+        Chromosome,
+        str_sort(ashm_regions$Chromosome, numeric = TRUE)
+      ))
+    ashm_regions = ashm_regions %>%
+      mutate(Chromosome_f = factor(Chromosome, levels = unique(ashm_regions$Chromosome)))
+  }
+
+  # if user is subsetting by chromosome or zooming in to a specific region, it is possible there are no aSHM features to show
+  # handle this case separately
+  if (nrow(ashm_regions) == 0) {
+    message(
+      "Warning: after subsetting to a regions you requested to plot, there are no aSHM features to overlap on the final graph."
+    )
+    label_ashm_genes = FALSE
+  }
+
+  # get ssm for the requested sample
+  if (!missing(this_maf)) {
+    message ("Using the suppplied MAF df to obrain ser of SSM for the specified sample ...")
+    these_ssm = this_maf %>%
+      filter(Tumor_Sample_Barcode %in% this_sample_id)
+  } else if (!missing (maf_path)) {
+    message ("Path to custom MAF file was provided, reading SSM using the custom path ...")
+    this_maf = read_tsv(maf_path) %>%
+      filter(Tumor_Sample_Barcode %in% this_sample_id)
+  } else {
+    message ("MAF df or path to custom MAF file was not provided, getting SSM using GAMBLR ...")
+    these_ssm = get_ssm_by_sample(this_sample_id,
+                                  projection = projection)
+  }
+
+  # do rainfall calculation using lag
+  rainfall_points = dplyr::select(
+    these_ssm,
+    Hugo_Symbol,
+    Chromosome,
+    Start_Position,
+    End_Position,
+    Reference_Allele,
+    Tumor_Seq_Allele2
+  ) %>%
+    arrange(Chromosome, Start_Position) %>%
+    group_by(Chromosome) %>%  # group by chromosome to calculate lag per chromosome
+    dplyr::mutate(
+      IMD = Start_Position - dplyr::lag(Start_Position),
+      # used for coloring
+      # all indels are squished to the same color
+      Substitution = ifelse((
+        Reference_Allele %in% c("A", "T",  "C", "G") &
+          Tumor_Seq_Allele2 %in% c("A", "T",  "C", "G")
+      ),
+      paste(Reference_Allele, Tumor_Seq_Allele2, sep = '>'),
+      "InDel"
+      )
+    ) %>%
+    dplyr::mutate(IMD = log(IMD)) %>%
+    ungroup() %>%
+    drop_na(IMD) # for the first point of each chromosome, NAs are produced generating a warning message
+
+  # collapse substitutions into classes
+  rainfall_points$Substitution = rainfall_conv[as.character(rainfall_points$Substitution)]
+
+  # ensure order of grids in the plot is sorted
+  rainfall_points = rainfall_points %>%
+    arrange(match(
+      Chromosome,
+      str_sort(rainfall_points$Chromosome, numeric = TRUE)
+    ))
+  rainfall_points = rainfall_points %>%
+    mutate(Chromosome_f = factor(Chromosome, levels = unique(rainfall_points$Chromosome)))
+  if (!missing(chromosome)) {
+    rainfall_points = dplyr::filter(rainfall_points, Chromosome %in% chromosome)
+  }
+  if (!missing(zoom_in_region)) {
+    rainfall_points = dplyr::filter(
+      rainfall_points,
+      (
+        Chromosome %in% zoom_in_region$chromosome &
+          Start_Position >= zoom_in_region$start &
+          End_Position <= zoom_in_region$end
+      )
+    )
+  }
+
+  # if user is subsetting by chromosome or zooming in to a specific region, are there any SSM left to plot?
+  if (nrow(rainfall_points) == 0) {
+    stop("After subsetting to a regions you requested to plot, there are no SSM to display.")
+  }
+
+  # label SVs if user wants to overlap this data
+  if (!missing(chromosome) & label_sv) {
+    sv_chromosome = chromosome
+  } else if (!missing(zoom_in_region) & label_sv) {
+    sv_chromosome = zoom_in_region$chromosome
+  } else if (label_sv) {
+    stop(
+      "Labeling SV is only supported when a particular chromosome or zoomed region is plotted."
+    )
+  }
+
+  if (label_sv) {
+    message("Getting combined manta + GRIDSS SVs using GAMBLR ...")
+    these_sv = get_combined_sv(sample_ids = this_sample_id)
+    if ("SCORE" %in% colnames(these_sv)) {
+      these_sv = these_sv %>%
+        rename("SOMATIC_SCORE" = "SCORE")
+    }
+    # annotate SV
+    these_sv = annotate_sv(these_sv)
+
+    # make SVs a long df with 1 record per SV corresponding to the strand
+    sv_to_label =
+      melt(
+        these_sv %>% select(
+          chrom1,
+          start1,
+          end1,
+          chrom2,
+          start2,
+          end2,
+          tumour_sample_id,
+          gene,
+          partner,
+          fusion
+        ),
+        id.vars = c(
+          "tumour_sample_id",
+          "gene",
+          "partner",
+          "fusion",
+          "start1",
+          "end1",
+          "start2",
+          "end2"
+        ),
+        variable.name = "chromosomeN",
+        value.name = "Chromosome"
+      ) %>%
+      dplyr::filter(Chromosome %in% sv_chromosome)
+
+    # are there any SVs on this chromosome/region?
+    if (nrow(sv_to_label) > 0) {
+      sv_to_label =
+        sv_to_label %>%
+        melt(
+          .,
+          id.vars = c(
+            "tumour_sample_id",
+            "gene",
+            "partner",
+            "fusion",
+            "chromosomeN",
+            "Chromosome"
+          )
+        ) %>%
+        group_by(fusion, chromosomeN) %>%
+        dplyr::filter(if (grepl("1", chromosomeN))
+          variable %in% c("start1", "end1")
+          else
+            variable %in% c("start2", "end2")) %>%
+        dplyr::mutate(variable = gsub("1|2", "", variable)) %>%
+        distinct(fusion, Chromosome, variable, .keep_all = TRUE) %>%
+        spread(., variable, value) %>%
+        dplyr::rename("End_Position" = "end",
+                      "Start_Position" = "start") %>%
+        ungroup
+    } else {
+      message(
+        "Warning: after subsetting to a regions you requested to plot, there are no SV features to overlap on the final graph."
+      )
+      label_sv = FALSE
+    }
+
+    # when we are plotting region and not whole chromosome, ensure SV is within that region
+    if (!missing(zoom_in_region) & label_sv) {
+      sv_to_label = dplyr::filter(
+        sv_to_label,
+        (
+          Start_Position >= zoom_in_region$start &
+            End_Position <= zoom_in_region$end
+        )
+      )
+      # When we did filtering to start/end for a region, are there any SV to plot?
+      if (nrow(sv_to_label) == 0) {
+        message(
+          "Warning: after subsetting to a regions you requested to plot, there are no SV features to overlap on the final graph."
+        )
+        label_sv = FALSE
+      }
+    }
+
+    sv_to_label = sv_to_label %>%
+      mutate(Chromosome_f = factor(Chromosome))
+  }
+
+  p = ggplot(rainfall_points) +
+    geom_point(aes(x = Start_Position, y = IMD, color = Substitution)) +
+    scale_color_manual(values = get_gambl_colours("rainfall")) +
+    ylab("log(IMD)") +
+    theme_Morons() +
+    facet_wrap( ~ Chromosome_f, scales = "free_x") +
+    ggtitle(this_sample_id) +
+    theme(plot.title = element_text(hjust = 0)) # left-align title plot
+
+  if (label_ashm_genes) {
+    p = p +
+      ggrepel::geom_text_repel(
+        data = ashm_regions,
+        aes(start, 1, label = gene),
+        size = 4,
+        segment.size = 0.5,
+        segment.color = "#000000",
+        force_pull = 0,
+        arrow = arrow(length = unit(0.05, "inches"), type = "closed"),
+        max.overlaps = 15,
+        segment.curvature = 0.25,
+        segment.ncp = 4,
+        segment.angle = 25
+      )
+  }
+
+  if (label_sv) {
+    p = p +
+      geom_vline(
+        data = sv_to_label,
+        aes(xintercept = Start_Position),
+        color = "lightgreen",
+        alpha = .7
+      ) +
+      geom_text(data = sv_to_label,
+                aes(End_Position, 15, label = fusion, color = "lightgreen"))
+  }
+
+  # show x-axis coordinates if zooming in to a specific region, but not if looking chromosome/genome-wide
+  if (missing(zoom_in_region)) {
+    p = p + guides(x = "none")
+  }
+
+  return(p)
+}
+
 #' Generate a plot of all CN segments.
 #'
 #' @param region Genomic region for plotting in bed format.
-#' @param gene Optional variable, converts gene to region if region not supplied. 
+#' @param gene Optional variable, converts gene to region if region not supplied.
 #' @param these_samples_metadata GAMBL metadata subset to the cases you want to process (or full metadata)
 #' @param type Type of CN segment to be ploitted. Default is gain (CN > 2).
 #' @param crop_segments Boolean statement that crops segment by first checking if crop segment is smaller than lef/right distance, then adds or subtracts  crop distance to end/start coordiantes. Default is TRUE.
@@ -56,7 +383,7 @@ focal_cn_plot = function(region,
     arrange(across(all_of(c(sort_by_annotation, "size"))))
 
   all_not_dip$ID = factor(all_not_dip$ID, levels = unique(all_not_dip$ID))
-  
+
   ggplot(all_not_dip, aes(x = start, xend = end, y = ID, yend = ID, colour = lymphgen)) +
     geom_vline(aes(xintercept = as.numeric(chunks$start)), alpha = 0.5, colour = get_gambl_colours()[type]) +
     geom_segment(size = segment_size) + theme_cowplot() +
@@ -88,7 +415,7 @@ pretty_lollipop_plot = function(maf_df,
   }
   maf_df = maf_df %>%
     dplyr::filter(Hugo_Symbol == gene)
-  
+
   #use the readMAF function (modified by Ryan) to parse/convert
   maf_df = g3viz::readMAF(maf.df = maf_df)
   chart.options = g3Lollipop.theme(theme.name = plot_theme, title.text = plot_title)
@@ -107,7 +434,7 @@ pretty_lollipop_plot = function(maf_df,
 #' @param region_padding How many bases will be added on the left and right of the regions to ensure any small regions are sufficiently covered by bins. Default is  1000.
 #' @param metadataColumns What metadata will be shown in the visualization.
 #' @param sortByColumns Which of the metadata to sort on for the heatmap.
-#' @param expressionColumns Optional variable for retreiving expression values for a specific gene(s). 
+#' @param expressionColumns Optional variable for retreiving expression values for a specific gene(s).
 #' @param orientation Specify the sample orientation, default is sample_rows.
 #' @param customColour Optional named list of named vectors for specifying all colours for metadata. Can be generated with map_metadata_to_colours. Default is NULL.
 #' @param slide_by How far to shift before starting the next window.
@@ -176,7 +503,7 @@ get_mutation_frequency_bin_matrix = function(regions,
     from_indexed_flatfile = from_indexed_flatfile, mode = mode)})
 
   all= do.call("rbind", dfs)
-  
+
   #add a fake bin for one gene and make every patient not mutated in it (to fill gaps)
   fake = these_samples_metadata %>%
     dplyr::select(sample_id) %>%
@@ -192,7 +519,7 @@ get_mutation_frequency_bin_matrix = function(regions,
     these_samples_metadata = these_samples_metadata %>%
       mutate(across(all_of(expressionColumns), ~ trim_scale_expression(.x)))
   }
-  meta_show = these_samples_metadata %>% 
+  meta_show = these_samples_metadata %>%
     select(sample_id, all_of(metadataColumns)) %>%
     arrange(across(all_of(sortByColumns))) %>%
     dplyr::filter(sample_id %in% colnames(widened_df)) %>%
@@ -242,7 +569,7 @@ get_mutation_frequency_bin_matrix = function(regions,
 
     return(bin_overlapped)
   }
-  
+
   #regions_df = grch37_ashm_regions
   if(is.null(customColour)){
     meta_cols = map_metadata_to_colours(metadataColumns, these_samples_metadata = meta_show, as_vector = F)
@@ -318,7 +645,7 @@ get_mutation_frequency_bin_matrix = function(regions,
 #' @param genes An optional list of genes to restrict your plot to.
 #' @param top_n_genes How many genes to be added to the plot.
 #' @param drop_unless_lowvaf Will drop some genes where VAF is low, default is FALSE.
-#' @param vaf_cutoff_to_drop Which VAF cut-off value to use when dropping variants before plotting. 
+#' @param vaf_cutoff_to_drop Which VAF cut-off value to use when dropping variants before plotting.
 #' @param cluster_columns Boolean statement for clustering by columns, defaults to FALSE.
 #' @param cluster_rows Boolean statement for clustering by rows, defaults to FALSE.
 #'
@@ -356,7 +683,7 @@ plot_mutation_dynamics_heatmap = function(maf1,
     these_samples_metadata = arrange(these_samples_metadata, across(sortByColumns))
   }
 
-  t1_pair_mafdat = t1_pair_mafdat %>% 
+  t1_pair_mafdat = t1_pair_mafdat %>%
     dplyr::rename("patient_id" = patient_colname)
 
   t2_pair_mafdat = t2_pair_mafdat %>%
@@ -366,7 +693,7 @@ plot_mutation_dynamics_heatmap = function(maf1,
     dplyr::rename("patient_id" = patient_colname)
 
   both_vaf_all = full_join(t1_pair_mafdat, t2_pair_mafdat, by = c("patient_id", "Start_Position")) %>%
-    dplyr::select(patient_id, HGVSp_Short.x, Hugo_Symbol.x, Hugo_Symbol.y, Tumor_Sample_Barcode.x, 
+    dplyr::select(patient_id, HGVSp_Short.x, Hugo_Symbol.x, Hugo_Symbol.y, Tumor_Sample_Barcode.x,
                   Tumor_Sample_Barcode.y, HGVSp_Short.y, vaf.x, vaf.y, hot_spot.x, hot_spot.y) %>%
     mutate(ANNO = ifelse(is.na(vaf.x), HGVSp_Short.y, HGVSp_Short.x)) %>%
     mutate(GENE = ifelse(is.na(vaf.x), Hugo_Symbol.y, Hugo_Symbol.x)) %>%
@@ -451,7 +778,7 @@ plot_mutation_dynamics_heatmap = function(maf1,
       H = Heatmap(to_show, layer_fun = function(j, i, x, y, width, height, fill) {
                                                 v = pindex(these_zeroes, i, j)
                                                 l = v == 0
-                                                grid.points(x[l], y[l], pch = 16, size = unit(1, "mm"), gp = gpar(col = "white"))     
+                                                grid.points(x[l], y[l], pch = 16, size = unit(1, "mm"), gp = gpar(col = "white"))
     },
       cluster_columns = cluster_columns, cluster_rows = cluster_rows, bottom_annotation = ta)
       print("HERE")
@@ -470,7 +797,7 @@ plot_mutation_dynamics_heatmap = function(maf1,
 #' @param these_samples_metadata Metadata for just the samples you need colours for.
 #' @param column_alias A list of column_names with values indicating what gambl colour scheme they should use (e.g. pos_neg, pathology, lymphgen).
 #' @param as_vector Boolean statement that is set to TRUE per default.
-#' @param verbose Set to TRUE to enable verbose mode (debugging messages. 
+#' @param verbose Set to TRUE to enable verbose mode (debugging messages.
 #' @param annoAlpha Optional alpha to apply to annotation colours.
 #'
 #' @return Either a vector or list of colours.
@@ -491,14 +818,14 @@ map_metadata_to_colours = function(metadataColumns,
   all_gambl_colours = get_gambl_colours()
   colours = list()
   colvec = c()
-  
+
   #aliases for finding specific sets of colours
   aliases = list("COO_consensus" = "coo", "COO" = "coo", "DHITsig_consensus" = "coo",
                  "pathology" = "pathology", "analysis_cohort" = "pathology", "group" = "pathology",
                  "FL_group" = "FL", "lymphgen" = "lymphgen", "lymphgen_with_cnv" = "lymphgen",
-                 "bcl2_ba" = "pos_neg", "BCL2_status" = "pos_neg", "myc_ba" = "pos_neg", 
+                 "bcl2_ba" = "pos_neg", "BCL2_status" = "pos_neg", "myc_ba" = "pos_neg",
                  "bcl6_ba" = "pos_neg", "manta_BCL2_sv" = "pos_neg", "manual_BCL2_sv" = "pos_neg", "manta_MYC_sv" = "pos_neg")
-  
+
   aliases = c(aliases, column_alias)
   for(column in metadataColumns){
     this_value = these_samples_metadata[[column]]
@@ -529,7 +856,7 @@ map_metadata_to_colours = function(metadataColumns,
       colvec = c(colvec, these[this_value])
       message("adding:", these[this_value])
     }else if(sum(levels(options) %in% names(clinical_colours)) == length(levels(options))){
-      
+
       #we have a way to map these all to colours!
       if(verbose){
         message(paste("found colours for", column, "in clinical"))
@@ -666,7 +993,7 @@ plot_sample_circos = function(this_sample_id,
     cnv_df = get_sample_cn_segments(this_sample_id = this_sample_id, with_chr_prefix = TRUE)
   }
   if(missing(chrom_list)){
-  
+
   #should we add chr list for males as well? Sex could then also be added as a paramter for the function were the appropiate chr list is called if not stated?
    chrom_list = paste0("chr", c(1:22,"X"))
   }
@@ -686,7 +1013,7 @@ plot_sample_circos = function(this_sample_id,
     dplyr::filter(CHROM_B %in% chrom_list)
 
   if(auto_label_sv){
-    
+
     #annotate oncogene SVs and label them
     annotated_sv  = annotate_sv(sv_df, with_chr_prefix = TRUE) %>%
       dplyr::filter(!is.na(partner)) %>%
@@ -697,7 +1024,7 @@ plot_sample_circos = function(this_sample_id,
     if("IGH" %in% these_partners){
       these_partners = c(these_partners, "IGHV3-62")
     }
-    anno_bed1 = annotated_sv %>% 
+    anno_bed1 = annotated_sv %>%
       dplyr::select(chrom1, start1, end1, tumour_sample_id)
 
     anno_bed2 = annotated_sv %>%
@@ -717,7 +1044,7 @@ plot_sample_circos = function(this_sample_id,
     bed_mut = bind_rows(bed_mut_partner, bed_mut_onco)
     print(bed_mut)
   }
-  bed1 = sv_df %>% 
+  bed1 = sv_df %>%
     dplyr::select(CHROM_A, START_A, END_A, tumour_sample_id)
 
   bed2 = sv_df %>%
@@ -799,15 +1126,15 @@ plot_sample_circos = function(this_sample_id,
 #' @param box_col Colour of boxes for outlining mutations (can be problematic with larger oncoprints).
 #' @param metadataBarHeight Optional argument to adjust the height of bar with annotations. The default is 1.5.
 #' @param metadataBarFontsize Optional argument to control for the font size of metadata annotations. The default is 5.
-#' @param hideTopBarplot Optional argument for removing top bar plot. Default value is TRUE. 
-#' @param hideSideBarplot Optional argument for removing side bar plot. Default value is FALSE. 
+#' @param hideTopBarplot Optional argument for removing top bar plot. Default value is TRUE.
+#' @param hideSideBarplot Optional argument for removing side bar plot. Default value is FALSE.
 #' @param splitColumnName Optional argument to indicate which metadata column to split on. Default is set to pathology.
 #' @param splitGeneGroups Split genes into groups for better seperation (between different gene-groups) in prettyOncoplot.
 #' @param legend_row Fiddle with these to widen or narrow your legend.
 #' @param legend_col Fiddle with these to widen or narrow your legend.
 #' @param showTumorSampleBarcode Optional argument for showing tumor barcode. Default is FALSE.
 #' @param groupNames optional vector of group names to be displayed above heatmap. Should be the same length as the number of groups that will be shown. Default is NULL (no labels).
-#' @param verbose Set to TRUE to enable verbose mode (debugging messages. 
+#' @param verbose Set to TRUE to enable verbose mode (debugging messages.
 #' @param hide_annotations Hide annotations for specifc ashms. argument takes a list with annotations.
 #' @param custom_colours Provide named vector (or named list of vectors) containing custom annotation colours if you do not want to use standartized pallette.
 #' @param legend_direction Direction of lgend, defualt is "horizontal".
@@ -831,7 +1158,7 @@ plot_sample_circos = function(this_sample_id,
 #' splitColumnName = "cluster_name",
 #' metadataBarHeight = 2.5,metadataBarFontsize = 6,fontSizeGene = 8,
 #' recycleOncomatrix = TRUE,removeNonMutated = FALSE)
-#' 
+#'
 prettyOncoplot = function(maftools_obj,
                           onco_matrix_path,
                           genes,
@@ -858,7 +1185,7 @@ prettyOncoplot = function(maftools_obj,
                           hideTopBarplot = TRUE,
                           hideSideBarplot = FALSE,
                           box_col = NA,
-                          annoAlpha = 1,                          
+                          annoAlpha = 1,
                           legend_direction = "horizontal",
                           legend_position = "bottom",
                           legend_row = 3,
@@ -897,7 +1224,7 @@ prettyOncoplot = function(maftools_obj,
       mat_origin = om$oncoMatrix
       tsbs = levels(maftools:::getSampleSummary(x = maftools_obj)[,Tumor_Sample_Barcode])
       print(paste("numcases:", length(tsbs)))
-      
+
       if(!removeNonMutated){
         tsb.include = matrix(data = 0, nrow = nrow(mat_origin), ncol = length(tsbs[!tsbs %in% colnames(mat_origin)]))
         colnames(tsb.include) = tsbs[!tsbs %in% colnames(mat_origin)]
@@ -1168,7 +1495,7 @@ prettyOncoplot = function(maftools_obj,
   }
   if(highlightHotspots){
     hot_samples = dplyr::filter(maftools_obj@data, hot_spot == TRUE & Hugo_Symbol %in% genes) %>%
-      dplyr::select(Hugo_Symbol, Tumor_Sample_Barcode) %>% 
+      dplyr::select(Hugo_Symbol, Tumor_Sample_Barcode) %>%
       mutate(mutated = "hot_spot") %>%
       unique()
 
@@ -1178,7 +1505,7 @@ prettyOncoplot = function(maftools_obj,
     hot_mat = hs %>%
       pivot_wider(names_from = "Tumor_Sample_Barcode", values_from = "mutated") %>%
       left_join(all_genes_df,.) %>%
-      column_to_rownames("Hugo_Symbol") %>% 
+      column_to_rownames("Hugo_Symbol") %>%
       as.matrix()
 
     #annotate hotspots in matrix
@@ -1312,12 +1639,12 @@ prettyOncoplot = function(maftools_obj,
 #' @import tidyverse DBI RMariaDB
 #'
 #' @examples
-#' my_plot = ashm_multi_rainbow_plot(regions_bed = "my_bed.bed", 
-#'                                   regions_to_display = "chr3", 
-#'                                   exclude_classification = "some-classification", 
-#'                                   metadata = "my_metadata", 
-#'                                   custom_colours = c("#onecolour, "#anothercolour", "athirdcolour"), 
-#'                                   classification_column = "lymphgen", 
+#' my_plot = ashm_multi_rainbow_plot(regions_bed = "my_bed.bed",
+#'                                   regions_to_display = "chr3",
+#'                                   exclude_classification = "some-classification",
+#'                                   metadata = "my_metadata",
+#'                                   custom_colours = c("#onecolour, "#anothercolour", "athirdcolour"),
+#'                                   classification_column = "lymphgen",
 #'                                   maf_data = my_maf)
 #'
 ashm_multi_rainbow_plot = function(regions_bed,
@@ -1327,7 +1654,7 @@ ashm_multi_rainbow_plot = function(regions_bed,
                                    custom_colours,
                                    classification_column = "lymphgen",
                                    maf_data){
-  
+
   table_name = config::get("results_tables")$ssm
   db = config::get("database_name")
   #get the mutations for each region and combine
@@ -1355,11 +1682,11 @@ ashm_multi_rainbow_plot = function(regions_bed,
   }
   print(regions_bed)
   names = pull(regions_bed, name)
-  names = c(names, "NFKBIZ-UTR", "MAF", "PAX5", "WHSC1", "CCND1", 
-                   "FOXP1-TSS1", "FOXP1-TSS2", "FOXP1-TSS3", "FOXP1-TSS4", 
+  names = c(names, "NFKBIZ-UTR", "MAF", "PAX5", "WHSC1", "CCND1",
+                   "FOXP1-TSS1", "FOXP1-TSS2", "FOXP1-TSS3", "FOXP1-TSS4",
                    "FOXP1-TSS5", "BCL6", "IGH", "IGL", "IGK", "PVT1", "BCL2") #add some additional regions of interest
   regions = pull(regions_bed, regions)
-  regions = c(regions,"chr3:101578214-101578365", "chr16:79627745-79634622", "chr9:36898851-37448583", "chr4:1867076-1977887", "chr11:69451233-69460334", "chr3:71623481-71641671", 
+  regions = c(regions,"chr3:101578214-101578365", "chr16:79627745-79634622", "chr9:36898851-37448583", "chr4:1867076-1977887", "chr11:69451233-69460334", "chr3:71623481-71641671",
                       "chr3:71532613-71559445", "chr3:71343345-71363145", "chr3:71167050-71193679", "chr3:71105715-71118362", "chr3:187406804-188522799","chr14:106144562-106344765",
                       "chr22:23217074-23250428","chr2:89073691-89320640", "chr8:128774985-128876311","chr18:60982124-60990180")
   regions_bed = data.frame(regions = regions, names = names)
@@ -1400,10 +1727,10 @@ ashm_multi_rainbow_plot = function(regions_bed,
   #make the plot
   if(missing(custom_colours)){
     p = muts_anno %>%
-        ggplot() + 
+        ggplot() +
         geom_point(aes(x = start, y = sample_id, colour = classification), alpha = 0.4, size = 0.6) +
         theme(axis.text.y = element_blank()) +
-        facet_wrap(~region_name, scales = "free_x") + 
+        facet_wrap(~region_name, scales = "free_x") +
         guides(color = guide_legend(reverse = TRUE, override.aes = list(size = 3)))
     print(p)
   }else{
@@ -1437,14 +1764,14 @@ ashm_multi_rainbow_plot = function(regions_bed,
 #'
 #' @examples
 #' cnv_vaf_plot = copy_number_vaf_plot(this_sample = "some-sample-name",
-#'                                     just_segments = TRUE, 
-#'                                     coding_only = FALSE, 
-#'                                     one_chrom = "chr2", 
-#'                                     genes_to_label = "MYC", 
-#'                                     from_flatfile = FALSE, 
-#'                                     use_augmented_maf = FALSE, 
+#'                                     just_segments = TRUE,
+#'                                     coding_only = FALSE,
+#'                                     one_chrom = "chr2",
+#'                                     genes_to_label = "MYC",
+#'                                     from_flatfile = FALSE,
+#'                                     use_augmented_maf = FALSE,
 #'                                     add_chr_prefix = TRUE)
-#' 
+#'
 copy_number_vaf_plot = function(this_sample,
                                 just_segments = FALSE,
                                 coding_only = FALSE,
@@ -1453,7 +1780,7 @@ copy_number_vaf_plot = function(this_sample,
                                 from_flatfile = FALSE,
                                 use_augmented_maf = FALSE,
                                 add_chr_prefix = FALSE){
-  
+
   chrom_order = factor(c(1:22, "X"))
   if(add_chr_prefix){
     chrom_order = c(1:22, "X")
@@ -1487,7 +1814,7 @@ copy_number_vaf_plot = function(this_sample,
           geom_point(aes(x = Start_Position, y = vaf, colour = CN), alpha = 0.6, size = 2) +
           scale_colour_manual(values = cn_colours) +
           facet_wrap(~factor(Chromosome, levels = chrom_order), scales = "free_x") +
-          theme_minimal() + 
+          theme_minimal() +
           guides(color = guide_legend(reverse = TRUE, override.aes = list(size = 3)))
         p + ggtitle(this_sample)
       }else{
@@ -1500,9 +1827,9 @@ copy_number_vaf_plot = function(this_sample,
           geom_point(aes(x = Start_Position, y = vaf, colour = CN), size = 2) +
           geom_text(data = plot_genes, aes(x = Start_Position, y = 0.8, label = Hugo_Symbol), size = 3, angle = 90) +
           scale_colour_manual(values = cn_colours) +
-          facet_wrap(~factor(Chromosome, levels = chrom_order), scales = "free_x") + 
+          facet_wrap(~factor(Chromosome, levels = chrom_order), scales = "free_x") +
           ylim(c(0,1)) +
-          theme_minimal() + 
+          theme_minimal() +
           guides(color = guide_legend(reverse = TRUE, override.aes = list(size = 3)))
         p + ggtitle(this_sample)
       }
@@ -1512,7 +1839,7 @@ copy_number_vaf_plot = function(this_sample,
         geom_point(aes(x = Start_Position, y = vaf, colour = CN), alpha = 0.6, size = 0.2) +
         scale_colour_manual(values = cn_colours) +
         facet_wrap(~factor(Chromosome, levels = chrom_order), scales = "free_x") +
-        theme_minimal() + 
+        theme_minimal() +
         guides(color = guide_legend(reverse = TRUE, override.aes = list(size = 3)))
       p + ggtitle(this_sample)
     }
@@ -1607,8 +1934,8 @@ ashm_rainbow_plot = function(mutations_maf,
   if(missing(bed)){
     p + guides(color = guide_legend(reverse = TRUE, override.aes = list(size = 3)))
   }else{
-    bed = bed %>% 
-      mutate(size = end - start) %>% 
+    bed = bed %>%
+      mutate(size = end - start) %>%
       mutate(midpoint = start + size / 2)
     height = length(unique(meta_arranged$sample_id)) + 8
     p = p + geom_rect(data = bed, aes(xmin = start, xmax = end, ymin = 0, ymax = height + 5), alpha = 0.1) +
@@ -1654,18 +1981,18 @@ plot_multi_timepoint = function(mafs,
     A.maf = fread_maf(mafs[1])
     B.maf = fread_maf(mafs[2])
 
-    A.maf = A.maf %>% 
+    A.maf = A.maf %>%
       dplyr::select(c(Hugo_Symbol, Chromosome, Start_Position, End_Position, Variant_Classification, Tumor_Sample_Barcode, HGVSp_Short, t_ref_count, t_alt_count)) %>%
       mutate(VAF = t_alt_count/(t_ref_count + t_alt_count)) %>%
-      mutate(time_point = 1) %>% 
+      mutate(time_point = 1) %>%
       mutate(coord = paste(Chromosome, Start_Position, sep = ":"))
-    
-    B.maf = B.maf %>% 
+
+    B.maf = B.maf %>%
       dplyr::select(c(Hugo_Symbol, Chromosome, Start_Position, End_Position, Variant_Classification, Tumor_Sample_Barcode, HGVSp_Short, t_ref_count, t_alt_count)) %>%
       mutate(VAF = t_alt_count/(t_ref_count + t_alt_count)) %>%
-      mutate(time_point = 2) %>% 
+      mutate(time_point = 2) %>%
       mutate(coord = paste(Chromosome, Start_Position, sep = ":"))
-    
+
     all.maf = rbind(A.maf, B.maf)
     if(show_noncoding){
       coding.maf = subset_regions(all.maf, shm_regions)
@@ -1702,7 +2029,7 @@ plot_multi_timepoint = function(mafs,
       mutate(time_point = time_point-0.4)
 
     ggplot(coding.maf, aes(x = time_point, y = VAF, group = coord, colour = category)) +
-      geom_point() + 
+      geom_point() +
       geom_line(alpha = 0.5) +
       geom_text_repel(data = just_gained_lg, aes(label = Hugo_Symbol), size = 4,segment.linetype = 0) +
       geom_text_repel(data = just_trunk, aes(label = Hugo_Symbol), size = 4, segment.linetype = 0) +
@@ -1715,16 +2042,16 @@ plot_multi_timepoint = function(mafs,
     B.maf = fread_maf(mafs[2])
     C.maf = fread_maf(mafs[3])
 
-    A.maf = A.maf %>% 
+    A.maf = A.maf %>%
       dplyr::select(c(Hugo_Symbol, Chromosome, Start_Position, End_Position, Variant_Classification, Tumor_Sample_Barcode, HGVSp_Short, t_ref_count, t_alt_count))  %>%
       mutate(VAF = t_alt_count/(t_ref_count + t_alt_count)) %>%
-      mutate(time_point = 1) %>% 
+      mutate(time_point = 1) %>%
       mutate(coord = paste(Chromosome, Start_Position, sep = ":"))
 
-    B.maf = B.maf %>% 
+    B.maf = B.maf %>%
       dplyr::select(c(Hugo_Symbol, Chromosome, Start_Position, End_Position, Variant_Classification, Tumor_Sample_Barcode, HGVSp_Short, t_ref_count, t_alt_count))  %>%
       mutate(VAF = t_alt_count/(t_ref_count + t_alt_count)) %>%
-      mutate(time_point = 2) %>% 
+      mutate(time_point = 2) %>%
       mutate(coord = paste(Chromosome, Start_Position,sep = ":"))
 
     C.maf = C.maf %>%
@@ -1732,7 +2059,7 @@ plot_multi_timepoint = function(mafs,
       mutate(VAF = t_alt_count/(t_ref_count + t_alt_count)) %>%
       mutate(time_point = 3) %>%
       mutate(coord = paste(Chromosome, Start_Position, sep = ":"))
-    
+
     all.maf = rbind(A.maf, B.maf, C.maf)
     if(show_noncoding){
       coding.maf = subset_regions(all.maf, shm_regions)
@@ -1769,7 +2096,7 @@ plot_multi_timepoint = function(mafs,
       mutate(time_point = time_point-0.4)
 
     ggplot(coding.maf, aes(x = time_point, y = VAF, group = coord, colour = category)) +
-      geom_point() + 
+      geom_point() +
       geom_line(alpha = 0.3) +
       geom_text_repel(data = just_gained_lg, aes(label = Hugo_Symbol), size = 4, segment.linetype = 0) +
       geom_text_repel(data = just_trunk, aes(label = Hugo_Symbol), size = 4, segment.linetype = 0) +
@@ -1820,14 +2147,14 @@ prettyChromoplot = function(scores,
   scores = data.table::fread(scores) %>%
     dplyr::mutate(`G-score` = ifelse(Type == "Amp", `G-score`, - 1 * `G-score`)) %>%
     dplyr::relocate(Type, .after = frequency)
-  
+
   #annotate each region with direction of changes - used for coloring
   scores$fill = ifelse(scores$Type == "Amp" & scores$`-log10(q-value)` > cutoff, "up",
                 ifelse(scores$Type == "Del" & scores$`-log10(q-value)` > cutoff, "down", "neutral"))
-  
+
   #colors to plot
   cnv_palette = c("up" = "#bd0000", "down" = "#2e5096", "neutral" = "#D2D2D3")
-  
+
   #if no file is provided, annotate with oncogenes in GAMBLR package
   if(missing(genes_to_label)){
     genes_to_label = GAMBLR::grch37_oncogene %>%
@@ -1837,17 +2164,17 @@ prettyChromoplot = function(scores,
     genes_to_label = data.table::fread(genes_to_label)
     colnames(genes_to_label)[1:3] = c("chrom", "start", "end")
     genes_to_label = genes_to_label %>%
-      
+
       #for now, drop the X chromosome since GISTIC runs without sex chromosmes
       dplyr::filter(!grepl("X", chrom)) %>%
       dplyr::mutate(across(c(chrom, start, end), as.integer)) %>%
       data.table::as.data.table()
   }
   #overlap scores with genes to annotate
-  scores = data.table::foverlaps(scores %>% 
-    data.table::setkey(., Chromosome, Start, End), genes_to_label %>% 
+  scores = data.table::foverlaps(scores %>%
+    data.table::setkey(., Chromosome, Start, End), genes_to_label %>%
     data.table::setkey(., chrom, start, end), by.x = c("Chromosome", "Start", "End"), by.y = c("chrom", "start", "end"), type = "within") %>%
-    
+
     #if gene to annotate is provided, but it is in region with no CNV, do not label it
     dplyr::mutate(gene=ifelse(!is.na(gene) & fill=="neutral", NA, gene)) %>%
     #if gene is covering multiple adjacent regions, label only once
@@ -1891,7 +2218,7 @@ prettyChromoplot = function(scores,
     theme_bw() +
     theme(axis.title.x = element_blank(), axis.text.x = element_blank(), axis.text.y = element_text(size = 16, colour = "black"),
           axis.ticks.x = element_blank(), axis.ticks.y = element_line(colour = "black"), legend.position = "none",
-          panel.spacing.x = unit(0.1, "lines"), panel.border = element_blank(), text = element_text(size = 16, colour = "black"), 
+          panel.spacing.x = unit(0.1, "lines"), panel.border = element_blank(), text = element_text(size = 16, colour = "black"),
           strip.background = element_blank(), strip.text.x = element_blank(), panel.grid = element_blank()) +
     geom_hline(yintercept = 0, size = 7) +
     geom_text(aes(label = Chromosome, x = xses, y = 0), size = 4, color = "white")
@@ -1921,7 +2248,7 @@ theme_Morons = function(base_size = 14,
                         my_legend_direction = "horizontal"){
 
   library(ggthemes)
-  (theme_foundation(base_size = base_size, base_family = base_family) + 
+  (theme_foundation(base_size = base_size, base_family = base_family) +
    theme(plot.title = element_text(face = "bold", size = rel(1.2), hjust = 0.5),
          text = element_text(colour = "black"),
          panel.background = element_rect(colour = NA),
@@ -1959,7 +2286,8 @@ theme_Morons = function(base_size = 14,
 #' @param custom_labels Optional: Specify custom labels for the legend categories. Must be in the same order as comparison_values.
 #' @param max_q cut off for q values to be filtered in fish test
 #'
-#' @return A ggplot object with a side-by-side forest plot and bar plot showing mutation incidences across two groups.
+#' @return A convenient list containing all the data frames that were created in making the plot, including the mutation matrix.
+#' @return It also produces (and returns) ggplot object with a side-by-side forest plot and bar plot showing mutation incidences across two groups.
 #' @export
 #' @import dplyr cowplot broom reshape2
 #'
@@ -1970,24 +2298,24 @@ theme_Morons = function(base_size = 14,
 #'
 #' maf = get_coding_ssm(limit_samples = metadata$sample_id, basic_columns = TRUE)
 #'
-#' prettyForestPlot(maf, 
-#'                  metadata, 
+#' prettyForestPlot(maf,
+#'                  metadata,
 #'                  genes = c("ATP6V1B2", "EZH2", "TNFRSF14", "RRAGC"),
-#'                  comparison_column = "consensus_pathology", 
-#'                  comparison_values = c("DLBCL", "FL"), 
-#'                  separate_hotspots = FALSE, 
+#'                  comparison_column = "consensus_pathology",
+#'                  comparison_values = c("DLBCL", "FL"),
+#'                  separate_hotspots = FALSE,
 #'                  comparison_name = "FL vs DLBCL")
 #'
 prettyForestPlot = function(maf,
-                            mutmat, 
-                            metadata, 
-                            genes, 
-                            comparison_column, 
-                            comparison_values = FALSE, 
-                            separate_hotspots = FALSE, 
-                            comparison_name = FALSE, 
-                            custom_colours = FALSE, 
-                            custom_labels = FALSE, 
+                            mutmat,
+                            metadata,
+                            genes,
+                            comparison_column,
+                            comparison_values = FALSE,
+                            separate_hotspots = FALSE,
+                            comparison_name = FALSE,
+                            custom_colours = FALSE,
+                            custom_labels = FALSE,
                             max_q = 1){
 
   #Subset the maf file to the specified genes
@@ -2124,7 +2452,7 @@ prettyForestPlot = function(maf,
 
   arranged_plot = cowplot::plot_grid(plot_grid(NULL, legend, NULL, nrow = 1), plots, nrow = 2, rel_heights = c(0.1, 1))
 
-  return(list(fisher = fish_test, forest = forest, bar = bar, legend = legend, arranged = arranged_plot))
+  return(list(fisher = fish_test, forest = forest, bar = bar, legend = legend, arranged = arranged_plot, mutmat = mutmat))
 }
 
 
@@ -2185,7 +2513,7 @@ splendidHeatmap = function(this_matrix,
                            leftStackedWidth = 4,
                            metadataBarFontsize = 5,
                            groupNames = NULL){
-  comparison_groups <- unique(these_samples_metadata[,splitColumnName])
+  comparison_groups = colnames(importance_values)
 
   if(!is.null(splitColumnName) & (splitColumnName %in% metadataColumns)){
     metadataColumns = c(splitColumnName, metadataColumns[!metadataColumns == splitColumnName])
@@ -2235,20 +2563,23 @@ splendidHeatmap = function(this_matrix,
   FEATURES <- w[,1] %>%
     as.data.frame() %>%
     `rownames<-`(rownames(w)) %>%
-    dplyr::arrange(desc(.)) %>%
+    `names<-`("importance") %>%
+    dplyr::arrange(desc(importance)) %>%
     head(., max_number_of_features_per_group) %>%
     rownames_to_column(., var = "Feature") %>%
     dplyr::mutate(group = comparison_groups[1])
   for (i in 2:length(comparison_groups)){
-    FEATURES = rbind(as.data.frame(FEATURES), w[,i] %>% 
+    FEATURES = rbind(as.data.frame(FEATURES), w[,i] %>%
       as.data.frame() %>%
-      `rownames = `(rownames(w)) %>%
-       dplyr::arrange(desc(.)) %>%
+      `rownames<-`(rownames(w)) %>%
+      `names<-`("importance") %>%
+       arrange(desc(importance)) %>%
        head(., max_number_of_features_per_group + 3) %>%
        rownames_to_column(., var = "Feature") %>%
        dplyr::mutate(group = comparison_groups[i])) %>%
+       dplyr::mutate(importance=as.numeric(importance)) %>%
        dplyr::group_by(Feature) %>%
-       dplyr::filter(. == max(.)) %>%
+       dplyr::filter(importance == max(importance)) %>%
        dplyr::arrange(group)
   }
   FEATURES = as.data.frame(FEATURES)
@@ -2298,9 +2629,14 @@ splendidHeatmap = function(this_matrix,
     dplyr::select(Tumor_Sample_Barcode, splitColumnName), by = "Tumor_Sample_Barcode")
 
   #specify where row breaks should be on heatmap
+  FEATURES = FEATURES %>%
+    arrange(match(
+      group,
+      str_sort(FEATURES$group, numeric = TRUE)
+    ))
   breaks = 0
   for (this_group in comparison_groups){
-    N = (nrow(FEATURES %>% 
+    N = (nrow(FEATURES %>%
       dplyr::filter(group == this_group)))
     breaks = c(breaks, N)
   }
@@ -2324,11 +2660,11 @@ splendidHeatmap = function(this_matrix,
     dplyr::select(-Tumor_Sample_Barcode, -splitColumnName) %>%
     dplyr::summarise_all(funs(sum)) %>%
     t(.) %>%
-    `colnames=`(comparison_groups[i]) %>%
+    `colnames<-`(comparison_groups[i]) %>%
     as.data.frame(.) %>%
     dplyr::mutate_all(~(./i) / nrow(metadata_df)))
   }
-  
+
   m = t(apply(STACKED, 1, function(x) x/sum(x)))
 
   used_for_ordering_df = t(base::merge(mat_2 %>%
@@ -2348,16 +2684,20 @@ splendidHeatmap = function(this_matrix,
   #bottom annotation: tracks indicating metadata
   ha_bottom = HeatmapAnnotation(df = metadata_df[ (order(match(rownames(metadata_df), used_for_ordering))), ] %>%
     dplyr::arrange(!!!syms(metadataColumns), desc(!!!syms(numericMetadataColumns))) %>%
-    dplyr::select(-splitColumnName), col = my_colours, 
+    dplyr::select(-splitColumnName), col = my_colours,
                                      simple_anno_size = unit(metadataBarHeight, "mm"),
-                                     gap = unit(0.25 * metadataBarHeight, "mm"), 
+                                     gap = unit(0.25 * metadataBarHeight, "mm"),
                                      annotation_name_gp = gpar(fontsize = metadataBarFontsize),
                                      annotation_legend_param = list(nrow = legend_row, ncol = legend_col, direction = legend_direction))
 
   #top annotation: groups of interest to split on
+  top_bar_colors = list(my_colours[[splitColumnName]] %>% rev)
+  names(top_bar_colors) = splitColumnName
+  names(top_bar_colors[[splitColumnName]]) = names(top_bar_colors[[splitColumnName]]) %>% rev()
+
   ha_top = HeatmapAnnotation(df = metadata_df[ (order(match(rownames(metadata_df), used_for_ordering))), ] %>%
     dplyr::arrange(!!!syms(metadataColumns), desc(!!!syms(numericMetadataColumns))) %>%
-    dplyr::select(splitColumnName), col = my_colours[splitColumnName],
+    dplyr::select(splitColumnName), col = top_bar_colors,
                                     simple_anno_size = unit(metadataBarHeight, "mm"),
                                     gap = unit(0.25*metadataBarHeight, "mm"),
                                     annotation_name_gp = gpar(fontsize = fontSizeGene * 1.5),
@@ -2397,43 +2737,43 @@ splendidHeatmap = function(this_matrix,
 #'
 #' @examples
 #' sv_plot = fancy_sv_chrdistplot(this_sample = "HTMCP-01-06-00422-01A-01D")
-#' 
+#'
 fancy_sv_chrdistplot = function(this_sample,
                                 plot_subtitle = "Structural Variant Distribution Per Chromosome",
                                 chr_select = paste0("chr", c(1:22)),
                                 coding_only = FALSE,
                                 from_flatfile = FALSE,
                                 use_augmented_maf = FALSE){
-  
-  #get maf data for a specific sample.  
+
+  #get maf data for a specific sample.
   maf = assign_cn_to_ssm(this_sample = this_sample, coding_only = coding_only, from_flatfile = from_flatfile, use_augmented_maf = use_augmented_maf)$maf
-  
+
   #convert variables to factors
   maf$Variant_Type = as.factor(maf$Variant_Type)
   maf$Chromosome = as.factor(maf$Chromosome)
-  
+
   #add chr prefix if missing
   if(!str_detect(maf$Chromosome, "chr")[5]){
     maf = mutate(maf, Chromosome = paste0("chr", Chromosome))
   }
-  
+
   #subset data frame on sv sub type
-  maf_del = dplyr::filter(maf, Variant_Type == "DEL") %>% 
+  maf_del = dplyr::filter(maf, Variant_Type == "DEL") %>%
     add_count(Chromosome) %>%
     distinct(Chromosome, .keep_all = TRUE) %>%
     dplyr::select(Chromosome, Variant_Type, n)
-  
-  maf_ins = dplyr::filter(maf, Variant_Type == "INS") %>% 
+
+  maf_ins = dplyr::filter(maf, Variant_Type == "INS") %>%
     add_count(Chromosome) %>%
     distinct(Chromosome, .keep_all = TRUE) %>%
     dplyr::select(Chromosome, Variant_Type, n)
-  
+
   #combine data frames
   maf.count = rbind(maf_del, maf_ins)
-  
+
   #get max number of mutations for the chromosome harboring most variants (for setting y-axis value).
   ymax = max(maf_del$n) + max(maf_ins$n)
-  
+
   #plot
   ggplot(maf.count, aes(x = Chromosome, y = n, fill = Variant_Type, label = n)) +
     labs(title = paste0(this_sample), subtitle = plot_subtitle, x = "Chromsomes", y = "Variants (n)", fill = "") +
@@ -2462,7 +2802,7 @@ fancy_sv_chrdistplot = function(this_sample,
 #' @examples
 #' snp_plot = fancy_snp_chrdistplot(this_sample = "HTMCP-01-06-00422-01A-01D")
 #' snp_dnp_plot = fancy_snp_chrdistplot(this_sample = "HTMCP-01-06-00422-01A-01D", include_dnp = TRUE, plot_subtitle = "SNP + DNP Distribution Per Chromosome")
-#' 
+#'
 fancy_snp_chrdistplot = function(this_sample,
                                  plot_subtitle = "SNP Distribution Per Chromosome",
                                  chr_select = paste0("chr", c(1:22)),
@@ -2470,25 +2810,25 @@ fancy_snp_chrdistplot = function(this_sample,
                                  coding_only = FALSE,
                                  from_flatfile = FALSE,
                                  use_augmented_maf = FALSE){
-  
-  #get maf data for a specific sample.  
+
+  #get maf data for a specific sample.
   maf = assign_cn_to_ssm(this_sample = this_sample, coding_only = coding_only, from_flatfile = from_flatfile, use_augmented_maf = use_augmented_maf)$maf
-  
+
   #add chr prefix if missing
   if(!str_detect(maf$Chromosome, "chr")[5]){
     maf = mutate(maf, Chromosome = paste0("chr", Chromosome))
   }
-  
+
   #subset data frame on snp sub type
-  maf_snp = dplyr::filter(maf, Variant_Type == "SNP") %>% 
+  maf_snp = dplyr::filter(maf, Variant_Type == "SNP") %>%
     add_count(Chromosome) %>%
     distinct(Chromosome, .keep_all = TRUE) %>%
     dplyr::select(Chromosome, Variant_Type, n)
-  
+
   if(!include_dnp){
     #get max number of SNP for the chromosome harboring most variants (for setting y-axis value).
     ymax = max(maf_snp$n)
-    
+
     #plot
     ggplot(maf_snp, aes(x = Chromosome, y = n)) +
       labs(title = paste0(this_sample), subtitle = plot_subtitle, x = "Chromsomes", y = "SNP Count (n)", fill = "") +
@@ -2498,20 +2838,20 @@ fancy_snp_chrdistplot = function(this_sample,
       theme_cowplot() +
       coord_flip()
   }
-  
+
   else{
     #subset data frame on snp sub type
-    maf_dnp = dplyr::filter(maf, Variant_Type == "DNP") %>% 
+    maf_dnp = dplyr::filter(maf, Variant_Type == "DNP") %>%
       add_count(Chromosome) %>%
       distinct(Chromosome, .keep_all = TRUE) %>%
       dplyr::select(Chromosome, Variant_Type, n)
-    
+
     #combine data frames
     maf.count = rbind(maf_snp, maf_dnp)
-    
+
     #get max number of mutations for the chromosome harboring most variants (for setting y-axis value).
     ymax = max(maf_snp$n) + max(maf_dnp$n)
-    
+
     #plot
     ggplot(maf.count, aes(x = Chromosome, y = n, fill = Variant_Type)) +
       labs(title = paste0(this_sample), subtitle = plot_subtitle, x = "Chromsomes", y = "SNP Count (n)", fill = "") +
@@ -2542,7 +2882,7 @@ fancy_snp_chrdistplot = function(this_sample,
 #' @examples
 #' chr1_sv = fancy_svbar(this_sample = "HTMCP-01-06-00422-01A-01D", chr_select = c(1))
 #' svs = fancy_svbar(this_sample = "HTMCP-01-06-00422-01A-01D")
-#' 
+#'
 fancy_svbar = function(this_sample,
                        plot_subtitle = "Structural Variant Subtype Distribution",
                        chr_select = paste0("chr", c(1:22)),
@@ -2550,28 +2890,28 @@ fancy_svbar = function(this_sample,
                        coding_only = FALSE,
                        from_flatfile = FALSE,
                        use_augmented_maf = FALSE){
-  
-  #get maf data for a specific sample.  
+
+  #get maf data for a specific sample.
   maf = assign_cn_to_ssm(this_sample = this_sample, coding_only = coding_only, from_flatfile = from_flatfile, use_augmented_maf = use_augmented_maf)$maf
-  
+
   #add chr prefix if missing
   if(!str_detect(maf$Chromosome, "chr")[5]){
     maf = mutate(maf, Chromosome = paste0("chr", Chromosome))
   }
-  
+
   #read maf into R and select relevant variables and transform to factor.
   maf_df = dplyr::select(maf, Chromosome, Start_Position, End_Position, Variant_Type, LOH, CN) %>%
     mutate_at(vars(Chromosome, Variant_Type), list(factor))
-  
+
   #sub-setting maf based on user-defined parameters
-  maf_df = maf_df[maf_df$Chromosome %in% chr_select, ] 
-  maf_df = maf_df[maf_df$Variant_Type %in% variant_select, ] 
-  
+  maf_df = maf_df[maf_df$Chromosome %in% chr_select, ]
+  maf_df = maf_df[maf_df$Variant_Type %in% variant_select, ]
+
   #subset variant data
   sv_count = maf_df %>%
     group_by(Variant_Type) %>%
     summarize(count = n())
-  
+
   #plot
   ggplot(sv_count, aes(x = Variant_Type, y = count, fill = Variant_Type, label = count)) +
     geom_bar(position = "stack", stat = "identity") +
@@ -2599,51 +2939,51 @@ fancy_svbar = function(this_sample,
 #' @examples
 #' chr1_cns = fancy_cnlohbar(this_sample = "HTMCP-01-06-00422-01A-01D", chr_select = c(1))
 #' cns = fancy_cnlohbar(this_sample = "HTMCP-01-06-00422-01A-01D")
-#' 
+#'
 fancy_cnlohbar = function(this_sample,
                           plot_subtitle = "CNV states and LOH Regions For Selected Contigs",
                           chr_select = paste0("chr", c(1:22)),
                           coding_only = FALSE,
                           from_flatfile = FALSE,
                           use_augmented_maf = FALSE){
-  
-  #get maf data for a specific sample.  
+
+  #get maf data for a specific sample.
   maf = assign_cn_to_ssm(this_sample = this_sample, coding_only = coding_only, from_flatfile = from_flatfile, use_augmented_maf = use_augmented_maf)$maf
-  
+
   #add chr prefix if missing
   if(!str_detect(maf$Chromosome, "chr")[5]){
     maf = mutate(maf, Chromosome = paste0("chr", Chromosome))
   }
-  
+
   #read maf into R and select relevant variables and transformt to factor.
   maf_df = dplyr::select(maf, Chromosome, Start_Position, End_Position, Variant_Type, LOH, CN) %>%
     mutate_at(vars(Chromosome, Variant_Type), list(factor))
-  
+
   #subsetting maf based on user-defined parameters
-  maf_df = maf_df[maf_df$Chromosome %in% chr_select, ] 
-  
+  maf_df = maf_df[maf_df$Chromosome %in% chr_select, ]
+
   #transform data type
   maf_df$LOH = as.factor(maf_df$LOH)
   maf_df$CN = as.factor(maf_df$CN)
-  
+
   #count levels of factor
   loh_count = dplyr::filter(maf_df, LOH == 1) %>%
     group_by(LOH) %>%
     summarize(count = n())
-  
+
   loh_count$Type = paste0("LOH-", loh_count$LOH)
   loh_count = dplyr::select(loh_count, count, Type)
-  
+
   cns_count = dplyr::filter(maf_df, CN == 1 | CN == 3 | CN == 4) %>%
     group_by(CN) %>%
     summarize(count = n())
-  
+
   cns_count$Type = paste0("CNV-", cns_count$CN)
   cns_count = dplyr::select(cns_count, count, Type)
-  
+
   #join loh and cnvs
   loh_cn = rbind(loh_count, cns_count)
-  
+
   #plot
   ggplot(loh_cn, aes(x = Type, y = count, fill = Type, label = count)) +
     geom_bar(position = "stack", stat = "identity") +
@@ -2669,42 +3009,42 @@ fancy_cnlohbar = function(this_sample,
 #'
 #' @examples
 #' violine_plot = fancy_vplot(this_sample = "HTMCP-01-06-00422-01A-01D")
-#' 
+#'
 fancy_vplot = function(this_sample,
                        plot_subtitle = "Structural Variant Size Distribution",
                        chr_select = paste0("chr", c(1:22)),
                        coding_only = FALSE,
                        from_flatfile = FALSE,
                        use_augmented_maf = FALSE){
-  
-  #get maf data for a specific sample.  
+
+  #get maf data for a specific sample.
   maf = assign_cn_to_ssm(this_sample = this_sample, coding_only = coding_only, from_flatfile = from_flatfile, use_augmented_maf = use_augmented_maf)$maf
-  
+
   #add chr prefix if missing
   if(!str_detect(maf$Chromosome, "chr")[5]){
     maf = mutate(maf, Chromosome = paste0("chr", Chromosome))
   }
-  
+
   #read maf into R and select relevant variables and transform to factor.
   maf_df = dplyr::select(maf, Chromosome, Start_Position, End_Position, Variant_Type, LOH, CN) %>%
     mutate_at(vars(Chromosome, Variant_Type), list(factor))
-  
+
   #calculate variant size
   maf_df$Size = maf_df$End_Position - maf_df$Start_Position
   maf_df$Size = as.factor(maf_df$Size)
-  maf_df = maf_df[maf_df$Variant_Type %in% c("DEL", "INS"), ] 
+  maf_df = maf_df[maf_df$Variant_Type %in% c("DEL", "INS"), ]
   levels(maf_df$Size)[levels(maf_df$Size) == "0"] = "1"
   maf_df$Size = as.numeric(maf_df$Size)
-  
+
   #sub-setting maf based on user-defined parameters
-  maf_df = maf_df[maf_df$Chromosome %in% chr_select, ] 
-  
-  ggplot(maf_df, aes(x = Variant_Type, y = Size, fill = Variant_Type)) + 
+  maf_df = maf_df[maf_df$Chromosome %in% chr_select, ]
+
+  ggplot(maf_df, aes(x = Variant_Type, y = Size, fill = Variant_Type)) +
     labs(title = paste0(this_sample), subtitle = plot_subtitle, x = "", y = "Variant Size") +
     geom_violin(trim = FALSE, scale = "width", color = NA) +
     stat_summary(fun = mean, geom = "point", shape = 20, size = 3, color = "black") +
     scale_fill_manual("", values = c("DEL" = "#E6856F", "INS" = "#3A8799")) +
     scale_y_log10() +
     theme_cowplot() +
-    theme(legend.position = "none") 
+    theme(legend.position = "none")
 }
