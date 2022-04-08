@@ -7,8 +7,9 @@
 assign_cn_to_ssm(
   this_sample,
   coding_only = FALSE,
-  from_flatfile = FALSE,
-  use_augmented_maf = FALSE,
+  from_flatfile = TRUE,
+  use_augmented_maf = TRUE,
+  tool_name = "slms-3",
   maf_file,
   seg_file,
   seg_file_source = "ichorCNA",

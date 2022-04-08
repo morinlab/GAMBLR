@@ -12,6 +12,7 @@ get_ssm_by_samples(
   projection = "grch37",
   seq_type = "genome",
   flavour = "clustered",
+  these_genes,
   min_read_support = 3,
   subset_from_merge = TRUE,
   augmented = TRUE
@@ -28,6 +29,8 @@ get_ssm_by_samples(
 
 \item{flavour}{Currently this function only supports one flavour option but this feature is meant for eventual compatability with additional variant calling parameters/versions}
 
+\item{these_genes}{A vector of genes to subset ssm to.}
+
 \item{min_read_support}{Only returns variants with at least this many reads in t_alt_count (for cleaning up augmented MAFs)}
 
 \item{subset_from_merge}{Instead of merging individual MAFs, the data will be subset from a pre-merged MAF of samples with the specified seq_type}
@@ -35,7 +38,7 @@ get_ssm_by_samples(
 \item{augmented}{default: TRUE. Set to FALSE if you instead want the original MAF from each sample for multi-sample patients instead}
 }
 \value{
-Returns a data frame of variants in MAF-like format.
+data frame in MAF format.
 }
 \description{
 Get MAF-format data frame for more than one sample and combine together (wraps get_ssm_by_sample)

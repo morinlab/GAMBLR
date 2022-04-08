@@ -13,6 +13,7 @@ get_ssm_by_sample(
   these_samples_metadata,
   tool_name = "slms-3",
   projection = "grch37",
+  these_genes,
   augmented = TRUE,
   flavour = "clustered",
   min_read_support = 3,
@@ -27,6 +28,8 @@ get_ssm_by_sample(
 \item{tool_name}{The name of the variant calling pipeline (currently only slms-3 is supported)}
 
 \item{projection}{The projection genome build. Supports hg38 and grch37.}
+
+\item{these_genes}{A vector of genes to subset ssm to.}
 
 \item{augmented}{default: TRUE. Set to FALSE if you instead want the original MAF from each sample for multi-sample patients instead of the augmented MAF}
 

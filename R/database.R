@@ -67,6 +67,7 @@ get_ssm_by_patients = function(these_patient_ids,
   return(get_ssm_by_samples(these_sample_ids, these_samples_metadata, tool_name, projection, seq_type, flavour, min_read_support, subset_from_merge))
 }
 
+
 #' Get MAF-format data frame for more than one sample and combine together (wraps get_ssm_by_sample)
 #' See get_ssm_by_sample for more information
 #' @param these_sample_ids A vector of sample_id that you want results for. This is the only required argument.
@@ -75,10 +76,11 @@ get_ssm_by_patients = function(these_patient_ids,
 #' @param augmented default: TRUE. Set to FALSE if you instead want the original MAF from each sample for multi-sample patients instead
 #' @param projection Obtain variants projected to this reference (one of grch37 or hg38)
 #' @param flavour Currently this function only supports one flavour option but this feature is meant for eventual compatability with additional variant calling parameters/versions
+#' @param these_genes A vector of genes to subset ssm to.
 #' @param min_read_support Only returns variants with at least this many reads in t_alt_count (for cleaning up augmented MAFs)
 #' @param subset_from_merge Instead of merging individual MAFs, the data will be subset from a pre-merged MAF of samples with the specified seq_type
 #'
-#' @return Returns a data frame of variants in MAF-like format.
+#' @return data frame in MAF format.
 #' @export
 #'
 #' @examples
@@ -90,14 +92,15 @@ get_ssm_by_samples = function(these_sample_ids,
                               projection = "grch37",
                               seq_type = "genome",
                               flavour = "clustered",
+                              these_genes,
                               min_read_support = 3,
                               subset_from_merge = TRUE,
                               augmented = TRUE){
   if(!subset_from_merge){
     message("WARNING: on-the-fly merges can be extremely slow and consume a lot of memory. Use at your own risk. ")
-    message("If you do not have permissions to access ICGC data then this is unfortunately your only option, currently")
   }
   to_exclude = get_excluded_samples(tool_name)
+  
   if(missing(these_samples_metadata)){
     these_samples_metadata = get_gambl_metadata() %>%
       dplyr::filter(sample_id %in% these_sample_ids) %>%
@@ -109,27 +112,45 @@ get_ssm_by_samples = function(these_sample_ids,
   }
   #ensure we only have sample_id that are in the remaining metadata (no excluded/unavailable samples)
   these_sample_ids = these_sample_ids[which(these_sample_ids %in% these_samples_metadata$sample_id)]
-  if(flavour == "legacy"){
+  
+  if(flavour=="legacy"){
     warning("I lied. Access to the old variant calls is not currently supported in this function")
     # TODO: implement loading of the old merged MAF under icgc_dart... vcf2maf-1.2 ..level_3 as per the other from_flatfile functions
     return()
-  }else if(flavour == "clustered"){
-    if(subset_from_merge){
-      maf_template = "all_the_things/slms_3-1.0_vcf2maf-1.3/{seq_type}--projection/deblacklisted/augmented_maf/all_slms-3--{projection}.maf"
+    
+  }else if(flavour=="clustered"){
+    if(subset_from_merge && !augmented){
+      maf_template = config::get("results_flatfiles")$ssm$template$merged$deblacklisted
       maf_path = glue::glue(maf_template)
-      message(paste("using existing merge:", maf_path))
       full_maf_path =  paste0(config::get("project_base"), maf_path)
       message(paste("using existing merge:", full_maf_path))
-      maf_df_merge = fread_maf(full_maf_path) %>%
+      maf_df_merge = fread_maf(full_maf_path) %>% 
         dplyr::filter(Tumor_Sample_Barcode %in% these_sample_ids)
-    }else{
+    }
+    
+    if(subset_from_merge && augmented){
+      maf_template = config::get("results_flatfiles")$ssm$template$merged$augmented
+      maf_path = glue::glue(maf_template)
+      full_maf_path =  paste0(config::get("project_base"), maf_path)
+      message(paste("using existing merge:", full_maf_path))
+      maf_df_merge = fread_maf(full_maf_path) %>% 
+        dplyr::filter(Tumor_Sample_Barcode %in% these_sample_ids) %>%
+        dplyr::filter(t_alt_count >= min_read_support)
+    }
+    
+    if(!subset_from_merge){
       maf_df_list = list()
       for(this_sample in these_sample_ids){
         maf_df = get_ssm_by_sample(this_sample, these_samples_metadata, tool_name, projection, augmented, flavour, min_read_support)
-        maf_df_list[[this_sample]] = maf_df
+        maf_df_list[[this_sample]]=maf_df
       }
       maf_df_merge = bind_rows(maf_df_list)
     }
+  }
+  
+  if(!missing(these_genes)){
+    maf_df_merge = maf_df_merge %>%
+      dplyr::filter(Hugo_Symbol %in% these_genes)
   }
   return(maf_df_merge)
 }
@@ -145,6 +166,7 @@ get_ssm_by_samples = function(these_sample_ids,
 #' @param these_samples_metadata Either a single row or entire metadata table containing your sample_id
 #' @param tool_name The name of the variant calling pipeline (currently only slms-3 is supported)
 #' @param projection The projection genome build. Supports hg38 and grch37.
+#' @param these_genes A vector of genes to subset ssm to.
 #' @param augmented default: TRUE. Set to FALSE if you instead want the original MAF from each sample for multi-sample patients instead of the augmented MAF
 #' @param flavour Currently this function only supports one flavour option but this feature is meant for eventual compatability with additional variant calling parameters/versions
 #' @param min_read_support Only returns variants with at least this many reads in t_alt_count (for cleaning up augmented MAFs)
@@ -160,16 +182,17 @@ get_ssm_by_sample = function(this_sample_id,
                              these_samples_metadata,
                              tool_name = "slms-3",
                              projection = "grch37",
+                             these_genes, 
                              augmented = TRUE,
                              flavour = "clustered",
                              min_read_support = 3,
                              verbose = FALSE){
-
- #figure out which unix_group this sample belongs to
+  
+  #figure out which unix_group this sample belongs to
   if(missing(these_samples_metadata)){
     these_samples_metadata = get_gambl_metadata() %>%
       dplyr::filter(sample_id == this_sample_id)
-
+    
   }else{
     these_samples_metadata = these_samples_metadata %>%
       dplyr::filter(sample_id == this_sample_id)
@@ -188,7 +211,7 @@ get_ssm_by_sample = function(this_sample_id,
   # That will need to be kept up to date if/when any new references are added.
   if(pair_status == "unmatched"){
     normal_sample_id = config::get("unmatched_normal_ids")[[unix_group]][[seq_type]][[genome_build]]
-
+    
   }else{
     normal_sample_id = pull(these_samples_metadata, normal_sample_id)
   }
@@ -201,11 +224,11 @@ get_ssm_by_sample = function(this_sample_id,
     return()
   }else if(flavour == "clustered"){
     vcf_base_name = "slms-3.final"
-    path_template = config::get("results_filatfiles")$ssm$template$clustered$deblacklisted
+    path_template = config::get("results_flatfiles")$ssm$template$clustered$deblacklisted
     path_complete = unname(unlist(glue::glue(path_template)))
     full_maf_path = paste0(config::get("project_base"), path_complete)
     if(augmented){
-      path_template = config::get("results_filatfiles")$ssm$template$clustered$augmented
+      path_template = config::get("results_flatfiles")$ssm$template$clustered$augmented
       path_complete = unname(unlist(glue::glue(path_template)))
       aug_maf_path = paste0(config::get("project_base"), path_complete)
     }
@@ -225,6 +248,11 @@ get_ssm_by_sample = function(this_sample_id,
       return()
     }
     sample_ssm = fread_maf(full_maf_path)
+  }
+  
+  if(!missing(these_genes)){
+    sample_ssm = sample_ssm %>%
+      dplyr::filter(Hugo_Symbol %in% these_genes)
   }
   return(sample_ssm)
 }
@@ -836,14 +864,14 @@ get_combined_sv = function(min_vaf = 0,
   }
 
   base_path = config::get("project_base")
-  sv_file = config::get()$results_filatfiles$sv_combined$icgc_dart
+  sv_file = config::get()$results_flatfiles$sv_combined$icgc_dart
   if(projection == "hg38"){
     sv_file = str_replace(sv_file, "--grch37", "--hg38")
   }
   sv_file = paste0(base_path, sv_file)
   permissions = file.access(sv_file, 4)
   if(permissions == - 1){
-    sv_file = config::get()$results_filatfiles$sv_combined$gambl
+    sv_file = config::get()$results_flatfiles$sv_combined$gambl
     sv_file = paste0(base_path, sv_file)
   }
   all_sv = read_tsv(sv_file, col_types = "cnncnncnccccnnccncn") %>%
@@ -1315,49 +1343,7 @@ get_ashm_count_matrix = function(regions_bed,
   return(all_counts_wide)
 }
 
-
-#' Get all somatic mutations for a given gene or list of genes and optionally restrict to coding variants.
-#'
-#' @param gene_symbol Character vector of gene symbols.
-#' @param coding_only Logical parameter indicating whether to return only coding mutations. Default is FALSE.
-#' @param include_silent Logical parameter indicating whether to include siment mutations into coding mutations. Default is TRUE.
-#' @param rename_splice_region Logical parameter indicating whether to rename splice regions. Default is TRUE.
-#'
-#' @return MAF-format data frame of mutations in query gene.
-#' @export
-#' @import tidyverse DBI RMariaDB dbplyr
-#'
-#' @examples
-#' #basic usage
-#' ssm_ezh2 = get_ssm_by_gene(gene_symbol=c("EZH2"),coding_only=TRUE)
-#'
-get_ssm_by_gene = function(gene_symbol,
-                           coding_only = FALSE,
-                           include_silent = TRUE,
-                           rename_splice_region = TRUE){
-
-  table_name = config::get("results_tables")$ssm
-  db = config::get("database_name")
-  if(!include_silent){
-    coding_class = coding_class[coding_class != "Silent"]
-  }
-  con = DBI::dbConnect(RMariaDB::MariaDB(), dbname = db)
-  muts_gene = dplyr::tbl(con, table_name) %>%
-    dplyr::filter(Hugo_Symbol %in% gene_symbol)
-  if(coding_only){
-    muts_gene = muts_gene %>%
-      dplyr::filter(Variant_Classification %in% coding_class)
-  }
-  muts_gene = as.data.frame(muts_gene)
-  if(rename_splice_region){
-    muts_gene = muts_gene %>%
-      mutate(Variant_Classification = case_when(Variant_Classification == "Splice_Region" ~ "Splice_Site", TRUE ~ Variant_Classification))
-  }
-  DBI::dbDisconnect(con)
-  return(muts_gene)
-}
-
-
+  
 #' Efficiently retrieve all mutations across a range of genomic regions.
 #'
 #' @param regions_list Either provide a vector of regions in the chr:start-end format OR.
@@ -1366,6 +1352,10 @@ get_ssm_by_gene = function(gene_symbol,
 #' @param use_name_column If your bed-format data frame has a name column (must be named "name") these can be used to name your regions.
 #' @param from_indexed_flatfile Set to TRUE to avoid using the database and instead rely on flatfiles (only works for streamlined data, not full MAF details).
 #' @param mode Only works with indexed flatfiles. Accepts 2 options of "slms-3" and "strelka2" to indicate which variant caller to use. Default is "slms-3".
+#' @param augmented default: TRUE. Set to FALSE if you instead want the original MAF from each sample for multi-sample patients instead of the augmented MAF 
+#' @param seq_type The seq_type you want back, default is genome.
+#' @param projection Obtain variants projected to this reference (one of grch37 or hg38).
+#' @param min_read_support Only returns variants with at least this many reads in t_alt_count (for cleaning up augmented MAFs).
 #' @param allow_clustered Logical parameter indicating whether to use SLMS-3 results with clustered events. Default is FALSE.
 #'
 #' @return Returns a data frame of variants in MAF-like format.
@@ -1374,17 +1364,21 @@ get_ssm_by_gene = function(gene_symbol,
 #' @examples
 #' #basic usage, adding custom names from bundled ashm data frame
 #' regions_bed = grch37_ashm_regions %>% mutate(name = paste(gene, region, sep = "_"))
-#' ashm_maf = get_ssm_by_regions(regions_bed = regions_bed, streamlined = TRUE, use_name_column = FALSE)
+#' ashm_maf = get_ssm_by_regions(regions_bed = regions_bed)
 #'
 get_ssm_by_regions = function(regions_list,
                               regions_bed,
-                              streamlined = FALSE,
+                              streamlined = TRUE,
                               maf_data = maf_data,
                               use_name_column = FALSE,
-                              from_indexed_flatfile = FALSE,
+                              from_indexed_flatfile = TRUE,
                               mode = "slms-3",
-                              allow_clustered = FALSE){
-
+                              augmented = TRUE,
+                              seq_type = "genome",
+                              projection = "grch37",
+                              min_read_support = 4,
+                              allow_clustered = TRUE){
+  
   bed2region = function(x){
     paste0(x[1], ":", as.numeric(x[2]), "-", as.numeric(x[3]))
   }
@@ -1400,6 +1394,9 @@ get_ssm_by_regions = function(regions_list,
                                                                 streamlined = streamlined,
                                                                 from_indexed_flatfile = from_indexed_flatfile,
                                                                 mode = mode,
+                                                                augmented = augmented,
+                                                                seq_type = seq_type,
+                                                                projection = projection,
                                                                 allow_clustered = allow_clustered)})
   }else{
     region_mafs = lapply(regions, function(x){get_ssm_by_region(region = x,
@@ -1417,11 +1414,11 @@ get_ssm_by_regions = function(regions_list,
   tibbled_data = tibble(region_mafs, region_name = rn)
   unnested_df = tibbled_data %>%
     unnest_longer(region_mafs)
-
+  
   if(streamlined){
     unlisted_df = mutate(unnested_df, start = region_mafs$Start_Position, sample_id = region_mafs$Tumor_Sample_Barcode) %>%
       dplyr::select(start, sample_id, region_name)
-
+    
   }else{
     unlisted_df = mutate(unnested_df, chromosome = region_mafs$Chromosome, start = region_mafs$Start_Position, end = region_mafs$End_Position, sample_id = region_mafs$Tumor_Sample_Barcode) %>%
       dplyr::select(chromosome, start, end, sample_id)
@@ -1430,6 +1427,7 @@ get_ssm_by_regions = function(regions_list,
   #region_maf = reduce(region_mafs,rbind)
   return(unlisted_df)
 }
+
 
 
 #' Retrieve all SSMs from the GAMBL database within a single genomic coordinate range.
@@ -1441,7 +1439,11 @@ get_ssm_by_regions = function(regions_list,
 #' @param basic_columns Set to TRUE to override the default behaviour of returning only the first 45 columns of MAF data.
 #' @param streamlined Return a basic rather than full MAF format, default is FALSE.
 #' @param maf_data Parameter description.
+#' @param seq_type The seq_type you want back, default is genome.
+#' @param projection Obtain variants projected to this reference (one of grch37 or hg38).
 #' @param from_indexed_flatfile Set to TRUE to avoid using the database and instead rely on flatfiles (only works for streamlined data, not full MAF details).
+#' @param augmented default: TRUE. Set to FALSE if you instead want the original MAF from each sample for multi-sample patients instead of the augmented MAF .
+#' @param min_read_support Only returns variants with at least this many reads in t_alt_count (for cleaning up augmented MAFs).
 #' @param mode Only works with indexed flatfiles. Accepts 2 options of "slms-3" and "strelka2" to indicate which variant caller to use. Default is "slms-3".
 #' @param allow_clustered Logical parameter indicating whether to use SLMS-3 results with clustered events. Default is FALSE.
 #'
@@ -1460,12 +1462,16 @@ get_ssm_by_region = function(chromosome,
                              qend,
                              region = "",
                              basic_columns = TRUE,
-                             streamlined = FALSE,
+                             streamlined = TRUE,
                              maf_data,
-                             from_indexed_flatfile = FALSE,
+                             seq_type = "genome",
+                             projection = "grch37",
+                             from_indexed_flatfile = TRUE,
+                             augmented = TRUE,
+                             min_read_support = 3,
                              mode = "slms-3",
-                             allow_clustered = FALSE){
-
+                             allow_clustered = TRUE){
+  
   tabix_bin = "/home/rmorin/miniconda3/bin/tabix"
   table_name = config::get("results_tables")$ssm
   db = config::get("database_name")
@@ -1474,42 +1480,26 @@ get_ssm_by_region = function(chromosome,
 
     #test if we have permissions for the full gambl + icgc merge
     if(mode == "slms-3"){
-      if(allow_clustered){
-        maf_partial_path = config::get("results_filatfiles")$ssm$all$clustered
+      if(allow_clustered && !augmented){
+        maf_partial_path = config::get("results_flatfiles")$ssm$template$merged$deblacklisted
       }
-      else{
-        maf_partial_path = config::get("results_filatfiles")$ssm$all$full
+      if(allow_clustered && augmented){
+        maf_partial_path = config::get("results_flatfiles")$ssm$template$merged$augmented
       }
     }else if (mode == "strelka2"){
-      maf_partial_path = config::get("results_filatfiles")$ssm$all$strelka2
+      maf_partial_path = config::get("results_flatfiles")$ssm$all$strelka2
     }else{
       stop("You requested results from indexed flatfile. The mode should be set to either slms-3 (default) or strelka2. Please specify one of these modes.")
     }
-    maf_path = paste0(base_path, maf_partial_path)
-    maf_permissions = file.access(maf_path, 4)
-    if(maf_permissions == - 1){
-
-      #currently this will only return non-ICGC results
-      if(mode == "slms-3"){
-        if(allow_clustered){
-          maf_partial_path = config::get("results_filatfiles")$ssm$gambl$clustered
-        }else{
-          maf_partial_path = config::get("results_filatfiles")$ssm$gambl$full
-        }
-      }else if (mode == "strelka2"){
-        maf_partial_path = config::get("results_filatfiles")$ssm$gambl$strelka2
-      }else{
-        stop("You requested results from indexed flatfile. The mode should be set to either slms-3 (default) or strelka2. Please specify one of these modes.")
-      }
-      base_path = config::get("project_base")
-
-      #default is non-ICGC
-      maf_path = paste0(base_path, maf_partial_path)
-    }
-
+    
+    maf_path = glue::glue(maf_partial_path)
+    full_maf_path = paste0(base_path, maf_path)
+    message(paste("reading from:", full_maf_path))
+    
     #substitute maf with bed.gz for indexed flatfiles
-    maf_path = stringr::str_replace(maf_path, ".maf$", ".bed.gz")
+    full_maf_path = stringr::str_replace(full_maf_path, ".maf$", ".bed.gz")
   }
+  
   if(!region == ""){
     region = gsub(",", "", region)
     #format is chr6:37060224-37151701
@@ -1521,26 +1511,34 @@ get_ssm_by_region = function(chromosome,
     qend=as.numeric(startend[2])
   }
   chromosome = gsub("chr", "", chromosome)
+  
   if(missing(maf_data)){
     if(from_indexed_flatfile){
       streamlined = TRUE
-      muts = system(paste(tabix_bin, maf_path, region), intern = TRUE)
+      muts = system(paste(tabix_bin, full_maf_path, region), intern = TRUE)
+      
       if(length(muts) > 1){
-        muts_region = readr::read_tsv(I(muts), col_names = c("Chromosome", "Start_Position", "End_Position", "Tumor_Sample_Barcode"))
-
-      # this is necessary because when only one row is returned, read_tsv thinks it is a file name
+        muts_region = readr::read_tsv(I(muts), col_names = c("Chromosome", "Start_Position", "End_Position", "Tumor_Sample_Barcode", "Read_Support"))
+        
+        # this is necessary because when only one row is returned, read_tsv thinks it is a file name
       }else if (length(muts) == 1){
         region_with_one_row = stringr::str_split(muts, "\t", n = 4)
         muts_region = data.frame(Chromosome = unlist(region_with_one_row)[1],
                                  Start_Position = as.numeric(unlist(region_with_one_row)[2]),
                                  End_Position = as.numeric(unlist(region_with_one_row)[3]),
                                  Tumor_Sample_Barcode = unlist(region_with_one_row)[4],
+                                 Read_Support = unlist(region_with_one_row)[5],
                                  stringsAsFactors = FALSE)
       } else {
         muts_region = data.frame(Chromosome = character(),
                                  Start_Position = character(),
                                  End_Position = character(),
-                                 Tumor_Sample_Barcode = character())
+                                 Tumor_Sample_Barcode = character(),
+                                 Read_Support = character())
+      }
+      if(augmented){
+        # drop poorly supported reads but only from augmented MAF
+        muts_region = dplyr::filter(muts_region, Read_Support >= min_read_support)
       }
     }else{
       con = DBI::dbConnect(RMariaDB::MariaDB(), dbname = db)
@@ -1555,12 +1553,14 @@ get_ssm_by_region = function(chromosome,
     muts_region = dplyr::filter(maf_data, Chromosome == chromosome & Start_Position > qstart & Start_Position < qend)
     muts_region = dplyr::filter(maf_data, Chromosome == chromosome & Start_Position > qstart & Start_Position < qend)
   }
+  
   if(streamlined){
     muts_region = muts_region %>%
       dplyr::select(Start_Position, Tumor_Sample_Barcode)
   }else if(basic_columns){
     muts_region = muts_region[, c(1:45)]
   }
+  
   return(muts_region)
 }
 
@@ -1571,12 +1571,15 @@ get_ssm_by_region = function(chromosome,
 #' @param exclude_cohort  Supply this to exclude mutations from one or more cohorts in a list.
 #' @param limit_pathology Supply this to restrict mutations to one pathology.
 #' @param limit_samples Supply this to restrict mutations to one sample.
-#' @param force_unmatched_samples Parameter description.
-#' @param basic_columns Set to TRUE to override the default behaviour of returning only the first 45 columns of MAF data.
+#' @param force_unmatched_samples Optional argument for forcing unmatched samples, using get_ssm_by_samples.
+#' @param projection Reference genome build for the coordinates in the MAF file. The default is hg19 genome build.
+#' @param seq_type The seq_type you want back, default is genome.
+#' @param basic_columns Set to TRUE to override the default behavior of returning only the first 45 columns of MAF data.
 #' @param from_flatfile Set to TRUE to obtain mutations from a local flatfile instead of the database. This can be more efficient and is currently the only option for users who do not have ICGC data access.
-#' @param allow_clustered Logical parameter indicating whether to use SLMS-3 results with clustered events. Default is FALSE.
+#' @param augmented default: TRUE. Set to FALSE if you instead want the original MAF from each sample for multi-sample patients instead of the augmented MAF
+#' @param min_read_support Only returns variants with at least this many reads in t_alt_count (for cleaning up augmented MAFs)
 #' @param groups Unix groups for the samples to be included. Default is both gambl and icgc_dart samples.
-#' @param include_silent Logical parameter indicating whether to include siment mutations into coding mutations. Default is TRUE.
+#' @param include_silent Logical parameter indicating whether to include silent mutations into coding mutations. Default is TRUE.
 #'
 #' @return A data frame containing all the MAF data columns (one row per mutation).
 #' @export
@@ -1585,98 +1588,114 @@ get_ssm_by_region = function(chromosome,
 #' @examples
 #' #basic usage
 #' maf_data = get_coding_ssm(limit_cohort = c("BL_ICGC"))
-#' maf_data = get_coding_ssm(limit_samples = my_sample_ids)
+#' maf_data = get_coding_ssm(limit_samples = "HTMCP-01-06-00485-01A-01D")
 #'
 get_coding_ssm = function(limit_cohort,
                           exclude_cohort,
                           limit_pathology,
                           limit_samples,
                           force_unmatched_samples,
+                          projection = "grch37",
+                          seq_type = "genome",
                           basic_columns = TRUE,
-                          from_flatfile = FALSE,
-                          allow_clustered = FALSE,
+                          from_flatfile = TRUE,
+                          augmented = TRUE,
+                          min_read_support = 3,
                           groups = c("gambl", "icgc_dart"),
                           include_silent = TRUE){
-
+  
   if(!include_silent){
     coding_class = coding_class[coding_class != "Silent"]
   }
-  all_meta = get_gambl_metadata(from_flatfile = from_flatfile)
 
+    all_meta = get_gambl_metadata(from_flatfile = from_flatfile)
+  
   #do all remaining filtering on the metadata then add the remaining sample_id to the query
-  all_meta = all_meta %>%
+  #unix groups
+  all_meta = all_meta %>% 
     dplyr::filter(unix_group %in% groups)
+    
+  #lmit cohort
   if(!missing(limit_cohort)){
     all_meta = all_meta %>%
       dplyr::filter(cohort %in% limit_cohort)
   }
+    #exclude cohort
   if(!missing(exclude_cohort)){
     all_meta = all_meta %>%
       dplyr::filter(!cohort %in% exclude_cohort)
   }
+    #limit pathology
   if(!missing(limit_pathology)){
     all_meta = all_meta %>%
       dplyr::filter(pathology %in% limit_pathology)
   }
+    #limit samples
   if(!missing(limit_samples)){
     all_meta = all_meta %>%
       dplyr::filter(sample_id %in% limit_samples)
   }
+    #pull info for loading .CDS.maf
   sample_ids = pull(all_meta, sample_id)
-  if(from_flatfile){
-    base_path = config::get("project_base")
-    if(allow_clustered){
-      maf_partial_path = config::get("results_filatfiles")$ssm$all$clustered_cds
-    }
-    else{
-      maf_partial_path = config::get("results_filatfiles")$ssm$all$cds
-    }
-    maf_path = paste0(base_path,maf_partial_path)
-    maf_permissions = file.access(maf_path, 4)
-    if(maf_permissions == - 1){
-
-      #currently this will only return non-ICGC results
-      if(allow_clustered){
-        maf_partial_path = config::get("results_filatfiles")$ssm$gambl$clustered_cds
-      }else{
-        maf_partial_path = config::get("results_filatfiles")$ssm$gambl$cds
-      }
-      base_path = config::get("project_base")
-
-      #default is non-ICGC
-      maf_path = paste0(base_path, maf_partial_path)
-    }
-    message(paste("reading from:", maf_path))
-    muts = fread_maf(maf_path) %>%
-      dplyr::filter(Variant_Classification %in% coding_class) %>%
-        as.data.frame()
-
-    mutated_samples = length(unique(muts$Tumor_Sample_Barcode))
-    message(paste("mutations from", mutated_samples, "samples"))
-  }else{
+  
+  #get file path for non-augmented maf
+  if(from_flatfile && !augmented){
+    maf_template = config::get("results_flatfiles")$ssm$template$cds$deblacklisted
+    maf_path = glue::glue(maf_template)
+    full_maf_path =  paste0(config::get("project_base"), maf_path)
+  }
+  
+  #get file path for augmented maf
+  if(from_flatfile && augmented){
+    maf_template = config::get("results_flatfiles")$ssm$template$cds$augmented
+    maf_path = glue::glue(maf_template)
+    full_maf_path =  paste0(config::get("project_base"), maf_path)
+  }
+  
+  #read file  
+  message(paste("reading from:", full_maf_path))
+  muts = fread_maf(full_maf_path) %>% 
+    dplyr::filter(Variant_Classification %in% coding_class) %>% 
+    as.data.frame()
+  
+  mutated_samples = length(unique(muts$Tumor_Sample_Barcode))
+  message(paste("mutations from", mutated_samples, "samples"))
+  
+  #use db if not using flatfile
+  if(!from_flatfile){
     table_name = config::get("results_tables")$ssm
     db = config::get("database_name")
     con = DBI::dbConnect(RMariaDB::MariaDB(), dbname = db)
+    
     muts = tbl(con, table_name) %>%
       dplyr::filter(Variant_Classification %in% coding_class) %>%
       as.data.frame()
-
+    
     DBI::dbDisconnect(con)
   }
+  
+  #if augmented maf selected, drop variants with low read support (default is 3)
+  if(augmented){
+    muts = dplyr::filter(muts, t_alt_count >= min_read_support)
+  }
+  
+  #filter maf on selected sample ids
   muts = muts %>%
     dplyr::filter(Tumor_Sample_Barcode %in% sample_ids)
-
+  
   mutated_samples = length(unique(muts$Tumor_Sample_Barcode))
   message(paste("after linking with metadata, we have mutations from", mutated_samples, "samples"))
+  
+  #subset to fewer columns
   if(basic_columns){
     muts = muts[,c(1:45)]
   }
+  
+  #drop rows for these samples so we can swap in the force_unmatched outputs instead
   if(!missing(force_unmatched_samples)){
-
-    #drop rows for these samples so we can swap in the force_unmatched outputs instead
-    muts = muts %>%
+    muts = muts %>% 
       dplyr::filter(!sample_id %in% force_unmatched_samples)
-
+    
     nsamp = length(force_unmatched_samples)
     message(paste("dropping variants from", nsamp, "samples and replacing with force_unmatched outputs"))
 
@@ -1684,6 +1703,7 @@ get_coding_ssm = function(limit_cohort,
     fu_muts = get_ssm_by_samples(these_sample_ids = force_unmatched_samples)
     muts = bind_rows(muts, fu_muts)
   }
+  
   return(muts)
 }
 

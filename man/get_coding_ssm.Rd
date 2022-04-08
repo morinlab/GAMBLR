@@ -10,9 +10,12 @@ get_coding_ssm(
   limit_pathology,
   limit_samples,
   force_unmatched_samples,
+  projection = "grch37",
+  seq_type = "genome",
   basic_columns = TRUE,
-  from_flatfile = FALSE,
-  allow_clustered = FALSE,
+  from_flatfile = TRUE,
+  augmented = TRUE,
+  min_read_support = 3,
   groups = c("gambl", "icgc_dart"),
   include_silent = TRUE
 )
@@ -26,17 +29,23 @@ get_coding_ssm(
 
 \item{limit_samples}{Supply this to restrict mutations to one sample.}
 
-\item{force_unmatched_samples}{Parameter description.}
+\item{force_unmatched_samples}{Optional argument for forcing unmatched samples, using get_ssm_by_samples.}
 
-\item{basic_columns}{Set to TRUE to override the default behaviour of returning only the first 45 columns of MAF data.}
+\item{projection}{Reference genome build for the coordinates in the MAF file. The default is hg19 genome build.}
+
+\item{seq_type}{The seq_type you want back, default is genome.}
+
+\item{basic_columns}{Set to TRUE to override the default behavior of returning only the first 45 columns of MAF data.}
 
 \item{from_flatfile}{Set to TRUE to obtain mutations from a local flatfile instead of the database. This can be more efficient and is currently the only option for users who do not have ICGC data access.}
 
-\item{allow_clustered}{Logical parameter indicating whether to use SLMS-3 results with clustered events. Default is FALSE.}
+\item{augmented}{default: TRUE. Set to FALSE if you instead want the original MAF from each sample for multi-sample patients instead of the augmented MAF}
+
+\item{min_read_support}{Only returns variants with at least this many reads in t_alt_count (for cleaning up augmented MAFs)}
 
 \item{groups}{Unix groups for the samples to be included. Default is both gambl and icgc_dart samples.}
 
-\item{include_silent}{Logical parameter indicating whether to include siment mutations into coding mutations. Default is TRUE.}
+\item{include_silent}{Logical parameter indicating whether to include silent mutations into coding mutations. Default is TRUE.}
 }
 \value{
 A data frame containing all the MAF data columns (one row per mutation).
@@ -47,6 +56,6 @@ Retrieve all coding SSMs from the GAMBL database in MAF-like format.
 \examples{
 #basic usage
 maf_data = get_coding_ssm(limit_cohort = c("BL_ICGC"))
-maf_data = get_coding_ssm(limit_samples = my_sample_ids)
+maf_data = get_coding_ssm(limit_samples = "HTMCP-01-06-00485-01A-01D")
 
 }
