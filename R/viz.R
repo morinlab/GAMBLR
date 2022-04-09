@@ -1738,6 +1738,8 @@ ashm_multi_rainbow_plot = function(regions_bed,
                                     title={{ classification_column }}))
 
   if(! missing(custom_colours)){
+    # ensure only relevant color keys are present
+    custom_colours = custom_colours[intersect(names(custom_colours), pull(meta_arranged[,classification_column]))]
     p = p +
         scale_colour_manual(values = custom_colours)
   }
