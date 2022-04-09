@@ -1705,7 +1705,10 @@ ashm_multi_rainbow_plot = function(regions_bed,
   unlisted_df = mutate(unnested_df, start = region_mafs$Start_Position, sample_id = region_mafs$Tumor_Sample_Barcode) %>%
     dplyr::select(start,sample_id, region_name)
 
-  meta_arranged$classification = factor(meta_arranged[,classification_column], levels = unique(meta_arranged[,classification_column]))
+  meta_arranged = meta_arranged %>% mutate_if(is.factor, as.character)
+  meta_arranged = meta_arranged %>% mutate(classification = factor(!!sym(classification_column)))
+
+
   muts_anno = left_join(unlisted_df, meta_arranged)
   muts_first = dplyr::select(muts_anno, start, region_name) %>%
     group_by(region_name) %>%
@@ -1725,25 +1728,24 @@ ashm_multi_rainbow_plot = function(regions_bed,
     muts_anno = dplyr::filter(muts_anno, region_name %in% regions_to_display)
   }
   #make the plot
-  if(missing(custom_colours)){
-    p = muts_anno %>%
+  p = muts_anno %>%
         ggplot() +
         geom_point(aes(x = start, y = sample_id, colour = classification), alpha = 0.4, size = 0.6) +
         theme(axis.text.y = element_blank()) +
         facet_wrap(~region_name, scales = "free_x") +
-        guides(color = guide_legend(reverse = TRUE, override.aes = list(size = 3)))
-    print(p)
-  }else{
-    #testing manual colouring
-    p = muts_anno %>%
-        ggplot() +
-        geom_point(aes(x = start, y = sample_id, colour = classification), alpha = 0.4, size = 0.6) +
-        theme(axis.text.y = element_blank()) +
-        scale_colour_manual(values = custom_colours) +
-        facet_wrap(~region_name, scales = "free_x") +
-        guides(color = guide_legend(reverse = TRUE, override.aes = list(size = 3)))
-    print(p)
+        guides(color = guide_legend(reverse = TRUE,
+                                    override.aes = list(size = 3),
+                                    title={{ classification_column }}))
+
+  if(! missing(custom_colours)){
+    # ensure only relevant color keys are present
+    custom_colours = custom_colours[intersect(names(custom_colours), pull(meta_arranged[,classification_column]))]
+    p = p +
+        scale_colour_manual(values = custom_colours)
   }
+
+  print(p)
+
 }
 
 

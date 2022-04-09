@@ -40,5 +40,5 @@ MYC_expr = get_gene_expression(hugo_symbols = c("MYC"), join_with = "mrna")
 Read full expression values df (no subsetting on genes)
 full_expression_df = get_gene_expression_new(all_genes = TRUE, join_with = "genome")
 Use loaded df (in previous step) to get expression values for IRF4 and MYC.
-irf4_myc_expressions = get_gene_expression_new(hugo_symbols = c("IRF4", "MYC"), all_genes = FALSE, join_with = "genome", from_flatfile = FALSE, expression_data = full_expression_df) 
+irf4_myc_expressions = get_gene_expression_new(hugo_symbols = c("IRF4", "MYC"), all_genes = FALSE, join_with = "genome", from_flatfile = FALSE, expression_data = full_expression_df)
 }

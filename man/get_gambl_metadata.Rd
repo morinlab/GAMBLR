@@ -5,7 +5,7 @@
 \title{Get GAMBL metadata.}
 \usage{
 get_gambl_metadata(
-  seq_type_filter = c("genome", "capture"),
+  seq_type_filter = "genome",
   tissue_status_filter = c("tumour"),
   case_set,
   remove_benchmarking = TRUE,
@@ -13,7 +13,8 @@ get_gambl_metadata(
   from_flatfile = TRUE,
   sample_flatfile = "",
   biopsy_flatfile = "",
-  only_available = TRUE
+  only_available = TRUE,
+  seq_type_priority = "genome"
 )
 }
 \arguments{
@@ -27,14 +28,17 @@ get_gambl_metadata(
 
 \item{with_outcomes}{Optionally join to gambl outcome data}
 
-\item{from_flatfile}{New default is to use the metadata in the flatfiles from your clone of the repo. Can be over-ridden to use the database
-embargoed cases (current options: 'BLGSP-study', 'FL-study', 'DLBCL-study', 'FL-DLBCL-study', 'FL-DLBCL-all', 'DLBCL-unembargoed', 'BL-DLBCL-manuscript', 'MCL','MCL-CLL')}
+\item{from_flatfile}{New default is to use the metadata in the flatfiles from your clone of the repo. Can be over-ridden to use the database}
 
 \item{sample_flatfile}{Optionally provide the full path to a samples table to use instead of the default}
 
 \item{biopsy_flatfile}{Optionally provide the full path to a biopsy table to use instead of the default}
 
 \item{only_available}{If TRUE, will remove samples with FALSE or NA in the bam_available column (default: TRUE)}
+
+\item{seq_type_priority}{For duplicate sample_id with different seq_type available, the metadata will prioritize this seq_type and drop the others
+
+embargoed cases (current options: 'BLGSP-study', 'FL-study', 'DLBCL-study', 'FL-DLBCL-study', 'FL-DLBCL-all', 'DLBCL-unembargoed', 'BL-DLBCL-manuscript', 'MCL','MCL-CLL')}
 }
 \value{
 A data frame with metadata for each biopsy in GAMBL
@@ -49,5 +53,5 @@ use pre-defined custom sample sets
 only_blgsp_metadata = get_gambl_metadata(case_set="BLGSP-study")
 override default filters and request metadata for samples other than tumour genomes, e.g. also get the normals
 only_normal_metadata = get_gambl_metadata(tissue_status_filter = c('tumour','normal'))
-
+non_duplicated_genome_and_capture = get_gambl_metadata(seq_type_filter=c('genome','capture'),seq_type_priority="genome")
 }
