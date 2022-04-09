@@ -938,7 +938,7 @@ get_manta_sv = function(min_vaf = 0.1,
                         qend,
                         region,
                         with_chr_prefix = FALSE,
-                        from_flatfile = FALSE,
+                        from_flatfile = TRUE,
                         projection = "grch37"){
 
   if(projection != "grch37"){
