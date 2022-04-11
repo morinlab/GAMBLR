@@ -1571,7 +1571,8 @@ get_ssm_by_region = function(chromosome,
 #' @param limit_cohort Supply this to restrict mutations to one or more cohorts in a list.
 #' @param exclude_cohort  Supply this to exclude mutations from one or more cohorts in a list.
 #' @param limit_pathology Supply this to restrict mutations to one pathology.
-#' @param limit_samples Supply this to restrict mutations to one sample.
+#' @param limit_samples Supply this to restrict mutations to a vector of sample_id (instead of subsetting using the provided metadata)
+#' @param these_samples_metadata Supply a metadata table to auto-subset the data to samples in that table before returning
 #' @param force_unmatched_samples Optional argument for forcing unmatched samples, using get_ssm_by_samples.
 #' @param projection Reference genome build for the coordinates in the MAF file. The default is hg19 genome build.
 #' @param seq_type The seq_type you want back, default is genome.
@@ -1595,6 +1596,7 @@ get_coding_ssm = function(limit_cohort,
                           exclude_cohort,
                           limit_pathology,
                           limit_samples,
+                          these_samples_metadata,
                           force_unmatched_samples,
                           projection = "grch37",
                           seq_type = "genome",
@@ -1608,9 +1610,11 @@ get_coding_ssm = function(limit_cohort,
   if(!include_silent){
     coding_class = coding_class[coding_class != "Silent"]
   }
-
+  if(!missing(these_samples_metadata)){
+    all_meta = these_samples_metadata
+  }else{
     all_meta = get_gambl_metadata(from_flatfile = from_flatfile)
-
+  }
   #do all remaining filtering on the metadata then add the remaining sample_id to the query
   #unix groups
   all_meta = all_meta %>%
@@ -1637,6 +1641,7 @@ get_coding_ssm = function(limit_cohort,
       dplyr::filter(sample_id %in% limit_samples)
   }
     #pull info for loading .CDS.maf
+
   sample_ids = pull(all_meta, sample_id)
 
   #get file path for non-augmented maf

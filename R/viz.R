@@ -1107,7 +1107,7 @@ plot_sample_circos = function(this_sample_id,
 #' @param maftools_obj A maftools object containing the mutations you want to plot.
 #' @param onco_matrix_path Provide a path to an onco_matrix file instead of a MAF object if the former is unavailable (this limits functionality a bit).
 #' @param genes An optional list of genes to restrict your plot to.
-#' @param include_noncoding List of non-coding regions to be included, default is "NFKBIZ - 3'UTR" and "HNRNPH1 - Splice_Region").
+#' @param include_noncoding List of non-coding regions to be included, default is "NFKBIZ - 3'UTR" and "HNRNPH1 - Splice_Region").. Specify like this: include_noncoding=list("NFKBIZ" = c("3'UTR"), "HNRNPH1" = "Splice_Region")
 #' @param keepGeneOrder Set to TRUE if you want to preserve the gene order specified.
 #' @param keepSampleOrder Set to TRUE if you want to preserve the sample order specified.
 #' @param highlightHotspots Set to TRUE to highlight hot spots. Default is FALSE.
@@ -1162,7 +1162,7 @@ plot_sample_circos = function(this_sample_id,
 prettyOncoplot = function(maftools_obj,
                           onco_matrix_path,
                           genes,
-                          include_noncoding = list("NFKBIZ" = c("3'UTR"), "HNRNPH1" = "Splice_Region"),
+                          include_noncoding = NULL,
                           keepGeneOrder = FALSE,
                           keepSampleOrder = TRUE,
                           highlightHotspots = FALSE,
