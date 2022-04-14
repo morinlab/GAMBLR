@@ -19,7 +19,7 @@ If you haven't already, clone the github repo:
 Run this vignette using the base directory of the GAMBLR repository as your working directory. See the Readme in the repository for more tips on getting set up.
 
 ```{r setup, warning = FALSE, message = FALSE}
-# Load the GAMBLR package and other packages required by these examples. 
+# Load the GAMBLR package and other packages required by these examples.
 library(GAMBLR)
 require(tidyverse)
 require(maftools)
@@ -36,7 +36,7 @@ require(conflicted)
 conflict_prefer("filter", "dplyr")
 ```
 
-The key level-1 GAMBL outputs are making their way into a MySQL (a.k.a. MariaDB) database. The most intuitive way to query the data is using the dbplyr R package. The initial connection and a method to determine what each table contains is shown below. 
+The key level-1 GAMBL outputs are making their way into a MySQL (a.k.a. MariaDB) database. The most intuitive way to query the data is using the dbplyr R package. The initial connection and a method to determine what each table contains is shown below.
 
 ```{r connect_show_tables, message = FALSE}
 con = DBI::dbConnect(RMariaDB::MariaDB(), dbname = "gambl_test")
@@ -46,7 +46,7 @@ all_table_names = DBI::dbListTables(con)
 
 print(all_table_names)
 
-# Peek at the contents of each table. 
+# Peek at the contents of each table.
 for(table_name in all_table_names){
   table_db = tbl(con, table_name)
   print(table_name)
@@ -59,7 +59,7 @@ Get the metadata, automatically joining both tables and dropping normal and RNA-
 my_metadata = get_gambl_metadata()
 
 # Reduce to some of the more useful metadata fields
-my_metadata = my_metadata %>% 
+my_metadata = my_metadata %>%
   select(sample_id, biopsy_id, myc_ba, cohort, pathology, lymphgen)
 
 print(head(my_metadata))
@@ -68,8 +68,8 @@ print(head(my_metadata))
 blgsp_metadata = get_gambl_metadata(case_set = "BLGSP-study")
 
 # As you can see this spans several cohorts and doesn't even just include BL pathology (for complex reasons)
-blgsp_metadata %>% 
-  pull(cohort) %>% 
+blgsp_metadata %>%
+  pull(cohort) %>%
   table()
 
 # If you want the sample_id (i.e. the Tumor_Sample_Barcode) for all these cases, for example to subset a MAF file, you can extract them into a vector:
@@ -83,46 +83,46 @@ The largest tables in the database are those that contain mutations from MAF fil
 ```{r mutation_totals, out.width = "75%", warning = FALSE}
 hg19_maf = tbl(con, "maf_slms3_hg19_icgc")
 
-mutation_counts = hg19_maf %>% 
-  group_by(Tumor_Sample_Barcode) %>% 
+mutation_counts = hg19_maf %>%
+  group_by(Tumor_Sample_Barcode) %>%
   tally()
 
 print(head(mutation_counts))
 
 mutation_counts %>%
-  ggplot() + 
-    geom_histogram(aes(x = n), bins = 100) + 
+  ggplot() +
+    geom_histogram(aes(x = n), bins = 100) +
     xlim(c(10, 25000))
 ```
 
-Here's a histogram of the total number of mutations per genome across all GAMBL cases. Pretty hard to interpret this without metadata. There are two metadata tables. Often we need to join them both to get all the information we want. 
+Here's a histogram of the total number of mutations per genome across all GAMBL cases. Pretty hard to interpret this without metadata. There are two metadata tables. Often we need to join them both to get all the information we want.
 
 ```{r join_metadata}
 # If we only care about genomes, we can drop/filter anything that isn't a tumour genome
-# The key for joining this table to the mutation information is to use sample_id. Think of this as equivalent to a library_id. It will differ depending on what assay was done to the sample. 
-sample_meta = tbl(con, "sample_metadata") %>% 
+# The key for joining this table to the mutation information is to use sample_id. Think of this as equivalent to a library_id. It will differ depending on what assay was done to the sample.
+sample_meta = tbl(con, "sample_metadata") %>%
   dplyr::filter(seq_type == "genome" & tissue_status == "tumour")
 
 biopsy_meta = tbl(con,"biopsy_metadata") %>%
-  select(-patient_id) %>% 
-  dplyr::select(-pathology) %>% 
-  dplyr::select(-time_point) %>% 
+  select(-patient_id) %>%
+  dplyr::select(-pathology) %>%
+  dplyr::select(-time_point) %>%
   dplyr::select(-EBV_status_inf)
 
 # This table is keyed on biopsy_id. One biopsy can have more than one sample_id. This table must be joined to the sample table using biopsy_id. Because of some redundancy in columns between the two tables, I've dropped all redundant columns with the exception of biopsy_id.
 all_meta = left_join(sample_meta, biopsy_meta, by = "biopsy_id")
 
-# IMPORTANT: the dbplyr package uses mysql queries under the hood to lazily retrieve the datat you need for each table on-the-fly. To properly use the efficiency of indexing and joins in MySQL, don't convert your tables into data frames until you're done all the necessary joins. 
+# IMPORTANT: the dbplyr package uses mysql queries under the hood to lazily retrieve the datat you need for each table on-the-fly. To properly use the efficiency of indexing and joins in MySQL, don't convert your tables into data frames until you're done all the necessary joins.
 ```
 
-Obtain all SV breakpoints (called by Manta) within a specific region of the genome and visualize them. 
+Obtain all SV breakpoints (called by Manta) within a specific region of the genome and visualize them.
 
 ```{r manta, out.width = "80%"}
 # We can override default that requires SV to meet the Manta "Pass" filtering criterion
 # Here we are also asking for the chromosomes to be named with a chr prefix (for circlize compatability)
-myc_locus_sv = get_manta_sv(region = "8:128723128-128774067", pass = FALSE, with_chr_prefix = TRUE) 
+myc_locus_sv = get_manta_sv(region = "8:128723128-128774067", pass = FALSE, with_chr_prefix = TRUE)
 
-bed1 = myc_locus_sv %>% 
+bed1 = myc_locus_sv %>%
   dplyr::select(CHROM_A, START_A, END_A, tumour_sample_id)
 
 bed2 = myc_locus_sv %>%
@@ -131,7 +131,7 @@ bed2 = myc_locus_sv %>%
 colnames(bed1) = c("chrom", "start", "end", "sample_id")
 colnames(bed2) = c("chrom", "start", "end", "sample_id")
 
-myc_locus_sv = myc_locus_sv %>% 
+myc_locus_sv = myc_locus_sv %>%
   dplyr::select(tumour_sample_id, CHROM_A, START_A, CHROM_B, START_B, STRAND_A, STRAND_B, VAF_tumour)
 
 print(head(myc_locus_sv))
@@ -140,37 +140,37 @@ circos.initializeWithIdeogram()
 circos.genomicLink(bed1, bed2, col = rand_color(nrow(bed1), transparency = 0.5))
 ```
 
-There is also a function that generates a sample overview with SV and CNV data displayed and it labels oncogene rearrangements. 
+There is also a function that generates a sample overview with SV and CNV data displayed and it labels oncogene rearrangements.
 
 ```{r circos_auto}
 this_samp = "13-38657_tumorB"
 GAMBLR::plot_sample_circos(this_sample_id = this_samp)
 ```
 
-This package also includes a convenience function to facilitate annotation of common oncogene fusions/SVs in B-cell lymphomas. 
+This package also includes a convenience function to facilitate annotation of common oncogene fusions/SVs in B-cell lymphomas.
 
 ```{r oncogene_annotations, out.width="100%", warning = FALSE}
-unannotated_sv = get_manta_sv() 
+unannotated_sv = get_manta_sv()
 
 # In this example, let's just look at the SVs annotated as likely driving BCL6 expression
-annotated_sv = annotate_sv(unannotated_sv, with_chr_prefix = TRUE) %>% 
-    dplyr::filter(!is.na(partner)) %>% 
-    dplyr::filter(gene == "BCL6") %>% 
+annotated_sv = annotate_sv(unannotated_sv, with_chr_prefix = TRUE) %>%
+    dplyr::filter(!is.na(partner)) %>%
+    dplyr::filter(gene == "BCL6") %>%
     as.data.frame()
 
 print(head(annotated_sv))
 
 # For labelling, get the unique set of partners
 to_label = unique(annotated_sv$partner)
-partner_label = grch37_partners %>% 
-  dplyr::filter(gene %in% to_label) %>% 
+partner_label = grch37_partners %>%
+  dplyr::filter(gene %in% to_label) %>%
   dplyr::mutate(chrom = paste0("chr", chrom)) %>%
   as.data.frame()
 
-bed1 = annotated_sv %>% 
+bed1 = annotated_sv %>%
   dplyr::select(chrom1, start1, end1, tumour_sample_id, fusion)
 
-bed2 = annotated_sv %>% 
+bed2 = annotated_sv %>%
   dplyr::select(chrom2, start2, end2, tumour_sample_id, fusion)
 
 colnames(bed1) = c("chrom", "start", "end", "sample_id", "fusion")
@@ -185,31 +185,31 @@ circos.genomicLink(bed1, bed2, col = rand_color(nrow(bed1), transparency = 0.5))
 ```
 
 ```{r oncogene_annotations_myc, out.width = "100%", warning = FALSE}
-unannotated_sv = get_manta_sv() 
+unannotated_sv = get_manta_sv()
 
 # Now let's try the SVs annotated as likely driving MYC expression
-annotated_sv = annotate_sv(unannotated_sv, with_chr_prefix = TRUE) %>% 
-    dplyr::filter(!is.na(partner)) %>% 
-    dplyr::filter(gene == "MYC") %>% 
+annotated_sv = annotate_sv(unannotated_sv, with_chr_prefix = TRUE) %>%
+    dplyr::filter(!is.na(partner)) %>%
+    dplyr::filter(gene == "MYC") %>%
     as.data.frame()
 
 print(head(annotated_sv))
 
 # For labelling, get the unique set of partners
 to_label = unique(annotated_sv$partner)
-partner_label = grch37_partners %>% 
-  dplyr::filter(gene %in% to_label) %>% 
+partner_label = grch37_partners %>%
+  dplyr::filter(gene %in% to_label) %>%
   dplyr::mutate(chrom = paste0("chr", chrom)) %>%
   as.data.frame()
 
-onco_label = grch37_oncogene %>% 
+onco_label = grch37_oncogene %>%
   mutate(chrom = paste0("chr", chrom)) %>%
   as.data.frame()
 
-bed1 = annotated_sv %>% 
+bed1 = annotated_sv %>%
   dplyr::select(chrom1, start1, end1, tumour_sample_id, fusion)
 
-bed2 = annotated_sv %>% 
+bed2 = annotated_sv %>%
   dplyr::select(chrom2, start2, end2, tumour_sample_id, fusion)
 
 colnames(bed1) = c("chrom", "start", "end", "sample_id", "fusion")
@@ -230,8 +230,8 @@ circos.genomicLink(bed1, bed2, col = rand_color(nrow(bed1), transparency = 0.5))
 This package has convenience features such as the ability to run liftOver on a set of coordinates (e.g. in bedpe format)
 
 ```{r lifting_over, warning = FLASE}
-bedpe_hg19 = unannotated_sv %>% 
-  head(20) %>% 
+bedpe_hg19 = unannotated_sv %>%
+  head(20) %>%
   as.data.frame()
 
 print(head(bedpe_hg19))
@@ -239,12 +239,12 @@ bedpe_hg38 = liftover_bedpe(bedpe_df = bedpe_hg19, target_build = "hg38")
 print(head(bedpe_hg38))
 ```
 
-Working with all mutations from a sample. 
+Working with all mutations from a sample.
 
 ```{r rainfall_plots, out.width = "100%", fig.dim = c(8,3)}
-# We can also directly query the database to get a MAF per patient for patient-centric visualizations. # this is not using the GAMBLR functions but shows an example of how unsupported queries can be accomplished. Beware queries that will return many thousands of variants. Thes will be slow and may fail if they're too greedy 
+# We can also directly query the database to get a MAF per patient for patient-centric visualizations. # this is not using the GAMBLR functions but shows an example of how unsupported queries can be accomplished. Beware queries that will return many thousands of variants. Thes will be slow and may fail if they're too greedy
 # Note that here I'm not restricting to only coding variants
-example_dlbcl = hg19_maf %>% 
+example_dlbcl = hg19_maf %>%
   dplyr::filter(Tumor_Sample_Barcode == "HTMCP-01-06-00422-01A-01D")
 
 example_dlbcl_df = example_dlbcl %>%
@@ -255,7 +255,7 @@ rainfallPlot(example_dlbcl_maf)
 DBI::dbDisconnect(con)
 ```
 
-What if you want to view the copy number landscape of a single patient and the VAF of somatic mutations in different copy number states? This can sometimes help you scrutinize whether the copy number fit looks reasonable. 
+What if you want to view the copy number landscape of a single patient and the VAF of somatic mutations in different copy number states? This can sometimes help you scrutinize whether the copy number fit looks reasonable.
 
 ```{r copy_number_and_vaf}
 # Use the same sample as the previous example
@@ -266,7 +266,7 @@ copy_number_vaf_plot(this_sample = my_sample)
 # What if we want to focus on putative driver mutations? You can restrict this plot just to coding mutations and label genes of your choice.
 # Use the built in lymphoma gene list and subset for BL or DLBCL
 my_genes = lymphoma_genes %>%
-  dplyr::filter(BL == TRUE | DLBCL == TRUE) %>% 
+  dplyr::filter(BL == TRUE | DLBCL == TRUE) %>%
   pull(Gene)
 
 copy_number_vaf_plot(this_sample = my_sample, coding_only = TRUE, genes_to_label = my_genes)
@@ -276,21 +276,20 @@ You may also be interested in visualizing all mutations across a given cohort (o
 
 ```{r rainbow_plot_ashm, out.width = "100%", fig.dim = c(8,3)}
 # Set up some coordinates to annotate in your plot (optional)
-mybed = data.frame(start = c(128806578, 128805652, 128748315), 
+mybed = data.frame(start = c(128806578, 128805652, 128748315),
                    end = c(128806992, 128809822, 128748880),
                    name = c("TSS", "enhancer", "MYC-e1"))
-
 # Get the mutations within a region of interest
 # Note that we can specify the query chromosome with or without a chr prefix and it will be handled elegantly
 region = "chr8:128743606-128820015"
 all_metadata = get_gambl_metadata()
 my_mutations = get_ssm_by_region(region = region)
 ashm_rainbow_plot(mutations_maf = my_mutations, metadata = all_metadata,
-                  bed = mybed, region = region, classification_column = "lymphgen", 
+                  bed = mybed, region = region, classification_column = "lymphgen",
                   custom_colours = get_gambl_colours("lymphgen"))
 ```
 
-A more advanced and fairly automatic plotting function for exploring multiple aSHM regions at once. 
+A more advanced and fairly automatic plotting function for exploring multiple aSHM regions at once.
 
 ```{r more_ashm_plotting}
 # Handy function that provides a vector of colours for giving points for different pathology/subgroups reproducible and distinguishable colours
@@ -300,7 +299,7 @@ lymphgen_colours = get_gambl_colours(classification = "lymphgen")
 ashm_multi_rainbow_plot(regions_to_display = c("BCL2-TSS", "MYC-TSS", "SGK1-TSS", "IGL"), custom_colours = lymphgen_colours)
 ```
 
-Get all CN segments that overlap with a gene of interest and annotate them using the metadata. 
+Get all CN segments that overlap with a gene of interest and annotate them using the metadata.
 
 ```{r get_seg_data}
 my_segments = get_cn_segments(chromosome = "4", qstart = 83274467, qend = 83295149)
@@ -308,32 +307,29 @@ print(head(my_segments))
 
 deleted_segments = my_segments %>%
   dplyr::filter(log.ratio < 0) #use some lower value if you want to be more stringent
- 
+
 annotated_segments = left_join(deleted_segments, my_metadata, by = c("ID" = "sample_id"))
 
-annotated_segments %>% 
-  pull(cohort) %>% 
+annotated_segments %>%
+  pull(cohort) %>%
   table()
 ```
 
-Retrieve all somatic mutations in a given gene and visualize them using MAFtools.
+Retrieve somatic mutations (MYC) for a given cohort and visualization using MAFtools.
 
 ```{r ssms_and_maftools, out.width = "100%", fig.dim = c(8,3)}
-all_ssms = get_ssm_by_gene(gene_symbol = c("CCND3"), coding_only = TRUE)
-
-all_ssms = all_ssms %>%
-  as.data.frame()
+maf_data = get_coding_ssm(limit_cohort = c("BL_ICGC"))
 
 # Make a MAFtools object and plot a lollipop plot
-maf_obj = read.maf(all_ssms)
-lollipopPlot(maf_obj, gene = "CCND3")
+maf_obj = read.maf(maf_data)
+lollipopPlot(maf_obj, gene = "MYC")
 ```
 
-We can also extract a MAF-like data frame for a set of samples using any combination of cohorts or pathology to subset the data. 
+We can also extract a MAF-like data frame for a set of samples using any combination of cohorts or pathology to subset the data.
 
 ```{r get_big_maf, width = "100%", fig.dim = c(8,5)}
 # Load the master merged MAF (coding only). It's usually more efficient to do this than to try to add filters to this query. Instead, just filter the data afterward
-maf_data = get_coding_ssm() 
+maf_data = get_coding_ssm()
 maf_metadata = get_gambl_metadata()
 maf = read.maf(maf_data, clinicalData = maf_metadata)
 
@@ -348,7 +344,7 @@ blgsp_maf = subsetMaf(maf, tsb = blgsp_sample_ids)
 oncoplot(blgsp_maf, clinicalFeatures = c("sex", "cohort"), sortByAnnotation = TRUE, genesToIgnore = c("TTN", "LILRB1"), top = 30)
 ```
 
-Commonly, we will want to generate visualizations that only show genes deemed relevant for a given malignancy (and above some frequency threshold). There is a lymphoma_genes data frame bundled with this package that allows us a quick way to get a list of genes that are recurrently mutated in that disease. This list is quite long for most because it includes anything mutated at a frequency of at least (roughly) 0.5% in GAMBL. 
+Commonly, we will want to generate visualizations that only show genes deemed relevant for a given malignancy (and above some frequency threshold). There is a lymphoma_genes data frame bundled with this package that allows us a quick way to get a list of genes that are recurrently mutated in that disease. This list is quite long for most because it includes anything mutated at a frequency of at least (roughly) 0.5% in GAMBL.
 
 ```{r pretty_oncoplot, warning = FALSE, message = FALSE, out.width = "100%", fig.dim = c(8,3)}
 bl_genes = c("MYC", "ID3", "TP53", "ARID1A", "FBXO11", "GNA13", "TCF3", "TFAP4", "HNRNPU", "FOXO1", "CCND3", "SMARCA4", "DDX3X")
@@ -373,7 +369,7 @@ prettyOncoplot(maftools_obj = maf,
                removeNonMutated = FALSE)
 ```
 
-Sometimes it can be useful to specify the order of how a specific metadata column is represented. For demonstration, in the prettyOncoplot bellow the pathology column in the metadata is reordered so that DLBCL is shown before BL. This is achieved by first converting the desired metadata column into a factor and then specifying the order of those factors. 
+Sometimes it can be useful to specify the order of how a specific metadata column is represented. For demonstration, in the prettyOncoplot bellow the pathology column in the metadata is reordered so that DLBCL is shown before BL. This is achieved by first converting the desired metadata column into a factor and then specifying the order of those factors.
 
 ```{r pretty_oncoplot_reordered, warning = FALSE, message = FALSE, out.width = "100%", fig.dim = c(8,3)}
 #define some genes of interest
@@ -401,7 +397,7 @@ prettyOncoplot(maftools_obj = maf,
                these_samples_metadata = maf_metadata,
                metadataColumns = c("pathology", "lymphgen", "sex", "EBV_status_inf", "cohort"),
                sortByColumns = c("pathology", "lymphgen", "sex", "EBV_status_inf", "cohort"),
-               keepGeneOrder = TRUE, 
+               keepGeneOrder = TRUE,
                splitGeneGroups = gene_groups,
                splitColumnName = "pathology",
                metadataBarHeight = 5,
@@ -468,7 +464,7 @@ Count hypermutated bins and generate heatmaps/cluster the data.
 
 ```{r get_mutation_frequency_bin_matrix, warning = FALSE, message = FALSE, out.width = "100%", fig.dim = c(8,3)}
 #load metadata.
-some_meta = get_gambl_metadata() %>% 
+some_meta = get_gambl_metadata() %>%
     dplyr::filter(pathology %in% c("DLBCL","BL")) #subset on specific pathology.
 
 #bring together all derived sample-level results from many GAMBL pipelines.
@@ -480,23 +476,23 @@ some_meta = left_join(some_meta, collated) %>%
 
 #get ashm regions (grch37) and filter out a set of genes.
 some_regions = grch37_ashm_regions %>%
-  dplyr::filter(!gene %in% c("BCL11A", "CD44", "CD74", "IRF1", "IRF4", "PTPN1", "KLHL6", "ZCCHC7", 
-                             "ITPKB", "IL4R", "NCOA3", "MYO1E", "ETV6", "FOXP1", "MEF2C", "MS4A1", 
-                             "SEPT9", "P2RX5", "BCL2L11", "POU2AF1", "RFTN1", "C13orf18", "MIR155HG", 
+  dplyr::filter(!gene %in% c("BCL11A", "CD44", "CD74", "IRF1", "IRF4", "PTPN1", "KLHL6", "ZCCHC7",
+                             "ITPKB", "IL4R", "NCOA3", "MYO1E", "ETV6", "FOXP1", "MEF2C", "MS4A1",
+                             "SEPT9", "P2RX5", "BCL2L11", "POU2AF1", "RFTN1", "C13orf18", "MIR155HG",
                              "EBF1", "LRMP", "BLK", "NFKBIZ", "BCL2")) %>% select(1:4)
 
 #reorder factor levels of genetic subgroups.
 some_regions$gene = factor(some_regions$gene, levels = c("BACH2", "TCL1A", "MYC", "PAX5", "ST6GAL1", "BCL6",
                                                          "BCL7A", "BIRC3", "BTG1", "BTG2", "CD83", "CIITA",
-                                                         "CXCR4", "DTX1", "FANK1", "IRF8", "PIM1", "PIM2", 
-                                                         "S1PR2", "SERPINA9", "TMSB4X", "ZFP36L1", "RHOH", 
+                                                         "CXCR4", "DTX1", "FANK1", "IRF8", "PIM1", "PIM2",
+                                                         "S1PR2", "SERPINA9", "TMSB4X", "ZFP36L1", "RHOH",
                                                          "MEF2B", "GRHPR", "LPP", "SGK1", "IGLL5"))
 
 #reorder factor levels of genetic subgroups.
-some_meta$genetic_subgroup = factor(some_meta$genetic_subgroup, levels = c("M53-BL", "DGG-BL", "IC-BL", 
+some_meta$genetic_subgroup = factor(some_meta$genetic_subgroup, levels = c("M53-BL", "DGG-BL", "IC-BL",
                                                                            "DLBCL-1", "DLBCL-2", "DLBCL-3",
-                                                                           "ST2", "ST2-COMP", "EZB", 
-                                                                           "EZB-COMP", "BN2", "MCD", 
+                                                                           "ST2", "ST2-COMP", "EZB",
+                                                                           "EZB-COMP", "BN2", "MCD",
                                                                            "MCD-COMP", "N1-COMP", "N1", "Other"))
 
 get_mutation_frequency_bin_matrix(these_samples_metadata = some_meta, #GAMBL metadata subset to the cases you want to process.
@@ -531,7 +527,7 @@ nhl = ggplot(path_df, aes(x = Pathology, y = 0, fill = hex, label = Pathology)) 
         scale_fill_identity(guide = "none") +
         coord_flip() +
         theme_void() +
-        labs(title = "B-NHL") + 
+        labs(title = "B-NHL") +
         theme(plot.title = element_text(lineheight = 0.9, hjust = 0.5, face = "bold"))
 
 #get COO palette
@@ -543,9 +539,9 @@ coo = ggplot(coo_df, aes(x = COO, y = 0, fill = hex, label = COO)) +
         geom_tile(width = 0.9, height = 1) +
         geom_text(color = "white", fontface = "bold") +
         scale_fill_identity(guide = "none") +
-        coord_flip() + 
+        coord_flip() +
         theme_void() +
-        labs(title = "COO") + 
+        labs(title = "COO") +
         theme(plot.title = element_text(lineheight = 0.9, hjust = 0.5, face = "bold"))
 
 #get Harvard palette
@@ -555,7 +551,7 @@ harvard = ggplot(harvard_df, aes(x = Harvard, y = 0, fill = hex, label = Harvard
             geom_tile(width = 0.9, height = 1) +
             geom_text(color = "white", fontface = "bold") +
             scale_fill_identity(guide = "none") +
-            coord_flip() + 
+            coord_flip() +
             theme_void() +
             labs(title = "Harvard") +
             theme(plot.title = element_text(lineheight = 0.9, hjust = 0.5, face = "bold"))
@@ -571,7 +567,7 @@ lymphgen = ggplot(lymphgen_df, aes(x = LymphGen, y = 0, fill = hex, label = Lymp
              scale_fill_identity(guide = "none") +
              coord_flip() +
              theme_void() +
-             labs(title = "LymphGen") + 
+             labs(title = "LymphGen") +
              theme(plot.title = element_text(lineheight = 0.9, hjust = 0.5, face = "bold"))
 
 #get HMRN palette
@@ -587,12 +583,12 @@ hmrn = ggplot(hmrn_df, aes(x = HMRN, y = 0, fill = hex, label = HMRN)) +
          theme(plot.title = element_text(lineheight = 0.9, hjust = 0.5, face = "bold"))
 
 #get Clinical palette
-clin_cols = ggsci::get_ash("clinical") 
+clin_cols = ggsci::get_ash("clinical")
 clin_df = data.frame(Clinical = factor(names(clin_cols), levels = rev(names(clin_cols))), hex = clin_cols) %>%
   dplyr::filter(!Clinical %in% exclude)
 
 #clinical 1
-clin1 = head(clin_df, 13) %>% 
+clin1 = head(clin_df, 13) %>%
   ggplot(aes(x = Clinical, y = 0, fill = hex, label = Clinical)) +
     geom_tile(width = 0.9, height = 1) +
     geom_text(color = "white", fontface = "bold") +
@@ -603,7 +599,7 @@ clin1 = head(clin_df, 13) %>%
     theme(plot.title = element_text(lineheight = 0.9, hjust = 0.5, face = "bold"))
 
 #clinical 2
-clin2 = tail(clin_df, 13) %>% 
+clin2 = tail(clin_df, 13) %>%
   ggplot(aes(x = Clinical, y = 0, fill = hex, label = Clinical)) +
     geom_tile(width = 0.9, height = 1) +
     geom_text(color = "white", fontface = "bold") +

@@ -126,7 +126,7 @@ get_coding_ssm_status = function(gene_symbols,
                                  genes_of_interest = c("FOXO1", "MYD88", "CREBBP"),
                                  genome_build = "hg19",
                                  include_silent = TRUE){
-  
+
   if(missing(gene_symbols)){
     message("defaulting to all lymphoma genes")
     gene_symbols = pull(lymphoma_genes,Gene)
@@ -141,12 +141,12 @@ get_coding_ssm_status = function(gene_symbols,
   if(!missing(maf_data)){
     coding_ssm = maf_data %>%
       dplyr::filter(Variant_Classification %in% coding_class)
-    
+
   }else if (!is.null(maf_path) ){
     coding_ssm = fread_maf(maf_path)
     coding_ssm = coding_ssm %>%
       dplyr::filter(Variant_Classification %in% coding_class)
-    
+
   }else if (from_flatfile && !augmented){
     base_path = config::get("project_base")
     maf_partial_path = config::get("results_flatfiles")$ssm$template$cds$deblacklisted
@@ -155,8 +155,8 @@ get_coding_ssm_status = function(gene_symbols,
     message(paste("reading from:", full_maf_path))
     maf_data = fread_maf(full_maf_path)
     coding_ssm = maf_data %>%
-      dplyr::filter(Variant_Classification %in% coding_class) 
-    
+      dplyr::filter(Variant_Classification %in% coding_class)
+
   }else if (from_flatfile && augmented){
     base_path = config::get("project_base")
     maf_partial_path = config::get("results_flatfiles")$ssm$template$cds$augmented
@@ -168,20 +168,20 @@ get_coding_ssm_status = function(gene_symbols,
       dplyr::filter(Variant_Classification %in% coding_class) %>%
       dplyr::filter(t_alt_count >= min_read_support)
   }
-  
+
   coding = coding_ssm %>%
     dplyr::filter(Hugo_Symbol %in% gene_symbols & Variant_Classification != "Synonymous") %>%
     dplyr::select(Tumor_Sample_Barcode, Hugo_Symbol) %>%
     dplyr::rename("sample_id" = "Tumor_Sample_Barcode", "gene" = "Hugo_Symbol") %>%
     unique() %>%
     mutate(mutated = 1)
-  
+
   samples_table = dplyr::select(these_samples_metadata, sample_id)
   wide_coding = pivot_wider(coding,names_from = "gene", values_from = "mutated",values_fill = 0)
   all_tabulated = left_join(samples_table, wide_coding)
   all_tabulated = all_tabulated %>%
     replace(is.na(.), 0)
-  
+
   # include hotspots if user chooses to do so
   if(include_hotspots){
     # first annotate
@@ -200,25 +200,25 @@ get_coding_ssm_status = function(gene_symbols,
       dplyr::mutate(mutated = ifelse(hot_spot == "TRUE", 1, 0)) %>%
       dplyr::filter(mutated == 1) %>%
       dplyr::select(-hot_spot)
-    
+
     # long to wide hotspots, samples are tabulated with 0 if no hotspot is detected
     wide_hotspots = pivot_wider(hotspots, names_from = "gene", values_from = "mutated", values_fill = 0)
     # join with the ssm object
     all_tabulated = left_join(all_tabulated, wide_hotspots)
     all_tabulated = all_tabulated %>%
       replace(is.na(.), 0)
-    
+
     all_tabulated = all_tabulated %>%
       dplyr::select(where(~ any(. != 0)))
-    
+
     all_tabulated = as.data.frame(all_tabulated)
     # make SSM and hotspots non-redundant by giving priority to hotspot feature and setting SSM to 0
     for (hotspot_site in colnames(wide_hotspots)[grepl("HOTSPOT", colnames(wide_hotspots))]){
       message(hotspot_site)
       this_gene = gsub("HOTSPOT", "", hotspot_site)
-      redundant_features = all_tabulated %>% 
+      redundant_features = all_tabulated %>%
         dplyr::select(starts_with(this_gene))
-      
+
       # if not both the gene and the hotspot are present, go to the next iteration
       if(ncol(redundant_features)!= 2) next
       message("OK")
@@ -1076,7 +1076,7 @@ assign_cn_to_ssm = function(this_sample,
                             assume_diploid = FALSE,
                             genes,
                             include_silent = FALSE){
-  
+
   database_name = config::get("database_name")
   project_base = config::get("project_base")
   if(!include_silent){
@@ -1091,7 +1091,7 @@ assign_cn_to_ssm = function(this_sample,
     genome_build = bam_info$genome_build
     unix_group = bam_info$unix_group
     maf_sample = get_ssm_by_sample(this_sample_id = this_sample, augmented = use_augmented_maf)
- 
+
   }else{
     #get all the segments for a sample and filter the small ones then assign CN value from the segment to all SSMs in that region
     con = dbConnect(RMariaDB::MariaDB(), dbname = database_name)
@@ -1103,53 +1103,53 @@ assign_cn_to_ssm = function(this_sample,
   if(coding_only){
     maf_sample = dplyr::filter(maf_sample, Variant_Classification %in% coding_class)
   }
-    
+
   if(!missing(genes)){
     maf_sample = dplyr::filter(maf_sample, Hugo_Symbol %in% genes)
   }
-    
+
   if(!missing(seg_file)){
     seg_sample = read_tsv(seg_file) %>%
       dplyr::mutate(size = end - start) %>%
       dplyr::filter(size > 100)
-    
+
     colnames(seg_sample)[c(1:4)] = c("ID", "chrom", "start", "end")
     seg_sample = seg_sample %>%
       dplyr::mutate(chrom = gsub("chr", "", chrom)) %>%
       dplyr::rename(Chromosome = chrom, Start_Position = start, End_Position = end) %>%
       data.table::as.data.table()
-    
+
     data.table::setkey(seg_sample, Chromosome, Start_Position, End_Position)
     a = data.table::as.data.table(maf_sample)
   }else if(assume_diploid == TRUE){
     if(missing(seg_file)){
       print("WARNING: A seg file was not provided! Annotating all mutation calls as copy neutral")
     }
-    
+
     a = data.table::as.data.table(maf_sample)
     a_diploid = dplyr::mutate(a, CN = 2)
     return(list(maf = a_diploid))
-    
+
   }else if(from_flatfile){
     message(paste("fetching:", tool_name))
     battenberg_files = fetch_output_files(build = genome_build, base_path = "gambl/battenberg_current", tool = "battenberg", search_pattern = ".igv.seg")
     battenberg_file = dplyr::filter(battenberg_files, tumour_sample_id == this_sample) %>%
-      dplyr::pull(full_path) %>% 
+      dplyr::pull(full_path) %>%
       as.character()
-    
+
     message(paste("using flatfile:", battenberg_file))
     if(length(battenberg_file) > 1){
       print("WARNING: more than one SEG found for this sample. This shouldn't happen!")
       battenberg_file = battenberg_file[1]
     }
-    
+
     seg_sample = read_tsv(battenberg_file) %>%
-      as.data.table() %>% 
+      as.data.table() %>%
       dplyr::mutate(size = end - start) %>%
       dplyr::filter(size > 100) %>%
       dplyr::mutate(chrom = gsub("chr", "", chrom)) %>%
       dplyr::rename(Chromosome = chrom, Start_Position = start, End_Position = end)
-    
+
     data.table::setkey(seg_sample, Chromosome, Start_Position, End_Position)
     a = data.table::as.data.table(maf_sample)
   }else{
@@ -1159,7 +1159,7 @@ assign_cn_to_ssm = function(this_sample,
       dplyr::mutate(chrom = gsub("chr", "", chrom)) %>%
       dplyr::rename(Chromosome = chrom, Start_Position = start, End_Position = end) %>%
       data.table::as.data.table()
-    
+
     data.table::setkey(seg_sample, Chromosome, Start_Position, End_Position)
     a = data.table::as.data.table(maf_sample)
     a.seg = data.table::foverlaps(a, seg_sample, type = "any")
@@ -1885,6 +1885,8 @@ get_gambl_colours = function(classification = "all",
   all_colours[["cohort"]] = c("Chapuy"="#8B0000",
                   "Arthur"= "#8845A8",
                   "Schmitz"= "#2C72B2")
+
+  all_colours[["indels"]] = c("DEL" = "#53B1FC", "INS" = "#FC9C6D")
 
   #print(all_colours)
   for(colslot in names(all_colours)){

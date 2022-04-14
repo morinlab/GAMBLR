@@ -12,8 +12,6 @@ web_initialize_gambl_site(
 )
 }
 \arguments{
-\item{site_base_name}{}
-
 \item{base_directory}{}
 }
 \value{

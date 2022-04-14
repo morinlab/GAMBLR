@@ -32,13 +32,13 @@ find_expected_outputs = function(targ_df,
   if(tool_name == "manta"){
     if(missing(targ_df)){
       filename_end_pattern = ".somaticSV.bedpe"
-      
+
       targ_df = read_tsv(target_path, col_names = c("file")) %>%
         dplyr::filter(str_detect(file, pattern = filename_end_pattern))
-      
+
       targ_df = mutate(targ_df, file_path = paste0(repo_base, file)) %>%
         separate(file, sep = "/", into = c("results", "unix_group", "tool_version", "outputs", "type", "seq_genome", "detail", "filename"))
-      
+
       targ_df = separate(targ_df, seq_genome, sep = "--", into = c("seq_type", "genome_build")) %>%
         dplyr::select(-results, -type, -detail, -outputs) %>%
         separate(filename, sep = "--", into = c("tumour_sample_id", "normal_sample_id", "pairing_status")) %>%
@@ -54,13 +54,13 @@ find_expected_outputs = function(targ_df,
 
   }else if(tool_name == "gridss"){
     filename_end_pattern = ".gridss_somatic_filtered.bedpe"
-    
+
     targ_df = read_tsv(target_path, col_names = c("file")) %>%
       dplyr::filter(str_detect(file, pattern = filename_end_pattern))
-    
+
     targ_df = mutate(targ_df, file_path = paste0(repo_base, file)) %>%
       separate(file, sep = "/", into = c("results", "unix_group", "tool_version", "outputs", "type", "seq_genome", "detail", "filename"))
-    
+
     targ_df = separate(targ_df, seq_genome, sep = "--", into = c("seq_type", "genome_build")) %>%
       dplyr::select(-results, -type, -detail, -outputs) %>%
       separate(filename, sep = "--", into = c("tumour_sample_id", "normal_sample_id", "pairing_status")) %>%
@@ -79,7 +79,7 @@ find_expected_outputs = function(targ_df,
     update_q = paste0("DELETE from ", table_name, " WHERE tool_name = \"", tool_name, "\" and unix_group = \"", unix_group, "\" ;")
     print(update_q)
     something = dbReadTable(conn = con, table_name)
-    
+
     summarized = something %>%
       group_by(unix_group) %>%
       tally()
@@ -179,7 +179,7 @@ populate_each_tool_result = function(tool,
   if(tool == "QC"){
     #flag any cases with QC issues raised
     collated = collate_results()
-    
+
     qc_issues = dplyr::select(collated,sample_id,QC_flag) %>%
       dplyr::filter(!is.na(QC_flag)) %>%
       dplyr::mutate(flagged = "yes")
@@ -188,7 +188,7 @@ populate_each_tool_result = function(tool,
   }
   if(tool == "sequenza"){
     parse_sequenza = function(sequenza_files){
-      
+
       seq_data=sequenza_files %>%
         purrr::map(read_tsv) %>% #read each file into a list of tibbles
         purrr::map(head, 1) %>% #just keep the first line
@@ -233,15 +233,15 @@ populate_each_tool_result = function(tool,
       files_df = find_expected_outputs(tool_name = "manta", unix_group = ug)
       print(head(files_df))
       message(paste("processing", ug))
-      
-      n_missing =  files_df %>% 
-        dplyr::filter(is.na(file_timestamp)) %>% 
+
+      n_missing =  files_df %>%
+        dplyr::filter(is.na(file_timestamp)) %>%
         count() %>%
         pull(n)
 
       if(n_missing){
         message(paste("missing outputs for", n_missing))
-        
+
         files_df=files_df %>%
           dplyr::filter(!is.na(file_timestamp))
       }
@@ -258,13 +258,13 @@ populate_each_tool_result = function(tool,
       if(length(no_meta) > 0){
         message("DROPPING RESULTS FROM SAMPLES WITH NO METADATA:")
         print(no_meta)
-        
+
         files_df = files_df %>%
           dplyr::filter(!tumour_sample_id %in% no_meta)
       }
       #TODO: Flag and drop files with too many SVs before merging (i.e. remove really bad data). Done manually currently.
       manta_df = process_all_manta_bedpe(files_df, group = ug) #need to add this to the database. Not currently automated
-      
+
       manta_df %>%
         group_by(tumour_sample_id) %>%
         tally() %>%
@@ -278,7 +278,7 @@ populate_each_tool_result = function(tool,
       dplyr::select(Tumor_Sample_Barcode) %>%
       group_by(Tumor_Sample_Barcode) %>%
       as.data.frame()
-    
+
     gambl_meta_normals = get_gambl_metadata(tissue_status_filter = c('tumour', 'normal')) %>%
       dplyr::select(patient_id, sample_id, tissue_status) %>%
       pivot_wider(id_cols = patient_id, names_from = tissue_status, values_from = sample_id)
@@ -293,10 +293,10 @@ populate_each_tool_result = function(tool,
       group_by(Tumor_Sample_Barcode) %>%
       tally() %>%
       as.data.frame()
-    
+
     generic_update(sample_id = gambl_counts$Tumor_Sample_Barcode, field_name = "slms3_ssm_total", field_value = gambl_counts$n)
 
-    #gambl_vafs = gambl_maf %>% 
+    #gambl_vafs = gambl_maf %>%
     #   group_by(Tumor_Sample_Barcode) %>%
     #   mutate(vaf = mean(t_alt_count / (t_ref_count + t_alt_count))) %>%
     #   select(Tumor_Sample_Barcode, vaf) %>%
@@ -318,10 +318,10 @@ populate_each_tool_result = function(tool,
       #for(sam in some){
       #check here to see if there's a non-null value and skip if possible
       check_q = paste0("select count(*) as n from derived_data where sample_id = \"", sam, "\" and slms3_ssm_coding is not NULL;")
-      
+
       num = dbGetQuery(con, check_q) %>%
         pull(n)
-      
+
       print(paste(sam, num))
       if(num == 0){
         print(paste("working on:", sam))
@@ -330,7 +330,7 @@ populate_each_tool_result = function(tool,
           dplyr::filter(Tumor_Sample_Barcode == sam & Variant_Classification %in% coding_class) %>%
           dplyr::count() %>%
           dplyr::pull(n)
-        
+
         generic_update(sample_id = sam, field_name = "slms3_ssm_coding", field_value = coding_num)
       }else{
         print(paste0("skipping ", sam))
@@ -358,13 +358,13 @@ populate_each_tool_result = function(tool,
 
         results_table = files %>%
           mutate(parse_batt(full_path))
-        
+
         generic_update(sample_id = results_table$tumour_sample_id, field_name = "battenberg_psi", field_value = results_table$battenberg_psi)
         generic_update(sample_id = results_table$tumour_sample_id, field_name = "battenberg_ploidy", field_value = results_table$battenberg_ploidy)
         generic_update(sample_id = results_table$tumour_sample_id, field_name = "battenberg_purity", field_value = results_table$battenberg_cellularity)
-        #results_table = files %>% 
+        #results_table = files %>%
         #   dplyr::mutate(parse_batt(full_path))
-        
+
         #sequenza_results = parse_sequenza(seq_files_gambl$full_path)
 
         #generic_update(sample_id = seq_files_gambl$tumour_sample_id, field_name = "sequenza_purity", field_value = sequenza_results$sequenza_cellularity)
@@ -435,7 +435,7 @@ read_merge_manta_with_liftover = function(bedpe_paths = c(),
       svbed$SOMATIC_SCORE = sapply(svbed$INFO_A, function(x){as.numeric(tail(unlist(strsplit(x, "=")), 1))})
 
       #filter on PASS, score, VAF
-      #svbed_filt = svbed %>% 
+      #svbed_filt = svbed %>%
       #  filter(SCORE > minScore & FILTER == "PASS") %>%
       #  dplyr::select(c(chrom1, start1, end1, chrom2, start2, end2))
 
@@ -549,7 +549,7 @@ process_all_manta_bedpe = function(file_df,
       dplyr::select(CHROM_A, START_A, END_A, CHROM_B, START_B, END_B, NAME, SOMATIC_SCORE, STRAND_A, STRAND_B, TYPE, FILTER, VAF_tumour, VAF_normal, DP_tumour, DP_normal, tumour_sample_id, normal_sample_id, pair_status)
 
     #remove chr prefix from both chromosome names
-    svbed = svbed %>% 
+    svbed = svbed %>%
       mutate(CHROM_A = gsub("chr", "", CHROM_A)) %>%
       mutate(CHROM_B = gsub("chr", "", CHROM_B))
     #print(paste("writing output to",out_file))
@@ -564,14 +564,14 @@ process_all_manta_bedpe = function(file_df,
     if(genome_build == "hg38"){
       hg38_files = dplyr::filter(file_df, genome_build == "hg38" & unix_group == group) %>%
         pull(file_path)
-      
+
       bed_data_lifted = hg38_files %>%
         purrr::map(process_manta, liftover_to_hg19 = TRUE, projection = projection_build) %>%
         purrr::reduce(rbind)
     }else{
       not_hg38_files = dplyr::filter(file_df, genome_build != "hg38" & unix_group == group) %>%
         pull(file_path)
-      
+
       bed_data_not_lifted = not_hg38_files %>%
         purrr::map(process_manta, liftover_to_hg19 = FALSE, projection = projection_build) %>%
         purrr::reduce(rbind)
@@ -580,14 +580,14 @@ process_all_manta_bedpe = function(file_df,
     if(genome_build == "hg38"){
       hg38_files = dplyr::filter(file_df, genome_build == "hg38" & unix_group == group) %>%
         pull(file_path)
-      
+
       bed_data_not_lifted = hg38_files %>%
         purrr::map(process_manta, liftover_to_hg38 =FALSE, liftover_to_hg19 = FALSE, projection = projection_build) %>%
         purrr::reduce(rbind)
     }else{
       not_hg38_files = dplyr::filter(file_df, genome_build != "hg38" & unix_group == group) %>%
         pull(file_path)
-      
+
       bed_data_lifted = not_hg38_files %>%
         purrr::map(process_manta, liftover_to_hg38 = TRUE, liftover_to_hg19 = FALSE, projection = projection_build) %>%
         purrr::reduce(rbind)
@@ -640,11 +640,11 @@ fetch_output_files = function(tool,
     unnest_wider(sample, names_sep = "_") %>%
     dplyr::rename(tumour_sample_id = sample_1, normal_sample_id = sample_2)
   #find file with search_pattern per directory and handle any missing files. This is a bit slow.
-  
+
   #unnested_df = unnested_df %>%
   #  head() %>%
   #  mutate(output_file = dir(paste0(results_path, short_path), pattern = search_pattern))
-  
+
   #This still fails when a matching file isn't found. No clue why this doesn't work
   if(tool == "sequenza"){
 
@@ -658,7 +658,7 @@ fetch_output_files = function(tool,
 
     found_files = tibble(filename = lapply(named, file.exists)) %>%
       unnest_longer(filename)
-    
+
     new_df = cbind(unnested_df, found_files) %>%
       dplyr::filter(found_files == TRUE)
 
@@ -784,7 +784,7 @@ tidy_gene_expression = function(return_df = FALSE){
   ex_matrix_file = config::get("results_merged")$ex_matrix_file
   tidy_expression_file = config::get("results_merged")$tidy_expression_file
   print("Loading and tidying the full matrix file...")
-  
+
   ex_tidy = read_tsv(ex_matrix_file) %>%
     dplyr::select(-gene_id) %>%
     dplyr::rename("Hugo_Symbol" = "hgnc_symbol") %>%
@@ -817,7 +817,7 @@ tidy_gene_expression = function(return_df = FALSE){
 
   ex_tidy = ex_tidy %>%
     dplyr::filter(mrna_sample_id %in% selected_libraries$sample_id)
-  
+
   rna_meta = rna_meta %>%
     dplyr::select(sample_id, biopsy_id)
 
@@ -919,17 +919,17 @@ liftover_bedpe = function(bedpe_file,
   if(!standard_bed){
     colnames(original_bedpe)[1] = "CHROM_A"
     original_bedpe = as.data.frame(original_bedpe)
-    
+
     original_bedpe = original_bedpe %>%
       mutate_if(is.numeric, as.integer)
-    
+
     #print(head(original_bedpe))
     original_bedpe = original_bedpe %>%
       dplyr::mutate(CHROM_A = ifelse(!grepl("chr", CHROM_A), paste0("chr", CHROM_A), CHROM_A),
                     CHROM_B = ifelse(!grepl("chr", CHROM_B), paste0("chr", CHROM_B), CHROM_B))
-    
+
     print(head(original_bedpe))
-    
+
     char_vec = original_bedpe %>%
       tidyr::unite(united, sep = "\t") %>%
         dplyr::pull(united)
@@ -968,28 +968,28 @@ liftover_bedpe = function(bedpe_file,
 
     first_ok = subset(first_sv_lifted, no_problem)
     second_ok = subset(second_sv_lifted, no_problem)
-    
+
     first_ok_df = data.frame(first_ok@unlistData) %>%
       dplyr::select(seqnames, start, end, strand) %>%
       dplyr::mutate(start = start - 1, end = as.numeric(end)) %>%
       `names<-`(c("CHROM_A", "START_A", "END_A", "STRAND_A"))
-    
+
     second_ok_df = data.frame(second_ok@unlistData) %>%
       dplyr::select(seqnames, start, end, strand) %>%
       dplyr::mutate(start = start - 1, end = as.numeric(end)) %>%
       `names<-`(c("CHROM_B", "START_B", "END_B", "STRAND_B"))
-    
+
     ok_bedpe = original_bedpe[no_problem,]
-    
-    kept_cols = ok_bedpe %>% 
+
+    kept_cols = ok_bedpe %>%
       dplyr::select(-c("CHROM_A", "START_A", "END_A", "CHROM_B", "START_B", "END_B", "STRAND_A", "STRAND_B"))
-    
+
     fully_lifted = bind_cols(first_ok_df, second_ok_df, kept_cols) %>%
       dplyr::select(all_of(original_columns)) %>%
       dplyr::mutate_if(is.factor, as.character)
-    
+
     return(fully_lifted)
-    
+
   }else{
     lifted = rtracklayer::liftOver(bedpe_obj, chain)
     no_problem = !((elementNROWS(lifted) != 1))
@@ -998,7 +998,7 @@ liftover_bedpe = function(bedpe_file,
     output = rtracklayer::export(first_ok, format = "bed") %>%
       read_tsv(col_names = c("chrom", "start", "end", "score", "strand", "nothing", "s1", "e1", "junk", "more", "stuff", "nada")) %>%
       dplyr::select("chrom", "start", "end")
-    
+
     return(output)
   }
 }

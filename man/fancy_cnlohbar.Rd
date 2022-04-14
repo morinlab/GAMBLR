@@ -2,12 +2,14 @@
 % Please edit documentation in R/viz.R
 \name{fancy_cnlohbar}
 \alias{fancy_cnlohbar}
-\title{Generate a bar plot visualizing sample-specific copy number states and n loh regions.}
+\title{Generate a bar plot visualizing sample-specific copy number states and affected bases for each CN segment.}
 \usage{
 fancy_cnlohbar(
   this_sample,
-  plot_subtitle = "CNV states and LOH Regions For Selected Contigs",
+ 
+    plot_subtitle = "n CNV Segments (barplots, left y-axis), n Affected bases for each CN state",
   chr_select = paste0("chr", c(1:22)),
+  include_cn2 = TRUE,
   coding_only = FALSE,
   from_flatfile = FALSE,
   use_augmented_maf = FALSE
@@ -20,6 +22,8 @@ fancy_cnlohbar(
 
 \item{chr_select}{vector of chromosomes to be included in plot, defaults to autosomes.}
 
+\item{include_cn2}{Optional boolean statement for including CN = 2 states in plot.}
+
 \item{coding_only}{Optional. Set to TRUE to restrict to plotting only coding mutations.}
 
 \item{from_flatfile}{If set to true the function will use flat files instead of the database.}
@@ -30,7 +34,7 @@ fancy_cnlohbar(
 Nothing.
 }
 \description{
-Generate a bar plot visualizing sample-specific copy number states and n loh regions.
+Generate a bar plot visualizing sample-specific copy number states and affected bases for each CN segment.
 }
 \examples{
 chr1_cns = fancy_cnlohbar(this_sample = "HTMCP-01-06-00422-01A-01D", chr_select = c(1))

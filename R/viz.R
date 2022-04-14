@@ -2782,12 +2782,12 @@ fancy_sv_chrdistplot = function(this_sample,
     scale_x_discrete(expand = c(0, 0.58), limits = chr_select) +
     geom_bar(position = "stack", stat = "identity") +
     scale_y_continuous(expand = c(0, 0), breaks = seq(0, ymax, by = 2)) +
-    scale_fill_manual("", values = c("DEL" = "#E6856F", "INS" = "#3A8799")) +
+    scale_fill_manual("", values = c("DEL" = "#53B1FC", "INS" = "#FC9C6D")) +
     theme_cowplot() +
     theme(axis.text.x = element_text(angle = 45, hjust = 1))
 }
 
-#' Generate a plot with SNP distribution per chromosome.
+#' Generate a plot with SNV distribution per chromosome.
 #'
 #' @param this_sample Sample to be plotted.
 #' @param plot_subtitle Subtitle for created plot.
@@ -2802,11 +2802,11 @@ fancy_sv_chrdistplot = function(this_sample,
 #' @export
 #'
 #' @examples
-#' snp_plot = fancy_snp_chrdistplot(this_sample = "HTMCP-01-06-00422-01A-01D")
-#' snp_dnp_plot = fancy_snp_chrdistplot(this_sample = "HTMCP-01-06-00422-01A-01D", include_dnp = TRUE, plot_subtitle = "SNP + DNP Distribution Per Chromosome")
+#' snv_plot = fancy_snv_chrdistplot(this_sample = "HTMCP-01-06-00422-01A-01D")
+#' snv_dnp_plot = fancy_snv_chrdistplot(this_sample = "HTMCP-01-06-00422-01A-01D", include_dnp = TRUE, plot_subtitle = "SNV + DNP Distribution Per Chromosome")
 #'
-fancy_snp_chrdistplot = function(this_sample,
-                                 plot_subtitle = "SNP Distribution Per Chromosome",
+fancy_snv_chrdistplot = function(this_sample,
+                                 plot_subtitle = "SNV Distribution Per Chromosome",
                                  chr_select = paste0("chr", c(1:22)),
                                  include_dnp = FALSE,
                                  coding_only = FALSE,
@@ -2833,7 +2833,7 @@ fancy_snp_chrdistplot = function(this_sample,
 
     #plot
     ggplot(maf_snp, aes(x = Chromosome, y = n)) +
-      labs(title = paste0(this_sample), subtitle = plot_subtitle, x = "Chromsomes", y = "SNP Count (n)", fill = "") +
+      labs(title = paste0(this_sample), subtitle = plot_subtitle, x = "Chromsomes", y = "SNV Count (n)", fill = "") +
       scale_x_discrete(expand = c(0, 0.7), limits = chr_select) +
       geom_bar(position = "stack", stat = "identity", fill = "#2B9971", width = 0.75) +
       scale_y_continuous(expand = c(0, 0)) +
@@ -2856,7 +2856,7 @@ fancy_snp_chrdistplot = function(this_sample,
 
     #plot
     ggplot(maf.count, aes(x = Chromosome, y = n, fill = Variant_Type)) +
-      labs(title = paste0(this_sample), subtitle = plot_subtitle, x = "Chromsomes", y = "SNP Count (n)", fill = "") +
+      labs(title = paste0(this_sample), subtitle = plot_subtitle, x = "Chromsomes", y = "SNV Count (n)", fill = "") +
       scale_x_discrete(expand = c(0, 0.7), limits = chr_select) +
       geom_bar(position = "stack", stat = "identity", width = 0.75) +
       scale_fill_manual("", values = c("SNP" = "#2B9971", "DNP" = "#993F2B")) +
@@ -2918,18 +2918,19 @@ fancy_svbar = function(this_sample,
   ggplot(sv_count, aes(x = Variant_Type, y = count, fill = Variant_Type, label = count)) +
     geom_bar(position = "stack", stat = "identity") +
     labs(title = paste0(this_sample), subtitle = plot_subtitle, x = "SVs", y = "Variant Count (n)", fill = "") +
-    scale_fill_manual("", values = c("DEL" = "#E6856F", "INS" = "#3A8799")) +
+    scale_fill_manual("", values = c("DEL" = "#53B1FC", "INS" = "#FC9C6D")) +
     geom_text(size = 5, position = position_stack(vjust = 0.5)) +
     scale_y_continuous(expand = c(0, 0)) +
     theme_cowplot()
 }
 
 
-#' Generate a bar plot visualizing sample-specific copy number states and n loh regions.
+#' Generate a bar plot visualizing sample-specific copy number states and affected bases for each CN segment.
 #'
 #' @param this_sample Sample to be plotted.
 #' @param plot_subtitle Subtitle for created plot.
 #' @param chr_select vector of chromosomes to be included in plot, defaults to autosomes.
+#' @param include_cn2 Optional boolean statement for including CN = 2 states in plot.
 #' @param coding_only Optional. Set to TRUE to restrict to plotting only coding mutations.
 #' @param from_flatfile If set to true the function will use flat files instead of the database.
 #' @param use_augmented Boolean statement if to use augmented maf, default is FALSE.
@@ -2943,8 +2944,9 @@ fancy_svbar = function(this_sample,
 #' cns = fancy_cnlohbar(this_sample = "HTMCP-01-06-00422-01A-01D")
 #'
 fancy_cnlohbar = function(this_sample,
-                          plot_subtitle = "CNV states and LOH Regions For Selected Contigs",
+                          plot_subtitle = "n CNV Segments (barplots, left y-axis), n Affected bases for each CN state",
                           chr_select = paste0("chr", c(1:22)),
+                          include_cn2 = TRUE,
                           coding_only = FALSE,
                           from_flatfile = FALSE,
                           use_augmented_maf = FALSE){
@@ -2969,31 +2971,56 @@ fancy_cnlohbar = function(this_sample,
   maf_df$CN = as.factor(maf_df$CN)
 
   #count levels of factor
-  loh_count = dplyr::filter(maf_df, LOH == 1) %>%
-    group_by(LOH) %>%
-    summarize(count = n())
+  if(include_cn2){
+    cn_states = c(0:15)
+    cns_count = dplyr::filter(maf_df, CN %in% cn_states) %>%
+      group_by(CN) %>%
+      summarize(count = n())
+  }else{
+    cn_states = c(0:1, 3:15)
+    cns_count = dplyr::filter(maf_df, CN %in% cn_states) %>%
+      group_by(CN) %>%
+      summarize(count = n())
+  }
 
-  loh_count$Type = paste0("LOH-", loh_count$LOH)
-  loh_count = dplyr::select(loh_count, count, Type)
-
-  cns_count = dplyr::filter(maf_df, CN == 1 | CN == 3 | CN == 4) %>%
-    group_by(CN) %>%
-    summarize(count = n())
-
-  cns_count$Type = paste0("CNV-", cns_count$CN)
+  cns_count$Type = paste0(cns_count$CN)
   cns_count = dplyr::select(cns_count, count, Type)
 
-  #join loh and cnvs
-  loh_cn = rbind(loh_count, cns_count)
+  #compute lenght of cn segments and transform for plotting
+  l_cn_seg = get_sample_cn_segments(this_sample_id = this_sample, multiple_samples = FALSE, with_chr_prefix = FALSE, streamlined = FALSE)
+  l_cn_seg$lenght = l_cn_seg$end - l_cn_seg$start
+  l_cn_seg$CN = as.factor(l_cn_seg$CN)
+  l_cn_seg = dplyr::filter(l_cn_seg, CN != 0)
+
+  if(!include_cn2){
+    l_cn_seg = dplyr::filter(l_cn_seg, CN != 2)
+  }
+
+  cn_seq_lenghts = aggregate(l_cn_seg$lenght, list(l_cn_seg$CN), sum)
+  colnames(cn_seq_lenghts) = c("CN", "lenght")
+
+  joined_cn = merge(cns_count, cn_seq_lenghts) %>%
+    as.data.frame() %>%
+    dplyr::select(CN, count, lenght)
+
+  #get levels of cn states for plotting
+  cn_levels = cns_count$Type
+
+  #load gamblr colours
+  cn_colours = get_gambl_colours("copy_number")
 
   #plot
-  ggplot(loh_cn, aes(x = Type, y = count, fill = Type, label = count)) +
-    geom_bar(position = "stack", stat = "identity") +
-    labs(title = paste0(this_sample), subtitle = plot_subtitle, x = "", y = "Count (n)", fill = "Legend") +
-    scale_fill_manual("", values = c("CNV-1" = "#663B31", "CNV-3" = "#A65F50", "CNV-4" = "#E6856F", "LOH-1" = "#E6DD85")) +
-    scale_y_continuous(expand = c(0, 0)) +
-    geom_text(size = 5, position = position_stack(vjust = 0.5)) +
-    theme_cowplot()
+  ggplot(joined_cn, aes(x = CN)) +
+    geom_bar(aes(y = count, fill = CN, label = count), position = "stack", stat = "identity") +
+    geom_line(aes(y = lenght/500000), alpha = 0.5, linetype = "dashed", group = 2) +
+    geom_point(aes(y = lenght/500000), colour = "#E6B315", size = 3, group = 2) +
+    scale_y_log10(limits = c(1, max(joined_cn$count) + 5000), sec.axis = sec_axis(~.*500000, name = "Nucleotides (n)")) +
+    labs(title = paste0(this_sample), subtitle = plot_subtitle, x = "CN States", y = "CN Segments (n)", fill = "Legend") +
+    scale_fill_manual("", values = cn_colours) +
+    scale_x_discrete(limits = cn_levels) +
+    geom_text(aes(x = CN, y = count, label = count), colour = "#000000", size = 5, position = position_stack(vjust = 0.5)) +
+    theme_cowplot() +
+    theme(legend.position = "none")
 }
 
 #' Generate a violine plot for structural variant size distribution.
@@ -3045,8 +3072,176 @@ fancy_vplot = function(this_sample,
     labs(title = paste0(this_sample), subtitle = plot_subtitle, x = "", y = "Variant Size") +
     geom_violin(trim = FALSE, scale = "width", color = NA) +
     stat_summary(fun = mean, geom = "point", shape = 20, size = 3, color = "black") +
-    scale_fill_manual("", values = c("DEL" = "#E6856F", "INS" = "#3A8799")) +
+    scale_fill_manual("", values = c("DEL" = "#53B1FC", "INS" = "#FC9C6D")) +
     scale_y_log10() +
     theme_cowplot() +
     theme(legend.position = "none")
+}
+
+
+#' Generate sample-level ideogram with SVs and gene annotations
+#'
+#' @param this_sample Sample to be plotted (currently only accepts one sample).
+#' @param gene_annotation Annotate ideogram with a single gene.
+#' @param include_sv Set to TRUE to plot SVs (dels and ins).
+#' @param add_loh Set to TRUE to include CN < 2 (LOH).
+#' @param sv_count Optional parameter to summarize n variants per chromosome, inlcude_sv must be set to TRUE.
+#' @param intersect_regions Use external df to intersect multiple regions. Format required: chr, start, end, feature. Can be used to highlight medically relevant genes, hotspots or any other interesting regions.
+#' @param coding_only Optional. Set to TRUE to restrict to plotting only coding mutations.
+#' @param from_flatfile If set to true the function will use flat files instead of the database.
+#' @param use_augmented Boolean statement if to use augmented maf, default is FALSE.
+#'
+#' @return Nothing.
+#' @export
+#'
+#' @examples
+#' ideogram_MYC = fancy_ideogram(this_sample = "HTMCP-01-06-00422-01A-01D", gene_annotation = "MYC", include_sv = TRUE, add_loh = TRUE, sv_count = TRUE, coding_only = FALSE, from_flatfile = FALSE, use_augmented = FALSE)
+#' cnv_ideogram = fancy_ideogram(this_sample = "HTMCP-01-06-00422-01A-01D", add_loh = TRUE)
+#'
+fancy_ideogram = function(this_sample,
+                          gene_annotation,
+                          include_sv = FALSE,
+                          add_loh = FALSE,
+                          sv_count = FALSE,
+                          coding_only = FALSE,
+                          from_flatfile = FALSE,
+                          use_augmented_maf = FALSE){
+
+  #plot theme
+  ideogram_theme = function(){
+    theme(legend.position = "bottom", axis.title.x = element_blank(), axis.ticks.y = element_blank(), axis.title.y = element_blank(), axis.line.y = element_blank(), axis.text.y = element_blank())
+  }
+
+  #grch37 coordinates
+  grch37_end = c(249250621, 243199373, 198022430, 191154276, 180915260, 171115067, 159138663, 146364022, 141213431, 135534747, 135006516, 133851895, 115169878, 107349540, 102531392, 90354753, 81195210, 78077248, 63025520, 59128983, 51304566, 48129895)
+  grch37_cent_start = c(121535434, 92326171, 90504854, 49660117, 46405641, 58830166, 58054331, 43838887, 47367679, 39254935, 51644205, 34856694, 16000000, 16000000, 17000000, 35335801, 22263006, 15460898, 24681782, 26369569, 11288129, 13000000)
+  grch37_cent_end = c(124535434, 95326171, 93504854, 52660117, 49405641, 61830166, 61054331, 46838887, 50367679, 42254935, 54644205, 37856694, 19000000, 19000000, 20000000, 38335801, 25263006, 18460898, 27681782, 29369569, 14288129, 16000000)
+
+  #additional regions to plot
+  if(!missing(gene_annotation)){
+    gene = gene_to_region(gene_symbol = gene_annotation, genome_build = "grch37")
+
+    gene.annotate = data.frame(gene) %>%
+      separate(gene, c("chr", "start"), ":") %>%
+      separate(start, c("start", "end"), "-")
+
+    cols.int.gene = c("chr", "start", "end")
+    gene.annotate[cols.int.gene] = sapply(gene.annotate[cols.int.gene], as.integer)
+  }
+
+  #build chr table for segment plotting
+  chr = paste0("chr", c(1:22))
+  chr_start = c(0)
+  chr_end = grch37_end
+  cent_start = grch37_cent_start
+  cent_end =  grch37_cent_end
+  y = c(1:22)
+  yend = c(1:22)
+
+  #transform to data frame
+  segment_data = data.frame(chr, chr_start, chr_end, cent_start, cent_end, y, yend)
+
+  #load CN data
+  cn_states = get_sample_cn_segments(this_sample_id = this_sample, multiple_samples = FALSE, with_chr_prefix = FALSE, streamlined = FALSE)
+
+  #convert chr into y coordinates
+  cn_states$ycoord = cn_states$chrom
+
+  #paste chr in chromosomecolumn, if not there
+  if(!str_detect(cn_states$chrom, "chr")){
+    cn_states = mutate(cn_states, chrom = paste0("chr", chrom))
+  }
+
+  #convert data types
+  cols.int = c("start", "end", "ycoord")
+  cn_states[cols.int] = sapply(cn_states[cols.int], as.integer)
+  cn_states$chrom = as.factor(cn_states$chrom)
+  cn_states$CN = as.factor(cn_states$CN)
+
+  #subset on CN state
+  if(add_loh){
+    loh = dplyr::filter(cn_states, CN == 1)
+  }
+  if("3" %in% levels(cn_states$CN)){
+    cn_3 = dplyr::filter(cn_states, CN == 3)
+  }
+  if("4" %in% levels(cn_states$CN)){
+    cn_4 = dplyr::filter(cn_states, CN == 4)
+  }
+  if("5" %in% levels(cn_states$CN)){
+    cn_5 = dplyr::filter(cn_states, CN == 5)
+  }
+  if("6+" %in% levels(cn_states$CN)){
+    cn_10 = dplyr::filter(cn_states, CN >= 6)
+  }
+
+  #load maf data
+  if(include_sv){
+    maf = assign_cn_to_ssm(this_sample = this_sample, coding_only = coding_only, from_flatfile = from_flatfile, use_augmented_maf = use_augmented_maf)$maf
+
+    #transform maf data
+    maf_trans = dplyr::select(maf, Chromosome, Start_Position, End_Position, Variant_Type)
+
+    #calculate mid points of variants
+    maf_trans$mid = ((maf_trans$End_Position - maf_trans$Start_Position) / 2) + maf_trans$Start_Position
+
+    #convert chr into y coordinates
+    maf_trans$ystart = maf_trans$Chromosome
+    maf_trans$yend = maf_trans$Chromosome
+
+    #paste chr in maf, if not there
+    if(!str_detect(maf_trans$Chromosome, "chr")){
+      maf_trans = mutate(maf_trans, Chromosome = paste0("chr", Chromosome))
+    }
+
+    #convert data types
+    maf_trans$Start_Position = as.double(maf_trans$Start_Position)
+    maf_trans$End_Position = as.double(maf_trans$End_Position)
+    maf_trans$ystart = as.integer(maf_trans$ystart)
+    maf_trans$yend = as.integer(maf_trans$yend)
+
+    #subset on variant type
+    maf_del = dplyr::filter(maf_trans, Variant_Type == "DEL")
+    maf_ins = dplyr::filter(maf_trans, Variant_Type == "INS")
+
+    if(sv_count){
+      del_count = dplyr::filter(maf_trans, Variant_Type == "DEL") %>%
+        add_count(Chromosome) %>%
+        distinct(Chromosome, .keep_all = TRUE) %>%
+        dplyr::select(Chromosome, Variant_Type, yend, n)
+
+      ins_count = dplyr::filter(maf_trans, Variant_Type == "INS") %>%
+        add_count(Chromosome) %>%
+        distinct(Chromosome, .keep_all = TRUE) %>%
+        dplyr::select(Chromosome, Variant_Type, yend, n)
+    }
+  }
+
+ #plot
+ ggplot() +
+   {if(include_sv) geom_segment(data = maf_del, aes(x = mid - 100000, xend = mid + 100000, y = ystart - 0.27, yend = yend - 0.27), color = "#53B1FC", size = 5, stat = "identity", position = position_dodge())} + #del
+   {if(include_sv) geom_segment(data = maf_del, aes(x = mid, xend = mid, y = ystart - 0.35, yend = yend - 0.35), color = "black", lineend = "round", size = 3.5, stat = "identity", position = position_dodge())} + #del
+   {if(include_sv) geom_segment(data = maf_del, aes(x = mid, xend = mid, y = ystart - 0.35, yend = yend - 0.35, color = "DEL"), lineend = "round", size = 3, stat = "identity", position = position_dodge())} + #del
+   {if(include_sv) geom_segment(data = maf_ins, aes(x = mid - 100000, xend = mid + 100000, y = ystart - 0.27, yend = yend - 0.27), color = "#FC9C6D", size = 5, stat = "identity", position = position_dodge())} + #ins
+   {if(include_sv) geom_segment(data = maf_ins, aes(x = mid, xend = mid, y = ystart - 0.35, yend = yend - 0.35), color = "black", lineend = "round", size = 3.5, stat = "identity", position = position_dodge())} + #ins
+   {if(include_sv) geom_segment(data = maf_ins, aes(x = mid, xend = mid, y = ystart - 0.35, yend = yend - 0.35, color = "INS"), lineend = "round", size = 3, stat = "identity", position = position_dodge())} + #ins
+   {if(sv_count) annotate(geom = "text", x = -4000000, y = del_count$yend, label = del_count$n, color = "#E6856F", size = 3)} +
+   {if(sv_count) annotate(geom = "text", x = -2300000, y = segment_data$y, label = " | ", color = "black", size = 3)} +
+   {if(sv_count) annotate(geom = "text", x = -1000000, y = ins_count$yend, label = ins_count$n, color = "#3A8799", size = 3)} +
+   geom_segment(data = segment_data, aes(x = chr_start, xend = chr_end, y = y, yend = yend, lebel = chr), color = "#99A1A6", lineend = "butt", size = 5, stat = "identity", position = position_dodge()) + #chr contigs
+   geom_segment(data = segment_data, aes(x = cent_start, xend = cent_end, y = y, yend = yend), color = "white", size = 6, stat = "identity", position = position_dodge()) + #centromeres
+   {if(add_loh) geom_segment(data = loh, aes(x = start, xend = end, y = ycoord, yend = ycoord, color = "LOH"), size = 4.7, stat = "identity", position = position_dodge())} + #loh
+   {if("3" %in% levels(cn_states$CN)) geom_segment(data = cn_3, aes(x = start, xend = end, y = ycoord, yend = ycoord, color = "CN3"), size = 4.7, stat = "identity", position = position_dodge())} + #cn3
+   {if("4" %in% levels(cn_states$CN)) geom_segment(data = cn_4, aes(x = start, xend = end, y = ycoord, yend = ycoord, color = "CN4"), size = 4.7, stat = "identity", position = position_dodge())} + #cn4
+   {if("5" %in% levels(cn_states$CN)) geom_segment(data = cn_5, aes(x = start, xend = end, y = ycoord, yend = ycoord, color = "CN5"), size = 4.7, stat = "identity", position = position_dodge())} + #cn5
+   {if("6" %in% levels(cn_states$CN)) geom_segment(data = cn_6, aes(x = start, xend = end, y = ycoord, yend = ycoord, color = "CN6_or_more"), size = 4.7, stat = "identity", position = position_dodge())} + #cn6
+   {if(!missing(gene_annotation)) geom_point(data = gene.annotate, aes(x = ((end - start) / 2) + start, y = chr - 0.28), shape = 25, color = "#A63932", fill = "#A63932", stat = "identity", position = position_dodge())} + #gene annotation
+   {if(!missing(gene_annotation)) geom_text(aes((x = gene.annotate$end - gene.annotate$start) / 2 + gene.annotate$start, y = gene.annotate$chr - 0.47), label = gene_annotation, color = "black", size = 3)} +
+   geom_text(aes(x = -10000000 , y = yend, label = segment_data$chr), color = "black", size = 5) +
+   labs(title = paste0(this_sample), subtitle = "Genome-wide Ideogram (grch37).") +
+   scale_colour_manual(name = "", values = c(DEL = "#53B1FC", INS = "#FC9C6D", LOH = "#E026D7FF", CN3 = "#D6604DFF", CN4 = "#B2182BFF", CN5 = "#67001FFF", CN6_or_more = "#380015FF")) +
+   scale_x_continuous(breaks = seq(0, max(segment_data$chr_end), by = 30000000)) +
+   scale_y_reverse() +
+   theme_cowplot() +
+   ideogram_theme()
 }
