@@ -7,9 +7,8 @@
 fancy_ideogram(
   this_sample,
   gene_annotation,
-  include_sv = FALSE,
-  add_loh = FALSE,
-  sv_count = FALSE,
+  include_sv = TRUE,
+  sv_count = TRUE,
   coding_only = FALSE,
   from_flatfile = FALSE,
   use_augmented_maf = FALSE
@@ -22,15 +21,11 @@ fancy_ideogram(
 
 \item{include_sv}{Set to TRUE to plot SVs (dels and ins).}
 
-\item{add_loh}{Set to TRUE to include CN < 2 (LOH).}
-
 \item{sv_count}{Optional parameter to summarize n variants per chromosome, inlcude_sv must be set to TRUE.}
 
 \item{coding_only}{Optional. Set to TRUE to restrict to plotting only coding mutations.}
 
 \item{from_flatfile}{If set to true the function will use flat files instead of the database.}
-
-\item{intersect_regions}{Use external df to intersect multiple regions. Format required: chr, start, end, feature. Can be used to highlight medically relevant genes, hotspots or any other interesting regions.}
 
 \item{use_augmented}{Boolean statement if to use augmented maf, default is FALSE.}
 }
@@ -41,7 +36,7 @@ Nothing.
 Generate sample-level ideogram with SVs and gene annotations
 }
 \examples{
-ideogram_MYC = fancy_ideogram(this_sample = "HTMCP-01-06-00422-01A-01D", gene_annotation = "MYC", include_sv = TRUE, add_loh = TRUE, sv_count = TRUE, coding_only = FALSE, from_flatfile = FALSE, use_augmented = FALSE)
-cnv_ideogram = fancy_ideogram(this_sample = "HTMCP-01-06-00422-01A-01D", add_loh = TRUE)
+ideogram_MYC = fancy_ideogram(this_sample = "HTMCP-01-06-00422-01A-01D", gene_annotation = "MYC", include_sv = TRUE, sv_count = TRUE, coding_only = FALSE, from_flatfile = FALSE, use_augmented = FALSE)
+cnv_ideogram = fancy_ideogram(this_sample = "HTMCP-01-06-00422-01A-01D")
 
 }

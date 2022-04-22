@@ -20,37 +20,18 @@ Run this vignette using the base directory of the GAMBLR repository as your work
 
 ```{r setup, warning = FALSE, message = FALSE}
 # Load the GAMBLR package and other packages required by these examples.
-library(GAMBLR)
+#library(GAMBLR)
 require(tidyverse)
 require(maftools)
 require(circlize)
 require(data.table)
 require(rtracklayer)
-require(RMariaDB)
-require(DBI)
 require(ComplexHeatmap)
 require(kableExtra)
 require(ggsci)
 require(gridExtra)
 require(conflicted)
 conflict_prefer("filter", "dplyr")
-```
-
-The key level-1 GAMBL outputs are making their way into a MySQL (a.k.a. MariaDB) database. The most intuitive way to query the data is using the dbplyr R package. The initial connection and a method to determine what each table contains is shown below.
-
-```{r connect_show_tables, message = FALSE}
-con = DBI::dbConnect(RMariaDB::MariaDB(), dbname = "gambl_test")
-
-# Use DBI function to list the tables
-all_table_names = DBI::dbListTables(con)
-
-print(all_table_names)
-
-# Peek at the contents of each table.
-for(table_name in all_table_names){
-  table_db = tbl(con, table_name)
-  print(table_name)
-}
 ```
 
 Get the metadata, automatically joining both tables and dropping normal and RNA-seq samples.
@@ -79,40 +60,35 @@ length(blgsp_sample_ids)
 ```
 
 The largest tables in the database are those that contain mutations from MAF files. The tables are simply all the rows and columns from a given merged MAF file. There will likely be four MAF-derived tables in this database, one for each reference build for "GAMBL" and the complete "GAMBL + ICGC". Although the names may change, currently the tables are implicitly GAMBL-only unless they contain "icgc" in their name. For example, maf_slms3_hg19_icgc contains all hg19 (grch37/hs37d5) mutations from GAMBL and icgc_dart/external cases.
+ 
+WARNING! This function have been updated to read from the deblacklisted and merged maf (instead of using the database). Thus, this chunk is rather slow and consumes a lot of memory. Should be updated to read from demo-dataset, when available. Alternativly, this chunk could be removed untiul then.
 
 ```{r mutation_totals, out.width = "75%", warning = FALSE}
-hg19_maf = tbl(con, "maf_slms3_hg19_icgc")
+# Define seqtype and genome projection for to be retreived MAF.
+seq_type = "genome"
+projection = "grch37"
 
+#set path to merged and deblacklsited MAF.
+maf_template = config::get("results_flatfiles")$ssm$template$merged$deblacklisted
+maf_path = glue::glue(maf_template)
+full_maf_path =  paste0(config::get("project_base"), maf_path)
+
+# Read MAF. 
+hg19_maf = fread_maf(full_maf_path)
+
+# Subset mutations by sample
 mutation_counts = hg19_maf %>%
   group_by(Tumor_Sample_Barcode) %>%
   tally()
 
+# Print head of mutation counts dataframe.
 print(head(mutation_counts))
 
+# Plot histogram with mutation counts .
 mutation_counts %>%
   ggplot() +
     geom_histogram(aes(x = n), bins = 100) +
     xlim(c(10, 25000))
-```
-
-Here's a histogram of the total number of mutations per genome across all GAMBL cases. Pretty hard to interpret this without metadata. There are two metadata tables. Often we need to join them both to get all the information we want.
-
-```{r join_metadata}
-# If we only care about genomes, we can drop/filter anything that isn't a tumour genome
-# The key for joining this table to the mutation information is to use sample_id. Think of this as equivalent to a library_id. It will differ depending on what assay was done to the sample.
-sample_meta = tbl(con, "sample_metadata") %>%
-  dplyr::filter(seq_type == "genome" & tissue_status == "tumour")
-
-biopsy_meta = tbl(con,"biopsy_metadata") %>%
-  select(-patient_id) %>%
-  dplyr::select(-pathology) %>%
-  dplyr::select(-time_point) %>%
-  dplyr::select(-EBV_status_inf)
-
-# This table is keyed on biopsy_id. One biopsy can have more than one sample_id. This table must be joined to the sample table using biopsy_id. Because of some redundancy in columns between the two tables, I've dropped all redundant columns with the exception of biopsy_id.
-all_meta = left_join(sample_meta, biopsy_meta, by = "biopsy_id")
-
-# IMPORTANT: the dbplyr package uses mysql queries under the hood to lazily retrieve the datat you need for each table on-the-fly. To properly use the efficiency of indexing and joins in MySQL, don't convert your tables into data frames until you're done all the necessary joins.
 ```
 
 Obtain all SV breakpoints (called by Manta) within a specific region of the genome and visualize them.
@@ -252,7 +228,6 @@ example_dlbcl_df = example_dlbcl %>%
 
 example_dlbcl_maf = read.maf(example_dlbcl_df)
 rainfallPlot(example_dlbcl_maf)
-DBI::dbDisconnect(con)
 ```
 
 What if you want to view the copy number landscape of a single patient and the VAF of somatic mutations in different copy number states? This can sometimes help you scrutinize whether the copy number fit looks reasonable.
@@ -506,6 +481,165 @@ get_mutation_frequency_bin_matrix(these_samples_metadata = some_meta, #GAMBL met
                                   sortByColumns = c("pathology","genetic_subgroup","manta_MYC_sv"), #which of the metadata to sort on for the heatmap.
                                   metadataColumns = c("manta_MYC_sv","genetic_subgroup","pathology")) #what metadata will be shown in the visualization.
 
+```
+
+Construct a sample-level, genome-wide ideogram to visualize CN segments. Optional argument to show SVs (lollipops) and annotate ideogram with gene(s). Plotting function calls get_cn_segments and assign_cn_to_ssm to retrieve relevant data. Thus, parameters available for such functions are also at the users disposal for sub-setting variants to coding regions and flatfile/augmented maf options. In addition, the user can also annotate LOH regions and SV counts per chromosome as such:
+
+```{r ideogram, dpi = 150, fig.retina = 2, warnings = FALSE, echo = FALSE, messages = FALSE, fig.height = 12, fig.width = 17}
+# Define sample to be plotted
+sample_id = "HTMCP-01-06-00422-01A-01D"
+
+# Set gene for gene_annotation argument (calls gene_to_region) in plotting function.
+gene_annotation = "MYC"
+
+# Construct plot.
+fancy_ideogram(this_sample = sample_id, 
+               gene_annotation = gene_annotation, 
+               sv_count = TRUE, 
+               include_sv = TRUE, 
+               coding_only = FALSE, 
+               add_loh = TRUE)
+```
+
+Another useful plot for visualizing sample-level CN information is the fancy_cnvlohbar. Similarly to fancy_ideogram, this function takes one required parameter (sample id), calls get_cn_segments and assign_cn_ssm to retrieve data for plotting. The plot highlights the number of CN states for any given sample (first y-axis), together with n bases included in each CN state (second y-axis).
+
+```{r dpi = 150, fig.retina = 2, warnings = FALSE, echo = FALSE, messages = FALSE, fig.height = 7, fig.width = 7}
+# Define sample to be plotted.
+sample_id = "HTMCP-01-06-00422-01A-01D"
+
+# State chromosomes to be included for the selected sample.
+chromosomes = paste0("chr", c(1:22))
+
+# Construct plot using above defined parameters.
+fancy_cnlohbar(this_sample = sample_id,
+               chr_select = chromosomes,
+               include_cn2 = TRUE, 
+               coding_only = FALSE)
+```
+
+Interested in how many variants are present in a given sample? One quick way to overview such information would be to call fancy_svbar on a given sample id. This function returns a bar plot visualizing SVs. A variety of sub-setting options are also available. Such as chromosome selection and SV types to be included in plot. 
+
+```{r dpi = 150, fig.retina = 2, warnings = FALSE, echo = FALSE, messages = FALSE, fig.height = 7 fig.width = 7}
+# Set sample ID for plotting.
+sample_id = "HTMCP-01-06-00422-01A-01D"
+
+# Define plot subtitle.
+plot_sub = "Structural Variant Subtype Distribution"
+
+# State chromosomes to be included for the selected sample.
+chromosomes = paste0("chr", c(1:22))
+
+# State what SV sub type are to be plotted.
+svs = c("DEL", "INS")
+
+# Construct plot using above defined parameters.
+fancy_svbar(this_sample = sample_id,
+            plot_subtitle = plot_sub,
+            chr_select = chromosomes,
+            variant_select = svs,
+            coding_only = FALSE)
+```
+
+Curious to see how SNVs are distributed across specific chromosomes? For this purpose fancy_snv_chrdistplot was developed. This function takes a sample ID and retrieves SNV information (using assign_cn_to_ssm) and plots variants in an ideogram dependent manner. Similarly to other fanxy_x_plot functions, a selection of parameters are available for data sub-setting and plot customization. For example, bu using the include_dnp, DNP counts will be added to each bar. 
+
+```{r dpi = 150, fig.retina = 2, warnings = FALSE, echo = FALSE, messages = FALSE, fig.height = 7 fig.width = 7}
+# Set sample ID for plotting.
+sample_id = "HTMCP-01-06-00422-01A-01D"
+
+# Define plot subtitle.
+plot_sub = "SNV Distribution Per Chromosome"
+
+# State chromosomes to be included for the selected sample.
+chromosomes = paste0("chr", c(1:5))
+
+# Construct plot using above defined parameters.
+fancy_snv_chrdistplot(this_sample = sample_id, 
+                      plot_subtitle = plot_sub,
+                      chr_select = chromosomes,
+                      include_dnp = FALSE,
+                      coding_only = FALSE)
+```
+
+
+Interested in how many variants are present in a given sample? One quick way to overview such information would be to call fancy_svbar on a given sample id. This function returns a bar plot visualizing SVs. A variety of sub-setting options are also available. Such as chromosome selection and SV types to be included in plot. 
+
+```{r dpi = 150, fig.retina = 2, warnings = FALSE, echo = FALSE, messages = FALSE, fig.height = 7 fig.width = 7}
+# Set sample ID for plotting.
+sample_id = "HTMCP-01-06-00422-01A-01D"
+
+# Define plot subtitle.
+plot_sub = "Structural Variant Subtype Distribution"
+
+# State chromosomes to be included for the selected sample.
+chromosomes = paste0("chr", c(1:22))
+
+# State what SV sub type are to be plotted.
+svs = c("DEL", "INS")
+
+# Construct plot using above defined parameters.
+fancy_svbar(this_sample = sample_id,
+            plot_subtitle = plot_sub,
+            chr_select = chromosomes,
+            variant_select = svs,
+            coding_only = FALSE)
+```
+
+Curious to see how SNVs are distributed across specific chromosomes? For this purpose fancy_snv_chrdistplot was developed. This function takes a sample ID and retrieves SNV information (using assign_cn_to_ssm) and plots variants in an ideogram dependent manner. Similarly to other fanxy_x_plot functions, a selection of parameters are available for data sub-setting and plot customization. For example, bu using the include_dnp, DNP counts will be added to each bar. 
+
+```{r dpi = 150, fig.retina = 2, warnings = FALSE, echo = FALSE, messages = FALSE, fig.height = 7 fig.width = 7}
+# Set sample ID for plotting.
+sample_id = "HTMCP-01-06-00422-01A-01D"
+
+# Define plot subtitle.
+plot_sub = "SNV Distribution Per Chromosome"
+
+# State chromosomes to be included for the selected sample.
+chromosomes = paste0("chr", c(1:5))
+
+# Construct plot using above defined parameters.
+fancy_snv_chrdistplot(this_sample = sample_id, 
+                      plot_subtitle = plot_sub,
+                      chr_select = chromosomes,
+                      include_dnp = FALSE,
+                      coding_only = FALSE)
+```
+
+Sometimes it can be useful to overview SV distribution across the complete genomic landscape. To do so, one could call fancy_sv_chrdistplot with sample ID. Optional arguments for sub-setting your data are avaialble (see parameter descriptions for more information)
+
+```{r dpi = 150, fig.retina = 2, warnings = FALSE, echo = FALSE, messages = FALSE, fig.height = 7 fig.width = 7}
+# Set sample ID for plotting.
+sample_id = "HTMCP-01-06-00422-01A-01D"
+
+# Define plot subtitle.
+plot_sub = "Structural Variant Distribution Per Chromosome"
+
+# State chromosomes to be included for the selected sample.
+chromosomes = paste0("chr", c(1:22))
+
+# Construct plot using above defined parameters.
+fancy_sv_chrdistplot(this_sample = sample_id, 
+                     plot_subtitle =  plot_sub,
+                     chr_select = chromosomes, 
+                     coding_only = FALSE)
+```
+
+Another useful way to visualize SV distributions is to call fancy_vplot to generate a violin plot showing SV size distributions (sample-level) across selected contigs (per default chr1-22). Optional parameters to sub-set data to include only coding regions are also available for this function.
+
+```{r dpi = 150, fig.retina = 2, warnings = FALSE, echo = FALSE, messages = FALSE, fig.height = 7 fig.width = 7}
+# Set sample ID for plotting.
+sample_id = "HTMCP-01-06-00422-01A-01D"
+
+# Define plot subtitle.
+plot_sub = "Structural Variant Size Distribution (chr1 - chr22)"
+
+# State chromosomes to be included for the selected sample.
+chromosomes = paste0("chr", c(1:22))
+
+# Construct plot using above defined parameters.
+fancy_vplot(this_sample = sample_id, 
+            plot_subtitle =  plot_sub,
+            chr_select = chromosomes, 
+            coding_only = FALSE)
 ```
 
 Hex codes for B-cell lymphomas.
