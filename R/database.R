@@ -141,7 +141,15 @@ get_ssm_by_samples = function(these_sample_ids,
     if(!subset_from_merge){
       maf_df_list = list()
       for(this_sample in these_sample_ids){
-        maf_df = get_ssm_by_sample(this_sample, these_samples_metadata, tool_name, projection, augmented, flavour, min_read_support)
+        maf_df = get_ssm_by_sample(
+          this_sample_id = this_sample,
+          these_samples_metadata = these_samples_metadata,
+          tool_name = tool_name,
+          projection = projection,
+          augmented = augmented,
+          flavour = flavour,
+          min_read_support = min_read_support
+        )
         maf_df_list[[this_sample]]=maf_df
       }
       maf_df_merge = bind_rows(maf_df_list)
@@ -1612,6 +1620,8 @@ get_coding_ssm = function(limit_cohort,
     all_meta = get_gambl_metadata(from_flatfile = from_flatfile, seq_type_filter = seq_type)
   }
   all_meta = dplyr::filter(all_meta,seq_type == {{ seq_type }})
+
+  all_meta = get_gambl_metadata(from_flatfile = from_flatfile)
 
   #do all remaining filtering on the metadata then add the remaining sample_id to the query
   #unix groups
