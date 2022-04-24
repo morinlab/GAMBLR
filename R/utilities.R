@@ -2928,8 +2928,9 @@ adjust_ploidy = function(this_seg,
 #' @param pga_cutoff Minimum PGA for the sample to adjust ploidy. Default is 0.05 (5%).
 #' @param exclude_sex Boolean argument specifying whether to exclude sex chromosomes from calculation. Default is FALSE.
 #' @param return_heatmap Boolean argument specifying whether to return a heatmap of cnvKompare scores. Default is TRUE.
+#' @param compare_pairwise Boolean argument specifying whether to perform pairwise comparisons is there are more than 2 time points in the group. Default is TRUE.
 #'
-#' @return A data frame in seg-consistent format with ploidy-adjusted log ratios.
+#' @return A list of overall and pairwise percent concordance, concordant and discordant cytobands, comparison heatmap of cnvKompare socres, and time series ggplot object.
 #' @export
 #' @import tidyverse data.table circlize ComplexHeatmap ggrepel
 #'

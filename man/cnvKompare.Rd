@@ -17,7 +17,8 @@ cnvKompare(
   ignore_cytoband_labels = c("acen", "gvar", "stalk"),
   max_overlap = 20,
   exclude_sex = FALSE,
-  return_heatmap = TRUE
+  return_heatmap = TRUE,
+  compare_pairwise = TRUE
 )
 }
 \arguments{
@@ -41,10 +42,12 @@ cnvKompare(
 
 \item{return_heatmap}{Boolean argument specifying whether to return a heatmap of cnvKompare scores. Default is TRUE.}
 
+\item{compare_pairwise}{Boolean argument specifying whether to perform pairwise comparisons is there are more than 2 time points in the group. Default is TRUE.}
+
 \item{pga_cutoff}{Minimum PGA for the sample to adjust ploidy. Default is 0.05 (5\%).}
 }
 \value{
-A data frame in seg-consistent format with ploidy-adjusted log ratios.
+A list of overall and pairwise percent concordance, concordant and discordant cytobands, comparison heatmap of cnvKompare socres, and time series ggplot object.
 }
 \description{
 This function adjusts ploidy of the sample using the percent of genome altered (PGA). The PGA is calculated internally, but can also be optionally provided as data frame
