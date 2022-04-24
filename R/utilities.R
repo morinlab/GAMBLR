@@ -2912,10 +2912,13 @@ adjust_ploidy = function(this_seg,
 }
 
 
-#' This function adjusts ploidy of the sample using the percent of genome altered (PGA). The PGA is calculated internally, but can also be optionally provided as data frame
-#' if calculated from other sources. Only the samples above the threshold-provided PGA will have ploidy adjusted. The function can work with either individual or
-#' multi-sample seg file. The telomeres are always excluded from calculation, and sex chromosomes can be optionally included or excluded. The supported projections are grch37 and hg38.
-#' The chromosome prefix is handled internally per projection and does not need to be consistent.
+#' This function will compare CNV data between samples with multiple time points. It can also handle same-sample comparison
+#' between different CNV callers if sample ID is specified in unique fashion. For groups with more than 2 samples,
+#' optionally the pairwise comparisons can be performed. The comparison is made based on the internally calculated score,
+#' which reflects percentage of each cytoband covered by CNV (rounded to the nearest 5%) and its absolute CN. Optionally,
+#' the heatmap of cnvKompare scores can be returned. In addition, the function will return all concordant and discordant cytobands.
+#' Finally, the time series plot of CNV log ratios will be returned for all lymphoma genes, with further functionality to subset
+#' it to a panel of genes of interest.
 #'
 #' @param patient_id Specify patient_id to retrieve sample ids from GAMBL metadata.
 #' @param sample_ids Optionally, specify sample ids for comparison.
@@ -2935,6 +2938,8 @@ adjust_ploidy = function(this_seg,
 #' @import tidyverse data.table circlize ComplexHeatmap ggrepel
 #'
 #' @examples
+#' cnvKompare(patient_id = "00-14595", genes_of_interest = c("EZH2", "TP53", "MYC", "CREBBP", "GNA13"))
+#'
 cnvKompare = function(patient_id,
                       sample_ids,
                       this_seg,
@@ -2959,8 +2964,8 @@ cnvKompare = function(patient_id,
   if(missing(sample_ids)) {
     sample_ids = get_gambl_metadata()
     sample_ids = dplyr::filter(sample_ids, patient_id=={{patient_id}})
-    sample_ids = pull(sample_ids, Tumor_Sample_Barcode)
-    message(paste0("Found ", length(sample_ids), "for patient ", patient_id, " ..."))
+    sample_ids = pull(sample_ids, sample_id)
+    message(paste0("Found ", length(sample_ids), " samples for patient ", patient_id, " ..."))
   }
 
   # get cytobands
@@ -2993,7 +2998,7 @@ cnvKompare = function(patient_id,
   } else {
     message("Retreiving the CNV data using GAMBLR ...")
     these_samples_seg = get_sample_cn_segments(multiple_samples = TRUE,
-                                               sample_list = sample_list)
+                                               sample_list = sample_ids)
   }
 
   these_samples_seg = these_samples_seg  %>%

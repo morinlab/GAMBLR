@@ -2,10 +2,13 @@
 % Please edit documentation in R/utilities.R
 \name{cnvKompare}
 \alias{cnvKompare}
-\title{This function adjusts ploidy of the sample using the percent of genome altered (PGA). The PGA is calculated internally, but can also be optionally provided as data frame
-if calculated from other sources. Only the samples above the threshold-provided PGA will have ploidy adjusted. The function can work with either individual or
-multi-sample seg file. The telomeres are always excluded from calculation, and sex chromosomes can be optionally included or excluded. The supported projections are grch37 and hg38.
-The chromosome prefix is handled internally per projection and does not need to be consistent.}
+\title{This function will compare CNV data between samples with multiple time points. It can also handle same-sample comparison
+between different CNV callers if sample ID is specified in unique fashion. For groups with more than 2 samples,
+optionally the pairwise comparisons can be performed. The comparison is made based on the internally calculated score,
+which reflects percentage of each cytoband covered by CNV (rounded to the nearest 5\%) and its absolute CN. Optionally,
+the heatmap of cnvKompare scores can be returned. In addition, the function will return all concordant and discordant cytobands.
+Finally, the time series plot of CNV log ratios will be returned for all lymphoma genes, with further functionality to subset
+it to a panel of genes of interest.}
 \usage{
 cnvKompare(
   patient_id,
@@ -50,8 +53,15 @@ cnvKompare(
 A list of overall and pairwise percent concordance, concordant and discordant cytobands, comparison heatmap of cnvKompare socres, and time series ggplot object.
 }
 \description{
-This function adjusts ploidy of the sample using the percent of genome altered (PGA). The PGA is calculated internally, but can also be optionally provided as data frame
-if calculated from other sources. Only the samples above the threshold-provided PGA will have ploidy adjusted. The function can work with either individual or
-multi-sample seg file. The telomeres are always excluded from calculation, and sex chromosomes can be optionally included or excluded. The supported projections are grch37 and hg38.
-The chromosome prefix is handled internally per projection and does not need to be consistent.
+This function will compare CNV data between samples with multiple time points. It can also handle same-sample comparison
+between different CNV callers if sample ID is specified in unique fashion. For groups with more than 2 samples,
+optionally the pairwise comparisons can be performed. The comparison is made based on the internally calculated score,
+which reflects percentage of each cytoband covered by CNV (rounded to the nearest 5\%) and its absolute CN. Optionally,
+the heatmap of cnvKompare scores can be returned. In addition, the function will return all concordant and discordant cytobands.
+Finally, the time series plot of CNV log ratios will be returned for all lymphoma genes, with further functionality to subset
+it to a panel of genes of interest.
+}
+\examples{
+cnvKompare(patient_id = "00-14595", genes_of_interest = c("EZH2", "TP53", "MYC", "CREBBP", "GNA13"))
+
 }
