@@ -2943,7 +2943,8 @@ cnvKompare = function(patient_id,
                       ignore_cytoband_labels = c("acen", "gvar", "stalk"),
                       max_overlap=20,
                       exclude_sex=FALSE,
-                      return_heatmap=TRUE) {
+                      return_heatmap=TRUE,
+                      compare_pairwise=TRUE) {
 
   # initialize output list
   output = list()
@@ -3122,6 +3123,49 @@ cnvKompare = function(patient_id,
 
   output$time_plot = time_plot
 
+  # for groups with >2 samples, make pairwise comparisons
+  if (compare_pairwise & length(sample_ids)>2) {
+    message("Performing pairwise comparisons ...")
+
+    # generate all possible combinations
+    possible_combinations = apply(combn(sample_ids,2),2,paste,collapse='--')
+
+    for (combination in possible_combinations) {
+      # samples in this pairwise comparison
+      these_samples = unlist(strsplit(combination, split = "--"))
+
+      # pct concordance in this pair
+      this_concordance = concordance[,these_samples]
+      this_concordance = ifelse(this_concordance[,1]==this_concordance[,2], "YES", "NO")
+      names(this_concordance) = rownames(concordance)
+      this_concordance = this_concordance[!is.na(this_concordance)]
+      this_concordance_pct = round(((sum(this_concordance == "YES")/length(this_concordance))*100),2)
+      output$pairwise_comparisons[[combination]]$pairwise_concordance_pct = this_concordance_pct
+
+      # return cytobands consistent in this pair
+      concordant_cytobands =
+        for_output %>%
+        dplyr::filter(ID %in% these_samples) %>%
+        # output-specific
+        select(ID, cb.chromosome, cb.start, cb.end, name, score) %>%
+        dplyr::filter(name %in% names(this_concordance[this_concordance == "YES"]))
+
+      output$pairwise_comparisons[[combination]]$concordant_cytobands = concordant_cytobands
+
+      # return cytobands discordant in this pair
+      discordant_cytobands =
+        for_output %>%
+        dplyr::filter(ID %in% these_samples) %>%
+        # output-specific
+        select(ID, cb.chromosome, cb.start, cb.end, name, pct_covered, log.ratio, score) %>%
+        dplyr::filter(name %in% names(this_concordance[this_concordance == "NO"]))
+
+      output$pairwise_comparisons[[combination]]$discordant_cytobands = discordant_cytobands
+
+    }
+  }
+
+  message("DONE!")
   return(output)
 
 }
