@@ -2911,6 +2911,24 @@ adjust_ploidy = function(this_seg,
   return(this_seg)
 }
 
+
+#' This function adjusts ploidy of the sample using the percent of genome altered (PGA). The PGA is calculated internally, but can also be optionally provided as data frame
+#' if calculated from other sources. Only the samples above the threshold-provided PGA will have ploidy adjusted. The function can work with either individual or
+#' multi-sample seg file. The telomeres are always excluded from calculation, and sex chromosomes can be optionally included or excluded. The supported projections are grch37 and hg38.
+#' The chromosome prefix is handled internally per projection and does not need to be consistent.
+#'
+#' @param patient_id Specify patient_id to retrieve sample ids from GAMBL metadata.
+#' @param sample_ids Optionally, specify sample ids for comparison.
+#' @param this_seg Optional input data frame of seg file. Must adhere to seg format.
+#' @param seg_path Optionally, specify the path to a local seg file. Must adhere to seg format.
+#' @param genes_of_interest Provide specific genes to be displayed on the time-series plot.
+#' @param projection Argument specifying the projection of seg file, which will determine coordinates of the cytobands. Default is grch37, but hg38 is also accepted.
+#'
+#' @param pga If PGA is calculated through other sources, the data frame with columns sample_id and PGA can be provided in this argument.
+#' @param pga_cutoff Minimum PGA for the sample to adjust ploidy. Default is 0.05 (5%).
+#' @param exclude_sex Boolean argument specifying whether to exclude sex chromosomes from calculation. Default is TRUE.
+#' @param return_seg Boolean argument specifying whether to return a data frame in seg-consistent format, or a raw data frame with all step-by-step transformations. Default is TRUE.
+#'
 #' @return A data frame in seg-consistent format with ploidy-adjusted log ratios.
 #' @export
 #' @import tidyverse data.table circlize ComplexHeatmap ggrepel
@@ -2977,6 +2995,7 @@ cnvKompare = function(patient_id,
   }
 
   these_samples_seg = these_samples_seg  %>%
+    dplyr::filter(ID %in% sample_ids) %>% # if user-provided seg, ensure only samples of comparison are present
     relocate(ID, .after = last_col())
   if (!include_sex) {
     these_samples_seg = dplyr::filter(these_samples_seg, !grepl("X|Y", chrom))
