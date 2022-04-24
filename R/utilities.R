@@ -2923,11 +2923,11 @@ adjust_ploidy = function(this_seg,
 #' @param seg_path Optionally, specify the path to a local seg file. Must adhere to seg format.
 #' @param genes_of_interest Provide specific genes to be displayed on the time-series plot.
 #' @param projection Argument specifying the projection of seg file, which will determine coordinates of the cytobands. Default is grch37, but hg38 is also accepted.
-#'
-#' @param pga If PGA is calculated through other sources, the data frame with columns sample_id and PGA can be provided in this argument.
+#' @param ignore_cytoband_labels Cytobands to be ignored. By default, "acen", "gvar", "stalk" are excluded.
+#' @param max_overlap For time-series plot, how many maximum overlapping points are allowed?
 #' @param pga_cutoff Minimum PGA for the sample to adjust ploidy. Default is 0.05 (5%).
-#' @param exclude_sex Boolean argument specifying whether to exclude sex chromosomes from calculation. Default is TRUE.
-#' @param return_seg Boolean argument specifying whether to return a data frame in seg-consistent format, or a raw data frame with all step-by-step transformations. Default is TRUE.
+#' @param exclude_sex Boolean argument specifying whether to exclude sex chromosomes from calculation. Default is FALSE.
+#' @param return_heatmap Boolean argument specifying whether to return a heatmap of cnvKompare scores. Default is TRUE.
 #'
 #' @return A data frame in seg-consistent format with ploidy-adjusted log ratios.
 #' @export
@@ -2942,7 +2942,7 @@ cnvKompare = function(patient_id,
                       projection="grch37",
                       ignore_cytoband_labels = c("acen", "gvar", "stalk"),
                       max_overlap=20,
-                      include_sex=TRUE,
+                      exclude_sex=FALSE,
                       return_heatmap=TRUE) {
 
   # initialize output list
@@ -2973,7 +2973,7 @@ cnvKompare = function(patient_id,
   cytobands = cytobands %>%
     `names<-`(c("cb.chromosome", "cb.start", "cb.end", "cb.name", "label")) %>%
     dplyr::filter(!label %in% ignore_cytoband_labels)
-  if (!include_sex) {
+  if (exclude_sex) {
     cytobands = dplyr::filter(cytobands, !grepl("X|Y", cb.chromosome))
   }
   cytobands = as.data.table(cytobands)
@@ -2997,7 +2997,7 @@ cnvKompare = function(patient_id,
   these_samples_seg = these_samples_seg  %>%
     dplyr::filter(ID %in% sample_ids) %>% # if user-provided seg, ensure only samples of comparison are present
     relocate(ID, .after = last_col())
-  if (!include_sex) {
+  if (exclude_sex) {
     these_samples_seg = dplyr::filter(these_samples_seg, !grepl("X|Y", chrom))
   }
 
