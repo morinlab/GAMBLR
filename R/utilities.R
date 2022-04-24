@@ -2945,33 +2945,42 @@ cnvKompare = function(patient_id,
                       this_seg,
                       seg_path,
                       genes_of_interest,
-                      projection="grch37",
+                      projection = "grch37",
                       ignore_cytoband_labels = c("acen", "gvar", "stalk"),
-                      max_overlap=20,
-                      exclude_sex=FALSE,
-                      return_heatmap=TRUE,
-                      compare_pairwise=TRUE) {
-
+                      max_overlap = 20,
+                      exclude_sex = FALSE,
+                      return_heatmap = TRUE,
+                      compare_pairwise = TRUE) {
   # initialize output list
   output = list()
 
   # check that sample identifiers are provided
-  if(missing(patient_id) & missing(sample_ids)) {
+  if (missing(patient_id) & missing(sample_ids)) {
     stop("Please provide patient id or sample ids for comparison.")
   }
 
   # retrieve sample ids if only patient id is specified
-  if(missing(sample_ids)) {
+  if (missing(sample_ids)) {
     sample_ids = get_gambl_metadata()
-    sample_ids = dplyr::filter(sample_ids, patient_id=={{patient_id}})
+    sample_ids = dplyr::filter(sample_ids, patient_id == {
+      {
+        patient_id
+      }
+    })
     sample_ids = pull(sample_ids, sample_id)
-    message(paste0("Found ", length(sample_ids), " samples for patient ", patient_id, " ..."))
+    message(paste0(
+      "Found ",
+      length(sample_ids),
+      " samples for patient ",
+      patient_id,
+      " ..."
+    ))
   }
 
   # get cytobands
   if (projection %in% c("hg19", "grch37")) {
     cytobands = circlize::read.cytoband(species = "hg19")$df %>%
-      mutate(V1=gsub("chr", "", V1))
+      mutate(V1 = gsub("chr", "", V1))
   } else if (projection %in% c("hg38", "grch38")) {
     cytobands = circlize::read.cytoband(species = "hg38")$df
   } else {
@@ -2981,7 +2990,7 @@ cnvKompare = function(patient_id,
     `names<-`(c("cb.chromosome", "cb.start", "cb.end", "cb.name", "label")) %>%
     dplyr::filter(!label %in% ignore_cytoband_labels)
   if (exclude_sex) {
-    cytobands = dplyr::filter(cytobands, !grepl("X|Y", cb.chromosome))
+    cytobands = dplyr::filter(cytobands,!grepl("X|Y", cb.chromosome))
   }
   cytobands = as.data.table(cytobands)
   setkey(cytobands, cb.chromosome, cb.start, cb.end)
@@ -2990,11 +2999,11 @@ cnvKompare = function(patient_id,
   if (!missing(seg_path)) {
     these_samples_seg = read_tsv(seg_path) %>%
       `names<-`(c(ID, chrom, start, end, LOH_flag, log.ratio)) %>%
-      dplyr::mutate(CN=(2*2^log.ratio))
+      dplyr::mutate(CN = (2 * 2 ^ log.ratio))
   } else if (!missing(this_seg)) {
     these_samples_seg = this_seg %>%
       `names<-`(c(ID, chrom, start, end, LOH_flag, log.ratio)) %>%
-      dplyr::mutate(CN=(2*2^log.ratio))
+      dplyr::mutate(CN = (2 * 2 ^ log.ratio))
   } else {
     message("Retreiving the CNV data using GAMBLR ...")
     these_samples_seg = get_sample_cn_segments(multiple_samples = TRUE,
@@ -3005,7 +3014,7 @@ cnvKompare = function(patient_id,
     dplyr::filter(ID %in% sample_ids) %>% # if user-provided seg, ensure only samples of comparison are present
     relocate(ID, .after = last_col())
   if (exclude_sex) {
-    these_samples_seg = dplyr::filter(these_samples_seg, !grepl("X|Y", chrom))
+    these_samples_seg = dplyr::filter(these_samples_seg,!grepl("X|Y", chrom))
   }
 
   these_samples_seg = as.data.table(these_samples_seg)
@@ -3016,32 +3025,36 @@ cnvKompare = function(patient_id,
   cytoband_overlap =
     foverlaps(cytobands,
               these_samples_seg,
-              nomatch=0) %>%
+              nomatch = 0) %>%
     as.data.frame %>%
     group_by(cb.name) %>%
-    mutate(start=ifelse(start>cb.start, start, cb.start),
-           end=ifelse(end<cb.end, end, cb.end)) %>%
+    mutate(
+      start = ifelse(start > cb.start, start, cb.start),
+      end = ifelse(end < cb.end, end, cb.end)
+    ) %>%
     ungroup
 
   # calculate % of cytoband covered by CNV and concordance score
   message("Calculating CNV concordance ...")
   for_output =
     cytoband_overlap %>%
-    mutate(band_length=cb.end-cb.start,
-           cnv_length=end-start,
-           # round the % of cytoband covered to the nearest 5%
-           pct_covered=plyr::round_any((cnv_length/band_length*100), 5, f = round)) %>%
+    mutate(
+      band_length = cb.end - cb.start,
+      cnv_length = end - start,
+      # round the % of cytoband covered to the nearest 5%
+      pct_covered = plyr::round_any((cnv_length / band_length * 100), 5, f = round)
+    ) %>%
     # name each cytoband as chr_cytoband
-    mutate(name=paste0(cb.chromosome, "_", cb.name)) %>%
+    mutate(name = paste0(cb.chromosome, "_", cb.name)) %>%
     # calculate % covered by cytoband and it's CN
     group_by(ID, name) %>%
     mutate(pct_covered = sum(pct_covered),
-           CN=mean(CN)) %>%
+           CN = mean(CN)) %>%
     ungroup() %>%
     arrange(name, ID) %>%
-    distinct(ID,CN,pct_covered,name,.keep_all = TRUE) %>%
+    distinct(ID, CN, pct_covered, name, .keep_all = TRUE) %>%
     # designate score of %covered*CN to infer intra-sample concordance
-    mutate(score=CN*pct_covered)
+    mutate(score = CN * pct_covered)
 
   # overall concordance
   concordance =
@@ -3050,9 +3063,14 @@ cnvKompare = function(patient_id,
     spread(., ID, score) %>%
     column_to_rownames("name")
 
-  overall_concordance = ifelse(rowSums(concordance)==concordance[,1]*ncol(concordance), "YES", "NO")
+  overall_concordance = ifelse(rowSums(concordance) == concordance[, 1] *
+                                 ncol(concordance),
+                               "YES",
+                               "NO")
   overall_concordance = overall_concordance[!is.na(overall_concordance)]
-  overall_concordance_pct = round(((sum(overall_concordance == "YES")/length(overall_concordance))*100),2)
+  overall_concordance_pct = round(((
+    sum(overall_concordance == "YES") / length(overall_concordance)
+  ) * 100), 2)
   output$overall_concordance_pct = overall_concordance_pct
 
   # return cytobands consistent across samples
@@ -3068,22 +3086,31 @@ cnvKompare = function(patient_id,
   discordant_cytobands =
     for_output %>%
     # output-specific
-    select(ID, cb.chromosome, cb.start, cb.end, name, pct_covered, log.ratio, score) %>%
+    select(ID,
+           cb.chromosome,
+           cb.start,
+           cb.end,
+           name,
+           pct_covered,
+           log.ratio,
+           score) %>%
     dplyr::filter(name %in% names(overall_concordance[overall_concordance == "NO"]))
 
   output$discordant_cytobands = discordant_cytobands
 
   # heatmap of cnvKompare scores
-  if (return_heatmap){
+  if (return_heatmap) {
     message("Building heatmap ...")
     hmap_legend_param = list(title = "cnvKompare score")
     hMap = concordance %>%
       as.matrix() %>%
       t %>%
-      ComplexHeatmap::Heatmap(.,
-                              cluster_columns = FALSE,
-                              cluster_rows = FALSE,
-                              heatmap_legend_param = hmap_legend_param)
+      ComplexHeatmap::Heatmap(
+        .,
+        cluster_columns = FALSE,
+        cluster_rows = FALSE,
+        heatmap_legend_param = hmap_legend_param
+      )
     output$Heatmap = hMap
   }
 
@@ -3096,8 +3123,8 @@ cnvKompare = function(patient_id,
     for_plot_lg = hg38_lymphoma_genes_bed %>%
       as.data.table()
   }
-   # did user specify particular genes of interest to display on the plot?
-  if (! missing(genes_of_interest)) {
+  # did user specify particular genes of interest to display on the plot?
+  if (!missing(genes_of_interest)) {
     message("Subsetting lymphoma genes to specified genes of interest ...")
     for_plot_lg = dplyr::filter(for_plot_lg, hgnc_symbol %in% genes_of_interest)
   }
@@ -3109,20 +3136,22 @@ cnvKompare = function(patient_id,
 
   # generate plot
   time_plot =
-  foverlaps(for_plot_lg,
-            for_plot,
-            nomatch=NULL) %>%
+    foverlaps(for_plot_lg,
+              for_plot,
+              nomatch = NULL) %>%
     as.data.frame %>%
     select(ID, hgnc_symbol, log.ratio) %>%
-    ggplot(., aes(x = ID, y = log.ratio, group=hgnc_symbol)) +
-    geom_line(aes(color=hgnc_symbol)) +
-    ggrepel::geom_label_repel(aes(label = hgnc_symbol, color=hgnc_symbol),
-                              nudge_x = 0.1,
-                              na.rm = TRUE,
-                              label.size = NA,
-                              fill = NA,
-                              segment.color = "transparent",
-                              max.overlaps = max_overlap) +
+    ggplot(., aes(x = ID, y = log.ratio, group = hgnc_symbol)) +
+    geom_line(aes(color = hgnc_symbol)) +
+    ggrepel::geom_label_repel(
+      aes(label = hgnc_symbol, color = hgnc_symbol),
+      nudge_x = 0.1,
+      na.rm = TRUE,
+      label.size = NA,
+      fill = NA,
+      segment.color = "transparent",
+      max.overlaps = max_overlap
+    ) +
     theme_Morons() +
     theme(legend.position = "none",
           axis.title.x = element_blank())
@@ -3130,22 +3159,25 @@ cnvKompare = function(patient_id,
   output$time_plot = time_plot
 
   # for groups with >2 samples, make pairwise comparisons
-  if (compare_pairwise & length(sample_ids)>2) {
+  if (compare_pairwise & length(sample_ids) > 2) {
     message("Performing pairwise comparisons ...")
 
     # generate all possible combinations
-    possible_combinations = apply(combn(sample_ids,2),2,paste,collapse='--')
+    possible_combinations = apply(combn(sample_ids, 2), 2, paste, collapse =
+                                    '--')
 
     for (combination in possible_combinations) {
       # samples in this pairwise comparison
       these_samples = unlist(strsplit(combination, split = "--"))
 
       # pct concordance in this pair
-      this_concordance = concordance[,these_samples]
-      this_concordance = ifelse(this_concordance[,1]==this_concordance[,2], "YES", "NO")
+      this_concordance = concordance[, these_samples]
+      this_concordance = ifelse(this_concordance[, 1] == this_concordance[, 2], "YES", "NO")
       names(this_concordance) = rownames(concordance)
       this_concordance = this_concordance[!is.na(this_concordance)]
-      this_concordance_pct = round(((sum(this_concordance == "YES")/length(this_concordance))*100),2)
+      this_concordance_pct = round(((
+        sum(this_concordance == "YES") / length(this_concordance)
+      ) * 100), 2)
       output$pairwise_comparisons[[combination]]$pairwise_concordance_pct = this_concordance_pct
 
       # return cytobands consistent in this pair
@@ -3163,7 +3195,14 @@ cnvKompare = function(patient_id,
         for_output %>%
         dplyr::filter(ID %in% these_samples) %>%
         # output-specific
-        select(ID, cb.chromosome, cb.start, cb.end, name, pct_covered, log.ratio, score) %>%
+        select(ID,
+               cb.chromosome,
+               cb.start,
+               cb.end,
+               name,
+               pct_covered,
+               log.ratio,
+               score) %>%
         dplyr::filter(name %in% names(this_concordance[this_concordance == "NO"]))
 
       output$pairwise_comparisons[[combination]]$discordant_cytobands = discordant_cytobands
