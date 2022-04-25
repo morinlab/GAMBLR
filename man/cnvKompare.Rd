@@ -2,13 +2,7 @@
 % Please edit documentation in R/utilities.R
 \name{cnvKompare}
 \alias{cnvKompare}
-\title{This function will compare CNV data between samples with multiple time points. It can also handle same-sample comparison
-between different CNV callers if sample ID is specified in unique fashion. For groups with more than 2 samples,
-optionally the pairwise comparisons can be performed. The comparison is made based on the internally calculated score,
-which reflects percentage of each cytoband covered by CNV (rounded to the nearest 5\%) and its absolute CN. Optionally,
-the heatmap of cnvKompare scores can be returned. In addition, the function will return all concordant and discordant cytobands.
-Finally, the time series plot of CNV log ratios will be returned for all lymphoma genes, with further functionality to subset
-it to a panel of genes of interest.}
+\title{Compare segmented data for multiple samples.}
 \usage{
 cnvKompare(
   patient_id,
@@ -53,6 +47,9 @@ cnvKompare(
 A list of overall and pairwise percent concordance, concordant and discordant cytobands, comparison heatmap of cnvKompare socres, and time series ggplot object.
 }
 \description{
+\code{cnvKompare} returns a list in variable data formats allowing to evaluate concordance of CNV data between multiple samples.
+}
+\details{
 This function will compare CNV data between samples with multiple time points. It can also handle same-sample comparison
 between different CNV callers if sample ID is specified in unique fashion. For groups with more than 2 samples,
 optionally the pairwise comparisons can be performed. The comparison is made based on the internally calculated score,

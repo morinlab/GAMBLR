@@ -459,6 +459,10 @@ region_to_chunks = function(region){
 }
 
 
+#' Convert mutation data to a shereable format.
+#'
+#' `sanitize_maf_data` returns oncomatrix of patient/gene data indicating only data needed to produce oncoplot.
+#'
 #' Write an oncomatrix from a MAF File for further plotting. This is meant to be run by individuals who have access to data sets to
 #' "sanitize" a subset of data for subsequent use by them or others who don't have permission to access the raw data.
 #' Example: User J has full permissions for ICGC data and has read permissions on a MAF file. User B needs to make some oncoplots
@@ -2648,6 +2652,10 @@ standardize_chr_prefix = function(incoming_vector,
 }
 
 
+#' Calculate proportion of genome altered by CNV.
+#'
+#' `calculate_pga` returns a data.frame with estimated proportion of genome altered for each sample.
+#'
 #' This function calculates the percent of genome altered (PGA) by CNV. It takes into account the total length of
 #' sample's CNV and relates it to the total genome length to return the proportion affected by CNV. The input is expected to be seg file.
 #' The path to a local SEG file can be provided instead. If The custom seg file is provided, the minimum required columns are
@@ -2790,6 +2798,10 @@ calculate_pga = function(this_seg,
 
 }
 
+#' Adjust ploidy for samples with CNV data.
+#'
+#' `adjust_ploidy` returns a seg file with log.ratios adjusted to the overall sample ploidy.
+#'
 #' This function adjusts ploidy of the sample using the percent of genome altered (PGA). The PGA is calculated internally, but can also be optionally provided as data frame
 #' if calculated from other sources. Only the samples above the threshold-provided PGA will have ploidy adjusted. The function can work with either individual or
 #' multi-sample seg file. The telomeres are always excluded from calculation, and sex chromosomes can be optionally included or excluded. The supported projections are grch37 and hg38.
@@ -2912,6 +2924,10 @@ adjust_ploidy = function(this_seg,
 }
 
 
+#' Compare segmented data for multiple samples.
+#'
+#' `cnvKompare` returns a list in variable data formats allowing to evaluate concordance of CNV data between multiple samples.
+#'
 #' This function will compare CNV data between samples with multiple time points. It can also handle same-sample comparison
 #' between different CNV callers if sample ID is specified in unique fashion. For groups with more than 2 samples,
 #' optionally the pairwise comparisons can be performed. The comparison is made based on the internally calculated score,
