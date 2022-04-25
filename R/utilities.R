@@ -2962,11 +2962,7 @@ cnvKompare = function(patient_id,
   # retrieve sample ids if only patient id is specified
   if (missing(sample_ids)) {
     sample_ids = get_gambl_metadata()
-    sample_ids = dplyr::filter(sample_ids, patient_id == {
-      {
-        patient_id
-      }
-    })
+    sample_ids = dplyr::filter(sample_ids, patient_id == {{ patient_id }})
     sample_ids = pull(sample_ids, sample_id)
     message(paste0(
       "Found ",
