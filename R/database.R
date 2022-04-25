@@ -1141,7 +1141,7 @@ get_sample_cn_segments = function(this_sample_id,
       full_cnv_path =  paste0(config::get("project_base"), cnv_path)
     }
 
-    all_segs = read_tsv(full_cnv_path)
+    all_segs = read_tsv(full_cnv_path, show_col_types = FALSE)
     if (!missing(this_sample_id) & !multiple_samples) {
       all_segs = dplyr::filter(all_segs, ID %in% this_sample_id)
     } else if (!missing(sample_list)) {
