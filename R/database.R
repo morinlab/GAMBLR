@@ -1122,54 +1122,83 @@ get_cn_states = function(regions_list,
 get_sample_cn_segments = function(this_sample_id,
                                   multiple_samples = FALSE,
                                   sample_list,
+                                  from_flatfile = TRUE,
+                                  projection = "grch37",
                                   with_chr_prefix = FALSE,
                                   streamlined = FALSE){
+  if(from_flatfile){
+    seq_type = "genome"
+    cnv_flatfile_template = config::get("results_flatfiles")$cnv_combined$icgc_dart
+    cnv_path =  glue::glue(cnv_flatfile_template)
+    full_cnv_path =  paste0(config::get("project_base"), cnv_path)
 
-  if(!missing(this_sample_id) & !multiple_samples){
-    sample_status = get_gambl_metadata() %>%
-      dplyr::filter(sample_id == this_sample_id) %>%
-      pull(pairing_status)
+    # check permissions to ICGC data
+    permissions = file.access(full_cnv_path, 4)
+    if (permissions == -1) {
+      message("restricting to non-ICGC data")
+      cnv_flatfile_template = config::get("results_flatfiles")$cnv_combined$gambl
+      cnv_path =  glue::glue(cnv_flatfile_template)
+      full_cnv_path =  paste0(config::get("project_base"), cnv_path)
+    }
 
-    db = config::get("database_name")
-    table_name = config::get("results_tables")$copy_number
-    table_name_unmatched = config::get("results_tables")$copy_number_unmatched
-    con = DBI::dbConnect(RMariaDB::MariaDB(), dbname = db)
+    all_segs = read_tsv(full_cnv_path)
+    if (!missing(this_sample_id) & !multiple_samples) {
+      all_segs = dplyr::filter(all_segs, ID %in% this_sample_id)
+    } else if (!missing(sample_list)) {
+      all_segs = dplyr::filter(all_segs, ID %in% sample_list)
+    }
 
-    all_segs_matched = dplyr::tbl(con, table_name) %>%
-      dplyr::filter(ID == this_sample_id) %>%
-      as.data.frame() %>%
-      dplyr::mutate(method = "battenberg")
+  } else {
 
-    all_segs_unmatched = dplyr::tbl(con, table_name_unmatched) %>%
-      dplyr::filter(ID == this_sample_id) %>%
-      as.data.frame() %>%
-      dplyr::filter(! ID %in% all_segs_matched$ID) %>%
-      dplyr::mutate(method = "controlfreec")
+    if(!missing(this_sample_id) & !multiple_samples){
+      sample_status = get_gambl_metadata() %>%
+        dplyr::filter(sample_id == this_sample_id) %>%
+        pull(pairing_status)
+
+      db = config::get("database_name")
+      table_name = config::get("results_tables")$copy_number
+      table_name_unmatched = config::get("results_tables")$copy_number_unmatched
+      con = DBI::dbConnect(RMariaDB::MariaDB(), dbname = db)
+
+      all_segs_matched = dplyr::tbl(con, table_name) %>%
+        dplyr::filter(ID == this_sample_id) %>%
+        as.data.frame() %>%
+        dplyr::mutate(method = "battenberg")
+
+      all_segs_unmatched = dplyr::tbl(con, table_name_unmatched) %>%
+        dplyr::filter(ID == this_sample_id) %>%
+        as.data.frame() %>%
+        dplyr::filter(! ID %in% all_segs_matched$ID) %>%
+        dplyr::mutate(method = "controlfreec")
+    }
+
+    if(multiple_samples & missing(this_sample_id)){
+      sample_status = get_gambl_metadata() %>%
+        dplyr::filter(sample_id %in% sample_list) %>%
+        pull(pairing_status)
+
+      db = config::get("database_name")
+      table_name = config::get("results_tables")$copy_number
+      table_name_unmatched = config::get("results_tables")$copy_number_unmatched
+      con = DBI::dbConnect(RMariaDB::MariaDB(), dbname = db)
+
+      all_segs_matched = dplyr::tbl(con, table_name) %>%
+        dplyr::filter(ID %in% sample_list) %>%
+        as.data.frame() %>%
+        dplyr::mutate(method = "battenberg")
+
+      all_segs_unmatched = dplyr::tbl(con, table_name_unmatched) %>%
+        dplyr::filter(ID %in% sample_list) %>%
+        as.data.frame() %>%
+        dplyr::filter(! ID %in% all_segs_matched$ID) %>%
+        dplyr::mutate(method = "controlfreec")
+    }
+
+    all_segs = rbind(all_segs_matched, all_segs_unmatched)
+
   }
 
-  if(multiple_samples & missing(this_sample_id)){
-    sample_status = get_gambl_metadata() %>%
-      dplyr::filter(sample_id %in% sample_list) %>%
-      pull(pairing_status)
 
-  db = config::get("database_name")
-  table_name = config::get("results_tables")$copy_number
-  table_name_unmatched = config::get("results_tables")$copy_number_unmatched
-  con = DBI::dbConnect(RMariaDB::MariaDB(), dbname = db)
-
-  all_segs_matched = dplyr::tbl(con, table_name) %>%
-    dplyr::filter(ID %in% sample_list) %>%
-    as.data.frame() %>%
-    dplyr::mutate(method = "battenberg")
-
-  all_segs_unmatched = dplyr::tbl(con, table_name_unmatched) %>%
-    dplyr::filter(ID %in% sample_list) %>%
-    as.data.frame() %>%
-    dplyr::filter(! ID %in% all_segs_matched$ID) %>%
-    dplyr::mutate(method = "controlfreec")
-  }
-
-  all_segs = rbind(all_segs_matched, all_segs_unmatched)
   all_segs = dplyr::mutate(all_segs, CN = round(2*2^log.ratio))
 
   if(!with_chr_prefix){all_segs = all_segs %>% dplyr::mutate(chrom = gsub("chr", "", chrom))}
