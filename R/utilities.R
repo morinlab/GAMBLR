@@ -2944,6 +2944,7 @@ adjust_ploidy = function(this_seg,
 #' @param projection Argument specifying the projection of seg file, which will determine coordinates of the cytobands. Default is grch37, but hg38 is also accepted.
 #' @param ignore_cytoband_labels Cytobands to be ignored. By default, "acen", "gvar", "stalk" are excluded.
 #' @param max_overlap For time-series plot, how many maximum overlapping points are allowed?
+#' @param min_concordance Integer value from 0 to 100 to indicate the minimum required similarity between cytobands to be considered concordant. The dafult is 90 (90%).
 #' @param pga_cutoff Minimum PGA for the sample to adjust ploidy. Default is 0.05 (5%).
 #' @param exclude_sex Boolean argument specifying whether to exclude sex chromosomes from calculation. Default is FALSE.
 #' @param return_heatmap Boolean argument specifying whether to return a heatmap of cnvKompare scores. Default is TRUE.
@@ -2964,11 +2965,15 @@ cnvKompare = function(patient_id,
                       projection = "grch37",
                       ignore_cytoband_labels = c("acen", "gvar", "stalk"),
                       max_overlap = 20,
+                      min_concordance = 90,
                       exclude_sex = FALSE,
                       return_heatmap = TRUE,
                       compare_pairwise = TRUE) {
   # initialize output list
   output = list()
+
+  # convert min concordance pct to fraction
+  min_concordance = min_concordance/100
 
   # check that sample identifiers are provided
   if (missing(patient_id) & missing(sample_ids)) {
@@ -3078,8 +3083,8 @@ cnvKompare = function(patient_id,
     spread(., ID, score) %>%
     column_to_rownames("name")
 
-  overall_concordance = ifelse(rowSums(concordance) == concordance[, 1] *
-                                 ncol(concordance),
+  overall_concordance = ifelse((rowSums(concordance) >= ((concordance[, 1] * ncol(concordance))*min_concordance) &
+                                  rowSums(concordance) <= ((concordance[, 1] * ncol(concordance))*(1+(1-min_concordance)))),
                                "YES",
                                "NO")
   overall_concordance = overall_concordance[!is.na(overall_concordance)]
@@ -3187,7 +3192,10 @@ cnvKompare = function(patient_id,
 
       # pct concordance in this pair
       this_concordance = concordance[, these_samples]
-      this_concordance = ifelse(this_concordance[, 1] == this_concordance[, 2], "YES", "NO")
+      this_concordance = ifelse((this_concordance[, 1] >= (this_concordance[, 2])*min_concordance) &
+                                  this_concordance[, 1] <= (this_concordance[, 2])*(1+(1-min_concordance)),
+                                "YES",
+                                "NO")
       names(this_concordance) = rownames(concordance)
       this_concordance = this_concordance[!is.na(this_concordance)]
       this_concordance_pct = round(((

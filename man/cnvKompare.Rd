@@ -13,6 +13,7 @@ cnvKompare(
   projection = "grch37",
   ignore_cytoband_labels = c("acen", "gvar", "stalk"),
   max_overlap = 20,
+  min_concordance = 90,
   exclude_sex = FALSE,
   return_heatmap = TRUE,
   compare_pairwise = TRUE
@@ -34,6 +35,8 @@ cnvKompare(
 \item{ignore_cytoband_labels}{Cytobands to be ignored. By default, "acen", "gvar", "stalk" are excluded.}
 
 \item{max_overlap}{For time-series plot, how many maximum overlapping points are allowed?}
+
+\item{min_concordance}{Integer value from 0 to 100 to indicate the minimum required similarity between cytobands to be considered concordant. The dafult is 90 (90\%).}
 
 \item{exclude_sex}{Boolean argument specifying whether to exclude sex chromosomes from calculation. Default is FALSE.}
 
