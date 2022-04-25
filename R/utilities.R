@@ -3007,7 +3007,10 @@ cnvKompare = function(patient_id,
   } else {
     message("Retreiving the CNV data using GAMBLR ...")
     these_samples_seg = get_sample_cn_segments(multiple_samples = TRUE,
-                                               sample_list = sample_ids)
+                                               sample_list = sample_ids,
+                                               from_flatfile = TRUE,
+                                               projection = projection,
+                                               with_chr_prefix = TRUE)
   }
 
   these_samples_seg = these_samples_seg  %>%
