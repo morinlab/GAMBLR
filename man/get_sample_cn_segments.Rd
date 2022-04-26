@@ -8,6 +8,8 @@ get_sample_cn_segments(
   this_sample_id,
   multiple_samples = FALSE,
   sample_list,
+  from_flatfile = TRUE,
+  projection = "grch37",
   with_chr_prefix = FALSE,
   streamlined = FALSE
 )
