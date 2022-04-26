@@ -50,5 +50,4 @@ ideo_2_samp = fancy_multisamp_ideogram(these_sample_ids = two_samples,
                                        from_flatfile = FALSE,
                                        use_augmented_maf = FALSE)
 
-
 }

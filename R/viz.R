@@ -3274,7 +3274,6 @@ fancy_ideogram = function(this_sample,
 #'                                        from_flatfile = FALSE,
 #'                                        use_augmented_maf = FALSE)
 #'
-#'
 fancy_multisamp_ideogram = function(these_sample_ids,
                                     plot_title = "CN Segments Ideogram",
                                     plot_sub = "grch37",
@@ -3286,31 +3285,22 @@ fancy_multisamp_ideogram = function(these_sample_ids,
 
   #plot theme
   ideogram_theme = function(){
-    theme(legend.position = "bottom", axis.title.x = element_blank(), axis.ticks.y = element_blank(), axis.title.y = element_blank(), axis.line.y = element_blank(), axis.text.y = element_blank())
-  }
+    theme(legend.position = "bottom", axis.title.x = element_blank(), axis.ticks.y = element_blank(), axis.title.y = element_blank(), axis.line.y = element_blank(), axis.text.y = element_blank())}
 
-  #transform chr_anno_dist
+  #transform chr_anno_dist and set some other variables
   anno_dist = chr_anno_dist * -10000000
-
-  #set widths based on n samples to be plotted
   if(length(these_sample_ids) == 2){
     seg_dist = 0.18
-    white_dist = 0.5
-    chr_anno_v = 0
+    seg_size = 4
+    seg_size_cent = 5
   }else if(length(these_sample_ids) == 3){
     seg_dist = 0.28
-    white_dist = 0.5
-    chr_anno_v = 0
+    seg_size = 3.5
+    seg_size_cent = 4
   }else if(length(these_sample_ids) == 4){
-    seg_dist = 0.12
-    white_dist = 0.5
-    chr_anno_v = 0
-  }else{
-    message("Warning: Function only supports plotting of 2, 3 and 4 samples.")
-    return()
-  }
+    seg_dist = 0.12}
 
-  #grch37 coordinates
+  #chr segment coordinates
   grch37_end = c(249250621, 243199373, 198022430, 191154276, 180915260, 171115067, 159138663, 146364022, 141213431, 135534747, 135006516, 133851895, 115169878, 107349540, 102531392, 90354753, 81195210, 78077248, 59128983, 63025520, 48129895, 51304566)
   grch37_cent_start = c(121535434, 92326171, 90504854, 49660117, 46405641, 58830166, 58054331, 43838887, 47367679, 39254935, 51644205, 34856694, 16000000, 16000000, 17000000, 35335801, 22263006, 15460898, 24681782, 26369569, 11288129, 13000000)
   grch37_cent_end = c(124535434, 95326171, 93504854, 52660117, 49405641, 61830166, 61054331, 46838887, 50367679, 42254935, 54644205, 37856694, 19000000, 19000000, 20000000, 38335801, 25263006, 18460898, 27681782, 29369569, 14288129, 16000000)
@@ -3330,7 +3320,7 @@ fancy_multisamp_ideogram = function(these_sample_ids,
 
   #sub-setting maf based on user-defined parameters
   segment_data = segment_data[segment_data$chr %in% chr_select, ]
-  segment_data= droplevels(segment_data)
+  segment_data = droplevels(segment_data)
 
   #load CN data
   cn_states = get_sample_cn_segments(multiple_samples = TRUE, sample_list = these_sample_ids, streamlined = FALSE)
@@ -3340,15 +3330,12 @@ fancy_multisamp_ideogram = function(these_sample_ids,
 
   #paste chr in chromosomecolumn, if not there
   if(!str_detect(cn_states$chrom, "chr")){
-    cn_states = mutate(cn_states, chrom = paste0("chr", chrom))
-  }
+    cn_states = mutate(cn_states, chrom = paste0("chr", chrom))}
 
-  #convert data types
   #transform data types
   cols.int = c("start", "end", "ycoord")
   cn_states[cols.int] = sapply(cn_states[cols.int], as.integer)
   cn_states$chrom = as.factor(cn_states$chrom)
-  cn_states$CN = as.factor(cn_states$CN)
   cn_states$ID = as.factor(cn_states$ID)
 
   #sub-setting maf based on user-defined parameters
@@ -3357,238 +3344,124 @@ fancy_multisamp_ideogram = function(these_sample_ids,
 
   #retrieve sample names
   samples = levels(cn_states$ID)
+
+  #first sample
   sample1 = samples[1]
-  sample2 = samples[2]
   sample1_cn = dplyr::filter(cn_states, ID == sample1)
+  subset_cnstates(cn_segments = sample1_cn, samplen = 1)
   sample1_cn$CN = as.factor(sample1_cn$CN)
   sample1_cn = droplevels(sample1_cn)
+
+  #second sample
+  sample2 = samples[2]
   sample2_cn = dplyr::filter(cn_states, ID == sample2)
+  subset_cnstates(cn_segments = sample2_cn, samplen = 2)
   sample2_cn$CN = as.factor(sample2_cn$CN)
   sample2_cn = droplevels(sample2_cn)
 
-  #subset on CN state (first sample)
-  if("0" %in% levels(sample1_cn$CN)){
-    cn_0_sample1 = dplyr::filter(sample1_cn, CN == 0)
-  }
-  if("1" %in% levels(sample1_cn$CN)){
-    cn_1_sample1 = dplyr::filter(sample1_cn, CN == 1)
-  }
-  if("3" %in% levels(sample1_cn$CN)){
-    cn_3_sample1 = dplyr::filter(sample1_cn, CN == 3)
-  }
-  if("4" %in% levels(sample1_cn$CN)){
-    cn_4_sample1 = dplyr::filter(sample1_cn, CN == 4)
-  }
-  if("5" %in% levels(sample1_cn$CN)){
-    cn_5_sample1 = dplyr::filter(sample1_cn, CN == 5)
-  }
-  if("6+" %in% levels(sample1_cn$CN)){
-    cn_6_or_more_sample1 = dplyr::filter(sample1_cn, CN >= 6)
-  }
-
-  #subset on CN state (second sample)
-  if("0" %in% levels(sample2_cn$CN)){
-    cn_0_sample2 = dplyr::filter(sample2_cn, CN == 0)
-  }
-  if("1" %in% levels(sample2_cn$CN)){
-    cn_1_sample2 = dplyr::filter(sample2_cn, CN == 1)
-  }
-  if("3" %in% levels(sample2_cn$CN)){
-    cn_3_sample2 = dplyr::filter(sample2_cn, CN == 3)
-  }
-  if("4" %in% levels(sample2_cn$CN)){
-    cn_4_sample2 = dplyr::filter(sample2_cn, CN == 4)
-  }
-  if("5" %in% levels(sample2_cn$CN)){
-    cn_5_sample2 = dplyr::filter(sample2_cn, CN == 5)
-  }
-  if("6+" %in% levels(sample2_cn$CN)){
-    cn_6_or_more_sample2 = dplyr::filter(sample2_cn, CN >= 6)
-  }
-
+  #third sample (if provided...)
   if(length(these_sample_ids) > 2){
     sample3 = samples[3]
     sample3_cn = dplyr::filter(cn_states, ID == sample3)
+    subset_cnstates(cn_segments = sample3_cn, samplen = 3)
     sample3_cn$CN = as.factor(sample3_cn$CN)
-    sample3_cn = droplevels(sample3_cn)
+    sample3_cn = droplevels(sample3_cn)}
 
-    #subset on CN state (third sample)
-    if("0" %in% levels(sample3_cn$CN)){
-      cn_0_sample3 = dplyr::filter(sample3_cn, CN == 0)
-    }
-    if("1" %in% levels(sample3_cn$CN)){
-      cn_1_sample3 = dplyr::filter(sample3_cn, CN == 1)
-    }
-    if("3" %in% levels(sample3_cn$CN)){
-      cn_3_sample3 = dplyr::filter(sample3_cn, CN == 3)
-    }
-    if("4" %in% levels(sample3_cn$CN)){
-      cn_4_sample3 = dplyr::filter(sample3_cn, CN == 4)
-    }
-    if("5" %in% levels(sample3_cn$CN)){
-      cn_5_sample3 = dplyr::filter(sample3_cn, CN == 5)
-    }
-    if("6+" %in% levels(sample3_cn$CN)){
-      cn_6_or_more_sample3 = dplyr::filter(sample3_cn, CN >= 6)
-    }
-
-  }
-
+  #fourth sample (if provided...)
   if(length(these_sample_ids) > 3){
     sample4 = samples[4]
-    sample4_cn = dplyr::filter(cn_states, ID == sample3)
+    sample4_cn = dplyr::filter(cn_states, ID == sample4)
+    subset_cnstates(cn_segments = sample4_cn, samplen = 4)
     sample4_cn$CN = as.factor(sample4_cn$CN)
-    sample4_cn = droplevels(sample4_cn)
-
-    #subset on CN state (fourth sample)
-    if("0" %in% levels(sample4_cn$CN)){
-      cn_0_sample4 = dplyr::filter(sample4_cn, CN == 0)
-    }
-    if("1" %in% levels(sample4_cn$CN)){
-      cn_1_sample4 = dplyr::filter(sample4_cn, CN == 1)
-    }
-    if("3" %in% levels(sample4_cn$CN)){
-      cn_3_sample4 = dplyr::filter(sample4_cn, CN == 3)
-    }
-    if("4" %in% levels(sample4_cn$CN)){
-      cn_4_sample4 = dplyr::filter(sample4_cn, CN == 4)
-    }
-    if("5" %in% levels(sample4_cn$CN)){
-      cn_5_sample4 = dplyr::filter(sample4_cn, CN == 5)
-    }
-    if("6+" %in% levels(sample4_cn$CN)){
-      cn_6_or_more_sample4 = dplyr::filter(sample4_cn, CN >= 6)
-    }
-  }
+    sample4_cn = droplevels(sample4_cn)}
 
   #plot
-  if(length(these_sample_ids) == 2){
-  ggplot() +
-    #first sample
-    geom_segment(data = segment_data, aes(x = chr_start, xend = chr_end, y = y + seg_dist, yend = yend + seg_dist, label = chr), color = "#99A1A6", lineend = "butt", size = 4, stat = "identity", position = position_dodge()) + #chr contigs
-    geom_segment(data = segment_data, aes(x = cent_start, xend = cent_end, y = y + seg_dist, yend = yend + seg_dist), color = "white", size = 5, stat = "identity", position = position_dodge()) + #centromeres
-    annotate(geom = "text", x = -2000000, y = segment_data$yend + seg_dist, label = sample1, color = "black", size = 3, hjust = 1) + #sample name annotations
-    {if("0" %in% levels(sample1_cn$CN)) geom_segment(data = cn_0_sample1, aes(x = start, xend = end, y = ycoord + seg_dist, yend = ycoord + seg_dist, color = "CN0"), size = 4, stat = "identity", position = position_dodge())} +  #cn0
-    {if("1" %in% levels(sample1_cn$CN)) geom_segment(data = cn_1_sample1, aes(x = start, xend = end, y = ycoord + seg_dist, yend = ycoord + seg_dist, color = "CN1"), size = 4, stat = "identity", position = position_dodge())} +  #cn1
-    {if("3" %in% levels(sample1_cn$CN)) geom_segment(data = cn_3_sample1, aes(x = start, xend = end, y = ycoord + seg_dist, yend = ycoord + seg_dist, color = "CN3"), size = 4, stat = "identity", position = position_dodge())} + #cn3
-    {if("4" %in% levels(sample1_cn$CN)) geom_segment(data = cn_4_sample1, aes(x = start, xend = end, y = ycoord + seg_dist, yend = ycoord + seg_dist, color = "CN4"), size = 4, stat = "identity", position = position_dodge())} + #cn4
-    {if("5" %in% levels(sample1_cn$CN)) geom_segment(data = cn_5_sample1, aes(x = start, xend = end, y = ycoord + seg_dist, yend = ycoord + seg_dist, color = "CN5"), size = 4, stat = "identity", position = position_dodge())} + #cn5
-    {if("6+" %in% levels(sample1_cn$CN)) geom_segment(data = cn_6_or_more_sample1, aes(x = start, xend = end, y = ycoord + seg_dist, yend = ycoord + seg_dist, color = "CN6_or_more"), size = 4, stat = "identity", position = position_dodge())} + #cn6+
-    #second sample
-    geom_segment(data = segment_data, aes(x = chr_start, xend = chr_end, y = y - seg_dist, yend = yend - seg_dist, label = chr), color = "#99A1A6", lineend = "butt", size = 4, stat = "identity", position = position_dodge()) + #chr contigs
-    geom_segment(data = segment_data, aes(x = cent_start, xend = cent_end, y = y - seg_dist, yend = yend - seg_dist), color = "white", size = 5, stat = "identity", position = position_dodge()) + #centromeres
-    annotate(geom = "text", x = -2000000, y = segment_data$yend - seg_dist, label = sample2, color = "black", size = 3, hjust = 1) + #sample name annotations
-    {if("0" %in% levels(sample2_cn$CN)) geom_segment(data = cn_0_sample2, aes(x = start, xend = end, y = ycoord - seg_dist, yend = ycoord - seg_dist, color = "CN0"), size = 4, stat = "identity", position = position_dodge())} +  #cn0
-    {if("1" %in% levels(sample2_cn$CN)) geom_segment(data = cn_1_sample2, aes(x = start, xend = end, y = ycoord - seg_dist, yend = ycoord - seg_dist, color = "CN1"), size = 4, stat = "identity", position = position_dodge())} +  #cn1
-    {if("3" %in% levels(sample2_cn$CN)) geom_segment(data = cn_3_sample2, aes(x = start, xend = end, y = ycoord - seg_dist, yend = ycoord - seg_dist, color = "CN3"), size = 4, stat = "identity", position = position_dodge())} + #cn3
-    {if("4" %in% levels(sample2_cn$CN)) geom_segment(data = cn_4_sample2, aes(x = start, xend = end, y = ycoord - seg_dist, yend = ycoord - seg_dist, color = "CN4"), size = 4, stat = "identity", position = position_dodge())} + #cn4
-    {if("5" %in% levels(sample2_cn$CN)) geom_segment(data = cn_5_sample2, aes(x = start, xend = end, y = ycoord - seg_dist, yend = ycoord - seg_dist, color = "CN5"), size = 4, stat = "identity", position = position_dodge())} + #cn5
-    {if("6+" %in% levels(sample2_cn$CN)) geom_segment(data = cn_6_or_more_sample2, aes(x = start, xend = end, y = ycoord - seg_dist, yend = ycoord - seg_dist, color = "CN6_or_more"), size = 4, stat = "identity", position = position_dodge())} + #cn6+
-    #aesthetics
-    geom_segment(data = segment_data, aes(x = chr_start, xend = chr_end, y = y - white_dist, yend = yend - white_dist, label = chr), color = "white", lineend = "butt", size = 2, stat = "identity", position = position_dodge()) + #white space between chromosome groups (upper)
-    geom_segment(data = segment_data, aes(x = chr_start, xend = chr_end, y = y + white_dist, yend = yend + white_dist, label = chr), color = "white", lineend = "butt", size = 2, stat = "identity", position = position_dodge()) + #white space between chromosome groups (bottom)
-    annotate(geom = "text", x = anno_dist, y = segment_data$yend + chr_anno_v, label = segment_data$chr, color = "black", size = 7, hjust = 1) + #chr labels
-    labs(title = plot_title, subtitle = plot_sub) + #plot titles
-    scale_colour_manual(name = "", values = c(CN0 = "#4393C3", CN1 = "#92C5DE", CN3 = "#D6604DFF", CN4 = "#B2182BFF", CN5 = "#67001FFF", CN6_or_more = "#380015FF")) + #colours and legend
-    scale_x_continuous(breaks = seq(0, max(segment_data$chr_end), by = 30000000)) + #x-axis boundaries
-    scale_y_reverse() + #flip ideogram
-    theme_cowplot() +  #theme
-    ideogram_theme() #more theme
+  if(length(these_sample_ids) >= 2 & length(these_sample_ids) < 4){
+    p = ggplot() + geom_segment(data = segment_data, aes(x = chr_start, xend = chr_end, y = y + seg_dist, yend = yend + seg_dist, label = chr), color = "#99A1A6", lineend = "butt", size = seg_size, stat = "identity", position = position_dodge()) + #chr contigs
+      geom_segment(data = segment_data, aes(x = cent_start, xend = cent_end, y = y + seg_dist, yend = yend + seg_dist), color = "white", size = seg_size_cent, stat = "identity", position = position_dodge()) + #centromeres
+      annotate(geom = "text", x = -2000000, y = segment_data$yend + seg_dist, label = sample1, color = "black", size = 3, hjust = 1) + #sample name annotations
+        {if("0" %in% levels(sample1_cn$CN)) geom_segment(data = cn_0_sample1, aes(x = start, xend = end, y = ycoord + seg_dist, yend = ycoord + seg_dist, color = "CN0"), size = seg_size, stat = "identity", position = position_dodge())} +  #cn0
+        {if("1" %in% levels(sample1_cn$CN)) geom_segment(data = cn_1_sample1, aes(x = start, xend = end, y = ycoord + seg_dist, yend = ycoord + seg_dist, color = "CN1"), size = seg_size, stat = "identity", position = position_dodge())} +  #cn1
+        {if("3" %in% levels(sample1_cn$CN)) geom_segment(data = cn_3_sample1, aes(x = start, xend = end, y = ycoord + seg_dist, yend = ycoord + seg_dist, color = "CN3"), size = seg_size, stat = "identity", position = position_dodge())} + #cn3
+        {if("4" %in% levels(sample1_cn$CN)) geom_segment(data = cn_4_sample1, aes(x = start, xend = end, y = ycoord + seg_dist, yend = ycoord + seg_dist, color = "CN4"), size = seg_size, stat = "identity", position = position_dodge())} + #cn4
+        {if("5" %in% levels(sample1_cn$CN)) geom_segment(data = cn_5_sample1, aes(x = start, xend = end, y = ycoord + seg_dist, yend = ycoord + seg_dist, color = "CN5"), size = seg_size, stat = "identity", position = position_dodge())} + #cn5
+        {if("6+" %in% levels(sample1_cn$CN)) geom_segment(data = cn_6_or_more_sample1, aes(x = start, xend = end, y = ycoord + seg_dist, yend = ycoord + seg_dist, color = "CN6_or_more"), size = seg_size, stat = "identity", position = position_dodge())} #second sample
+      geom_segment(data = segment_data, aes(x = chr_start, xend = chr_end, y = y - seg_dist, yend = yend - seg_dist, label = chr), color = "#99A1A6", lineend = "butt", size = seg_size, stat = "identity", position = position_dodge()) + #chr contigs
+      geom_segment(data = segment_data, aes(x = cent_start, xend = cent_end, y = y - seg_dist, yend = yend - seg_dist), color = "white", size = seg_size_cent, stat = "identity", position = position_dodge()) + #centromeres
+      annotate(geom = "text", x = -2000000, y = segment_data$yend - seg_dist, label = sample2, color = "black", size = 3, hjust = 1) + #sample name annotations
+        {if("0" %in% levels(sample2_cn$CN)) geom_segment(data = cn_0_sample2, aes(x = start, xend = end, y = ycoord - seg_dist, yend = ycoord - seg_dist, color = "CN0"), size = seg_size, stat = "identity", position = position_dodge())} +  #cn0
+        {if("1" %in% levels(sample2_cn$CN)) geom_segment(data = cn_1_sample2, aes(x = start, xend = end, y = ycoord - seg_dist, yend = ycoord - seg_dist, color = "CN1"), size = seg_size, stat = "identity", position = position_dodge())} +  #cn1
+        {if("3" %in% levels(sample2_cn$CN)) geom_segment(data = cn_3_sample2, aes(x = start, xend = end, y = ycoord - seg_dist, yend = ycoord - seg_dist, color = "CN3"), size = seg_size, stat = "identity", position = position_dodge())} + #cn3
+        {if("4" %in% levels(sample2_cn$CN)) geom_segment(data = cn_4_sample2, aes(x = start, xend = end, y = ycoord - seg_dist, yend = ycoord - seg_dist, color = "CN4"), size = seg_size, stat = "identity", position = position_dodge())} + #cn4
+        {if("5" %in% levels(sample2_cn$CN)) geom_segment(data = cn_5_sample2, aes(x = start, xend = end, y = ycoord - seg_dist, yend = ycoord - seg_dist, color = "CN5"), size = seg_size, stat = "identity", position = position_dodge())} + #cn5
+        {if("6+" %in% levels(sample2_cn$CN)) geom_segment(data = cn_6_or_more_sample2, aes(x = start, xend = end, y = ycoord + seg_dist, yend = ycoord + seg_dist, color = "CN6_or_more"), size = seg_size, stat = "identity", position = position_dodge())} #third sample
+      if(length(these_sample_ids) > 2){
+        p = p + geom_segment(data = segment_data, aes(x = chr_start, xend = chr_end, y = y + seg_dist - 0.28, yend = yend + seg_dist - 0.28, label = chr), color = "#99A1A6", lineend = "butt", size = seg_size, stat = "identity", position = position_dodge()) + #chr contigs
+          geom_segment(data = segment_data, aes(x = cent_start, xend = cent_end, y = y + seg_dist - 0.28, yend = yend + seg_dist - 0.28), color = "white", size = seg_size_cent, stat = "identity", position = position_dodge()) + #centromeres
+          annotate(geom = "text", x = -2000000, y = segment_data$yend + seg_dist - 0.28, label = sample3, color = "black", size = 3, hjust = 1) + #sample name annotations
+            {if("0" %in% levels(sample3_cn$CN)) geom_segment(data = cn_0_sample3, aes(x = start, xend = end, y = ycoord + seg_dist - 0.28, yend = ycoord + seg_dist - 0.28, color = "CN0"), size = seg_size, stat = "identity", position = position_dodge())} +  #cn0
+            {if("1" %in% levels(sample3_cn$CN)) geom_segment(data = cn_1_sample3, aes(x = start, xend = end, y = ycoord + seg_dist - 0.28, yend = ycoord + seg_dist - 0.28, color = "CN1"), size = seg_size, stat = "identity", position = position_dodge())} +  #cn1
+            {if("3" %in% levels(sample3_cn$CN)) geom_segment(data = cn_3_sample3, aes(x = start, xend = end, y = ycoord + seg_dist - 0.28, yend = ycoord + seg_dist - 0.28, color = "CN3"), size = seg_size, stat = "identity", position = position_dodge())} + #cn3
+            {if("4" %in% levels(sample3_cn$CN)) geom_segment(data = cn_4_sample3, aes(x = start, xend = end, y = ycoord + seg_dist - 0.28, yend = ycoord + seg_dist - 0.28, color = "CN4"), size = seg_size, stat = "identity", position = position_dodge())} + #cn4
+            {if("5" %in% levels(sample3_cn$CN)) geom_segment(data = cn_5_sample3, aes(x = start, xend = end, y = ycoord + seg_dist - 0.28, yend = ycoord + seg_dist - 0.28, color = "CN5"), size = seg_size, stat = "identity", position = position_dodge())} + #cn5
+            {if("6+" %in% levels(sample3_cn$CN)) geom_segment(data = cn_6_or_more_sample3, aes(x = start, xend = end, y = ycoord + seg_dist - 0.28, yend = ycoord + seg_dist - 0.28, color = "CN6_or_more"), size = seg_size, stat = "identity", position = position_dodge())}} #cn6+
+      p = p + geom_segment(data = segment_data, aes(x = chr_start, xend = chr_end, y = y - 0.5, yend = yend - 0.5, label = chr), color = "white", lineend = "butt", size = 2, stat = "identity", position = position_dodge()) + #white space between chromosome groups (upper)
+        geom_segment(data = segment_data, aes(x = chr_start, xend = chr_end, y = y + 0.5, yend = yend + 0.5, label = chr), color = "white", lineend = "butt", size = 2, stat = "identity", position = position_dodge()) + #white space between chromosome groups (bottom)
+        annotate(geom = "text", x = anno_dist, y = segment_data$yend, label = segment_data$chr, color = "black", size = 7, hjust = 1) + #chr labels
+        labs(title = plot_title, subtitle = plot_sub) + #plot titles
+        scale_colour_manual(name = "", values = c(CN0 = "#4393C3", CN1 = "#92C5DE", CN3 = "#D6604DFF", CN4 = "#B2182BFF", CN5 = "#67001FFF", CN6_or_more = "#380015FF")) + #colours and legend
+        scale_x_continuous(breaks = seq(0, max(segment_data$chr_end), by = 30000000)) + #x-axis boundaries
+        scale_y_reverse() + #flip ideogram
+        theme_cowplot() +  #theme
+        ideogram_theme() #more theme
 
-  }else if(length(these_sample_ids) == 3){
-  ggplot() +
-    #first sample
-    geom_segment(data = segment_data, aes(x = chr_start, xend = chr_end, y = y, yend = yend, label = chr), color = "#99A1A6", lineend = "butt", size = 3.5, stat = "identity", position = position_dodge()) + #chr contigs
-    geom_segment(data = segment_data, aes(x = cent_start, xend = cent_end, y = y, yend = yend), color = "white", size = 4, stat = "identity", position = position_dodge()) + #centromeres
-    annotate(geom = "text", x = -2000000, y = segment_data$yend, label = sample1, color = "black", size = 3, hjust = 1) + #sample name annotations
-    {if("0" %in% levels(sample1_cn$CN)) geom_segment(data = cn_0_sample1, aes(x = start, xend = end, y = ycoord, yend = ycoord, color = "CN0"), size = 3.5, stat = "identity", position = position_dodge())} +  #cn0
-    {if("1" %in% levels(sample1_cn$CN)) geom_segment(data = cn_1_sample1, aes(x = start, xend = end, y = ycoord, yend = ycoord, color = "CN1"), size = 3.5, stat = "identity", position = position_dodge())} +  #cn1
-    {if("3" %in% levels(sample1_cn$CN)) geom_segment(data = cn_3_sample1, aes(x = start, xend = end, y = ycoord, yend = ycoord, color = "CN3"), size = 3.5, stat = "identity", position = position_dodge())} + #cn3
-    {if("4" %in% levels(sample1_cn$CN)) geom_segment(data = cn_4_sample1, aes(x = start, xend = end, y = ycoord, yend = ycoord, color = "CN4"), size = 3.5, stat = "identity", position = position_dodge())} + #cn4
-    {if("5" %in% levels(sample1_cn$CN)) geom_segment(data = cn_5_sample1, aes(x = start, xend = end, y = ycoord, yend = ycoord, color = "CN5"), size = 3.5, stat = "identity", position = position_dodge())} + #cn5
-    {if("6+" %in% levels(sample1_cn$CN)) geom_segment(data = cn_6_or_more_sample1, aes(x = start, xend = end, y = ycoord, yend = ycoord, color = "CN6_or_more"), size = 3.5, stat = "identity", position = position_dodge())} + #cn6+
-    #second sample
-    geom_segment(data = segment_data, aes(x = chr_start, xend = chr_end, y = y - seg_dist, yend = yend - seg_dist, label = chr), color = "#99A1A6", lineend = "butt", size = 3.5, stat = "identity", position = position_dodge()) + #chr contigs
-    geom_segment(data = segment_data, aes(x = cent_start, xend = cent_end, y = y - seg_dist, yend = yend - seg_dist), color = "white", size = 4, stat = "identity", position = position_dodge()) + #centromeres
-    annotate(geom = "text", x = -2000000, y = segment_data$yend - seg_dist, label = sample2, color = "black", size = 3, hjust = 1) + #sample name annotations
-    {if("0" %in% levels(sample2_cn$CN)) geom_segment(data = cn_0_sample2, aes(x = start, xend = end, y = ycoord - seg_dist, yend = ycoord - seg_dist, color = "CN0"), size = 3.5, stat = "identity", position = position_dodge())} +  #cn0
-    {if("1" %in% levels(sample2_cn$CN)) geom_segment(data = cn_1_sample2, aes(x = start, xend = end, y = ycoord - seg_dist, yend = ycoord - seg_dist, color = "CN1"), size = 3.5, stat = "identity", position = position_dodge())} +  #cn1
-    {if("3" %in% levels(sample2_cn$CN)) geom_segment(data = cn_3_sample2, aes(x = start, xend = end, y = ycoord - seg_dist, yend = ycoord - seg_dist, color = "CN3"), size = 3.5, stat = "identity", position = position_dodge())} + #cn3
-    {if("4" %in% levels(sample2_cn$CN)) geom_segment(data = cn_4_sample2, aes(x = start, xend = end, y = ycoord - seg_dist, yend = ycoord - seg_dist, color = "CN4"), size = 3.5, stat = "identity", position = position_dodge())} + #cn4
-    {if("5" %in% levels(sample2_cn$CN)) geom_segment(data = cn_5_sample2, aes(x = start, xend = end, y = ycoord - seg_dist, yend = ycoord - seg_dist, color = "CN5"), size = 3.5, stat = "identity", position = position_dodge())} + #cn5
-    {if("6+" %in% levels(sample2_cn$CN)) geom_segment(data = cn_6_or_more_sample2, aes(x = start, xend = end, y = ycoord - seg_dist, yend = ycoord - seg_dist, color = "CN6_or_more"), size = 3.5, stat = "identity", position = position_dodge())} + #cn6+
-    #third sample
-    geom_segment(data = segment_data, aes(x = chr_start, xend = chr_end, y = y + seg_dist, yend = yend + seg_dist, label = chr), color = "#99A1A6", lineend = "butt", size = 3.5, stat = "identity", position = position_dodge()) + #chr contigs
-    geom_segment(data = segment_data, aes(x = cent_start, xend = cent_end, y = y + seg_dist, yend = yend + seg_dist), color = "white", size = 4, stat = "identity", position = position_dodge()) + #centromeres
-    annotate(geom = "text", x = -2000000, y = segment_data$yend + seg_dist, label = sample3, color = "black", size = 3, hjust = 1) + #sample name annotations
-    {if("0" %in% levels(sample3_cn$CN)) geom_segment(data = cn_0_sample3, aes(x = start, xend = end, y = ycoord + seg_dist, yend = ycoord + seg_dist, color = "CN0"), size = 3.5, stat = "identity", position = position_dodge())} +  #cn0
-    {if("1" %in% levels(sample3_cn$CN)) geom_segment(data = cn_1_sample3, aes(x = start, xend = end, y = ycoord + seg_dist, yend = ycoord + seg_dist, color = "CN1"), size = 3.5, stat = "identity", position = position_dodge())} +  #cn1
-    {if("3" %in% levels(sample3_cn$CN)) geom_segment(data = cn_3_sample3, aes(x = start, xend = end, y = ycoord + seg_dist, yend = ycoord + seg_dist, color = "CN3"), size = 3.5, stat = "identity", position = position_dodge())} + #cn3
-    {if("4" %in% levels(sample3_cn$CN)) geom_segment(data = cn_4_sample3, aes(x = start, xend = end, y = ycoord + seg_dist, yend = ycoord + seg_dist, color = "CN4"), size = 3.5, stat = "identity", position = position_dodge())} + #cn4
-    {if("5" %in% levels(sample3_cn$CN)) geom_segment(data = cn_5_sample3, aes(x = start, xend = end, y = ycoord + seg_dist, yend = ycoord + seg_dist, color = "CN5"), size = 3.5, stat = "identity", position = position_dodge())} + #cn5
-    {if("6+" %in% levels(sample3_cn$CN)) geom_segment(data = cn_6_or_more_sample3, aes(x = start, xend = end, y = ycoord + seg_dist, yend = ycoord + seg_dist, color = "CN6_or_more"), size = 3.5, stat = "identity", position = position_dodge())} + #cn6+
-    #aesthetics
-    geom_segment(data = segment_data, aes(x = chr_start, xend = chr_end, y = y - white_dist, yend = yend - white_dist, label = chr), color = "white", lineend = "butt", size = 2, stat = "identity", position = position_dodge()) + #white space between chromosome groups (upper)
-    geom_segment(data = segment_data, aes(x = chr_start, xend = chr_end, y = y + white_dist, yend = yend + white_dist, label = chr), color = "white", lineend = "butt", size = 2, stat = "identity", position = position_dodge()) + #white space between chromosome groups (bottom)
-    annotate(geom = "text", x = anno_dist, y = segment_data$yend + chr_anno_v, label = segment_data$chr, color = "black", size = 7, hjust = 1) + #chr labels
-    labs(title = plot_title, subtitle = plot_sub) + #plot titles
-    scale_colour_manual(name = "", values = c(CN0 = "#4393C3", CN1 = "#92C5DE", CN3 = "#D6604DFF", CN4 = "#B2182BFF", CN5 = "#67001FFF", CN6_or_more = "#380015FF")) + #colours and legend
-    scale_x_continuous(breaks = seq(0, max(segment_data$chr_end), by = 30000000)) + #x-axis boundaries
-    scale_y_reverse() + #flip ideogram
-    theme_cowplot() +  #theme
-    ideogram_theme() #more theme
-
+  #plotting has its own plotting chunk, due to re-scaling of geom_segments and segment widths etc.
   }else if(length(these_sample_ids) == 4){
-  ggplot() +
-    #first sample
-    geom_segment(data = segment_data, aes(x = chr_start, xend = chr_end, y = y - (seg_dist - 0.48), yend = yend - (seg_dist - 0.48), label = chr), color = "#99A1A6", lineend = "butt", size = 3, stat = "identity", position = position_dodge()) + #chr contigs
-    geom_segment(data = segment_data, aes(x = cent_start, xend = cent_end, y = y - (seg_dist - 0.48), yend = yend - (seg_dist - 0.48)), color = "white", size = 4, stat = "identity", position = position_dodge()) + #centromeres
-    annotate(geom = "text", x = -2000000, y = segment_data$yend - (seg_dist - 0.48), label = sample1, color = "black", size = 3, hjust = 1) + #sample name annotations
-    {if("0" %in% levels(sample1_cn$CN)) geom_segment(data = cn_0_sample1, aes(x = start, xend = end, y = ycoord - (seg_dist - 0.48), yend = ycoord - (seg_dist - 0.48), color = "CN0"), size = 3, stat = "identity", position = position_dodge())} +  #cn0
-    {if("1" %in% levels(sample1_cn$CN)) geom_segment(data = cn_1_sample1, aes(x = start, xend = end, y = ycoord - (seg_dist - 0.48), yend = ycoord - (seg_dist - 0.48), color = "CN1"), size = 3, stat = "identity", position = position_dodge())} +  #cn1
-    {if("3" %in% levels(sample1_cn$CN)) geom_segment(data = cn_3_sample1, aes(x = start, xend = end, y = ycoord - (seg_dist - 0.48), yend = ycoord - (seg_dist - 0.48), color = "CN3"), size = 3, stat = "identity", position = position_dodge())} + #cn3
-    {if("4" %in% levels(sample1_cn$CN)) geom_segment(data = cn_4_sample1, aes(x = start, xend = end, y = ycoord - (seg_dist - 0.48), yend = ycoord - (seg_dist - 0.48), color = "CN4"), size = 3, stat = "identity", position = position_dodge())} + #cn4
-    {if("5" %in% levels(sample1_cn$CN)) geom_segment(data = cn_5_sample1, aes(x = start, xend = end, y = ycoord - (seg_dist - 0.48), yend = ycoord - (seg_dist - 0.48), color = "CN5"), size = 3, stat = "identity", position = position_dodge())} + #cn5
-    {if("6+" %in% levels(sample1_cn$CN)) geom_segment(data = cn_6_or_more_sample1, aes(x = start, xend = end, y = ycoord - (seg_dist - 0.48), yend = ycoord - (seg_dist - 0.48), color = "CN6_or_more"), size = 3, stat = "identity", position = position_dodge())} + #cn6+
-    #second sample
-    geom_segment(data = segment_data, aes(x = chr_start, xend = chr_end, y = y - seg_dist, yend = yend - seg_dist, label = chr), color = "#99A1A6", lineend = "butt", size = 3, stat = "identity", position = position_dodge()) + #chr contigs
-    geom_segment(data = segment_data, aes(x = cent_start, xend = cent_end, y = y - seg_dist, yend = yend - seg_dist), color = "white", size = 4, stat = "identity", position = position_dodge()) + #centromeres
-    annotate(geom = "text", x = -2000000, y = segment_data$yend - seg_dist, label = sample2, color = "black", size = 3, hjust = 1) + #sample name annotations
-    {if("0" %in% levels(sample2_cn$CN)) geom_segment(data = cn_0_sample2, aes(x = start, xend = end, y = ycoord - seg_dist, yend = ycoord - seg_dist, color = "CN0"), size = 3, stat = "identity", position = position_dodge())} +  #cn0
-    {if("1" %in% levels(sample2_cn$CN)) geom_segment(data = cn_1_sample2, aes(x = start, xend = end, y = ycoord - seg_dist, yend = ycoord - seg_dist, color = "CN1"), size = 3, stat = "identity", position = position_dodge())} +  #cn1
-    {if("3" %in% levels(sample2_cn$CN)) geom_segment(data = cn_3_sample2, aes(x = start, xend = end, y = ycoord - seg_dist, yend = ycoord - seg_dist, color = "CN3"), size = 3, stat = "identity", position = position_dodge())} + #cn3
-    {if("4" %in% levels(sample2_cn$CN)) geom_segment(data = cn_4_sample2, aes(x = start, xend = end, y = ycoord - seg_dist, yend = ycoord - seg_dist, color = "CN4"), size = 3, stat = "identity", position = position_dodge())} + #cn4
-    {if("5" %in% levels(sample2_cn$CN)) geom_segment(data = cn_5_sample2, aes(x = start, xend = end, y = ycoord - seg_dist, yend = ycoord - seg_dist, color = "CN5"), size = 3, stat = "identity", position = position_dodge())} + #cn5
-    {if("6+" %in% levels(sample2_cn$CN)) geom_segment(data = cn_6_or_more_sample2, aes(x = start, xend = end, y = ycoord - seg_dist, yend = ycoord - seg_dist, color = "CN6_or_more"), size = 3, stat = "identity", position = position_dodge())} + #cn6+
-    #third sample
-    geom_segment(data = segment_data, aes(x = chr_start, xend = chr_end, y = y + seg_dist, yend = yend + seg_dist, label = chr), color = "#99A1A6", lineend = "butt", size = 3, stat = "identity", position = position_dodge()) + #chr contigs
-    geom_segment(data = segment_data, aes(x = cent_start, xend = cent_end, y = y + seg_dist, yend = yend + seg_dist), color = "white", size = 4, stat = "identity", position = position_dodge()) + #centromeres
-    annotate(geom = "text", x = -2000000, y = segment_data$yend + seg_dist, label = sample3, color = "black", size = 3, hjust = 1) + #sample name annotations
-    {if("0" %in% levels(sample3_cn$CN)) geom_segment(data = cn_0_sample3, aes(x = start, xend = end, y = ycoord + seg_dist, yend = ycoord + seg_dist, color = "CN0"), size = 3, stat = "identity", position = position_dodge())} +  #cn0
-    {if("1" %in% levels(sample3_cn$CN)) geom_segment(data = cn_1_sample3, aes(x = start, xend = end, y = ycoord + seg_dist, yend = ycoord + seg_dist, color = "CN1"), size = 3, stat = "identity", position = position_dodge())} +  #cn1
-    {if("3" %in% levels(sample3_cn$CN)) geom_segment(data = cn_3_sample3, aes(x = start, xend = end, y = ycoord + seg_dist, yend = ycoord + seg_dist, color = "CN3"), size = 3, stat = "identity", position = position_dodge())} + #cn3
-    {if("4" %in% levels(sample3_cn$CN)) geom_segment(data = cn_4_sample3, aes(x = start, xend = end, y = ycoord + seg_dist, yend = ycoord + seg_dist, color = "CN4"), size = 3, stat = "identity", position = position_dodge())} + #cn4
-    {if("5" %in% levels(sample3_cn$CN)) geom_segment(data = cn_5_sample3, aes(x = start, xend = end, y = ycoord + seg_dist, yend = ycoord + seg_dist, color = "CN5"), size = 3, stat = "identity", position = position_dodge())} + #cn5
-    {if("6+" %in% levels(sample3_cn$CN)) geom_segment(data = cn_6_or_more_sample3, aes(x = start, xend = end, y = ycoord + seg_dist, yend = ycoord + seg_dist, color = "CN6_or_more"), size = 3, stat = "identity", position = position_dodge())} + #cn6+
-    #fourth sample
-    geom_segment(data = segment_data, aes(x = chr_start, xend = chr_end, y = y + (seg_dist - 0.48), yend = yend + (seg_dist - 0.48), label = chr), color = "#99A1A6", lineend = "butt", size = 3, stat = "identity", position = position_dodge()) + #chr contigs
-    geom_segment(data = segment_data, aes(x = cent_start, xend = cent_end, y = y + (seg_dist - 0.48), yend = yend  + (seg_dist - 0.48)), color = "white", size = 4, stat = "identity", position = position_dodge()) + #centromeres
-    annotate(geom = "text", x = -2000000, y = segment_data$yend  + (seg_dist - 0.48), label = sample4, color = "black", size = 3, hjust = 1) + #sample name annotations
-    {if("0" %in% levels(sample4_cn$CN)) geom_segment(data = cn_0_sample4, aes(x = start, xend = end, y = ycoord + (seg_dist - 0.48), yend = ycoord + (seg_dist - 0.48), color = "CN0"), size = 3, stat = "identity", position = position_dodge())} +  #cn0
-    {if("1" %in% levels(sample4_cn$CN)) geom_segment(data = cn_1_sample4, aes(x = start, xend = end, y = ycoord + (seg_dist - 0.48), yend = ycoord + (seg_dist - 0.48), color = "CN1"), size = 3, stat = "identity", position = position_dodge())} +  #cn1
-    {if("3" %in% levels(sample4_cn$CN)) geom_segment(data = cn_3_sample4, aes(x = start, xend = end, y = ycoord + (seg_dist - 0.48), yend = ycoord + (seg_dist - 0.48), color = "CN3"), size = 3, stat = "identity", position = position_dodge())} + #cn3
-    {if("4" %in% levels(sample4_cn$CN)) geom_segment(data = cn_4_sample4, aes(x = start, xend = end, y = ycoord + (seg_dist - 0.48), yend = ycoord + (seg_dist - 0.48), color = "CN4"), size = 3, stat = "identity", position = position_dodge())} + #cn4
-    {if("5" %in% levels(sample4_cn$CN)) geom_segment(data = cn_5_sample4, aes(x = start, xend = end, y = ycoord + (seg_dist - 0.48), yend = ycoord + (seg_dist - 0.48), color = "CN5"), size = 3, stat = "identity", position = position_dodge())} + #cn5
-    {if("6+" %in% levels(sample4_cn$CN)) geom_segment(data = cn_6_or_more_sample4, aes(x = start, xend = end, y = ycoord + (seg_dist - 0.48), yend = ycoord + (seg_dist - 0.48), color = "CN6_or_more"), size = 3, stat = "identity", position = position_dodge())} + #cn6+
-    #aesthetics
-    geom_segment(data = segment_data, aes(x = chr_start, xend = chr_end, y = y - white_dist, yend = yend - white_dist, label = chr), color = "white", lineend = "butt", size = 2, stat = "identity", position = position_dodge()) + #white space between chromosome groups (upper)
-    geom_segment(data = segment_data, aes(x = chr_start, xend = chr_end, y = y + white_dist, yend = yend + white_dist, label = chr), color = "white", lineend = "butt", size = 2, stat = "identity", position = position_dodge()) + #white space between chromosome groups (bottom)
-    annotate(geom = "text", x = anno_dist, y = segment_data$yend + chr_anno_v, label = segment_data$chr, color = "black", size = 7, hjust = 1) + #chr labels
-    labs(title = plot_title, subtitle = plot_sub) + #plot titles
-    scale_colour_manual(name = "", values = c(CN0 = "#4393C3", CN1 = "#92C5DE", CN3 = "#D6604DFF", CN4 = "#B2182BFF", CN5 = "#67001FFF", CN6_or_more = "#380015FF")) + #colours and legend
-    scale_x_continuous(breaks = seq(0, max(segment_data$chr_end), by = 30000000)) + #x-axis boundaries
-    scale_y_reverse() + #flip ideogram
-    theme_cowplot() +  #theme
-    ideogram_theme() #more theme
+    p = ggplot() + geom_segment(data = segment_data, aes(x = chr_start, xend = chr_end, y = y - (seg_dist - 0.48), yend = yend - (seg_dist - 0.48), label = chr), color = "#99A1A6", lineend = "butt", size = 3, stat = "identity", position = position_dodge()) + #chr contigs
+      geom_segment(data = segment_data, aes(x = cent_start, xend = cent_end, y = y - (seg_dist - 0.48), yend = yend - (seg_dist - 0.48)), color = "white", size = 3, stat = "identity", position = position_dodge()) + #centromeres
+      annotate(geom = "text", x = -2000000, y = segment_data$yend - (seg_dist - 0.48), label = sample1, color = "black", size = 3, hjust = 1) + #sample name annotations
+        {if("0" %in% levels(sample1_cn$CN)) geom_segment(data = cn_0_sample1, aes(x = start, xend = end, y = ycoord - (seg_dist - 0.48), yend = ycoord - (seg_dist - 0.48), color = "CN0"), size = 3, stat = "identity", position = position_dodge())} +  #cn0
+        {if("1" %in% levels(sample1_cn$CN)) geom_segment(data = cn_1_sample1, aes(x = start, xend = end, y = ycoord - (seg_dist - 0.48), yend = ycoord - (seg_dist - 0.48), color = "CN1"), size = 3, stat = "identity", position = position_dodge())} +  #cn1
+        {if("3" %in% levels(sample1_cn$CN)) geom_segment(data = cn_3_sample1, aes(x = start, xend = end, y = ycoord - (seg_dist - 0.48), yend = ycoord - (seg_dist - 0.48), color = "CN3"), size = 3, stat = "identity", position = position_dodge())} + #cn3
+        {if("4" %in% levels(sample1_cn$CN)) geom_segment(data = cn_4_sample1, aes(x = start, xend = end, y = ycoord - (seg_dist - 0.48), yend = ycoord - (seg_dist - 0.48), color = "CN4"), size = 3, stat = "identity", position = position_dodge())} + #cn4
+        {if("5" %in% levels(sample1_cn$CN)) geom_segment(data = cn_5_sample1, aes(x = start, xend = end, y = ycoord - (seg_dist - 0.48), yend = ycoord - (seg_dist - 0.48), color = "CN5"), size = 3, stat = "identity", position = position_dodge())} + #cn5
+        {if("6+" %in% levels(sample1_cn$CN)) geom_segment(data = cn_6_or_more_sample1, aes(x = start, xend = end, y = ycoord - (seg_dist - 0.48), yend = ycoord - (seg_dist - 0.48), color = "CN6_or_more"), size = 3, stat = "identity", position = position_dodge())} + #cn6+
+      geom_segment(data = segment_data, aes(x = chr_start, xend = chr_end, y = y - seg_dist, yend = yend - seg_dist, label = chr), color = "#99A1A6", lineend = "butt", size = 3, stat = "identity", position = position_dodge()) + #chr contigs
+      geom_segment(data = segment_data, aes(x = cent_start, xend = cent_end, y = y - seg_dist, yend = yend - seg_dist), color = "white", size = 3, stat = "identity", position = position_dodge()) + #centromeres
+      annotate(geom = "text", x = -2000000, y = segment_data$yend - seg_dist, label = sample2, color = "black", size = 3, hjust = 1) + #sample name annotations
+        {if("0" %in% levels(sample2_cn$CN)) geom_segment(data = cn_0_sample2, aes(x = start, xend = end, y = ycoord - seg_dist, yend = ycoord - seg_dist, color = "CN0"), size = 3, stat = "identity", position = position_dodge())} +  #cn0
+        {if("1" %in% levels(sample2_cn$CN)) geom_segment(data = cn_1_sample2, aes(x = start, xend = end, y = ycoord - seg_dist, yend = ycoord - seg_dist, color = "CN1"), size = 3, stat = "identity", position = position_dodge())} +  #cn1
+        {if("3" %in% levels(sample2_cn$CN)) geom_segment(data = cn_3_sample2, aes(x = start, xend = end, y = ycoord - seg_dist, yend = ycoord - seg_dist, color = "CN3"), size = 3, stat = "identity", position = position_dodge())} + #cn3
+        {if("4" %in% levels(sample2_cn$CN)) geom_segment(data = cn_4_sample2, aes(x = start, xend = end, y = ycoord - seg_dist, yend = ycoord - seg_dist, color = "CN4"), size = 3, stat = "identity", position = position_dodge())} + #cn4
+        {if("5" %in% levels(sample2_cn$CN)) geom_segment(data = cn_5_sample2, aes(x = start, xend = end, y = ycoord - seg_dist, yend = ycoord - seg_dist, color = "CN5"), size = 3, stat = "identity", position = position_dodge())} + #cn5
+        {if("6+" %in% levels(sample2_cn$CN)) geom_segment(data = cn_6_or_more_sample2, aes(x = start, xend = end, y = ycoord - seg_dist, yend = ycoord - seg_dist, color = "CN6_or_more"), size = 3, stat = "identity", position = position_dodge())} + #cn6+
+      geom_segment(data = segment_data, aes(x = chr_start, xend = chr_end, y = y + seg_dist, yend = yend + seg_dist, label = chr), color = "#99A1A6", lineend = "butt", size = 3, stat = "identity", position = position_dodge()) + #chr contigs
+      geom_segment(data = segment_data, aes(x = cent_start, xend = cent_end, y = y + seg_dist, yend = yend + seg_dist), color = "white", size = 3, stat = "identity", position = position_dodge()) + #centromeres
+      annotate(geom = "text", x = -2000000, y = segment_data$yend + seg_dist, label = sample3, color = "black", size = 3, hjust = 1) + #sample name annotations
+        {if("0" %in% levels(sample3_cn$CN)) geom_segment(data = cn_0_sample3, aes(x = start, xend = end, y = ycoord + seg_dist, yend = ycoord + seg_dist, color = "CN0"), size = 3, stat = "identity", position = position_dodge())} +  #cn0
+        {if("1" %in% levels(sample3_cn$CN)) geom_segment(data = cn_1_sample3, aes(x = start, xend = end, y = ycoord + seg_dist, yend = ycoord + seg_dist, color = "CN1"), size = 3, stat = "identity", position = position_dodge())} +  #cn1
+        {if("3" %in% levels(sample3_cn$CN)) geom_segment(data = cn_3_sample3, aes(x = start, xend = end, y = ycoord + seg_dist, yend = ycoord + seg_dist, color = "CN3"), size = 3, stat = "identity", position = position_dodge())} + #cn3
+        {if("4" %in% levels(sample3_cn$CN)) geom_segment(data = cn_4_sample3, aes(x = start, xend = end, y = ycoord + seg_dist, yend = ycoord + seg_dist, color = "CN4"), size = 3, stat = "identity", position = position_dodge())} + #cn4
+        {if("5" %in% levels(sample3_cn$CN)) geom_segment(data = cn_5_sample3, aes(x = start, xend = end, y = ycoord + seg_dist, yend = ycoord + seg_dist, color = "CN5"), size = 3, stat = "identity", position = position_dodge())} + #cn5
+        {if("6+" %in% levels(sample3_cn$CN)) geom_segment(data = cn_6_or_more_sample3, aes(x = start, xend = end, y = ycoord + seg_dist, yend = ycoord + seg_dist, color = "CN6_or_more"), size = 3, stat = "identity", position = position_dodge())} + #cn6+
+      geom_segment(data = segment_data, aes(x = chr_start, xend = chr_end, y = y + (seg_dist - 0.48), yend = yend + (seg_dist - 0.48), label = chr), color = "#99A1A6", lineend = "butt", size = 3, stat = "identity", position = position_dodge()) + #chr contigs
+      geom_segment(data = segment_data, aes(x = cent_start, xend = cent_end, y = y + (seg_dist - 0.48), yend = yend  + (seg_dist - 0.48)), color = "white", size = 3, stat = "identity", position = position_dodge()) + #centromeres
+      annotate(geom = "text", x = -2000000, y = segment_data$yend  + (seg_dist - 0.48), label = sample4, color = "black", size = 3, hjust = 1) + #sample name annotations
+        {if("0" %in% levels(sample4_cn$CN)) geom_segment(data = cn_0_sample4, aes(x = start, xend = end, y = ycoord + (seg_dist - 0.48), yend = ycoord + (seg_dist - 0.48), color = "CN0"), size = 3, stat = "identity", position = position_dodge())} +  #cn0
+        {if("1" %in% levels(sample4_cn$CN)) geom_segment(data = cn_1_sample4, aes(x = start, xend = end, y = ycoord + (seg_dist - 0.48), yend = ycoord + (seg_dist - 0.48), color = "CN1"), size = 3, stat = "identity", position = position_dodge())} +  #cn1
+        {if("3" %in% levels(sample4_cn$CN)) geom_segment(data = cn_3_sample4, aes(x = start, xend = end, y = ycoord + (seg_dist - 0.48), yend = ycoord + (seg_dist - 0.48), color = "CN3"), size = 3, stat = "identity", position = position_dodge())} + #cn3
+        {if("4" %in% levels(sample4_cn$CN)) geom_segment(data = cn_4_sample4, aes(x = start, xend = end, y = ycoord + (seg_dist - 0.48), yend = ycoord + (seg_dist - 0.48), color = "CN4"), size = 3, stat = "identity", position = position_dodge())} + #cn4
+        {if("5" %in% levels(sample4_cn$CN)) geom_segment(data = cn_5_sample4, aes(x = start, xend = end, y = ycoord + (seg_dist - 0.48), yend = ycoord + (seg_dist - 0.48), color = "CN5"), size = 3, stat = "identity", position = position_dodge())} + #cn5
+        {if("6+" %in% levels(sample4_cn$CN)) geom_segment(data = cn_6_or_more_sample4, aes(x = start, xend = end, y = ycoord + (seg_dist - 0.48), yend = ycoord + (seg_dist - 0.48), color = "CN6_or_more"), size = 3, stat = "identity", position = position_dodge())} + #cn6+
+      geom_segment(data = segment_data, aes(x = chr_start, xend = chr_end, y = y - 0.5, yend = yend - 0.5, label = chr), color = "white", lineend = "butt", size = 2, stat = "identity", position = position_dodge()) + #white space between chromosome groups (upper)
+      geom_segment(data = segment_data, aes(x = chr_start, xend = chr_end, y = y + 0.5, yend = yend + 0.5, label = chr), color = "white", lineend = "butt", size = 2, stat = "identity", position = position_dodge()) + #white space between chromosome groups (bottom)
+      annotate(geom = "text", x = anno_dist, y = segment_data$yend, label = segment_data$chr, color = "black", size = 7, hjust = 1) + #chr labels
+      labs(title = plot_title, subtitle = plot_sub) + #plot titles
+      scale_colour_manual(name = "", values = c(CN0 = "#4393C3", CN1 = "#92C5DE", CN3 = "#D6604DFF", CN4 = "#B2182BFF", CN5 = "#67001FFF", CN6_or_more = "#380015FF")) + #colours and legend
+      scale_x_continuous(breaks = seq(0, max(segment_data$chr_end), by = 30000000)) + #x-axis boundaries
+      scale_y_reverse() + #flip ideogram
+      theme_cowplot() +  #theme
+      ideogram_theme() #more theme
+    }
+  return(p)
   }
-}
