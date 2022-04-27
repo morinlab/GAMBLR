@@ -2,10 +2,7 @@
 % Please edit documentation in R/utilities.R
 \name{adjust_ploidy}
 \alias{adjust_ploidy}
-\title{This function adjusts ploidy of the sample using the percent of genome altered (PGA). The PGA is calculated internally, but can also be optionally provided as data frame
-if calculated from other sources. Only the samples above the threshold-provided PGA will have ploidy adjusted. The function can work with either individual or
-multi-sample seg file. The telomeres are always excluded from calculation, and sex chromosomes can be optionally included or excluded. The supported projections are grch37 and hg38.
-The chromosome prefix is handled internally per projection and does not need to be consistent.}
+\title{Adjust ploidy for samples with CNV data.}
 \usage{
 adjust_ploidy(
   this_seg,
@@ -36,6 +33,9 @@ adjust_ploidy(
 A data frame in seg-consistent format with ploidy-adjusted log ratios.
 }
 \description{
+\code{adjust_ploidy} returns a seg file with log.ratios adjusted to the overall sample ploidy.
+}
+\details{
 This function adjusts ploidy of the sample using the percent of genome altered (PGA). The PGA is calculated internally, but can also be optionally provided as data frame
 if calculated from other sources. Only the samples above the threshold-provided PGA will have ploidy adjusted. The function can work with either individual or
 multi-sample seg file. The telomeres are always excluded from calculation, and sex chromosomes can be optionally included or excluded. The supported projections are grch37 and hg38.
