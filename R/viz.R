@@ -2744,8 +2744,8 @@ fancy_sv_chrdistplot = function(this_sample,
                                 plot_subtitle = "Structural Variant Distribution Per Chromosome",
                                 chr_select = paste0("chr", c(1:22)),
                                 coding_only = FALSE,
-                                from_flatfile = FALSE,
-                                use_augmented_maf = FALSE){
+                                from_flatfile = TRUE,
+                                use_augmented_maf = TRUE){
 
   #get maf data for a specific sample.
   maf = assign_cn_to_ssm(this_sample = this_sample, coding_only = coding_only, from_flatfile = from_flatfile, use_augmented_maf = use_augmented_maf)$maf
@@ -2810,8 +2810,8 @@ fancy_snv_chrdistplot = function(this_sample,
                                  chr_select = paste0("chr", c(1:22)),
                                  include_dnp = FALSE,
                                  coding_only = FALSE,
-                                 from_flatfile = FALSE,
-                                 use_augmented_maf = FALSE){
+                                 from_flatfile = TRUE,
+                                 use_augmented_maf = TRUE){
 
   #get maf data for a specific sample.
   maf = assign_cn_to_ssm(this_sample = this_sample, coding_only = coding_only, from_flatfile = from_flatfile, use_augmented_maf = use_augmented_maf)$maf
@@ -2890,8 +2890,8 @@ fancy_svbar = function(this_sample,
                        chr_select = paste0("chr", c(1:22)),
                        variant_select = c("DEL", "INS"),
                        coding_only = FALSE,
-                       from_flatfile = FALSE,
-                       use_augmented_maf = FALSE){
+                       from_flatfile = TRUE,
+                       use_augmented_maf = TRUE){
 
   #get maf data for a specific sample.
   maf = assign_cn_to_ssm(this_sample = this_sample, coding_only = coding_only, from_flatfile = from_flatfile, use_augmented_maf = use_augmented_maf)$maf
@@ -2902,7 +2902,7 @@ fancy_svbar = function(this_sample,
   }
 
   #read maf into R and select relevant variables and transform to factor.
-  maf_df = dplyr::select(maf, Chromosome, Start_Position, End_Position, Variant_Type, LOH, CN) %>%
+  maf_df = dplyr::select(maf, Chromosome, Start_Position, End_Position, Variant_Type) %>%
     mutate_at(vars(Chromosome, Variant_Type), list(factor))
 
   #sub-setting maf based on user-defined parameters
@@ -2931,43 +2931,35 @@ fancy_svbar = function(this_sample,
 #' @param plot_subtitle Subtitle for created plot.
 #' @param chr_select vector of chromosomes to be included in plot, defaults to autosomes.
 #' @param include_cn2 Optional boolean statement for including CN = 2 states in plot.
-#' @param coding_only Optional. Set to TRUE to restrict to plotting only coding mutations.
-#' @param from_flatfile If set to true the function will use flat files instead of the database.
-#' @param use_augmented Boolean statement if to use augmented maf, default is FALSE.
-#'
 #' @return Nothing.
 #' @import tidyverse cowplot
 #' @export
 #'
 #' @examples
-#' chr1_cns = fancy_cnlohbar(this_sample = "HTMCP-01-06-00422-01A-01D", chr_select = c(1))
-#' cns = fancy_cnlohbar(this_sample = "HTMCP-01-06-00422-01A-01D")
+#' chr1_cns = fancy_cnbar(this_sample = "HTMCP-01-06-00422-01A-01D", chr_select = c(1))
+#' cns = fancy_cnbar(this_sample = "HTMCP-01-06-00422-01A-01D")
 #'
-fancy_cnlohbar = function(this_sample,
-                          plot_subtitle = "n CNV Segments (barplots, left y-axis), n Affected bases for each CN state",
-                          chr_select = paste0("chr", c(1:22)),
-                          include_cn2 = TRUE,
-                          coding_only = FALSE,
-                          from_flatfile = FALSE,
-                          use_augmented_maf = FALSE){
+fancy_cnbar = function(this_sample,
+                       plot_subtitle = "n CNV Segments (barplots, left y-axis), n Affected bases for each CN state",
+                       chr_select = paste0("chr", c(1:22)),
+                       include_cn2 = TRUE) {
 
   #get maf data for a specific sample.
-  maf = assign_cn_to_ssm(this_sample = this_sample, coding_only = coding_only, from_flatfile = from_flatfile, use_augmented_maf = use_augmented_maf)$maf
+  maf = get_sample_cn_segments(this_sample = this_sample, multiple_samples = FALSE, streamlined = FALSE, from_flatfile = TRUE)
 
   #add chr prefix if missing
-  if(!str_detect(maf$Chromosome, "chr")[5]){
-    maf = mutate(maf, Chromosome = paste0("chr", Chromosome))
+  if(!str_detect(maf$chrom, "chr")[2]){
+    maf = mutate(maf, chrom = paste0("chr", chrom))
   }
 
   #read maf into R and select relevant variables and transformt to factor.
-  maf_df = dplyr::select(maf, Chromosome, Start_Position, End_Position, Variant_Type, LOH, CN) %>%
-    mutate_at(vars(Chromosome, Variant_Type), list(factor))
+  maf_df = dplyr::select(maf, chrom, start, end, CN) %>%
+    mutate_at(vars(chrom), list(factor))
 
   #subsetting maf based on user-defined parameters
-  maf_df = maf_df[maf_df$Chromosome %in% chr_select, ]
+  maf_df = maf_df[maf_df$chrom %in% chr_select, ]
 
   #transform data type
-  maf_df$LOH = as.factor(maf_df$LOH)
   maf_df$CN = as.factor(maf_df$CN)
 
   #count levels of factor
@@ -2985,9 +2977,10 @@ fancy_cnlohbar = function(this_sample,
 
   cns_count$Type = paste0(cns_count$CN)
   cns_count = dplyr::select(cns_count, count, Type)
+  cns_count = dplyr::filter(cns_count, Type != 0)
 
   #compute lenght of cn segments and transform for plotting
-  l_cn_seg = get_sample_cn_segments(this_sample_id = this_sample, multiple_samples = FALSE, with_chr_prefix = FALSE, streamlined = FALSE)
+  l_cn_seg = maf
   l_cn_seg$lenght = l_cn_seg$end - l_cn_seg$start
   l_cn_seg$CN = as.factor(l_cn_seg$CN)
   l_cn_seg = dplyr::filter(l_cn_seg, CN != 0)
@@ -3023,6 +3016,7 @@ fancy_cnlohbar = function(this_sample,
     theme(legend.position = "none")
 }
 
+
 #' Generate a violine plot for structural variant size distribution.
 #'
 #' @param this_sample Sample to be plotted.
@@ -3043,8 +3037,8 @@ fancy_vplot = function(this_sample,
                        plot_subtitle = "Structural Variant Size Distribution",
                        chr_select = paste0("chr", c(1:22)),
                        coding_only = FALSE,
-                       from_flatfile = FALSE,
-                       use_augmented_maf = FALSE){
+                       from_flatfile = TRUE,
+                       use_augmented_maf = TRUE){
 
   #get maf data for a specific sample.
   maf = assign_cn_to_ssm(this_sample = this_sample, coding_only = coding_only, from_flatfile = from_flatfile, use_augmented_maf = use_augmented_maf)$maf
@@ -3055,7 +3049,7 @@ fancy_vplot = function(this_sample,
   }
 
   #read maf into R and select relevant variables and transform to factor.
-  maf_df = dplyr::select(maf, Chromosome, Start_Position, End_Position, Variant_Type, LOH, CN) %>%
+  maf_df = dplyr::select(maf, Chromosome, Start_Position, End_Position, Variant_Type) %>%
     mutate_at(vars(Chromosome, Variant_Type), list(factor))
 
   #calculate variant size
@@ -3101,8 +3095,8 @@ fancy_ideogram = function(this_sample,
                           include_sv = TRUE,
                           sv_count = TRUE,
                           coding_only = FALSE,
-                          from_flatfile = FALSE,
-                          use_augmented_maf = FALSE){
+                          from_flatfile = TRUE,
+                          use_augmented_maf = TRUE){
 
   #plot theme
   ideogram_theme = function(){
@@ -3280,8 +3274,8 @@ fancy_multisamp_ideogram = function(these_sample_ids,
                                     chr_anno_dist = 3,
                                     chr_select = paste0("chr", c(1:22)),
                                     coding_only = FALSE,
-                                    from_flatfile = FALSE,
-                                    use_augmented_maf = FALSE){
+                                    from_flatfile = TRUE,
+                                    use_augmented_maf = TRUE){
 
   #plot theme
   ideogram_theme = function(){
