@@ -2972,6 +2972,7 @@ subset_cnstates = function(cn_segments,
   #split cn_segments on available factors and lists into the global environment.
   l = split(cn_segments, cn_segments$CN)
   list2env(l, envir = .GlobalEnv)
+}
 
 
 #' Compare segmented data for multiple samples.
@@ -3285,4 +3286,5 @@ cnvKompare = function(patient_id,
 
   message("DONE!")
   return(output)
+
 }
