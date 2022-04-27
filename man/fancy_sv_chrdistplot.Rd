@@ -9,8 +9,8 @@ fancy_sv_chrdistplot(
   plot_subtitle = "Structural Variant Distribution Per Chromosome",
   chr_select = paste0("chr", c(1:22)),
   coding_only = FALSE,
-  from_flatfile = FALSE,
-  use_augmented_maf = FALSE
+  from_flatfile = TRUE,
+  use_augmented_maf = TRUE
 )
 }
 \arguments{

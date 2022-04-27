@@ -10,8 +10,8 @@ fancy_svbar(
   chr_select = paste0("chr", c(1:22)),
   variant_select = c("DEL", "INS"),
   coding_only = FALSE,
-  from_flatfile = FALSE,
-  use_augmented_maf = FALSE
+  from_flatfile = TRUE,
+  use_augmented_maf = TRUE
 )
 }
 \arguments{

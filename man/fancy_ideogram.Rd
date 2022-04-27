@@ -10,8 +10,8 @@ fancy_ideogram(
   include_sv = TRUE,
   sv_count = TRUE,
   coding_only = FALSE,
-  from_flatfile = FALSE,
-  use_augmented_maf = FALSE
+  from_flatfile = TRUE,
+  use_augmented_maf = TRUE
 )
 }
 \arguments{

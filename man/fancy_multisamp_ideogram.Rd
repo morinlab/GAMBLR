@@ -11,8 +11,8 @@ fancy_multisamp_ideogram(
   chr_anno_dist = 3,
   chr_select = paste0("chr", c(1:22)),
   coding_only = FALSE,
-  from_flatfile = FALSE,
-  use_augmented_maf = FALSE
+  from_flatfile = TRUE,
+  use_augmented_maf = TRUE
 )
 }
 \arguments{
