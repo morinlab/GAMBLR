@@ -2727,6 +2727,7 @@ splendidHeatmap = function(this_matrix,
 #' Generate a plot for structural variant sub type distribution sorted per chromosome
 #'
 #' @param this_sample Sample to be plotted.
+#' @param plot_title Title of plot (default to sample ID).
 #' @param plot_subtitle Subtitle for created plot.
 #' @param chr_select vector of chromosomes to be included in plot, defaults to autosomes.
 #' @param coding_only Optional. Set to TRUE to restrict to plotting only coding mutations.
@@ -2741,6 +2742,7 @@ splendidHeatmap = function(this_matrix,
 #' sv_plot = fancy_sv_chrdistplot(this_sample = "HTMCP-01-06-00422-01A-01D")
 #'
 fancy_sv_chrdistplot = function(this_sample,
+                                plot_title = paste0(this_sample),
                                 plot_subtitle = "Structural Variant Distribution Per Chromosome",
                                 chr_select = paste0("chr", c(1:22)),
                                 coding_only = FALSE,
@@ -2779,7 +2781,7 @@ fancy_sv_chrdistplot = function(this_sample,
 
   #plot
   ggplot(maf.count, aes(x = Chromosome, y = n, fill = Variant_Type, label = n)) +
-    labs(title = paste0(this_sample), subtitle = plot_subtitle, x = "Chromsomes", y = "Variants (n)", fill = "") +
+    labs(title = plot_title, subtitle = plot_subtitle, x = "Chromsomes", y = "Variants (n)", fill = "") +
     scale_x_discrete(expand = c(0, 0.58), limits = chr_select) +
     geom_bar(position = "stack", stat = "identity") +
     scale_y_continuous(expand = c(0, 0), breaks = seq(0, ymax, by = 2)) +
@@ -2792,6 +2794,7 @@ fancy_sv_chrdistplot = function(this_sample,
 #' Generate a plot with SNV distribution per chromosome.
 #'
 #' @param this_sample Sample to be plotted.
+#' @param plot_title Title of plot (default to sample ID).
 #' @param plot_subtitle Subtitle for created plot.
 #' @param chr_select vector of chromosomes to be included in plot, defaults to autosomes.
 #' @param include_dnp Optional argument for including DNPs. Default is FALSE.
@@ -2808,6 +2811,7 @@ fancy_sv_chrdistplot = function(this_sample,
 #' snv_dnp_plot = fancy_snv_chrdistplot(this_sample = "HTMCP-01-06-00422-01A-01D", include_dnp = TRUE, plot_subtitle = "SNV + DNP Distribution Per Chromosome")
 #'
 fancy_snv_chrdistplot = function(this_sample,
+                                 plot_title = paste0(this_sample),
                                  plot_subtitle = "SNV Distribution Per Chromosome",
                                  chr_select = paste0("chr", c(1:22)),
                                  include_dnp = FALSE,
@@ -2835,7 +2839,7 @@ fancy_snv_chrdistplot = function(this_sample,
 
     #plot
     ggplot(maf_snp, aes(x = Chromosome, y = n)) +
-      labs(title = paste0(this_sample), subtitle = plot_subtitle, x = "Chromsomes", y = "SNV Count (n)", fill = "") +
+      labs(title = plot_title, subtitle = plot_subtitle, x = "Chromsomes", y = "SNV Count (n)", fill = "") +
       scale_x_discrete(expand = c(0, 0.7), limits = chr_select) +
       geom_bar(position = "stack", stat = "identity", fill = "#2B9971", width = 0.75) +
       scale_y_continuous(expand = c(0, 0)) +
@@ -2858,7 +2862,7 @@ fancy_snv_chrdistplot = function(this_sample,
 
     #plot
     ggplot(maf.count, aes(x = Chromosome, y = n, fill = Variant_Type)) +
-      labs(title = paste0(this_sample), subtitle = plot_subtitle, x = "Chromsomes", y = "SNV Count (n)", fill = "") +
+      labs(title = plot_title, subtitle = plot_subtitle, x = "Chromsomes", y = "SNV Count (n)", fill = "") +
       scale_x_discrete(expand = c(0, 0.7), limits = chr_select) +
       geom_bar(position = "stack", stat = "identity", width = 0.75) +
       scale_fill_manual("", values = c("SNP" = "#2B9971", "DNP" = "#993F2B")) +
@@ -2873,6 +2877,7 @@ fancy_snv_chrdistplot = function(this_sample,
 #' Generate a bar plot visualizing structural variant subtype distributions
 #'
 #' @param this_sample Sample to be plotted.
+#' @param plot_title Title of plot (default to sample ID).
 #' @param plot_subtitle Subtitle for created plot.
 #' @param chr_select vector of chromosomes to be included in plot, defaults to autosomes.
 #' @param variant_select Subtypes of SVs to be incldued in plot, default is DEL and INS.
@@ -2889,6 +2894,7 @@ fancy_snv_chrdistplot = function(this_sample,
 #' svs = fancy_svbar(this_sample = "HTMCP-01-06-00422-01A-01D")
 #'
 fancy_svbar = function(this_sample,
+                       plot_title = paste0(this_sample),
                        plot_subtitle = "Structural Variant Subtype Distribution",
                        chr_select = paste0("chr", c(1:22)),
                        variant_select = c("DEL", "INS"),
@@ -2920,7 +2926,7 @@ fancy_svbar = function(this_sample,
   #plot
   ggplot(sv_count, aes(x = Variant_Type, y = count, fill = Variant_Type, label = count)) +
     geom_bar(position = "stack", stat = "identity") +
-    labs(title = paste0(this_sample), subtitle = plot_subtitle, x = "SVs", y = "Variant Count (n)", fill = "") +
+    labs(title = plot_title, subtitle = plot_subtitle, x = "SVs", y = "Variant Count (n)", fill = "") +
     scale_fill_manual(values = get_gambl_colours("indels")) +
     geom_text(size = 5, position = position_stack(vjust = 0.5)) +
     scale_y_continuous(expand = c(0, 0)) +
@@ -2931,6 +2937,7 @@ fancy_svbar = function(this_sample,
 #' Generate a bar plot visualizing sample-specific copy number states and affected bases for each CN segment.
 #'
 #' @param this_sample Sample to be plotted.
+#' @param plot_title Title of plot (default to sample ID).
 #' @param plot_subtitle Subtitle for created plot.
 #' @param chr_select Vector of chromosomes to be included in plot, defaults to autosomes.
 #' @param cutoff Set threshold for maximum CN state to be retrieved.
@@ -2945,6 +2952,7 @@ fancy_svbar = function(this_sample,
 #' cns = fancy_cnbar(this_sample = "HTMCP-01-06-00422-01A-01D")
 #'
 fancy_cnbar = function(this_sample,
+                       plot_title = paste0(this_sample),
                        plot_subtitle = "n CNV Segments (barplots, left y-axis), n Affected bases for each CN state",
                        chr_select = paste0("chr", c(1:22)),
                        cutoff = 160,
@@ -3010,7 +3018,7 @@ fancy_cnbar = function(this_sample,
     geom_line(aes(y = lenght/500000), alpha = 0.5, linetype = "dashed", group = 2) +
     geom_point(aes(y = lenght/500000), colour = "#E6B315", size = 3, group = 2) +
     scale_y_log10(limits = c(1, max(joined_cn$count) + 5000), sec.axis = sec_axis(~.*500000, name = "Nucleotides (n)")) +
-    labs(title = paste0(this_sample), subtitle = plot_subtitle, x = "CN States", y = "CN Segments (n)", fill = "Legend") +
+    labs(title = plot_title, subtitle = plot_subtitle, x = "CN States", y = "CN Segments (n)", fill = "Legend") +
     scale_fill_manual(values = get_gambl_colours("copy_number")) +
     scale_x_discrete(limits = cn_levels) +
     geom_text(aes(x = CN, y = count, label = count), colour = "#000000", size = 5, position = position_stack(vjust = 0.5)) +
@@ -3022,6 +3030,7 @@ fancy_cnbar = function(this_sample,
 #' Generate a violine plot for structural variant size distribution.
 #'
 #' @param this_sample Sample to be plotted.
+#' @param plot_title Title of plot (default to sample ID).
 #' @param plot_subtitle Subtitle for created plot.
 #' @param chr_select vector of chromosomes to be included in plot, defaults to autosomes.
 #' @param coding_only Optional. Set to TRUE to restrict to plotting only coding mutations.
@@ -3036,6 +3045,7 @@ fancy_cnbar = function(this_sample,
 #' violine_plot = fancy_vplot(this_sample = "HTMCP-01-06-00422-01A-01D")
 #'
 fancy_vplot = function(this_sample,
+                       plot_title = paste0(this_sample),
                        plot_subtitle = "Structural Variant Size Distribution",
                        chr_select = paste0("chr", c(1:22)),
                        coding_only = FALSE,
@@ -3065,7 +3075,7 @@ fancy_vplot = function(this_sample,
   maf_df = maf_df[maf_df$Chromosome %in% chr_select, ]
 
   ggplot(maf_df, aes(x = Variant_Type, y = Size, fill = Variant_Type)) +
-    labs(title = paste0(this_sample), subtitle = plot_subtitle, x = "", y = "Variant Size") +
+    labs(title = plot_title, subtitle = plot_subtitle, x = "", y = "Variant Size") +
     geom_violin(trim = FALSE, scale = "width", color = NA) +
     stat_summary(fun = mean, geom = "point", shape = 20, size = 3, color = "black") +
     scale_fill_manual(values = get_gambl_colours("indels")) +
@@ -3079,6 +3089,7 @@ fancy_vplot = function(this_sample,
 #'
 #' @param this_sample Sample to be plotted (currently only accepts one sample).
 #' @param gene_annotation Annotate ideogram with a single gene.
+#' @param plot_title Title of plot (default to sample ID).
 #' @param include_sv Set to TRUE to plot SVs (dels and ins).
 #' @param sv_count Optional parameter to summarize n variants per chromosome, inlcude_sv must be set to TRUE.
 #' @param coding_only Optional. Set to TRUE to restrict to plotting only coding mutations.
@@ -3094,6 +3105,8 @@ fancy_vplot = function(this_sample,
 #'
 fancy_ideogram = function(this_sample,
                           gene_annotation,
+                          plot_title = paste0(this_sample),
+                          plot_subtitle = "Genome-wide Ideogram (grch37).",
                           include_sv = TRUE,
                           sv_count = TRUE,
                           coding_only = FALSE,
@@ -3229,7 +3242,7 @@ fancy_ideogram = function(this_sample,
     {if(!missing(gene_annotation)) geom_point(data = gene.annotate, aes(x = ((end - start) / 2) + start, y = chr - 0.28), shape = 25, color = "#A63932", fill = "#A63932", stat = "identity", position = position_dodge())} + #gene annotation
     {if(!missing(gene_annotation)) geom_text(aes((x = gene.annotate$end - gene.annotate$start) / 2 + gene.annotate$start, y = gene.annotate$chr - 0.47), label = gene_annotation, color = "black", size = 3)} + #gene annotation text
     geom_text(aes(x = -10000000 , y = yend, label = segment_data$chr), color = "black", size = 5) + #chr labels
-    labs(title = paste0(this_sample), subtitle = "Genome-wide Ideogram (grch37).") + #plot titles
+    labs(title = plot_title, subtitle = plot_subtitle) + #plot titles
     scale_colour_manual(name = "", values = selected_colours) + #legend/colours
     scale_x_continuous(breaks = seq(0, max(segment_data$chr_end), by = 30000000)) + #set x-axis boundaries
     scale_y_reverse() + #reverse y axis
@@ -3461,4 +3474,43 @@ fancy_multisamp_ideogram = function(these_sample_ids,
       ideogram_theme() #more theme
   }
   return(p)
+}
+
+#' Construct pdf with sample-level plots, using minimum of arguments
+#'
+#' @param this_sample Sample ID to be plotted in report.
+#' @param export_individual_plots Boolean parameter, set to TRUE to export individual plots.
+#' @param out Path to output folder.
+#'
+#' @return Nothing.
+#' @export
+#'
+#' @examples
+#' comp_report(this_sample = this_sample, out = "../../../newplots/", export_individual_plots = TRUE)
+#'
+comp_report = function(this_sample,
+                       export_individual_plots = FALSE,
+                       out) {
+
+  sv_plot = fancy_sv_chrdistplot(this_sample = this_sample, plot_title = "", plot_subtitle = "A. SV Distribution Per Chromosome.")
+  svs = fancy_svbar(this_sample = this_sample, plot_title = "", plot_subtitle = "C. SV Counts.")
+  violine_plot = fancy_vplot(this_sample = this_sample, plot_title = "", plot_subtitle = "D. SV Size Distributions.")
+  cns = fancy_cnbar(this_sample = this_sample, plot_title = "", plot_subtitle = "E. CN states.")
+  snv_plot = fancy_snv_chrdistplot(this_sample = this_sample, plot_title = "", plot_subtitle = "B. SNV Distribution Per Chromosome.")
+  cnv_ideogram = fancy_ideogram(this_sample = this_sample, plot_title = "", plot_subtitle = "F. Ideogram.")
+
+  pdf(paste0(out, this_sample, "_report.pdf"), width = 17, height = 12)
+  page1 = grid.arrange(sv_plot, svs, violine_plot, cns, snv_plot,  nrow = 4, ncol = 6, name = "Report", top = textGrob(paste0(this_sample), gp = gpar(fontsize = 15, fontface = "bold")), bottom = "Page 1", layout_matrix = rbind(c(1,1,1,5,5,5), c(1,1,1,5,5,5), c(2,2,3,3,4,4), c(2,2,3,3,4,4)))
+  page2 = grid.arrange(cnv_ideogram,  nrow = 4, ncol = 4, name = "Report", top = paste0(this_sample), bottom = "Page 2", layout_matrix = rbind(c(1,1,1,1), c(1,1,1,1), c(1,1,1,1), c(1,1,1,1)))
+  dev.off()
+
+  if(export_individual_plots){
+    ggsave(sv_plot, file = paste0(out, this_sample, "_sv_dist_chr.pdf"), limitsize = FALSE, width = 17, height = 12, units = c("in"), dpi = 300)
+    ggsave(snv_plot, file = paste0(out, this_sample, "_snv_dist_chr.pdf"), limitsize = FALSE, width = 17, height = 12, units = c("in"), dpi = 300)
+    ggsave(svs, file = paste0(out, this_sample, "_sv_counts.pdf"), limitsize = FALSE, width = 12, height = 12, units = c("in"), dpi = 300)
+    ggsave(cns, file = paste0(out, this_sample, "_cn_states.pdf"), limitsize = FALSE, width = 12, height = 12, units = c("in"), dpi = 300)
+    ggsave(violine_plot, file = paste0(out, this_sample, "_sv_size_dist.pdf"), limitsize = FALSE, width = 12, height = 12, units = c("in"), dpi = 300)
+    ggsave(cnv_ideogram, file = paste0(out, this_sample, "_cnv_ideo.pdf"), limitsize = FALSE, width = 17, height = 12, units = c("in"), dpi = 300)
+  }
+  return()
 }

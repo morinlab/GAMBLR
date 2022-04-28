@@ -6,6 +6,7 @@
 \usage{
 fancy_snv_chrdistplot(
   this_sample,
+  plot_title = paste0(this_sample),
   plot_subtitle = "SNV Distribution Per Chromosome",
   chr_select = paste0("chr", c(1:22)),
   include_dnp = FALSE,
@@ -16,6 +17,8 @@ fancy_snv_chrdistplot(
 }
 \arguments{
 \item{this_sample}{Sample to be plotted.}
+
+\item{plot_title}{Title of plot (default to sample ID).}
 
 \item{plot_subtitle}{Subtitle for created plot.}
 

@@ -6,6 +6,7 @@
 \usage{
 fancy_cnbar(
   this_sample,
+  plot_title = paste0(this_sample),
  
     plot_subtitle = "n CNV Segments (barplots, left y-axis), n Affected bases for each CN state",
   chr_select = paste0("chr", c(1:22)),
@@ -15,6 +16,8 @@ fancy_cnbar(
 }
 \arguments{
 \item{this_sample}{Sample to be plotted.}
+
+\item{plot_title}{Title of plot (default to sample ID).}
 
 \item{plot_subtitle}{Subtitle for created plot.}
 

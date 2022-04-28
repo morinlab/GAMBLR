@@ -7,6 +7,8 @@
 fancy_ideogram(
   this_sample,
   gene_annotation,
+  plot_title = paste0(this_sample),
+  plot_subtitle = "Genome-wide Ideogram (grch37).",
   include_sv = TRUE,
   sv_count = TRUE,
   coding_only = FALSE,
@@ -18,6 +20,8 @@ fancy_ideogram(
 \item{this_sample}{Sample to be plotted (currently only accepts one sample).}
 
 \item{gene_annotation}{Annotate ideogram with a single gene.}
+
+\item{plot_title}{Title of plot (default to sample ID).}
 
 \item{include_sv}{Set to TRUE to plot SVs (dels and ins).}
 
