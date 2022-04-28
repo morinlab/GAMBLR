@@ -2947,24 +2947,7 @@ subset_cnstates = function(cn_segments,
   cn_segments = subset(cn_segments, CN != 2)
 
   #update CN annotations (if present in cn_segment data).
-  if("0" %in% cn_segments$CN){
-    cn_segments$CN[cn_segments$CN == 0] = paste0("cn_0_", "sample", samplen)
-  }
-  if("1" %in% cn_segments$CN){
-    cn_segments$CN[cn_segments$CN == 1] = paste0("cn_1_", "sample", samplen)
-  }
-  if("3" %in% cn_segments$CN){
-    cn_segments$CN[cn_segments$CN == 3] = paste0("cn_3_", "sample", samplen)
-  }
-  if("4" %in% cn_segments$CN){
-    cn_segments$CN[cn_segments$CN == 4] = paste0("cn_4_", "sample", samplen)
-  }
-  if("5" %in% cn_segments$CN){
-    cn_segments$CN[cn_segments$CN == 5] = paste0("cn_5_", "sample", samplen)
-  }
-  if("6" %in% cn_segments$CN){
-    cn_segments$CN[cn_segments$CN == 6] = paste0("cn_6_or_more_", "sample", samplen)
-  }
+  cn_segments$CN = paste0("cn_", cn_segments$CN , "_sample", samplen)
 
   #convert to factor.
   cn_segments$CN = as.factor(cn_segments$CN)

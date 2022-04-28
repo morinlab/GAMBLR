@@ -9,6 +9,7 @@ fancy_cnbar(
  
     plot_subtitle = "n CNV Segments (barplots, left y-axis), n Affected bases for each CN state",
   chr_select = paste0("chr", c(1:22)),
+  cutoff = 160,
   include_cn2 = TRUE
 )
 }
@@ -17,7 +18,9 @@ fancy_cnbar(
 
 \item{plot_subtitle}{Subtitle for created plot.}
 
-\item{chr_select}{vector of chromosomes to be included in plot, defaults to autosomes.}
+\item{chr_select}{Vector of chromosomes to be included in plot, defaults to autosomes.}
+
+\item{cutoff}{Set threshold for maximum CN state to be retrieved.}
 
 \item{include_cn2}{Optional boolean statement for including CN = 2 states in plot.}
 }

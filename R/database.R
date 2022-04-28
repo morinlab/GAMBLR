@@ -1650,7 +1650,7 @@ get_coding_ssm = function(limit_cohort,
   }
   all_meta = dplyr::filter(all_meta,seq_type == {{ seq_type }})
 
-  all_meta = get_gambl_metadata(from_flatfile = from_flatfile)
+  all_meta = get_gambl_metadata(from_flatfile = from_flatfile, seq_type = seq_type)
 
   #do all remaining filtering on the metadata then add the remaining sample_id to the query
   #unix groups
