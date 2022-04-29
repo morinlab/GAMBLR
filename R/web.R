@@ -1,7 +1,7 @@
 
 #' Set up a fresh instance of a website to host on gitlab
 #'
-#' @param site_base_name 
+#' @param site_base_name
 #' @param base_directory
 #'
 #' @return
@@ -20,7 +20,7 @@ web_initialize_gambl_site = function(site_base_name,
 }
 
 web_add_update_page = function(path_to_markdown){
-  
+
 }
 
 

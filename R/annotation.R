@@ -51,9 +51,9 @@ annotate_ssm_blacklist = function(mutations_df,
   for(b in blacklist_files){
     full_path = paste0(project_base,b)
     lifted_blacklist = read_tsv(full_path, col_names = c("chrpos", "blacklist_count"), show_col_types = FALSE)
-    lifted_blacklist = lifted_blacklist %>% 
+    lifted_blacklist = lifted_blacklist %>%
       separate(chrpos, into = c("Chromosome", "Start_Position"), sep = ":")
-    
+
     blacklist_list[[b]] = lifted_blacklist
   }
   combined_blacklist = do.call("rbind", blacklist_list)
@@ -121,7 +121,7 @@ annotate_recurrent_cnv = function(seg_df,
                             anchor = c("right"),
                             min_cn = c(3),
                             name = "18der_gain")
-  
+
   cnv_dt = as.data.table(cnv_coord_df)
   seg_dt = as.data.table(seg_df)
   setkey(cnv_dt, chrom, start, end)
@@ -141,7 +141,7 @@ annotate_recurrent_cnv = function(seg_df,
 #' all_annotated = get_manta_sv() %>% annotate_sv()
 #' ig_annotated = annotate_igh_breakpoints(all_annotated)
 #'
-annotate_igh_breakpoints = function(annotated_df, 
+annotate_igh_breakpoints = function(annotated_df,
                                     genome_build = "grch37"){
 
   if(genome_build != "grch37"){
@@ -158,7 +158,7 @@ annotate_igh_breakpoints = function(annotated_df,
                       end = c(106329487, 106330175, 106330579, 106330991, emu_end, 106327600, 106058458, 106322397, 106312100, 106237884, 106209489, 106174976, 106112209, 106068295, 106092889, 106136399),
                       label = c("J6", "J5", "J4", "J3", "Emu", "Smu", "A2", "M", "D", "G3", "G1", "A1", "G2", "E", "G4", "GP"),
                       y = c(-0.5, -0.5, -0.5, -0.5, 0, 0.5, 0.5, 0.5, 0.5, 0.5, 0.5, 0.5, 0.5, 0.5, 0.5, 0.5))
-  
+
   annoying_segments = c("J6", "J3P", "J5", "J4", "J3", "Smu", "M")
   j_segs = mutate(j_segs, start_wide = ifelse(!label %in% annoying_segments, start - 3500, start), end_wide = ifelse(!label %in% annoying_segments, end + 5000, end))
   sv_igh_anno = mutate(sv_igh, mechanism = case_when(chrom2 %in% c("14", "chr14") & start2 < switch_end ~ "CSR",
@@ -175,7 +175,7 @@ annotate_igh_breakpoints = function(annotated_df,
   #assign a higher resolution position by matching to nearest annotation
   sv_igh_anno_dt = as.data.table(sv_igh_anno)
 
-  j_segs_dt = dplyr::filter(j_segs, label != "Emu") %>% 
+  j_segs_dt = dplyr::filter(j_segs, label != "Emu") %>%
     as.data.table()
 
   #annotate Emu separately because it overlaps with some annoying J segments
@@ -201,8 +201,8 @@ annotate_igh_breakpoints = function(annotated_df,
 #' @examples
 #' driver_ssm = annotate_driver_ssm(maf_df = maf, lymphoma_type = "DLBCL", noncoding_regions=c("NFKBIZ"="chr3:101578206-101578365"))
 #'
-annotate_driver_ssm = function(maf_df, 
-                               lymphoma_type, 
+annotate_driver_ssm = function(maf_df,
+                               lymphoma_type,
                                driver_genes,
                                noncoding_regions = c("NFKBIZ" = "chr3:101578206-101578365", "HNRNPH1" = "chr5:179,045,946-179,046,683")){
 
@@ -219,15 +219,15 @@ annotate_driver_ssm = function(maf_df,
     return()
   }else{
     #this all assumes the user has left the noncoding variants in their MAF
-    kept_ssm = maf_df %>% 
+    kept_ssm = maf_df %>%
       dplyr::filter(Variant_Classification %in% coding_vc) %>%
       dplyr::filter(Hugo_Symbol %in% driver_genes)
 
     for(gene in names(include_noncoding)){
       message(paste("adding", unname(include_noncoding[gene]), "for", gene))
-      nc_ssm = maf_df %>% 
+      nc_ssm = maf_df %>%
       dplyr::filter(Variant_Classification == unname(include_noncoding[gene]))
-      
+
       if(!is.na(noncoding_regions[gene])){
         #also restrict to coordinates
         chunks = region_to_chunks(noncoding_regions[gene])
@@ -266,20 +266,20 @@ annotate_driver_ssm = function(maf_df,
 #' annotated_sv = annotate_sv(sv_df)
 #' annotated_entrez = annotate_sv(sv_data = sv_df, with_chr_prefix = FALSE, collapse_redundant = FALSE, return_as = "bedpe_entrez", genome_build = "grch37")
 #'
-annotate_sv = function(sv_data, 
-                       partner_bed, 
-                       with_chr_prefix = FALSE, 
-                       collapse_redundant = FALSE, 
+annotate_sv = function(sv_data,
+                       partner_bed,
+                       with_chr_prefix = FALSE,
+                       collapse_redundant = FALSE,
                        return_as = "bedpe_entrez",
                        blacklist = c(60565248, 30303126, 187728894, 101357565, 101359747, 161734970, 69400840, 65217851, 187728889, 188305164),
                        genome_build = "grch37"){
-  
+
   bedpe1 = sv_data %>%
     dplyr::select("CHROM_A", "START_A", "END_A", "tumour_sample_id", "SOMATIC_SCORE", "STRAND_A")
-  
+
   bedpe2 = sv_data %>%
     dplyr::select("CHROM_B", "START_B", "END_B", "tumour_sample_id", "SOMATIC_SCORE", "STRAND_B")
-  
+
   colnames(bedpe1) = c("chrom", "start", "end", "tumour_sample_id", "score", "strand1")
   colnames(bedpe2) = c("chrom", "start", "end", "tumour_sample_id", "score", "strand2")
   suppressWarnings({
@@ -307,45 +307,45 @@ annotate_sv = function(sv_data,
   }
   y = data.table::as.data.table(oncogene_regions)
   data.table::setkey(y, chrom, start, end)
-  
+
   #use foverlaps to get oncogene SVs
   a = data.table::as.data.table(bedpe1)
   a.onco = data.table::foverlaps(a, y, type = "any", mult = "first") #oncogene-annotated bedpe for the first breakpoints
-  
+
   b = data.table::as.data.table(bedpe2)
   b.onco = data.table::foverlaps(b, y, type = "any", mult = "first") #oncogene-annotated bedpe for the first breakpoints
-  
+
   #insist oncogene breakpoints are anchored in an IG or superenhancer region (currently just IG or BCL6)
   #other end of breakpoint
   a.onco.break = a.onco[which(!is.na(a.onco$start)), c("chrom", "i.start", "i.end", "tumour_sample_id", "gene", "entrez", "score", "strand1")]
   b.onco.break = b.onco[which(!is.na(b.onco$start)), c("chrom", "i.start", "i.end", "tumour_sample_id", "gene", "entrez", "score", "strand2")]
-  
+
   a.partner = b[which(!is.na(a.onco$start)),]
   b.partner = a[which(!is.na(b.onco$start)),]
-  
+
   y = data.table::as.data.table(ig_regions)
   data.table::setkey(y, chrom, start, end)
-  
+
   a.ig = data.table::foverlaps(a.partner, y, type = "any", mult = "first")
   b.ig = data.table::foverlaps(b.partner, y, type = "any", mult = "first")
-  
+
   a.ig = a.ig[,c("chrom", "i.start", "i.end", "strand2", "gene")]
   b.ig = b.ig[,c("chrom", "i.start", "i.end", "strand1", "gene")]
-  
+
   a.annotated.both = cbind(a.onco.break, a.ig)
   colnames(a.annotated.both) = c("chrom1", "start1", "end1", "tumour_sample_id", "gene", "entrez", "score", "strand1", "chrom2", "start2", "end2", "strand2", "partner")
-  
+
   b.annotated.both = cbind(b.onco.break, b.ig)
   colnames(b.annotated.both) = c("chrom2", "start2", "end2", "tumour_sample_id", "gene", "entrez", "score", "strand2", "chrom1", "start1", "end1", "strand1", "partner")
-  
+
   all.annotated = rbind(a.annotated.both, b.annotated.both)
-  
+
   all.annotated$fusion = dplyr::pull(tidyr::unite(all.annotated, fusion, partner, gene, sep = "-"), fusion)
   all.annotated = dplyr::filter(all.annotated, !fusion %in% c("BCL6-BCL6", "CIITA-CIITA", "FOXP1-FOXP1"))
-  
+
   all.annotated = dplyr::filter(all.annotated, !start1 %in% blacklist)
   all.annotated = dplyr::filter(all.annotated, !start2 %in% blacklist)
-  
+
   if(return_as == "bedpe"){
     all.annotated$name = "."
     all.annotated = dplyr::select(all.annotated, chrom1, start1, end1, chrom2, start2, end2, name, score, strand1, strand2, tumour_sample_id, gene, partner, fusion)
@@ -353,21 +353,21 @@ annotate_sv = function(sv_data,
     all.annotated$name = "."
     all.annotated = dplyr::select(all.annotated, chrom1, start1, end1, chrom2, start2, end2, name, score, strand1, strand2, tumour_sample_id, gene, entrez, partner, fusion)
   }else if(return_as == "bed"){
-    
+
     #lose the linkage but add a name that somewhat retains it
     if(!grepl("chr", all.annotated$chrom1)){
       all.annotated = all.annotated %>%
         dplyr::mutate(chrom1 = paste0("chr", chrom1))
-      
+
       all.annotated = all.annotated %>%
         dplyr::mutate(chrom2 = paste0("chr", chrom2))
     }
     bed1 = dplyr::mutate(all.annotated, name = paste(tumour_sample_id, fusion, sep = "_")) %>%
       dplyr::select(chrom1, start1, end1, name, score, strand1)
-    
+
     bed2 = dplyr::mutate(all.annotated, name = paste(tumour_sample_id, fusion, sep = "_")) %>%
       dplyr::select(chrom2, start2, end2, name, score, strand2)
-    
+
     colnames(bed1) = c("chrom", "start", "end", "name", "score", "strand")
     colnames(bed2) = c("chrom", "start", "end", "name", "score", "strand")
     return(dplyr::arrange(rbind(bed1, bed2), name))
@@ -377,12 +377,12 @@ annotate_sv = function(sv_data,
     }
   }
   if(with_chr_prefix){
-    
+
     #add the prefix if necessary
     if(!grepl("chr", all.annotated$chrom1)){
       all.annotated = all.annotated %>%
         dplyr::mutate(chrom1 = paste0("chr", chrom1))
-      
+
       all.annotated = all.annotated %>%
         dplyr::mutate(chrom2 = paste0("chr", chrom2))
     }

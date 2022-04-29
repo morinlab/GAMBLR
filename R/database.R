@@ -1466,7 +1466,6 @@ get_ssm_by_regions = function(regions_list,
 }
 
 
-
 #' Retrieve all SSMs from the GAMBL database within a single genomic coordinate range.
 #'
 #' @param chromosome The chromosome you are restricting to (with or without a chr prefix).
@@ -1498,8 +1497,8 @@ get_ssm_by_region = function(chromosome,
                              qstart,
                              qend,
                              region = "",
-                             basic_columns = TRUE,
-                             streamlined = TRUE,
+                             basic_columns = FALSE,
+                             streamlined = FALSE,
                              maf_data,
                              seq_type = "genome",
                              projection = "grch37",
@@ -1551,7 +1550,6 @@ get_ssm_by_region = function(chromosome,
 
   if(missing(maf_data)){
     if(from_indexed_flatfile){
-      streamlined = TRUE
       muts = system(paste(tabix_bin, full_maf_path, region), intern = TRUE)
 
       if(length(muts) > 1){
@@ -1629,6 +1627,7 @@ get_ssm_by_region = function(chromosome,
 #'
 get_coding_ssm = function(limit_cohort,
                           exclude_cohort,
+                          these_samples_metadata,
                           limit_pathology,
                           limit_samples,
                           force_unmatched_samples,
@@ -1644,8 +1643,14 @@ get_coding_ssm = function(limit_cohort,
   if(!include_silent){
     coding_class = coding_class[coding_class != "Silent"]
   }
+  if(!missing(these_samples_metadata)){
+    all_meta = these_samples_metadata
+  }else{
+    all_meta = get_gambl_metadata(from_flatfile = from_flatfile, seq_type_filter = seq_type)
+  }
+  all_meta = dplyr::filter(all_meta,seq_type == {{ seq_type }})
 
-    all_meta = get_gambl_metadata(from_flatfile = from_flatfile)
+  all_meta = get_gambl_metadata(from_flatfile = from_flatfile, seq_type = seq_type)
 
   #do all remaining filtering on the metadata then add the remaining sample_id to the query
   #unix groups
