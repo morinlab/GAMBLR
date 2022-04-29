@@ -2955,7 +2955,7 @@ fancy_cnbar = function(this_sample,
                        plot_title = paste0(this_sample),
                        plot_subtitle = "n CNV Segments (barplots, left y-axis), n Affected bases for each CN state",
                        chr_select = paste0("chr", c(1:22)),
-                       cutoff = 160,
+                       cutoff = 15,
                        include_cn2 = TRUE) {
 
   #get maf data for a specific sample.
