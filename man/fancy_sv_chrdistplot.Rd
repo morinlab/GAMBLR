@@ -6,6 +6,10 @@
 \usage{
 fancy_sv_chrdistplot(
   this_sample,
+  maf_data,
+  maf_path = NULL,
+  variant_type_col = 10,
+  chromosome_col = 5,
   plot_title = paste0(this_sample),
   plot_subtitle = "Structural Variant Distribution Per Chromosome",
   chr_select = paste0("chr", c(1:22)),
@@ -16,6 +20,14 @@ fancy_sv_chrdistplot(
 }
 \arguments{
 \item{this_sample}{Sample to be plotted.}
+
+\item{maf_data}{Optional parameter with maf like df already loaded into R.}
+
+\item{maf_path}{Optional parameter with path to external maf like file.}
+
+\item{variant_type_col}{Index of column holding Variant Type (to be used with either maf_data or maf_path).}
+
+\item{chromosome_col}{Index of column holding Chromosome (to be used with either maf_data or maf_path).}
 
 \item{plot_title}{Title of plot (default to sample ID).}
 

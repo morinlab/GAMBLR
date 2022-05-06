@@ -6,16 +6,34 @@
 \usage{
 fancy_cnbar(
   this_sample,
+  seq_data,
+  seq_path = NULL,
+  chrom_col = 2,
+  start_col = 3,
+  end_col = 4,
+  cn_col = 7,
   plot_title = paste0(this_sample),
  
     plot_subtitle = "n CNV Segments (barplots, left y-axis), n Affected bases for each CN state",
   chr_select = paste0("chr", c(1:22)),
-  cutoff = 160,
+  cutoff = 15,
   include_cn2 = TRUE
 )
 }
 \arguments{
 \item{this_sample}{Sample to be plotted.}
+
+\item{seq_data}{Optional parameter with copy number df already loaded into R.}
+
+\item{seq_path}{Optional parameter with path to external cn file.}
+
+\item{chrom_col}{Index of column annotating Chromosome (to be used with either maf_data or maf_path).}
+
+\item{start_col}{Index of column with copy number start coordinates (to be used with either maf_data or maf_path).}
+
+\item{end_col}{Index of column with copy number end coordinates (to be used with either maf_data or maf_path).}
+
+\item{cn_col}{Index of column holding copy number information (to be used with either maf_data or maf_path).}
 
 \item{plot_title}{Title of plot (default to sample ID).}
 
