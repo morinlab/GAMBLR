@@ -271,14 +271,14 @@ annotate_sv = function(sv_data,
                        with_chr_prefix = FALSE,
                        collapse_redundant = FALSE,
                        return_as = "bedpe_entrez",
-                       blacklist = c(60565248, 30303126, 187728894, 101357565, 101359747, 161734970, 69400840, 65217851, 187728889, 188305164),
+                       blacklist = c(60565248, 30303126, 187728894, 101357565, 101359747, 161734970, 69400840, 65217851, 187728889, 187728888,187728892, 187728893,188305164),
                        genome_build = "grch37"){
 
   bedpe1 = sv_data %>%
-    dplyr::select("CHROM_A", "START_A", "END_A", "tumour_sample_id", "SOMATIC_SCORE", "STRAND_A")
+    dplyr::select("CHROM_A", "START_A", "END_A", "tumour_sample_id", ends_with("SCORE"), "STRAND_A")
 
   bedpe2 = sv_data %>%
-    dplyr::select("CHROM_B", "START_B", "END_B", "tumour_sample_id", "SOMATIC_SCORE", "STRAND_B")
+    dplyr::select("CHROM_B", "START_B", "END_B", "tumour_sample_id", ends_with("SCORE"), "STRAND_B")
 
   colnames(bedpe1) = c("chrom", "start", "end", "tumour_sample_id", "score", "strand1")
   colnames(bedpe2) = c("chrom", "start", "end", "tumour_sample_id", "score", "strand2")
