@@ -7,6 +7,7 @@
 get_coding_ssm(
   limit_cohort,
   exclude_cohort,
+  these_samples_metadata,
   limit_pathology,
   limit_samples,
   force_unmatched_samples,
