@@ -7,9 +7,9 @@
 get_coding_ssm(
   limit_cohort,
   exclude_cohort,
-  these_samples_metadata,
   limit_pathology,
   limit_samples,
+  these_samples_metadata,
   force_unmatched_samples,
   projection = "grch37",
   seq_type = "genome",
@@ -28,7 +28,9 @@ get_coding_ssm(
 
 \item{limit_pathology}{Supply this to restrict mutations to one pathology.}
 
-\item{limit_samples}{Supply this to restrict mutations to one sample.}
+\item{limit_samples}{Supply this to restrict mutations to a vector of sample_id (instead of subsetting using the provided metadata)}
+
+\item{these_samples_metadata}{Supply a metadata table to auto-subset the data to samples in that table before returning}
 
 \item{force_unmatched_samples}{Optional argument for forcing unmatched samples, using get_ssm_by_samples.}
 

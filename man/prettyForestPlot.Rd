@@ -10,6 +10,7 @@ prettyForestPlot(
   metadata,
   genes,
   comparison_column,
+  rm_na_samples = TRUE,
   comparison_values = FALSE,
   separate_hotspots = FALSE,
   comparison_name = FALSE,
@@ -28,6 +29,8 @@ prettyForestPlot(
 \item{genes}{An optional list of genes to restrict your plot to.}
 
 \item{comparison_column}{Mandatory: the name of the metadata column containing the comparison values.}
+
+\item{rm_na_samples}{Set to TRUE to remove 0 mutation samples. Default is TRUE.}
 
 \item{comparison_values}{Optional: If the comparison column contains more than two values or is not a factor, specify a character vector of length two in the order you would like the factor levels to be set, reference group first.}
 
@@ -56,8 +59,8 @@ metadata = get_gambl_metadata(case_set = "tFL-study") #\%>\%
 
 maf = get_coding_ssm(limit_samples = metadata$sample_id, basic_columns = TRUE)
 
-prettyForestPlot(maf,
-                 metadata,
+prettyForestPlot(maf = maf,
+                 metadata = metadata,
                  genes = c("ATP6V1B2", "EZH2", "TNFRSF14", "RRAGC"),
                  comparison_column = "consensus_pathology",
                  comparison_values = c("DLBCL", "FL"),

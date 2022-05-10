@@ -15,7 +15,7 @@ get_manta_sv(
   qend,
   region,
   with_chr_prefix = FALSE,
-  from_flatfile = FALSE,
+  from_flatfile = TRUE,
   projection = "grch37"
 )
 }

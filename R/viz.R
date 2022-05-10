@@ -2281,6 +2281,7 @@ theme_Morons = function(base_size = 14,
 #' @param metadata Metadata for the comparisons. Minimum required columns are Tumor_Sample_Barcode and the column assigning each case to one of two groups.
 #' @param genes An optional list of genes to restrict your plot to.
 #' @param comparison_column Mandatory: the name of the metadata column containing the comparison values.
+#' @param rm_na_samples Set to TRUE to remove 0 mutation samples. Default is TRUE.
 #' @param comparison_values Optional: If the comparison column contains more than two values or is not a factor, specify a character vector of length two in the order you would like the factor levels to be set, reference group first.
 #' @param separate_hotspots Optional: If you would like to treat hotspots separately from other mutations in any gene. Requires that the maf file is annotated with GAMBLR::annotate_hotspots.
 #' @param comparison_name Optional: Specify the legend title if different from the comparison column name.
@@ -2300,8 +2301,8 @@ theme_Morons = function(base_size = 14,
 #'
 #' maf = get_coding_ssm(limit_samples = metadata$sample_id, basic_columns = TRUE)
 #'
-#' prettyForestPlot(maf,
-#'                  metadata,
+#' prettyForestPlot(maf = maf,
+#'                  metadata = metadata,
 #'                  genes = c("ATP6V1B2", "EZH2", "TNFRSF14", "RRAGC"),
 #'                  comparison_column = "consensus_pathology",
 #'                  comparison_values = c("DLBCL", "FL"),
@@ -2313,6 +2314,7 @@ prettyForestPlot = function(maf,
                             metadata,
                             genes,
                             comparison_column,
+                            rm_na_samples = TRUE,
                             comparison_values = FALSE,
                             separate_hotspots = FALSE,
                             comparison_name = FALSE,
@@ -2341,6 +2343,7 @@ prettyForestPlot = function(maf,
   }
   #Subset the metadata to the specified comparison_values and the maf to the remaining sample_ids
   metadata = metadata[metadata[[comparison_column]] %in% comparison_values, ]
+
   #Ensure the metadata comparison column is a factor with levels matching the input
   metadata$comparison = factor(metadata[[comparison_column]], levels = comparison_values)
   if(!missing(maf)){
@@ -2354,18 +2357,25 @@ prettyForestPlot = function(maf,
       dplyr::rename("Tumor_Sample_Barcode"="sample_id")
   }else if(!missing(maf)){
     if(separate_hotspots){
-        if(!"hot_spot" %in% colnames(maf))
-          stop("No \"hot_spot\" column in maf file. Annotate your maf file with GAMBLR::annotate_hot_spots() first. ")
+      if(!"hot_spot" %in% colnames(maf))
+        stop("No \"hot_spot\" column in maf file. Annotate your maf file with GAMBLR::annotate_hot_spots() first. ")
       maf$Hugo_Symbol = ifelse(!is.na(maf$hot_spot), paste0(maf$Hugo_Symbol, "_hotspot"), maf$Hugo_Symbol)
     }
     #Convert the maf file to a binary matrix
     mutmat = maf %>%
       dplyr::select(Hugo_Symbol, Tumor_Sample_Barcode) %>%
-      left_join(dplyr::select(metadata, Tumor_Sample_Barcode, comparison), by = "Tumor_Sample_Barcode") %>%
+      full_join(dplyr::select(metadata, Tumor_Sample_Barcode, comparison), by = "Tumor_Sample_Barcode") %>%
       distinct() %>%
       dplyr::mutate(is_mutated = 1) %>%
       pivot_wider(names_from = Hugo_Symbol, values_from = is_mutated, values_fill = 0) %>%
       dplyr::mutate(across(where(is.numeric), ~replace_na(., 0)))
+
+    if(rm_na_samples){
+      names(mutmat)[7] = "na_samples"
+      mutmat = mutmat %>%
+        dplyr::filter(na_samples == 0) %>%
+        dplyr::select(-na_samples)
+    }
   }else{
     message("provide a MAF or mutation matrix")
     return()
@@ -2440,17 +2450,17 @@ prettyForestPlot = function(maf,
     dplyr::filter(gene %in% fish_test$gene) %>%
     dplyr::mutate(gene = factor(gene, levels = levels(fish_test$gene))) %>%
     ggplot(aes(x = gene, y = percent_mutated, fill = comparison)) +
-      geom_col(position = "dodge", width = 0.5) +
-      xlab("") + ylab("% Mutated") +
-      coord_flip() +
-      scale_fill_manual(name = comparison_name, values = colours, labels = labels[levels(metadata$comparison)]) +
-      cowplot::theme_cowplot() +
-      theme(axis.text.y = element_blank(), legend.position = "bottom", legend.justification = ) #condition missing?)
+    geom_col(position = "dodge", width = 0.5) +
+    xlab("") + ylab("% Mutated") +
+    coord_flip() +
+    scale_fill_manual(name = comparison_name, values = colours, labels = labels[levels(metadata$comparison)]) +
+    cowplot::theme_cowplot() +
+    theme(axis.text.y = element_blank(), legend.position = "bottom")
 
   legend = cowplot::get_legend(bar)
 
   plots = plot_grid(forest, bar +
-          theme(legend.position = "none"), rel_widths = c(1, 0.6), nrow = 1)
+                      theme(legend.position = "none"), rel_widths = c(1, 0.6), nrow = 1)
 
   arranged_plot = cowplot::plot_grid(plot_grid(NULL, legend, NULL, nrow = 1), plots, nrow = 2, rel_heights = c(0.1, 1))
 
