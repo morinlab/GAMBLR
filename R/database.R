@@ -1629,7 +1629,6 @@ get_ssm_by_region = function(chromosome,
 #'
 get_coding_ssm = function(limit_cohort,
                           exclude_cohort,
-                          these_samples_metadata,
                           limit_pathology,
                           limit_samples,
                           these_samples_metadata,
