@@ -1515,13 +1515,11 @@ get_ssm_by_region = function(chromosome,
 
     #test if we have permissions for the full gambl + icgc merge
     if(mode == "slms-3"){
-      if(!augmented){
-        maf_partial_path = config::get("results_flatfiles")$ssm$template$merged$deblacklisted
-      }
       if(augmented){
         maf_partial_path = config::get("results_flatfiles")$ssm$template$merged$augmented
-      }
-
+      }else{
+        maf_partial_path = config::get("results_flatfiles")$ssm$template$merged$deblacklisted
+        }
     }else if (mode == "strelka2"){
       maf_partial_path = config::get("results_flatfiles")$ssm$all$strelka2
     }else{
@@ -1655,8 +1653,7 @@ get_coding_ssm = function(limit_cohort,
     all_meta = get_gambl_metadata(from_flatfile = from_flatfile, seq_type_filter = seq_type)
   }
 
-  all_meta = dplyr::filter(all_meta,seq_type == {{ seq_type }})
-  all_meta = get_gambl_metadata(from_flatfile = from_flatfile, seq_type_filter = seq_type)
+  all_meta = dplyr::filter(all_meta, seq_type == {{ seq_type }})
 
   #do all remaining filtering on the metadata then add the remaining sample_id to the query
   #unix groups

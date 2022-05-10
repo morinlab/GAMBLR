@@ -3892,7 +3892,7 @@ fancy_sv_size_plot = function(this_sample,
         geom_hline(yintercept =  mean(manta_sv$size), color = "black", linetype = "dashed") +
         labs(title = plot_title, subtitle = plot_subtitle, x = "", y = "Variant Size (bp)") +
         scale_fill_manual(values = c(del_col, dup_col)) +
-        scale_y_log10(expand = c(0, 0), breaks) +
+        scale_y_log10(expand = c(0, 0)) +
         theme_cowplot() +
         theme(legend.title = element_blank(), axis.text.x = element_blank(), axis.ticks.x = element_blank())
 

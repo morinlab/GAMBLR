@@ -132,6 +132,10 @@ get_coding_ssm_status = function(gene_symbols,
     gene_symbols = pull(lymphoma_genes, Gene)
   }
 
+  if(missing(these_samples_metadata)){
+    these_samples_metadata = get_gambl_metadata()
+  }
+
   # call it once so the object can be reused if user wants to annotate hotspots
   if(!missing(maf_data)){
     coding_ssm = maf_data %>%
