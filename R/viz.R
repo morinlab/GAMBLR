@@ -2368,13 +2368,11 @@ prettyForestPlot = function(maf,
       dplyr::mutate(is_mutated = 1) %>%
       pivot_wider(names_from = Hugo_Symbol, values_from = is_mutated, values_fill = 0) %>%
       dplyr::mutate(across(where(is.numeric), ~replace_na(., 0)))
-
-    if(rm_na_samples){
-      names(mutmat)[7] = "na_samples"
+    if(rm_na_samples){ #remove 0 mutation samples, i.e samples that show 0 for all selected genes.
+      names(mutmat)[length(names(mutmat))]<-"na_samples" #rename the last column, "NA" (since dplyr do not treat a variable named NA the same way as other variables?)
       mutmat = mutmat %>%
-        dplyr::filter(na_samples == 0) %>%
-        dplyr::select(-na_samples)
-    }
+        dplyr::filter(na_samples == 0) %>% #filter out all samples that show no mutations in the selected genes (i.e na_samples = 1).
+        dplyr::select(-na_samples) #drop temporary column (na_samples) to return mutmat to expected format.
   }else{
     message("provide a MAF or mutation matrix")
     return()
