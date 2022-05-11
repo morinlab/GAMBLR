@@ -35,6 +35,3 @@ Updates the database by appending to the gambl_files table. Use with caution!
 \description{
 Title
 }
-\examples{
-
-}

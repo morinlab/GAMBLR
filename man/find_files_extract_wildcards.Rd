@@ -14,7 +14,15 @@ find_files_extract_wildcards(
 )
 }
 \arguments{
-\item{unix_group}{}
+\item{tool_results_path}{path to results}
+
+\item{search_pattern}{search pattern}
+
+\item{genome_build}{genome projection to be sued}
+
+\item{seq_type}{default si geneome}
+
+\item{unix_group}{default value is gambl}
 }
 \value{
 

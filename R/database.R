@@ -1805,7 +1805,7 @@ get_gene_cn_and_expression = function(gene_symbol,
 
 #' Get the expression for one or more genes for all GAMBL samples
 #'
-#' @param metadata # GAMBL metadata.
+#' @param metadata GAMBL metadata.
 #' @param hugo_symbols One or more gene symbols. Should match the values in a maf file.
 #' @param ensembl_gene_ids One or more ensembl gene IDs. Only one of hugo_symbols or ensembl_gene_ids may be used.
 #' @param join_with How to restrict cases for the join. Can be one of genome, mrna or "any"

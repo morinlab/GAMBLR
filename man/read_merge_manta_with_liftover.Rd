@@ -11,15 +11,15 @@ read_merge_manta_with_liftover(
 )
 }
 \arguments{
-\item{out_dir}{}
+\item{bedpe_paths}{path to bedpe}
+
+\item{pattern}{pattern}
+
+\item{out_dir}{output directory}
 }
 \value{
 
 }
 \description{
 This is a helper function that is not meant to be used routinely
-}
-\examples{
-
-
 }

@@ -1,14 +1,13 @@
 
 #' Set up a fresh instance of a website to host on gitlab
 #'
-#' @param site_base_name
-#' @param base_directory
+#' @param site_base_name base name for site
+#' @param base_directory path to base directory
 #'
 #' @return
 #' @export
 #' @import workflowr
 #'
-#' @examples
 web_initialize_gambl_site = function(site_base_name,
                                  base_directory = "/home/rmorin/",
                                  my_name = "Ryan Morin",

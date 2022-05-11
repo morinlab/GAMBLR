@@ -38,3 +38,7 @@ A vector of sample_id for the patients that have been included.
 \description{
 Annotate SVs and create the input for fusions to be displayed in cBioPortal instance.
 }
+\examples{
+fusion_ids = setup_fusions(out_dir = "GAMBLR/cBioPortal/instance01/")
+
+}

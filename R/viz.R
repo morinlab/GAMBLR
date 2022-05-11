@@ -1964,7 +1964,6 @@ ashm_rainbow_plot = function(mutations_maf,
 #' @export
 #' @import tidyverse
 #'
-#' @examples
 plot_multi_timepoint = function(mafs,
                                 sample_id,
                                 genes,
@@ -3669,7 +3668,7 @@ comp_report = function(this_sample,
 #' @param gene_name_col Index number of gene_list that holds gene names.
 #'
 #' @return Nothing.
-#' @import tidyverse Rcircos
+#' @import tidyverse RCircos
 #' @export
 #'
 #' @examples

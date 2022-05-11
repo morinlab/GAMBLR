@@ -41,3 +41,7 @@ Nothing.
 \description{
 Finish setting up a new cBioPortal instance or updating an existing portal data set.
 }
+\examples{
+finalize_study(sample_ids = c(ids, fusion_ids), out_dir = "GAMBLR/cBioPortal/instance01/")
+
+}

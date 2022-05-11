@@ -41,6 +41,7 @@ Imports:
     reshape2,
     RMariaDB,
     rtracklayer,
+    RCircos, 
     S4Vectors,
     SRAdb,
     stats,

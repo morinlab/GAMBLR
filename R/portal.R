@@ -170,8 +170,7 @@ setup_study = function(short_name = "GAMBL",
 #' @export
 #'
 #' @examples
-#' Setup fusions and save included sample ids into a vector of character
-#' fusion_ids = setup_fusions(out_dir = "GAMBLR/cBioPortal/instance01/)
+#' fusion_ids = setup_fusions(out_dir = "GAMBLR/cBioPortal/instance01/")
 #'
 setup_fusions = function(short_name = "GAMBL",
                          include_icgc_data = FALSE,
@@ -305,8 +304,7 @@ setup_fusions = function(short_name = "GAMBL",
 #' @export
 #'
 #' @examples
-#' Finalize study using generated list of ids from setup_study and setup_fusions:
-#' finalize_study(sample_ids = c(ids, fusion_ids), out_dir = "GAMBLR/cBioPortal/instance01/)
+#' finalize_study(sample_ids = c(ids, fusion_ids), out_dir = "GAMBLR/cBioPortal/instance01/")
 #'
 finalize_study = function(short_name = "GAMBL",
                           include_icgc_data = FALSE,
@@ -392,8 +390,7 @@ finalize_study = function(short_name = "GAMBL",
 #' @export
 #'
 #' @examples
-#' Perform sanity check on generated files (i.e ensure that sample ids in case lists are represented in clinical file and filter out such samples, if any):
-#' samples_not_in_clinical = study_check(out_dir = "GAMBLR/cBioPortal/instance01/)
+#' samples_not_in_clinical = study_check(out_dir = "GAMBLR/cBioPortal/instance01/")
 #'
 study_check = function(data_clinical_samples_path = "data_clinical_samples.txt",
                        data_fusions_path = "data_fusions.txt",

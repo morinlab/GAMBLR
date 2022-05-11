@@ -15,7 +15,7 @@ coding_class = c("Frame_Shift_Del", "Frame_Shift_Ins", "In_Frame_Del", "In_Frame
 #' @export
 #'
 #' @examples
-#' ex_outs = find_expected_outputs(my_df, "slims_3", gambl")
+#' ex_outs = find_expected_outputs(my_df, "slims_3", "gambl")
 #'
 find_expected_outputs = function(targ_df,
                                  tool_name,
@@ -389,14 +389,12 @@ populate_each_tool_result = function(tool,
 
 #' This is a helper function that is not meant to be used routinely
 #'
-#' @param bedpe_paths
-#' @param pattern
-#' @param out_dir
+#' @param bedpe_paths path to bedpe
+#' @param pattern pattern
+#' @param out_dir output directory
 #'
 #' @return
 #' @import tidyverse
-#'
-#' @examples
 #'
 #'
 read_merge_manta_with_liftover = function(bedpe_paths = c(),
@@ -465,9 +463,9 @@ read_merge_manta_with_liftover = function(bedpe_paths = c(),
 
 #' This is a helper function that is not meant to be used routinely
 #'
-#' @param bedpe_paths
-#' @param pattern
-#' @param out_dir
+#' @param bedpe_paths paths to bedpe
+#' @param pattern pattern
+#' @param out_dir output directory
 #' @param projection_build The genome we want all results to be relative to (lifted if necessary)
 #'
 #' @return
@@ -475,7 +473,6 @@ read_merge_manta_with_liftover = function(bedpe_paths = c(),
 #'
 #' @export
 #'
-#' @examples
 process_all_manta_bedpe = function(file_df,
                                    out_dir,
                                    group,
@@ -598,18 +595,16 @@ process_all_manta_bedpe = function(file_df,
 
 #' Title
 #'
-#' @param tool_name
+#' @param tool_name name of tool
 #' @param base_path Either the full or relative path to where all the results directories are for the tool e.g. "gambl/sequenza_current"
-#' @param results_dir
-#' @param seq_type
-#' @param genome_build
-#' @param search_pattern
+#' @param results_dir directory with results
+#' @param seq_type either genome or capture
+#' @param genome_build default is hg38
+#' @param search_pattern file-extensions search pattern
 #'
 #' @return A data frame with one row per file and sample IDs parsed from the file name along with other GAMBL wildcards
 #' @export
 #' @import tidyverse
-#'
-#' @examples
 #'
 fetch_output_files = function(tool,
                               unix_group,
@@ -703,11 +698,11 @@ fetch_output_files = function(tool,
 
 #' Title
 #'
-#' @param tool_results_path
-#' @param search_pattern
-#' @param genome_build
-#' @param seq_type
-#' @param unix_group
+#' @param tool_results_path path to results
+#' @param search_pattern search pattern
+#' @param genome_build genome projection to be sued
+#' @param seq_type default si geneome
+#' @param unix_group default value is gambl
 #'
 #' @return
 #' @export
@@ -752,8 +747,6 @@ find_files_extract_wildcards = function(tool_results_path,
 #' @return a data table containing MAF data from a MAF file
 #' @export
 #'
-#' @examples
-#'
 fread_maf = function(maf_file_path){
                      maf_dt = data.table::fread(
                      file = maf_file_path,
@@ -775,8 +768,6 @@ fread_maf = function(maf_file_path){
 #'
 #' @return
 #' @export
-#'
-#' @examples
 #'
 tidy_gene_expression = function(return_df = FALSE){
 
@@ -857,8 +848,6 @@ tidy_gene_expression = function(return_df = FALSE){
 #'
 #' @return Updates the database by appending to the gambl_files table. Use with caution!
 #' @export
-#'
-#' @examples
 #'
 assemble_file_details = function(file_details_df,
                                  file_paths,

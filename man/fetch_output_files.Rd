@@ -17,14 +17,19 @@ fetch_output_files(
 \arguments{
 \item{base_path}{Either the full or relative path to where all the results directories are for the tool e.g. "gambl/sequenza_current"}
 
-\item{search_pattern}{}
+\item{results_dir}{directory with results}
+
+\item{seq_type}{either genome or capture}
+
+\item{search_pattern}{file-extensions search pattern}
+
+\item{tool_name}{name of tool}
+
+\item{genome_build}{default is hg38}
 }
 \value{
 A data frame with one row per file and sample IDs parsed from the file name along with other GAMBL wildcards
 }
 \description{
 Title
-}
-\examples{
-
 }
