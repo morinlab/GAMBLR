@@ -2280,7 +2280,7 @@ theme_Morons = function(base_size = 14,
 #' @param metadata Metadata for the comparisons. Minimum required columns are Tumor_Sample_Barcode and the column assigning each case to one of two groups.
 #' @param genes An optional list of genes to restrict your plot to.
 #' @param comparison_column Mandatory: the name of the metadata column containing the comparison values.
-#' @param rm_na_samples Set to TRUE to remove 0 mutation samples. Default is TRUE.
+#' @param rm_na_samples Set to TRUE to remove 0 mutation samples. Default is FALSE.
 #' @param comparison_values Optional: If the comparison column contains more than two values or is not a factor, specify a character vector of length two in the order you would like the factor levels to be set, reference group first.
 #' @param separate_hotspots Optional: If you would like to treat hotspots separately from other mutations in any gene. Requires that the maf file is annotated with GAMBLR::annotate_hotspots.
 #' @param comparison_name Optional: Specify the legend title if different from the comparison column name.
@@ -2313,7 +2313,7 @@ prettyForestPlot = function(maf,
                             metadata,
                             genes,
                             comparison_column,
-                            rm_na_samples = TRUE,
+                            rm_na_samples = FALSE,
                             comparison_values = FALSE,
                             separate_hotspots = FALSE,
                             comparison_name = FALSE,
@@ -2368,11 +2368,11 @@ prettyForestPlot = function(maf,
       dplyr::mutate(is_mutated = 1) %>%
       pivot_wider(names_from = Hugo_Symbol, values_from = is_mutated, values_fill = 0) %>%
       dplyr::mutate(across(where(is.numeric), ~replace_na(., 0)))
-    if(rm_na_samples){ #remove 0 mutation samples, i.e samples that show 0 for all selected genes.
-      names(mutmat)[length(names(mutmat))]<-"na_samples" #rename the last column, "NA" (since dplyr do not treat a variable named NA the same way as other variables?)
+    if(rm_na_samples && "NA" %in% colnames(mutmat)){
       mutmat = mutmat %>%
-        dplyr::filter(na_samples == 0) %>% #filter out all samples that show no mutations in the selected genes (i.e na_samples = 1).
-        dplyr::select(-na_samples) #drop temporary column (na_samples) to return mutmat to expected format.
+        dplyr::filter(`NA` == 0) #filter out all samples that show no mutations in the selected genes (i.e na_samples = 1).
+    }
+    mutmat = dplyr::select(mutmat, -`NA`)
   }else{
     message("provide a MAF or mutation matrix")
     return()

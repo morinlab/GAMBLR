@@ -10,7 +10,7 @@ prettyForestPlot(
   metadata,
   genes,
   comparison_column,
-  rm_na_samples = TRUE,
+  rm_na_samples = FALSE,
   comparison_values = FALSE,
   separate_hotspots = FALSE,
   comparison_name = FALSE,
@@ -30,7 +30,7 @@ prettyForestPlot(
 
 \item{comparison_column}{Mandatory: the name of the metadata column containing the comparison values.}
 
-\item{rm_na_samples}{Set to TRUE to remove 0 mutation samples. Default is TRUE.}
+\item{rm_na_samples}{Set to TRUE to remove 0 mutation samples. Default is FALSE.}
 
 \item{comparison_values}{Optional: If the comparison column contains more than two values or is not a factor, specify a character vector of length two in the order you would like the factor levels to be set, reference group first.}
 
