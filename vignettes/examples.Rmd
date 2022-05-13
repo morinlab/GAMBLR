@@ -341,6 +341,7 @@ prettyOncoplot(maftools_obj = maf,
                metadataBarFontsize = 8,
                fontSizeGene = 11,
                recycleOncomatrix = TRUE,
+               include_noncoding = NULL,
                removeNonMutated = FALSE)
 ```
 

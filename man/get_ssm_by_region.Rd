@@ -17,8 +17,7 @@ get_ssm_by_region(
   from_indexed_flatfile = TRUE,
   augmented = TRUE,
   min_read_support = 3,
-  mode = "slms-3",
-  allow_clustered = TRUE
+  mode = "slms-3"
 )
 }
 \arguments{
@@ -47,8 +46,6 @@ get_ssm_by_region(
 \item{min_read_support}{Only returns variants with at least this many reads in t_alt_count (for cleaning up augmented MAFs).}
 
 \item{mode}{Only works with indexed flatfiles. Accepts 2 options of "slms-3" and "strelka2" to indicate which variant caller to use. Default is "slms-3".}
-
-\item{allow_clustered}{Logical parameter indicating whether to use SLMS-3 results with clustered events. Default is FALSE.}
 }
 \value{
 A data frame containing all the MAF data columns (one row per mutation).

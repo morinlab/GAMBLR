@@ -11,7 +11,7 @@ prettyOncoplot(
   maftools_obj,
   onco_matrix_path,
   genes,
-  include_noncoding = list(NFKBIZ = c("3'UTR"), HNRNPH1 = "Splice_Region"),
+  include_noncoding = NULL,
   keepGeneOrder = FALSE,
   keepSampleOrder = TRUE,
   highlightHotspots = FALSE,
@@ -55,7 +55,7 @@ prettyOncoplot(
 
 \item{genes}{An optional list of genes to restrict your plot to.}
 
-\item{include_noncoding}{List of non-coding regions to be included, default is "NFKBIZ - 3'UTR" and "HNRNPH1 - Splice_Region").}
+\item{include_noncoding}{List of non-coding regions to be included, default is "NFKBIZ - 3'UTR" and "HNRNPH1 - Splice_Region").. Specify like this: include_noncoding=list("NFKBIZ" = c("3'UTR"), "HNRNPH1" = "Splice_Region")}
 
 \item{keepGeneOrder}{Set to TRUE if you want to preserve the gene order specified.}
 

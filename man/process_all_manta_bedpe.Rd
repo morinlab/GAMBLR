@@ -13,7 +13,13 @@ process_all_manta_bedpe(
 )
 }
 \arguments{
+\item{out_dir}{output directory}
+
 \item{projection_build}{The genome we want all results to be relative to (lifted if necessary)}
+
+\item{bedpe_paths}{paths to bedpe}
+
+\item{pattern}{pattern}
 }
 \value{
 

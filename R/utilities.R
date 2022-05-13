@@ -129,45 +129,30 @@ get_coding_ssm_status = function(gene_symbols,
 
   if(missing(gene_symbols)){
     message("defaulting to all lymphoma genes")
-    gene_symbols = pull(lymphoma_genes,Gene)
+    gene_symbols = pull(lymphoma_genes, Gene)
   }
+
   if(missing(these_samples_metadata)){
     these_samples_metadata = get_gambl_metadata()
   }
-  if(!include_silent){
-    coding_class = coding_class[coding_class != "Silent"]
-  }
+
   # call it once so the object can be reused if user wants to annotate hotspots
   if(!missing(maf_data)){
     coding_ssm = maf_data %>%
       dplyr::filter(Variant_Classification %in% coding_class)
 
-  }else if (!is.null(maf_path) ){
+  }else if (!is.null(maf_path)){
     coding_ssm = fread_maf(maf_path)
     coding_ssm = coding_ssm %>%
       dplyr::filter(Variant_Classification %in% coding_class)
-
-  }else if (from_flatfile && !augmented){
-    base_path = config::get("project_base")
-    maf_partial_path = config::get("results_flatfiles")$ssm$template$cds$deblacklisted
-    maf_path = glue::glue(maf_partial_path)
-    full_maf_path = paste0(base_path, maf_path)
-    message(paste("reading from:", full_maf_path))
-    maf_data = fread_maf(full_maf_path)
-    coding_ssm = maf_data %>%
-      dplyr::filter(Variant_Classification %in% coding_class)
-
-  }else if (from_flatfile && augmented){
-    base_path = config::get("project_base")
-    maf_partial_path = config::get("results_flatfiles")$ssm$template$cds$augmented
-    maf_path = glue::glue(maf_partial_path)
-    full_maf_path = paste0(base_path, maf_path)
-    message(paste("reading from:", full_maf_path))
-    maf_data = fread_maf(full_maf_path)
-    coding_ssm = maf_data %>%
-      dplyr::filter(Variant_Classification %in% coding_class) %>%
-      dplyr::filter(t_alt_count >= min_read_support)
   }
+
+  if(!missing(maf_data) && !is.null(maf_path)){
+    maf_data = get_coding_ssm(projection = projection, seq_type = seq_type, from_flatfile = from_flatfile, augmented = augmented, min_read_support = 3, basic_columns = FALSE, include_silent = include_silent)
+  }
+
+  coding_ssm = maf_data %>%
+    dplyr::filter(Variant_Classification %in% coding_class)
 
   coding = coding_ssm %>%
     dplyr::filter(Hugo_Symbol %in% gene_symbols & Variant_Classification != "Synonymous") %>%

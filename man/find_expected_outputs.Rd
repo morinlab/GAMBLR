@@ -32,3 +32,7 @@ find_expected_outputs(
 \description{
 Get the details including file paths for the anticipated outputs from a pipeline or tool
 }
+\examples{
+ex_outs = find_expected_outputs(my_df, "slims_3", "gambl")
+
+}

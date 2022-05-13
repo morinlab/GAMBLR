@@ -35,3 +35,7 @@ Nothing.
 \description{
 Helper function for checking integrity of study files.
 }
+\examples{
+samples_not_in_clinical = study_check(out_dir = "GAMBLR/cBioPortal/instance01/")
+
+}

@@ -6,6 +6,12 @@
 \usage{
 fancy_vplot(
   this_sample,
+  maf_data,
+  maf_path = NULL,
+  variant_type_col = 10,
+  chromosome_col = 5,
+  start_col = 6,
+  end_col = 7,
   plot_title = paste0(this_sample),
   plot_subtitle = "Structural Variant Size Distribution",
   chr_select = paste0("chr", c(1:22)),
@@ -16,6 +22,18 @@ fancy_vplot(
 }
 \arguments{
 \item{this_sample}{Sample to be plotted.}
+
+\item{maf_data}{Optional parameter with maf like df already loaded into R.}
+
+\item{maf_path}{Optional parameter with path to external maf like file.}
+
+\item{variant_type_col}{Index of column holding Variant Type (to be used with either maf_data or maf_path).}
+
+\item{chromosome_col}{Index of column holding Chromosome (to be used with either maf_data or maf_path).}
+
+\item{start_col}{Index of column with variant start coordinates (to be used with either maf_data or maf_path).}
+
+\item{end_col}{Index of column with variant end coordinates (to be used with either maf_data or maf_path).}
 
 \item{plot_title}{Title of plot (default to sample ID).}
 

@@ -1482,7 +1482,6 @@ get_ssm_by_regions = function(regions_list,
 #' @param augmented default: TRUE. Set to FALSE if you instead want the original MAF from each sample for multi-sample patients instead of the augmented MAF .
 #' @param min_read_support Only returns variants with at least this many reads in t_alt_count (for cleaning up augmented MAFs).
 #' @param mode Only works with indexed flatfiles. Accepts 2 options of "slms-3" and "strelka2" to indicate which variant caller to use. Default is "slms-3".
-#' @param allow_clustered Logical parameter indicating whether to use SLMS-3 results with clustered events. Default is FALSE.
 #'
 #' @return A data frame containing all the MAF data columns (one row per mutation).
 #' @export
@@ -1506,23 +1505,22 @@ get_ssm_by_region = function(chromosome,
                              from_indexed_flatfile = TRUE,
                              augmented = TRUE,
                              min_read_support = 3,
-                             mode = "slms-3",
-                             allow_clustered = TRUE){
+                             mode = "slms-3"){
 
   tabix_bin = "/home/rmorin/miniconda3/bin/tabix"
   table_name = config::get("results_tables")$ssm
   db = config::get("database_name")
+
   if(from_indexed_flatfile){
     base_path = config::get("project_base")
 
     #test if we have permissions for the full gambl + icgc merge
     if(mode == "slms-3"){
-      if(allow_clustered && !augmented){
-        maf_partial_path = config::get("results_flatfiles")$ssm$template$merged$deblacklisted
-      }
-      if(allow_clustered && augmented){
+      if(augmented){
         maf_partial_path = config::get("results_flatfiles")$ssm$template$merged$augmented
-      }
+      }else{
+        maf_partial_path = config::get("results_flatfiles")$ssm$template$merged$deblacklisted
+        }
     }else if (mode == "strelka2"){
       maf_partial_path = config::get("results_flatfiles")$ssm$all$strelka2
     }else{
@@ -1531,23 +1529,29 @@ get_ssm_by_region = function(chromosome,
 
     maf_path = glue::glue(maf_partial_path)
     full_maf_path = paste0(base_path, maf_path)
-    message(paste("reading from:", full_maf_path))
 
     #substitute maf with bed.gz for indexed flatfiles
     full_maf_path = stringr::str_replace(full_maf_path, ".maf$", ".bed.gz")
+    message(paste("reading from:", full_maf_path))
   }
+
+  region = "chr8:128,723,128-128,774,067"
 
   if(!region == ""){
     region = gsub(",", "", region)
-    #format is chr6:37060224-37151701
     split_chunks = unlist(strsplit(region, ":"))
-    region = stringr::str_replace(region, "chr", "")
+    if(projection == "grch37"){
+      region = stringr::str_replace(region, "chr", "")
+    }
     chromosome = split_chunks[1]
     startend = unlist(strsplit(split_chunks[2], "-"))
-    qstart=as.numeric(startend[1])
-    qend=as.numeric(startend[2])
+    qstart = as.numeric(startend[1])
+    qend = as.numeric(startend[2])
   }
-  chromosome = gsub("chr", "", chromosome)
+
+  if(projection =="grch37"){
+    chromosome = gsub("chr", "", chromosome)
+  }
 
   if(missing(maf_data)){
     if(from_indexed_flatfile){
@@ -1650,9 +1654,8 @@ get_coding_ssm = function(limit_cohort,
   }else{
     all_meta = get_gambl_metadata(from_flatfile = from_flatfile, seq_type_filter = seq_type)
   }
-  all_meta = dplyr::filter(all_meta,seq_type == {{ seq_type }})
 
-  all_meta = get_gambl_metadata(from_flatfile = from_flatfile, seq_type = seq_type)
+  all_meta = dplyr::filter(all_meta, seq_type == {{ seq_type }})
 
   #do all remaining filtering on the metadata then add the remaining sample_id to the query
   #unix groups
@@ -1664,23 +1667,22 @@ get_coding_ssm = function(limit_cohort,
     all_meta = all_meta %>%
       dplyr::filter(cohort %in% limit_cohort)
   }
-    #exclude cohort
+  #exclude cohort
   if(!missing(exclude_cohort)){
     all_meta = all_meta %>%
       dplyr::filter(!cohort %in% exclude_cohort)
   }
-    #limit pathology
+  #limit pathology
   if(!missing(limit_pathology)){
     all_meta = all_meta %>%
       dplyr::filter(pathology %in% limit_pathology)
   }
-    #limit samples
+  #limit samples
   if(!missing(limit_samples)){
     all_meta = all_meta %>%
       dplyr::filter(sample_id %in% limit_samples)
   }
-    #pull info for loading .CDS.maf
-
+  #pull info for loading .CDS.maf
   sample_ids = pull(all_meta, sample_id)
 
   #get file path for non-augmented maf
@@ -1698,13 +1700,15 @@ get_coding_ssm = function(limit_cohort,
   }
 
   #read file
-  message(paste("reading from:", full_maf_path))
-  muts = fread_maf(full_maf_path) %>%
-    dplyr::filter(Variant_Classification %in% coding_class) %>%
-    as.data.frame()
+  if(from_flatfile){
+    message(paste("reading from:", full_maf_path))
+    muts = fread_maf(full_maf_path) %>%
+      dplyr::filter(Variant_Classification %in% coding_class) %>%
+      as.data.frame()
 
-  mutated_samples = length(unique(muts$Tumor_Sample_Barcode))
-  message(paste("mutations from", mutated_samples, "samples"))
+    mutated_samples = length(unique(muts$Tumor_Sample_Barcode))
+    message(paste("mutations from", mutated_samples, "samples"))
+  }
 
   #use db if not using flatfile
   if(!from_flatfile){
@@ -1769,7 +1773,7 @@ get_gene_cn_and_expression = function(gene_symbol,
                                       ensembl_id){
 
     if(!missing(gene_symbol)){
-      this_row = grch37_all_gene_coordinates %>%
+      this_row = grch37_gene_coordinates %>%
         dplyr::filter(hugo_symbol == gene_symbol)
 
       this_region = paste0(this_row$chromosome, ":", this_row$start, "-", this_row$end)
@@ -1777,7 +1781,7 @@ get_gene_cn_and_expression = function(gene_symbol,
       }
 
     else{
-      this_row = grch37_all_gene_coordinates %>%
+      this_row = grch37_gene_coordinates %>%
         dplyr::filter(ensembl_gene_id == ensembl_id)
 
       this_region = paste0(this_row$chromosome, ":", this_row$start, "-",this_row$end)
@@ -1801,7 +1805,7 @@ get_gene_cn_and_expression = function(gene_symbol,
 
 #' Get the expression for one or more genes for all GAMBL samples
 #'
-#' @param metadata # GAMBL metadata.
+#' @param metadata GAMBL metadata.
 #' @param hugo_symbols One or more gene symbols. Should match the values in a maf file.
 #' @param ensembl_gene_ids One or more ensembl gene IDs. Only one of hugo_symbols or ensembl_gene_ids may be used.
 #' @param join_with How to restrict cases for the join. Can be one of genome, mrna or "any"

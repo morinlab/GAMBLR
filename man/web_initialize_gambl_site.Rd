@@ -12,7 +12,9 @@ web_initialize_gambl_site(
 )
 }
 \arguments{
-\item{base_directory}{}
+\item{site_base_name}{base name for site}
+
+\item{base_directory}{path to base directory}
 }
 \value{
 
