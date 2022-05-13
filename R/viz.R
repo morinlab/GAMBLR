@@ -2372,7 +2372,9 @@ prettyForestPlot = function(maf,
       mutmat = mutmat %>%
         dplyr::filter(`NA` == 0) #filter out all samples that show no mutations in the selected genes (i.e na_samples = 1).
     }
-    mutmat = dplyr::select(mutmat, -`NA`)
+    if("NA" %in% colnames(mutmat)){
+    mutmat = dplyr::select(mutmat, -`NA`) #remove NA column (if there).
+    }
   }else{
     message("provide a MAF or mutation matrix")
     return()
