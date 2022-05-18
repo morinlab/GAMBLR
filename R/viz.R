@@ -2871,11 +2871,6 @@ fancy_v_chrcount = function(this_sample,
 }
 
 
-
-
-
-
-
 #' Generate a bar plot visualizing structural variant subtype distributions
 #'
 #' @param this_sample Sample to be plotted.
@@ -2902,7 +2897,7 @@ fancy_v_chrcount = function(this_sample,
 #' chr1_sv = fancy_svbar(this_sample = "HTMCP-01-06-00422-01A-01D", chr_select = c(1))
 #' svs = fancy_svbar(this_sample = "HTMCP-01-06-00422-01A-01D")
 #'
-fancy_svbar_new = function(this_sample,
+fancy_svbar = function(this_sample,
                        maf_data,
                        maf_path = NULL,
                        ssm = TRUE,
