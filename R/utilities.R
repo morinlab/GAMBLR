@@ -1876,6 +1876,7 @@ get_gambl_colours = function(classification = "all",
                   "Schmitz"= "#2C72B2")
 
   all_colours[["indels"]] = c("DEL" = "#53B1FC", "INS" = "#FC9C6D")
+  all_colours[["svs"]] = c("DEL" = "#53B1FC", "DUP" = "#FC9C6D")
 
   #print(all_colours)
   for(colslot in names(all_colours)){
