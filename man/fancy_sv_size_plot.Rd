@@ -6,6 +6,12 @@
 \usage{
 fancy_sv_size_plot(
   this_sample,
+  maf_data,
+  maf_path = NULL,
+  chrom_a_col = 3,
+  start_a_col = 4,
+  end_a__col = 5,
+  variant_type_col = 9,
   vaf_cutoff = 0,
   size_cutoff = 50,
   chr_select = paste0("chr", c(1:22)),
@@ -19,6 +25,16 @@ fancy_sv_size_plot(
 \arguments{
 \item{this_sample}{Sample to be plotted.}
 
+\item{maf_data}{Optional parameter with copy number df already loaded into R.}
+
+\item{maf_path}{Optional parameter with path to external cn file.}
+
+\item{chrom_a_col}{Index of column holding chromosome (to be used with either maf_data or maf_path).}
+
+\item{start_a_col}{Index of column holding start coordiantes (to be used with either maf_data or maf_path).}
+
+\item{variant_type_col}{Index of column holding variant type information (to be used with either maf_data or maf_path).}
+
 \item{vaf_cutoff}{Threshold for filtering variants on VAF (events with a VAF > cutoff will be retained).}
 
 \item{size_cutoff}{Threshold for filtering variants on size, default is 50bp.}
@@ -30,6 +46,8 @@ fancy_sv_size_plot(
 \item{plot_subtitle}{Subtitle for created plot.}
 
 \item{projection}{Genomic projection for SVs and circos plot. Accepted values are grch37 and hg38.}
+
+\item{end_a_col}{Index of column holding end coordinates (to be used with either maf_data or maf_path).}
 }
 \value{
 Nothing.

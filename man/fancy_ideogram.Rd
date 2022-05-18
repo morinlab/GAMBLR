@@ -2,30 +2,30 @@
 % Please edit documentation in R/viz.R
 \name{fancy_ideogram}
 \alias{fancy_ideogram}
-\title{Generate sample-level ideogram with SVs and gene annotations}
+\title{Generate sample-level ideogram with copy number information, ssm and gene annotations, etc.}
 \usage{
 fancy_ideogram(
   this_sample,
   gene_annotation,
   plot_title = paste0(this_sample),
   plot_subtitle = "Genome-wide Ideogram (grch37).",
-  include_sv = TRUE,
-  sv_count = TRUE,
+  include_ssm = TRUE,
+  ssm_count = TRUE,
   coding_only = FALSE,
   from_flatfile = TRUE,
   use_augmented_maf = TRUE
 )
 }
 \arguments{
-\item{this_sample}{Sample to be plotted (currently only accepts one sample).}
+\item{this_sample}{Sample to be plotted (for multiple samples, see fancy_multisample_ideogram.}
 
 \item{gene_annotation}{Annotate ideogram with a single gene.}
 
 \item{plot_title}{Title of plot (default to sample ID).}
 
-\item{include_sv}{Set to TRUE to plot SVs (dels and ins).}
+\item{include_ssm}{Set to TRUE to plot ssms (dels and ins).}
 
-\item{sv_count}{Optional parameter to summarize n variants per chromosome, inlcude_sv must be set to TRUE.}
+\item{ssm_count}{Optional parameter to summarize n variants per chromosome, inlcude_ssm must be set to TRUE.}
 
 \item{coding_only}{Optional. Set to TRUE to restrict to plotting only coding mutations.}
 
@@ -37,10 +37,10 @@ fancy_ideogram(
 Nothing.
 }
 \description{
-Generate sample-level ideogram with SVs and gene annotations
+Generate sample-level ideogram with copy number information, ssm and gene annotations, etc.
 }
 \examples{
-ideogram_MYC = fancy_ideogram(this_sample = "HTMCP-01-06-00422-01A-01D", gene_annotation = "MYC", include_sv = TRUE, sv_count = TRUE, coding_only = FALSE, from_flatfile = FALSE, use_augmented = FALSE)
+ideogram_MYC = fancy_ideogram(this_sample = "HTMCP-01-06-00422-01A-01D", gene_annotation = "MYC", include_ssm = TRUE, ssm_count = TRUE, coding_only = FALSE, from_flatfile = FALSE, use_augmented = FALSE)
 cnv_ideogram = fancy_ideogram(this_sample = "HTMCP-01-06-00422-01A-01D")
 
 }
