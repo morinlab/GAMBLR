@@ -1093,8 +1093,10 @@ get_cn_states = function(regions_list,
   cn_matrix = pivot_wider(all_cn, id_cols = "sample_id", names_from = "region_name", values_from = "CN") %>%
     column_to_rownames("sample_id")
 
+  names(cn_matrix) = region_names
+
   #order the regions the same way the user provided them for convenience
-  return(cn_matrix[,region_names])
+  return(cn_matrix)
 }
 
 
@@ -1699,6 +1701,7 @@ get_coding_ssm = function(limit_cohort,
     full_maf_path =  paste0(config::get("project_base"), maf_path)
   }
 
+<<<<<<< Updated upstream
   #read file
   if(from_flatfile){
     message(paste("reading from:", full_maf_path))
@@ -1709,6 +1712,9 @@ get_coding_ssm = function(limit_cohort,
     mutated_samples = length(unique(muts$Tumor_Sample_Barcode))
     message(paste("mutations from", mutated_samples, "samples"))
   }
+=======
+
+>>>>>>> Stashed changes
 
   #use db if not using flatfile
   if(!from_flatfile){
@@ -1721,6 +1727,15 @@ get_coding_ssm = function(limit_cohort,
       as.data.frame()
 
     DBI::dbDisconnect(con)
+  } else {
+    #read file
+    message(paste("reading from:", full_maf_path))
+    muts = fread_maf(full_maf_path) %>%
+      dplyr::filter(Variant_Classification %in% coding_class) %>%
+      as.data.frame()
+
+    mutated_samples = length(unique(muts$Tumor_Sample_Barcode))
+    message(paste("mutations from", mutated_samples, "samples"))
   }
 
   #if augmented maf selected, drop variants with low read support (default is 3)
