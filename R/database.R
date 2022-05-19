@@ -1701,7 +1701,6 @@ get_coding_ssm = function(limit_cohort,
     full_maf_path =  paste0(config::get("project_base"), maf_path)
   }
 
-<<<<<<< Updated upstream
   #read file
   if(from_flatfile){
     message(paste("reading from:", full_maf_path))
@@ -1712,9 +1711,6 @@ get_coding_ssm = function(limit_cohort,
     mutated_samples = length(unique(muts$Tumor_Sample_Barcode))
     message(paste("mutations from", mutated_samples, "samples"))
   }
-=======
-
->>>>>>> Stashed changes
 
   #use db if not using flatfile
   if(!from_flatfile){
