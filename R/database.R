@@ -1723,15 +1723,6 @@ get_coding_ssm = function(limit_cohort,
       as.data.frame()
 
     DBI::dbDisconnect(con)
-  } else {
-    #read file
-    message(paste("reading from:", full_maf_path))
-    muts = fread_maf(full_maf_path) %>%
-      dplyr::filter(Variant_Classification %in% coding_class) %>%
-      as.data.frame()
-
-    mutated_samples = length(unique(muts$Tumor_Sample_Barcode))
-    message(paste("mutations from", mutated_samples, "samples"))
   }
 
   #if augmented maf selected, drop variants with low read support (default is 3)
