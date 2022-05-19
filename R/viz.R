@@ -1624,6 +1624,71 @@ prettyOncoplot = function(maftools_obj,
 }
 
 
+
+prettyCoOncoplot <- function(ssm1,
+                             ssm2,
+                             meta1,
+                             meta2,
+                             label1,
+                             label2,
+                             ...) {
+
+    # Check for required arguments
+    required = c("ssm1", "ssm2", "meta1", "meta2")
+    defined = names(as.list(match.call())[-1])
+    if (any(!required %in% defined)) {
+      stop("Please provide mutation data and metadata for 2 pretty Oncoplots.")
+    }
+
+    # Arguments to pass into prettyOncoplot
+    oncoplot_args = list(...)
+    # Discard any arguments not supported by prettyOncoplot
+    oncoplot_args = oncoplot_args[names(oncoplot_args) %in% intersect(names(oncoplot_args),
+                                                                      formalArgs(prettyOncoplot))]
+    # Build oncoplot No1
+    op1 = do.call(prettyOncoplot, c(
+      list(
+        maftools_obj = ssm1,
+        these_samples_metadata = meta1
+      ),
+      oncoplot_args
+    ))
+    # convert it to ggplot object
+    op1 = grid.grabExpr(draw(op1), width = 10, height = 17)
+    # if user provided annotation label, place it as a name for oncoplot No1
+    if (!missing(label1)) {
+      op1 = annotate_figure(op1,
+                            top = text_grob(label1,
+                                            face = "bold",
+                                            size = 20))
+    }
+    # Build oncoplot No2
+    op2 = do.call(prettyOncoplot, c(
+      list(
+        maftools_obj = ssm2,
+        these_samples_metadata = meta2
+      ),
+      oncoplot_args
+    ))
+    # convert it to ggplot object
+    op2 = grid.grabExpr(draw(op2), width = 10, height = 17)
+    # if user provided annotation label, place it as a name for oncoplot No2
+    if (!missing(label2)) {
+      op2 = annotate_figure(op2,
+                            top = text_grob(label2,
+                                            face = "bold",
+                                            size = 20))
+    }
+    # arrange 2 oncoplots together side by side
+    p = ggarrange(op1,
+                  op2,
+                  ncol = 2,
+                  nrow = 1)
+
+    return(p)
+  }
+
+
 #' Generate a colourful multi-panel overview of hypermutation in regions of interest across many samples.
 #'
 #' @param regions_bed Bed file with chromosome coordinates, should contain columns chr, start, end, name (with these exact names).
