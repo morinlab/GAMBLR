@@ -2871,116 +2871,6 @@ fancy_v_chrcount = function(this_sample,
 }
 
 
-#' Generate a bar plot visualizing structural variant subtype distributions
-#'
-#' @param this_sample Sample to be plotted.
-#' @param maf_data Optional parameter with maf like df already loaded into R.
-#' @param maf_path Optional parameter with path to external maf like file.
-#' @param ssm Set to FALSE to get plotting data from get_combined_sv (SVs). Default value is TRUE (plots SSM retrieved from annotate_cn_by_ssm$maf).
-#' @param projection Genome build for returned variants (only applicable for ssm = FALSE).
-#' @param min_vaf The minimum tumour VAF for a SV to be returned. Recommended: 0 (only applicable for ssm = FALSE).
-#' @param variant_type_col Index of column holding Variant Type (to be used with either maf_data or maf_path).
-#' @param chromosome_col Index of column holding Chromosome (to be used with either maf_data or maf_path).
-#' @param plot_title Title of plot (default to sample ID).
-#' @param plot_subtitle Subtitle for created plot.
-#' @param chr_select vector of chromosomes to be included in plot, defaults to autosomes.
-#' @param variant_select Subtypes of SVs to be incldued in plot, default is DEL and INS.
-#' @param coding_only Optional. Set to TRUE to restrict to plotting only coding mutations.
-#' @param from_flatfile If set to true the function will use flat files instead of the database.
-#' @param use_augmented Boolean statement if to use augmented maf, default is FALSE.
-#'
-#' @return Nothing.
-#' @import tidyverse cowplot
-#' @export
-#'
-#' @examples
-#' chr1_sv = fancy_svbar(this_sample = "HTMCP-01-06-00422-01A-01D", chr_select = c(1))
-#' svs = fancy_svbar(this_sample = "HTMCP-01-06-00422-01A-01D")
-#'
-fancy_svbar = function(this_sample,
-                       maf_data,
-                       maf_path = NULL,
-                       ssm = TRUE,
-                       projection = "grch37",
-                       min_vaf = 0,
-                       variant_type_col = 10,
-                       chromosome_col = 5,
-                       plot_title = paste0(this_sample),
-                       plot_subtitle = "Structural Variant Subtype Distribution",
-                       chr_select = paste0("chr", c(1:22)),
-                       variant_select = c("DEL", "INS"),
-                       coding_only = FALSE,
-                       from_flatfile = TRUE,
-                       use_augmented_maf = TRUE){
-
-  if(!missing(maf_data)){
-    maf = maf_data
-    maf = as.data.frame(maf)
-    colnames(maf)[variant_type_col] = "Variant_Type"
-    colnames(maf)[chromosome_col] = "Chromosome"
-
-  }else if (!is.null(maf_path)){
-    maf = fread_maf(maf_path)
-    maf = as.data.frame(maf)
-    colnames(maf)[variant_type_col] = "Variant_Type"
-    colnames(maf)[chromosome_col] = "Chromosome"
-  }
-
-  #get maf data for a specific sample.
-  if(missing(maf_data) && is.null(maf_path)){
-    if(ssm){
-      maf = assign_cn_to_ssm(this_sample = this_sample, coding_only = coding_only, from_flatfile = from_flatfile, use_augmented_maf = use_augmented_maf)$maf
-    }else{
-      maf = get_combined_sv(sample_ids = this_sample, projection = projection, min_vaf = min_vaf) %>%
-        dplyr::select(CHROM_A, START_A, END_A, manta_name)
-
-      #get manta results in required format
-      maf = data.frame(maf$CHROM_A, maf$START_A, maf$END_A, do.call(rbind, strsplit(maf$manta_name, split = ":", fixed = TRUE)))
-
-      #rename variables
-      names(maf)[1] = "Chromosome"
-      names(maf)[2] = "Start_Position"
-      names(maf)[3] = "End_Position"
-      names(maf)[4] = "Variant_Type"
-
-      #filter out translocations and set order of variables
-      maf = dplyr::filter(maf, Variant_Type %in% c("MantaDEL", "MantaDUP")) %>%
-        dplyr::select(Chromosome, Start_Position, End_Position, Variant_Type)
-
-      #remove "Manta" from Variant_Type string
-      maf$Variant_Type = gsub("^.{0,5}", "", maf$Variant_Type)
-    }
-  }
-
-  #add chr prefix if missing
-  if(!str_detect(maf$Chromosome, "chr")[5]){
-    maf = mutate(maf, Chromosome = paste0("chr", Chromosome))
-  }
-
-  #read maf into R and select relevant variables and transform to factor.
-  maf_df = dplyr::select(maf, Chromosome, Start_Position, End_Position, Variant_Type) %>%
-    mutate_at(vars(Chromosome, Variant_Type), list(factor))
-
-  #sub-setting maf based on user-defined parameters
-  maf_df = maf_df[maf_df$Chromosome %in% chr_select, ]
-  maf_df = maf_df[maf_df$Variant_Type %in% variant_select, ]
-
-  #subset variant data
-  sv_count = maf_df %>%
-    group_by(Variant_Type) %>%
-    summarize(count = n())
-
-  #plot
-  ggplot(sv_count, aes(x = Variant_Type, y = count, fill = Variant_Type, label = count)) +
-    geom_bar(position = "stack", stat = "identity") +
-    labs(title = plot_title, subtitle = plot_subtitle, x = "SVs", y = "Variant Count (n)", fill = "") +
-    scale_fill_manual(values = get_gambl_colours("indels")) +
-    geom_text(size = 5, position = position_stack(vjust = 0.5)) +
-    scale_y_continuous(expand = c(0, 0)) +
-    theme_cowplot()
-}
-
-
 #' Generate a plot with SNV distribution per chromosome.
 #'
 #' @param this_sample Sample to be plotted.
@@ -4063,7 +3953,7 @@ fancy_circos_plot = function(this_sample,
 }
 
 
-#' Generate plot visualizing SV sizes retreived with get_combined_sv. Subset on variant type, filter on VAF, size etc.
+#' Generate plot visualizing SV sizes. Subset on variant type, filter on VAF, size etc.
 #'
 #' @param this_sample Sample to be plotted.
 #' @param maf_data Optional parameter with copy number df already loaded into R.
@@ -4074,6 +3964,8 @@ fancy_circos_plot = function(this_sample,
 #' @param variant_type_col Index of column holding variant type information (to be used with either maf_data or maf_path).
 #' @param vaf_cutoff Threshold for filtering variants on VAF (events with a VAF > cutoff will be retained).
 #' @param size_cutoff Threshold for filtering variants on size, default is 50bp.
+#' @param adjust_value A multiplicate bandwidth adjustment. This makes it possible to adjust the bandwidth while still using the a bandwidth estimator. For example, adjust = 1/2 means use half of the default bandwidth.
+#' @param trim If FALSE, the default, each density is computed on the full range of the data.
 #' @param chr_select Optional argument for subsetting on selected chromosomes, default is all autosomes.
 #' @param plot_title Title of plot (default to sample ID).
 #' @param plot_subtitle Subtitle for created plot.
@@ -4084,28 +3976,30 @@ fancy_circos_plot = function(this_sample,
 #' @export
 #'
 #' @examples
-#' myplot = fancy_sv_size_plot(this_sample = "HTMCP-01-06-00422-01A-01D")
-#' myplot2 = fancy_sv_size_plot(this_sample = "HTMCP-01-06-00422-01A-01D", size_cutoff = 0, chr_select = c("chr1", "chr2"))
+#' myplot = fancy_sv_sizedens(this_sample = "HTMCP-01-06-00422-01A-01D")
+#' myplot2 = fancy_sv_sizedens(this_sample = "HTMCP-01-06-00422-01A-01D", size_cutoff = 0, chr_select = c("chr1", "chr2"))
 #'
-fancy_sv_size_plot = function(this_sample,
-                              maf_data,
-                              maf_path = NULL,
-                              chrom_a_col = 3,
-                              start_a_col = 4,
-                              end_a__col = 5,
-                              variant_type_col = 9,
-                              vaf_cutoff = 0,
-                              size_cutoff = 50,
-                              chr_select = paste0("chr", c(1:22)),
-                              plot_title = paste0(this_sample),
-                              plot_subtitle = paste0("SV sizes for Manta calls. Dashed line annotates mean variant size.\nVAF cut off: ", vaf_cutoff,", SV size cut off: ", size_cutoff),
-                              projection = "grch37"){
+fancy_sv_sizedens = function(this_sample,
+                            maf_data,
+                            maf_path = NULL,
+                            chrom_a_col = 3,
+                            start_a_col = 4,
+                            end_a_col = 5,
+                            variant_type_col = 9,
+                            vaf_cutoff = 0,
+                            size_cutoff = 50,
+                            adjust_value = 1,
+                            trim = FALSE,
+                            chr_select = paste0("chr", c(1:22)),
+                            plot_title = paste0(this_sample),
+                            plot_subtitle = paste0("SV sizes for Manta calls. Dashed line annotates mean variant size.\nVAF cut off: ", vaf_cutoff,", SV size cut off: ", size_cutoff),
+                            projection = "grch37"){
   if(!missing(maf_data)){
     svs = maf_data
     svs = as.data.frame(svs)
     colnames(svs)[chrom_a_col] = "CHROM_A"
     colnames(svs)[start_a_col] = "START_A"
-    colnames(svs)[end_a__col] = "END_A"
+    colnames(svs)[end_a_col] = "END_A"
     colnames(svs)[variant_type_col] = "manta_name"
 
   }else if (!is.null(maf_path)){
@@ -4113,7 +4007,7 @@ fancy_sv_size_plot = function(this_sample,
     svs = as.data.frame(svs)
     colnames(svs)[chrom_a_col] = "CHROM_A"
     colnames(svs)[start_a_col] = "START_A"
-    colnames(svs)[end_a__col] = "END_A"
+    colnames(svs)[end_a_col] = "END_A"
     colnames(svs)[variant_type_col] = "manta_name"
   }
 
@@ -4157,14 +4051,15 @@ fancy_sv_size_plot = function(this_sample,
   dup_col = get_gambl_colours("indels")[[2]]
 
   #plotting
-  p = ggplot(manta_sv, aes(x = reorder(row_num, -size), y = size, fill = type)) +
-        geom_bar(position = "stack", stat = "identity") +
-        geom_hline(yintercept =  mean(manta_sv$size), color = "black", linetype = "dashed") +
-        labs(title = plot_title, subtitle = plot_subtitle, x = "", y = "Variant Size (bp)") +
+  p = ggplot(manta_sv, aes(x = size, fill = type)) +
+        geom_density(alpha = 0.7, adjust = adjust_value, trim = trim) +
+        labs(title = plot_title, subtitle = plot_subtitle, x = "Size (bp)", y = "Density") +
         scale_fill_manual(values = c(del_col, dup_col)) +
-        scale_y_log10(expand = c(0, 0)) +
+        scale_y_continuous(expand = c(0, 0)) +
+        scale_x_continuous(expand = c(0, 0)) +
         theme_cowplot() +
-        theme(legend.title = element_blank(), axis.text.x = element_blank(), axis.ticks.x = element_blank())
+        theme(legend.title = element_blank())
 
   return(p)
 }
+
