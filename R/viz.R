@@ -3746,28 +3746,28 @@ fancy_multisamp_ideogram = function(these_sample_ids,
 #' @export
 #'
 #' @examples
-#' comp_report(this_sample = this_sample, out = "../../../newplots/", export_individual_plots = TRUE)
+#' comp_report(this_sample = "HTMCP-01-06-00422-01A-01D", out = "reports/", export_individual_plots = TRUE)
 #'
 comp_report = function(this_sample,
                        export_individual_plots = FALSE,
-                       out) {
+                       out){
 
-  sv_plot = fancy_sv_chrdistplot(this_sample = this_sample, plot_title = "", plot_subtitle = "A. SV Distribution Per Chromosome.")
-  svs = fancy_svbar(this_sample = this_sample, plot_title = "", plot_subtitle = "C. SV Counts.")
-  violine_plot = fancy_vplot(this_sample = this_sample, plot_title = "", plot_subtitle = "D. SV Size Distributions.")
+  ssm_chr = fancy_v_chrcount(this_sample = this_sample, plot_title = "", plot_subtitle = "A. SSM Distribution Per Chromosome.")
+  ssm_count = fancy_v_count(this_sample = this_sample, plot_title = "", plot_subtitle = "C. SSM Counts.")
+  violine_plot = fancy_v_sizedis(this_sample = this_sample, plot_title = "", plot_subtitle = "D. SV Size Distributions.")
   cns = fancy_cnbar(this_sample = this_sample, plot_title = "", plot_subtitle = "E. CN states.")
   snv_plot = fancy_snv_chrdistplot(this_sample = this_sample, plot_title = "", plot_subtitle = "B. SNV Distribution Per Chromosome.")
   cnv_ideogram = fancy_ideogram(this_sample = this_sample, plot_title = "", plot_subtitle = "F. Ideogram.")
 
   pdf(paste0(out, this_sample, "_report.pdf"), width = 17, height = 12)
-  page1 = grid.arrange(sv_plot, svs, violine_plot, cns, snv_plot,  nrow = 4, ncol = 6, name = "Report", top = textGrob(paste0(this_sample), gp = gpar(fontsize = 15, fontface = "bold")), bottom = "Page 1", layout_matrix = rbind(c(1,1,1,5,5,5), c(1,1,1,5,5,5), c(2,2,3,3,4,4), c(2,2,3,3,4,4)))
+  page1 = grid.arrange(ssm_chr, ssm_count, violine_plot, cns, snv_plot,  nrow = 4, ncol = 6, name = "Report", top = textGrob(paste0(this_sample), gp = gpar(fontsize = 15, fontface = "bold")), bottom = "Page 1", layout_matrix = rbind(c(1,1,1,5,5,5), c(1,1,1,5,5,5), c(2,2,3,3,4,4), c(2,2,3,3,4,4)))
   page2 = grid.arrange(cnv_ideogram,  nrow = 4, ncol = 4, name = "Report", top = paste0(this_sample), bottom = "Page 2", layout_matrix = rbind(c(1,1,1,1), c(1,1,1,1), c(1,1,1,1), c(1,1,1,1)))
   dev.off()
 
   if(export_individual_plots){
-    ggsave(sv_plot, file = paste0(out, this_sample, "_sv_dist_chr.pdf"), limitsize = FALSE, width = 17, height = 12, units = c("in"), dpi = 300)
+    ggsave(ssm_chr, file = paste0(out, this_sample, "_ssm_dist_chr.pdf"), limitsize = FALSE, width = 17, height = 12, units = c("in"), dpi = 300)
     ggsave(snv_plot, file = paste0(out, this_sample, "_snv_dist_chr.pdf"), limitsize = FALSE, width = 17, height = 12, units = c("in"), dpi = 300)
-    ggsave(svs, file = paste0(out, this_sample, "_sv_counts.pdf"), limitsize = FALSE, width = 12, height = 12, units = c("in"), dpi = 300)
+    ggsave(ssm_count, file = paste0(out, this_sample, "_ssm_counts.pdf"), limitsize = FALSE, width = 12, height = 12, units = c("in"), dpi = 300)
     ggsave(cns, file = paste0(out, this_sample, "_cn_states.pdf"), limitsize = FALSE, width = 12, height = 12, units = c("in"), dpi = 300)
     ggsave(violine_plot, file = paste0(out, this_sample, "_sv_size_dist.pdf"), limitsize = FALSE, width = 12, height = 12, units = c("in"), dpi = 300)
     ggsave(cnv_ideogram, file = paste0(out, this_sample, "_cnv_ideo.pdf"), limitsize = FALSE, width = 17, height = 12, units = c("in"), dpi = 300)
