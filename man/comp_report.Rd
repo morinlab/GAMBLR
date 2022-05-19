@@ -20,6 +20,6 @@ Nothing.
 Construct pdf with sample-level plots, using minimum of arguments
 }
 \examples{
-comp_report(this_sample = this_sample, out = "../../../newplots/", export_individual_plots = TRUE)
+comp_report(this_sample = "HTMCP-01-06-00422-01A-01D", out = "reports/", export_individual_plots = TRUE)
 
 }
