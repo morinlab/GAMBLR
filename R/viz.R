@@ -1624,7 +1624,48 @@ prettyOncoplot = function(maftools_obj,
 }
 
 
-
+#' Display 2 prettyOncoplots side-by-side.
+#'
+#' `prettyCoOncoplot` returns ggplot-compatible figure of 2 prettyOncoplots side-by-side.
+#'
+#' This function will generate a graphic displaying 2 oncoplots side-by-side. Optionally user can
+#' annotate each oncoplot with it's own title that will be displayed at the top. All the arguments
+#' recognized by prettyOncoplot are supported and can be specified when calling this function.
+#' For both oncoplots the same specified parameters will be applied (e.g. genes to display, split columns,
+#' font size, top annotation etc). If the provided argument is not recognized by prettyOncoplot,
+#' it will be discarded. For developers: new arguments added to prettyOncoplot in the future
+#' are expected to be out-of-the-box compatible with this function nd would not need code modifications.
+#'
+#' @param ssm1 Required argument. A maftools object containing the mutations you want to plot on the oncoplot #1.
+#' @param ssm2 Required argument. A maftools object containing the mutations you want to plot on the oncoplot #2.
+#' @param meta1 Required argument. A data.frame with metadata for the oncoplot #1.
+#' @param meta2 Required argument. A data.frame with metadata for the oncoplot #2.
+#' @param label1 Optional argument. Label to be shown as a title for the oncoplot #1.
+#' @param label2 Optional argument. Label to be shown as a title for the oncoplot #2.
+#'
+#' @return A ggplot object with 2 oncoplots side-by-side.
+#' @export
+#' @import ComplexHeatmap ggpubr
+#'
+#' @examples
+#' ssm1=get_coding_ssm(limit_cohort = "BL_Adult")
+#' ssm1=maftools::read.maf(ssm1)
+#' ssm2=get_coding_ssm(limit_cohort = "BL_Pediatric")
+#' ssm2=maftools::read.maf(ssm2)
+#' meta1=get_gambl_metadata() %>% filter(cohort=="BL_Adult")
+#' meta2=get_gambl_metadata() %>% filter(cohort=="BL_Pediatric")
+#' prettyCoOncoplot(ssm1=ssm1, ssm2=ssm2, meta1=meta1, meta2 = meta2,
+#'     include_noncoding = NULL,
+#'     minMutationPercent = 0,
+#'     genes=c("MYC", "TET2", "TP53", "DDX3X", "ID3"),
+#'     metadataColumns=c("pathology", "EBV_status_inf", "pairing_status", "cohort"),
+#'     splitColumnName="EBV_status_inf",
+#'     metadataBarHeight=10,
+#'     fontSizeGene=12,
+#'     metadataBarFontsize=10,
+#'     label1="Adult",
+#'     label2="Pediatric")
+#'
 prettyCoOncoplot <- function(ssm1,
                              ssm2,
                              meta1,
