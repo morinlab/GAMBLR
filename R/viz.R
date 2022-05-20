@@ -1645,7 +1645,7 @@ prettyOncoplot = function(maftools_obj,
 #'
 #' @return A ggplot object with 2 oncoplots side-by-side.
 #' @export
-#' @import ComplexHeatmap ggpubr
+#' @import ComplexHeatmap ggpubr maftools
 #'
 #' @examples
 #' ssm=get_coding_ssm(limit_cohort = c("BL_Adult", "BL_Pediatric"))
