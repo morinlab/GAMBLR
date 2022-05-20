@@ -39,7 +39,9 @@ annotate each oncoplot with it's own title that will be displayed at the top. Al
 recognized by prettyOncoplot are supported and can be specified when calling this function.
 For both oncoplots the same specified parameters will be applied (e.g. genes to display, split columns,
 font size, top annotation etc). If the provided argument is not recognized by prettyOncoplot,
-it will be discarded. For developers: new arguments added to prettyOncoplot in the future
+it will be discarded. If you want a specific order of oncoplots on the left and right, please
+ensure the argument \code{comparison_column} is a factor with first level being the group
+you want to be plotted on the left side. For developers: new arguments added to prettyOncoplot in the future
 are expected to be out-of-the-box compatible with this function nd would not need code modifications.
 }
 \examples{
