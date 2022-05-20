@@ -17,6 +17,7 @@ fancy_v_count(
   plot_subtitle = "Variant Count For Selected Contigs",
   chr_select = paste0("chr", c(1:22)),
   variant_select = c("DEL", "INS", "DUP"),
+  hide_legend = FALSE,
   coding_only = FALSE,
   from_flatfile = TRUE,
   use_augmented_maf = TRUE
@@ -46,6 +47,8 @@ fancy_v_count(
 \item{chr_select}{vector of chromosomes to be included in plot, defaults to autosomes.}
 
 \item{variant_select}{Subtypes of SVs to be incldued in plot, default is DEL, INS and DUP.}
+
+\item{hide_legend}{Set to True to remove legend from plot, default is FALSE.}
 
 \item{coding_only}{Optional. Set to TRUE to restrict to plotting only coding mutations.}
 

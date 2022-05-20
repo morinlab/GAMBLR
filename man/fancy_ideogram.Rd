@@ -7,6 +7,18 @@
 fancy_ideogram(
   this_sample,
   gene_annotation,
+  seq_data,
+  seq_path = NULL,
+  maf_data,
+  maf_path = NULL,
+  variant_type_col_maf = 10,
+  chromosome_col_maf = 5,
+  start_col_maf = 6,
+  end_col_maf = 7,
+  chrom_col_seq = 2,
+  start_col_seq = 3,
+  end_col_seq = 4,
+  cn_col_seq = 7,
   plot_title = paste0(this_sample),
   plot_subtitle = "Genome-wide Ideogram (grch37).",
   include_ssm = TRUE,
@@ -21,6 +33,28 @@ fancy_ideogram(
 
 \item{gene_annotation}{Annotate ideogram with a single gene.}
 
+\item{seq_data}{Optional parameter with copy number df already loaded into R.}
+
+\item{seq_path}{Optional parameter with path to external cn file.}
+
+\item{maf_data}{Optional parameter with maf like df already loaded into R.}
+
+\item{maf_path}{Optional parameter with path to external maf like file.}
+
+\item{variant_type_col_maf}{Index of column holding Variant Type (to be used with either maf_data or maf_path).}
+
+\item{chromosome_col_maf}{Index of column holding Chromosome (to be used with either maf_data or maf_path).}
+
+\item{start_col_maf}{Index of column with variant start coordinates (to be used with either maf_data or maf_path).}
+
+\item{end_col_maf}{Index of column with variant end coordinates (to be used with either maf_data or maf_path).}
+
+\item{chrom_col_seq}{Index of column annotating Chromosome (to be used with either maf_data or maf_path).}
+
+\item{start_col_seq}{Index of column with copy number start coordinates (to be used with either maf_data or maf_path).}
+
+\item{end_col_seq}{Index of column with copy number end coordinates (to be used with either maf_data or maf_path).}
+
 \item{plot_title}{Title of plot (default to sample ID).}
 
 \item{include_ssm}{Set to TRUE to plot ssms (dels and ins).}
@@ -30,6 +64,8 @@ fancy_ideogram(
 \item{coding_only}{Optional. Set to TRUE to restrict to plotting only coding mutations.}
 
 \item{from_flatfile}{If set to true the function will use flat files instead of the database.}
+
+\item{cn_col}{Index of column holding copy number information (to be used with either maf_data or maf_path).}
 
 \item{use_augmented}{Boolean statement if to use augmented maf, default is FALSE.}
 }

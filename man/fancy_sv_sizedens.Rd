@@ -16,6 +16,7 @@ fancy_sv_sizedens(
   size_cutoff = 50,
   adjust_value = 1,
   trim = FALSE,
+  hide_legend = FALSE,
   chr_select = paste0("chr", c(1:22)),
   plot_title = paste0(this_sample),
  
@@ -46,6 +47,8 @@ fancy_sv_sizedens(
 \item{adjust_value}{A multiplicate bandwidth adjustment. This makes it possible to adjust the bandwidth while still using the a bandwidth estimator. For example, adjust = 1/2 means use half of the default bandwidth.}
 
 \item{trim}{If FALSE, the default, each density is computed on the full range of the data.}
+
+\item{hide_legend}{Set to True to remove legend from plot, default is FALSE.}
 
 \item{chr_select}{Optional argument for subsetting on selected chromosomes, default is all autosomes.}
 

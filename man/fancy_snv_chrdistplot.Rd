@@ -14,6 +14,7 @@ fancy_snv_chrdistplot(
   plot_subtitle = "SNV Distribution Per Chromosome",
   chr_select = paste0("chr", c(1:22)),
   include_dnp = FALSE,
+  hide_legend = FALSE,
   coding_only = FALSE,
   from_flatfile = TRUE,
   use_augmented_maf = TRUE
@@ -37,6 +38,8 @@ fancy_snv_chrdistplot(
 \item{chr_select}{vector of chromosomes to be included in plot, defaults to autosomes.}
 
 \item{include_dnp}{Optional argument for including DNPs. Default is FALSE.}
+
+\item{hide_legend}{Set to True to remove legend from plot, default is FALSE.}
 
 \item{coding_only}{Optional. Set to TRUE to restrict to plotting only coding mutations.}
 
