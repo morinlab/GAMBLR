@@ -46,7 +46,8 @@ Imports:
     SRAdb,
     stats,
     tidyverse,
-    workflowr
+    workflowr,
+    ggpubr
 Remotes: morinlab/g3viz
 VignetteBuilder: knitr
 Depends:
