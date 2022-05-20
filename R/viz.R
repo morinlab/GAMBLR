@@ -2744,6 +2744,7 @@ splendidHeatmap = function(this_matrix,
 #' @param variant_type_col Index of column holding Variant Type (to be used with either maf_data or maf_path).
 #' @param chromosome_col Index of column holding Chromosome (to be used with either maf_data or maf_path).
 #' @param plot_title Title of plot (default to sample ID).
+#' @param hide_legend Set to True to remove legend from plot, default is FALSE.
 #' @param plot_subtitle Subtitle for created plot.
 #' @param chr_select vector of chromosomes to be included in plot, defaults to autosomes.
 #' @param coding_only Optional. Set to TRUE to restrict to plotting only coding mutations.
@@ -2771,6 +2772,7 @@ fancy_v_chrcount = function(this_sample,
                             variant_type_col = 10,
                             chromosome_col = 5,
                             plot_title = paste0(this_sample),
+                            hide_legend = FALSE,
                             plot_subtitle = "Variant Count Distribution Per Chromosome",
                             chr_select = paste0("chr", c(1:22)),
                             coding_only = FALSE,
@@ -2858,13 +2860,14 @@ fancy_v_chrcount = function(this_sample,
 
   #plot
   p = ggplot(maf.count, aes(x = Chromosome, y = n, fill = Variant_Type, label = n)) +
-        labs(title = plot_title, subtitle = plot_subtitle, x = "Chromsomes", y = "Variants (n)", fill = "") +
+        labs(title = plot_title, subtitle = plot_subtitle, x = "", y = "Variants (n)", fill = "") +
         scale_x_discrete(expand = c(0, 0.58), limits = chr_select) +
         geom_bar(position = "stack", stat = "identity") +
         {if(ssm)scale_fill_manual(values = get_gambl_colours("indels"))} +
         {if(!ssm)scale_fill_manual(values = get_gambl_colours("svs"))} +
         scale_y_continuous(expand = c(0, 0), breaks = seq(0, ymax, by = 2)) +
         theme_cowplot() +
+        {if(hide_legend)theme(legend.position = "none")} +
         theme(axis.text.x = element_text(angle = 45, hjust = 1))
 
   return(p)
@@ -2882,6 +2885,7 @@ fancy_v_chrcount = function(this_sample,
 #' @param plot_subtitle Subtitle for created plot.
 #' @param chr_select vector of chromosomes to be included in plot, defaults to autosomes.
 #' @param include_dnp Optional argument for including DNPs. Default is FALSE.
+#' @param hide_legend Set to True to remove legend from plot, default is FALSE.
 #' @param coding_only Optional. Set to TRUE to restrict to plotting only coding mutations.
 #' @param from_flatfile If set to true the function will use flat files instead of the database.
 #' @param use_augmented Boolean statement if to use augmented maf, default is FALSE.
@@ -2903,6 +2907,7 @@ fancy_snv_chrdistplot = function(this_sample,
                                  plot_subtitle = "SNV Distribution Per Chromosome",
                                  chr_select = paste0("chr", c(1:22)),
                                  include_dnp = FALSE,
+                                 hide_legend = FALSE,
                                  coding_only = FALSE,
                                  from_flatfile = TRUE,
                                  use_augmented_maf = TRUE){
@@ -2942,7 +2947,7 @@ fancy_snv_chrdistplot = function(this_sample,
 
     #plot
     ggplot(maf_snp, aes(x = Chromosome, y = n)) +
-      labs(title = plot_title, subtitle = plot_subtitle, x = "Chromsomes", y = "SNV Count (n)", fill = "") +
+      labs(title = plot_title, subtitle = plot_subtitle, x = "", y = "Count (n)", fill = "") +
       scale_x_discrete(expand = c(0, 0.7), limits = chr_select) +
       geom_bar(position = "stack", stat = "identity", fill = "#2B9971", width = 0.75) +
       scale_y_continuous(expand = c(0, 0)) +
@@ -2965,13 +2970,14 @@ fancy_snv_chrdistplot = function(this_sample,
 
     #plot
     ggplot(maf.count, aes(x = Chromosome, y = n, fill = Variant_Type)) +
-      labs(title = plot_title, subtitle = plot_subtitle, x = "Chromsomes", y = "SNV Count (n)", fill = "") +
+      labs(title = plot_title, subtitle = plot_subtitle, x = "", y = "SNV Count (n)", fill = "") +
       scale_x_discrete(expand = c(0, 0.7), limits = chr_select) +
       geom_bar(position = "stack", stat = "identity", width = 0.75) +
       scale_fill_manual("", values = c("SNP" = "#2B9971", "DNP" = "#993F2B")) +
       scale_y_continuous(expand = c(0, 0)) +
       theme_cowplot() +
       theme(axis.text.x = element_text(angle = 45, hjust = 1)) +
+      {if(hide_legend)theme(legend.position = "none")} +
       coord_flip()
   }
 }
@@ -2991,6 +2997,7 @@ fancy_snv_chrdistplot = function(this_sample,
 #' @param plot_subtitle Subtitle for created plot.
 #' @param chr_select vector of chromosomes to be included in plot, defaults to autosomes.
 #' @param variant_select Subtypes of SVs to be incldued in plot, default is DEL, INS and DUP.
+#' @param hide_legend Set to True to remove legend from plot, default is FALSE.
 #' @param coding_only Optional. Set to TRUE to restrict to plotting only coding mutations.
 #' @param from_flatfile If set to true the function will use flat files instead of the database.
 #' @param use_augmented Boolean statement if to use augmented maf, default is FALSE.
@@ -3015,6 +3022,7 @@ fancy_v_count = function(this_sample,
                          plot_subtitle = "Variant Count For Selected Contigs",
                          chr_select = paste0("chr", c(1:22)),
                          variant_select = c("DEL", "INS", "DUP"),
+                         hide_legend = FALSE,
                          coding_only = FALSE,
                          from_flatfile = TRUE,
                          use_augmented_maf = TRUE){
@@ -3079,11 +3087,12 @@ fancy_v_count = function(this_sample,
   #plot
   p = ggplot(sv_count, aes(x = Variant_Type, y = count, fill = Variant_Type, label = count)) +
         geom_bar(position = "stack", stat = "identity") +
-        labs(title = plot_title, subtitle = plot_subtitle, x = "SVs", y = "Variant Count (n)", fill = "") +
+        labs(title = plot_title, subtitle = plot_subtitle, x = "", y = "Variants (n)", fill = "") +
         {if(ssm)scale_fill_manual(values = get_gambl_colours("indels"))} +
         {if(!ssm)scale_fill_manual(values = get_gambl_colours("svs"))} +
         geom_text(size = 5, position = position_stack(vjust = 0.5)) +
         scale_y_continuous(expand = c(0, 0)) +
+        {if(hide_legend)theme(legend.position = "none")} +
         theme_cowplot()
 
   return(p)
@@ -3349,6 +3358,18 @@ fancy_v_sizedis = function(this_sample,
 #'
 #' @param this_sample Sample to be plotted (for multiple samples, see fancy_multisample_ideogram.
 #' @param gene_annotation Annotate ideogram with a single gene.
+#' @param seq_data Optional parameter with copy number df already loaded into R.
+#' @param seq_path Optional parameter with path to external cn file.
+#' @param maf_data Optional parameter with maf like df already loaded into R.
+#' @param maf_path Optional parameter with path to external maf like file.
+#' @param variant_type_col_maf Index of column holding Variant Type (to be used with either maf_data or maf_path).
+#' @param chromosome_col_maf Index of column holding Chromosome (to be used with either maf_data or maf_path).
+#' @param start_col_maf Index of column with variant start coordinates (to be used with either maf_data or maf_path).
+#' @param end_col_maf Index of column with variant end coordinates (to be used with either maf_data or maf_path).
+#' @param chrom_col_seq Index of column annotating Chromosome (to be used with either maf_data or maf_path).
+#' @param start_col_seq Index of column with copy number start coordinates (to be used with either maf_data or maf_path).
+#' @param end_col_seq Index of column with copy number end coordinates (to be used with either maf_data or maf_path).
+#' @param cn_col Index of column holding copy number information (to be used with either maf_data or maf_path).
 #' @param plot_title Title of plot (default to sample ID).
 #' @param include_ssm Set to TRUE to plot ssms (dels and ins).
 #' @param ssm_count Optional parameter to summarize n variants per chromosome, inlcude_ssm must be set to TRUE.
@@ -3365,6 +3386,18 @@ fancy_v_sizedis = function(this_sample,
 #'
 fancy_ideogram = function(this_sample,
                           gene_annotation,
+                          seq_data,
+                          seq_path = NULL,
+                          maf_data,
+                          maf_path = NULL,
+                          variant_type_col_maf = 10,
+                          chromosome_col_maf = 5,
+                          start_col_maf = 6,
+                          end_col_maf = 7,
+                          chrom_col_seq = 2,
+                          start_col_seq = 3,
+                          end_col_seq = 4,
+                          cn_col_seq = 7,
                           plot_title = paste0(this_sample),
                           plot_subtitle = "Genome-wide Ideogram (grch37).",
                           include_ssm = TRUE,
@@ -3408,7 +3441,27 @@ fancy_ideogram = function(this_sample,
   segment_data = data.frame(chr, chr_start, chr_end, cent_start, cent_end, y, yend)
 
   #load CN data
-  cn_states = get_sample_cn_segments(this_sample_id = this_sample, multiple_samples = FALSE, with_chr_prefix = FALSE, streamlined = FALSE)
+  if(!missing(seq_data)){
+    cn_states = seq_data
+    cn_states = as.data.frame(cn_states)
+    colnames(cn_states)[chrom_col_seq] = "chrom"
+    colnames(cn_states)[start_col_seq] = "start"
+    colnames(cn_states)[end_col_seq] = "end"
+    colnames(cn_states)[cn_col_seq] = "CN"
+
+  }else if (!is.null(seq_path)){
+    cn_states = read.table(seq_path, sep = "\t", header = TRUE, row.names = FALSE, col.names = FALSE, quote = FALSE)
+    cn_states = as.data.frame(cn_states)
+    colnames(cn_states)[chrom_col_seq] = "chrom"
+    colnames(cn_states)[start_col_seq] = "start"
+    colnames(cn_states)[end_col_seq] = "end"
+    colnames(cn_states)[cn_col_seq] = "CN"
+  }
+
+  #get maf data for a specific sample.
+  if(missing(seq_data) && is.null(seq_path)){
+    cn_states = get_sample_cn_segments(this_sample_id = this_sample, multiple_samples = FALSE, with_chr_prefix = FALSE, streamlined = FALSE)
+  }
 
   #convert chr into y coordinates
   cn_states$ycoord = cn_states$chrom
@@ -3435,7 +3488,27 @@ fancy_ideogram = function(this_sample,
 
   #load maf data
   if(include_ssm){
-    maf = assign_cn_to_ssm(this_sample = this_sample, coding_only = coding_only, from_flatfile = from_flatfile, use_augmented_maf = use_augmented_maf)$maf
+
+    if(!missing(maf_data)){
+      maf = maf_data
+      maf = as.data.frame(maf)
+      colnames(maf)[variant_type_col_maf] = "Variant_Type"
+      colnames(maf)[chromosome_col_maf] = "Chromosome"
+      colnames(maf)[start_col_maf] = "Start_Position"
+      colnames(maf)[end_col_maf] = "End_Position"
+
+    }else if (!is.null(maf_path)){
+      maf = fread_maf(maf_path)
+      maf = as.data.frame(maf)
+      colnames(maf)[variant_type_col_maf] = "Variant_Type"
+      colnames(maf)[chromosome_col_maf] = "Chromosome"
+      colnames(maf)[start_col_maf] = "Start_Position"
+      colnames(maf)[end_col_maf] = "End_Position"
+    }
+
+    if(missing(maf_data) && is.null(maf_path)){
+      maf = assign_cn_to_ssm(this_sample = this_sample, coding_only = coding_only, from_flatfile = from_flatfile, use_augmented_maf = use_augmented_maf)$maf
+      }
 
     #transform maf data
     maf_trans = dplyr::select(maf, Chromosome, Start_Position, End_Position, Variant_Type)
@@ -3511,6 +3584,8 @@ fancy_ideogram = function(this_sample,
 
   return(p)
 }
+
+
 
 
 #' Generate ideograms for selected sample, visualizing copy number variation segments.
@@ -3736,11 +3811,16 @@ fancy_multisamp_ideogram = function(these_sample_ids,
   return(p)
 }
 
+
 #' Construct pdf with sample-level plots, using minimum of arguments
 #'
 #' @param this_sample Sample ID to be plotted in report.
 #' @param export_individual_plots Boolean parameter, set to TRUE to export individual plots.
 #' @param out Path to output folder.
+#' @param seq_data Optional parameter with copy number df already loaded into R.
+#' @param seq_path Optional parameter with path to external cn file.
+#' @param maf_data Optional parameter with maf like df already loaded into R.
+#' @param maf_path Optional parameter with path to external maf like file.
 #'
 #' @return Nothing.
 #' @export
@@ -3750,24 +3830,83 @@ fancy_multisamp_ideogram = function(these_sample_ids,
 #'
 comp_report = function(this_sample,
                        export_individual_plots = FALSE,
-                       out){
+                       out,
+                       seq_data,
+                       seq_path = NULL,
+                       maf_data,
+                       maf_path = NULL){
 
-  ssm_chr = fancy_v_chrcount(this_sample = this_sample, plot_title = "", plot_subtitle = "A. SSM Distribution Per Chromosome.")
-  ssm_count = fancy_v_count(this_sample = this_sample, plot_title = "", plot_subtitle = "C. SSM Counts.")
-  violine_plot = fancy_v_sizedis(this_sample = this_sample, plot_title = "", plot_subtitle = "D. SV Size Distributions.")
-  cns = fancy_cnbar(this_sample = this_sample, plot_title = "", plot_subtitle = "E. CN states.")
-  snv_plot = fancy_snv_chrdistplot(this_sample = this_sample, plot_title = "", plot_subtitle = "B. SNV Distribution Per Chromosome.")
-  cnv_ideogram = fancy_ideogram(this_sample = this_sample, plot_title = "", plot_subtitle = "F. Ideogram.")
+  if(!missing(maf_data)){
+    maf = maf_data
+    maf = as.data.frame(maf)
+    colnames(maf)[variant_type_col_maf] = "Variant_Type"
+    colnames(maf)[chromosome_col_maf] = "Chromosome"
+    colnames(maf)[start_col_maf] = "Start_Position"
+    colnames(maf)[end_col_maf] = "End_Position"
 
+  }else if (!is.null(maf_path)){
+    maf = fread_maf(maf_path)
+    maf = as.data.frame(maf)
+    colnames(maf)[variant_type_col_maf] = "Variant_Type"
+    colnames(maf)[chromosome_col_maf] = "Chromosome"
+    colnames(maf)[start_col_maf] = "Start_Position"
+    colnames(maf)[end_col_maf] = "End_Position"
+  }
+
+  if(!missing(seq_data)){
+    seq = seq_data
+    seq = as.data.frame(seq)
+    colnames(seq)[chrom_col_seq] = "chrom"
+    colnames(seq)[start_col_seq] = "start"
+    colnames(seq)[end_col_seq] = "end"
+    colnames(seq)[cn_col_seq] = "CN"
+
+  }else if (!is.null(seq_path)){
+    seq = read.table(seq_path, sep = "\t", header = TRUE, row.names = FALSE, col.names = FALSE, quote = FALSE)
+    seq = as.data.frame(seq)
+    colnames(seq)[chrom_col_seq] = "chrom"
+    colnames(seq)[start_col_seq] = "start"
+    colnames(seq)[end_col_seq] = "end"
+    colnames(seq)[cn_col_seq] = "CN"
+  }
+
+  #read maf and seq data into r (avoid calling assign_cn_to_ssm and get_cn_segments for every plotting function)
+  if(missing(maf_data) && is.null(maf_path)){
+    maf = assign_cn_to_ssm(this_sample = this_sample, coding_only = FALSE, from_flatfile = TRUE, use_augmented_maf = TRUE)$maf
+  }
+
+  if(missing(seq_data) && is.null(seq_path)){
+    seq = get_sample_cn_segments(this_sample = this_sample, multiple_samples = FALSE, streamlined = FALSE, from_flatfile = TRUE)
+  }
+
+  #execute a collection of sample-level plots with default parameters
+  #page 1
+  ssm_chr = fancy_v_chrcount(this_sample = this_sample, maf_data = maf, plot_title = "", plot_subtitle = "A. SSM Distribution Per Chromosome.", hide_legend = TRUE)
+  sv_chr = fancy_v_chrcount(this_sample = this_sample, plot_title = "", plot_subtitle = "B. SV Distribution Per Chromosome.", ssm = FALSE, hide_legend = TRUE)
+  ssm_count = fancy_v_count(this_sample = this_sample,  maf_data = maf, plot_title = "", plot_subtitle = "C. SSM Counts.", hide_legend = TRUE)
+  violine_plot = fancy_v_sizedis(this_sample = this_sample,  maf_data = maf, plot_title = "", plot_subtitle = "D. SSM Size Distributions.")
+  sv_count = fancy_v_count(this_sample = this_sample, plot_title = "", plot_subtitle = "E. SV Counts.", ssm = FALSE, variant_select = c("DEL", "DUP"), hide_legend = TRUE)
+  sv_size = fancy_sv_sizedens(this_sample = this_sample, plot_title = "", plot_subtitle = "F. SV Size Density.", hide_legend = TRUE)
+  snv_plot = fancy_snv_chrdistplot(this_sample = this_sample,  maf_data = maf, plot_title = "", plot_subtitle = "G. SNV Distribution Per Chromosome.")
+  cns = fancy_cnbar(this_sample = this_sample, seq_data = seq, plot_title = "", plot_subtitle = "H. CN states.")
+
+  #page 2 ideogram
+  cnv_ideogram = fancy_ideogram(this_sample = this_sample, seq_data = seq, maf_data = maf, plot_title = "", plot_subtitle = "F. Ideogram.")
+
+  #build pdf report
   pdf(paste0(out, this_sample, "_report.pdf"), width = 17, height = 12)
-  page1 = grid.arrange(ssm_chr, ssm_count, violine_plot, cns, snv_plot,  nrow = 4, ncol = 6, name = "Report", top = textGrob(paste0(this_sample), gp = gpar(fontsize = 15, fontface = "bold")), bottom = "Page 1", layout_matrix = rbind(c(1,1,1,5,5,5), c(1,1,1,5,5,5), c(2,2,3,3,4,4), c(2,2,3,3,4,4)))
-  page2 = grid.arrange(cnv_ideogram,  nrow = 4, ncol = 4, name = "Report", top = paste0(this_sample), bottom = "Page 2", layout_matrix = rbind(c(1,1,1,1), c(1,1,1,1), c(1,1,1,1), c(1,1,1,1)))
+  page1 = grid.arrange(ssm_chr, sv_chr, ssm_count, violine_plot, sv_count, sv_size, snv_plot, cns, nrow = 3, ncol = 6, name = "Report", top = textGrob(paste0(this_sample, " - Report"), gp = gpar(fontsize = 15, fontface = "bold")), bottom = "Page 1", layout_matrix = rbind(c(1,1,1,2,2,2), c(3,3,4,4,5,5), c(6,6,7,7,8,8)))
+  page2 = grid.arrange(cnv_ideogram,  nrow = 4, ncol = 4, name = "Report", bottom = "Page 2", layout_matrix = rbind(c(1,1,1,1), c(1,1,1,1), c(1,1,1,1), c(1,1,1,1)))
   dev.off()
 
+  #export individual plots
   if(export_individual_plots){
     ggsave(ssm_chr, file = paste0(out, this_sample, "_ssm_dist_chr.pdf"), limitsize = FALSE, width = 17, height = 12, units = c("in"), dpi = 300)
+    ggsave(sv_chr, file = paste0(out, this_sample, "_sv_dist_chr.pdf"), limitsize = FALSE, width = 17, height = 12, units = c("in"), dpi = 300)
     ggsave(snv_plot, file = paste0(out, this_sample, "_snv_dist_chr.pdf"), limitsize = FALSE, width = 17, height = 12, units = c("in"), dpi = 300)
     ggsave(ssm_count, file = paste0(out, this_sample, "_ssm_counts.pdf"), limitsize = FALSE, width = 12, height = 12, units = c("in"), dpi = 300)
+    ggsave(sv_count, file = paste0(out, this_sample, "_sv_counts.pdf"), limitsize = FALSE, width = 12, height = 12, units = c("in"), dpi = 300)
+    ggsave(sv_size, file = paste0(out, this_sample, "_sv_size_dens.pdf"), limitsize = FALSE, width = 12, height = 12, units = c("in"), dpi = 300)
     ggsave(cns, file = paste0(out, this_sample, "_cn_states.pdf"), limitsize = FALSE, width = 12, height = 12, units = c("in"), dpi = 300)
     ggsave(violine_plot, file = paste0(out, this_sample, "_sv_size_dist.pdf"), limitsize = FALSE, width = 12, height = 12, units = c("in"), dpi = 300)
     ggsave(cnv_ideogram, file = paste0(out, this_sample, "_cnv_ideo.pdf"), limitsize = FALSE, width = 17, height = 12, units = c("in"), dpi = 300)
@@ -3967,6 +4106,7 @@ fancy_circos_plot = function(this_sample,
 #' @param adjust_value A multiplicate bandwidth adjustment. This makes it possible to adjust the bandwidth while still using the a bandwidth estimator. For example, adjust = 1/2 means use half of the default bandwidth.
 #' @param trim If FALSE, the default, each density is computed on the full range of the data.
 #' @param chr_select Optional argument for subsetting on selected chromosomes, default is all autosomes.
+#' @param hide_legend Set to True to remove legend from plot, default is FALSE.
 #' @param plot_title Title of plot (default to sample ID).
 #' @param plot_subtitle Subtitle for created plot.
 #' @param projection Genomic projection for SVs and circos plot. Accepted values are grch37 and hg38.
@@ -3990,6 +4130,7 @@ fancy_sv_sizedens = function(this_sample,
                             size_cutoff = 50,
                             adjust_value = 1,
                             trim = FALSE,
+                            hide_legend = FALSE,
                             chr_select = paste0("chr", c(1:22)),
                             plot_title = paste0(this_sample),
                             plot_subtitle = paste0("SV sizes for Manta calls. Dashed line annotates mean variant size.\nVAF cut off: ", vaf_cutoff,", SV size cut off: ", size_cutoff),
@@ -4052,13 +4193,13 @@ fancy_sv_sizedens = function(this_sample,
 
   #plotting
   p = ggplot(manta_sv, aes(x = size, fill = type)) +
-        geom_density(alpha = 0.7, adjust = adjust_value, trim = trim) +
-        labs(title = plot_title, subtitle = plot_subtitle, x = "Size (bp)", y = "Density") +
+        geom_density(alpha = 0.7, color = NA, adjust = adjust_value, trim = trim) +
+        labs(title = plot_title, subtitle = plot_subtitle, x = "Size (bp)", y = "") +
         scale_fill_manual(values = c(del_col, dup_col)) +
         scale_y_continuous(expand = c(0, 0)) +
         scale_x_continuous(expand = c(0, 0)) +
-        theme_cowplot() +
-        theme(legend.title = element_blank())
+        {if(hide_legend)theme(legend.position = "none")} +
+        theme_cowplot()
 
   return(p)
 }
