@@ -1636,10 +1636,10 @@ prettyOncoplot = function(maftools_obj,
 #' it will be discarded. For developers: new arguments added to prettyOncoplot in the future
 #' are expected to be out-of-the-box compatible with this function nd would not need code modifications.
 #'
-#' @param ssm1 Required argument. A maftools object containing the mutations you want to plot on the oncoplot #1.
-#' @param ssm2 Required argument. A maftools object containing the mutations you want to plot on the oncoplot #2.
-#' @param meta1 Required argument. A data.frame with metadata for the oncoplot #1.
-#' @param meta2 Required argument. A data.frame with metadata for the oncoplot #2.
+#' @param maf Required argument. A maftools object containing the mutations you want to plot on both oncoplots.
+#' @param metadata Required argument. A data.frame with metadata for both oncoplots.
+#' @param comparison_values Optional: If the comparison column contains more than two values or is not a factor, specify a character vector of length two in the order you would like the factor levels to be set, reference group first.
+#' @param comparison_column Required: the name of the metadata column containing the comparison values.
 #' @param label1 Optional argument. Label to be shown as a title for the oncoplot #1.
 #' @param label2 Optional argument. Label to be shown as a title for the oncoplot #2.
 #'
@@ -1674,12 +1674,12 @@ prettyCoOncoplot <-   function(maf,
                                label2,
                                ...) {
     # check for required arguments
-    required = c("maf", "metadata")
+    required = c("maf", "metadata", "comparison_column")
 
     defined = names(as.list(match.call())[-1])
 
     if (any(!required %in% defined)) {
-      stop("Please provide mutation data and metadata for 2 pretty Oncoplots.")
+      stop("Please provide mutation data and metadata for 2 pretty Oncoplots with specified comparison_column.")
     }
 
     #If no comparison_values are specified, derive the comparison_values from the specified comparison_column
