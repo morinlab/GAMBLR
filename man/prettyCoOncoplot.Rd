@@ -4,16 +4,24 @@
 \alias{prettyCoOncoplot}
 \title{Display 2 prettyOncoplots side-by-side.}
 \usage{
-prettyCoOncoplot(ssm1, ssm2, meta1, meta2, label1, label2, ...)
+prettyCoOncoplot(
+  maf,
+  metadata,
+  comparison_column,
+  comparison_values,
+  label1,
+  label2,
+  ...
+)
 }
 \arguments{
-\item{ssm1}{Required argument. A maftools object containing the mutations you want to plot on the oncoplot #1.}
+\item{maf}{Required argument. A maftools object containing the mutations you want to plot on both oncoplots.}
 
-\item{ssm2}{Required argument. A maftools object containing the mutations you want to plot on the oncoplot #2.}
+\item{metadata}{Required argument. A data.frame with metadata for both oncoplots.}
 
-\item{meta1}{Required argument. A data.frame with metadata for the oncoplot #1.}
+\item{comparison_column}{Required: the name of the metadata column containing the comparison values.}
 
-\item{meta2}{Required argument. A data.frame with metadata for the oncoplot #2.}
+\item{comparison_values}{Optional: If the comparison column contains more than two values or is not a factor, specify a character vector of length two in the order you would like the factor levels to be set, reference group first.}
 
 \item{label1}{Optional argument. Label to be shown as a title for the oncoplot #1.}
 
@@ -35,13 +43,12 @@ it will be discarded. For developers: new arguments added to prettyOncoplot in t
 are expected to be out-of-the-box compatible with this function nd would not need code modifications.
 }
 \examples{
-ssm1=get_coding_ssm(limit_cohort = "BL_Adult")
-ssm1=maftools::read.maf(ssm1)
-ssm2=get_coding_ssm(limit_cohort = "BL_Pediatric")
-ssm2=maftools::read.maf(ssm2)
-meta1=get_gambl_metadata() \%>\% filter(cohort=="BL_Adult")
-meta2=get_gambl_metadata() \%>\% filter(cohort=="BL_Pediatric")
-prettyCoOncoplot(ssm1=ssm1, ssm2=ssm2, meta1=meta1, meta2 = meta2,
+ssm=get_coding_ssm(limit_cohort = c("BL_Adult", "BL_Pediatric"))
+ssm=maftools::read.maf(ssm)
+meta=get_gambl_metadata() \%>\% dplyr::filter(cohort \%in\% c("BL_Adult", "BL_Pediatric"))
+prettyCoOncoplot(maf=ssm,
+    metadata = meta,
+    comparison_column = "cohort",
     include_noncoding = NULL,
     minMutationPercent = 0,
     genes=c("MYC", "TET2", "TP53", "DDX3X", "ID3"),

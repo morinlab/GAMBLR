@@ -1648,13 +1648,12 @@ prettyOncoplot = function(maftools_obj,
 #' @import ComplexHeatmap ggpubr
 #'
 #' @examples
-#' ssm1=get_coding_ssm(limit_cohort = "BL_Adult")
-#' ssm1=maftools::read.maf(ssm1)
-#' ssm2=get_coding_ssm(limit_cohort = "BL_Pediatric")
-#' ssm2=maftools::read.maf(ssm2)
-#' meta1=get_gambl_metadata() %>% filter(cohort=="BL_Adult")
-#' meta2=get_gambl_metadata() %>% filter(cohort=="BL_Pediatric")
-#' prettyCoOncoplot(ssm1=ssm1, ssm2=ssm2, meta1=meta1, meta2 = meta2,
+#' ssm=get_coding_ssm(limit_cohort = c("BL_Adult", "BL_Pediatric"))
+#' ssm=maftools::read.maf(ssm)
+#' meta=get_gambl_metadata() %>% dplyr::filter(cohort %in% c("BL_Adult", "BL_Pediatric"))
+#' prettyCoOncoplot(maf=ssm,
+#'     metadata = meta,
+#'     comparison_column = "cohort",
 #'     include_noncoding = NULL,
 #'     minMutationPercent = 0,
 #'     genes=c("MYC", "TET2", "TP53", "DDX3X", "ID3"),
