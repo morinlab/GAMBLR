@@ -1666,20 +1666,44 @@ prettyOncoplot = function(maftools_obj,
 #'     label1="Adult",
 #'     label2="Pediatric")
 #'
-prettyCoOncoplot <- function(ssm1,
-                             ssm2,
-                             meta1,
-                             meta2,
-                             label1,
-                             label2,
-                             ...) {
+prettyCoOncoplot <-   function(maf,
+                               metadata,
+                               comparison_column,
+                               comparison_values,
+                               label1,
+                               label2,
+                               ...) {
+    # check for required arguments
+    required = c("maf", "metadata")
 
-    # Check for required arguments
-    required = c("ssm1", "ssm2", "meta1", "meta2")
     defined = names(as.list(match.call())[-1])
+
     if (any(!required %in% defined)) {
       stop("Please provide mutation data and metadata for 2 pretty Oncoplots.")
     }
+
+    #If no comparison_values are specified, derive the comparison_values from the specified comparison_column
+    if(missing(comparison_values)){
+      if(class(metadata[[comparison_column]]) == "factor"){
+        comparison_values = levels(metadata[[comparison_column]])
+      } else {
+        comparison_values = unique(metadata[[comparison_column]])
+      }
+    }
+
+    #Ensure there are only two comparison_values
+    {
+      if(length(comparison_values) != 2)
+        stop(paste0("Your comparison must have two values. \nEither specify comparison_values as a vector of length 2 or subset your metadata so your comparison_column has only two unique values or factor levels."))
+    }
+
+    #Subset the metadata to the specified comparison_values and the maf to the remaining sample_ids
+    meta1 = metadata[metadata[[comparison_column]] %in% comparison_values[1], ]
+    meta2 = metadata[metadata[[comparison_column]] %in% comparison_values[2], ]
+
+    # Subset maf to only samples in the comparison values
+    ssm1 = maftools::subsetMaf(maf,tsb=pull(meta1, Tumor_Sample_Barcode))
+    ssm2 = maftools::subsetMaf(maf,tsb=pull(meta2, Tumor_Sample_Barcode))
 
     # Arguments to pass into prettyOncoplot
     oncoplot_args = list(...)
