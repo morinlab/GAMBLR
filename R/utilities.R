@@ -1855,7 +1855,8 @@ get_gambl_colours = function(classification = "all",
       "SCBC"="#8c9c90",
       "UNSPECIFIED"="#cfba7c",
       "OTHER"="#cfba7c",
-      "MZL"="#065A7F"
+      "MZL"="#065A7F",
+      "SMZL"="#065A7F"
   )
   all_colours[["coo"]] = c(
     "ABC" = "#05ACEF",
@@ -1871,9 +1872,14 @@ get_gambl_colours = function(classification = "all",
     "DHITsigPos" = "#D62828",
     "NA" = "#ACADAF"
   )
-  all_colours[["cohort"]] = c("Chapuy"="#8B0000",
-                  "Arthur"= "#8845A8",
-                  "Schmitz"= "#2C72B2")
+  all_colours[["cohort"]] = c("Chapuy"="#8B0000","Chapuy, 2018"="#8B0000",
+                  "Arthur"= "#8845A8","Arthur, 2018"= "#8845A8",
+                  "Schmitz"= "#2C72B2","Schmitz, 2018"= "#2C72B2",
+                  "Reddy" = "#E561C3","Reddy, 2017" = "#E561C3",
+                  "Morin"= "#8DB753", "Morin, 2013"= "#8DB753",
+                  "Kridel"= "#4686B7", "Kridel, 2016"= "#4686B7",
+                  "ICGC"="#E09C3B","ICGC, 2018"="#E09C3B",
+                  "Grande"="#e90c8b", "Grande, 2019"="#e90c8b")
 
   all_colours[["indels"]] = c("DEL" = "#53B1FC", "INS" = "#FC9C6D")
 
