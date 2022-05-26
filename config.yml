@@ -1,3 +1,7 @@
+remote:
+    project_base: "/Users/rmorin/gambl_results/"
+    repo_base: "/Users/rmorin/git/gambl/"
+
 default:
     project_base: "/projects/nhl_meta_analysis_scratch/gambl/results_local/"
     repo_base: "/projects/rmorin/projects/gambl-repos/gambl-rmorin/"
@@ -120,62 +124,3 @@ default:
                 hg38-nci: "04-24937N-Schmitz"
                 hg38: "BLGSP-71-06-00286-99A-01D"
                 hg19-clc: "PA011-G"
-
-testing:
-    project_base: "/projects/nhl_meta_analysis_scratch/gambl/results_local/"
-    repo_base: "/projects/rmorin/projects/gambl-repos/gambl-rmorin/"
-    derived_and_curated: "icgc_dart/derived_and_curated_metadata/"
-    database_name: "gambl_07_2021"
-    results_staging:
-        manta: "manta_current/level_3/01-gamblr_preprocess/"
-    results_merged:
-        tidy_expression_file: "/projects/rmorin/projects/gambl-repos/gambl-rmorin/results/icgc_dart/DESeq2-0.0_salmon-1.0/mrna--gambl-icgc-all/vst-matrix-Hugo_Symbol_tidy.tsv"
-        ex_matrix_file: "/projects/rmorin/projects/gambl-repos/gambl-rmorin/results/icgc_dart/DESeq2-0.0_salmon-1.0/mrna--gambl-icgc-all/vst-matrix-Hugo_Symbol.tsv.gz"
-
-#results from every combination of each of these will be included in the database
-    unix_groups: "gambl,icgc_dart"
-    genome_builds: "grch37,hg38,hs37d5"
-#the genome build to use for all coordinate-based results in the database
-    canonical_genome_build: "grch37"
-    analyses:
-        matched:
-            copy_number: "battenberg"
-            ssm: "slms-3"
-            sv: "manta"
-        unmatched:
-            copy_number: "controlfreec"
-            ssm: "slms-3"
-            sv: "manta"
-
-#tables that likely need to be populated sequentially or outside of R due to their size
-    results_tables:
-        ssm: "maf_slms3_hg19_icgc"
-        copy_number: "seg_battenberg_hg19"
-        sv: "bedpe_manta_hg19"
-        copy_number_unmatched: "seg_controlfreec_hg19"
-
-    results_filatfiles:
-        sv: "icgc_dart/cbioportal-1.0/01-filtered-manta/genome-grch37/all_merged_sv_info.tsv"
-        ssm:
-            all:
-                full: "icgc_dart/slms_3-1.0_vcf2maf-1.2/level_3/final_merged_grch37.maf"
-                cds: "icgc_dart/slms_3-1.0_vcf2maf-1.2/level_3/final_merged_grch37.CDS.maf"
-            gambl:
-                full: "gambl/slms_3-1.0_vcf2maf-1.2/level_3/final_merged_grch37.maf"
-                cds: "gambl/slms_3-1.0_vcf2maf-1.2/level_3/final_merged_grch37.CDS.maf"
-
-    results_directories:
-        manta: "manta_current/99-outputs/bedpe/"
-
-
-    tables:
-        biopsies: "biopsy_metadata"
-        samples: "sample_metadata"
-        outcomes: "outcome_metadata"
-        derived: "derived_data"
-
-    table_flatfiles:
-        biopsies: "data/metadata/gambl_biopsy_metadata.tsv"
-        samples: "data/metadata/gambl_samples_available.tsv"
-        outcomes: "data/metadata/gambl_all_outcomes.tsv"
-        derived: "data/metadata/gambl_sample_results.tsv"
