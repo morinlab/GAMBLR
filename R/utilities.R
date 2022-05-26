@@ -1725,11 +1725,11 @@ get_gambl_colours = function(classification = "all",
                             "NEG" = "#E5A4CB")
 
   all_colours[["BL"]] = c("M53-BL" = "#A6CEE3",
-                          "DLBCL-1" = "#721F0F",
+                          "DLBCL-A" = "#721F0F",
                           "IC-BL" = "#45425A",
                           "DGG-BL" = "#E90C8BFF",
-                          "DLBCL-2" = "#FB9A99",
-                          "DLBCL-3" = "#C41230")
+                          "DLBCL-B" = "#FB9A99",
+                          "DLBCL-C" = "#C41230")
 
   all_colours[["FL"]] = c(dFL = "#99C1B9", cFL = "#D16666", DLBCL = "#479450")
 
