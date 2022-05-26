@@ -1434,15 +1434,13 @@ get_ssm_by_regions = function(regions_list,
                                                                 mode = mode,
                                                                 augmented = augmented,
                                                                 seq_type = seq_type,
-                                                                projection = projection,
-                                                                allow_clustered = allow_clustered)})
+                                                                projection = projection)})
   }else{
     region_mafs = lapply(regions, function(x){get_ssm_by_region(region = x,
                                                                 streamlined = streamlined,
                                                                 maf_data = maf_data,
                                                                 from_indexed_flatfile = from_indexed_flatfile,
-                                                                mode = mode,
-                                                                allow_clustered = allow_clustered)})
+                                                                mode = mode)})
   }
   if(!use_name_column){
     rn = regions
