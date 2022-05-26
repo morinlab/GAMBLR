@@ -20,6 +20,7 @@ get_excluded_samples = function(tool_name = "slms-3"){
   return(excluded_samples)
 }
 
+
 #' Get MAF-format data frame for more than one patient using at most one augmented_maf  per patient(i.e. unique superset of variants)
 #' and combine or subset from a merged MAF (wraps get_ssm_by_samples)
 #' See get_ssm_by_samples for more information
@@ -29,22 +30,27 @@ get_excluded_samples = function(tool_name = "slms-3"){
 #' @param projection Obtain variants projected to this reference (one of grch37 or hg38)
 #' @param flavour Currently this function only supports one flavour option but this feature is meant for eventual compatability with additional variant calling parameters/versions
 #' @param min_read_support Only returns variants with at least this many reads in t_alt_count (for cleaning up augmented MAFs)
+#' @param basic_columns Return first 43 columns of MAF rather than full details. Default is TRUE.
+#' @param maf_cols if basic_columns is set to FALSE, the user can specify what columns to be returned within the MAF. This parameter can either be a list of indexes (integer) or a list of characters (matching columns in MAF).
+#' @param return_cols If set to TRUE, a vector with all avaialble column names will be returned. Default is FALSE.
 #' @param subset_from_merge Instead of merging individual MAFs, the data will be subset from a pre-merged MAF of samples with the specified seq_type
 #'
 #' @return
 #' @export
 #'
 #' @examples
-#' merged_maf_force_unmatched = get_ssm_by_samples(these_sample_ids=c("HTMCP-01-06-00485-01A-01D","14-35472_tumorA","14-35472_tumorB"))
 #'
 get_ssm_by_patients = function(these_patient_ids,
-                              these_samples_metadata,
-                              tool_name = "slms-3",
-                              projection = "grch37",
-                              seq_type = "genome",
-                              flavour = "clustered",
-                              min_read_support = 3,
-                              subset_from_merge = TRUE){
+                               these_samples_metadata,
+                               tool_name = "slms-3",
+                               projection = "grch37",
+                               seq_type = "genome",
+                               flavour = "clustered",
+                               min_read_support = 3,
+                               basic_columns = TRUE,
+                               maf_cols = NULL,
+                               return_cols = FALSE,
+                               subset_from_merge = TRUE){
   if(!subset_from_merge){
     message("WARNING: on-the-fly merges can be extremely slow and consume a lot of memory. Use at your own risk. ")
   }
@@ -65,7 +71,7 @@ get_ssm_by_patients = function(these_patient_ids,
     ungroup()
 
   these_sample_ids = pull(these_samples_metadata, sample_id)
-  return(get_ssm_by_samples(these_sample_ids, these_samples_metadata, tool_name, projection, seq_type, flavour, min_read_support, subset_from_merge))
+  return(get_ssm_by_samples(these_sample_ids, these_samples_metadata, tool_name, projection, seq_type, flavour, min_read_support, subset_from_merge, basic_columns, maf_cols, return_cols))
 }
 
 
@@ -79,6 +85,9 @@ get_ssm_by_patients = function(these_patient_ids,
 #' @param flavour Currently this function only supports one flavour option but this feature is meant for eventual compatability with additional variant calling parameters/versions
 #' @param these_genes A vector of genes to subset ssm to.
 #' @param min_read_support Only returns variants with at least this many reads in t_alt_count (for cleaning up augmented MAFs)
+#' @param basic_columns Return first 45 columns of MAF rather than full details. Default is TRUE.
+#' @param maf_cols if basic_columns is set to FALSE, the suer can specify what columns to be returned within the MAF. This parameter can either be a list of indexes (integer) or a list of characters.
+#' @param return_cols If set to TRUE, a vector with all avaialble column names will be returned. Default is FALSE.
 #' @param subset_from_merge Instead of merging individual MAFs, the data will be subset from a pre-merged MAF of samples with the specified seq_type
 #'
 #' @return data frame in MAF format.
@@ -95,6 +104,9 @@ get_ssm_by_samples = function(these_sample_ids,
                               flavour = "clustered",
                               these_genes,
                               min_read_support = 3,
+                              basic_columns = TRUE,
+                              maf_cols = NULL,
+                              return_cols = FALSE,
                               subset_from_merge = TRUE,
                               augmented = TRUE){
   if(!subset_from_merge){
@@ -127,6 +139,12 @@ get_ssm_by_samples = function(these_sample_ids,
       message(paste("using existing merge:", full_maf_path))
       maf_df_merge = fread_maf(full_maf_path) %>%
         dplyr::filter(Tumor_Sample_Barcode %in% these_sample_ids)
+      #subset maf to only include first 43 columns (default)
+      if(basic_columns){maf_df_merge = dplyr::select(maf_df_merge, c(1:45))}
+      #subset maf to a specific set of columns (defined in maf_cols)
+      if(!is.null(maf_cols) && !basic_columns){maf_df_merge = dplyr::select(maf_df_merge, all_of(maf_cols))}
+      #print all available columns
+      if(!basic_columns && return_cols){print(colnames(maf_df_merge))}
     }
 
     if(subset_from_merge && augmented){
@@ -137,6 +155,12 @@ get_ssm_by_samples = function(these_sample_ids,
       maf_df_merge = fread_maf(full_maf_path) %>%
         dplyr::filter(Tumor_Sample_Barcode %in% these_sample_ids) %>%
         dplyr::filter(t_alt_count >= min_read_support)
+      #subset maf to only include first 43 columns (default)
+      if(basic_columns){maf_df_merge = dplyr::select(maf_df_merge, c(1:45))}
+      #subset maf to a specific set of columns (defined in maf_cols)
+      if(!is.null(maf_cols) && !basic_columns){maf_df_merge = dplyr::select(maf_df_merge, all_of(maf_cols))}
+      #print all available columns
+      if(!basic_columns && return_cols){print(colnames(maf_df_merge))}
     }
 
     if(!subset_from_merge){
@@ -149,7 +173,10 @@ get_ssm_by_samples = function(these_sample_ids,
           projection = projection,
           augmented = augmented,
           flavour = flavour,
-          min_read_support = min_read_support
+          min_read_support = min_read_support,
+          basic_columns = basic_columns,
+          maf_cols = maf_cols,
+          return_cols = return_cols,
         )
         maf_df_list[[this_sample]]=maf_df
       }
@@ -163,6 +190,7 @@ get_ssm_by_samples = function(these_sample_ids,
   }
   return(maf_df_merge)
 }
+
 
 
 #' Get the ssms (i.e. load MAF) for a single sample. This was implemented to allow flexibility because
@@ -179,6 +207,9 @@ get_ssm_by_samples = function(these_sample_ids,
 #' @param augmented default: TRUE. Set to FALSE if you instead want the original MAF from each sample for multi-sample patients instead of the augmented MAF
 #' @param flavour Currently this function only supports one flavour option but this feature is meant for eventual compatability with additional variant calling parameters/versions
 #' @param min_read_support Only returns variants with at least this many reads in t_alt_count (for cleaning up augmented MAFs)
+#' @param basic_columns Return first 43 columns of MAF rather than full details. Default is TRUE.
+#' @param maf_cols if basic_columns is set to FALSE, the suer can specify what columns to be returned within the MAF. This parameter can either be a list of indexes (integer) or a list of characters.
+#' @param return_cols If set to TRUE, a vector with all avaialble column names will be returned. Default is FALSE.
 #' @param verbose Enable for debugging/noisier output
 #'
 #' @return data frame in MAF format.
@@ -195,6 +226,9 @@ get_ssm_by_sample = function(this_sample_id,
                              augmented = TRUE,
                              flavour = "clustered",
                              min_read_support = 3,
+                             basic_columns = TRUE,
+                             maf_cols = NULL,
+                             return_cols = FALSE,
                              verbose = FALSE){
 
   #figure out which unix_group this sample belongs to
@@ -263,6 +297,22 @@ get_ssm_by_sample = function(this_sample_id,
     sample_ssm = sample_ssm %>%
       dplyr::filter(Hugo_Symbol %in% these_genes)
   }
+
+  #subset maf to only include first 43 columns (default)
+  if(basic_columns){
+    sample_ssm = dplyr::select(sample_ssm, c(1:43))
+    }
+
+  #subset maf to a specific set of columns (defined in maf_cols)
+  if(!is.null(maf_cols) && !basic_columns){
+    sample_ssm = dplyr::select(sample_ssm, all_of(maf_cols))
+    }
+
+  #print all available columns
+  if(!basic_columns && return_cols){
+    print(colnames(sample_ssm))
+    }
+
   return(sample_ssm)
 }
 
@@ -1533,8 +1583,6 @@ get_ssm_by_region = function(chromosome,
     message(paste("reading from:", full_maf_path))
   }
 
-  region = "chr8:128,723,128-128,774,067"
-
   if(!region == ""){
     region = gsub(",", "", region)
     split_chunks = unlist(strsplit(region, ":"))
@@ -1614,6 +1662,8 @@ get_ssm_by_region = function(chromosome,
 #' @param projection Reference genome build for the coordinates in the MAF file. The default is hg19 genome build.
 #' @param seq_type The seq_type you want back, default is genome.
 #' @param basic_columns Set to TRUE to override the default behavior of returning only the first 45 columns of MAF data.
+#' @param maf_cols if basic_columns is set to FALSE, the user can specify what columns to be returned within the MAF. This parameter can either be a list of indexes (integer) or a list of characters (matching columns in MAF).
+#' @param return_cols If set to TRUE, a vector with all avaialble column names will be returned. Default is FALSE.
 #' @param from_flatfile Set to TRUE to obtain mutations from a local flatfile instead of the database. This can be more efficient and is currently the only option for users who do not have ICGC data access.
 #' @param augmented default: TRUE. Set to FALSE if you instead want the original MAF from each sample for multi-sample patients instead of the augmented MAF
 #' @param min_read_support Only returns variants with at least this many reads in t_alt_count (for cleaning up augmented MAFs)
@@ -1638,6 +1688,8 @@ get_coding_ssm = function(limit_cohort,
                           projection = "grch37",
                           seq_type = "genome",
                           basic_columns = TRUE,
+                          maf_cols = NULL,
+                          return_cols = FALSE,
                           from_flatfile = TRUE,
                           augmented = TRUE,
                           min_read_support = 3,
@@ -1736,6 +1788,16 @@ get_coding_ssm = function(limit_cohort,
   #subset to fewer columns
   if(basic_columns){
     muts = muts[,c(1:45)]
+  }
+
+  #subset maf to a specific set of columns (defined in maf_cols)
+  if(!is.null(maf_cols) && !basic_columns){
+    muts = dplyr::select(muts, all_of(maf_cols))
+  }
+
+  #print all avaialble columns
+  if(!basic_columns && return_cols){
+    print(colnames(muts))
   }
 
   #drop rows for these samples so we can swap in the force_unmatched outputs instead
