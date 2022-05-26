@@ -834,7 +834,8 @@ collate_results = function(sample_table,
     output_file = config::get("table_flatfiles")$derived
     output_base = config::get("repo_base")
     output_file = paste0(output_base, output_file)
-    sample_table = read_tsv(output_file)
+    output_file = glue::glue(output_file)
+    sample_table = read_tsv(output_file) %>% dplyr::filter(sample_id %in% sample_table$sample_id)
   }else{
     message("Slow option: not using cached result. I suggest from_cache = TRUE whenever possible")
     #edit this function and add a new function to load any additional results into the main summary table
@@ -850,6 +851,7 @@ collate_results = function(sample_table,
   }
   if(write_to_file){
     output_file = config::get("table_flatfiles")$derived
+    output_file = glue(output_file)
     output_base = config::get("repo_base")
     output_file = paste0(output_base, output_file)
     write_tsv(sample_table, file = output_file)

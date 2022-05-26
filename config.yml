@@ -95,7 +95,7 @@ default:
         biopsies: "data/metadata/gambl_biopsy_metadata.tsv"
         samples: "data/metadata/gambl_samples_available.tsv"
         outcomes: "data/metadata/gambl_all_outcomes.tsv"
-        derived: "data/metadata/gambl_sample_results.tsv"
+        derived: "data/metadata/gambl_{seq_type_filter}_results.tsv"
 
     unmatched_normal_ids:
         gambl:
