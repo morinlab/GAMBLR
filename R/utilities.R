@@ -3257,3 +3257,33 @@ cnvKompare = function(patient_id,
   return(output)
 
 }
+
+
+#' Transform input maf columns to allow for usage of dplyr verbs
+#'
+#' @param maf_df input MAF data frame.
+#'
+#' @return maf_df with transofmred columns
+#' @export
+#' @import tidyverse
+#'
+#' @examples
+#' ssm_sample = get_ssm_by_sample(this_sample_id = "HTMCP-01-06-00485-01A-01D", tool_name = "slims-3", projection = "grch37")
+#' clean_maf = cleanup_maf(maf_df = ssm_sample)
+#'
+cleanup_maf = function(maf_df){
+
+  #cleanup various columns that store text to make them useful (make numeric, drop denominator etc)
+  maf_df = mutate(maf_df,EXON = gsub("/.+", "", EXON)) %>%
+    mutate(EXON = as.numeric(EXON)) %>%
+    mutate(INTRON = gsub("/.+", "", INTRON)) %>%
+    mutate(INTRON = as.numeric(INTRON)) %>%
+    mutate(CDS_position = gsub("/.+", "", CDS_position)) %>%
+    mutate(CDS_position = as.numeric(as.character(CDS_position))) %>%
+    mutate(cDNA_position = gsub("/.+", "", cDNA_position)) %>%
+    mutate(cDNA_position = as.numeric(as.character(cDNA_position))) %>%
+    mutate(Protein_position = gsub("/.+", "", Protein_position)) %>%
+    mutate(Protein_position = as.numeric(as.character(Protein_position)))
+
+  return(maf_df)
+}
