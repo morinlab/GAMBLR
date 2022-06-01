@@ -1396,22 +1396,24 @@ get_ashm_count_matrix = function(regions_bed,
                                  maf_data,
                                  sample_metadata,
                                  use_name_column = FALSE,
-                                 from_indexed_flatfile = FALSE,
-                                 allow_clustered = FALSE){
+                                 from_indexed_flatfile = TRUE){
 
   if(missing(regions_bed)){
     regions_bed = grch37_ashm_regions
   }
   ashm_maf = get_ssm_by_regions(regions_bed = regions_bed,
-                                streamlined = TRUE,
+                                basic_columns = TRUE,
                                 maf_data = maf_data,
                                 use_name_column = use_name_column,
-                                from_indexed_flatfile = from_indexed_flatfile,
-                                allow_clustered = allow_clustered)
+                                from_indexed_flatfile = from_indexed_flatfile)
 
   ashm_counted = ashm_maf %>%
-    group_by(sample_id, region_name) %>%
+    group_by(Tumor_Sample_Barcode, Region_Name) %>%
     tally()
+
+  colnames(ashm_counted)[1] = "sample_id"
+  colnames(ashm_counted)[1] = "region_name"
+
   if(missing(sample_metadata)){
     all_meta = get_gambl_metadata() %>%
       dplyr::select(sample_id)
@@ -1428,8 +1430,9 @@ get_ashm_count_matrix = function(regions_bed,
   all_counts_wide = pivot_wider(all_counts, id_cols = sample_id, names_from = region_name, values_from = n) %>%
     column_to_rownames(var = "sample_id")
 
-  return(all_counts_wide)
+   return(all_counts_wide)
 }
+
 
 
 #' Efficiently retrieve all mutations across a range of genomic regions.
@@ -1469,8 +1472,7 @@ get_ssm_by_regions = function(regions_list,
                               augmented = TRUE,
                               seq_type = "genome",
                               projection = "grch37",
-                              min_read_support = 4,
-                              allow_clustered = TRUE){
+                              min_read_support = 4){
 
   bed2region = function(x){
     paste0(x[1], ":", as.numeric(x[2]), "-", as.numeric(x[3]))
@@ -1486,7 +1488,7 @@ get_ssm_by_regions = function(regions_list,
   if(missing(maf_data)){
     region_mafs = lapply(regions, function(x){get_ssm_by_region(region = x,
                                                                 streamlined = streamlined,
-                                                                basic_columns = FALSE,
+                                                                basic_columns = TRUE,
                                                                 from_indexed_flatfile = from_indexed_flatfile,
                                                                 mode = mode,
                                                                 augmented = augmented,
@@ -1620,7 +1622,7 @@ get_ssm_by_region = function(chromosome,
 
     if(projection == "grch37"){
       region = stringr::str_replace(region, "chr", "")
-      }
+    }
 
     chromosome = split_chunks[1]
     startend = unlist(strsplit(split_chunks[2], "-"))
@@ -1677,6 +1679,8 @@ get_ssm_by_region = function(chromosome,
   if(!basic_columns && return_cols){
     print(colnames(muts_region))
   }
+
+  muts_region$Chromosome = as.character(muts_region$Chromosome)
 
   return(muts_region)
 }
