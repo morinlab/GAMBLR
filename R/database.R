@@ -1412,7 +1412,7 @@ get_ashm_count_matrix = function(regions_bed,
     tally()
 
   colnames(ashm_counted)[1] = "sample_id"
-  colnames(ashm_counted)[1] = "region_name"
+  colnames(ashm_counted)[2] = "region_name"
 
   if(missing(sample_metadata)){
     all_meta = get_gambl_metadata() %>%
@@ -1430,7 +1430,7 @@ get_ashm_count_matrix = function(regions_bed,
   all_counts_wide = pivot_wider(all_counts, id_cols = sample_id, names_from = region_name, values_from = n) %>%
     column_to_rownames(var = "sample_id")
 
-   return(all_counts_wide)
+  return(all_counts_wide)
 }
 
 
