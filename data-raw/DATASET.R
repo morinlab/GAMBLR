@@ -91,3 +91,34 @@ usethis::use_data(chromosome_arms_grch37, overwrite = TRUE)
 chromosome_arms_hg38 = system.file("extdata","chromosome_arms_hg38.tsv",package="GAMBLR") %>%
   read.table(sep="\t",header=1)
 usethis::use_data(chromosome_arms_hg38, overwrite = TRUE)
+
+
+lymphgen_entrez = system.file("extdata","lymphgen_genes_entrez.txt",package="GAMBLR") %>%
+  read_tsv()
+
+entrez_map = system.file("extdata","hugo2entrez.tsv",package="GAMBLR") %>%
+  read_tsv()
+
+lymphgen_anno = left_join(lymphgen_entrez,entrez_map) %>% dplyr::rename("Hugo_Symbol"="Approved symbol") %>% dplyr::select(1:3)
+
+
+library("biomaRt")
+#need to get entrezgene_id, hgnc_symbol using ensembl_gene_id
+gene_detail = getBM(attributes=c( 'ensembl_gene_id','entrezgene_id','hgnc_symbol'), 
+      filters = 'ensembl_gene_id', 
+      values = lymphoma_genes$ensembl_gene_id, 
+      mart = ensembl,useCache = FALSE)
+
+#fill in missing entrezgene_id
+
+gene_detail[gene_detail$ensembl_gene_id =="ENSG00000036448","entrezgene_id"] = 9172
+
+gene_detail[gene_detail$ensembl_gene_id =="ENSG00000065526","entrezgene_id"] = 23013
+
+gene_detail[gene_detail$ensembl_gene_id =="ENSG00000102096","entrezgene_id"] = 11040
+
+gene_detail[gene_detail$ensembl_gene_id =="ENSG00000172578","entrezgene_id"] = 89857
+
+gene_detail[gene_detail$ensembl_gene_id =="ENSG00000205542","entrezgene_id"] = 7114
+
+
