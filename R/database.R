@@ -1412,7 +1412,6 @@ get_ashm_count_matrix = function(regions_bed,
     tally()
 
   colnames(ashm_counted)[1] = "sample_id"
-  colnames(ashm_counted)[2] = "region_name"
 
   if(missing(sample_metadata)){
     all_meta = get_gambl_metadata() %>%
