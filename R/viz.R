@@ -1138,6 +1138,7 @@ plot_sample_circos = function(this_sample_id,
 #' @param hide_annotations Hide annotations for specifc ashms. argument takes a list with annotations.
 #' @param custom_colours Provide named vector (or named list of vectors) containing custom annotation colours if you do not want to use standartized pallette.
 #' @param legend_direction Direction of lgend, defualt is "horizontal".
+#' @param ylim Limit for y-axis.
 #' @param legend_position Position of legend, default is "bottom".
 #' @param annotation_row Row for annotations, default is 2.
 #' @param annotation_col Column for annotations, default is 1.
@@ -1187,6 +1188,7 @@ prettyOncoplot = function(maftools_obj,
                           box_col = NA,
                           annoAlpha = 1,
                           legend_direction = "horizontal",
+                          ylim = NULL,
                           legend_position = "bottom",
                           legend_row = 3,
                           legend_col = 3,
@@ -1590,8 +1592,13 @@ prettyOncoplot = function(maftools_obj,
   if(hideTopBarplot){
     top_annotation = NULL
   }else{
-    top_annotation = HeatmapAnnotation(cbar = anno_oncoprint_barplot())
+    if(is.null(ylim)){
+        top_annotation = HeatmapAnnotation(cbar = anno_oncoprint_barplot())
+    }else{
+        top_annotation = HeatmapAnnotation(cbar = anno_oncoprint_barplot(ylim=ylim))
+    }
   }
+
   ch = ComplexHeatmap::oncoPrint(mat[intersect(genes, genes_kept),patients_kept],
                                  alter_fun = alter_fun,
                                  top_annotation = top_annotation,
@@ -2804,10 +2811,7 @@ fancy_v_chrcount = function(this_sample,
       maf = data.frame(maf$CHROM_A, maf$START_A, maf$END_A, do.call(rbind, strsplit(maf$manta_name, split = ":", fixed = TRUE)))
 
       #rename variables
-      names(maf)[1] = "Chromosome"
-      names(maf)[2] = "Start_Position"
-      names(maf)[3] = "End_Position"
-      names(maf)[4] = "Variant_Type"
+      names(maf)[1:4] = c("Chromosome", "Start_Position", "End_Position","Variant_Type")
 
       #filter out translocations and set order of variables
       maf = dplyr::filter(maf, Variant_Type %in% c("MantaDEL", "MantaDUP")) %>%

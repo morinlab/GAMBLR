@@ -299,7 +299,7 @@ calc_mutation_frequency_sliding_windows = function(this_region,
     mutate(end = start + window_size - 1)
   #use foverlaps to assign mutations to bins
   windows.dt = as.data.table(windows)
-  region_ssm = GAMBLR::get_ssm_by_region(region = this_region, streamlined = TRUE, from_indexed_flatfile = from_indexed_flatfile, mode = mode) %>%
+  region_ssm = GAMBLR::get_ssm_by_region(region = this_region, streamlined = FALSE, from_indexed_flatfile = from_indexed_flatfile, mode = mode) %>%
     dplyr::rename(c("start" = "Start_Position", "sample_id" = "Tumor_Sample_Barcode")) %>%
     mutate(mutated = 1)
 
@@ -573,7 +573,7 @@ annotate_hotspots = function(mutation_maf,
     group_by(MAX_COORD) %>%
     arrange(MAX_COORD, COORDINATE) %>%
     complete(COORDINATE = seq(COORDINATE[1], COORDINATE[2])) %>%
-    fill(CHROMOSOME, .direction = "up") %>%
+    tidyr::fill(CHROMOSOME, .direction = "up") %>%
     dplyr::rename("Start_Position" = "COORDINATE") %>%
     dplyr::rename("Chromosome" = "CHROMOSOME") %>%
     ungroup()

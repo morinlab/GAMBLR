@@ -1401,14 +1401,14 @@ get_ashm_count_matrix = function(regions_bed,
   if(missing(regions_bed)){
     regions_bed = grch37_ashm_regions
   }
-  ashm_maf = get_ssm_by_regions(regions_bed = regions_bed,
+  ashm_maf = suppressMessages(get_ssm_by_regions(regions_bed = regions_bed,
                                 basic_columns = TRUE,
                                 maf_data = maf_data,
                                 use_name_column = use_name_column,
-                                from_indexed_flatfile = from_indexed_flatfile)
+                                from_indexed_flatfile = from_indexed_flatfile))
 
   ashm_counted = ashm_maf %>%
-    group_by(Tumor_Sample_Barcode, Region_Name) %>%
+    group_by(Tumor_Sample_Barcode, region_name) %>%
     tally()
 
   colnames(ashm_counted)[1] = "sample_id"
@@ -1432,7 +1432,6 @@ get_ashm_count_matrix = function(regions_bed,
 
   return(all_counts_wide)
 }
-
 
 
 #' Efficiently retrieve all mutations across a range of genomic regions.
@@ -1513,9 +1512,9 @@ get_ssm_by_regions = function(regions_list,
   unnested_df = tibbled_data %>%
     unnest_longer(region_mafs)
 
-  #subset on region anmes and rename column before cbind with full maf
+  #subset on region names and rename column before cbind with full maf
   r_names = as.data.frame(unnested_df$region_name)
-  colnames(r_names)[1] <- "Region_Name"
+  colnames(r_names)[1] <- "region_name"
 
   #unnest maf
   unnested_maf = bind_rows(region_mafs)
@@ -1612,7 +1611,6 @@ get_ssm_by_region = function(chromosome,
     maf_path = glue::glue(maf_partial_path)
     full_maf_path = paste0(base_path, maf_path)
     full_maf_path_comp = paste0(base_path, maf_path, ".gz")
-    message(paste("reading from:", full_maf_path_comp))
 
   }
 
@@ -1684,6 +1682,7 @@ get_ssm_by_region = function(chromosome,
 
   return(muts_region)
 }
+
 
 
 

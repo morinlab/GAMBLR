@@ -18,8 +18,7 @@ get_ssm_by_regions(
   augmented = TRUE,
   seq_type = "genome",
   projection = "grch37",
-  min_read_support = 4,
-  allow_clustered = TRUE
+  min_read_support = 4
 )
 }
 \arguments{

@@ -10,8 +10,7 @@ get_ashm_count_matrix(
   maf_data,
   sample_metadata,
   use_name_column = FALSE,
-  from_indexed_flatfile = FALSE,
-  allow_clustered = FALSE
+  from_indexed_flatfile = TRUE
 )
 }
 \arguments{
