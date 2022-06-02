@@ -13,7 +13,7 @@ cnames = c("CHROM_A", "START_A", "END_A", "CHROM_B", "START_B", "END_B", "NAME",
 #' excluded_samp = get_excluded_samples()
 #'
 get_excluded_samples = function(tool_name = "slms-3"){
-  excluded_df = read_tsv("/projects/rmorin/projects/gambl-repos/gambl-rmorin/config/exclude.tsv", show_col_types = FALSE)
+  excluded_df = read_tsv("/projects/rmorin/projects/gambl-repos/gambl-rmorin/config/exclude.tsv")
   excluded_samples = dplyr::filter(excluded_df, pipeline_exclude == tool_name) %>%
     pull(sample_id)
 
@@ -1144,7 +1144,7 @@ get_sample_cn_segments = function(this_sample_id,
       full_cnv_path =  paste0(config::get("project_base"), cnv_path)
     }
 
-    all_segs = read_tsv(full_cnv_path, show_col_types = FALSE)
+    all_segs = read_tsv(full_cnv_path)
     if (!missing(this_sample_id) & !multiple_samples) {
       all_segs = dplyr::filter(all_segs, ID %in% this_sample_id)
     } else if (!missing(sample_list)) {
