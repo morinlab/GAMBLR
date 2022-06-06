@@ -4,12 +4,9 @@
 # You can create one and add it to your authorized_keys file if your current key is not passphase-protected
 
 
-import keyring
-import paramiko
-
-hostname = 'gphost01.bcgsc.ca'
+hostname = 'gphost08.bcgsc.ca'
 myuser = 'rmorin' #UPDATE with your GSC username
-mypassphrase = 'FAKEPASSPHRASE' #UPDATE with the passphrase for your private key. This only seems to work if you use a key that has a passphrase!
+mypassphrase = 'GAMBL' #UPDATE with the passphrase for your private key. This only seems to work if you use a key that has a passphrase!
 mySSHK = '/Users/rmorin/.ssh/id_rsa2' # UPDATE set this to the path of your RSA private key if it has a different name (it probably will)
 
 from snakemake.remote.SFTP import RemoteProvider
