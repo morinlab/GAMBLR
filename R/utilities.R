@@ -850,6 +850,7 @@ collate_results = function(sample_table,
     sample_table = collate_csr_results(sample_table = sample_table,seq_type_filter=seq_type_filter)
     sample_table = collate_ancestry(sample_table = sample_table,seq_type_filter=seq_type_filter)
     sample_table = collate_sbs_results(sample_table = sample_table, sbs_manipulation = sbs_manipulation,seq_type_filter=seq_type_filter)
+    sample_table = collate_qc_results(sample_table = sample_table,seq_type_filter = seq_type_filter)
   }
   if(write_to_file){
     output_file = config::get("table_flatfiles")$derived
@@ -2528,6 +2529,58 @@ collate_lymphgen = function(sample_table,
   }
 
   return(sample_table)
+}
+
+
+#' INTERNAL FUNCTION called by collate_results, not meant for out-of-package usage.
+#' Collate qc metrics.
+#'
+#' @param sample_table df with sample ids in the first column.
+#' @param seq_type_filter default is genome, capture is also available for unix_group icgc_dart.
+#'
+#' @return The sample table with additional columns.
+#' @import tidyverse
+#'
+#' @examples
+#' sample_table <- data.frame (sample_id  = c("09-33003T", "05-18426T", "BLGSP-71-06-00174-01A-01D", "BLGSP-71-22-00347-01A-12E", "SP59282"))
+#' qc_metrics = collate_qc_results(sample_table = sample_table, seq_type_filter = "genome")
+#'
+collate_qc_results = function(sample_table,
+                              seq_type_filter = "genome"){
+
+  if(! seq_type_filter %in% c("genome", "capture")){
+    stop("Please provide a valid seq_type (\"genome\" or \"capture\").")
+  }
+
+  #get paths
+  base = config::get("project_base") #base
+  qc_template = config::get("qc_met") #qc metric template
+  qc_path = glue::glue(qc_template) #glue wildcards
+  icgc_qc_path_full = paste0(base, qc_path) #combine for icgc_dart qc metric path
+  gambl_qc = gsub("icgc_dart", "gambl", qc_path) #use gsub to substitute icgc_dart in qc path with gambl
+  gambl_qc_path_full = paste0(base, gambl_qc) #combine for gambl qc metric path
+
+  #read in icgc qc data, rename sample id column and filter on samples in sample id in sample_table
+  icgc_qc = suppressMessages(read_tsv(icgc_qc_path_full)) %>%
+    rename(sample_id = UID) %>%
+    dplyr::filter(sample_id %in% dplyr::pull(sample_table, sample_id))
+
+  #read in gambl qc data (if seq_type_filter set to "genome"), rename sample id column and filter on samples in sample id in sample_table
+  if(seq_type_filter == "genome"){
+    gambl_qc = suppressMessages(read_tsv(gambl_qc_path_full)) %>%
+      rename(sample_id = UID) %>%
+      dplyr::filter(sample_id %in% dplyr::pull(sample_table, sample_id))
+
+    #join gambl and icgc QC data
+    full_qc = rbind(gambl_qc, icgc_qc)
+
+    return(full_qc)
+
+    }else{
+      message("Currently, seq_type_filter = \"capture\" is only available for unix_group \"icgc_dart\". Only QC metrics for icgc_dart will be returned.")
+      #TO DO: Remove this once capture metrics have been generated for gambl samples.
+      return(icgc_qc)
+      }
 }
 
 
