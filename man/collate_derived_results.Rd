@@ -5,7 +5,11 @@
 \title{INTERNAL FUNCTION called by collate_results, not meant for out-of-package usage.
 Extract derived results stored in the database (these are usually slower to derive on the fly).}
 \usage{
-collate_derived_results(sample_table, from_flatfile = FALSE)
+collate_derived_results(
+  sample_table,
+  seq_type_filter = "genome",
+  from_flatfile = FALSE
+)
 }
 \arguments{
 \item{sample_table}{A data frame with sample_id as the first column.}

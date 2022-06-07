@@ -7,6 +7,7 @@ Bring in the results from mutational signature analysis.}
 \usage{
 collate_sbs_results(
   sample_table,
+  seq_type_filter = "genome",
   file_path,
   scale_vals = FALSE,
   sbs_manipulation = ""
