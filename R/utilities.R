@@ -830,26 +830,30 @@ collate_results = function(sample_table,
     sample_table = get_gambl_metadata(seq_type_filter = seq_type_filter) %>%
       dplyr::select(sample_id, patient_id, biopsy_id)
   }
+  if(write_to_file){
+    from_cache = FALSE #override default automatically for nonsense combination of options
+  }
   if(from_cache){
     output_file = config::get("table_flatfiles")$derived
     output_base = config::get("repo_base")
     output_file = paste0(output_base, output_file)
-    sample_table = read_tsv(output_file)
+    output_file = glue::glue(output_file)
+    sample_table = read_tsv(output_file) %>% dplyr::filter(sample_id %in% sample_table$sample_id)
   }else{
     message("Slow option: not using cached result. I suggest from_cache = TRUE whenever possible")
     #edit this function and add a new function to load any additional results into the main summary table
-    sample_table = collate_ssm_results(sample_table = sample_table)
-    sample_table = collate_sv_results(sample_table = sample_table)
-    sample_table = collate_curated_sv_results(sample_table = sample_table)
-    sample_table = collate_ashm_results(sample_table = sample_table)
-    sample_table = collate_nfkbiz_results(sample_table = sample_table)
-    sample_table = collate_csr_results(sample_table = sample_table)
-    sample_table = collate_ancestry(sample_table = sample_table)
-    sample_table = collate_sbs_results(sample_table = sample_table, sbs_manipulation = sbs_manipulation)
-    sample_table = collate_derived_results(sample_table = sample_table)
+    sample_table = collate_ssm_results(sample_table = sample_table,seq_type_filter=seq_type_filter)
+    sample_table = collate_sv_results(sample_table = sample_table,seq_type_filter=seq_type_filter)
+    sample_table = collate_curated_sv_results(sample_table = sample_table,seq_type_filter=seq_type_filter)
+    sample_table = collate_ashm_results(sample_table = sample_table,seq_type_filter=seq_type_filter)
+    sample_table = collate_nfkbiz_results(sample_table = sample_table,seq_type_filter=seq_type_filter)
+    sample_table = collate_csr_results(sample_table = sample_table,seq_type_filter=seq_type_filter)
+    sample_table = collate_ancestry(sample_table = sample_table,seq_type_filter=seq_type_filter)
+    sample_table = collate_sbs_results(sample_table = sample_table, sbs_manipulation = sbs_manipulation,seq_type_filter=seq_type_filter)
   }
   if(write_to_file){
     output_file = config::get("table_flatfiles")$derived
+    output_file = glue::glue(output_file)
     output_base = config::get("repo_base")
     output_file = paste0(output_base, output_file)
     write_tsv(sample_table, file = output_file)
@@ -885,6 +889,7 @@ collate_results = function(sample_table,
 #' gambl_results_derived = collate_derived_results(samples_df)
 #'
 collate_derived_results = function(sample_table,
+                                   seq_type_filter="genome",
                                    from_flatfile = FALSE){
 
   if(from_flatfile){
@@ -917,8 +922,10 @@ collate_derived_results = function(sample_table,
 #' @examples
 #' gambl_results_derived = collate_csr_results(gambl_results_derived)
 #'
-collate_csr_results = function(sample_table){
-
+collate_csr_results = function(sample_table,seq_type_filter = "genome"){
+   if(seq_type_filter=="capture"){
+     return(sample_table) #result doesn't exist or make sense for this seq_type
+   }
    csr = suppressMessages(read_tsv("/projects/rmorin/projects/gambl-repos/gambl-nthomas/results/icgc_dart/mixcr_current/level_3/mixcr_genome_CSR_results.tsv"))
    sm_join = inner_join(sample_table, csr, by = c("sample_id" = "sample"))
    pt_join = inner_join(sample_table, csr, by = c("patient_id" = "sample"))
@@ -943,27 +950,32 @@ collate_csr_results = function(sample_table){
 #' ssm_results = colalte_ssm_results(samples, TRUE, TRUE)
 #'
 collate_ssm_results = function(sample_table,
+                               seq_type_filter = "genome",
+                               projection = "grch37",
                                from_flatfile = TRUE,
                                include_silent = FALSE){
 
   if(!include_silent){
     coding_class = coding_class[coding_class != "Silent"]
   }
+  seq_type = seq_type_filter
   #iterate over every sample and compute some summary stats from its MAF
   if(from_flatfile){
     base_path = config::get("project_base")
     #test if we have permissions for the full gambl + icgc merge
-    maf_partial_path = config::get("results_flatfiles")$ssm$template$cds$deblacklisted
+    maf_partial_path = config::get("results_flatfiles")$ssm$template$merged$deblacklisted
+
     maf_path = paste0(base_path, maf_partial_path)
+    maf_path = glue::glue(maf_path)
+    message(paste("Checking permissions on:",maf_path))
     maf_permissions = file.access(maf_path, 4)
     if(maf_permissions == -1){
-      #currently this will only return non-ICGC results
-      maf_partial_path = config::get("results_flatfiles")$ssm$gambl$full
-      base_path = config::get("project_base")
-      #default is non-ICGC
-      maf_path = paste0(base_path, maf_partial_path)
+      message("fail. You do not have permissions to access all the results. Use the cached results instead.")
+      return(sample_table)
     }
-    muts = fread_maf(maf_path)
+    print(paste("loading",maf_path))
+    muts = vroom::vroom(maf_path) %>%
+      dplyr::select(Hugo_Symbol,Tumor_Sample_Barcode,Variant_Classification,t_alt_count,t_ref_count)
     mutated_samples = length(unique(muts$Tumor_Sample_Barcode))
     message(paste("mutations from", mutated_samples, "samples"))
   }
@@ -1016,7 +1028,7 @@ collate_ssm_results = function(sample_table,
 #' @examples
 #' gambl_results_derived = collate_curated_sv_results(gambl_results_derived)
 #'
-collate_curated_sv_results = function(sample_table){
+collate_curated_sv_results = function(sample_table,seq_type_filter="genome"){
 
   path_to_files = config::get("derived_and_curated")
   project_base = config::get("project_base")
@@ -1447,8 +1459,12 @@ sanity_check_metadata = function(){
 #' table = collate_ancestry(sample_table = "my_sample_table.txt")
 #'
 collate_ancestry = function(sample_table,
+                            seq_type_filter="genome",
                             somalier_output){
-
+  if(seq_type_filter=="capture"){
+    message("skipping ancestry for this seq_type")
+    return(sample_table)
+  }
   if(missing(somalier_output)){
     somalier_output = "/projects/rmorin/projects/gambl-repos/gambl-rmorin/results/gambl/somalier_current/02-ancestry/2020_08_07.somalier-ancestry.tsv"
   }
@@ -1495,13 +1511,20 @@ collate_extra_metadata = function(sample_table,
 #' collated = collate_sbs_results(sample_table=sample_table,sbs_manipulation=sbs_manipulation)
 #'
 collate_sbs_results = function(sample_table,
+                               seq_type_filter="genome",
                                file_path,
                                scale_vals = FALSE,
                                sbs_manipulation = ""){
-
-  if(missing(file_path)){
-    file_path = "/projects/rmorin_scratch/prasath_scratch/gambl/sigprofiler/gambl_slms3/02-extract/slms3_matched_unmatched_gambl_icgc.hg38/SBS96/Suggested_Solution/COSMIC_SBS96_Decomposed_Solution/Activities/COSMIC_SBS96_Activities_refit.txt"
+  if(seq_type_filter!="genome"){
+    message("skipping sbs for seq_type")
+    return(sample_table)
   }
+  if(missing(file_path)){
+    base = config::get("project_base")
+
+    file_path = paste0(base,"icgc_dart/sigprofiler-1.0/02-extract/genome--hg38/BL_HGBL_DLBCL_FL_COMFL_CLL_MCL_B-ALL_PBL_DLBCL-BL-like_UNSPECIFIED_SCBC_MM_all/SBS96/Suggested_Solution/COSMIC_SBS96_Decomposed_Solution/Activities/COSMIC_SBS96_Activities_refit.txt")
+  }
+  message(paste("loading",file_path))
   signatures = read.csv(file_path, sep = "\t", header = 1, row.names = 1)
   rs = rowSums(signatures)
   cn = colnames(signatures)
@@ -1569,22 +1592,27 @@ collate_sbs_results = function(sample_table,
 #' @examples
 #' sample_table = collate_nfkbiz_results(sample_table=sample_table)
 #'
-collate_nfkbiz_results = function(sample_table){
-
+collate_nfkbiz_results = function(sample_table,seq_type_filter="genome"){
+  #TO DO: Update to work with hg38 projection
   if(missing(sample_table)){
-    sample_table = get_gambl_metadata() %>%
+    sample_table = get_gambl_metadata(seq_type_filter=seq_type_filter) %>%
       dplyr::select(sample_id, patient_id, biopsy_id)
   }
   this_region = "chr3:101578214-101578365"
-  nfkbiz_ssm = get_ssm_by_region(region = this_region) %>%
+  nfkbiz_ssm = get_ssm_by_region(region = this_region,seq_type = seq_type_filter) %>%
     pull(Tumor_Sample_Barcode) %>%
     unique
+  if(seq_type_filter=="genome"){
+    nfkbiz_sv = get_manta_sv(region = this_region) %>%
+      pull(tumour_sample_id) %>%
+      unique
+    nfkbiz = unique(c(nfkbiz_ssm, nfkbiz_sv))
+  }
+  else{
+    nfkbiz = unique(nfkbiz_ssm)
+  }
 
-  nfkbiz_sv = get_manta_sv(region = this_region) %>%
-    pull(tumour_sample_id) %>%
-    unique
 
-  nfkbiz = unique(c(nfkbiz_ssm, nfkbiz_sv))
   sample_table$NFKBIZ_UTR = "NEG"
   sample_table[sample_table$sample_id %in% nfkbiz, "NFKBIZ_UTR"] = "POS"
   return(sample_table)
@@ -1602,16 +1630,17 @@ collate_nfkbiz_results = function(sample_table){
 #' @examples
 #' sample_table = collate_ashm_results(sample_table=sample_table)
 #'
-collate_ashm_results = function(sample_table){
+collate_ashm_results = function(sample_table,
+                                seq_type_filter="genome"){
 
   if(missing(sample_table)){
-    sample_table = get_gambl_metadata() %>%
+    sample_table = get_gambl_metadata(seq_type_filter=seq_type_filter) %>%
       dplyr::select(sample_id, patient_id, biopsy_id)
   }
   #just annotate BCL2, MYC and CCND1 hypermutation
   regions_df = data.frame(name = c("CCND1","BCL2","MYC"),
   region = c("chr11:69455000-69459900", "chr18:60983000-60989000", "chr8:128747615-128751834"))
-  region_mafs = lapply(regions_df$region, function(x){get_ssm_by_region(region = x, streamlined = TRUE)})
+  region_mafs = lapply(regions_df$region, function(x){get_ssm_by_region(region = x, streamlined = TRUE,seq_type=seq_type_filter)})
   tibbled_data = tibble(region_mafs, region_name = regions_df$name)
   unnested_df = tibbled_data %>%
     unnest_longer(region_mafs)
@@ -1643,8 +1672,12 @@ collate_ashm_results = function(sample_table){
 #'
 collate_sv_results = function(sample_table,
                               tool = "manta",
+                              seq_type_filter="genome",
                               oncogenes = c("MYC", "BCL2", "BCL6", "CCND1", "IRF4")){
-
+  if(seq_type_filter!="genome"){
+    message("skipping sv for this seq_type")
+    return(sample_table)
+  }
   if(tool == "manta"){
     all_svs = get_manta_sv()
   }
@@ -1725,11 +1758,11 @@ get_gambl_colours = function(classification = "all",
                             "NEG" = "#E5A4CB")
 
   all_colours[["BL"]] = c("M53-BL" = "#A6CEE3",
-                          "DLBCL-1" = "#721F0F",
+                          "DLBCL-A" = "#721F0F",
                           "IC-BL" = "#45425A",
                           "DGG-BL" = "#E90C8BFF",
-                          "DLBCL-2" = "#FB9A99",
-                          "DLBCL-3" = "#C41230")
+                          "DLBCL-B" = "#FB9A99",
+                          "DLBCL-C" = "#C41230")
 
   all_colours[["FL"]] = c(dFL = "#99C1B9", cFL = "#D16666", DLBCL = "#479450")
 
@@ -1855,7 +1888,8 @@ get_gambl_colours = function(classification = "all",
       "SCBC"="#8c9c90",
       "UNSPECIFIED"="#cfba7c",
       "OTHER"="#cfba7c",
-      "MZL"="#065A7F"
+      "MZL"="#065A7F",
+      "SMZL"="#065A7F"
   )
   all_colours[["coo"]] = c(
     "ABC" = "#05ACEF",
@@ -1871,9 +1905,14 @@ get_gambl_colours = function(classification = "all",
     "DHITsigPos" = "#D62828",
     "NA" = "#ACADAF"
   )
-  all_colours[["cohort"]] = c("Chapuy"="#8B0000",
-                  "Arthur"= "#8845A8",
-                  "Schmitz"= "#2C72B2")
+  all_colours[["cohort"]] = c("Chapuy"="#8B0000","Chapuy, 2018"="#8B0000",
+                  "Arthur"= "#8845A8","Arthur, 2018"= "#8845A8",
+                  "Schmitz"= "#2C72B2","Schmitz, 2018"= "#2C72B2",
+                  "Reddy" = "#E561C3","Reddy, 2017" = "#E561C3",
+                  "Morin"= "#8DB753", "Morin, 2013"= "#8DB753",
+                  "Kridel"= "#4686B7", "Kridel, 2016"= "#4686B7",
+                  "ICGC"="#E09C3B","ICGC, 2018"="#E09C3B",
+                  "Grande"="#e90c8b", "Grande, 2019"="#e90c8b")
 
   all_colours[["indels"]] = c("DEL" = "#53B1FC", "INS" = "#FC9C6D")
   all_colours[["svs"]] = c("DEL" = "#53B1FC", "DUP" = "#FC9C6D")

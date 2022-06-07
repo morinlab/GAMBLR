@@ -759,17 +759,17 @@ add_prps_result = function(incoming_metadata){
 #' icgc_metadata = add_icgc_metadata(incoming_metadata = my_meta)
 #'
 add_icgc_metadata = function(incoming_metadata){
-
-  #add trio metadata too!
-  trio_meta = "/projects/rmorin/projects/gambl-repos/gambl-rmorin/data/metadata/private_metadata/2021-04-30-DLBC_LSARP_Trios_with_metadata.tsv"
-  icgc_publ = suppressMessages(suppressWarnings(read_csv("/projects/rmorin/projects/gambl-repos/gambl-rmorin/data/metadata/raw_metadata/MALY_DE_tableS1.csv")))
+  repo_base = config::get("repo_base")
+  icgc_publ_file = paste0(repo_base,"data/metadata/raw_metadata/MALY_DE_tableS1.csv")
+  icgc_publ = suppressMessages(suppressWarnings(read_csv(icgc_publ_file)))
   icgc_publ = icgc_publ[,c(1:20)]
   #fix commas as decimals
   icgc_publ = mutate(icgc_publ, purity = str_replace(purity, ",", "."))
   icgc_publ = mutate(icgc_publ, sex = str_to_upper(sex))
-
-  icgc_raw = suppressMessages(read_tsv("/projects/rmorin/projects/gambl-repos/gambl-rmorin/data/metadata/raw_metadata/ICGC_MALY_seq_md.tsv"))
-
+  
+  icgc_raw_path = paste0(repo_base,"data/metadata/raw_metadata/ICGC_MALY_seq_md.tsv")
+  icgc_raw = suppressMessages(read_tsv(icgc_raw_path))
+  
   icgc_raw = icgc_raw %>%
     dplyr::select(-compression, -bam_available, -read_length, -time_point, -unix_group, -ffpe_or_frozen, -link_name)  %>%
     dplyr::filter(tissue_status %in% c("tumor", "tumour"))
@@ -1143,8 +1143,10 @@ get_cn_states = function(regions_list,
   cn_matrix = pivot_wider(all_cn, id_cols = "sample_id", names_from = "region_name", values_from = "CN") %>%
     column_to_rownames("sample_id")
 
+  names(cn_matrix) = region_names
+
   #order the regions the same way the user provided them for convenience
-  return(cn_matrix[,region_names])
+  return(cn_matrix)
 }
 
 
