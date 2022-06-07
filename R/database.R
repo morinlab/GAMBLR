@@ -1609,7 +1609,7 @@ get_ssm_by_region = function(chromosome,
     #setup file paths
     maf_path = glue::glue(maf_partial_path)
     full_maf_path = paste0(base_path, maf_path)
-    full_maf_path_comp = paste0(base_path, maf_path, ".gz")
+    full_maf_path_comp = paste0(base_path, maf_path, ".bgz")
 
   }
 
