@@ -10,11 +10,6 @@ require("data.table")
 #' @param human_friendly_name A slightly more verbose name for your project.
 #' @param project_name Unique ID for your project.
 #' @param description A verbose description of your data set.
-#' @param cancer_type Cancer types included in study, default is "mixed".
-#' @param data_cancer_type The cancer type abbreviation, e.g., "brca". (for data_cancer_type file).
-#' @param data_cancer_name  The name of the cancer type, e.g., "Breast Invasive Carcinoma". (for data_cancer_type file).
-#' @param data_dedicated_colour CSS color name of the color associated with this cancer study, e.g., "HotPink". (for data_cancer_type file).
-#' @param data_cancer_parent_type The type_of_cancer field of the cancer type of which this is a subtype, e.g., "Breast". You can set parent to tissue, which is the reserved word to place the given cancer type at "root" level in the "studies oncotree" that will be generated in the homepage (aka query page) of the portal. (for data_cancer_type file).
 #' @param exclude_cohorts Cohorts to be excluded.
 #' @param gambl_maf maf origin.
 #' @param gambl_icgc_maf Icgc maf origin.
@@ -28,28 +23,14 @@ require("data.table")
 #' Setup study and save included ids as a vector of characters:
 #' ids = setup_study(out_dir = "GAMBLR/cBioPortal/instance01/")
 #'
-setup_study = function(short_name = "GAMBL",
-                       include_icgc_data = FALSE,
+setup_study = function(seq_type_filter = c("capture"),
+                       short_name = "GAMBL",
                        human_friendly_name = "GAMBL data",
-                       project_name = "gambl_minus_icgc",
-                       description = "GAMBL data without ICGC",
-                       cancer_type = "mixed",
-                       data_cancer_type = "brca",
-                       data_cancer_name = "Invasive Breast Carcinoma",
-                       data_dedicated_colour = "HotPink",
-                       data_cancer_parent_type = "Breast",
-                       exclude_cohorts = c("FFPE_Benchmarking"),
-                       gambl_maf = "maf_slms3_hg19",
-                       gambl_icgc_maf = "maf_slms3_hg19_icgc",
+                       project_name = "gambl_all",
+                       description = "GAMBL data from exomes",
                        overwrite = TRUE,
                        out_dir){
-
-  #determine what table to query and what restrictions to use for the MAF data
-  if(include_icgc_data){
-    maf_table = gambl_icgc_maf
-  }else{
-    maf_table = gambl_maf
-  }
+ cancer_type="mixed"
 
   #set up the new directory
   if (!file.exists(out_dir)){
@@ -72,25 +53,6 @@ setup_study = function(short_name = "GAMBL",
 
   cat(meta_study_content, file = meta_study)
 
-  #meta cancer type
-  meta_cancer_type = paste0(out_dir, "meta_cancer_type.txt")
-
-  meta_cancer_type_content = paste0("genetic_alteration_type: CANCER_TYPE\n",
-                                    "datatype: CANCER_TYPE\n",
-                                    "data_filename: data_cancer_type.txt\n")
-
-  cat(meta_cancer_type_content, file = meta_cancer_type)
-
-  #data cancer type
-  data_cancer_type = paste0(out_dir, "data_cancer_type.txt")
-
-  data_cancer_type_content = paste(data_cancer_type,
-                                   data_cancer_name,
-                                   data_dedicated_colour,
-                                   data_cancer_parent_type, "\n",
-                                   sep = "\t")
-
-  cat(data_cancer_type_content, file = data_cancer_type)
 
   #meta clinical samples
   meta_clinical_samples = paste0(out_dir, "meta_clinical_samples.txt")
@@ -121,7 +83,7 @@ setup_study = function(short_name = "GAMBL",
                                   "datatype: MAF\n",
                                   "stable_id: mutations\n",
                                   "show_profile_in_analysis_tab: true\n",
-                                  "profile_description: Mutation data from whole genome sequencing.\n",
+                                  "profile_description: Mutation data\n",
                                   "profile_name: Mutations\n",
                                   "data_filename: ", data_mutations, "\n",
                                   "swissprot_identifier: name\n")
@@ -130,7 +92,7 @@ setup_study = function(short_name = "GAMBL",
 
   if(overwrite){
     #create the actual MAF file by querying the database using the API
-    coding_ssms = get_coding_ssm(exclude_cohort = exclude_cohorts)
+    coding_ssms = get_coding_ssm(seq_type = seq_type_filter)
     data_mutations_full = paste0(out_dir, "data_mutations_extended.maf")
     write_tsv(coding_ssms, data_mutations_full, na = "")
   }else{
@@ -173,7 +135,6 @@ setup_study = function(short_name = "GAMBL",
 #' fusion_ids = setup_fusions(out_dir = "GAMBLR/cBioPortal/instance01/")
 #'
 setup_fusions = function(short_name = "GAMBL",
-                         include_icgc_data = FALSE,
                          human_friendly_name = "GAMBL data",
                          project_name = "gambl_minus_icgc",
                          description = "GAMBL data without ICGC",
@@ -181,12 +142,6 @@ setup_fusions = function(short_name = "GAMBL",
                          gambl_icgc_maf = "maf_slms3_hg19_icgc",
                          out_dir){
 
-  #determine what table to query and what restrictions to use for the MAF data
-  if(include_icgc_data){
-    maf_table = gambl_icgc_maf
-  }else{
-    maf_table = gambl_maf
-  }
 
   #create necessary files
   #meta fusions
@@ -204,7 +159,7 @@ setup_fusions = function(short_name = "GAMBL",
   cat(meta_fusion_content, file = meta_fusions)
 
   #get SV breakpoints and annotate them
-  unannotated_sv = get_manta_sv()
+  unannotated_sv = get_combined_sv()
 
   annotated_sv = annotate_sv(unannotated_sv) %>%
     dplyr::filter(!is.na(partner)) %>%
@@ -221,55 +176,50 @@ setup_fusions = function(short_name = "GAMBL",
                            Fusion = c(pull(unite(annotated_sv, fusion, partner, gene, sep = "-"), fusion)),
                            DNA_support = "yes",
                            RNA_support = "no",
-                           Method = "Manta",
+                           Method = "SVAR",
                            Frame = "in-frame")
 
   fusions_df = distinct(fusions_df, Tumor_Sample_Barcode, Fusion, .keep_all = TRUE)
 
   #determine what table to query and what restrictions to use for the MAF data
-  if(include_icgc_data){
-    maf_table = gambl_icgc_maf
-  }else{
-    maf_table = gambl_maf
-  }
+  
+  # TO DO: Fix this code to work with the indexed MAF file using get_ssm_by_region instead of by gene
+  #nfkbiz_entrez = 64332
+  #nfkbiz_utr_ssm = get_ssm_by_gene(gene_symbol = "NFKBIZ") %>%
+  #  dplyr::filter(Variant_Classification == "3'UTR") %>%
+  #  pull(Tumor_Sample_Barcode) %>%
+  #  unique()
 
-
-  nfkbiz_entrez = 64332
-
-  nfkbiz_utr_ssm = get_ssm_by_gene(gene_symbol = "NFKBIZ") %>%
-    dplyr::filter(Variant_Classification == "3'UTR") %>%
-    pull(Tumor_Sample_Barcode) %>%
-    unique()
-
-  nfkbiz.mut.df = data.frame(Hugo_Symbol = "NFKBIZ",
-                             Entrez_Gene_Id = nfkbiz_entrez,
-                             Center = "BCGSC",
-                             Tumor_Sample_Barcode = nfkbiz_utr_ssm,
-                             Fusion = "NFKBIZ-UTR",
-                             DNA_support = "yes",
-                             RNA_support = "no",
-                             Method = "SLMS-3",
-                             Frame = "in-frame")
+  #nfkbiz.mut.df = data.frame(Hugo_Symbol = "NFKBIZ",
+  #                           Entrez_Gene_Id = nfkbiz_entrez,
+  #                           Center = "BCGSC",
+  #                           Tumor_Sample_Barcode = nfkbiz_utr_ssm,
+  #                           Fusion = "NFKBIZ-UTR",
+  #                           DNA_support = "yes",
+  #                           RNA_support = "no",
+  #                           Method = "SLMS-3",
+  #                           Frame = "in-frame")
 
   #get any SV breakpoints that are in the 3'UTR of NFKBIZ
-  nfkbiz_utr_region = "chr3:101,578,185-101,579,902"
+  #nfkbiz_utr_region = "chr3:101,578,185-101,579,902"
   data_fusions = paste0(out_dir, "data_fusions.txt")
+  #TODO: FIX! this is also broken
+  #nfkbiz.svs = get_combined_sv(region = nfkbiz_utr_region) %>%
+  #  pull(tumour_sample_id) %>%
+  #  unique()
 
-  nfkbiz.svs = get_manta_sv(region = nfkbiz_utr_region) %>%
-    pull(tumour_sample_id) %>%
-    unique()
+  #nfkbiz.sv.df = data.frame(Hugo_Symbol = "NFKBIZ",
+  #                          Entrez_Gene_Id = nfkbiz_entrez,
+  #                          Center = "BCGSC",
+  #                          Tumor_Sample_Barcode = nfkbiz.svs,
+  #                          Fusion = "NFKBIZ-SV",
+  #                          DNA_support = "yes",
+  #                          RNA_support = "no",
+  #                          Method = "Manta",
+  #                          Frame = "in-frame")
 
-  nfkbiz.sv.df = data.frame(Hugo_Symbol = "NFKBIZ",
-                            Entrez_Gene_Id = nfkbiz_entrez,
-                            Center = "BCGSC",
-                            Tumor_Sample_Barcode = nfkbiz.svs,
-                            Fusion = "NFKBIZ-SV",
-                            DNA_support = "yes",
-                            RNA_support = "no",
-                            Method = "Manta",
-                            Frame = "in-frame")
-
-  all_fusions = rbind(fusions_df, nfkbiz.sv.df, nfkbiz.mut.df)
+  #all_fusions = rbind(fusions_df, nfkbiz.sv.df, nfkbiz.mut.df)
+  all_fusions = fusions_df
   fusion.cases = as.character(unique(all_fusions$Tumor_Sample_Barcode))
   write_tsv(all_fusions, data_fusions)
 
@@ -306,8 +256,8 @@ setup_fusions = function(short_name = "GAMBL",
 #' @examples
 #' finalize_study(sample_ids = c(ids, fusion_ids), out_dir = "GAMBLR/cBioPortal/instance01/")
 #'
-finalize_study = function(short_name = "GAMBL",
-                          include_icgc_data = FALSE,
+finalize_study = function(seq_type_filter="genome",
+                          short_name = "GAMBL",
                           human_friendly_name = "GAMBL data",
                           project_name = "gambl_minus_icgc",
                           description = "GAMBL data without ICGC",
@@ -340,7 +290,7 @@ finalize_study = function(short_name = "GAMBL",
   #meta samples
   #prepare and write out the relevant metadata
   clinsamp = paste0(out_dir, "data_clinical_samples.txt")
-  meta_samples = get_gambl_metadata() %>%
+  meta_samples = get_gambl_metadata(seq_type_filter=seq_type_filter) %>%
     dplyr::filter(sample_id %in% sample_ids) %>%
     dplyr::select(patient_id, sample_id, pathology, EBV_status_inf, cohort, time_point, ffpe_or_frozen, myc_ba, bcl6_ba, bcl2_ba, COO_consensus, DHITsig_consensus, lymphgen)
 
