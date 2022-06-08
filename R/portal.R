@@ -1,7 +1,4 @@
-#require packages
-require("dbplyr")
-require("tidyverse")
-require("data.table")
+
 
 #' Initialize a new cBioPortal instance or update existing portal data set, can also be used to retrieve sample ids included in study.
 #'
