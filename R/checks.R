@@ -77,5 +77,10 @@ check_gambl_metadata = function(metadata_df,to_check="all",show_details=FALSE,fi
   }
   if(fix){
     message("Nothing fixed. I'm waiting for someone to implement some code to fix common issues.")
+    message("maybe try something like this? GAMBLR::tidy_lymphgen(metadata,  lymphgen_with_cnv, lymphgen_with_cnv_tidy, relevel = TRUE)")
   }
 }
+
+
+
+
