@@ -138,5 +138,5 @@ lymphoma_genes[lymphoma_genes$hgnc_symbol %in% reddy_genes$hgnc_symbol,"Reddy"]=
 
 usethis::use_data(lymphoma_genes, overwrite = TRUE)
 
-
+reddy_only = reddy_genes[which(!reddy_genes$hgnc_symbol %in% lymphoma_genes$hgnc_symbol),"hgnc_symbol"]
 

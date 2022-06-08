@@ -47,4 +47,42 @@ svar_anno = annotate_sv(svar_all)
 
 all_seg = get_sample_cn_segments(sample_list = all_meta$sample_id,multiple_samples = T)
 
+# test if we can make a cBioportal instance
+
+cbio_path = paste0(config::get("project_base"),"cbioportal-docker-compose/study/GAMBL_capture_2022/")
+
+samples_included = GAMBLR::setup_study(seq_type = "capture",
+                    short_name="GAMBL_capture_2022",
+                    human_friendly_name = "GAMBL exomes 2022 edition",
+                    project_name="gambl_capture_2022",
+                    description = "GAMBL capture data",
+                    out_dir = cbio_path)
+
+finalize_study(seq_type="capture",short_name="GAMBL_capture_2022",sample_ids=samples_included,
+               human_friendly_name = "GAMBL exomes 2022 edition",
+               project_name="gambl_capture_2022",
+               description = "GAMBL capture data",out_dir = cbio_path,overwrite = TRUE)
+
+
+
+cbio_path = paste0(config::get("project_base"),"cbioportal-docker-compose/study/GAMBL_genome_2022/")
+
+samples_included = GAMBLR::setup_study(seq_type_filter = "genome",
+                                       short_name="GAMBL_genome_2022",
+                                       human_friendly_name = "GAMBL genomes 2022 edition",
+                                       project_name="gambl_genome_2022",
+                                       description = "GAMBL genome data",
+                                       out_dir = cbio_path)
+
+
+fusion_samples = setup_fusions(human_friendly_name = "GAMBL genomes 2022 edition",
+              project_name = "gambl_genome_2022",
+              description = "GAMBL genome data",
+              out_dir=cbio_path)
+  
+all_samples = unique(c(samples_included,fusion_samples))
+finalize_study(seq_type_filter="genome",short_name="GAMBL_genome_2022",sample_ids=all_samples,
+               human_friendly_name = "GAMBL genomes 2022 edition",
+               project_name="gambl_genome_2022",
+               description = "GAMBL genome data",out_dir = cbio_path,overwrite = TRUE)
 
