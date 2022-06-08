@@ -5,7 +5,7 @@
 \title{INTERNAL FUNCTION called by collate_results, not meant for out-of-package usage.
 Collate all SV calls from the genome data and summarize for main oncogenes of interest per sample.}
 \usage{
-collate_curated_sv_results(sample_table)
+collate_curated_sv_results(sample_table, seq_type_filter = "genome")
 }
 \arguments{
 \item{sample_table}{A data frame with sample_id as the first column.}
