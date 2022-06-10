@@ -1184,9 +1184,8 @@ assign_cn_to_ssm = function(this_sample,
     seg_sample = dplyr::mutate(seg_sample, CN = round(2*2^log.ratio))
     seg_sample$LOH_flag = factor(seg_sample$LOH_flag)
   }
-  if(!missing(seg_file_source)){
-    if(seg_file_source == "ichorCNA"){
-      #message("defaulting to ichorCNA format")
+  if(seg_file_source == "ichorCNA"){
+      message("defaulting to ichorCNA format")
       seg_sample = dplyr::rename(seg_sample, c("log.ratio" = "median", "CN" = "copy.number"))
       a.seg = data.table::foverlaps(a, seg_sample, type = "any")
       a$log.ratio = a.seg$log.ratio
@@ -1200,7 +1199,6 @@ assign_cn_to_ssm = function(this_sample,
       a = dplyr::mutate(a, CN = round(2*2^log.ratio))
       seg_sample = dplyr::mutate(seg_sample, CN = round(2*2^log.ratio))
       seg_sample$LOH_flag = factor(seg_sample$LOH_flag)
-    }
   }
   if(!missing(seg_sample)){
     return(list(maf = a, seg = seg_sample))
@@ -1241,13 +1239,9 @@ estimate_purity = function(in_maf,
 
   # Merge the CN info to the corresponding MAF file, uses GAMBLR function
   if(missing(in_maf) & missing(in_seg)){
-    CN_new = assign_cn_to_ssm(this_sample = sample_id, coding_only = coding_only, assume_diploid = assume_diploid, genes = genes)$maf
+    CN_new = assign_cn_to_ssm(this_sample = sample_id, coding_only = coding_only, assume_diploid = assume_diploid, genes = genes,seg_file_source = seg_file_source)$maf
   }else if(!missing(in_seg)){
-    if(seg_file_source == "ichorCNA"){
-      CN_new = assign_cn_to_ssm(maf_file = in_maf, seg_file = in_seg, seg_file_source = "ichorCNA", coding_only = coding_only, genes = genes)$maf
-    }else{
-      CN_new = assign_cn_to_ssm(maf_file = in_maf, seg_file = in_seg, seg_file_source = "", coding_only = coding_only, genes = genes)$maf
-    }
+    CN_new = assign_cn_to_ssm(maf_file = in_maf, seg_file = in_seg, seg_file_source = seg_file_source, coding_only = coding_only, genes = genes)$maf
   }else{
     # If no seg file was provided and assume_diploid paramtere is set to true,
     if(assume_diploid){
