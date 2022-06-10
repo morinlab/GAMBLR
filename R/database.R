@@ -275,11 +275,13 @@ get_ssm_by_sample = function(this_sample_id,
     # first check if we already have a local copy
     # Load data from local copy or get a local copy from the remote path first
     if(status==0){
-      message("found:",aug_maf_path)
-      message("local home:",local_aug_maf_path)
+      if(verbose){
+        message("found:",aug_maf_path)
+        message("local home:",local_aug_maf_path)
+      }
       dirN = dirname(local_aug_maf_path)
-      message("dir:",dirN)
-      dir.create(dirN,recursive = T)
+      
+      suppressMessages(suppressWarnings(dir.create(dirN,recursive = T)))
       if(!file.exists(local_aug_maf_path)){
 
         scp_download(ssh_session,aug_maf_path,dirN)
@@ -287,11 +289,13 @@ get_ssm_by_sample = function(this_sample_id,
       sample_ssm = fread_maf(local_aug_maf_path) %>%
       dplyr::filter(t_alt_count >= min_read_support)
     }else{
-      message("will use",full_maf_path)
-      message("local home:",full_maf_path,local_full_maf_path)
+      if(verbose){
+        message("will use",full_maf_path)
+        message("local home:",full_maf_path,local_full_maf_path)
+      }
       dirN = dirname(local_full_maf_path)
-      message("dir:",dirN)
-      dir.create(dirN,recursive = T)
+      
+      suppressMessages(suppressWarnings(dir.create(dirN,recursive = T)))
       if(!file.exists(local_full_maf_path)){
 
         scp_download(ssh_session,full_maf_path,dirN)
@@ -1187,8 +1191,8 @@ get_sample_cn_segments = function(this_sample_id,
     seq_type = "genome"
     cnv_flatfile_template = config::get("results_flatfiles")$cnv_combined$icgc_dart
     cnv_path =  glue::glue(cnv_flatfile_template)
-    full_cnv_path =  paste0(config::get("project_base"), cnv_path)
-
+    full_cnv_path =  paste0(config::get("project_base",config="default"), cnv_path)
+    local_full_cnv_path =  paste0(config::get("project_base"), cnv_path)
     # check permissions to ICGC data
     permissions = file.access(full_cnv_path, 4)
     if (permissions == -1) {
@@ -1293,7 +1297,8 @@ get_cn_segments = function(chromosome = "",
                            region,
                            with_chr_prefix = FALSE,
                            streamlined = FALSE,
-                           from_flatfile = FALSE){
+                           from_flatfile = FALSE,
+                           ssh_session){
 
   db = config::get("database_name")
   table_name = config::get("results_tables")$copy_number
@@ -1315,9 +1320,10 @@ get_cn_segments = function(chromosome = "",
   #chr prefix the query chromosome to match how it's stored in the table.
   #This isn't yet standardized in the db so it's just a workaround "for now".
   if(from_flatfile){
-    base_dir = config::get()$project_base
+    base_dir = config::get(config="default")$project_base
+    
     unmatched_path = config::get()$results_directories$controlfreec
-
+    
     #separated by which genome the sample was aligned to
     unmatched_hg38_path = paste0(unmatched_path, "from--genome--hg38/")
     unmatched_grch37_path = paste0(unmatched_path, "from--genome--grch37/")
