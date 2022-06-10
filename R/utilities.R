@@ -3,6 +3,20 @@ coding_class = c("Frame_Shift_Del", "Frame_Shift_Ins", "In_Frame_Del", "In_Frame
 rainfall_conv = c("T>C", "T>C", "C>T", "C>T", "T>A", "T>A", "T>G", "T>G", "C>A", "C>A", "C>G", "C>G", "InDel")
 names(rainfall_conv) = c('A>G', 'T>C', 'C>T', 'G>A', 'A>T', 'T>A', 'A>C', 'T>G', 'C>A', 'G>T', 'C>G', 'G>C', 'InDel')
 
+#' Create an ssh session to the GSC (requires active VPN connection)
+#'
+#' @param host (default is gphost01.bcgsc.ca)
+#'
+#' @return
+#' @export
+#' @import ssh
+#'
+#' @examples
+get_ssh_session = function(host="gphost01.bcgsc.ca"){
+  session = ssh_connect(host=host)
+  return(session)
+}
+
 
 #' Get regions (bed format) from genes.
 #'

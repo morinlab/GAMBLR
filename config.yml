@@ -10,6 +10,7 @@ default:
     results_staging:
         manta: "manta_current/level_3/01-gamblr_preprocess/"
     results_merged:
+        tidy_expression_path: "icgc_dart/DESeq2-0.0_salmon-1.0/mrna--gambl-icgc-all/vst-matrix-Hugo_Symbol_tidy.tsv.gz"
         tidy_expression_file: "/projects/rmorin/projects/gambl-repos/gambl-rmorin/results/icgc_dart/DESeq2-0.0_salmon-1.0/mrna--gambl-icgc-all/vst-matrix-Hugo_Symbol_tidy.tsv"
         ex_matrix_file: "/projects/rmorin/projects/gambl-repos/gambl-rmorin/results/icgc_dart/DESeq2-0.0_salmon-1.0/mrna--gambl-icgc-all/vst-matrix.tsv"
     resources:

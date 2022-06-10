@@ -17,7 +17,8 @@ get_ssm_by_sample(
   augmented = TRUE,
   flavour = "clustered",
   min_read_support = 3,
-  verbose = FALSE
+  verbose = FALSE,
+  ssh_session
 )
 }
 \arguments{
@@ -38,6 +39,9 @@ get_ssm_by_sample(
 \item{min_read_support}{Only returns variants with at least this many reads in t_alt_count (for cleaning up augmented MAFs)}
 
 \item{verbose}{Enable for debugging/noisier output}
+
+\item{ssh_session}{BETA feature! pass active ssh session object.
+If specified, the function will assume the user is not on the network and will temporarily copy the file locally.}
 }
 \value{
 data frame in MAF format.

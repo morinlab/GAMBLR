@@ -13,7 +13,8 @@ cnames = c("CHROM_A", "START_A", "END_A", "CHROM_B", "START_B", "END_B", "NAME",
 #' excluded_samp = get_excluded_samples()
 #'
 get_excluded_samples = function(tool_name = "slms-3"){
-  excluded_df = read_tsv("/projects/rmorin/projects/gambl-repos/gambl-rmorin/config/exclude.tsv")
+  base = config::get("repo_base")
+  excluded_df = read_tsv(paste0(base,"config/exclude.tsv"))
   excluded_samples = dplyr::filter(excluded_df, pipeline_exclude == tool_name) %>%
     pull(sample_id)
 
@@ -44,7 +45,8 @@ get_ssm_by_patients = function(these_patient_ids,
                               seq_type = "genome",
                               flavour = "clustered",
                               min_read_support = 3,
-                              subset_from_merge = TRUE){
+                              subset_from_merge = TRUE,
+                              ssh_session){
   if(!subset_from_merge){
     message("WARNING: on-the-fly merges can be extremely slow and consume a lot of memory. Use at your own risk. ")
   }
@@ -60,12 +62,22 @@ get_ssm_by_patients = function(these_patient_ids,
       dplyr::filter(patient_id %in% these_patient_ids) %>%
       dplyr::filter(!sample_id %in% to_exclude)
   }
-  these_samples_metadata = group_by(these_samples_metadata, patient_id) %>%
-    slice_head() %>%
-    ungroup()
+  # Removed because this drops all but one sample for the patient!
+  #these_samples_metadata = group_by(these_samples_metadata, patient_id) %>%
+  #  slice_head() %>%
+  #  ungroup()
 
   these_sample_ids = pull(these_samples_metadata, sample_id)
-  return(get_ssm_by_samples(these_sample_ids, these_samples_metadata, tool_name, projection, seq_type, flavour, min_read_support, subset_from_merge))
+  return(get_ssm_by_samples(these_sample_ids=these_sample_ids,
+                            these_samples_metadata= these_samples_metadata, 
+                            tool_name=tool_name, 
+                            projection=projection, 
+                            seq_type=seq_type, 
+                            flavour=flavour, 
+                            min_read_support=min_read_support, 
+                            subset_from_merge=subset_from_merge, 
+                            augmented=augmented,
+                            ssh_session=ssh_session))
 }
 
 
@@ -80,6 +92,7 @@ get_ssm_by_patients = function(these_patient_ids,
 #' @param these_genes A vector of genes to subset ssm to.
 #' @param min_read_support Only returns variants with at least this many reads in t_alt_count (for cleaning up augmented MAFs)
 #' @param subset_from_merge Instead of merging individual MAFs, the data will be subset from a pre-merged MAF of samples with the specified seq_type
+#' @param BETA optional argument to supply active ssh session connection for remote transfers
 #'
 #' @return data frame in MAF format.
 #' @export
@@ -96,7 +109,8 @@ get_ssm_by_samples = function(these_sample_ids,
                               these_genes,
                               min_read_support = 3,
                               subset_from_merge = TRUE,
-                              augmented = TRUE){
+                              augmented = TRUE,
+                              ssh_session){
   if(!subset_from_merge){
     message("WARNING: on-the-fly merges can be extremely slow and consume a lot of memory. Use at your own risk. ")
   }
@@ -149,7 +163,9 @@ get_ssm_by_samples = function(these_sample_ids,
           projection = projection,
           augmented = augmented,
           flavour = flavour,
-          min_read_support = min_read_support
+          min_read_support = min_read_support,
+          verbose=FALSE,
+          ssh_session = ssh_session
         )
         maf_df_list[[this_sample]]=maf_df
       }
@@ -180,6 +196,8 @@ get_ssm_by_samples = function(these_sample_ids,
 #' @param flavour Currently this function only supports one flavour option but this feature is meant for eventual compatability with additional variant calling parameters/versions
 #' @param min_read_support Only returns variants with at least this many reads in t_alt_count (for cleaning up augmented MAFs)
 #' @param verbose Enable for debugging/noisier output
+#' @param ssh_session BETA feature! pass active ssh session object. 
+#' If specified, the function will assume the user is not on the network and will temporarily copy the file locally.
 #'
 #' @return data frame in MAF format.
 #' @export
@@ -195,7 +213,8 @@ get_ssm_by_sample = function(this_sample_id,
                              augmented = TRUE,
                              flavour = "clustered",
                              min_read_support = 3,
-                             verbose = FALSE){
+                             verbose = FALSE,
+                             ssh_session){
 
   #figure out which unix_group this sample belongs to
   if(missing(these_samples_metadata)){
@@ -233,18 +252,53 @@ get_ssm_by_sample = function(this_sample_id,
     return()
   }else if(flavour == "clustered"){
     vcf_base_name = "slms-3.final"
-    path_template = config::get("results_flatfiles")$ssm$template$clustered$deblacklisted
+    path_template = config::get("results_flatfiles",config="default")$ssm$template$clustered$deblacklisted
     path_complete = unname(unlist(glue::glue(path_template)))
-    full_maf_path = paste0(config::get("project_base"), path_complete)
+    full_maf_path = paste0(config::get("project_base",config="default"), path_complete)
+    local_full_maf_path = paste0(config::get("project_base"), path_complete)
     if(augmented){
-      path_template = config::get("results_flatfiles")$ssm$template$clustered$augmented
+      path_template = config::get("results_flatfiles",config="default")$ssm$template$clustered$augmented
       path_complete = unname(unlist(glue::glue(path_template)))
-      aug_maf_path = paste0(config::get("project_base"), path_complete)
+      aug_maf_path = paste0(config::get("project_base",config="default"), path_complete)
+      local_aug_maf_path = paste0(config::get("project_base"), path_complete)
     }
   }else{
     warning("Currently the only flavour available to this function is 'clustered'")
   }
-  if(augmented && file.exists(aug_maf_path)){
+  if(!missing(ssh_session)){
+    #check if file exists
+    status = ssh_exec_internal(ssh_session,command=paste("stat",aug_maf_path),error=F)$status
+    aug_maf_path = paste0(aug_maf_path,".gz")
+    local_aug_maf_path = paste0(local_aug_maf_path,".gz")
+    full_maf_path = paste0(full_maf_path,".gz")
+    local_full_maf_path = paste0(local_full_maf_path,".gz")
+    # first check if we already have a local copy
+    # Load data from local copy or get a local copy from the remote path first
+    if(status==0){
+      message("found:",aug_maf_path)
+      message("local home:",local_aug_maf_path)
+      dirN = dirname(local_aug_maf_path)
+      message("dir:",dirN)
+      dir.create(dirN,recursive = T)
+      if(!file.exists(local_aug_maf_path)){
+
+        scp_download(ssh_session,aug_maf_path,dirN)
+      }
+      sample_ssm = fread_maf(local_aug_maf_path) %>%
+      dplyr::filter(t_alt_count >= min_read_support)
+    }else{
+      message("will use",full_maf_path)
+      message("local home:",full_maf_path,local_full_maf_path)
+      dirN = dirname(local_full_maf_path)
+      message("dir:",dirN)
+      dir.create(dirN,recursive = T)
+      if(!file.exists(local_full_maf_path)){
+
+        scp_download(ssh_session,full_maf_path,dirN)
+      }
+      sample_ssm = fread_maf(local_full_maf_path)
+    }
+  }else if(augmented && file.exists(aug_maf_path)){
     full_maf_path = aug_maf_path
     sample_ssm = fread_maf(full_maf_path)
     if(min_read_support){

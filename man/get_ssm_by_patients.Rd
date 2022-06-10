@@ -14,7 +14,8 @@ get_ssm_by_patients(
   seq_type = "genome",
   flavour = "clustered",
   min_read_support = 3,
-  subset_from_merge = TRUE
+  subset_from_merge = TRUE,
+  ssh_session
 )
 }
 \arguments{
