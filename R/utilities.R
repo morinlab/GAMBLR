@@ -537,9 +537,10 @@ annotate_hotspots = function(mutation_maf,
 
   hotspot_info = list()
   for(abase in analysis_base){
-    base_path = "/projects/rmorin/projects/gambl-repos/gambl-rmorin/results/icgc_dart/oncodriveclustl-0.0/99-outputs/webversion/"
-    clust_full_path = paste0(base_path, abase, "/NO_SILENT_MUTS/", abase, "_clusters_results.tsv")
-    all_full_path = paste0(base_path, abase, "/NO_SILENT_MUTS/", abase, "_elements_results.txt")
+    base_path = config::get("repo_base")
+    
+    clust_full_path = paste0(base_path, config::get("results_versioned")$oncodriveclustl$FL_DLBCL$clusters)
+    all_full_path = paste0(base_path, config::get("results_versioned")$oncodriveclustl$FL_DLBCL$elements)
     clust_hotspot = read_tsv(clust_full_path)
     all_hotspot = read_tsv(all_full_path)
 
@@ -1115,7 +1116,7 @@ assign_cn_to_ssm = function(this_sample,
                             tool_name = "battenberg",
                             maf_file,
                             seg_file,
-                            seg_file_source = "ichorCNA",
+                            seg_file_source = "battenberg",
                             assume_diploid = FALSE,
                             genes,
                             include_silent = FALSE,
@@ -1279,7 +1280,7 @@ assign_cn_to_ssm = function(this_sample,
 estimate_purity = function(in_maf,
                            in_seg,
                            sample_id,
-                           seg_file_source = "ichorCNA",
+                           seg_file_source = "battenberg",
                            show_plots = FALSE,
                            assume_diploid = FALSE,
                            coding_only = FALSE,
