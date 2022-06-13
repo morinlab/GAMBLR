@@ -3,12 +3,10 @@
 # It also requires an RSA key that is passphrase-protected. Other key types don't seem to work.
 # You can create one and add it to your authorized_keys file if your current key is not passphase-protected
 
-
 hostname = 'gphost08.bcgsc.ca'
-myuser = 'rmorin' #UPDATE with your GSC username
-mypassphrase = 'GAMBL' #UPDATE with the passphrase for your private key. This only seems to work if you use a key that has a passphrase!
-mySSHK = '/Users/rmorin/.ssh/id_rsa2' # UPDATE set this to the path of your RSA private key if it has a different name (it probably will)
-
+myuser = os.environ["GSC_USERNAME"] #set the environment variable GSC_USERNAME with your GSC username
+mypassphrase = os.environ["GSC_PASSPHRASE"] #set the environment variable GSC_PASSPHRASE with the passphrase for your rsa key
+mySSHK = os.environ["GSC_KEY"] #  set  the environment variable GSC_KEY to the path of your RSA private key 
 from snakemake.remote.SFTP import RemoteProvider
 SFTP = RemoteProvider(username=myuser,private_key_pass=mypassphrase,private_key=mySSHK)
 
