@@ -1194,6 +1194,10 @@ get_sample_cn_segments = function(this_sample_id,
     cnv_path =  glue::glue(cnv_flatfile_template)
     full_cnv_path =  paste0(config::get("project_base",config="default"), cnv_path)
     local_full_cnv_path =  paste0(config::get("project_base"), cnv_path)
+    if(file.exists(local_full_cnv_path)){
+      full_cnv_path = local_full_cnv_path
+      #use local file when available
+    }
     # check permissions to ICGC data
     permissions = file.access(full_cnv_path, 4)
     if (permissions == -1) {
