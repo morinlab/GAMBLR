@@ -97,6 +97,9 @@ default:
         outcomes: "data/metadata/gambl_all_outcomes.tsv"
         derived: "data/metadata/gambl_{seq_type_filter}_results.tsv"
 
+    sample_sets:
+        default: "data/metadata/level3_samples_subsets.tsv"
+
     unmatched_normal_ids:
         gambl:
             genome:
