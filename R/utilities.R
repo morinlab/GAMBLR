@@ -425,7 +425,7 @@ sv_to_bedpe_file = function(sv_df,
 
   #add chr prefix if missing
   if(add_chr_prefix){
-    if(!grepl("chr", region_sv$CHROM_A[1])){
+    if(!any(grepl("chr", region_sv$CHROM_A[1]))){
       sv_df = mutate(sv_df, CHROM_A = paste0("chr", CHROM_A)) %>%
         mutate(CHROM_B = paste0("chr", CHROM_B))
     }
@@ -733,7 +733,7 @@ sv_to_custom_track = function(sv_bedpe,
 
     colnames(sv_data)=c("chrom", "start", "end", "sample_id", "annotation")
   }
-  if(!grepl("chr", sv_data[,1])){
+  if(!any(grepl("chr", sv_data[,1]))){
     #add chr
     sv_data[,1] = unlist(lapply(sv_data[,1], function(x){paste0("chr", x)}))
   }
@@ -787,7 +787,7 @@ maf_to_custom_track = function(maf_data,
   #reduce to a bed-like format
   maf_data = dplyr::select(maf_data, Chromosome, Start_Position, End_Position, Tumor_Sample_Barcode)
   colnames(maf_data) = c("chrom", "start", "end", "sample_id")
-  if(!grepl("chr", maf_data[,1])){
+  if(!any(grepl("chr", maf_data[,1]))){
     #add chr
     maf_data[,1] = unlist(lapply(maf_data[,1], function(x){paste0("chr", x)}))
   }

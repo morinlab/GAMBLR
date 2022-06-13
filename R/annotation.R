@@ -283,7 +283,7 @@ annotate_sv = function(sv_data,
   colnames(bedpe1) = c("chrom", "start", "end", "tumour_sample_id", "score", "strand1")
   colnames(bedpe2) = c("chrom", "start", "end", "tumour_sample_id", "score", "strand2")
   suppressWarnings({
-    if(grepl("chr", bedpe1$chrom)){
+    if(any(grepl("chr", bedpe1$chrom))){
       bedpe1 = dplyr::mutate(bedpe1, chrom = str_replace(chrom, "chr", ""))
       bedpe2 = dplyr::mutate(bedpe2, chrom = str_replace(chrom, "chr", ""))
     }

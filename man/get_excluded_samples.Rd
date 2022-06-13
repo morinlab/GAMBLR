@@ -9,9 +9,6 @@ get_excluded_samples(tool_name = "slms-3")
 \arguments{
 \item{tool_name}{The tool or pipeline that generated the files (should be the same for all).}
 }
-\value{
-
-}
 \description{
 Exclude samples that have been excluded from certain analyses and drop from merges
 }
