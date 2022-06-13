@@ -11,7 +11,8 @@ get_cn_segments(
   region,
   with_chr_prefix = FALSE,
   streamlined = FALSE,
-  from_flatfile = FALSE
+  from_flatfile = FALSE,
+  ssh_session
 )
 }
 \arguments{

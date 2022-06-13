@@ -86,3 +86,21 @@ finalize_study(seq_type_filter="genome",short_name="GAMBL_genome_2022",sample_id
                project_name="gambl_genome_2022",
                description = "GAMBL genome data",out_dir = cbio_path,overwrite = TRUE)
 
+session = GAMBLR::get_ssh_session()
+test_ssm = get_ssm_by_samples(these_sample_ids = c("14-24534_tumorA","14-24534_tumorB"),
+                              ssh_session = session,subset_from_merge = F)
+
+
+test_ssm1 = get_ssm_by_patients(these_patient_ids =  c("14-24534"),
+                              ssh_session = session,subset_from_merge = F)
+
+table(test_ssm$Tumor_Sample_Barcode) #should be the same
+table(test_ssm1$Tumor_Sample_Barcode) #should be the same
+
+#copy number functionality
+
+cn_seg = get_sample_cn_segments("14-24534_tumorB",from_flatfile = T)
+
+cn_ssm = assign_cn_to_ssm("14-24534_tumorB",seg_file_source = "battenberg")
+
+pursteenah = estimate_purity(sample_id = "14-24534_tumorB",seg_file_source = "battenberg")

@@ -27,6 +27,7 @@ default:
 #results from every combination of each of these will be included in the database
     unix_groups: "gambl,icgc_dart"
     genome_builds: "grch37,hg38,hs37d5"
+    projections: "grch37,hg38"
 #the genome build to use for all coordinate-based results in the database
     canonical_genome_build: "grch37"
     analyses:
@@ -50,13 +51,17 @@ default:
         cnv:
             gambl:
                 unmatched: "controlfreec_liftover_current/99-outputs/"
+            template: "{unix_group}/cnv_master-1.0/99-outputs/{seq_type}--projection/all--{projection}.seg"
+            battenberg: "{unix_group}/battenberg_current/99-outputs/seg/{seq_type}--projection/{tumour_sample_id}--{normal_sample_id}--{pairing_status}.battenberg.{projection}.seg"
         cnv_combined:
             gambl: "gambl/cnv_master-1.0/99-outputs/{seq_type}--projection/all--{projection}.seg"
             icgc_dart: "all_the_things/cnv_master-1.0/merges/{seq_type}--{projection}.seg"
+            template: "all_the_things/cnv_master-1.0/merges/{seq_type}--{projection}.seg"
         sv: "icgc_dart/cbioportal-1.0/01-filtered-manta/genome-grch37/all_merged_sv_info.tsv"
         sv_combined:
             gambl: "gambl/svar_master-1.0/merges/gridss_manta.genome--grch37.bedpe"
             icgc_dart: "all_the_things/svar_master-1.0/merges/gridss_manta.genome--grch37.bedpe"
+            template: "all_the_things/svar_master-1.0/merges/gridss_manta.genome--{projection}.bedpe"
         ssm:
             template:
                 clustered:

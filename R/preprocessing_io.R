@@ -612,34 +612,25 @@ fetch_output_files = function(tool,
                               results_dir = "99-outputs",
                               seq_type = "genome",
                               build = "hg38",
-                              search_pattern = "cellularity_ploidy.txt"){
+                              search_pattern = "cellularity_ploidy.txt",
+                              ssh_session){
 
   if(!grepl("^/", base_path)){
-    project_base = config::get("project_base")
+    project_base = config::get("project_base",config="default")
+    local_project_base = config::get("project_base")
     #project_base = "/projects/nhl_meta_analysis_scratch/gambl/results_local/"
+    local_base_path = paste0(local_project_base, base_path)
     base_path = paste0(project_base, base_path)
+    
   }
   if(tool == "battenberg"){
-    results_path = paste0(base_path, "/", results_dir, "/seg/", seq_type, "--", build,"/")
+    results_path = paste0(base_path, "/", results_dir, "/seg/", seq_type, "--projection/")
+    local_results_path = paste0(local_base_path, "/", results_dir, "/seg/", seq_type, "--projection/")
   }else{
-    results_path = paste0(base_path, "/", results_dir, "/", seq_type, "--", build, "/")
+    results_path = paste0(base_path, "/", results_dir, "/", seq_type, "--projection/")
+    local_results_path = paste0(local_base_path, "/", results_dir, "/", seq_type, "--projection/")
   }
-  #path may contain either directories or files named after the sample pair
-
-  dir_listing = dir(results_path, pattern = "--")
-  #start a data frame for tidy collation of details
-  dir_df = tibble(short_path = dir_listing) %>%
-    mutate(sample = strsplit(short_path, "--"))
-
-  unnested_df = dir_df %>%
-    unnest_wider(sample, names_sep = "_") %>%
-    dplyr::rename(tumour_sample_id = sample_1, normal_sample_id = sample_2)
-  #find file with search_pattern per directory and handle any missing files. This is a bit slow.
-
-  #unnested_df = unnested_df %>%
-  #  head() %>%
-  #  mutate(output_file = dir(paste0(results_path, short_path), pattern = search_pattern))
-
+ 
   #This still fails when a matching file isn't found. No clue why this doesn't work
   if(tool == "sequenza"){
 

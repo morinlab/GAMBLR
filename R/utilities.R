@@ -1056,6 +1056,34 @@ collate_curated_sv_results = function(sample_table,seq_type_filter="genome"){
   return(sample_table)
 }
 
+#' Get wildcards for a sample_id/seq_type combination. 
+#'
+#' @param this_sample_id 
+#' @param seq_type 
+#'
+#' @return
+#' @export
+#'
+#' @examples
+get_sample_wildcards = function(this_sample_id,seq_type){
+  sample_meta = get_gambl_metadata(seq_type_filter = seq_type) %>% 
+    dplyr::filter(sample_id==this_sample_id)
+  this_patient_id = sample_meta$patient_id
+  if(sample_meta$pairing_status=="matched"){
+    normal_meta = get_gambl_metadata(seq_type_filter = seq_type,tissue_status_filter = c("normal","tumour")) %>% 
+      dplyr::filter(patient_id==this_patient_id) %>% dplyr::filter(tissue_status=="normal")
+      normal_id = normal_meta$sample_id
+      return(list(tumour_sample_id=this_sample_id,
+               normal_sample_id=normal_id,
+               seq_type = seq_type,
+               pairing_status=sample_meta$pairing_status,
+               genome_build=sample_meta$genome_build,
+               unix_group=sample_meta$unix_group))
+  }else{
+    message("This function only works with matched samples for now")
+    return()
+  }
+}
 
 #' Annotate mutations with their copy number information.
 #'
@@ -1084,13 +1112,16 @@ assign_cn_to_ssm = function(this_sample,
                             coding_only = FALSE,
                             from_flatfile = TRUE,
                             use_augmented_maf = TRUE,
-                            tool_name = "slms-3",
+                            tool_name = "battenberg",
                             maf_file,
                             seg_file,
                             seg_file_source = "ichorCNA",
                             assume_diploid = FALSE,
                             genes,
-                            include_silent = FALSE){
+                            include_silent = FALSE,
+                            ssh_session,
+                            seq_type="genome",
+                            projection="grch37"){
 
   database_name = config::get("database_name")
   project_base = config::get("project_base")
@@ -1101,11 +1132,15 @@ assign_cn_to_ssm = function(this_sample,
     maf_sample = fread_maf(maf_file) %>%
       dplyr::mutate(Chromosome = gsub("chr", "", Chromosome))
   }else if(from_flatfile){
-    #get the genome_build for this sample
-    bam_info = get_bams(this_sample)
-    genome_build = bam_info$genome_build
-    unix_group = bam_info$unix_group
-    maf_sample = get_ssm_by_sample(this_sample_id = this_sample, augmented = use_augmented_maf)
+    #get the genome_build and other wildcards for this sample
+    wildcards = get_sample_wildcards(this_sample,seq_type)
+    genome_build = wildcards$genome_build
+    unix_group = wildcards$unix_group
+    seq_type = wildcards$seq_type
+    tumour_sample_id = wildcards$tumour_sample_id
+    normal_sample_id = wildcards$normal_sample_id
+    pairing_status = wildcards$pairing_status
+    maf_sample = get_ssm_by_sample(this_sample_id = this_sample, augmented = use_augmented_maf, ssh_session = ssh_session)
 
   }else{
     #get all the segments for a sample and filter the small ones then assign CN value from the segment to all SSMs in that region
@@ -1146,18 +1181,31 @@ assign_cn_to_ssm = function(this_sample,
     return(list(maf = a_diploid))
 
   }else if(from_flatfile){
-    message(paste("fetching:", tool_name))
-    battenberg_files = fetch_output_files(build = genome_build, base_path = "gambl/battenberg_current", tool = "battenberg", search_pattern = ".igv.seg")
-    battenberg_file = dplyr::filter(battenberg_files, tumour_sample_id == this_sample) %>%
-      dplyr::pull(full_path) %>%
-      as.character()
-
-    message(paste("using flatfile:", battenberg_file))
-    if(length(battenberg_file) > 1){
-      print("WARNING: more than one SEG found for this sample. This shouldn't happen!")
-      battenberg_file = battenberg_file[1]
+    message(paste("trying to find output from:", tool_name))
+    project_base = config::get("project_base",config="default")
+    local_project_base = config::get("project_base")
+    
+    results_path_template = config::get("results_flatfiles")$cnv$battenberg
+    results_path = paste0(project_base, results_path_template)
+    local_results_path = paste0(local_project_base, results_path_template)
+    
+    ## NEED TO FIX THIS TO contain tumour/normal ID from metadata and pairing status
+    battenberg_file = glue::glue(results_path)
+    local_battenberg_file = glue::glue(local_results_path)
+    
+    
+    message(paste("looking for flatfile:", battenberg_file))
+    if(!missing(ssh_session)){
+      print(local_battenberg_file)
+      dirN = dirname(local_battenberg_file)
+    
+      suppressMessages(suppressWarnings(dir.create(dirN,recursive = T)))
+      if(!file.exists(local_battenberg_file)){
+      
+        scp_download(ssh_session,battenberg_file,dirN)
+      }
+      battenberg_file = local_battenberg_file
     }
-
     seg_sample = read_tsv(battenberg_file) %>%
       as.data.table() %>%
       dplyr::mutate(size = end - start) %>%
@@ -1235,17 +1283,18 @@ estimate_purity = function(in_maf,
                            show_plots = FALSE,
                            assume_diploid = FALSE,
                            coding_only = FALSE,
-                           genes){
+                           genes,
+                           ssh_session){
 
   # Merge the CN info to the corresponding MAF file, uses GAMBLR function
   if(missing(in_maf) & missing(in_seg)){
-    CN_new = assign_cn_to_ssm(this_sample = sample_id, coding_only = coding_only, assume_diploid = assume_diploid, genes = genes,seg_file_source = seg_file_source)$maf
+    CN_new = assign_cn_to_ssm(this_sample = sample_id, coding_only = coding_only, assume_diploid = assume_diploid, genes = genes,seg_file_source = seg_file_source,ssh_session=ssh_session)$maf
   }else if(!missing(in_seg)){
-    CN_new = assign_cn_to_ssm(maf_file = in_maf, seg_file = in_seg, seg_file_source = seg_file_source, coding_only = coding_only, genes = genes)$maf
+    CN_new = assign_cn_to_ssm(maf_file = in_maf, seg_file = in_seg, seg_file_source = seg_file_source, coding_only = coding_only, genes = genes,ssh_session=ssh_session)$maf
   }else{
     # If no seg file was provided and assume_diploid paramtere is set to true,
     if(assume_diploid){
-      CN_new = assign_cn_to_ssm(maf_file = in_maf, assume_diploid = TRUE, coding_only = coding_only, genes = genes)$maf
+      CN_new = assign_cn_to_ssm(maf_file = in_maf, assume_diploid = TRUE, coding_only = coding_only, genes = genes,ssh_session=ssh_session)$maf
     }
   }
   # Change any homozygous deletions (CN = 0) to 1 for calculation purposes
@@ -1963,9 +2012,10 @@ get_gambl_colours = function(classification = "all",
 #' bam_details = get_bams(sample=this_sv[1,"tumour_sample_id"])
 #'
 get_bams = function(sample,
-                    patient){
+                    patient
+                    ){
 
-  meta = get_gambl_metadata(tissue_status_filter = c("tumour", "normal"))
+  meta = get_gambl_metadata(tissue_status_filter = c("tumour", "normal"),seq_type_filter="genome")
   meta_mrna = get_gambl_metadata(seq_type_filter = "mrna")
   #get all samples for this patient
   if(missing(patient)){
@@ -1996,7 +2046,11 @@ get_bams = function(sample,
   unix_group = dplyr::filter(meta_patient, seq_type == "genome" & tissue_status == "tumour") %>%
     dplyr::pull(unix_group) %>%
     unique()
-
+  
+  bam_details$pairing_status = dplyr::filter(meta_patient, tissue_status == "tumour") %>%
+    dplyr::pull(pairing_status) %>%
+    unique()
+  
   bam_details$unix_group = unix_group
   if(length(normal_genome_bams)){
     bam_details$normal_genome_bams = normal_genome_bams
