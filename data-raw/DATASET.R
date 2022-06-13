@@ -92,7 +92,6 @@ chromosome_arms_hg38 = system.file("extdata","chromosome_arms_hg38.tsv",package=
   read.table(sep="\t",header=1)
 usethis::use_data(chromosome_arms_hg38, overwrite = TRUE)
 
-
 lymphgen_entrez = system.file("extdata","lymphgen_genes_entrez.txt",package="GAMBLR") %>%
   read_tsv()
 
@@ -140,3 +139,10 @@ usethis::use_data(lymphoma_genes, overwrite = TRUE)
 
 reddy_only = reddy_genes[which(!reddy_genes$hgnc_symbol %in% lymphoma_genes$hgnc_symbol),"hgnc_symbol"]
 
+# Example SSM data from Grande et. al, 2019
+grande_maf = system.file("extdata", "blood8871418-suppl2-ssm.csv", package = "GAMBLR") %>%
+  read_tsv(.) %>%
+  as.data.frame
+grande_maf = grande_maf[!colnames(grande_maf) %in% c("tumor_biospecimen_id","normal_biospecimen_id")]
+
+usethis::use_data(grande_maf, overwrite = TRUE)

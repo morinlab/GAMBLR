@@ -486,6 +486,17 @@ get_gambl_metadata = function(seq_type_filter = "genome",
 
   all_meta = unique(all_meta) #something in the ICGC code is causing this. Need to figure out what #should this be posted as an issue on Github?
   if(!missing(case_set)){
+    # This functionality is meant to eventually replace the hard-coded case sets
+    case_set_path = config::get("sample_sets")$default
+    full_case_set_path =  paste0(config::get("repo_base"), case_set_path)
+    if (file.exists(full_case_set_path)) {
+      full_case_set = suppressMessages(read_tsv(full_case_set_path))
+    } else {
+      message(paste("Warning: case set is requested, but the case set file", full_case_set_path, "is not found."))
+      message("Defaulting to pre-defined case sets")
+    }
+
+    # pre-defined case sets
     if(case_set == "MCL"){
       all_meta = all_meta %>%
         dplyr::filter(consensus_pathology %in% c("MCL"))
@@ -644,6 +655,22 @@ get_gambl_metadata = function(seq_type_filter = "genome",
       #get all GAMBL but remove FFPE benchmarking cases and ctDNA
       all_meta = all_meta %>%
       dplyr::filter(!cohort %in% c("FFPE_Benchmarking", "DLBCL_ctDNA"))
+    }else if(case_set %in% colnames(full_case_set)) {
+      # ensure consistent column naming
+      full_case_set =
+        full_case_set %>% rename_at(vars(matches(
+          "sample_id", ignore.case = TRUE
+        )),
+        ~ "Tumor_Sample_Barcode")
+
+      # get case set as defined in the file
+      this_subset_samples =
+        full_case_set %>%
+        dplyr::filter(!!sym(case_set) == 1) %>%
+        pull(Tumor_Sample_Barcode)
+
+      all_meta = all_meta %>%
+        dplyr::filter(sample_id %in% this_subset_samples)
 
     }else{
       message(paste("case set", case_set, "not available"))
