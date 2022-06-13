@@ -93,9 +93,9 @@ chromosome_arms_hg38 = system.file("extdata","chromosome_arms_hg38.tsv",package=
 usethis::use_data(chromosome_arms_hg38, overwrite = TRUE)
 
 # Example SSM data from Grande et. al, 2019
-example_ssm = system.file("extdata", "blood8871418-suppl2-ssm.csv", package = "GAMBLR") %>%
+grande_maf = system.file("extdata", "blood8871418-suppl2-ssm.csv", package = "GAMBLR") %>%
   read_tsv(.) %>%
   as.data.frame
-example_ssm = example_ssm[!colnames(example_ssm) %in% c("tumor_biospecimen_id","normal_biospecimen_id")]
+grande_maf = grande_maf[!colnames(grande_maf) %in% c("tumor_biospecimen_id","normal_biospecimen_id")]
 
-usethis::use_data(example_ssm, overwrite = TRUE)
+usethis::use_data(grande_maf, overwrite = TRUE)
