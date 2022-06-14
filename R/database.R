@@ -69,13 +69,13 @@ get_ssm_by_patients = function(these_patient_ids,
 
   these_sample_ids = pull(these_samples_metadata, sample_id)
   return(get_ssm_by_samples(these_sample_ids=these_sample_ids,
-                            these_samples_metadata= these_samples_metadata, 
-                            tool_name=tool_name, 
-                            projection=projection, 
-                            seq_type=seq_type, 
-                            flavour=flavour, 
-                            min_read_support=min_read_support, 
-                            subset_from_merge=subset_from_merge, 
+                            these_samples_metadata= these_samples_metadata,
+                            tool_name=tool_name,
+                            projection=projection,
+                            seq_type=seq_type,
+                            flavour=flavour,
+                            min_read_support=min_read_support,
+                            subset_from_merge=subset_from_merge,
                             augmented=augmented,
                             ssh_session=ssh_session))
 }
@@ -96,7 +96,6 @@ get_ssm_by_patients = function(these_patient_ids,
 #'
 #' @return data frame in MAF format.
 #' @export
-#' @import ssh
 #'
 #' @examples
 #' merged_maf_force_unmatched = get_ssm_by_samples(these_sample_ids=c("HTMCP-01-06-00485-01A-01D","14-35472_tumorA","14-35472_tumorB"))
@@ -197,7 +196,7 @@ get_ssm_by_samples = function(these_sample_ids,
 #' @param flavour Currently this function only supports one flavour option but this feature is meant for eventual compatability with additional variant calling parameters/versions
 #' @param min_read_support Only returns variants with at least this many reads in t_alt_count (for cleaning up augmented MAFs)
 #' @param verbose Enable for debugging/noisier output
-#' @param ssh_session BETA feature! pass active ssh session object. 
+#' @param ssh_session BETA feature! pass active ssh session object.
 #' If specified, the function will assume the user is not on the network and will temporarily copy the file locally.
 #'
 #' @return data frame in MAF format.
@@ -281,7 +280,7 @@ get_ssm_by_sample = function(this_sample_id,
         message("local home:",local_aug_maf_path)
       }
       dirN = dirname(local_aug_maf_path)
-      
+
       suppressMessages(suppressWarnings(dir.create(dirN,recursive = T)))
       if(!file.exists(local_aug_maf_path)){
 
@@ -295,7 +294,7 @@ get_ssm_by_sample = function(this_sample_id,
         message("local home:",full_maf_path,local_full_maf_path)
       }
       dirN = dirname(local_full_maf_path)
-      
+
       suppressMessages(suppressWarnings(dir.create(dirN,recursive = T)))
       if(!file.exists(local_full_maf_path)){
 
@@ -1353,9 +1352,9 @@ get_cn_segments = function(chromosome = "",
   #This isn't yet standardized in the db so it's just a workaround "for now".
   if(from_flatfile){
     base_dir = config::get(config="default")$project_base
-    
+
     unmatched_path = config::get()$results_directories$controlfreec
-    
+
     #separated by which genome the sample was aligned to
     unmatched_hg38_path = paste0(unmatched_path, "from--genome--hg38/")
     unmatched_grch37_path = paste0(unmatched_path, "from--genome--grch37/")
