@@ -29,7 +29,7 @@ get_ssm_by_patients(
 
 \item{projection}{Obtain variants projected to this reference (one of grch37 or hg38)}
 
-\item{flavour}{Currently this function only supports one flavour option but this feature is meant for eventual compatability with additional variant calling parameters/versions}
+\item{flavour}{Currently this function only supports one flavour option but this feature is meant for eventual compatibility with additional variant calling parameters/versions}
 
 \item{min_read_support}{Only returns variants with at least this many reads in t_alt_count (for cleaning up augmented MAFs)}
 
@@ -37,7 +37,7 @@ get_ssm_by_patients(
 
 \item{maf_cols}{if basic_columns is set to FALSE, the user can specify what columns to be returned within the MAF. This parameter can either be a list of indexes (integer) or a list of characters (matching columns in MAF).}
 
-\item{return_cols}{If set to TRUE, a vector with all avaialble column names will be returned. Default is FALSE.}
+\item{return_cols}{If set to TRUE, a vector with all available column names will be returned. Default is FALSE.}
 
 \item{subset_from_merge}{Instead of merging individual MAFs, the data will be subset from a pre-merged MAF of samples with the specified seq_type}
 }
@@ -50,5 +50,7 @@ and combine or subset from a merged MAF (wraps get_ssm_by_samples)
 See get_ssm_by_samples for more information
 }
 \examples{
+patients = c("00-14595", "00-15201", "01-12047")
+patients_ssm = get_ssm_by_patients(these_patient_ids = patients, seq_type = "genome", min_read_support = 3, basic_columns = TRUE, subset_from_merge = FALSE)
 
 }
