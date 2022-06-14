@@ -3,14 +3,20 @@
 # It also requires an RSA key that is passphrase-protected. Other key types don't seem to work.
 # You can create one and add it to your authorized_keys file if your current key is not passphase-protected
 
+envvars:
+    "GSC_USERNAME",
+    "GSC_PASSPHRASE",
+    "GSC_KEY"
+
+
 hostname = 'gphost08.bcgsc.ca'
 myuser = os.environ["GSC_USERNAME"] #set the environment variable GSC_USERNAME with your GSC username
 mypassphrase = os.environ["GSC_PASSPHRASE"] #set the environment variable GSC_PASSPHRASE with the passphrase for your rsa key
-mySSHK = os.environ["GSC_KEY"] #  set  the environment variable GSC_KEY to the path of your RSA private key 
+mySSHK = os.environ["GSC_KEY"] #  set  the environment variable GSC_KEY to the path of your RSA private key
 from snakemake.remote.SFTP import RemoteProvider
 SFTP = RemoteProvider(username=myuser,private_key_pass=mypassphrase,private_key=mySSHK)
 
-configfile: "gambl/config.yml" #UPDATE: specify the full path to the GAMBLR config.yml or make a symlink so this points to it
+configfile: "config.yml" #UPDATE: specify the full path to the GAMBLR config.yml or make a symlink so this points to it
 
 
 project_base = config["default"]["project_base"]
@@ -34,7 +40,7 @@ projections = config["default"]["projections"].split(",")
 
 
 rule all:
-    input: 
+    input:
         deblacklisted = expand(db_maf,seq_type=seq_types,projection=projections),
         augmented = expand(aug_maf,seq_type=seq_types,projection=projections),
         combined_cnv = expand(cnv_combined,seq_type=['genome'],projection=projections),
@@ -52,7 +58,7 @@ rule get_mafs:
     run:
         shell("cp {input.db} {output.deblacklisted}")
         shell("cp {input.aug} {output.augmented}")
-        
+
 rule get_resources:
     input:
         SFTP.remote(hostname + project_base + blacklist)
