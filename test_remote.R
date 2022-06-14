@@ -68,7 +68,9 @@ all_seg = get_sample_cn_segments(sample_list = all_meta$sample_id,multiple_sampl
 
 # Test remote functionality over ssh
 
-session = GAMBLR::get_ssh_session()
+session = GAMBLR::get_ssh_session() # If your local machine username doesn't
+# match your GSC username, you need to add "<your_username>@gphost01.bcgsc.ca"
+# as the only argument to this function.
 test_ssm = get_ssm_by_samples(these_sample_ids = c("14-24534_tumorA","14-24534_tumorB"),
                               ssh_session = session,subset_from_merge = F)
 
