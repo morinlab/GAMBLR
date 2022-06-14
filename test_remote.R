@@ -2,6 +2,7 @@
 # in your config.yml file set repo_base under the remote config (at the top) to point to this path also
 library(GAMBLR)
 library(tidyverse)
+library(ssh)
 #skip this next line if you are running on the GSC network
 Sys.setenv(R_CONFIG_ACTIVE= "remote")
 
