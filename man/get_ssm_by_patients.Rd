@@ -18,6 +18,7 @@ get_ssm_by_patients(
   maf_cols = NULL,
   return_cols = FALSE,
   subset_from_merge = TRUE,
+  augmented = TRUE,
   ssh_session
 )
 }
