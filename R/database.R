@@ -255,7 +255,6 @@ get_ssm_by_sample = function(this_sample_id,
                              maf_cols = NULL,
                              return_cols = FALSE,
                              verbose = FALSE,
-                             verbose = FALSE,
                              ssh_session){
 
   #figure out which unix_group this sample belongs to
