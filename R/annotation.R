@@ -46,11 +46,11 @@ annotate_ssm_blacklist = function(mutations_df,
   if(missing(project_base)){
     project_base = config::get("project_base")
   }
-  blacklist_files = glue(blacklist_template)
+  blacklist_files = glue::glue(blacklist_template)
   blacklist_list = list()
   for(b in blacklist_files){
     full_path = paste0(project_base,b)
-    lifted_blacklist = read_tsv(full_path, col_names = c("chrpos", "blacklist_count"), show_col_types = FALSE)
+    lifted_blacklist = read_tsv(full_path, col_names = c("chrpos", "blacklist_count"),col_types="ci")
     lifted_blacklist = lifted_blacklist %>%
       separate(chrpos, into = c("Chromosome", "Start_Position"), sep = ":")
 
@@ -283,7 +283,7 @@ annotate_sv = function(sv_data,
   colnames(bedpe1) = c("chrom", "start", "end", "tumour_sample_id", "score", "strand1")
   colnames(bedpe2) = c("chrom", "start", "end", "tumour_sample_id", "score", "strand2")
   suppressWarnings({
-    if(grepl("chr", bedpe1$chrom)){
+    if(any(grepl("chr", bedpe1$chrom))){
       bedpe1 = dplyr::mutate(bedpe1, chrom = str_replace(chrom, "chr", ""))
       bedpe2 = dplyr::mutate(bedpe2, chrom = str_replace(chrom, "chr", ""))
     }

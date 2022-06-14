@@ -1,4 +1,12 @@
 
+# global set of aliases for finding specific sets of colours
+colour_aliases = list("COO_consensus" = "coo", "COO" = "coo", "DHITsig_consensus" = "coo",
+                      "pathology" = "pathology", "analysis_cohort" = "pathology", "group" = "pathology",
+                      "FL_group" = "FL", "lymphgen" = "lymphgen", "lymphgen_with_cnv" = "lymphgen",
+                      "bcl2_ba" = "pos_neg", "BCL2_status" = "pos_neg", "myc_ba" = "pos_neg",
+                      "bcl6_ba" = "pos_neg", "manta_BCL2_sv" = "pos_neg", "manual_BCL2_sv" = "pos_neg", "manta_MYC_sv" = "pos_neg")
+
+
 #' Plot a rainfall plot for one sample. This function takes in MAF data frame, or path to custom MAF file.
 #' If non are specified, the SSM will be obtained though GAMBLR directly.
 #'
@@ -819,14 +827,8 @@ map_metadata_to_colours = function(metadataColumns,
   colours = list()
   colvec = c()
 
-  #aliases for finding specific sets of colours
-  aliases = list("COO_consensus" = "coo", "COO" = "coo", "DHITsig_consensus" = "coo",
-                 "pathology" = "pathology", "analysis_cohort" = "pathology", "group" = "pathology",
-                 "FL_group" = "FL", "lymphgen" = "lymphgen", "lymphgen_with_cnv" = "lymphgen",
-                 "bcl2_ba" = "pos_neg", "BCL2_status" = "pos_neg", "myc_ba" = "pos_neg",
-                 "bcl6_ba" = "pos_neg", "manta_BCL2_sv" = "pos_neg", "manual_BCL2_sv" = "pos_neg", "manta_MYC_sv" = "pos_neg")
 
-  aliases = c(aliases, column_alias)
+  aliases = c(colour_aliases, column_alias)
   for(column in metadataColumns){
     this_value = these_samples_metadata[[column]]
   options = this_value

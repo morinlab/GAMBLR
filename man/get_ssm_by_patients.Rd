@@ -17,7 +17,8 @@ get_ssm_by_patients(
   basic_columns = TRUE,
   maf_cols = NULL,
   return_cols = FALSE,
-  subset_from_merge = TRUE
+  subset_from_merge = TRUE,
+  ssh_session
 )
 }
 \arguments{

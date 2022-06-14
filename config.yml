@@ -10,8 +10,14 @@ default:
     results_staging:
         manta: "manta_current/level_3/01-gamblr_preprocess/"
     results_merged:
+        tidy_expression_path: "icgc_dart/DESeq2-0.0_salmon-1.0/mrna--gambl-icgc-all/vst-matrix-Hugo_Symbol_tidy.tsv.gz"
         tidy_expression_file: "/projects/rmorin/projects/gambl-repos/gambl-rmorin/results/icgc_dart/DESeq2-0.0_salmon-1.0/mrna--gambl-icgc-all/vst-matrix-Hugo_Symbol_tidy.tsv"
         ex_matrix_file: "/projects/rmorin/projects/gambl-repos/gambl-rmorin/results/icgc_dart/DESeq2-0.0_salmon-1.0/mrna--gambl-icgc-all/vst-matrix.tsv"
+    results_versioned:
+        oncodriveclustl:
+            FL_DLBCL:
+                clusters: "versioned_results/oncodriveclustl-0.0_FL--DLBCL_clusters_results.tsv"
+                elements: "versioned_results/oncodriveclustl-0.0_FL--DLBCL_elements_results.tsv"
     resources:
         whitelist:
             template: all_the_things/slms_3-1.0_vcf2maf-1.3/level_3/{projection}_whitelist.txt
@@ -28,6 +34,7 @@ default:
 #results from every combination of each of these will be included in the database
     unix_groups: "gambl,icgc_dart"
     genome_builds: "grch37,hg38,hs37d5"
+    projections: "grch37,hg38"
 #the genome build to use for all coordinate-based results in the database
     canonical_genome_build: "grch37"
     analyses:
@@ -53,13 +60,17 @@ default:
         cnv:
             gambl:
                 unmatched: "controlfreec_liftover_current/99-outputs/"
+            template: "{unix_group}/cnv_master-1.0/99-outputs/{seq_type}--projection/all--{projection}.seg"
+            battenberg: "{unix_group}/battenberg_current/99-outputs/seg/{seq_type}--projection/{tumour_sample_id}--{normal_sample_id}--{pairing_status}.battenberg.{projection}.seg"
         cnv_combined:
             gambl: "gambl/cnv_master-1.0/99-outputs/{seq_type}--projection/all--{projection}.seg"
             icgc_dart: "all_the_things/cnv_master-1.0/merges/{seq_type}--{projection}.seg"
+            template: "all_the_things/cnv_master-1.0/merges/{seq_type}--{projection}.seg"
         sv: "icgc_dart/cbioportal-1.0/01-filtered-manta/genome-grch37/all_merged_sv_info.tsv"
         sv_combined:
             gambl: "gambl/svar_master-1.0/merges/gridss_manta.genome--grch37.bedpe"
             icgc_dart: "all_the_things/svar_master-1.0/merges/gridss_manta.genome--grch37.bedpe"
+            template: "all_the_things/svar_master-1.0/merges/gridss_manta.genome--{projection}.bedpe"
         ssm:
             template:
                 clustered:
@@ -100,6 +111,9 @@ default:
         samples: "data/metadata/gambl_samples_available.tsv"
         outcomes: "data/metadata/gambl_all_outcomes.tsv"
         derived: "data/metadata/gambl_{seq_type_filter}_results.tsv"
+
+    sample_sets:
+        default: "data/metadata/level3_samples_subsets.tsv"
 
     unmatched_normal_ids:
         gambl:

@@ -9,13 +9,16 @@ assign_cn_to_ssm(
   coding_only = FALSE,
   from_flatfile = TRUE,
   use_augmented_maf = TRUE,
-  tool_name = "slms-3",
+  tool_name = "battenberg",
   maf_file,
   seg_file,
-  seg_file_source = "ichorCNA",
+  seg_file_source = "battenberg",
   assume_diploid = FALSE,
   genes,
-  include_silent = FALSE
+  include_silent = FALSE,
+  ssh_session,
+  seq_type = "genome",
+  projection = "grch37"
 )
 }
 \arguments{

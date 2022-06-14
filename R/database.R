@@ -13,7 +13,8 @@ cnames = c("CHROM_A", "START_A", "END_A", "CHROM_B", "START_B", "END_B", "NAME",
 #' excluded_samp = get_excluded_samples()
 #'
 get_excluded_samples = function(tool_name = "slms-3"){
-  excluded_df = read_tsv("/projects/rmorin/projects/gambl-repos/gambl-rmorin/config/exclude.tsv", show_col_types = FALSE)
+  base = config::get("repo_base")
+  excluded_df = read_tsv(paste0(base,"config/exclude.tsv"))
   excluded_samples = dplyr::filter(excluded_df, pipeline_exclude == tool_name) %>%
     pull(sample_id)
 
@@ -43,6 +44,7 @@ get_excluded_samples = function(tool_name = "slms-3"){
 #' patients_ssm = get_ssm_by_patients(these_patient_ids = patients, seq_type = "genome", min_read_support = 3, basic_columns = TRUE, subset_from_merge = FALSE)
 #'
 get_ssm_by_patients = function(these_patient_ids,
+<<<<<<< HEAD
                                these_samples_metadata,
                                tool_name = "slms-3",
                                projection = "grch37",
@@ -53,6 +55,16 @@ get_ssm_by_patients = function(these_patient_ids,
                                maf_cols = NULL,
                                return_cols = FALSE,
                                subset_from_merge = TRUE){
+=======
+                              these_samples_metadata,
+                              tool_name = "slms-3",
+                              projection = "grch37",
+                              seq_type = "genome",
+                              flavour = "clustered",
+                              min_read_support = 3,
+                              subset_from_merge = TRUE,
+                              ssh_session){
+>>>>>>> rmorin-dev
   if(!subset_from_merge){
     message("WARNING: on-the-fly merges can be extremely slow and consume a lot of memory. Use at your own risk. ")
   }
@@ -68,16 +80,30 @@ get_ssm_by_patients = function(these_patient_ids,
       dplyr::filter(patient_id %in% these_patient_ids) %>%
       dplyr::filter(!sample_id %in% to_exclude)
   }
-  these_samples_metadata = group_by(these_samples_metadata, patient_id) %>%
-    slice_head() %>%
-    ungroup()
+  # Removed because this drops all but one sample for the patient!
+  #these_samples_metadata = group_by(these_samples_metadata, patient_id) %>%
+  #  slice_head() %>%
+  #  ungroup()
 
   these_sample_ids = pull(these_samples_metadata, sample_id)
+<<<<<<< HEAD
 
   return(get_ssm_by_samples(these_sample_ids, these_samples_metadata = these_samples_metadata, tool_name = tool_name,
                             projection = projection, seq_type = seq_type, flavour = flavour,
                             min_read_support = min_read_support, subset_from_merge = subset_from_merge,
                             basic_columns = basic_columns, maf_cols = maf_cols, return_cols = return_cols))
+=======
+  return(get_ssm_by_samples(these_sample_ids=these_sample_ids,
+                            these_samples_metadata= these_samples_metadata,
+                            tool_name=tool_name,
+                            projection=projection,
+                            seq_type=seq_type,
+                            flavour=flavour,
+                            min_read_support=min_read_support,
+                            subset_from_merge=subset_from_merge,
+                            augmented=augmented,
+                            ssh_session=ssh_session))
+>>>>>>> rmorin-dev
 }
 
 
@@ -95,6 +121,7 @@ get_ssm_by_patients = function(these_patient_ids,
 #' @param maf_cols if basic_columns is set to FALSE, the suer can specify what columns to be returned within the MAF. This parameter can either be a list of indexes (integer) or a list of characters.
 #' @param return_cols If set to TRUE, a vector with all avaialble column names will be returned. Default is FALSE.
 #' @param subset_from_merge Instead of merging individual MAFs, the data will be subset from a pre-merged MAF of samples with the specified seq_type
+#' @param BETA optional argument to supply active ssh session connection for remote transfers
 #'
 #' @return data frame in MAF format.
 #' @export
@@ -114,7 +141,8 @@ get_ssm_by_samples = function(these_sample_ids,
                               maf_cols = NULL,
                               return_cols = FALSE,
                               subset_from_merge = TRUE,
-                              augmented = TRUE){
+                              augmented = TRUE,
+                              ssh_session){
   if(!subset_from_merge){
     message("WARNING: on-the-fly merges can be extremely slow and consume a lot of memory. Use at your own risk. ")
   }
@@ -180,9 +208,14 @@ get_ssm_by_samples = function(these_sample_ids,
           augmented = augmented,
           flavour = flavour,
           min_read_support = min_read_support,
+<<<<<<< HEAD
           basic_columns = basic_columns,
           maf_cols = maf_cols,
           return_cols = return_cols,
+=======
+          verbose=FALSE,
+          ssh_session = ssh_session
+>>>>>>> rmorin-dev
         )
         maf_df_list[[this_sample]]=maf_df
       }
@@ -217,6 +250,8 @@ get_ssm_by_samples = function(these_sample_ids,
 #' @param maf_cols if basic_columns is set to FALSE, the suer can specify what columns to be returned within the MAF. This parameter can either be a list of indexes (integer) or a list of characters.
 #' @param return_cols If set to TRUE, a vector with all avaialble column names will be returned. Default is FALSE.
 #' @param verbose Enable for debugging/noisier output
+#' @param ssh_session BETA feature! pass active ssh session object.
+#' If specified, the function will assume the user is not on the network and will temporarily copy the file locally.
 #'
 #' @return data frame in MAF format.
 #' @export
@@ -232,10 +267,15 @@ get_ssm_by_sample = function(this_sample_id,
                              augmented = TRUE,
                              flavour = "clustered",
                              min_read_support = 3,
+<<<<<<< HEAD
                              basic_columns = TRUE,
                              maf_cols = NULL,
                              return_cols = FALSE,
                              verbose = FALSE){
+=======
+                             verbose = FALSE,
+                             ssh_session){
+>>>>>>> rmorin-dev
 
   #figure out which unix_group this sample belongs to
   if(missing(these_samples_metadata)){
@@ -273,18 +313,57 @@ get_ssm_by_sample = function(this_sample_id,
     return()
   }else if(flavour == "clustered"){
     vcf_base_name = "slms-3.final"
-    path_template = config::get("results_flatfiles")$ssm$template$clustered$deblacklisted
+    path_template = config::get("results_flatfiles",config="default")$ssm$template$clustered$deblacklisted
     path_complete = unname(unlist(glue::glue(path_template)))
-    full_maf_path = paste0(config::get("project_base"), path_complete)
+    full_maf_path = paste0(config::get("project_base",config="default"), path_complete)
+    local_full_maf_path = paste0(config::get("project_base"), path_complete)
     if(augmented){
-      path_template = config::get("results_flatfiles")$ssm$template$clustered$augmented
+      path_template = config::get("results_flatfiles",config="default")$ssm$template$clustered$augmented
       path_complete = unname(unlist(glue::glue(path_template)))
-      aug_maf_path = paste0(config::get("project_base"), path_complete)
+      aug_maf_path = paste0(config::get("project_base",config="default"), path_complete)
+      local_aug_maf_path = paste0(config::get("project_base"), path_complete)
     }
   }else{
     warning("Currently the only flavour available to this function is 'clustered'")
   }
-  if(augmented && file.exists(aug_maf_path)){
+  if(!missing(ssh_session)){
+    #check if file exists
+    status = ssh_exec_internal(ssh_session,command=paste("stat",aug_maf_path),error=F)$status
+    aug_maf_path = paste0(aug_maf_path,".gz")
+    local_aug_maf_path = paste0(local_aug_maf_path,".gz")
+    full_maf_path = paste0(full_maf_path,".gz")
+    local_full_maf_path = paste0(local_full_maf_path,".gz")
+    # first check if we already have a local copy
+    # Load data from local copy or get a local copy from the remote path first
+    if(status==0){
+      if(verbose){
+        message("found:",aug_maf_path)
+        message("local home:",local_aug_maf_path)
+      }
+      dirN = dirname(local_aug_maf_path)
+
+      suppressMessages(suppressWarnings(dir.create(dirN,recursive = T)))
+      if(!file.exists(local_aug_maf_path)){
+
+        scp_download(ssh_session,aug_maf_path,dirN)
+      }
+      sample_ssm = fread_maf(local_aug_maf_path) %>%
+      dplyr::filter(t_alt_count >= min_read_support)
+    }else{
+      if(verbose){
+        message("will use",full_maf_path)
+        message("local home:",full_maf_path,local_full_maf_path)
+      }
+      dirN = dirname(local_full_maf_path)
+
+      suppressMessages(suppressWarnings(dir.create(dirN,recursive = T)))
+      if(!file.exists(local_full_maf_path)){
+
+        scp_download(ssh_session,full_maf_path,dirN)
+      }
+      sample_ssm = fread_maf(local_full_maf_path)
+    }
+  }else if(augmented && file.exists(aug_maf_path)){
     full_maf_path = aug_maf_path
     sample_ssm = fread_maf(full_maf_path)
     if(min_read_support){
@@ -483,6 +562,17 @@ get_gambl_metadata = function(seq_type_filter = "genome",
 
   all_meta = unique(all_meta) #something in the ICGC code is causing this. Need to figure out what #should this be posted as an issue on Github?
   if(!missing(case_set)){
+    # This functionality is meant to eventually replace the hard-coded case sets
+    case_set_path = config::get("sample_sets")$default
+    full_case_set_path =  paste0(config::get("repo_base"), case_set_path)
+    if (file.exists(full_case_set_path)) {
+      full_case_set = suppressMessages(read_tsv(full_case_set_path))
+    } else {
+      message(paste("Warning: case set is requested, but the case set file", full_case_set_path, "is not found."))
+      message("Defaulting to pre-defined case sets")
+    }
+
+    # pre-defined case sets
     if(case_set == "MCL"){
       all_meta = all_meta %>%
         dplyr::filter(consensus_pathology %in% c("MCL"))
@@ -641,6 +731,22 @@ get_gambl_metadata = function(seq_type_filter = "genome",
       #get all GAMBL but remove FFPE benchmarking cases and ctDNA
       all_meta = all_meta %>%
       dplyr::filter(!cohort %in% c("FFPE_Benchmarking", "DLBCL_ctDNA"))
+    }else if(case_set %in% colnames(full_case_set)) {
+      # ensure consistent column naming
+      full_case_set =
+        full_case_set %>% rename_at(vars(matches(
+          "sample_id", ignore.case = TRUE
+        )),
+        ~ "Tumor_Sample_Barcode")
+
+      # get case set as defined in the file
+      this_subset_samples =
+        full_case_set %>%
+        dplyr::filter(!!sym(case_set) == 1) %>%
+        pull(Tumor_Sample_Barcode)
+
+      all_meta = all_meta %>%
+        dplyr::filter(sample_id %in% this_subset_samples)
 
     }else{
       message(paste("case set", case_set, "not available"))
@@ -1189,8 +1295,12 @@ get_sample_cn_segments = function(this_sample_id,
     seq_type = "genome"
     cnv_flatfile_template = config::get("results_flatfiles")$cnv_combined$icgc_dart
     cnv_path =  glue::glue(cnv_flatfile_template)
-    full_cnv_path =  paste0(config::get("project_base"), cnv_path)
-
+    full_cnv_path =  paste0(config::get("project_base",config="default"), cnv_path)
+    local_full_cnv_path =  paste0(config::get("project_base"), cnv_path)
+    if(file.exists(local_full_cnv_path)){
+      full_cnv_path = local_full_cnv_path
+      #use local file when available
+    }
     # check permissions to ICGC data
     permissions = file.access(full_cnv_path, 4)
     if (permissions == -1) {
@@ -1200,7 +1310,7 @@ get_sample_cn_segments = function(this_sample_id,
       full_cnv_path =  paste0(config::get("project_base"), cnv_path)
     }
 
-    all_segs = read_tsv(full_cnv_path, show_col_types = FALSE)
+    all_segs = read_tsv(full_cnv_path)
     if (!missing(this_sample_id) & !multiple_samples) {
       all_segs = dplyr::filter(all_segs, ID %in% this_sample_id)
     } else if (!missing(sample_list)) {
@@ -1295,7 +1405,8 @@ get_cn_segments = function(chromosome = "",
                            region,
                            with_chr_prefix = FALSE,
                            streamlined = FALSE,
-                           from_flatfile = FALSE){
+                           from_flatfile = FALSE,
+                           ssh_session){
 
   db = config::get("database_name")
   table_name = config::get("results_tables")$copy_number
@@ -1317,7 +1428,8 @@ get_cn_segments = function(chromosome = "",
   #chr prefix the query chromosome to match how it's stored in the table.
   #This isn't yet standardized in the db so it's just a workaround "for now".
   if(from_flatfile){
-    base_dir = config::get()$project_base
+    base_dir = config::get(config="default")$project_base
+
     unmatched_path = config::get()$results_directories$controlfreec
 
     #separated by which genome the sample was aligned to
@@ -1911,9 +2023,9 @@ get_gene_cn_and_expression = function(gene_symbol,
 #' @param hugo_symbols One or more gene symbols. Should match the values in a maf file.
 #' @param ensembl_gene_ids One or more ensembl gene IDs. Only one of hugo_symbols or ensembl_gene_ids may be used.
 #' @param join_with How to restrict cases for the join. Can be one of genome, mrna or "any"
-#' @param all_genes Set to TRUE to return full expression data frame without any subsetting.
+#' @param all_genes Set to TRUE to return full expression data frame without any subsetting. Avoid this if you don't want to use tons of RAM.
 #' @param expression_data Optional argument to use an already loaded expression data frame (prevent function to re-load full df from flat file or database)
-#' @param from_flatfile Set to TRUE to obtain mutations from a local flatfile instead of the database.
+#' @param from_flatfile Deprecated but left here for backwards compatibility.
 #'
 #' @return A list.
 #' @export
@@ -1946,7 +2058,7 @@ get_gene_expression = function(metadata,
         dplyr::select(sample_id)
 
       }else{
-      metadata = get_gambl_metadata(seq_type_filter = "any", only_available = FALSE)
+      metadata = get_gambl_metadata(seq_type_filter = c("genome","mrna"), only_available = FALSE)
       metadata = metadata %>%
         dplyr::select(sample_id, biopsy_id)
     }
@@ -1957,62 +2069,76 @@ get_gene_expression = function(metadata,
   }else if(!missing(hugo_symbols) & !missing(ensembl_gene_ids)){
     stop("ERROR: Both hugo_symbols and ensembl_gene_ids were provided. Please provide only one type of ID.")
   }
+  tidy_expression_file = config::get("results_merged")$tidy_expression_file
 
-  if(from_flatfile & missing(expression_data)){
-    tidy_expression_file = config::get("results_merged")$tidy_expression_file
-    tidy_expression_data = read_tsv(tidy_expression_file)
-  }
 
-  if(!from_flatfile & !missing(expression_data)){
+  if(!missing(expression_data)){
     tidy_expression_data = as.data.frame(expression_data)
-  }
+    if(!missing(hugo_symbols)){
+      #lazily filter on the fly to conserve RAM
+      wide_expression_data = tidy_expression_data %>%
+        dplyr::filter(Hugo_Symbol %in% hugo_symbols) %>%
+        dplyr::select(-ensembl_gene_id) %>%
+        group_by(mrna_sample_id,Hugo_Symbol) %>% #deal with non 1:1 mapping of Hugo to Ensembl
+        slice_head() %>%
+        as.data.frame() %>%
+        pivot_wider(names_from = Hugo_Symbol, values_from = expression)
+    }
+    if(!missing(ensembl_gene_ids)){
+      wide_expression_data = tidy_expression_data %>%
+        dplyr::filter(ensembl_gene_id %in% ensembl_gene_ids) %>%
+        dplyr::select(-Hugo_Symbol) %>%
+        as.data.frame() %>%
+        pivot_wider(names_from = ensembl_gene_id, values_from = expression)
+    }
+  }else{
+    #only ever load the full data frame when absolutely necessary
+    if(all_genes & missing(ensembl_gene_ids) & missing(hugo_symbols)){
+      tidy_expression_data = vroom::vroom(tidy_expression_file) %>%
+        as.data.frame()
+    }else{
+      if(!missing(hugo_symbols)){
+        #lazily filter on the fly to conserve RAM
+        wide_expression_data = vroom::vroom(tidy_expression_file) %>%
+          dplyr::filter(Hugo_Symbol %in% hugo_symbols) %>%
+          dplyr::select(-ensembl_gene_id) %>%
+          group_by(mrna_sample_id,Hugo_Symbol) %>% #deal with non 1:1 mapping of Hugo to Ensembl
+          slice_head() %>%
+          as.data.frame() %>%
+          pivot_wider(names_from = Hugo_Symbol, values_from = expression)
+      }
+      if(!missing(ensembl_gene_ids)){
+        wide_expression_data = vroom::vroom(tidy_expression_file) %>%
+          dplyr::filter(ensembl_gene_id %in% ensembl_gene_ids) %>%
+          dplyr::select(-Hugo_Symbol) %>%
+          as.data.frame() %>%
+          pivot_wider(names_from = ensembl_gene_id, values_from = expression)
 
-  if(!from_flatfile & missing(expression_data)){
-    con = DBI::dbConnect(RMariaDB::MariaDB(), dbname = database_name)
-    tidy_expression_data = tbl(con, "expression_vst_hg38")
-  }
+      }
 
-  if(all_genes & missing(ensembl_gene_ids) & missing(hugo_symbols)){
-    tidy_expression_data = tidy_expression_data %>%
-      as.data.frame()
-  }
-
-  if(!missing(hugo_symbols) & !all_genes){
-    tidy_expression_data = tidy_expression_data %>%
-      dplyr::filter(Hugo_Symbol %in% hugo_symbols) %>%
-      dplyr::select(-ensembl_gene_id) %>%
-      as.data.frame() %>%
-      pivot_wider(names_from = Hugo_Symbol, values_from = expression)
-  }
-
-  if(!missing(ensembl_gene_ids) & !all_genes){
-    tidy_expression_data = tidy_expression_data %>%
-      dplyr::filter(ensembl_gene_id %in% ensembl_gene_ids) %>%
-      dplyr::select(-Hugo_Symbol) %>%
-      as.data.frame() %>%
-      pivot_wider(names_from = ensembl_gene_id, values_from = expression)
+    }
   }
 
   if(join_with == "mrna" & missing(expression_data)){
-    expression_wider = dplyr::select(tidy_expression_data, -biopsy_id, -genome_sample_id)
+    expression_wider = dplyr::select(wide_expression_data, -biopsy_id, -genome_sample_id)
     expression_wider = left_join(metadata, expression_wider, by = c("sample_id" = "mrna_sample_id"))
 
     }else if(join_with == "genome" & missing(expression_data)){
-    expression_wider = dplyr::select(tidy_expression_data, -mrna_sample_id, -biopsy_id) %>% dplyr::filter(genome_sample_id != "NA")
+    expression_wider = dplyr::select(wide_expression_data, -mrna_sample_id, -biopsy_id) %>% dplyr::filter(genome_sample_id != "NA")
     expression_wider = left_join(metadata, expression_wider, by = c("sample_id" = "genome_sample_id"))
 
     }else if(join_with == "any" & missing(expression_data)){
-    expression_wider = dplyr::select(tidy_expression_data, -mrna_sample_id, -genome_sample_id)
+    expression_wider = dplyr::select(wide_expression_data, -mrna_sample_id, -genome_sample_id)
     expression_wider = left_join(metadata, expression_wider, by = c("biopsy_id" = "biopsy_id"))
 
     }else if(join_with == "mrna" & !missing(expression_data)){
-      expression_wider = tidy_expression_data
+      expression_wider = wide_expression_data
 
     }else if(join_with == "genome" & !missing(expression_data)){
-      expression_wider = tidy_expression_data
+      expression_wider = wide_expression_data
 
     }else if(join_with == "any" & !missing(expression_data)){
-      expression_wider = tidy_expression_data
+      expression_wider = wide_expression_data
   }
   return(expression_wider)
 }

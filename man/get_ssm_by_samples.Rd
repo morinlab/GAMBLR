@@ -18,7 +18,8 @@ get_ssm_by_samples(
   maf_cols = NULL,
   return_cols = FALSE,
   subset_from_merge = TRUE,
-  augmented = TRUE
+  augmented = TRUE,
+  ssh_session
 )
 }
 \arguments{
@@ -45,6 +46,8 @@ get_ssm_by_samples(
 \item{subset_from_merge}{Instead of merging individual MAFs, the data will be subset from a pre-merged MAF of samples with the specified seq_type}
 
 \item{augmented}{default: TRUE. Set to FALSE if you instead want the original MAF from each sample for multi-sample patients instead}
+
+\item{BETA}{optional argument to supply active ssh session connection for remote transfers}
 }
 \value{
 data frame in MAF format.

@@ -20,7 +20,8 @@ get_ssm_by_sample(
   basic_columns = TRUE,
   maf_cols = NULL,
   return_cols = FALSE,
-  verbose = FALSE
+  verbose = FALSE,
+  ssh_session
 )
 }
 \arguments{
@@ -47,6 +48,9 @@ get_ssm_by_sample(
 \item{return_cols}{If set to TRUE, a vector with all avaialble column names will be returned. Default is FALSE.}
 
 \item{verbose}{Enable for debugging/noisier output}
+
+\item{ssh_session}{BETA feature! pass active ssh session object.
+If specified, the function will assume the user is not on the network and will temporarily copy the file locally.}
 }
 \value{
 data frame in MAF format.
