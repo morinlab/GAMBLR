@@ -31,7 +31,7 @@ dim(collated)
 # all these should proceed without error
 coding_ssm = get_coding_ssm(these_samples_metadata = all_meta,seq_type = "genome")
 
-cap_ssm = get_coding_ssm(these_samples_metadata = cap_meta,seq_type = "capture",seq_type_priority="genome")
+cap_ssm = get_coding_ssm(these_samples_metadata = cap_meta,seq_type = "capture")
 
 cap_ssm_hg38 = get_coding_ssm(these_samples_metadata = cap_meta,seq_type = "capture",projection = "hg38")
 
@@ -48,6 +48,13 @@ all_ssm = bind_rows(coding_ssm,cap_ssm)
 
 
 blacklisted = GAMBLR:::annotate_ssm_blacklist(cap_ssm_hg38,seq_type = "capture",genome_build = "hg38")
+
+grande_gambl_ssm = dplyr::filter(coding_ssm,Tumor_Sample_Barcode %in% grande_maf$Tumor_Sample_Barcode)
+
+dim(grande_gambl_ssm)
+#[1] 5865   45
+dim(grande_maf)
+#[1] 12251   125
 
 #test SV functions
 svar_all = get_combined_sv(min_vaf = 0.1,projection = "grch37")
