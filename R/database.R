@@ -28,17 +28,19 @@ get_excluded_samples = function(tool_name = "slms-3"){
 #' @param these_samples_metadata Optional metadata table
 #' @param tool_name Only supports slms-3 currently
 #' @param projection Obtain variants projected to this reference (one of grch37 or hg38)
-#' @param flavour Currently this function only supports one flavour option but this feature is meant for eventual compatability with additional variant calling parameters/versions
+#' @param flavour Currently this function only supports one flavour option but this feature is meant for eventual compatibility with additional variant calling parameters/versions
 #' @param min_read_support Only returns variants with at least this many reads in t_alt_count (for cleaning up augmented MAFs)
 #' @param basic_columns Return first 43 columns of MAF rather than full details. Default is TRUE.
 #' @param maf_cols if basic_columns is set to FALSE, the user can specify what columns to be returned within the MAF. This parameter can either be a list of indexes (integer) or a list of characters (matching columns in MAF).
-#' @param return_cols If set to TRUE, a vector with all avaialble column names will be returned. Default is FALSE.
+#' @param return_cols If set to TRUE, a vector with all available column names will be returned. Default is FALSE.
 #' @param subset_from_merge Instead of merging individual MAFs, the data will be subset from a pre-merged MAF of samples with the specified seq_type
 #'
 #' @return
 #' @export
 #'
 #' @examples
+#' patients = c("00-14595", "00-15201", "01-12047")
+#' patients_ssm = get_ssm_by_patients(these_patient_ids = patients, seq_type = "genome", min_read_support = 3, basic_columns = TRUE, subset_from_merge = FALSE)
 #'
 get_ssm_by_patients = function(these_patient_ids,
                                these_samples_metadata,
@@ -71,7 +73,11 @@ get_ssm_by_patients = function(these_patient_ids,
     ungroup()
 
   these_sample_ids = pull(these_samples_metadata, sample_id)
-  return(get_ssm_by_samples(these_sample_ids, these_samples_metadata, tool_name, projection, seq_type, flavour, min_read_support, subset_from_merge, basic_columns, maf_cols, return_cols))
+
+  return(get_ssm_by_samples(these_sample_ids, these_samples_metadata = these_samples_metadata, tool_name = tool_name,
+                            projection = projection, seq_type = seq_type, flavour = flavour,
+                            min_read_support = min_read_support, subset_from_merge = subset_from_merge,
+                            basic_columns = basic_columns, maf_cols = maf_cols, return_cols = return_cols))
 }
 
 
@@ -766,10 +772,10 @@ add_icgc_metadata = function(incoming_metadata){
   #fix commas as decimals
   icgc_publ = mutate(icgc_publ, purity = str_replace(purity, ",", "."))
   icgc_publ = mutate(icgc_publ, sex = str_to_upper(sex))
-  
+
   icgc_raw_path = paste0(repo_base,"data/metadata/raw_metadata/ICGC_MALY_seq_md.tsv")
   icgc_raw = suppressMessages(read_tsv(icgc_raw_path))
-  
+
   icgc_raw = icgc_raw %>%
     dplyr::select(-compression, -bam_available, -read_length, -time_point, -unix_group, -ffpe_or_frozen, -link_name)  %>%
     dplyr::filter(tissue_status %in% c("tumor", "tumour"))
