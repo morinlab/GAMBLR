@@ -44,7 +44,6 @@ get_excluded_samples = function(tool_name = "slms-3"){
 #' patients_ssm = get_ssm_by_patients(these_patient_ids = patients, seq_type = "genome", min_read_support = 3, basic_columns = TRUE, subset_from_merge = FALSE)
 #'
 get_ssm_by_patients = function(these_patient_ids,
-<<<<<<< HEAD
                                these_samples_metadata,
                                tool_name = "slms-3",
                                projection = "grch37",
@@ -54,17 +53,9 @@ get_ssm_by_patients = function(these_patient_ids,
                                basic_columns = TRUE,
                                maf_cols = NULL,
                                return_cols = FALSE,
-                               subset_from_merge = TRUE){
-=======
-                              these_samples_metadata,
-                              tool_name = "slms-3",
-                              projection = "grch37",
-                              seq_type = "genome",
-                              flavour = "clustered",
-                              min_read_support = 3,
-                              subset_from_merge = TRUE,
-                              ssh_session){
->>>>>>> rmorin-dev
+                               subset_from_merge = TRUE,
+                               augmented = TRUE,
+                               ssh_session){
   if(!subset_from_merge){
     message("WARNING: on-the-fly merges can be extremely slow and consume a lot of memory. Use at your own risk. ")
   }
@@ -86,24 +77,20 @@ get_ssm_by_patients = function(these_patient_ids,
   #  ungroup()
 
   these_sample_ids = pull(these_samples_metadata, sample_id)
-<<<<<<< HEAD
 
-  return(get_ssm_by_samples(these_sample_ids, these_samples_metadata = these_samples_metadata, tool_name = tool_name,
-                            projection = projection, seq_type = seq_type, flavour = flavour,
-                            min_read_support = min_read_support, subset_from_merge = subset_from_merge,
-                            basic_columns = basic_columns, maf_cols = maf_cols, return_cols = return_cols))
-=======
-  return(get_ssm_by_samples(these_sample_ids=these_sample_ids,
-                            these_samples_metadata= these_samples_metadata,
-                            tool_name=tool_name,
-                            projection=projection,
-                            seq_type=seq_type,
-                            flavour=flavour,
-                            min_read_support=min_read_support,
-                            subset_from_merge=subset_from_merge,
-                            augmented=augmented,
-                            ssh_session=ssh_session))
->>>>>>> rmorin-dev
+  return(get_ssm_by_samples(these_sample_ids = these_sample_ids,
+                            these_samples_metadata = these_samples_metadata,
+                            tool_name = tool_name,
+                            projection = projection,
+                            seq_type = seq_type,
+                            flavour = flavour,
+                            min_read_support = min_read_support,
+                            subset_from_merge = subset_from_merge,
+                            augmented = augmented,
+                            ssh_session = ssh_session,
+                            basic_columns = basic_columns,
+                            maf_cols = maf_cols,
+                            return_cols = return_cols))
 }
 
 
@@ -208,14 +195,11 @@ get_ssm_by_samples = function(these_sample_ids,
           augmented = augmented,
           flavour = flavour,
           min_read_support = min_read_support,
-<<<<<<< HEAD
           basic_columns = basic_columns,
           maf_cols = maf_cols,
           return_cols = return_cols,
-=======
-          verbose=FALSE,
+          verbose = FALSE,
           ssh_session = ssh_session
->>>>>>> rmorin-dev
         )
         maf_df_list[[this_sample]]=maf_df
       }
@@ -267,15 +251,12 @@ get_ssm_by_sample = function(this_sample_id,
                              augmented = TRUE,
                              flavour = "clustered",
                              min_read_support = 3,
-<<<<<<< HEAD
                              basic_columns = TRUE,
                              maf_cols = NULL,
                              return_cols = FALSE,
-                             verbose = FALSE){
-=======
+                             verbose = FALSE,
                              verbose = FALSE,
                              ssh_session){
->>>>>>> rmorin-dev
 
   #figure out which unix_group this sample belongs to
   if(missing(these_samples_metadata)){
