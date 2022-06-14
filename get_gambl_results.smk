@@ -23,8 +23,10 @@ project_base = config["default"]["project_base"]
 repo_base = config["default"]["repo_base"]
 
 flatfiles = config["default"]["results_flatfiles"]
-
+merged = config['default']['results_merged']
 resources = config["default"]["resources"]
+
+expression = merged["tidy_expression_path"]
 
 #here we specify which files are included from the GAMBLR config
 db_maf = flatfiles["ssm"]["template"]["cds"]["deblacklisted"]
@@ -47,6 +49,15 @@ rule all:
         blacklists = expand(blacklist,seq_type=seq_types,projection=projections)
 
 #Use the relative directory for local file names (outputs) and full path for remote file names (inputs)
+
+rule get_expression:
+    input:
+        exp = SFTP.remote(hostname + project_base + expression)
+    output:
+        expression = expression
+    run:
+        shell("cp {input.exp} {output.expression}")
+
 rule get_mafs:
     input:
         db = SFTP.remote(hostname + project_base + db_maf),

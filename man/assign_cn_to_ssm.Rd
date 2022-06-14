@@ -12,7 +12,7 @@ assign_cn_to_ssm(
   tool_name = "battenberg",
   maf_file,
   seg_file,
-  seg_file_source = "ichorCNA",
+  seg_file_source = "battenberg",
   assume_diploid = FALSE,
   genes,
   include_silent = FALSE,

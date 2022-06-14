@@ -7,9 +7,10 @@
 get_sample_wildcards(this_sample_id, seq_type)
 }
 \arguments{
-\item{this_sample_id}{}
-
 \item{seq_type}{}
+}
+\value{
+
 }
 \description{
 Get wildcards for a sample_id/seq_type combination.

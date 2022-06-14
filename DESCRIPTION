@@ -43,7 +43,6 @@ Imports:
     rtracklayer,
     RCircos,
     S4Vectors,
-    ssh,
     SRAdb,
     stats,
     tidyverse,

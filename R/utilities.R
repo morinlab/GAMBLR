@@ -9,11 +9,15 @@ names(rainfall_conv) = c('A>G', 'T>C', 'C>T', 'G>A', 'A>T', 'T>A', 'A>C', 'T>G',
 #'
 #' @return
 #' @export
-#' @import ssh
 #'
 #' @examples
 get_ssh_session = function(host="gphost01.bcgsc.ca"){
-  session = ssh_connect(host=host)
+  if (!requireNamespace("ssh", quietly = TRUE)) {
+    warning("The ssh package must be installed to use this functionality")
+    #Either exit or do something that does not require ssh
+    return(NULL)
+  }
+  session = ssh::ssh_connect(host=host)
   return(session)
 }
 
@@ -538,7 +542,7 @@ annotate_hotspots = function(mutation_maf,
   hotspot_info = list()
   for(abase in analysis_base){
     base_path = config::get("repo_base")
-    
+
     clust_full_path = paste0(base_path, config::get("results_versioned")$oncodriveclustl$FL_DLBCL$clusters)
     all_full_path = paste0(base_path, config::get("results_versioned")$oncodriveclustl$FL_DLBCL$elements)
     clust_hotspot = read_tsv(clust_full_path)
@@ -1057,21 +1061,21 @@ collate_curated_sv_results = function(sample_table,seq_type_filter="genome"){
   return(sample_table)
 }
 
-#' Get wildcards for a sample_id/seq_type combination. 
+#' Get wildcards for a sample_id/seq_type combination.
 #'
-#' @param this_sample_id 
-#' @param seq_type 
+#' @param this_sample_id
+#' @param seq_type
 #'
 #' @return
 #' @export
 #'
 #' @examples
 get_sample_wildcards = function(this_sample_id,seq_type){
-  sample_meta = get_gambl_metadata(seq_type_filter = seq_type) %>% 
+  sample_meta = get_gambl_metadata(seq_type_filter = seq_type) %>%
     dplyr::filter(sample_id==this_sample_id)
   this_patient_id = sample_meta$patient_id
   if(sample_meta$pairing_status=="matched"){
-    normal_meta = get_gambl_metadata(seq_type_filter = seq_type,tissue_status_filter = c("normal","tumour")) %>% 
+    normal_meta = get_gambl_metadata(seq_type_filter = seq_type,tissue_status_filter = c("normal","tumour")) %>%
       dplyr::filter(patient_id==this_patient_id) %>% dplyr::filter(tissue_status=="normal")
       normal_id = normal_meta$sample_id
       return(list(tumour_sample_id=this_sample_id,
@@ -1185,24 +1189,24 @@ assign_cn_to_ssm = function(this_sample,
     message(paste("trying to find output from:", tool_name))
     project_base = config::get("project_base",config="default")
     local_project_base = config::get("project_base")
-    
+
     results_path_template = config::get("results_flatfiles")$cnv$battenberg
     results_path = paste0(project_base, results_path_template)
     local_results_path = paste0(local_project_base, results_path_template)
-    
+
     ## NEED TO FIX THIS TO contain tumour/normal ID from metadata and pairing status
     battenberg_file = glue::glue(results_path)
     local_battenberg_file = glue::glue(local_results_path)
-    
-    
+
+
     message(paste("looking for flatfile:", battenberg_file))
     if(!missing(ssh_session)){
       print(local_battenberg_file)
       dirN = dirname(local_battenberg_file)
-    
+
       suppressMessages(suppressWarnings(dir.create(dirN,recursive = T)))
       if(!file.exists(local_battenberg_file)){
-      
+
         scp_download(ssh_session,battenberg_file,dirN)
       }
       battenberg_file = local_battenberg_file
@@ -2047,11 +2051,11 @@ get_bams = function(sample,
   unix_group = dplyr::filter(meta_patient, seq_type == "genome" & tissue_status == "tumour") %>%
     dplyr::pull(unix_group) %>%
     unique()
-  
+
   bam_details$pairing_status = dplyr::filter(meta_patient, tissue_status == "tumour") %>%
     dplyr::pull(pairing_status) %>%
     unique()
-  
+
   bam_details$unix_group = unix_group
   if(length(normal_genome_bams)){
     bam_details$normal_genome_bams = normal_genome_bams
