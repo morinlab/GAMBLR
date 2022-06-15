@@ -9,9 +9,9 @@ envvars:
     "GSC_KEY"
 
 
-
-hostname = os.environ["GSC_HOSTNAME"]
-if hostname == None:
+try:
+    hostname = os.environ["GSC_HOSTNAME"]
+except KeyError:
     hostname = 'gphost08.bcgsc.ca'
     # use this to sync from a different host (mostly for unsynced keys or host outage)
 
@@ -30,10 +30,11 @@ repo_base = config["default"]["repo_base"]
 flatfiles = config["default"]["results_flatfiles"]
 merged = config['default']['results_merged']
 resources = config["default"]["resources"]
+wildcards = config["default"]["results_merged_wildcards"]
 
 expression = merged["tidy_expression_path"]
 print(merged)
-lymphgen_keys = list(merged["lymphgen"])
+lymphgen_keys = wildcards["lymphgen_template"].split(",")
 lymphgen = merged["lymphgen_template"]
 
 #here we specify which files are included from the GAMBLR config

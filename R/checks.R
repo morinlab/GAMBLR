@@ -1,6 +1,108 @@
 #Global variable specifying what metadata columns are absolutely required
 required_cols = c("sample_id","patient_id","pathology","seq_type","genome_build","pairing_status","Tumor_Sample_Barcode")
 
+check_gamblr_config = function(mode="default"){
+  files_to_check = c()
+  #get all the wildcards we'll need
+  seq_type = get_template_wildcards("seq_types")
+  unix_group = get_template_wildcards("unix_groups")
+  projection = get_template_wildcards("projections")
+  grob_wildcards = function(wildcarded_string){
+    wildcards = unlist(str_extract_all(wildcarded_string,"\\{[^\\{]+\\}"))
+    wildcards = str_remove_all(wildcards,"\\{") %>%  str_remove_all(.,"\\}")
+    return(wildcards)
+  }
+  check_file_details = function(relative_paths){
+    not_found = c()
+    base_path=config::get("project_base")
+    for(relative_path in relative_paths){
+      full_path = paste0(base_path,relative_path)
+      message(paste("Looking for:",full_path))
+      if(file.exists(full_path)){
+        message("OK")
+      }else{
+        message("Uh oh. This file cannot be found!")
+        print(full_path)
+        not_found=c(not_found,full_path)
+        print("-=10101010101=-")
+      }
+    }
+    return(not_found)
+  }
+  get_template_wildcards = function(parent_key,template_key){
+    if(missing(template_key)){
+      wildcard_string = config::get(parent_key)
+    }else{
+      wildcard_string = config::get(paste0(parent_key,"_wildcards"))[template_key]
+    }
+    wildcards = str_split(wildcard_string,",")
+    return(unlist(wildcards))
+  }
+  
+  #data frame for seq_type/projection expansion
+  projection_expanded = expand_grid(seq_type = get_template_wildcards("seq_types"),projection = get_template_wildcards("projections"))
+  #resources section of config (only needs blacklist right now)
+  blacklist_f = config::get("resources")$blacklist$template
+  blacklist_f = mutate(projection_expanded,output=glue::glue(blacklist_f)) %>% pull(output)
+  files_to_check = c(files_to_check,blacklist_f)
+  
+  
+  merged_keys = names(config::get("results_merged"))
+  
+  
+  
+  #skip any file starting with "/"
+  for (merge in merged_keys){
+    merge_path = config::get("results_merged")[merge]
+    if(!grepl("^/",merge_path)){
+      files = unlist(merge_path)
+      print(names(files))
+      
+      for(f in files){
+        print(paste("CHECKING",f))
+        if(grepl("\\{",f)){
+          print("contains wildcards, using all wildcards:")
+          if(stringi::stri_count_fixed(f,"{")>1){
+            print("Multiple wildcards!")
+            wildcards = grob_wildcards(f)
+            print(wildcards)
+            if("projection" %in% wildcards & "seq_type" %in% wildcards){
+              #use the same expansion approach we used above
+              print(f)
+              f = mutate(projection_expanded,output=glue::glue(f)) %>% pull(output)
+              files_to_check = c(files_to_check,f)
+            }else{
+              warning("Unrecognized wildcards. Not sure how to handle this, using default approach")
+              flavour =get_template_wildcards("results_merged",names(files))
+              all_f = glue::glue(f)
+              print(all_f)
+              files_to_check = c(files_to_check,all_f)
+            }
+          }else{
+            flavour =get_template_wildcards("results_merged",names(files))
+            all_f = glue::glue(f)
+            print(all_f)
+            files_to_check = c(files_to_check,all_f) 
+          }
+        }else{
+          files_to_check = c(files_to_check,f)
+        }
+        
+      }
+
+    }
+  }
+  print(f)
+  mia=check_file_details(files_to_check)
+  l_missing = length(mia)
+  if(l_missing){
+    warning(paste("There were",l_missing,"files that cannot be found (see above). If this is unexpected, try to obtain them."))
+    print("MISSING FILES:")
+    print(mia)
+  }
+  print("DONE!")
+}
+
 #' Check GAMBL or other metadata for compatability with various features
 #'
 #' @param metadata_df Data frame output by get_gambl_metadata or some other source of metadata you plan to use

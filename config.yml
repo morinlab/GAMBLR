@@ -13,10 +13,13 @@ default:
         tidy_expression_path: "icgc_dart/DESeq2-0.0_salmon-1.0/mrna--gambl-icgc-all/vst-matrix-Hugo_Symbol_tidy.tsv.gz"
         tidy_expression_file: "/projects/rmorin/projects/gambl-repos/gambl-rmorin/results/icgc_dart/DESeq2-0.0_salmon-1.0/mrna--gambl-icgc-all/vst-matrix-Hugo_Symbol_tidy.tsv"
         ex_matrix_file: "/projects/rmorin/projects/gambl-repos/gambl-rmorin/results/icgc_dart/DESeq2-0.0_salmon-1.0/mrna--gambl-icgc-all/vst-matrix.tsv"
-        lymphgen:
-            with_cnvs.with_sv: "all_the_things/lymphgen-1.0/99-outputs/GAMBL_all_the_things.lymphgen_calls.with_cnvs.with_sv.tsv"
-            no_cnvs.with_sv: "all_the_things/lymphgen-1.0/99-outputs/GAMBL_all_the_things.lymphgen_calls.no_cnvs.with_sv.tsv"
         lymphgen_template: "all_the_things/lymphgen-1.0/99-outputs/GAMBL_all_the_things.lymphgen_calls.{flavour}.tsv"
+        deblacklisted: "all_the_things/slms_3-1.0_vcf2maf-1.3/{seq_type}--projection/deblacklisted/maf/all_slms-3--{projection}.CDS.maf"
+        augmented: "all_the_things/slms_3-1.0_vcf2maf-1.3/{seq_type}--projection/deblacklisted/augmented_maf/all_slms-3--{projection}.CDS.maf"
+        cnv: "all_the_things/cnv_master-1.0/merges/{seq_type}--{projection}.seg"
+        sv: "all_the_things/svar_master-1.0/merges/gridss_manta.genome--{projection}.bedpe"
+    results_merged_wildcards:
+        lymphgen_template: "no_cnvs.with_sv,with_cnvs.with_sv"
     results_versioned:
         oncodriveclustl:
             FL_DLBCL:
@@ -37,6 +40,7 @@ default:
     unix_groups: "gambl,icgc_dart"
     genome_builds: "grch37,hg38,hs37d5"
     projections: "grch37,hg38"
+    seq_types: "capture,genome"
 #the genome build to use for all coordinate-based results in the database
     canonical_genome_build: "grch37"
     analyses:
