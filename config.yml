@@ -14,8 +14,9 @@ default:
         tidy_expression_file: "/projects/rmorin/projects/gambl-repos/gambl-rmorin/results/icgc_dart/DESeq2-0.0_salmon-1.0/mrna--gambl-icgc-all/vst-matrix-Hugo_Symbol_tidy.tsv"
         ex_matrix_file: "/projects/rmorin/projects/gambl-repos/gambl-rmorin/results/icgc_dart/DESeq2-0.0_salmon-1.0/mrna--gambl-icgc-all/vst-matrix.tsv"
         lymphgen:
-            with_cnv_with_sv: "all_the_things/lymphgen-1.0/99-outputs/GAMBL_all_the_things.lymphgen_calls.with_cnvs.with_sv.tsv"
-            no_cnv_with_sv: "all_the_things/lymphgen-1.0/99-outputs/GAMBL_all_the_things.lymphgen_calls.no_cnvs.with_sv.tsv"
+            with_cnvs.with_sv: "all_the_things/lymphgen-1.0/99-outputs/GAMBL_all_the_things.lymphgen_calls.with_cnvs.with_sv.tsv"
+            no_cnvs.with_sv: "all_the_things/lymphgen-1.0/99-outputs/GAMBL_all_the_things.lymphgen_calls.no_cnvs.with_sv.tsv"
+        lymphgen_template: "all_the_things/lymphgen-1.0/99-outputs/GAMBL_all_the_things.lymphgen_calls.{flavour}.tsv"
     results_versioned:
         oncodriveclustl:
             FL_DLBCL:

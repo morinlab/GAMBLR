@@ -9,7 +9,12 @@ envvars:
     "GSC_KEY"
 
 
-hostname = 'gphost08.bcgsc.ca'
+
+hostname = os.environ["GSC_HOSTNAME"]
+if hostname == None:
+    hostname = 'gphost08.bcgsc.ca'
+    # use this to sync from a different host (mostly for unsynced keys or host outage)
+
 myuser = os.environ["GSC_USERNAME"] #set the environment variable GSC_USERNAME with your GSC username
 mypassphrase = os.environ["GSC_PASSPHRASE"] #set the environment variable GSC_PASSPHRASE with the passphrase for your rsa key
 mySSHK = os.environ["GSC_KEY"] #  set  the environment variable GSC_KEY to the path of your RSA private key
@@ -27,6 +32,9 @@ merged = config['default']['results_merged']
 resources = config["default"]["resources"]
 
 expression = merged["tidy_expression_path"]
+print(merged)
+lymphgen_keys = list(merged["lymphgen"])
+lymphgen = merged["lymphgen_template"]
 
 #here we specify which files are included from the GAMBLR config
 db_maf = flatfiles["ssm"]["template"]["cds"]["deblacklisted"]
@@ -46,9 +54,18 @@ rule all:
         augmented = expand(aug_maf,seq_type=seq_types,projection=projections),
         combined_cnv = expand(cnv_combined,seq_type=['genome'],projection=projections),
         combined_sv = expand(sv_combined,seq_type=['genome'],projection=projections),
-        blacklists = expand(blacklist,seq_type=seq_types,projection=projections)
+        blacklists = expand(blacklist,seq_type=seq_types,projection=projections),
+        lymphgens = expand(lymphgen,flavour=lymphgen_keys)
 
 #Use the relative directory for local file names (outputs) and full path for remote file names (inputs)
+
+rule get_lymphgen:
+    input:
+        lymphgen = SFTP.remote(hostname + project_base + lymphgen)
+    output:
+        lymphgen = lymphgen
+    run:
+         shell("cp {input.lymphgen} {output.lymphgen}")
 
 rule get_expression:
     input:
