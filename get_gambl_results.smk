@@ -40,7 +40,6 @@ seq_types = list(config["default"]["unmatched_normal_ids"]["gambl"].keys())
 projections = config["default"]["projections"].split(",")
 
 
-
 rule all:
     input:
         deblacklisted = expand(db_maf,seq_type=seq_types,projection=projections),
@@ -65,7 +64,9 @@ rule get_mafs:
         aug = SFTP.remote(hostname + project_base + aug_maf),
     output:
         deblacklisted = db_maf,
+        db_complete = touch(db_maf + ".complete"),
         augmented = aug_maf,
+        aug_complete = touch(aug_maf + ".complete")
     run:
         shell("cp {input.db} {output.deblacklisted}")
         shell("cp {input.aug} {output.augmented}")
@@ -74,7 +75,8 @@ rule get_resources:
     input:
         SFTP.remote(hostname + project_base + blacklist)
     output:
-        blacklist
+        blacklist,
+        touch(blacklist + ".complete")
     run:
         shell("cp {input[0]} {output[0]}")
 
@@ -82,7 +84,8 @@ rule get_cnv:
     input:
         cnv = SFTP.remote(hostname + project_base + cnv_combined)
     output:
-        combined_cnv = cnv_combined
+        combined_cnv = cnv_combined,
+        complete = touch(cnv_combined + ".complete")
     run:
         shell("cp {input[0]} {output[0]}")
 
@@ -90,6 +93,7 @@ rule get_sv:
     input:
         SFTP.remote(hostname + project_base + sv_combined)
     output:
-        sv_combined
+        sv_combined,
+        complete = touch(sv_combined + ".complete")
     run:
         shell("cp {input[0]} {output[0]}")
