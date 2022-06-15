@@ -1207,7 +1207,7 @@ assign_cn_to_ssm = function(this_sample,
       suppressMessages(suppressWarnings(dir.create(dirN,recursive = T)))
       if(!file.exists(local_battenberg_file)){
 
-        scp_download(ssh_session,battenberg_file,dirN)
+        ssh::scp_download(ssh_session,battenberg_file,dirN)
       }
       battenberg_file = local_battenberg_file
     }
