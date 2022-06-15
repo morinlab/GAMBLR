@@ -21,10 +21,10 @@ check_gamblr_config = function(mode="default"){
       if(file.exists(full_path)){
         message("OK")
       }else{
-        message("Uh oh. This file cannot be found!")
+        #message("Uh oh. This file cannot be found!")
         print(full_path)
         not_found=c(not_found,full_path)
-        print("-=10101010101=-")
+        #print("-=10101010101=-")
       }
     }
     return(not_found)
@@ -56,12 +56,12 @@ check_gamblr_config = function(mode="default"){
     merge_path = config::get("results_merged")[merge]
     if(!grepl("^/",merge_path)){
       files = unlist(merge_path)
-      print(names(files))
+      #print(names(files))
       
       for(f in files){
-        print(paste("CHECKING",f))
+        #print(paste("CHECKING",f))
         if(grepl("\\{",f)){
-          print("contains wildcards, using all wildcards:")
+          #print("contains wildcards, using all wildcards:")
           if(stringi::stri_count_fixed(f,"{")>1){
             print("Multiple wildcards!")
             wildcards = grob_wildcards(f)
@@ -81,7 +81,7 @@ check_gamblr_config = function(mode="default"){
           }else{
             flavour =get_template_wildcards("results_merged",names(files))
             all_f = glue::glue(f)
-            print(all_f)
+            #print(all_f)
             files_to_check = c(files_to_check,all_f) 
           }
         }else{
