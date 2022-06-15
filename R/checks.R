@@ -3,6 +3,16 @@ required_cols = c("sample_id","patient_id","pathology","seq_type","genome_build"
 
 check_gamblr_config = function(mode="default"){
   files_to_check = c()
+  
+  get_template_wildcards = function(parent_key,template_key){
+    if(missing(template_key)){
+      wildcard_string = config::get(parent_key)
+    }else{
+      wildcard_string = config::get(paste0(parent_key,"_wildcards"))[template_key]
+    }
+    wildcards = str_split(wildcard_string,",")
+    return(unlist(wildcards))
+  }
   #get all the wildcards we'll need
   seq_type = get_template_wildcards("seq_types")
   unix_group = get_template_wildcards("unix_groups")
@@ -29,15 +39,7 @@ check_gamblr_config = function(mode="default"){
     }
     return(not_found)
   }
-  get_template_wildcards = function(parent_key,template_key){
-    if(missing(template_key)){
-      wildcard_string = config::get(parent_key)
-    }else{
-      wildcard_string = config::get(paste0(parent_key,"_wildcards"))[template_key]
-    }
-    wildcards = str_split(wildcard_string,",")
-    return(unlist(wildcards))
-  }
+
   
   #data frame for seq_type/projection expansion
   projection_expanded = expand_grid(seq_type = get_template_wildcards("seq_types"),projection = get_template_wildcards("projections"))

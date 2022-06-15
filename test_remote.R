@@ -2,9 +2,11 @@
 # in your config.yml file set repo_base under the remote config (at the top) to point to this path also
 library(GAMBLR)
 library(tidyverse)
-library(ssh)
+#library(ssh)
 #skip this next line if you are running on the GSC network
 Sys.setenv(R_CONFIG_ACTIVE= "remote")
+
+check_gamblr_config() #check for missing local files
 
 
 config::get("project_base")

@@ -1100,15 +1100,45 @@ get_manta_sv = function(min_vaf = 0.1,
   return(all_sv)
 }
 
-#work in progress.
-get_lymphgen = function(flavour){
-  if(missing(flavour)){
-    message("please provide one of the following flavours")
-    print(names(config::get("results_merged")$lymphgen))
+
+#' Get a specific flavour of LymphGen from the main GAMBL outputs and tidy the composites.
+#' Optionally return a matrix of features instead
+#'
+#' @param flavour 
+#'
+#' @return
+#' @export
+#'
+#' @examples
+get_lymphgen = function(these_samples_metadata,flavour,return_feature_matrix=FALSE,lymphgen_file,keep_all_rows=FALSE){
+  if(missing(these_samples_metadata)){
+    if(!keep_all_rows){
+      these_samples_metadata = get_gambl_metadata(seq_type_filter="genome")
+    }
   }
-  lg_path = paste0(config::get("project_base"),config::get("results_merged")$lymphgen[flavour])
+  if(missing(flavour)){
+    if(!missing(lymphgen_file)){
+      lg_path = lymphgen_file
+    }else{
+      message("please provide a path to your lymphgen output file or one of the following flavours")
+      print(config::get("results_merged_wildcards")$lymphgen_template)
+      return(NULL)
+    }
+  }else{
+    lg_path = paste0(config::get("project_base"),config::get("results_merged")$lymphgen_template)
+    lg_path = glue::glue(lg_path)
+  }
+  
   lg = read_tsv(lg_path)
   lg_tidy = tidy_lymphgen(lg,lymphgen_column_in = "Subtype.Prediction",lymphgen_column_out = "LymphGen")
+  if(!return_feature_matrix){
+    lg_tidy = dplyr::select(lg_tidy,Sample.Name,LymphGen) %>% dplyr::rename("sample_id"="Sample.Name")
+    if(!keep_all_rows){
+      lg_tidy = dplyr::filter(lg_tidy,sample_id %in% these_samples_metadata$sample_id)
+    }
+    return(lg_tidy)
+  }else{
+  
   lg_ord = select(lg_tidy,Sample.Name,LymphGen) %>% arrange(LymphGen) %>% pull(Sample.Name)
   lg_levels = select(lg_tidy,Sample.Name,LymphGen) %>% arrange(LymphGen) %>% pull(LymphGen)
   all_mcd = separate(lg_tidy,col="MCD.Features",into=c(paste0("Feature_MCD_",seq(1:15))),sep=",") %>% 
@@ -1158,7 +1188,14 @@ get_lymphgen = function(flavour){
   all_mat = left_join(ezb_mat,mcd_mat)
   all_mat = left_join(all_mat,bn2_mat) 
   all_mat = left_join(all_mat,n1_mat) 
-  all_mat = left_join(all_mat,st2_mat) %>% column_to_rownames("Sample.Name")
+  all_mat = left_join(all_mat,st2_mat) 
+  if(!keep_all_rows){
+    all_mat = dplyr::filter(all_mat,Sample.Name %in% these_samples_metadata$sample_id)
+  }
+  all_mat = all_mat %>% column_to_rownames("Sample.Name")
+  
+    return(all_mat)
+  }
 }
 
 #' Get a copy number matrix for all samples based on segmented data in database.
