@@ -2008,7 +2008,9 @@ copy_number_vaf_plot = function(this_sample,
 #'
 #' @examples
 #' #basic usage
-#' ashm_rainbow_plot(mutations_maf=get_ssm_by_region(region="chr8:128806578-128806992"),metadata=get_gambl_metadata())
+#' region = "chr6:90975034-91066134"
+#' metadata = get_gambl_metadata()
+#' plot = ashm_rainbow_plot(metadata = metadata, region = region)
 #' #advanced usages
 #' mybed = data.frame(start=c(128806578,128805652,128748315), end=c(128806992,128809822,128748880), name=c("TSS","enhancer","MYC-e1"))
 #' ashm_rainbow_plot(mutations_maf=my_mutations,metadata=my_metadata,bed=mybed)
