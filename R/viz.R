@@ -2033,10 +2033,10 @@ ashm_rainbow_plot = function(mutations_maf,
     qstart = as.numeric(startend[1])
     qend = as.numeric(startend[2])
     if(missing(mutations_maf)){
-      mutations_maf = get_ssm_by_region(region = region, streamlined = TRUE)
+      mutations_maf = get_ssm_by_region(region = region, streamlined = FALSE)
     }else{
       #ensure it only contains mutations in the region specified
-      mutations_maf = get_ssm_by_region(region = region, streamlined = TRUE, maf_data = mutations_maf)
+      mutations_maf = get_ssm_by_region(region = region, streamlined = FALSE, maf_data = mutations_maf)
     }
   }
   if(!missing(classification_column)){
