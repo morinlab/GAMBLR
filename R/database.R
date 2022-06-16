@@ -1105,12 +1105,24 @@ get_manta_sv = function(min_vaf = 0.1,
 #' Optionally return a matrix of features instead
 #'
 #' @param flavour 
+#' @param these_samples_metadata
+#' @param return_feature_matrix
+#' @param return_feature_annotation
+#' @param lymphgen_file
+#' @param keep_all_rows
+#' @param keep_original_columns
 #'
 #' @return
 #' @export
 #'
 #' @examples
-get_lymphgen = function(these_samples_metadata,flavour,return_feature_matrix=FALSE,lymphgen_file,keep_all_rows=FALSE){
+get_lymphgen = function(these_samples_metadata,
+                        flavour,
+                        return_feature_matrix=FALSE,
+                        return_feature_annotation=FALSE,
+                        lymphgen_file,
+                        keep_all_rows=FALSE,
+                        keep_original_columns=FALSE){
   if(missing(these_samples_metadata)){
     if(!keep_all_rows){
       these_samples_metadata = get_gambl_metadata(seq_type_filter="genome")
@@ -1131,59 +1143,64 @@ get_lymphgen = function(these_samples_metadata,flavour,return_feature_matrix=FAL
   
   lg = read_tsv(lg_path)
   lg_tidy = tidy_lymphgen(lg,lymphgen_column_in = "Subtype.Prediction",lymphgen_column_out = "LymphGen")
-  if(!return_feature_matrix){
-    lg_tidy = dplyr::select(lg_tidy,Sample.Name,LymphGen) %>% dplyr::rename("sample_id"="Sample.Name")
-    if(!keep_all_rows){
-      lg_tidy = dplyr::filter(lg_tidy,sample_id %in% these_samples_metadata$sample_id)
-    }
-    return(lg_tidy)
-  }else{
+  if(return_feature_matrix | return_feature_annotation){
+    lg_ord = select(lg_tidy,Sample.Name,LymphGen) %>% arrange(LymphGen) %>% pull(Sample.Name)
+    lg_levels = select(lg_tidy,Sample.Name,LymphGen) %>% arrange(LymphGen) %>% pull(LymphGen)
+    all_mcd = separate(lg_tidy,col="MCD.Features",into=c(paste0("Feature_MCD_",seq(1:15))),sep=",") %>% 
+      pivot_longer(starts_with("Feature_"),values_to = "MCD") %>% dplyr::filter(!is.na(MCD)) %>% pull(MCD) %>% unique()
+    all_mcd_df = expand.grid(Sample.Name=unique(lg_tidy$Sample.Name),Feature=all_mcd)
+    feat_mcd = separate(lg_tidy,col="MCD.Features",into=c(paste0("Feature_MCD_",seq(1:15))),sep=",") %>% 
+      pivot_longer(starts_with("Feature_"),values_to = "Feature") %>% dplyr::filter(!is.na(Feature)) %>% select(Sample.Name,Feature) %>% mutate(present=1)
+    feat_mcd = mutate(feat_mcd,Class="MCD")
+    mcd_mat = left_join(all_mcd_df,feat_mcd) %>% mutate(present=replace_na(present,0)) %>%
+      pivot_wider(names_from="Feature",values_from="present") 
   
-  lg_ord = select(lg_tidy,Sample.Name,LymphGen) %>% arrange(LymphGen) %>% pull(Sample.Name)
-  lg_levels = select(lg_tidy,Sample.Name,LymphGen) %>% arrange(LymphGen) %>% pull(LymphGen)
-  all_mcd = separate(lg_tidy,col="MCD.Features",into=c(paste0("Feature_MCD_",seq(1:15))),sep=",") %>% 
-    pivot_longer(starts_with("Feature_"),values_to = "MCD") %>% dplyr::filter(!is.na(MCD)) %>% pull(MCD) %>% unique()
-  all_mcd_df = expand.grid(Sample.Name=unique(lg_tidy$Sample.Name),Feature=all_mcd)
-  feat_mcd = separate(lg_tidy,col="MCD.Features",into=c(paste0("Feature_MCD_",seq(1:15))),sep=",") %>% 
-    pivot_longer(starts_with("Feature_"),values_to = "Feature") %>% dplyr::filter(!is.na(Feature)) %>% select(Sample.Name,Feature) %>% mutate(present=1)
-  mcd_mat = left_join(all_mcd_df,feat_mcd) %>% mutate(present=replace_na(present,0)) %>%
-    pivot_wider(names_from="Feature",values_from="present") 
+    all_ezb = separate(lg_tidy,col="EZB.Features",into=c(paste0("Feature_MCD_",seq(1:15))),sep=",") %>% 
+      pivot_longer(starts_with("Feature_"),values_to = "MCD") %>% dplyr::filter(!is.na(MCD)) %>% pull(MCD) %>% unique()
+    all_ezb_df = expand.grid(Sample.Name=unique(lg_tidy$Sample.Name),Feature=all_ezb)
+    feat_ezb = separate(lg_tidy,col="EZB.Features",into=c(paste0("Feature_MCD_",seq(1:15))),sep=",") %>% 
+      pivot_longer(starts_with("Feature_"),values_to = "Feature") %>% dplyr::filter(!is.na(Feature)) %>% select(Sample.Name,Feature) %>% mutate(present=1)
+    feat_ezb = mutate(feat_ezb,Class="EZB")
+    ezb_mat = left_join(all_ezb_df,feat_ezb) %>% mutate(present=replace_na(present,0)) %>%
+      pivot_wider(names_from="Feature",values_from="present") 
   
-  all_ezb = separate(lg_tidy,col="EZB.Features",into=c(paste0("Feature_MCD_",seq(1:15))),sep=",") %>% 
-    pivot_longer(starts_with("Feature_"),values_to = "MCD") %>% dplyr::filter(!is.na(MCD)) %>% pull(MCD) %>% unique()
-  all_ezb_df = expand.grid(Sample.Name=unique(lg_tidy$Sample.Name),Feature=all_ezb)
-  feat_ezb = separate(lg_tidy,col="EZB.Features",into=c(paste0("Feature_MCD_",seq(1:15))),sep=",") %>% 
-    pivot_longer(starts_with("Feature_"),values_to = "Feature") %>% dplyr::filter(!is.na(Feature)) %>% select(Sample.Name,Feature) %>% mutate(present=1)
-  ezb_mat = left_join(all_ezb_df,feat_ezb) %>% mutate(present=replace_na(present,0)) %>%
-    pivot_wider(names_from="Feature",values_from="present") 
+    all_bn2 = separate(lg_tidy,col="BN2.Features",into=c(paste0("Feature_MCD_",seq(1:15))),sep=",") %>% 
+      pivot_longer(starts_with("Feature_"),values_to = "MCD") %>% dplyr::filter(!is.na(MCD)) %>% pull(MCD) %>% unique()
+    all_bn2_df = expand.grid(Sample.Name=unique(lg_tidy$Sample.Name),Feature=all_bn2)
+    feat_bn2 = separate(lg_tidy,col="BN2.Features",into=c(paste0("Feature_MCD_",seq(1:15))),sep=",") %>% 
+      pivot_longer(starts_with("Feature_"),values_to = "Feature") %>% dplyr::filter(!is.na(Feature)) %>%
+      select(Sample.Name,Feature) %>% mutate(present=1)
+    feat_bn2 = mutate(feat_bn2,Class="BN2")
+    bn2_mat = left_join(all_bn2_df,feat_bn2) %>% mutate(present=replace_na(present,0)) %>%
+      pivot_wider(names_from="Feature",values_from="present") 
   
-  all_bn2 = separate(lg_tidy,col="BN2.Features",into=c(paste0("Feature_MCD_",seq(1:15))),sep=",") %>% 
-    pivot_longer(starts_with("Feature_"),values_to = "MCD") %>% dplyr::filter(!is.na(MCD)) %>% pull(MCD) %>% unique()
-  all_bn2_df = expand.grid(Sample.Name=unique(lg_tidy$Sample.Name),Feature=all_bn2)
-  feat_bn2 = separate(lg_tidy,col="BN2.Features",into=c(paste0("Feature_MCD_",seq(1:15))),sep=",") %>% 
-    pivot_longer(starts_with("Feature_"),values_to = "Feature") %>% dplyr::filter(!is.na(Feature)) %>%
-    select(Sample.Name,Feature) %>% mutate(present=1)
-  bn2_mat = left_join(all_bn2_df,feat_bn2) %>% mutate(present=replace_na(present,0)) %>%
-    pivot_wider(names_from="Feature",values_from="present") 
+    all_st2 = separate(lg_tidy,col="ST2.Features",into=c(paste0("Feature_MCD_",seq(1:15))),sep=",") %>% 
+      pivot_longer(starts_with("Feature_"),values_to = "MCD") %>% dplyr::filter(!is.na(MCD)) %>% pull(MCD) %>% unique()
+    all_st2_df = expand.grid(Sample.Name=unique(lg_tidy$Sample.Name),Feature=all_st2)
+    feat_st2 = separate(lg_tidy,col="ST2.Features",into=c(paste0("Feature_MCD_",seq(1:15))),sep=",") %>% 
+      pivot_longer(starts_with("Feature_"),values_to = "Feature") %>% dplyr::filter(!is.na(Feature)) %>%
+      select(Sample.Name,Feature) %>% mutate(present=1)
+    feat_st2 = mutate(feat_st2,Class="ST2")
+    st2_mat = left_join(all_st2_df,feat_st2) %>% mutate(present=replace_na(present,0)) %>%
+      pivot_wider(names_from="Feature",values_from="present") 
   
-  all_st2 = separate(lg_tidy,col="ST2.Features",into=c(paste0("Feature_MCD_",seq(1:15))),sep=",") %>% 
-    pivot_longer(starts_with("Feature_"),values_to = "MCD") %>% dplyr::filter(!is.na(MCD)) %>% pull(MCD) %>% unique()
-  all_st2_df = expand.grid(Sample.Name=unique(lg_tidy$Sample.Name),Feature=all_st2)
-  feat_st2 = separate(lg_tidy,col="ST2.Features",into=c(paste0("Feature_MCD_",seq(1:15))),sep=",") %>% 
-    pivot_longer(starts_with("Feature_"),values_to = "Feature") %>% dplyr::filter(!is.na(Feature)) %>%
-    select(Sample.Name,Feature) %>% mutate(present=1)
-  st2_mat = left_join(all_st2_df,feat_st2) %>% mutate(present=replace_na(present,0)) %>%
-    pivot_wider(names_from="Feature",values_from="present") 
+    all_n1 = separate(lg_tidy,col="N1.Features",into=c(paste0("Feature_MCD_",seq(1:15))),sep=",") %>% 
+      pivot_longer(starts_with("Feature_"),values_to = "MCD") %>% dplyr::filter(!is.na(MCD)) %>% pull(MCD) %>% unique()
   
-  all_n1 = separate(lg_tidy,col="N1.Features",into=c(paste0("Feature_MCD_",seq(1:15))),sep=",") %>% 
-    pivot_longer(starts_with("Feature_"),values_to = "MCD") %>% dplyr::filter(!is.na(MCD)) %>% pull(MCD) %>% unique()
-  all_n1_df = expand.grid(Sample.Name=unique(lg_tidy$Sample.Name),Feature=all_n1)
-  feat_n1 = separate(lg_tidy,col="N1.Features",into=c(paste0("Feature_MCD_",seq(1:15))),sep=",") %>% 
-    pivot_longer(starts_with("Feature_"),values_to = "Feature") %>% dplyr::filter(!is.na(Feature)) %>%
-    select(Sample.Name,Feature) %>% mutate(present=1)
-  n1_mat = left_join(all_n1_df,feat_n1) %>% mutate(present=replace_na(present,0)) %>%
-    pivot_wider(names_from="Feature",values_from="present") 
-  
+    all_n1_df = expand.grid(Sample.Name=unique(lg_tidy$Sample.Name),Feature=all_n1)
+    feat_n1 = separate(lg_tidy,col="N1.Features",into=c(paste0("Feature_MCD_",seq(1:15))),sep=",") %>% 
+      pivot_longer(starts_with("Feature_"),values_to = "Feature") %>% dplyr::filter(!is.na(Feature)) %>%
+      select(Sample.Name,Feature) %>% mutate(present=1)
+    feat_n1 = mutate(feat_n1,Class="N1")
+    n1_mat = left_join(all_n1_df,feat_n1) %>% mutate(present=replace_na(present,0)) %>%
+      pivot_wider(names_from="Feature",values_from="present") 
+    feat_all = bind_rows(feat_n1,feat_st2,feat_mcd,feat_ezb,feat_bn2)
+    
+  if(return_feature_annotation){
+    #just give the user the association between each feature and its class along with some summary stats
+    feat_count = group_by(feat_all,Feature,Class) %>% count() %>% column_to_rownames("Feature")
+    return(feat_count)
+  }
   
   all_mat = left_join(ezb_mat,mcd_mat)
   all_mat = left_join(all_mat,bn2_mat) 
@@ -1195,6 +1212,16 @@ get_lymphgen = function(these_samples_metadata,flavour,return_feature_matrix=FAL
   all_mat = all_mat %>% column_to_rownames("Sample.Name")
   
     return(all_mat)
+  }else{
+    if(!keep_original_columns){
+      lg_tidy = dplyr::select(lg_tidy,Sample.Name,LymphGen) 
+    }
+    lg_tidy = lg_tidy %>% dplyr::rename("sample_id"="Sample.Name")
+    if(!keep_all_rows){
+      lg_tidy = dplyr::filter(lg_tidy,sample_id %in% these_samples_metadata$sample_id)
+    }
+    return(lg_tidy)
+    
   }
 }
 
