@@ -67,6 +67,8 @@ default:
                 unmatched: "controlfreec_liftover_current/99-outputs/"
             template: "{unix_group}/cnv_master-1.0/99-outputs/{seq_type}--projection/all--{projection}.seg"
             battenberg: "{unix_group}/battenberg_current/99-outputs/seg/{seq_type}--projection/{tumour_sample_id}--{normal_sample_id}--{pairing_status}.battenberg.{projection}.seg"
+            battenberg_wildcards:
+                pairing_status: "matched"
         cnv_combined:
             gambl: "gambl/cnv_master-1.0/99-outputs/{seq_type}--projection/all--{projection}.seg"
             icgc_dart: "all_the_things/cnv_master-1.0/merges/{seq_type}--{projection}.seg"
