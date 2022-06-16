@@ -8,6 +8,9 @@ Sys.setenv(R_CONFIG_ACTIVE= "remote")
 
 check_gamblr_config() #check for missing local files
 
+session = get_ssh_session() #only run this if you have an active VPN connection
+check_gamblr_config(compare_timestamps = T,ssh_session=session)
+
 
 config::get("project_base")
 # should point to an existing path on your local computer where you want the data to be stored

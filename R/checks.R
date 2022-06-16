@@ -1,7 +1,7 @@
 #Global variable specifying what metadata columns are absolutely required
 required_cols = c("sample_id","patient_id","pathology","seq_type","genome_build","pairing_status","Tumor_Sample_Barcode")
 
-check_gamblr_config = function(mode="default"){
+check_gamblr_config = function(mode="default",compare_timestamps=FALSE,ssh_session){
   files_to_check = c()
   
   get_template_wildcards = function(parent_key,template_key){
@@ -10,7 +10,7 @@ check_gamblr_config = function(mode="default"){
     }else{
       wildcard_string = config::get(paste0(parent_key,"_wildcards"))[template_key]
     }
-    wildcards = str_split(wildcard_string,",")
+    wildcards = stringr::str_split(wildcard_string,",")
     return(unlist(wildcards))
   }
   #get all the wildcards we'll need
@@ -18,8 +18,8 @@ check_gamblr_config = function(mode="default"){
   unix_group = get_template_wildcards("unix_groups")
   projection = get_template_wildcards("projections")
   grob_wildcards = function(wildcarded_string){
-    wildcards = unlist(str_extract_all(wildcarded_string,"\\{[^\\{]+\\}"))
-    wildcards = str_remove_all(wildcards,"\\{") %>%  str_remove_all(.,"\\}")
+    wildcards = unlist(stringr::str_extract_all(wildcarded_string,"\\{[^\\{]+\\}"))
+    wildcards = stringr::str_remove_all(wildcards,"\\{") %>%  stringr::str_remove_all(.,"\\}")
     return(wildcards)
   }
   check_file_details = function(relative_paths){
@@ -39,10 +39,37 @@ check_gamblr_config = function(mode="default"){
     }
     return(not_found)
   }
+  check_times = function(relative_paths){
+    
+    local_base = base_path=config::get("project_base")
+    remote_base = base_path=config::get("project_base",config="default")
+    for(rel_f in relative_paths){
+      local_f = paste0(local_base,rel_f)
+      #print(rel_f)
+      if(file.exists(local_f)){
+        mtime = file.info(local_f)$mtime
+        mtime = stringr::str_remove(mtime,"\\s\\d+:\\d+:\\d+")
+        #print(mtime)
+        remote_f = paste0(remote_base,rel_f)
+        #print(remote_f)
+        output = ssh::ssh_exec_internal(ssh_session,paste("stat -L ",remote_f,"| grep Modify"))$stdout
+        
+        output = rawToChar(output) %>% stringr::str_extract(.,"\\d+-\\d+-\\d+")
+        
+        remote_time = lubridate::as_date(output)
+        local_time = lubridate::as_date(mtime)
+        agediff = lubridate::time_length(remote_time - local_time,unit="days")
+        if(agediff>0){
+          print(paste("Warning! Remote version is",agediff,"days newer than the local file. You probably need to update the following file:"))
+          print(rel_f)
+        }
+      }
+    }
+  }
 
   
   #data frame for seq_type/projection expansion
-  projection_expanded = expand_grid(seq_type = get_template_wildcards("seq_types"),projection = get_template_wildcards("projections"))
+  projection_expanded = tidyr::expand_grid(seq_type = get_template_wildcards("seq_types"),projection = get_template_wildcards("projections"))
   #resources section of config (only needs blacklist right now)
   blacklist_f = config::get("resources")$blacklist$template
   blacklist_f = mutate(projection_expanded,output=glue::glue(blacklist_f)) %>% pull(output)
@@ -101,6 +128,9 @@ check_gamblr_config = function(mode="default"){
     warning(paste("There were",l_missing,"files that cannot be found (see above). If this is unexpected, try to obtain them."))
     print("MISSING FILES:")
     print(mia)
+  }
+  if(compare_timestamps){
+    check_times(files_to_check)
   }
   print("DONE!")
 }
