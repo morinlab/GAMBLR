@@ -56,7 +56,8 @@ rule all:
         combined_cnv = expand(cnv_combined,seq_type=['genome'],projection=projections),
         combined_sv = expand(sv_combined,seq_type=['genome'],projection=projections),
         blacklists = expand(blacklist,seq_type=seq_types,projection=projections),
-        lymphgens = expand(lymphgen,flavour=lymphgen_keys)
+        lymphgens = expand(lymphgen,flavour=lymphgen_keys),
+        expression = expression
 
 #Use the relative directory for local file names (outputs) and full path for remote file names (inputs)
 
