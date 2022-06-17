@@ -21,6 +21,13 @@ get_ssh_session = function(host="gphost01.bcgsc.ca"){
   return(session)
 }
 
+#helper function to get the unmatched normals from the main config
+get_unmatched_normals = function(){
+  a=config::get("unmatched_normal_ids")
+  df = melt(a,value.name="normal_sample_id") %>% 
+    rename(c("genome_build"="L3","seq_type"="L2","unix_group"="L1"))
+  return(df)
+}
 
 #' Get regions (bed format) from genes.
 #'
