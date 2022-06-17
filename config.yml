@@ -20,7 +20,7 @@ default:
         cnv: "all_the_things/cnv_master-1.0/merges/{seq_type}--{projection}.seg"
         sv: "all_the_things/svar_master-1.0/merges/gridss_manta.genome--{projection}.bedpe"
     results_merged_wildcards:
-        lymphgen_template: "no_cnvs.with_sv,with_cnvs.with_sv"
+        lymphgen_template: "no_cnvs.no_sv.with_A53,no_cnvs.no_sv.no_A53,no_cnvs.with_sv.with_A53,with_cnvs.no_sv.no_A53,no_cnvs.with_sv.no_A53,with_cnvs.no_sv.with_A53,with_cnvs.with_sv.no_A53,with_cnvs.with_sv.with_A53"
     results_versioned:
         oncodriveclustl:
             FL_DLBCL:
