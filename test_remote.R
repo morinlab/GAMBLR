@@ -138,14 +138,14 @@ coding_ssm_status = get_coding_ssm_status(gene_symbols = c("EZH2","CREBBP","KMT2
 
 cbio_path = paste0(config::get("project_base"),"cbioportal-docker-compose/study/GAMBL_capture_2022/")
 
-samples_included = GAMBLR::setup_study(seq_type = "capture",
+samples_included = GAMBLR::setup_study(seq_type_filter = "capture",
                     short_name="GAMBL_capture_2022",
                     human_friendly_name = "GAMBL exomes 2022 edition",
                     project_name="gambl_capture_2022",
                     description = "GAMBL capture data",
                     out_dir = cbio_path)
 
-finalize_study(seq_type="capture",short_name="GAMBL_capture_2022",sample_ids=samples_included,
+finalize_study(seq_type_filter="capture",short_name="GAMBL_capture_2022",sample_ids=samples_included,
                human_friendly_name = "GAMBL exomes 2022 edition",
                project_name="gambl_capture_2022",
                description = "GAMBL capture data",out_dir = cbio_path,overwrite = TRUE)

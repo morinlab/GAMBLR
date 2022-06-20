@@ -4,7 +4,8 @@ colour_aliases = list("COO_consensus" = "coo", "COO" = "coo", "DHITsig_consensus
                       "pathology" = "pathology", "analysis_cohort" = "pathology", "group" = "pathology",
                       "FL_group" = "FL", "lymphgen" = "lymphgen", "lymphgen_with_cnv" = "lymphgen",
                       "bcl2_ba" = "pos_neg", "BCL2_status" = "pos_neg", "myc_ba" = "pos_neg",
-                      "bcl6_ba" = "pos_neg", "manta_BCL2_sv" = "pos_neg", "manual_BCL2_sv" = "pos_neg", "manta_MYC_sv" = "pos_neg")
+                      "bcl6_ba" = "pos_neg", "EBV_status_inf"="EBV_status",
+                      "manta_BCL2_sv" = "pos_neg", "manual_BCL2_sv" = "pos_neg", "manta_MYC_sv" = "pos_neg")
 
 
 #' Plot a rainfall plot for one sample. This function takes in MAF data frame, or path to custom MAF file.
@@ -473,11 +474,13 @@ pretty_lollipop_plot = function(maf_df,
 get_mutation_frequency_bin_matrix = function(regions,
                                              regions_df,
                                              these_samples_metadata,
+                                             seq_type="genome",
                                              region_padding = 1000,
                                              metadataColumns = c("pathology"),
                                              sortByColumns = c("pathology"),
                                              expressionColumns = c(),
                                              orientation = "sample_rows",
+                                             skip_regions=c("MYC", "BCL2", "IGLL5"),
                                              customColour = NULL,
                                              slide_by = 100,
                                              window_size = 500,
@@ -492,23 +495,24 @@ get_mutation_frequency_bin_matrix = function(regions,
                                              legend_col = 3,
                                              legend_direction = "horizontal",
                                              legendFontSize = 10,
-                                             from_indexed_flatfile = FALSE,
-                                             mode = "slms-3"){
+                                             from_indexed_flatfile = TRUE,
+                                             mode = "slms-3",
+                                             ssh_session){
 
   if(missing(regions)){
     if(missing(regions_df)){
       regions_df = grch37_ashm_regions #drop MYC and BCL2
       regions_df = grch37_ashm_regions %>%
-        dplyr::filter(!gene %in% c("MYC", "BCL2", "IGLL5"))
+        dplyr::filter(!gene %in% skip_regions)
     }
     regions = unlist(apply(regions_df, 1, function(x){paste0(x[1], ":", as.numeric(x[2]) - region_padding, "-", as.numeric(x[3]) + region_padding)})) #add some buffer around each
   }
   dfs = lapply(regions, function(x){calc_mutation_frequency_sliding_windows(
-    this_region = x, drop_unmutated = TRUE,
+    this_region = x, drop_unmutated = TRUE,seq_type=seq_type,
     slide_by = slide_by, plot_type = "none", window_size = window_size,
     min_count_per_bin = min_count_per_bin, return_count = TRUE,
     metadata = these_samples_metadata,
-    from_indexed_flatfile = from_indexed_flatfile, mode = mode)})
+    from_indexed_flatfile = from_indexed_flatfile, mode = mode,ssh_session=ssh_session)})
 
   all= do.call("rbind", dfs)
 
@@ -1784,9 +1788,11 @@ ashm_multi_rainbow_plot = function(regions_bed,
                                    regions_to_display,
                                    exclude_classifications,
                                    metadata,
+                                   seq_type,
                                    custom_colours,
                                    classification_column = "lymphgen",
-                                   maf_data){
+                                   maf_data,
+                                   ssh_session){
 
   table_name = config::get("results_tables")$ssm
   db = config::get("database_name")
@@ -1827,9 +1833,9 @@ ashm_multi_rainbow_plot = function(regions_bed,
   regions = pull(regions_bed, regions)
   names = pull(regions_bed, names)
   if(missing(maf_data)){
-    region_mafs = lapply(regions, function(x){get_ssm_by_region(region = x, streamlined = TRUE)})
+    region_mafs = lapply(regions, function(x){get_ssm_by_region(region = x, streamlined = TRUE,ssh_session=ssh_session,seq_type = seq_type)})
   }else{
-    region_mafs = lapply(regions, function(x){get_ssm_by_region(region = x, streamlined = TRUE, maf_data = maf_data)})
+    region_mafs = lapply(regions, function(x){get_ssm_by_region(region = x, streamlined = TRUE, maf_data = maf_data,ssh_session=ssh_session)})
   }
   tibbled_data = tibble(region_mafs, region_name = names)
   unnested_df = tibbled_data %>%
@@ -2014,7 +2020,8 @@ ashm_rainbow_plot = function(mutations_maf,
                              bed,
                              region,
                              custom_colours,
-                             hide_ids = TRUE){
+                             hide_ids = TRUE,
+                             ssh_session){
 
   table_name = config::get("results_tables")$ssm
   db=config::get("database_name")
@@ -2026,10 +2033,10 @@ ashm_rainbow_plot = function(mutations_maf,
     qstart = as.numeric(startend[1])
     qend = as.numeric(startend[2])
     if(missing(mutations_maf)){
-      mutations_maf = get_ssm_by_region(region = region, streamlined = TRUE)
+      mutations_maf = get_ssm_by_region(region = region, streamlined = TRUE,ssh_session=ssh_session,from_indexed_flatfile = T)
     }else{
       #ensure it only contains mutations in the region specified
-      mutations_maf = get_ssm_by_region(region = region, streamlined = TRUE, maf_data = mutations_maf)
+      mutations_maf = get_ssm_by_region(region = region, streamlined = TRUE, maf_data = mutations_maf,ssh_session=ssh_session)
     }
   }
   if(!missing(classification_column)){

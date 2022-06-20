@@ -249,27 +249,55 @@ check_gambl_metadata = function(metadata_df,to_check="all",show_details=FALSE,fi
 
 get_runs_table = function(seq_type_filter="genome"){
   t_meta = get_gambl_metadata(tissue_status_filter = c("tumour"),seq_type_filter=seq_type_filter) %>% 
-    dplyr::select(sample_id,patient_id,seq_type,genome_build,pairing_status) %>% rename("tumour_sample_id"="sample_id")
+    dplyr::select(sample_id,patient_id,seq_type,genome_build,pairing_status,unix_group) %>% 
+    rename("tumour_sample_id"="sample_id")
   n_meta = get_gambl_metadata(tissue_status_filter = c("normal"),seq_type_filter=seq_type_filter) %>%
     dplyr::select(sample_id,patient_id,seq_type,genome_build) %>% rename("normal_sample_id"="sample_id")
+  runs_df = left_join(t_meta,n_meta,by=c("patient_id","seq_type","genome_build"))
+  #fill in normal_sample_id for unmatched cases
+  unmatched_df = get_unmatched_normals(seq_type_filter=seq_type_filter)
+  runs_df = left_join(runs_df,unmatched_df,by=c("seq_type","genome_build","unix_group")) %>% 
+    mutate(normal_sample_id=ifelse(is.na(normal_sample_id.x),normal_sample_id.y,normal_sample_id.x)) %>% 
+    select(-normal_sample_id.x, -normal_sample_id.y)
+  return(runs_df)
+}
+
+#helper function to get the unmatched normals from the main config
+get_unmatched_normals = function(seq_type_filter){
+  a=config::get("unmatched_normal_ids")
+  df = melt(a,value.name="normal_sample_id") %>% 
+    rename(c("genome_build"="L3","seq_type"="L2","unix_group"="L1")) %>%
+    dplyr::filter(seq_type == seq_type_filter)
+  return(df)
 }
 
 check_expected_outputs = function(tool_name="battenberg",seq_type_filter="genome"){
-  all_meta = get_gambl_metadata(seq_type_filter=seq_type_filter)
+  projection = get_template_wildcards("projections")
   #drop irrelevant rows of the metadata based on the scope of the tool etc
   if(tool_name=="battenberg"){
     template_path = config::get("results_flatfiles")$cnv$battenberg
     extra_wildcards = config::get("results_flatfiles")$cnv$battenberg_wildcards
     #in the current setup, this drops unmatched samples (could be hard-coded but using the config is more transparent)
     relevant_metadata = dplyr::filter(all_meta,base::get(names(extra_wildcards)[1]) == unname(extra_wildcards[1])) 
-    relevant_metadata = dplyr::filter(relevant_metadata,seq_type == seq_type_filter)
+    runs = dplyr::filter(relevant_metadata,seq_type == seq_type_filter) %>%
+      mutate(tumour_sample_id = sample_id)
+  }else if(tool_name=="slms_3"){
+    runs = get_runs_table(seq_type_filter = seq_type_filter) %>% mutate(pair_status = pairing_status)
+    vcf_base = get_template_wildcards("vcf_base_name")
+    runs = mutate(runs,vcf_base_name = vcf_base)
+    #runs = mutate(runs,target_builds = projection)
+    runs = expand_grid(runs,target_builds=projection)
+    template_path = config::get("results_flatfiles")$ssm$template$clustered$deblacklisted
   }
   w = grob_wildcards(template_path)
-
-  projection = get_template_wildcards("projections")
+  
+  
+  
   #use the unix group and seq_type from the actual metadata and all available projections
   seq_type = seq_type_filter
-  template_path = glue::glue()
+  
+  runs_files = mutate(runs,outfile=glue::glue(template_path))
+  
 }
 
 

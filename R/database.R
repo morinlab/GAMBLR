@@ -1608,19 +1608,22 @@ append_to_table = function(table_name,
 get_ashm_count_matrix = function(regions_bed,
                                  maf_data,
                                  sample_metadata,
+                                 seq_type,
                                  use_name_column = FALSE,
                                  from_indexed_flatfile = FALSE,
-                                 allow_clustered = FALSE){
+                                 
+                                 ssh_session){
 
   if(missing(regions_bed)){
     regions_bed = grch37_ashm_regions
   }
   ashm_maf = get_ssm_by_regions(regions_bed = regions_bed,
                                 streamlined = TRUE,
+                                seq_type=seq_type,
                                 maf_data = maf_data,
                                 use_name_column = use_name_column,
                                 from_indexed_flatfile = from_indexed_flatfile,
-                                allow_clustered = allow_clustered)
+                                ssh_session=ssh_session)
 
   ashm_counted = ashm_maf %>%
     group_by(sample_id, region_name) %>%
@@ -1657,7 +1660,6 @@ get_ashm_count_matrix = function(regions_bed,
 #' @param seq_type The seq_type you want back, default is genome.
 #' @param projection Obtain variants projected to this reference (one of grch37 or hg38).
 #' @param min_read_support Only returns variants with at least this many reads in t_alt_count (for cleaning up augmented MAFs).
-#' @param allow_clustered Logical parameter indicating whether to use SLMS-3 results with clustered events. Default is FALSE.
 #'
 #' @return Returns a data frame of variants in MAF-like format.
 #' @export
@@ -1678,7 +1680,7 @@ get_ssm_by_regions = function(regions_list,
                               seq_type = "genome",
                               projection = "grch37",
                               min_read_support = 4,
-                              allow_clustered = TRUE){
+                              ssh_session){
 
   bed2region = function(x){
     paste0(x[1], ":", as.numeric(x[2]), "-", as.numeric(x[3]))
@@ -1698,14 +1700,14 @@ get_ssm_by_regions = function(regions_list,
                                                                 augmented = augmented,
                                                                 seq_type = seq_type,
                                                                 projection = projection,
-                                                                allow_clustered = allow_clustered)})
+                                                                ssh_session=ssh_session)})
   }else{
     region_mafs = lapply(regions, function(x){get_ssm_by_region(region = x,
                                                                 streamlined = streamlined,
                                                                 maf_data = maf_data,
                                                                 from_indexed_flatfile = from_indexed_flatfile,
                                                                 mode = mode,
-                                                                allow_clustered = allow_clustered)})
+                                                                ssh_session=ssh_session)})
   }
   if(!use_name_column){
     rn = regions
@@ -1768,9 +1770,10 @@ get_ssm_by_region = function(chromosome,
                              from_indexed_flatfile = TRUE,
                              augmented = TRUE,
                              min_read_support = 3,
-                             mode = "slms-3"){
+                             mode = "slms-3",
+                             ssh_session){
 
-  tabix_bin = "/home/rmorin/miniconda3/bin/tabix"
+  tabix_bin = config::get("dependencies")$tabix
   table_name = config::get("results_tables")$ssm
   db = config::get("database_name")
 
@@ -1792,13 +1795,11 @@ get_ssm_by_region = function(chromosome,
 
     maf_path = glue::glue(maf_partial_path)
     full_maf_path = paste0(base_path, maf_path)
-
-    #substitute maf with bed.gz for indexed flatfiles
-    full_maf_path = stringr::str_replace(full_maf_path, ".maf$", ".bed.gz")
+    full_maf_path_comp = paste0(base_path, maf_path, ".bgz")
+    
     message(paste("reading from:", full_maf_path))
   }
 
-  region = "chr8:128,723,128-128,774,067"
 
   if(!region == ""){
     region = gsub(",", "", region)
@@ -1815,29 +1816,28 @@ get_ssm_by_region = function(chromosome,
   if(projection =="grch37"){
     chromosome = gsub("chr", "", chromosome)
   }
-
+  #Helper function that may come in handy elsewhere so could be moved out of this function if necessary
+  run_command_remote = function(ssh_session,to_run){
+    output = ssh::ssh_exec_internal(ssh_session,to_run)$stdout
+    output = rawToChar(output)
+    return(output)
+  }
   if(missing(maf_data)){
     if(from_indexed_flatfile){
-      muts = system(paste(tabix_bin, full_maf_path, region), intern = TRUE)
-
-      if(length(muts) > 1){
-        muts_region = readr::read_tsv(I(muts), col_names = c("Chromosome", "Start_Position", "End_Position", "Tumor_Sample_Barcode", "Read_Support"))
-
-        # this is necessary because when only one row is returned, read_tsv thinks it is a file name
-      }else if (length(muts) == 1){
-        region_with_one_row = stringr::str_split(muts, "\t", n = 4)
-        muts_region = data.frame(Chromosome = unlist(region_with_one_row)[1],
-                                 Start_Position = as.numeric(unlist(region_with_one_row)[2]),
-                                 End_Position = as.numeric(unlist(region_with_one_row)[3]),
-                                 Tumor_Sample_Barcode = unlist(region_with_one_row)[4],
-                                 Read_Support = unlist(region_with_one_row)[5],
-                                 stringsAsFactors = FALSE)
-      } else {
-        muts_region = data.frame(Chromosome = character(),
-                                 Start_Position = character(),
-                                 End_Position = character(),
-                                 Tumor_Sample_Barcode = character(),
-                                 Read_Support = character())
+      if(!missing(ssh_session)){
+        # NOTE!
+        # Retrieving mutations per region over ssh connection is only supporting the basic columns for now in an attempt to keep the transfer of unnecessary data to a minimum
+        remote_base_path = config::get("project_base",config="default")
+        
+        full_maf_path_comp = paste0(remote_base_path, maf_path, ".bgz")
+        message(paste("reading from:", full_maf_path_comp))
+        tabix_command = paste(tabix_bin, full_maf_path_comp, region, "| cut -f 5,6,7,16,42")
+        muts = run_command_remote(ssh_session,tabix_command)
+        muts_region = vroom::vroom(I(muts),col_names=c("Chromosome", "Start_Position", "End_Position", "Tumor_Sample_Barcode", "Read_Support"))
+      }
+      else{
+        muts = system(paste(tabix_bin, full_maf_path, region), intern = TRUE)
+        muts_region = vroom(I(muts), col_names = maf_head)
       }
       if(augmented){
         # drop poorly supported reads but only from augmented MAF

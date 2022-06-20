@@ -21,13 +21,7 @@ get_ssh_session = function(host="gphost01.bcgsc.ca"){
   return(session)
 }
 
-#helper function to get the unmatched normals from the main config
-get_unmatched_normals = function(){
-  a=config::get("unmatched_normal_ids")
-  df = melt(a,value.name="normal_sample_id") %>% 
-    rename(c("genome_build"="L3","seq_type"="L2","unix_group"="L1"))
-  return(df)
-}
+
 
 #' Get regions (bed format) from genes.
 #'
@@ -290,6 +284,7 @@ calc_mutation_frequency_sliding_windows = function(this_region,
                                                    start_pos,
                                                    end_pos,
                                                    metadata,
+                                                   seq_type,
                                                    slide_by = 100,
                                                    window_size = 1000,
                                                    plot_type = "none",
@@ -300,7 +295,8 @@ calc_mutation_frequency_sliding_windows = function(this_region,
                                                    drop_unmutated = FALSE,
                                                    classification_column = "lymphgen",
                                                    from_indexed_flatfile = FALSE,
-                                                   mode = "slms-3"){
+                                                   mode = "slms-3",
+                                                   ssh_session=ssh_session){
 
   max_region = 1000000
   if(missing(metadata)){
@@ -324,7 +320,7 @@ calc_mutation_frequency_sliding_windows = function(this_region,
     mutate(end = start + window_size - 1)
   #use foverlaps to assign mutations to bins
   windows.dt = as.data.table(windows)
-  region_ssm = GAMBLR::get_ssm_by_region(region = this_region, streamlined = TRUE, from_indexed_flatfile = from_indexed_flatfile, mode = mode) %>%
+  region_ssm = GAMBLR::get_ssm_by_region(region = this_region, streamlined = TRUE, seq_type=seq_type, from_indexed_flatfile = from_indexed_flatfile, mode = mode,ssh_session=ssh_session) %>%
     dplyr::rename(c("start" = "Start_Position", "sample_id" = "Tumor_Sample_Barcode")) %>%
     mutate(mutated = 1)
 
@@ -848,7 +844,8 @@ collate_results = function(sample_table,
                            case_set,
                            sbs_manipulation = "",
                            seq_type_filter = "genome",
-                           from_cache = TRUE){
+                           from_cache = TRUE,
+                           ssh_session){
 
   # important: if you are collating results from anything but WGS (e.g RNA-seq libraries) be sure to use biopsy ID as the key in your join
   # the sample_id should probably not even be in this file if we want this to be biopsy-centric
@@ -1661,14 +1658,14 @@ collate_sbs_results = function(sample_table,
 #' @examples
 #' sample_table = collate_nfkbiz_results(sample_table=sample_table)
 #'
-collate_nfkbiz_results = function(sample_table,seq_type_filter="genome"){
+collate_nfkbiz_results = function(sample_table,seq_type_filter="genome",ssh_session){
   #TO DO: Update to work with hg38 projection
   if(missing(sample_table)){
     sample_table = get_gambl_metadata(seq_type_filter=seq_type_filter) %>%
       dplyr::select(sample_id, patient_id, biopsy_id)
   }
   this_region = "chr3:101578214-101578365"
-  nfkbiz_ssm = get_ssm_by_region(region = this_region,seq_type = seq_type_filter) %>%
+  nfkbiz_ssm = get_ssm_by_region(region = this_region,seq_type = seq_type_filter,ssh_session=ssh_session) %>%
     pull(Tumor_Sample_Barcode) %>%
     unique
   if(seq_type_filter=="genome"){
@@ -1700,7 +1697,8 @@ collate_nfkbiz_results = function(sample_table,seq_type_filter="genome"){
 #' sample_table = collate_ashm_results(sample_table=sample_table)
 #'
 collate_ashm_results = function(sample_table,
-                                seq_type_filter="genome"){
+                                seq_type_filter="genome",
+                                ssh_session){
 
   if(missing(sample_table)){
     sample_table = get_gambl_metadata(seq_type_filter=seq_type_filter) %>%
@@ -1709,7 +1707,7 @@ collate_ashm_results = function(sample_table,
   #just annotate BCL2, MYC and CCND1 hypermutation
   regions_df = data.frame(name = c("CCND1","BCL2","MYC"),
   region = c("chr11:69455000-69459900", "chr18:60983000-60989000", "chr8:128747615-128751834"))
-  region_mafs = lapply(regions_df$region, function(x){get_ssm_by_region(region = x, streamlined = TRUE,seq_type=seq_type_filter)})
+  region_mafs = lapply(regions_df$region, function(x){get_ssm_by_region(region = x, streamlined = TRUE,seq_type=seq_type_filter,ssh_session=ssh_session)})
   tibbled_data = tibble(region_mafs, region_name = regions_df$name)
   unnested_df = tibbled_data %>%
     unnest_longer(region_mafs)
