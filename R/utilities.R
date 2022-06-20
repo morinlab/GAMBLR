@@ -790,6 +790,7 @@ sv_to_custom_track = function(sv_bedpe,
 #' maf_to_custom_track(my_maf_data, "/home/rmorin/private/some_mutations.bed")
 #'
 maf_to_custom_track = function(maf_data,
+                               these_samples_metadata,
                                output_file){
 
   #reduce to a bed-like format
@@ -804,10 +805,13 @@ maf_to_custom_track = function(maf_data,
   rgb_df = data.frame(t(col2rgb(lymphgen_cols))) %>%
     mutate(lymphgen = names(lymphgen_cols)) %>%
     unite(col = "rgb", red, green, blue, sep = ",")
-
+  if(missing(these_samples_metadata)){
   meta = get_gambl_metadata() %>%
     dplyr::select(sample_id, lymphgen)
-
+  }else{
+    meta = these_samples_metadata %>%
+      dplyr::select(sample_id, lymphgen)
+  }
   samples_coloured = left_join(meta, rgb_df)
   maf_bed = maf_data %>%
     mutate(score = 0, strand = "+", end = end + 1, start1 = start, end1 = end)
