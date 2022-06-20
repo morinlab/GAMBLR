@@ -497,7 +497,10 @@ get_gambl_metadata = function(seq_type_filter = "genome",
   sample_meta = sample_meta %>%
     dplyr::filter(seq_type %in% seq_type_filter & tissue_status %in% tissue_status_filter & bam_available %in% c(1,"TRUE")) %>%
     dplyr::select(-sex)
-
+  #if only normals were requested, just return what we have because there is nothing else to join 
+  if(tissue_status_filter == "normal"){
+    return(sample_meta)
+  }
 
   #if we only care about genomes, we can drop/filter anything that isn't a tumour genome
   #The key for joining this table to the mutation information is to use sample_id. Think of this as equivalent to a library_id. It will differ depending on what assay was done to the sample.
@@ -733,13 +736,6 @@ get_gambl_metadata = function(seq_type_filter = "genome",
       return()
     }
   }
-
-  #add some derivative columns that simplify and consolidate some of the others (DLBCL-specific)
-  #all_meta = all_meta %>% dplyr::mutate(lymphgen = case_when(
-  #  pathology != "DLBCL" ~ pathology,
-  #  str_detect(lymphgen_cnv_noA53,"/") ~ "COMPOSITE",
-  #  TRUE ~ lymphgen_cnv_noA53
-  #))
 
   all_meta = GAMBLR::tidy_lymphgen(all_meta,
               lymphgen_column_in = "lymphgen_cnv_noA53",
@@ -1158,6 +1154,180 @@ get_manta_sv = function(min_vaf = 0.1,
 }
 
 
+#' Get a specific flavour of LymphGen from the main GAMBL outputs and tidy the composites.
+#' Optionally return a matrix of features instead
+#'
+#' @param flavour 
+#' @param these_samples_metadata
+#' @param return_feature_matrix
+#' @param return_feature_annotation
+#' @param lymphgen_file
+#' @param keep_all_rows
+#' @param keep_original_columns
+#'
+#' @return
+#' @export
+#'
+#' @examples
+get_lymphgen = function(these_samples_metadata,
+                        flavour,
+                        return_feature_matrix=FALSE,
+                        return_feature_annotation=FALSE,
+                        lymphgen_file,
+                        keep_all_rows=FALSE,
+                        keep_original_columns=FALSE){
+  if(missing(these_samples_metadata)){
+    if(!keep_all_rows){
+      these_samples_metadata = get_gambl_metadata(seq_type_filter="genome")
+    }
+  }
+  if(missing(flavour)){
+    if(!missing(lymphgen_file)){
+      lg_path = lymphgen_file
+    }else{
+      message("please provide a path to your lymphgen output file or one of the following flavours")
+      print(config::get("results_merged_wildcards")$lymphgen_template)
+      return(NULL)
+    }
+  }else{
+    lg_path = paste0(config::get("project_base"),config::get("results_merged")$lymphgen_template)
+    lg_path = glue::glue(lg_path)
+  }
+  
+  lg = readr::read_tsv(lg_path)
+  lg_tidy = tidy_lymphgen(lg,lymphgen_column_in = "Subtype.Prediction",lymphgen_column_out = "LymphGen")
+  if(return_feature_matrix | return_feature_annotation){
+    lg_ord = select(lg_tidy,Sample.Name,LymphGen) %>% arrange(LymphGen) %>% pull(Sample.Name)
+    lg_levels = select(lg_tidy,Sample.Name,LymphGen) %>% arrange(LymphGen) %>% pull(LymphGen)
+    all_mcd = separate(lg_tidy,col="MCD.Features",into=c(paste0("Feature_MCD_",seq(1:15))),sep=",") %>% 
+      pivot_longer(starts_with("Feature_"),values_to = "MCD") %>% dplyr::filter(!is.na(MCD)) %>% 
+      pull(MCD) %>% unique()
+    all_mcd_genes = str_remove(all_mcd,"_.*")%>% unique()
+    all_mcd_df = expand.grid(Sample.Name=unique(lg_tidy$Sample.Name),Feature=all_mcd_genes)
+    feat_mcd = separate(lg_tidy,col="MCD.Features",into=c(paste0("Feature_MCD_",seq(1:15))),sep=",") %>% 
+      pivot_longer(starts_with("Feature_"),values_to = "Feature") %>% dplyr::filter(!is.na(Feature)) %>% select(Sample.Name,Feature) %>% mutate(present=1)
+    
+    feat_mcd_genes = separate(lg_tidy,col="MCD.Features",into=c(paste0("Feature_MCD_",seq(1:15))),sep=",") %>% 
+      pivot_longer(starts_with("Feature_"),values_to = "Feature") %>% 
+      dplyr::filter(!is.na(Feature)) %>% select(Sample.Name,Feature) %>% mutate(present=1) %>% 
+      mutate(Feature=str_remove(Feature,"_.*")) %>% group_by(Sample.Name,Feature) %>% slice_head()
+    
+    
+    mcd_mat = left_join(all_mcd_df,feat_mcd_genes) %>% mutate(present=replace_na(present,0)) %>%
+      pivot_wider(names_from="Feature",values_from="present") 
+    feat_mcd = mutate(feat_mcd_genes,Class="MCD")
+  
+    all_ezb = separate(lg_tidy,col="EZB.Features",into=c(paste0("Feature_MCD_",seq(1:15))),sep=",") %>% 
+      pivot_longer(starts_with("Feature_"),values_to = "MCD") %>% dplyr::filter(!is.na(MCD)) %>% pull(MCD) %>% unique()
+    all_ezb_genes = str_remove(all_ezb,"_.*")%>% unique()
+    
+    feat_ezb_genes = separate(lg_tidy,col="EZB.Features",into=c(paste0("Feature_MCD_",seq(1:15))),sep=",") %>% 
+      pivot_longer(starts_with("Feature_"),values_to = "Feature") %>% 
+      dplyr::filter(!is.na(Feature)) %>% select(Sample.Name,Feature) %>% mutate(present=1) %>% 
+      mutate(Feature=str_remove(Feature,"_.*")) %>% group_by(Sample.Name,Feature) %>% slice_head()
+    
+    all_ezb_df = expand.grid(Sample.Name=unique(lg_tidy$Sample.Name),Feature=all_ezb_genes)
+    feat_ezb = separate(lg_tidy,col="EZB.Features",into=c(paste0("Feature_MCD_",seq(1:15))),sep=",") %>% 
+      pivot_longer(starts_with("Feature_"),values_to = "Feature") %>% dplyr::filter(!is.na(Feature)) %>% select(Sample.Name,Feature) %>% mutate(present=1)
+    
+    ezb_mat = left_join(all_ezb_df,feat_ezb_genes) %>% mutate(present=replace_na(present,0)) %>%
+      pivot_wider(names_from="Feature",values_from="present") 
+    feat_ezb = mutate(feat_ezb_genes,Class="EZB")
+    
+    all_bn2 = separate(lg_tidy,col="BN2.Features",into=c(paste0("Feature_MCD_",seq(1:15))),sep=",") %>% 
+      pivot_longer(starts_with("Feature_"),values_to = "MCD") %>% dplyr::filter(!is.na(MCD)) %>% pull(MCD) %>% unique()
+    all_bn2_genes = str_remove(all_bn2,"_.*")%>% unique()
+    all_bn2_df = expand.grid(Sample.Name=unique(lg_tidy$Sample.Name),Feature=all_bn2_genes)
+    
+    feat_bn2 = separate(lg_tidy,col="BN2.Features",into=c(paste0("Feature_MCD_",seq(1:15))),sep=",") %>% 
+      pivot_longer(starts_with("Feature_"),values_to = "Feature") %>% dplyr::filter(!is.na(Feature)) %>%
+      select(Sample.Name,Feature) %>% mutate(present=1)
+    
+    feat_bn2_genes = separate(lg_tidy,col="BN2.Features",into=c(paste0("Feature_MCD_",seq(1:15))),sep=",") %>% 
+      pivot_longer(starts_with("Feature_"),values_to = "Feature") %>% 
+      dplyr::filter(!is.na(Feature)) %>% select(Sample.Name,Feature) %>% mutate(present=1) %>% 
+      mutate(Feature=str_remove(Feature,"_.*")) %>% group_by(Sample.Name,Feature) %>% slice_head()
+    
+    
+    bn2_mat = left_join(all_bn2_df,feat_bn2_genes) %>% mutate(present=replace_na(present,0)) %>%
+      pivot_wider(names_from="Feature",values_from="present") 
+    feat_bn2 = mutate(feat_bn2_genes,Class="BN2")
+    
+    all_st2 = separate(lg_tidy,col="ST2.Features",into=c(paste0("Feature_MCD_",seq(1:15))),sep=",") %>% 
+      pivot_longer(starts_with("Feature_"),values_to = "MCD") %>% dplyr::filter(!is.na(MCD)) %>% 
+      pull(MCD) %>% unique()
+    all_st2_genes = str_remove(all_st2,"_.*") %>% unique()
+    all_st2_df = expand.grid(Sample.Name=unique(lg_tidy$Sample.Name),Feature=all_st2_genes)
+    
+    feat_st2 = separate(lg_tidy,col="ST2.Features",into=c(paste0("Feature_MCD_",seq(1:15))),sep=",") %>% 
+      pivot_longer(starts_with("Feature_"),values_to = "Feature") %>% dplyr::filter(!is.na(Feature)) %>%
+      select(Sample.Name,Feature) %>% mutate(present=1)
+    
+    feat_st2_genes = separate(lg_tidy,col="ST2.Features",into=c(paste0("Feature_MCD_",seq(1:15))),sep=",") %>% 
+      pivot_longer(starts_with("Feature_"),values_to = "Feature") %>% 
+      dplyr::filter(!is.na(Feature)) %>% select(Sample.Name,Feature) %>% mutate(present=1) %>% 
+      mutate(Feature=str_remove(Feature,"_.*")) %>% group_by(Sample.Name,Feature) %>% slice_head()
+    
+    
+    st2_mat = left_join(all_st2_df,feat_st2_genes) %>% mutate(present=replace_na(present,0)) %>%
+      pivot_wider(names_from="Feature",values_from="present") 
+    feat_st2 = mutate(feat_st2_genes,Class="ST2")
+    
+    all_n1 = separate(lg_tidy,col="N1.Features",into=c(paste0("Feature_MCD_",seq(1:15))),sep=",") %>% 
+      pivot_longer(starts_with("Feature_"),values_to = "MCD") %>% dplyr::filter(!is.na(MCD)) %>% pull(MCD) %>% unique()
+    all_n1_genes = str_remove(all_n1,"_.*") %>% unique()
+    
+    #all_n1_df = expand.grid(Sample.Name=unique(lg_tidy$Sample.Name),Feature=all_n1)
+    all_n1_df = expand.grid(Sample.Name=unique(lg_tidy$Sample.Name),Feature=all_n1_genes)
+    feat_n1 = separate(lg_tidy,col="N1.Features",into=c(paste0("Feature_MCD_",seq(1:15))),sep=",") %>% 
+      pivot_longer(starts_with("Feature_"),values_to = "Feature") %>% dplyr::filter(!is.na(Feature)) %>%
+      select(Sample.Name,Feature) %>% mutate(present=1)
+    
+    feat_n1_genes = separate(lg_tidy,col="N1.Features",into=c(paste0("Feature_MCD_",seq(1:15))),sep=",") %>% 
+      pivot_longer(starts_with("Feature_"),values_to = "Feature") %>% 
+      dplyr::filter(!is.na(Feature)) %>% select(Sample.Name,Feature) %>% mutate(present=1) %>% 
+      mutate(Feature=str_remove(Feature,"_.*")) %>% group_by(Sample.Name,Feature) %>% slice_head()
+    
+    #n1_mat = left_join(all_n1_df,feat_n1) %>% mutate(present=replace_na(present,0)) %>%
+    #  pivot_wider(names_from="Feature",values_from="present") 
+    
+    n1_mat = left_join(all_n1_df,feat_n1_genes) %>% mutate(present=replace_na(present,0)) %>%
+      pivot_wider(names_from="Feature",values_from="present") 
+    feat_n1 = mutate(feat_n1_genes,Class="N1")
+    
+    all_genes = c(all_n1_genes,all_ezb_genes,all_st2_genes,all_bn2_genes,all_mcd_genes)
+    print(table(all_genes))
+    feat_all = bind_rows(feat_n1,feat_st2,feat_mcd,feat_ezb,feat_bn2)
+    
+  if(return_feature_annotation){
+    #just give the user the association between each feature and its class along with some summary stats
+    feat_count = group_by(feat_all,Feature,Class) %>% count() 
+    return(feat_count)
+  }
+  
+  all_mat = left_join(ezb_mat,mcd_mat)
+  all_mat = left_join(all_mat,bn2_mat) 
+  all_mat = left_join(all_mat,n1_mat) 
+  all_mat = left_join(all_mat,st2_mat) 
+  if(!keep_all_rows){
+    all_mat = dplyr::filter(all_mat,Sample.Name %in% these_samples_metadata$sample_id)
+  }
+  all_mat = all_mat %>% column_to_rownames("Sample.Name")
+  
+    return(all_mat)
+  }else{
+    if(!keep_original_columns){
+      lg_tidy = dplyr::select(lg_tidy,Sample.Name,LymphGen) 
+    }
+    lg_tidy = lg_tidy %>% dplyr::rename("sample_id"="Sample.Name")
+    if(!keep_all_rows){
+      lg_tidy = dplyr::filter(lg_tidy,sample_id %in% these_samples_metadata$sample_id)
+    }
+    return(lg_tidy)
+    
+  }
+}
+
 #' Get a copy number matrix for all samples based on segmented data in database.
 #'
 #' @param regions_list A list of regions in the format chrom:start-end.
@@ -1495,17 +1665,21 @@ append_to_table = function(table_name,
 get_ashm_count_matrix = function(regions_bed,
                                  maf_data,
                                  sample_metadata,
+                                 seq_type,
                                  use_name_column = FALSE,
-                                 from_indexed_flatfile = TRUE){
+                                 from_indexed_flatfile = FALSE,
+                                 ssh_session){
 
   if(missing(regions_bed)){
     regions_bed = grch37_ashm_regions
   }
-  ashm_maf = suppressMessages(get_ssm_by_regions(regions_bed = regions_bed,
-                                basic_columns = TRUE,
+  ashm_maf = get_ssm_by_regions(regions_bed = regions_bed,
+                                streamlined = TRUE,
+                                seq_type=seq_type,
                                 maf_data = maf_data,
                                 use_name_column = use_name_column,
-                                from_indexed_flatfile = from_indexed_flatfile))
+                                from_indexed_flatfile = from_indexed_flatfile,
+                                ssh_session=ssh_session)
 
   ashm_counted = ashm_maf %>%
     group_by(Tumor_Sample_Barcode, region_name) %>%
@@ -1547,7 +1721,6 @@ get_ashm_count_matrix = function(regions_bed,
 #' @param seq_type The seq_type you want back, default is genome.
 #' @param projection Obtain variants projected to this reference (one of grch37 or hg38).
 #' @param min_read_support Only returns variants with at least this many reads in t_alt_count (for cleaning up augmented MAFs).
-#' @param allow_clustered Logical parameter indicating whether to use SLMS-3 results with clustered events. Default is FALSE.
 #'
 #' @return Returns a data frame of variants in MAF-like format.
 #' @export
@@ -1570,7 +1743,8 @@ get_ssm_by_regions = function(regions_list,
                               augmented = TRUE,
                               seq_type = "genome",
                               projection = "grch37",
-                              min_read_support = 4){
+                              min_read_support = 4,
+                              ssh_session){
 
   bed2region = function(x){
     paste0(x[1], ":", as.numeric(x[2]), "-", as.numeric(x[3]))
@@ -1591,13 +1765,15 @@ get_ssm_by_regions = function(regions_list,
                                                                 mode = mode,
                                                                 augmented = augmented,
                                                                 seq_type = seq_type,
-                                                                projection = projection)})
+                                                                projection = projection,
+                                                                ssh_session=ssh_session)})
   }else{
     region_mafs = lapply(regions, function(x){get_ssm_by_region(region = x,
                                                                 streamlined = streamlined,
                                                                 maf_data = maf_data,
                                                                 from_indexed_flatfile = from_indexed_flatfile,
-                                                                mode = mode)})
+                                                                mode = mode,
+                                                                ssh_session=ssh_session)})
   }
 
   if(!use_name_column){
@@ -1684,9 +1860,10 @@ get_ssm_by_region = function(chromosome,
                              from_indexed_flatfile = TRUE,
                              augmented = TRUE,
                              min_read_support = 3,
-                             mode = "slms-3"){
+                             mode = "slms-3",
+                             ssh_session){
 
-  tabix_bin = "/home/rmorin/miniconda3/bin/tabix"
+  tabix_bin = config::get("dependencies")$tabix
   table_name = config::get("results_tables")$ssm
   db = config::get("database_name")
 
@@ -1710,8 +1887,10 @@ get_ssm_by_region = function(chromosome,
     maf_path = glue::glue(maf_partial_path)
     full_maf_path = paste0(base_path, maf_path)
     full_maf_path_comp = paste0(base_path, maf_path, ".bgz")
-
+    
+    message(paste("reading from:", full_maf_path))
   }
+
 
   if(!region == ""){
     region = gsub(",", "", region)
@@ -1730,14 +1909,27 @@ get_ssm_by_region = function(chromosome,
   if(projection =="grch37"){
     chromosome = gsub("chr", "", chromosome)
   }
-
+  #Helper function that may come in handy elsewhere so could be moved out of this function if necessary
+  run_command_remote = function(ssh_session,to_run){
+    output = ssh::ssh_exec_internal(ssh_session,to_run)$stdout
+    output = rawToChar(output)
+    return(output)
+  }
   if(missing(maf_data)){
     if(from_indexed_flatfile){
-      #get column names for maf
-      maf_head = as.vector(as.matrix(read.table(file = full_maf_path, header = FALSE, stringsAsFactors = FALSE, nrows = 1)))
-      muts = system(paste(tabix_bin, full_maf_path_comp, region), intern = TRUE)
-
-      if(length(muts) > 1){
+      if(!missing(ssh_session)){
+        # NOTE!
+        # Retrieving mutations per region over ssh connection is only supporting the basic columns for now in an attempt to keep the transfer of unnecessary data to a minimum
+        remote_base_path = config::get("project_base",config="default")
+        
+        full_maf_path_comp = paste0(remote_base_path, maf_path, ".bgz")
+        message(paste("reading from:", full_maf_path_comp))
+        tabix_command = paste(tabix_bin, full_maf_path_comp, region, "| cut -f 5,6,7,16,42")
+        muts = run_command_remote(ssh_session,tabix_command)
+        muts_region = vroom::vroom(I(muts),col_names=c("Chromosome", "Start_Position", "End_Position", "Tumor_Sample_Barcode", "Read_Support"))
+      }
+      else{
+        muts = system(paste(tabix_bin, full_maf_path, region), intern = TRUE)
         muts_region = vroom(I(muts), col_names = maf_head)
       }
 

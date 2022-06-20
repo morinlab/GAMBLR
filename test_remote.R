@@ -2,8 +2,14 @@
 # in your config.yml file set repo_base under the remote config (at the top) to point to this path also
 library(GAMBLR)
 library(tidyverse)
+#library(ssh)
 #skip this next line if you are running on the GSC network
 Sys.setenv(R_CONFIG_ACTIVE= "remote")
+
+check_gamblr_config() #check for missing local files
+
+session = get_ssh_session() #only run this if you have an active VPN connection
+check_gamblr_config(compare_timestamps = T,ssh_session=session)
 
 
 config::get("project_base")
@@ -71,7 +77,7 @@ svar_anno = annotate_sv(svar_all)
 
 all_seg = get_sample_cn_segments(sample_list = all_meta$sample_id,multiple_samples = T)
 #dim(all_seg)
-#[1] 375247      7
+#[1] 376588      7
 
 # Test remote functionality over ssh
 
@@ -107,6 +113,20 @@ pursteenah = estimate_purity(sample_id = "14-24534_tumorB",seg_file_source = "ba
 
 pursteenah$sample_purity_estimation
 
+
+#pure=estimate_purity(sample_id="12-17272_tumorB",seg_file_source = "battenberg")
+#fetching: slms-3                                                                                                                                   
+#using flatfile: /projects/nhl_meta_analysis_scratch/gambl/results_local/gambl/battenberg_current/99-outputs/seg/genome--grch37/12-17272_tumorB--12-17272_normal_subclones.igv.seg
+#Rows: 45 Columns: 6                                                                                                                                
+#── Column specification ────────────────────────────────────────────────────────────────────────────────────────
+#Delimiter: "\t"
+#chr (2): ID, chrom
+#dbl (4): start, end, LOH_flag, log.ratio
+#ℹ Use `spec()` to retrieve the full column specification for this data.
+#ℹ Specify the column types or set `show_col_types = FALSE` to quiet this message.
+#> pure$sample_purity_estimation
+#[1] 0.3882176
+
 # advanced functions
 
 
@@ -118,14 +138,14 @@ coding_ssm_status = get_coding_ssm_status(gene_symbols = c("EZH2","CREBBP","KMT2
 
 cbio_path = paste0(config::get("project_base"),"cbioportal-docker-compose/study/GAMBL_capture_2022/")
 
-samples_included = GAMBLR::setup_study(seq_type = "capture",
+samples_included = GAMBLR::setup_study(seq_type_filter = "capture",
                     short_name="GAMBL_capture_2022",
                     human_friendly_name = "GAMBL exomes 2022 edition",
                     project_name="gambl_capture_2022",
                     description = "GAMBL capture data",
                     out_dir = cbio_path)
 
-finalize_study(seq_type="capture",short_name="GAMBL_capture_2022",sample_ids=samples_included,
+finalize_study(seq_type_filter="capture",short_name="GAMBL_capture_2022",sample_ids=samples_included,
                human_friendly_name = "GAMBL exomes 2022 edition",
                project_name="gambl_capture_2022",
                description = "GAMBL capture data",out_dir = cbio_path,overwrite = TRUE)
