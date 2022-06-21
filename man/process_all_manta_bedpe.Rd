@@ -21,9 +21,6 @@ process_all_manta_bedpe(
 
 \item{pattern}{pattern}
 }
-\value{
-
-}
 \description{
 This is a helper function that is not meant to be used routinely
 }

@@ -20,9 +20,6 @@ populate_each_tool_result(
 
 \item{unix_group}{A list of all unix groups to process}
 }
-\value{
-
-}
 \description{
 Title
 }

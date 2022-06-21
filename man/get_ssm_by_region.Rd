@@ -8,7 +8,7 @@ get_ssm_by_region(
   chromosome,
   qstart,
   qend,
-  region = "",
+  region = "chr8:128,723,128-128,774,067",
   basic_columns = TRUE,
   maf_cols = NULL,
   return_cols = FALSE,
@@ -19,7 +19,8 @@ get_ssm_by_region(
   from_indexed_flatfile = TRUE,
   augmented = TRUE,
   min_read_support = 3,
-  mode = "slms-3"
+  mode = "slms-3",
+  ssh_session
 )
 }
 \arguments{
