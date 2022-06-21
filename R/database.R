@@ -1711,10 +1711,8 @@ get_ashm_count_matrix = function(regions_bed,
 #'
 #' @param regions_list Either provide a vector of regions in the chr:start-end format OR.
 #' @param regions_bed Better yet, provide a bed file with the coordinates you want to retrieve.
-#' @param streamlined Set to TRUE to return only the following columns; start, sample_id and region_name.
-#' @param basic_columns Set to FALSE to override the default behavior of returning only the following columns; chromosome, start, end and sample_id.
-#' @param maf_cols if basic_columns is set to FALSE, the user can specify what columns to be returned within the MAF. This parameter can either be a list of indexes (integer) or a list of characters.
-#' @param return_cols If set to TRUE, a vector with all available column names will be returned. Default is FALSE.
+#' @param streamlined Return a basic rather than full MAF format, default is FALSE.
+#' @param use_name_column If your bed-format data frame has a name column (must be named "name") these can be used to name your regions.
 #' @param from_indexed_flatfile Set to TRUE to avoid using the database and instead rely on flatfiles (only works for streamlined data, not full MAF details).
 #' @param mode Only works with indexed flatfiles. Accepts 2 options of "slms-3" and "strelka2" to indicate which variant caller to use. Default is "slms-3".
 #' @param augmented default: TRUE. Set to FALSE if you instead want the original MAF from each sample for multi-sample patients instead of the augmented MAF
@@ -1732,12 +1730,9 @@ get_ashm_count_matrix = function(regions_bed,
 #'
 get_ssm_by_regions = function(regions_list,
                               regions_bed,
-                              streamlined = FALSE,
-                              basic_columns = TRUE,
-                              maf_cols = NULL,
-                              return_cols = FALSE,
-                              use_name_column = FALSE,
+                              streamlined = TRUE,
                               maf_data = maf_data,
+                              use_name_column = FALSE,
                               from_indexed_flatfile = TRUE,
                               mode = "slms-3",
                               augmented = TRUE,
@@ -1749,7 +1744,6 @@ get_ssm_by_regions = function(regions_list,
   bed2region = function(x){
     paste0(x[1], ":", as.numeric(x[2]), "-", as.numeric(x[3]))
   }
-
   if(missing(regions_list)){
     if(!missing(regions_bed)){
       regions = apply(regions_bed, 1, bed2region)
@@ -1760,7 +1754,6 @@ get_ssm_by_regions = function(regions_list,
   if(missing(maf_data)){
     region_mafs = lapply(regions, function(x){get_ssm_by_region(region = x,
                                                                 streamlined = streamlined,
-                                                                basic_columns = TRUE,
                                                                 from_indexed_flatfile = from_indexed_flatfile,
                                                                 mode = mode,
                                                                 augmented = augmented,
@@ -1775,46 +1768,24 @@ get_ssm_by_regions = function(regions_list,
                                                                 mode = mode,
                                                                 ssh_session=ssh_session)})
   }
-
   if(!use_name_column){
     rn = regions
   }else{
     rn = regions_bed[["name"]]
   }
-
-  #get region names
   tibbled_data = tibble(region_mafs, region_name = rn)
   unnested_df = tibbled_data %>%
     unnest_longer(region_mafs)
 
-  #subset on region names and rename column before cbind with full maf
-  r_names = as.data.frame(unnested_df$region_name)
-  colnames(r_names)[1] <- "region_name"
-
-  #unnest maf
-  unnested_maf = bind_rows(region_mafs)
-
-  #join region names df with unnested maf
-  maf = cbind(r_names, unnested_maf)
-
   if(streamlined){
-    maf = maf %>%
-      dplyr::select(Start_Position, Tumor_Sample_Barcode)
-  }else if(basic_columns){
-    maf = maf[, c(1:46)]
-  }
+    unlisted_df = mutate(unnested_df, start = region_mafs$Start_Position, sample_id = region_mafs$Tumor_Sample_Barcode) %>%
+      dplyr::select(start, sample_id, region_name)
 
-  #subset maf to a specific set of columns (defined in maf_cols)
-  if(!is.null(maf_cols) && !basic_columns){
-    maf = dplyr::select(maf, all_of(maf_cols))
+  }else{
+    unlisted_df = mutate(unnested_df, chromosome = region_mafs$Chromosome, end = region_mafs$End_Position, start = region_mafs$Start_Position, sample_id = region_mafs$Tumor_Sample_Barcode) %>%
+      dplyr::select(chromosome, start, end, sample_id, region_name)
   }
-
-  #print all available columns
-  if(!basic_columns && return_cols){
-    print(colnames(maf))
-  }
-
-  return(maf)
+  return(unlisted_df)
 }
 
 
@@ -1824,9 +1795,7 @@ get_ssm_by_regions = function(regions_list,
 #' @param qstart Query start coordinate of the range you are restricting to.
 #' @param qend Query end coordinate of the range you are restricting to.
 #' @param region Region formatted like chrX:1234-5678 instead of specifying chromosome, start and end separately.
-#' @param basic_columns Set to FALSE to override the default behavior of returning only the first 45 columns of MAF data.
-#' @param maf_cols if basic_columns is set to FALSE, the user can specify what columns to be returned within the MAF. This parameter can either be a list of indexes (integer) or a list of characters.
-#' @param return_cols If set to TRUE, a vector with all available column names will be returned. Default is FALSE.
+#' @param basic_columns Set to TRUE to override the default behaviour of returning only the first 45 columns of MAF data.
 #' @param streamlined Return a basic rather than full MAF format, default is FALSE.
 #' @param maf_data Parameter description.
 #' @param seq_type The seq_type you want back, default is genome.
@@ -1850,9 +1819,7 @@ get_ssm_by_region = function(chromosome,
                              qstart,
                              qend,
                              region = "",
-                             basic_columns = TRUE,
-                             maf_cols = NULL,
-                             return_cols = FALSE,
+                             basic_columns = FALSE,
                              streamlined = FALSE,
                              maf_data,
                              seq_type = "genome",
@@ -1876,14 +1843,13 @@ get_ssm_by_region = function(chromosome,
         maf_partial_path = config::get("results_flatfiles")$ssm$template$merged$augmented
       }else{
         maf_partial_path = config::get("results_flatfiles")$ssm$template$merged$deblacklisted
-      }
+        }
     }else if (mode == "strelka2"){
       maf_partial_path = config::get("results_flatfiles")$ssm$all$strelka2
     }else{
       stop("You requested results from indexed flatfile. The mode should be set to either slms-3 (default) or strelka2. Please specify one of these modes.")
     }
 
-    #setup file paths
     maf_path = glue::glue(maf_partial_path)
     full_maf_path = paste0(base_path, maf_path)
     full_maf_path_comp = paste0(base_path, maf_path, ".bgz")
@@ -1894,11 +1860,9 @@ get_ssm_by_region = function(chromosome,
   if(!region == ""){
     region = gsub(",", "", region)
     split_chunks = unlist(strsplit(region, ":"))
-
     if(projection == "grch37"){
       region = stringr::str_replace(region, "chr", "")
     }
-
     chromosome = split_chunks[1]
     startend = unlist(strsplit(split_chunks[2], "-"))
     qstart = as.numeric(startend[1])
@@ -1908,11 +1872,11 @@ get_ssm_by_region = function(chromosome,
   if(projection =="grch37"){
     chromosome = gsub("chr", "", chromosome)
   }
+
   if(missing(maf_data)){
     if(from_indexed_flatfile){
       if(ssh_session){
-          #Helper function that may come in handy elsewhere so could be moved out of this function if necessary
-
+        #Helper function that may come in handy elsewhere so could be moved out of this function if necessary
         run_command_remote = function(ssh_session,to_run){
         output = ssh::ssh_exec_internal(ssh_session,to_run)$stdout
         output = rawToChar(output)
@@ -1922,24 +1886,22 @@ get_ssm_by_region = function(chromosome,
         # NOTE!
         # Retrieving mutations per region over ssh connection is only supporting the basic columns for now in an attempt to keep the transfer of unnecessary data to a minimum
         remote_base_path = config::get("project_base",config="default")
-
         full_maf_path_comp = paste0(remote_base_path, maf_path, ".bgz")
         message(paste("reading from:", full_maf_path_comp))
         tabix_command = paste(tabix_bin, full_maf_path_comp, region, "| cut -f 5,6,7,16,42")
         muts = run_command_remote(ssh_session,tabix_command)
-        muts_region = vroom::vroom(I(muts),col_names=c("Chromosome", "Start_Position", "End_Position", "Tumor_Sample_Barcode", "Read_Support"))
-      }
-      else{
+        muts_region = vroom::vroom(I(muts),col_types = "ciici",
+                                   col_names=c("Chromosome", "Start_Position", "End_Position", "Tumor_Sample_Barcode", "Read_Support"))
+      }else{
+        #get column names for maf and read maf
         maf_head = as.vector(as.matrix(read.table(file = full_maf_path, header = FALSE, stringsAsFactors = FALSE, nrows = 1)))
         muts = system(paste(tabix_bin, full_maf_path_comp, region), intern = TRUE)
         muts_region = vroom(I(muts), col_names = maf_head)
       }
-
       if(augmented){
         # drop poorly supported reads but only from augmented MAF
         muts_region = dplyr::filter(muts_region, t_alt_count >= min_read_support)
       }
-
     }else{
       con = DBI::dbConnect(RMariaDB::MariaDB(), dbname = db)
       muts_region = dplyr::tbl(con, table_name) %>%
@@ -1961,22 +1923,8 @@ get_ssm_by_region = function(chromosome,
     muts_region = muts_region[, c(1:45)]
   }
 
-  #subset maf to a specific set of columns (defined in maf_cols)
-  if(!is.null(maf_cols) && !basic_columns){
-    muts_region = dplyr::select(muts_region, all_of(maf_cols))
-  }
-
-  #print all available columns
-  if(!basic_columns && return_cols){
-    print(colnames(muts_region))
-  }
-
-  muts_region$Chromosome = as.character(muts_region$Chromosome)
-
   return(muts_region)
 }
-
-
 
 
 #' Retrieve all coding SSMs from the GAMBL database in MAF-like format.
