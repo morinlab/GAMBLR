@@ -1744,7 +1744,7 @@ get_ssm_by_regions = function(regions_list,
                               seq_type = "genome",
                               projection = "grch37",
                               min_read_support = 4,
-                              ssh_session){
+                              ssh_session = FALSE){
 
   bed2region = function(x){
     paste0(x[1], ":", as.numeric(x[2]), "-", as.numeric(x[3]))
@@ -1861,7 +1861,7 @@ get_ssm_by_region = function(chromosome,
                              augmented = TRUE,
                              min_read_support = 3,
                              mode = "slms-3",
-                             ssh_session){
+                             ssh_session = FALSE){
 
   tabix_bin = config::get("dependencies")$tabix
   table_name = config::get("results_tables")$ssm
@@ -1891,7 +1891,6 @@ get_ssm_by_region = function(chromosome,
     message(paste("reading from:", full_maf_path))
   }
 
-
   if(!region == ""){
     region = gsub(",", "", region)
     split_chunks = unlist(strsplit(region, ":"))
@@ -1909,16 +1908,17 @@ get_ssm_by_region = function(chromosome,
   if(projection =="grch37"){
     chromosome = gsub("chr", "", chromosome)
   }
-  #Helper function that may come in handy elsewhere so could be moved out of this function if necessary
-
-  run_command_remote = function(ssh_session,to_run){
-    output = ssh::ssh_exec_internal(ssh_session,to_run)$stdout
-    output = rawToChar(output)
-    return(output)
-  }
   if(missing(maf_data)){
     if(from_indexed_flatfile){
-      if(!missing(ssh_session)){
+      if(ssh_session){
+          #Helper function that may come in handy elsewhere so could be moved out of this function if necessary
+
+        run_command_remote = function(ssh_session,to_run){
+        output = ssh::ssh_exec_internal(ssh_session,to_run)$stdout
+        output = rawToChar(output)
+        return(output)
+        }
+
         # NOTE!
         # Retrieving mutations per region over ssh connection is only supporting the basic columns for now in an attempt to keep the transfer of unnecessary data to a minimum
         remote_base_path = config::get("project_base",config="default")
