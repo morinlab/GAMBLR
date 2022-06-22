@@ -4,7 +4,7 @@ remote:
 
 default:
     project_base: "/projects/nhl_meta_analysis_scratch/gambl/results_local/"
-    repo_base: "/projects/rmorin/projects/gambl-repos/gambl-hshaalan/"
+    repo_base: "/projects/rmorin/projects/gambl-repos/gambl-rmorin/"
     derived_and_curated: "icgc_dart/derived_and_curated_metadata/"
     database_name: "gambl_test"
     results_staging:
