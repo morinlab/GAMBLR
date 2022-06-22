@@ -31,6 +31,7 @@ annotate_ssm_blacklist = function(mutations_df,
                                   blacklist_file_template,
                                   drop_threshold = 4,
                                   return_blacklist = FALSE,
+                                  use_curated_blacklist = FALSE,
                                   verbose = FALSE,
                                   invert = FALSE){
   if(missing(seq_type)){
@@ -80,7 +81,37 @@ annotate_ssm_blacklist = function(mutations_df,
   mutations_df = left_join(mutations_df,combined_blacklist,by = c("Chromosome", "Start_Position")) %>%
     mutate(blacklist_count = replace_na(blacklist_count, 0))
 
+  if (use_curated_blacklist){
+    repo_base = config::get("repo_base")
+    full_path = paste0(repo_base, config::get("results_versioned")$curated_blacklist$template)
+    additional_blacklist = glue(repo_path) %>% read_tsv(c("chrpos", "blacklist_count2"), show_col_types = FALSE)
+    additional_blacklist = additional_blacklist %>%
+      separate(chrpos, into = c("Chromosome", "Start_Position"), sep = ":")
 
+    additional_blacklist = mutate(additional_blacklist, Start_Position = as.integer(Start_Position)) %>%
+      group_by(Start_Position, Chromosome) %>%
+      summarize(blacklist_count2 = sum(blacklist_count2)) %>%
+      ungroup()
+
+    if(str_detect(mutations_df$Chromosome, "chr")[1]){
+      additional_blacklist = mutate(additional_blacklist, Chromosome = paste0("chr", Chromosome))
+    }
+    mutations_df = left_join(mutations_df,additional_blacklist,by = c("Chromosome", "Start_Position")) %>%
+      mutate(blacklist_count2 = replace_na(blacklist_count2, 0))
+    dropped = dplyr::filter(mutations_df, blacklist_count2 > drop_threshold)
+    mutations_df = dplyr::filter(mutations_df, is.na(blacklist_count2) | blacklist_count2 < drop_threshold)
+
+    if(verbose){
+      if(length(dropped) > 0 ){
+        ndrop = length(dropped$Tumor_Sample_Barcode)
+        message(paste(ndrop, "variants were dropped"))
+      } else {
+        message("0 variants were dropped")
+      }
+
+    }
+
+  }
   dropped = dplyr::filter(mutations_df, blacklist_count > drop_threshold)
   if(verbose){
     if(length(dropped) > 0 ){
