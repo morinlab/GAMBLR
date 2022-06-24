@@ -1422,8 +1422,7 @@ get_ashm_count_matrix = function(regions_bed,
 #' @param augmented default: TRUE. Set to FALSE if you instead want the original MAF from each sample for multi-sample patients instead of the augmented MAF
 #' @param seq_type The seq_type you want back, default is genome.
 #' @param projection Obtain variants projected to this reference (one of grch37 or hg38).
-#' @param min_read_support Only returns variants with at least this many reads in t_alt_count (for cleaning up augmented MAFs).
-#' @param allow_clustered Logical parameter indicating whether to use SLMS-3 results with clustered events. Default is FALSE.
+#' @param min_read_support Only returns variants with at least this many reads in t_alt_count (for cleaning up augmented MAFs). Default is 4.
 #'
 #' @return Returns a data frame of variants in MAF-like format.
 #' @export
