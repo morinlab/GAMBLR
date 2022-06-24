@@ -1363,7 +1363,6 @@ append_to_table = function(table_name,
 #' @param sample_metadata This is used to complete your matrix. All GAMBL samples will be used by default. Provide a data frame with at least sample_id for all samples if you are using non-GAMBL data.
 #' @param use_name_column Set this to true to force the function to use the value in column "name" to name each feature in the output.
 #' @param from_indexed_flatfile Set to TRUE to avoid using the database and instead rely on flatfiles (only works for streamlined data, not full MAF details).
-#' @param allow_clustered Set to TRUE to utilize the latest SLMS-3 variant calls that allow clustered variants.
 #'
 #' @return Matrix
 #' @export
@@ -1375,8 +1374,7 @@ get_ashm_count_matrix = function(regions_bed,
                                  maf_data,
                                  sample_metadata,
                                  use_name_column = FALSE,
-                                 from_indexed_flatfile = FALSE,
-                                 allow_clustered = FALSE){
+                                 from_indexed_flatfile = FALSE){
 
   if(missing(regions_bed)){
     regions_bed = grch37_ashm_regions
@@ -1385,8 +1383,7 @@ get_ashm_count_matrix = function(regions_bed,
                                 streamlined = TRUE,
                                 maf_data = maf_data,
                                 use_name_column = use_name_column,
-                                from_indexed_flatfile = from_indexed_flatfile,
-                                allow_clustered = allow_clustered)
+                                from_indexed_flatfile = from_indexed_flatfile)
 
   ashm_counted = ashm_maf %>%
     group_by(sample_id, region_name) %>%
@@ -1415,7 +1412,7 @@ get_ashm_count_matrix = function(regions_bed,
 #'
 #' @param regions_list Either provide a vector of regions in the chr:start-end format OR.
 #' @param regions_bed Better yet, provide a bed file with the coordinates you want to retrieve.
-#' @param streamlined Return a basic rather than full MAF format, default is FALSE.
+#' @param streamlined Return a basic rather than full MAF format, default is TRUE.
 #' @param use_name_column If your bed-format data frame has a name column (must be named "name") these can be used to name your regions.
 #' @param from_indexed_flatfile Set to TRUE to avoid using the database and instead rely on flatfiles (only works for streamlined data, not full MAF details).
 #' @param mode Only works with indexed flatfiles. Accepts 2 options of "slms-3" and "strelka2" to indicate which variant caller to use. Default is "slms-3".
