@@ -17,7 +17,11 @@ get_ssm_by_sample(
   augmented = TRUE,
   flavour = "clustered",
   min_read_support = 3,
-  verbose = FALSE
+  basic_columns = TRUE,
+  maf_cols = NULL,
+  return_cols = FALSE,
+  verbose = FALSE,
+  ssh_session
 )
 }
 \arguments{
@@ -37,7 +41,16 @@ get_ssm_by_sample(
 
 \item{min_read_support}{Only returns variants with at least this many reads in t_alt_count (for cleaning up augmented MAFs)}
 
+\item{basic_columns}{Return first 43 columns of MAF rather than full details. Default is TRUE.}
+
+\item{maf_cols}{if basic_columns is set to FALSE, the suer can specify what columns to be returned within the MAF. This parameter can either be a list of indexes (integer) or a list of characters.}
+
+\item{return_cols}{If set to TRUE, a vector with all avaialble column names will be returned. Default is FALSE.}
+
 \item{verbose}{Enable for debugging/noisier output}
+
+\item{ssh_session}{BETA feature! pass active ssh session object.
+If specified, the function will assume the user is not on the network and will temporarily copy the file locally.}
 }
 \value{
 data frame in MAF format.

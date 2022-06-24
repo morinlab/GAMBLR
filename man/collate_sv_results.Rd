@@ -8,6 +8,7 @@ Determine and summarize which cases have specific oncogene SVs.}
 collate_sv_results(
   sample_table,
   tool = "manta",
+  seq_type_filter = "genome",
   oncogenes = c("MYC", "BCL2", "BCL6", "CCND1", "IRF4")
 )
 }
