@@ -4350,3 +4350,271 @@ fancy_sv_sizedens = function(this_sample,
   return(p)
 }
 
+#' Visualize (stacked barplot) genomic read-subsets across a selection of samples.
+#'
+#' @param these_samples Data frame with sample IDs (to be plotted) in the first column.
+#' @param metadata Optional argument, used to derive sample IDs if sample_table is Null.
+#' @param comparison_data Optional argument for plotting mean alignment metrics. Default is plotting the mean for samples provided. This parameter takes a list of smaple IDs.
+#' @param seq_type Subset qc metrics to a specific seq_type, default is genome.
+#' @param add_mean Set to TRUE to superimpose mean values of plotted variables. Default is TRUE.
+#' @param limit_cohort If no df with sample IDs is supplied (these_samples = NULL) the function calls get_gambl_metadata and subsets on selected cohort.
+#' @param limit_pathology If no df with sample IDs is supplied (these_samples = NULL) the function calls get_gambl_metadata and subsets on selected pathology.
+#' @param this_color_palette Optional parameter that holds the selected colours for the plotted bars.
+#' @param plot_sub Optional parameter, add a subtitle to alignment metric plot.
+#'
+#' @return plot as ggplot object.
+#' @import tidyverse cowplot
+#' @export
+#'
+#' @examples
+#' sample_table = data.frame(sample_id  = c("09-33003T", "05-18426T", "SP59282"))
+#' fancy_qc_plot(these_samples = sample_table, seq_type = "genome")
+#'
+fancy_qc_alignment_plot = function(these_samples,
+                         metadata,
+                         comparison_data = NULL,
+                         seq_type = "genome",
+                         add_mean = TRUE,
+                         limit_cohort = NULL,
+                         limit_pathology = NULL,
+                         this_color_palette = c("TotalReads" = "#3D405B",
+                                                "TotalUniquelyMapped" = "#81B29A",
+                                                "TotalDuplicatedreads" = "#E07A5F"),
+                         plot_sub = ""){
+
+  if(missing(these_samples) && missing(metadata)){
+    metadata = get_gambl_metadata()
+  }
+
+  if(missing(these_samples) && !is.null(limit_cohort)){
+    these_samples = dplyr::filter(metadata, cohort == limit_cohort) %>%
+      dplyr::select(sample_id) %>%
+      arrange(sample_id) %>%
+      as.data.frame()
+  }
+
+  if(missing(these_samples) && !is.null(limit_pathology)){
+    these_samples = dplyr::filter(metadata, pathology == limit_pathology) %>%
+      dplyr::select(sample_id) %>%
+      arrange(sample_id) %>%
+      as.data.frame()
+  }
+
+  #sanity check incoming sample table
+  if(typeof(these_samples) != "list"){
+    stop("Please provide input sample IDs (these_samples) in a df with sample IDs in the first column...")
+  }
+
+  #get qc data for selected samples
+  qc_metrics = collate_qc_results(sample_table = these_samples, seq_type_filter = seq_type)
+  message(paste0("QC Metric successfully retreived for ", nrow(qc_metrics), " samples out of a total of ", nrow(these_samples), " samples in input sample table."))
+
+  #subset alignment metrics
+  melt_align = dplyr::select(qc_metrics, c(sample_id, TotalReads, TotalUniquelyMapped, TotalDuplicatedreads)) %>%
+    melt(id.var = "sample_id") %>%
+    arrange(sample_id)
+
+  mean_cov_df = data.frame (Metric = c("TotalReads", "TotalUniquelyMapped", "TotalDuplicatedreads"),
+                            Value = c (mean(melt_align$value[melt_align$variable == "TotalReads"]),
+                                       mean(melt_align$value[melt_align$variable == "TotalUniquelyMapped"]),
+                                       mean(melt_align$value[melt_align$variable == "TotalDuplicatedreads"])))
+
+  if(!is.null(comparison_data)){
+    comp_data = collate_qc_results(sample_table = comparison_data, seq_type_filter = seq_type) %>%
+      dplyr::select(sample_id, TotalReads, TotalUniquelyMapped, TotalDuplicatedreads) %>%
+      melt(id.var = "sample_id") %>%
+      arrange(sample_id)
+
+    mean_cov_df_comp = data.frame (Metric = c("TotalReads", "TotalUniquelyMapped", "TotalDuplicatedreads"),
+                            Value = c (mean(comp_data$value[comp_data$variable == "TotalReads"]),
+                                       mean(comp_data$value[comp_data$variable == "TotalUniquelyMapped"]),
+                                       mean(comp_data$value[comp_data$variable == "TotalDuplicatedreads"])))
+  }
+
+
+  #corrected mean coverage
+  melt_cov = dplyr::select(qc_metrics, c(sample_id, MeanCorrectedCoverage)) %>%
+    melt(id.var = "sample_id") %>%
+    arrange(sample_id)
+
+  #plot alignment data
+  alignment_plot = ggplot() +
+    geom_bar(melt_align, mapping = aes(x = sample_id, y = value, fill = variable), position = "dodge", stat = "identity") +
+    {if(add_mean) geom_hline(mean_cov_df, mapping = aes(yintercept = Value, color = Metric))} +
+    {if(!is.null(comparison_data)) geom_hline(mean_cov_df_comp, mapping = aes(yintercept = Value, linetype = Metric), color = "#54555E")} +
+    geom_line(melt_cov, mapping = aes(x = sample_id, y = value * 25000000), group = 1, color = "#5C4966", position = "dodge", stat = "identity") +
+    geom_point(melt_cov, mapping = aes(x = sample_id, y = value * 25000000, shape = variable), fill = "#A892B3", color = "#5C4966", size = 3, position = "dodge", stat = "identity") +
+    scale_y_continuous(expand = c(0, 0), breaks = seq(0, 3.0e+10, by = 3e+08), sec.axis = sec_axis(~ . / 2500000000, name = "", labels = function(b){paste0(round(b * 100, 0), "X")})) +
+    labs(title = "Alignment Summary", subtitle = plot_sub, x = "", y = "Reads (n)") +
+    scale_fill_manual(values = this_color_palette) +
+    scale_linetype_manual(values = c("TotalReads" = "solid", "TotalUniquelyMapped" = "dashed", "TotalDuplicatedreads" = "dotted")) +
+    scale_shape_manual(values = c("MeanCorrectedCoverage" = 21)) +
+    scale_color_manual(values = c(this_color_palette)) +
+    theme_cowplot() +
+    labs(linetype = "Comparison Group", shape = "Corrected Coverage (right y-axis)", fill = "Alignment Metrics", color = "Alignment Metrics (Mean)") +
+    theme(legend.position = "right", axis.text.x = element_text(angle = 90, vjust = 0.5), panel.grid.minor = element_blank(), panel.grid.major = element_blank(), panel.background = element_blank())
+
+  return(alignment_plot)
+}
+
+
+#' Plot for visualizing QC metrics and allowing for grouping by different metadata columns.
+#'
+#' @param these_samples Data frame with sample IDs (to be plotted) in the first column (has to be named sample_id).
+#' @param seq_type Selected seqtype for incoming QC metrics.
+#' @param metadata Optional, user can provide a metadata df to subset sample IDs from.
+#' @param sort_by Plotting parameter, set sorting column for barplots.
+#' @param plot_data Plotting parameter, define the data type to be plotted.
+#' @param fill_by Plotting parameter, Set fill for bar plot, can be pathology, cohort, etc.
+#' @param comparison_data Optional parameter for adding a comparison group, can be "FL", "DLBCL", etc. Is dependent on comp_factor. If comp_factor is set to pathology, this parameter excepts the same data tytpe.
+#' @param comparison_samples Optional aprameter, give the function a list of sample IDs to be compared against the main plotting group.
+#' @param comp_factor Optional parameter for specifying the factor type of comparison data. Can be "pathology, "cohort", etc.
+#' @param plot_title Plotting parameter, plot title.
+#' @param plot_subtitle Plotting parameter, subtitle of generated plot.
+#' @param y_axis_lab Plotting parameter, label of y-axis.
+#' @param return_plotdata Optional parameter, if set to TRUE a list of acceptable data types for plotting will be returned, and nothing else.
+#'
+#' @return plot as ggplot object.
+#' @import tidyverse cowplot
+#' @export
+#'
+#' @examples
+#' #plot QC metrics (Average base Quality for all BL samples), compared to the same metric for all FL cases (pathology).
+#' qc_avg_basequality = fancy_qc_plot(filter_pathology = "BL",
+#'                                    comparison_data = "FL",
+#'                                    comp_factor = "pathology",
+#'                                    sort_by = "AverageBaseQuality",
+#'                                    plot_data = "AverageBaseQuality",
+#'                                    fill_by = "pathology",
+#'                                    plot_title = "Average Base Quality",
+#'                                    y_axis_lab = "Base Quality")
+#'
+fancy_qc_plot = function(these_samples,
+                         filter_cohort,
+                         filter_pathology,
+                         seq_type = "genome",
+                         metadata,
+                         sort_by,
+                         plot_data,
+                         fill_by,
+                         comparison_data = NULL,
+                         comparison_samples = NULL,
+                         comp_factor,
+                         plot_title,
+                         plot_subtitle,
+                         y_axis_lab,
+                         return_plotdata = FALSE) {
+
+  #return a list of acceptable data types for plotting
+  if(return_plotdata){
+    plotting_variables = c("AverageBaseQuality", "AverageInsertSize", "AverageReadLength",
+                           "PairsOnDiffCHR", "TotalReads", "TotalUniquelyMapped",
+                           "TotalUnmappedreads", "TotalDuplicatedreads", "ProportionReadsDuplicated",
+                           "ProportionReadsMapped", "MeanCorrectedCoverage", "ProportionCoverage10x", "ProportionCoverage30x")
+
+    return(plotting_variables)
+  }
+
+  #get gambl metadata (if not supplied)
+  if(missing(metadata)){
+    this_meta = get_gambl_metadata()
+  }else{
+    this_meta = metadata
+  }
+
+  #filter metadata on selected cohort (if filter_cohort is called)
+  if(missing(these_samples) && !missing(filter_cohort)){
+    these_samples = dplyr::filter(this_meta, cohort == filter_cohort) %>%
+      dplyr::select(sample_id) %>%
+      as.data.frame()
+  }
+
+  #filter metadata on pathology (if filter_pathology is called)
+  if(missing(these_samples) && !missing(filter_pathology)){
+    these_samples = dplyr::filter(this_meta, pathology == filter_pathology) %>%
+      dplyr::select(sample_id) %>%
+      as.data.frame()
+  }
+
+  #get QC data for selected samples
+  qc_metrics = collate_qc_results(sample_table = these_samples, seq_type_filter = seq_type)
+  message(paste0("QC Metric successfully retreived for ", nrow(qc_metrics), " samples out of a total of ", nrow(these_samples), " samples in input sample table."))
+
+  #aggregate sample list with metadata columns
+  qc_meta = qc_metrics %>% inner_join(this_meta)
+  qc_meta = mutate_if(qc_meta, is.integer, as.factor)
+  qc_meta = mutate_if(qc_meta, is.character, as.factor)
+
+  #calculate mean (for data type specified in plot_data) for selected samples,
+  mean_df = data.frame(mean  = c("plotted_samples"),
+                       value = c(mean(qc_meta[[plot_data]])))
+
+  mean_df$mean = as.factor(mean_df$mean)
+
+  #calculate mean for selected comparison group using a list of IDs provided in comparison_samples
+  if(!is.null(comparison_samples) && is.null(comparison_data)){
+    comp_data = collate_qc_results(sample_table = comparison_samples, seq_type_filter = seq_type) %>%
+      dplyr::select(sample_id, plot_data) %>%
+      melt(id.var = "sample_id") %>%
+      arrange(sample_id)
+
+    mean_cov_df_comp = data.frame(mean = c("comparison_group"),
+                                  value = c(mean(comp_data$value)))
+
+    #merge with mean value for plotting data
+    mean_df = dplyr::full_join(mean_df, mean_cov_df_comp)
+    mean_df$mean = as.factor(mean_df$mean)
+  }
+
+  #calculate mean for selected comparison group as a subset of incoming metadata (i.e no list of sample IDs provided for comparison_samples)
+  if(!is.null(comparison_data) && is.null(comparison_samples)){
+    if(comp_factor == "pathology"){
+      comp_samples = dplyr::filter(this_meta, pathology == comparison_data) %>%
+        dplyr::select(sample_id) %>%
+        as.data.frame()
+    }else if(comp_factor == "cohort"){
+      comp_samples = dplyr::filter(this_meta, cohort == comparison_data) %>%
+        dplyr::select(sample_id) %>%
+        as.data.frame()
+    }
+
+    comp_data = collate_qc_results(sample_table = comp_samples, seq_type_filter = "genome") %>%
+      dplyr::select(sample_id, plot_data) %>%
+      melt(id.var = "sample_id") %>%
+      arrange(sample_id)
+
+    mean_cov_df_comp = data.frame(mean = c("comparison_group"),
+                                  value = c(mean(comp_data$value)))
+
+    #merge with mean value for plotting data
+    mean_df = dplyr::full_join(mean_df, mean_cov_df_comp)
+    mean_df$mean = as.factor(mean_df$mean)
+  }
+
+  #get gambl colours for selected fill and subset to levels in selected factor
+  col_gambl = get_gambl_colours(fill_by) %>%
+    as.data.frame()
+
+  col_gambl$factors = rownames(col_gambl)
+  colnames(col_gambl)[1] = "hex"
+  row.names(col_gambl) <- NULL
+
+  levels_fill = levels(qc_meta$pathology) %>%
+    as.data.frame()
+
+  colnames(levels_fill)[1] = "factors"
+  sub_cols = dplyr::left_join(levels_fill, col_gambl, by = "factors")
+  list_col = as.list(sub_cols$hex)
+
+  #plotting
+  qc_plot = ggplot(qc_meta, aes_string(paste0("reorder(", "sample_id, -", sort_by, ")"), y = plot_data, fill = fill_by)) +
+    geom_bar(stat = "identity", width = 0.7, position = position_dodge()) +
+    geom_hline(mean_df, mapping = aes(yintercept = value, linetype = mean)) +
+    labs(title = plot_title, subtitle = plot_subtitle, x = "", y = y_axis_lab) +
+    theme_cowplot() +
+    scale_y_continuous(expand = c(0, 0)) +
+    scale_fill_manual(values = c(list_col)) +
+    theme(legend.position = "right", axis.title.x=element_blank(), axis.text.x=element_blank(), axis.ticks.x=element_blank(), panel.grid.minor = element_blank(), panel.grid.major = element_blank(), panel.background = element_blank())
+
+  return(qc_plot)
+}
