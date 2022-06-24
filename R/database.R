@@ -1741,6 +1741,7 @@ get_ssm_by_regions = function(regions_list,
                               min_read_support = 4,
                               ssh_session = NULL){
 
+
   bed2region = function(x){
     paste0(x[1], ":", as.numeric(x[2]), "-", as.numeric(x[3]))
   }
@@ -1890,8 +1891,9 @@ get_ssm_by_region = function(chromosome,
         message(paste("reading from:", full_maf_path_comp))
         tabix_command = paste(tabix_bin, full_maf_path_comp, region, "| cut -f 5,6,7,16,42")
         muts = run_command_remote(ssh_session,tabix_command)
+        print(tabix_command)
         muts_region = vroom::vroom(I(muts),col_types = "ciici",
-                                   col_names=c("Chromosome", "Start_Position", "End_Position", "Tumor_Sample_Barcode", "Read_Support"))
+                                   col_names=c("Chromosome", "Start_Position", "End_Position", "Tumor_Sample_Barcode", "t_alt_count"))
       }else{
         #get column names for maf and read maf
         maf_head = as.vector(as.matrix(read.table(file = full_maf_path, header = FALSE, stringsAsFactors = FALSE, nrows = 1)))
