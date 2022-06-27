@@ -1854,7 +1854,11 @@ get_ssm_by_region = function(chromosome,
     full_maf_path = paste0(base_path, maf_path)
     full_maf_path_comp = paste0(base_path, maf_path, ".bgz")
 
-    message(paste("reading from:", full_maf_path))
+    if(!file.exists(full_maf_path_comp)){
+      stop("Warning, you are running this on a computer that does not have direct acces to the directed file, prehaps you should try run this with ssh_session as a parameter?")
+    }else if(!is.null(ssh_session)){
+      stop("The file you requested exists locally. Are you sure you want to use ssh_session?")
+    }
   }
 
   if(!region == ""){
@@ -1890,7 +1894,6 @@ get_ssm_by_region = function(chromosome,
         message(paste("reading from:", full_maf_path_comp))
         tabix_command = paste(tabix_bin, full_maf_path_comp, region, "| cut -f 5,6,7,16,42")
         muts = run_command_remote(ssh_session,tabix_command)
-        print(tabix_command)
         muts_region = vroom::vroom(I(muts),col_types = "ciici",
                                    col_names=c("Chromosome", "Start_Position", "End_Position", "Tumor_Sample_Barcode", "t_alt_count"))
       }else{
