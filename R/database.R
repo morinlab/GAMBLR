@@ -1855,9 +1855,9 @@ get_ssm_by_region = function(chromosome,
     full_maf_path_comp = paste0(base_path, maf_path, ".bgz")
 
     if(!file.exists(full_maf_path_comp)){
-      stop("Warning, you are running this on a computer that does not have direct acces to the directed file, prehaps you should try run this with ssh_session as a parameter?")
+      message("Warning, you are running this on a computer that does not have direct acces to the directed file, prehaps you should try run this with ssh_session as a parameter?")
     }else if(!is.null(ssh_session)){
-      stop("The file you requested exists locally. Are you sure you want to use ssh_session?")
+      message("The file you requested exists locally. Are you sure you want to use ssh_session?")
     }
   }
 
