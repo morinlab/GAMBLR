@@ -1667,8 +1667,8 @@ get_ashm_count_matrix = function(regions_bed,
                                  sample_metadata,
                                  seq_type,
                                  use_name_column = FALSE,
-                                 from_indexed_flatfile = FALSE,
-                                 ssh_session){
+                                 from_indexed_flatfile = TRUE,
+                                 ssh_session = NULL){
 
   if(missing(regions_bed)){
     regions_bed = grch37_ashm_regions
@@ -1682,10 +1682,8 @@ get_ashm_count_matrix = function(regions_bed,
                                 ssh_session=ssh_session)
 
   ashm_counted = ashm_maf %>%
-    group_by(Tumor_Sample_Barcode, region_name) %>%
+    group_by(sample_id, region_name) %>%
     tally()
-
-  colnames(ashm_counted)[1] = "sample_id"
 
   if(missing(sample_metadata)){
     all_meta = get_gambl_metadata() %>%
