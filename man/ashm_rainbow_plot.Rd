@@ -14,7 +14,7 @@ ashm_rainbow_plot(
   region,
   custom_colours,
   hide_ids = TRUE,
-  ssh_session
+  ssh_session = NULL
 )
 }
 \arguments{

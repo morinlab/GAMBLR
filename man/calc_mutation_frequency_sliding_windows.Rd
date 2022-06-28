@@ -22,7 +22,7 @@ calc_mutation_frequency_sliding_windows(
   classification_column = "lymphgen",
   from_indexed_flatfile = FALSE,
   mode = "slms-3",
-  ssh_session = ssh_session
+  ssh_session = NULL
 )
 }
 \arguments{
