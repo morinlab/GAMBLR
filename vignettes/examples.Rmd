@@ -484,163 +484,128 @@ get_mutation_frequency_bin_matrix(these_samples_metadata = some_meta, #GAMBL met
 
 ```
 
-Construct a sample-level, genome-wide ideogram to visualize CN segments. Optional argument to show SVs (lollipops) and annotate ideogram with gene(s). Plotting function calls get_cn_segments and assign_cn_to_ssm to retrieve relevant data. Thus, parameters available for such functions are also at the users disposal for sub-setting variants to coding regions and flatfile/augmented maf options. In addition, the user can also annotate LOH regions and SV counts per chromosome as such:
+```{r plot_parameters, include = FALSE}
+this_sample = "HTMCP-01-06-00422-01A-01D"
+maf = assign_cn_to_ssm(this_sample = this_sample, coding_only = FALSE,
+                       from_flatfile = TRUE, use_augmented_maf = TRUE)$maf
 
-```{r ideogram, dpi = 150, fig.retina = 2, warnings = FALSE, echo = FALSE, messages = FALSE, fig.height = 12, fig.width = 17}
-# Define sample to be plotted
-sample_id = "HTMCP-01-06-00422-01A-01D"
-
-# Set gene for gene_annotation argument (calls gene_to_region) in plotting function.
-gene_annotation = "MYC"
-
-# Construct plot.
-fancy_ideogram(this_sample = sample_id, 
-               gene_annotation = gene_annotation, 
-               sv_count = TRUE, 
-               include_sv = TRUE, 
-               coding_only = FALSE, 
-               add_loh = TRUE)
+seq = get_sample_cn_segments(this_sample = this_sample, multiple_samples = FALSE, 
+                             streamlined = FALSE, from_flatfile = TRUE)
 ```
 
-Another useful plot for visualizing sample-level CN information is the fancy_cnvlohbar. Similarly to fancy_ideogram, this function takes one required parameter (sample id), calls get_cn_segments and assign_cn_ssm to retrieve data for plotting. The plot highlights the number of CN states for any given sample (first y-axis), together with n bases included in each CN state (second y-axis).
+Interested in how many variants are present in a given sample? A quick way to overview such information would be to call `fancy_svbar` on a given sample ID. This function returns a bar plot visualizing SVs or SSMs. A variety of sub-setting options are also available. Such as chromosome selection and variant types to be included in plot. In the example bellow, we're looking at genome-wide SSMs for one selected sample. 
 
-```{r dpi = 150, fig.retina = 2, warnings = FALSE, echo = FALSE, messages = FALSE, fig.height = 7, fig.width = 7}
-# Define sample to be plotted.
-sample_id = "HTMCP-01-06-00422-01A-01D"
-
-# State chromosomes to be included for the selected sample.
-chromosomes = paste0("chr", c(1:22))
-
-# Construct plot using above defined parameters.
-fancy_cnlohbar(this_sample = sample_id,
-               chr_select = chromosomes,
-               include_cn2 = TRUE, 
-               coding_only = FALSE)
+```{r svbar, dpi = 150}
+fancy_v_count(this_sample = this_sample,
+              maf_data = maf,
+              ssm = TRUE,
+              from_flatfile = TRUE, 
+              use_augmented_maf = TRUE, 
+              plot_subtitle = "grch37", 
+              plot_title = "SSM Count Example",
+              chr_select = paste0("chr", c(1:22)),
+              variant_select = c("DEL", "INS"),
+              coding_only = FALSE)
 ```
 
-Interested in how many variants are present in a given sample? One quick way to overview such information would be to call fancy_svbar on a given sample id. This function returns a bar plot visualizing SVs. A variety of sub-setting options are also available. Such as chromosome selection and SV types to be included in plot. 
+Sometimes it can be useful to overview variant distributions (SSM or SVs) across the complete genomic landscape. To do so, one could call `fancy_v_chrcount` with sample ID. Optional arguments for sub-setting your data are available (see parameter descriptions for more information). In the following example we're plotting SV (ssm = FALSE) counts for autosomes. 
 
-```{r dpi = 150, fig.retina = 2, warnings = FALSE, echo = FALSE, messages = FALSE, fig.height = 7 fig.width = 7}
-# Set sample ID for plotting.
-sample_id = "HTMCP-01-06-00422-01A-01D"
-
-# Define plot subtitle.
-plot_sub = "Structural Variant Subtype Distribution"
-
-# State chromosomes to be included for the selected sample.
-chromosomes = paste0("chr", c(1:22))
-
-# State what SV sub type are to be plotted.
-svs = c("DEL", "INS")
-
-# Construct plot using above defined parameters.
-fancy_svbar(this_sample = sample_id,
-            plot_subtitle = plot_sub,
-            chr_select = chromosomes,
-            variant_select = svs,
-            coding_only = FALSE)
+```{r svdist, dpi = 150}
+fancy_v_chrcount(this_sample = "HTMCP-01-06-00422-01A-01D",
+                 plot_subtitle =  "grch37",
+                 plot_title = "SV Genomic Distribution Example", 
+                 ssm = FALSE, 
+                 projection = "grch37", 
+                 min_vaf = 0, 
+                 chr_select = paste0("chr", c(1:22)), 
+                 coding_only = FALSE, 
+                 from_flatfile = TRUE, 
+                 use_augmented_maf = TRUE)
 ```
 
-Curious to see how SNVs are distributed across specific chromosomes? For this purpose fancy_snv_chrdistplot was developed. This function takes a sample ID and retrieves SNV information (using assign_cn_to_ssm) and plots variants in an ideogram dependent manner. Similarly to other fanxy_x_plot functions, a selection of parameters are available for data sub-setting and plot customization. For example, bu using the include_dnp, DNP counts will be added to each bar. 
+A useful way to visualize variant size distributions is to call `fancy_v_sizedis` to generate a violin plot showing  variant size distributions (sample-level) across selected contigs (per default chr1-22). Optional parameters to sub-set data to include only coding regions are also available for this function, as well as to plot SVs by setting `ssm = FALSE`. 
 
-```{r dpi = 150, fig.retina = 2, warnings = FALSE, echo = FALSE, messages = FALSE, fig.height = 7 fig.width = 7}
-# Set sample ID for plotting.
-sample_id = "HTMCP-01-06-00422-01A-01D"
+```{r svvplot, dpi = 150}
+fancy_v_sizedis(this_sample = this_sample,
+                maf_data = maf,
+                plot_title = "SV (small variants) Size Distribution Example", 
+                ssm = TRUE, 
+                scale_value = "width", 
+                plot_trim = FALSE, 
+                log_10 = TRUE,
+                plot_subtitle =  "grch37",
+                chr_select = paste0("chr", c(1:22)),
+                from_flatfile = TRUE,
+                use_augmented_maf = TRUE, 
+                coding_only = FALSE)
+```
 
-# Define plot subtitle.
-plot_sub = "SNV Distribution Per Chromosome"
+Another useful plotting function for visualizing SV size distributions is `fancy_sv_sizedens`. In this example, we're showing SVs (larger 50bp and with a with minimum vaf of 0) size distributions for a specific sample and selected chromosomes.
 
-# State chromosomes to be included for the selected sample.
-chromosomes = paste0("chr", c(1:5))
+```{r sv_size, dpi = 150}
+fancy_sv_sizedens(this_sample = this_sample,
+                vaf_cutoff = 0, 
+                size_cutoff = 50, 
+                chr_select = paste0("chr", c(1:22)), 
+                plot_title = "SV (>50bp) Size Distribution Example", 
+                plot_subtitle = "grch37", 
+                projection = "grch37")
+```
 
-# Construct plot using above defined parameters.
-fancy_snv_chrdistplot(this_sample = sample_id, 
-                      plot_subtitle = plot_sub,
-                      chr_select = chromosomes,
-                      include_dnp = FALSE,
+Curious to see how SNVs are distributed across specific chromosomes? For this purpose `fancy_snv_chrdistplot` was developed. This function takes a sample ID and retrieves SNV information (using `assign_cn_to_ssm`) and plots variants in an ideogram dependent manner. Similarly to other `fanxy_x_plot` functions, a selection of parameters are available for data sub-setting and plot customization. For example, by calling the include_dnp, DNP counts will be added to each bar.
+
+```{r snvbar, dpi = 150}
+fancy_snv_chrdistplot(this_sample = this_sample,
+                      maf_data = maf,
+                      plot_subtitle = "SNV Distribution Example", 
+                      plot_title = "grch37",
+                      chr_select = paste0("chr", c(1:22)),
+                      include_dnp = FALSE, 
+                      from_flatfile = TRUE, 
+                      use_augmented_maf = TRUE,
                       coding_only = FALSE)
 ```
 
+A useful way to visualize copy number information is with the the `fancy_cnvbar`. This function takes one required parameter (sample ID), calls `get_cn_segments` and `assign_cn_ssm` to retrieve data for plotting. The plot highlights the number of CN states for any given sample (left y-axis), together with n bases included in each given CN state (right y-axis).
 
-Interested in how many variants are present in a given sample? One quick way to overview such information would be to call fancy_svbar on a given sample id. This function returns a bar plot visualizing SVs. A variety of sub-setting options are also available. Such as chromosome selection and SV types to be included in plot. 
-
-```{r dpi = 150, fig.retina = 2, warnings = FALSE, echo = FALSE, messages = FALSE, fig.height = 7 fig.width = 7}
-# Set sample ID for plotting.
-sample_id = "HTMCP-01-06-00422-01A-01D"
-
-# Define plot subtitle.
-plot_sub = "Structural Variant Subtype Distribution"
-
-# State chromosomes to be included for the selected sample.
-chromosomes = paste0("chr", c(1:22))
-
-# State what SV sub type are to be plotted.
-svs = c("DEL", "INS")
-
-# Construct plot using above defined parameters.
-fancy_svbar(this_sample = sample_id,
-            plot_subtitle = plot_sub,
-            chr_select = chromosomes,
-            variant_select = svs,
-            coding_only = FALSE)
+```{r cnbar, dpi = 150}
+fancy_cnbar(this_sample = this_sample, 
+            seq_data = seq,
+            plot_title = "CNV Barplot Example", 
+            plot_subtitle = "grch37",   
+            chr_select =  paste0("chr", c(1:22)),
+            include_cn2 = TRUE)
 ```
 
-Curious to see how SNVs are distributed across specific chromosomes? For this purpose fancy_snv_chrdistplot was developed. This function takes a sample ID and retrieves SNV information (using assign_cn_to_ssm) and plots variants in an ideogram dependent manner. Similarly to other fanxy_x_plot functions, a selection of parameters are available for data sub-setting and plot customization. For example, bu using the include_dnp, DNP counts will be added to each bar. 
+A great way to overview SVs and Copy Number Segments on sample-level is to call `fancy_ideogram`. This function creates an ideogram based on the chromosomes defined in the `chr_select` parameter. Copy Number states are plotted along the x-axis (selected contigs plotted vertically on the y-axis). The plot annotates Copy Number States from 0 to 6+. Additional support for superimposing SVs on the ideogram is also possible, by setting `include_sv` to TRUE, deletions and insertions will be plotted as lollipops. n Number of SVs can also be added for each contig. This is achieved by specifying `sv_count` to TRUE. In addition, it's also possible to highlight genomic regions fo interest, such as genes, hotspots, difficult to map regions, etc. For convenience, one can specify a list of genes under the `gene_annotation` parameter. The function will then implement `gene_to_region` function to convert gene names to bed-style coordinates. 
 
-```{r dpi = 150, fig.retina = 2, warnings = FALSE, echo = FALSE, messages = FALSE, fig.height = 7 fig.width = 7}
-# Set sample ID for plotting.
-sample_id = "HTMCP-01-06-00422-01A-01D"
-
-# Define plot subtitle.
-plot_sub = "SNV Distribution Per Chromosome"
-
-# State chromosomes to be included for the selected sample.
-chromosomes = paste0("chr", c(1:5))
-
-# Construct plot using above defined parameters.
-fancy_snv_chrdistplot(this_sample = sample_id, 
-                      plot_subtitle = plot_sub,
-                      chr_select = chromosomes,
-                      include_dnp = FALSE,
-                      coding_only = FALSE)
+```{r fancy_ideogram, dpi = 150, fig.height = 14, fig.width = 14}
+fancy_ideogram(this_sample = this_sample,
+               gene_annotation = "MYC",
+               plot_title = "Sample-level Ideogram Example",
+               plot_subtitle = "grch37",
+               include_sv = TRUE,
+               sv_count = TRUE,
+               coding_only = FALSE,
+               from_flatfile = TRUE,
+               use_augmented_maf = TRUE)
 ```
 
-Sometimes it can be useful to overview SV distribution across the complete genomic landscape. To do so, one could call fancy_sv_chrdistplot with sample ID. Optional arguments for sub-setting your data are avaialble (see parameter descriptions for more information)
+It's also possible to plot multiple samples (2, 3 or 4) in a similar manner. This can be used to infer inheritance patterns, hotspots, etc. across multiple samples. For this purpose `fancy_ideogram_multisamp` was developed. This function is called with similar parameters as `fancy_ideogram` with the addition that `this_sample` has been replaced with `these_sample_ids`. The function automatically detects the number of samples provided and sets the plotting parameters accordingly.
 
-```{r dpi = 150, fig.retina = 2, warnings = FALSE, echo = FALSE, messages = FALSE, fig.height = 7 fig.width = 7}
-# Set sample ID for plotting.
-sample_id = "HTMCP-01-06-00422-01A-01D"
+```{r fancy_ideogram_multisamp, dpi = 150, fig.height = 14, fig.width = 14}
+#load two samples
+two_samples = c("00-15201_tumorA", "00-15201_tumorB")
 
-# Define plot subtitle.
-plot_sub = "Structural Variant Distribution Per Chromosome"
-
-# State chromosomes to be included for the selected sample.
-chromosomes = paste0("chr", c(1:22))
-
-# Construct plot using above defined parameters.
-fancy_sv_chrdistplot(this_sample = sample_id, 
-                     plot_subtitle =  plot_sub,
-                     chr_select = chromosomes, 
-                     coding_only = FALSE)
-```
-
-Another useful way to visualize SV distributions is to call fancy_vplot to generate a violin plot showing SV size distributions (sample-level) across selected contigs (per default chr1-22). Optional parameters to sub-set data to include only coding regions are also available for this function.
-
-```{r dpi = 150, fig.retina = 2, warnings = FALSE, echo = FALSE, messages = FALSE, fig.height = 7 fig.width = 7}
-# Set sample ID for plotting.
-sample_id = "HTMCP-01-06-00422-01A-01D"
-
-# Define plot subtitle.
-plot_sub = "Structural Variant Size Distribution (chr1 - chr22)"
-
-# State chromosomes to be included for the selected sample.
-chromosomes = paste0("chr", c(1:22))
-
-# Construct plot using above defined parameters.
-fancy_vplot(this_sample = sample_id, 
-            plot_subtitle =  plot_sub,
-            chr_select = chromosomes, 
-            coding_only = FALSE)
+#build plot
+fancy_multisamp_ideogram(these_sample_ids = two_samples,
+                         plot_title = "Multi-sample Ideograms Example",
+                         plot_sub = "grch37",
+                         chr_anno_dist = 2.5,
+                         chr_select = paste0("chr", c(1:22)),
+                         coding_only = FALSE,
+                         from_flatfile = FALSE,
+                         use_augmented_maf = FALSE)
 ```
 
 Hex codes for B-cell lymphomas.

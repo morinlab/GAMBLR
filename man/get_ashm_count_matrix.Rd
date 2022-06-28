@@ -9,9 +9,10 @@ get_ashm_count_matrix(
   regions_bed,
   maf_data,
   sample_metadata,
+  seq_type,
   use_name_column = FALSE,
   from_indexed_flatfile = FALSE,
-  allow_clustered = FALSE
+  ssh_session
 )
 }
 \arguments{

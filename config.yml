@@ -63,6 +63,8 @@ default:
         copy_number: "seg_battenberg_hg19"
         sv: "bedpe_manta_hg19"
         copy_number_unmatched: "seg_controlfreec_hg19"
+    
+    qc_met: "icgc_dart/qc-1.0/99-outputs/{seq_type_filter}.qc_metrics.tsv"
 
     results_flatfiles:
         cnv:

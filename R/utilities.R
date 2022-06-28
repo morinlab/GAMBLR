@@ -320,7 +320,7 @@ calc_mutation_frequency_sliding_windows = function(this_region,
     mutate(end = start + window_size - 1)
   #use foverlaps to assign mutations to bins
   windows.dt = as.data.table(windows)
-  region_ssm = GAMBLR::get_ssm_by_region(region = this_region, streamlined = TRUE, seq_type=seq_type, from_indexed_flatfile = from_indexed_flatfile, mode = mode,ssh_session=ssh_session) %>%
+  region_ssm = GAMBLR::get_ssm_by_region(region = this_region, streamlined = FALSE, seq_type=seq_type, from_indexed_flatfile = from_indexed_flatfile, mode = mode,ssh_session=ssh_session) %>%
     dplyr::rename(c("start" = "Start_Position", "sample_id" = "Tumor_Sample_Barcode")) %>%
     mutate(mutated = 1)
 
@@ -595,7 +595,7 @@ annotate_hotspots = function(mutation_maf,
     group_by(MAX_COORD) %>%
     arrange(MAX_COORD, COORDINATE) %>%
     complete(COORDINATE = seq(COORDINATE[1], COORDINATE[2])) %>%
-    fill(CHROMOSOME, .direction = "up") %>%
+    tidyr::fill(CHROMOSOME, .direction = "up") %>%
     dplyr::rename("Start_Position" = "COORDINATE") %>%
     dplyr::rename("Chromosome" = "CHROMOSOME") %>%
     ungroup()
@@ -879,6 +879,7 @@ collate_results = function(sample_table,
     sample_table = collate_csr_results(sample_table = sample_table,seq_type_filter=seq_type_filter)
     sample_table = collate_ancestry(sample_table = sample_table,seq_type_filter=seq_type_filter)
     sample_table = collate_sbs_results(sample_table = sample_table, sbs_manipulation = sbs_manipulation,seq_type_filter=seq_type_filter)
+    sample_table = collate_qc_results(sample_table = sample_table,seq_type_filter = seq_type_filter)
   }
   if(write_to_file){
     output_file = config::get("table_flatfiles")$derived
@@ -1713,7 +1714,7 @@ collate_ashm_results = function(sample_table,
   #just annotate BCL2, MYC and CCND1 hypermutation
   regions_df = data.frame(name = c("CCND1","BCL2","MYC"),
   region = c("chr11:69455000-69459900", "chr18:60983000-60989000", "chr8:128747615-128751834"))
-  region_mafs = lapply(regions_df$region, function(x){get_ssm_by_region(region = x, streamlined = TRUE,seq_type=seq_type_filter,ssh_session=ssh_session)})
+  region_mafs = lapply(regions_df$region, function(x){get_ssm_by_region(region = x, streamlined = FALSE,seq_type=seq_type_filter,ssh_session=ssh_session)})
   tibbled_data = tibble(region_mafs, region_name = regions_df$name)
   unnested_df = tibbled_data %>%
     unnest_longer(region_mafs)
@@ -1988,6 +1989,7 @@ get_gambl_colours = function(classification = "all",
                   "Grande"="#e90c8b", "Grande, 2019"="#e90c8b")
 
   all_colours[["indels"]] = c("DEL" = "#53B1FC", "INS" = "#FC9C6D")
+  all_colours[["svs"]] = c("DEL" = "#53B1FC", "DUP" = "#FC9C6D")
 
   #print(all_colours)
   for(colslot in names(all_colours)){
@@ -2605,6 +2607,58 @@ collate_lymphgen = function(sample_table,
   }
 
   return(sample_table)
+}
+
+
+#' INTERNAL FUNCTION called by collate_results, not meant for out-of-package usage.
+#' Collate qc metrics.
+#'
+#' @param sample_table df with sample ids in the first column.
+#' @param seq_type_filter default is genome, capture is also available for unix_group icgc_dart.
+#'
+#' @return The sample table with additional columns.
+#' @import tidyverse
+#'
+#' @examples
+#' sample_table <- data.frame (sample_id  = c("09-33003T", "05-18426T", "BLGSP-71-06-00174-01A-01D", "BLGSP-71-22-00347-01A-12E", "SP59282"))
+#' qc_metrics = collate_qc_results(sample_table = sample_table, seq_type_filter = "genome")
+#'
+collate_qc_results = function(sample_table,
+                              seq_type_filter = "genome"){
+
+  if(! seq_type_filter %in% c("genome", "capture")){
+    stop("Please provide a valid seq_type (\"genome\" or \"capture\").")
+  }
+
+  #get paths
+  base = config::get("project_base") #base
+  qc_template = config::get("qc_met") #qc metric template
+  qc_path = glue::glue(qc_template) #glue wildcards
+  icgc_qc_path_full = paste0(base, qc_path) #combine for icgc_dart qc metric path
+  gambl_qc = gsub("icgc_dart", "gambl", qc_path) #use gsub to substitute icgc_dart in qc path with gambl
+  gambl_qc_path_full = paste0(base, gambl_qc) #combine for gambl qc metric path
+
+  #read in icgc qc data, rename sample id column and filter on samples in sample id in sample_table
+  icgc_qc = suppressMessages(read_tsv(icgc_qc_path_full)) %>%
+    rename(sample_id = UID) %>%
+    dplyr::filter(sample_id %in% dplyr::pull(sample_table, sample_id))
+
+  #read in gambl qc data (if seq_type_filter set to "genome"), rename sample id column and filter on samples in sample id in sample_table
+  if(seq_type_filter == "genome"){
+    gambl_qc = suppressMessages(read_tsv(gambl_qc_path_full)) %>%
+      rename(sample_id = UID) %>%
+      dplyr::filter(sample_id %in% dplyr::pull(sample_table, sample_id))
+
+    #join gambl and icgc QC data
+    full_qc = rbind(gambl_qc, icgc_qc)
+
+    return(full_qc)
+
+    }else{
+      message("Currently, seq_type_filter = \"capture\" is only available for unix_group \"icgc_dart\". Only QC metrics for icgc_dart will be returned.")
+      #TO DO: Remove this once capture metrics have been generated for gambl samples.
+      return(icgc_qc)
+      }
 }
 
 
@@ -3372,4 +3426,34 @@ cnvKompare = function(patient_id,
   message("DONE!")
   return(output)
 
+}
+
+
+#' Transform input maf columns to allow for usage of dplyr verbs
+#'
+#' @param maf_df input MAF data frame.
+#'
+#' @return maf_df with transofmred columns
+#' @export
+#' @import tidyverse
+#'
+#' @examples
+#' ssm_sample = get_ssm_by_sample(this_sample_id = "HTMCP-01-06-00485-01A-01D", tool_name = "slims-3", projection = "grch37")
+#' clean_maf = cleanup_maf(maf_df = ssm_sample)
+#'
+cleanup_maf = function(maf_df){
+
+  #cleanup various columns that store text to make them useful (make numeric, drop denominator etc)
+  maf_df = mutate(maf_df,EXON = gsub("/.+", "", EXON)) %>%
+    mutate(EXON = as.numeric(EXON)) %>%
+    mutate(INTRON = gsub("/.+", "", INTRON)) %>%
+    mutate(INTRON = as.numeric(INTRON)) %>%
+    mutate(CDS_position = gsub("/.+", "", CDS_position)) %>%
+    mutate(CDS_position = as.numeric(as.character(CDS_position))) %>%
+    mutate(cDNA_position = gsub("/.+", "", cDNA_position)) %>%
+    mutate(cDNA_position = as.numeric(as.character(cDNA_position))) %>%
+    mutate(Protein_position = gsub("/.+", "", Protein_position)) %>%
+    mutate(Protein_position = as.numeric(as.character(Protein_position)))
+
+  return(maf_df)
 }

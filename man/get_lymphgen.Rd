@@ -9,15 +9,14 @@ get_lymphgen(
   these_samples_metadata,
   flavour,
   return_feature_matrix = FALSE,
+  return_feature_annotation = FALSE,
   lymphgen_file,
-  keep_all_rows = FALSE
+  keep_all_rows = FALSE,
+  keep_original_columns = FALSE
 )
 }
 \arguments{
-\item{flavour}{}
-}
-\value{
-
+\item{keep_original_columns}{}
 }
 \description{
 Get a specific flavour of LymphGen from the main GAMBL outputs and tidy the composites.
