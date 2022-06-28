@@ -791,7 +791,9 @@ sv_to_custom_track = function(sv_bedpe,
 #'
 maf_to_custom_track = function(maf_data,
                                these_samples_metadata,
-                               output_file){
+                               output_file,
+                               track_name="GAMBL mutations",
+                               track_description = "mutations from GAMBL"){
 
   #reduce to a bed-like format
   maf_data = dplyr::select(maf_data, Chromosome, Start_Position, End_Position, Tumor_Sample_Barcode)
@@ -819,8 +821,8 @@ maf_to_custom_track = function(maf_data,
   maf_coloured = left_join(maf_bed, samples_coloured, by = "sample_id") %>%
     dplyr::select(-lymphgen) %>%
     dplyr::filter(!is.na(rgb))
-
-  cat('track name="GAMBL mutations" description="Mutations from GAMBL" visibility=2 itemRgb="On"\n', file = output_file)
+  header_ucsc = paste0('track name="',track_name,'" description="', track_description, '" visibility=2 itemRgb="On"\n')
+  cat(header_ucsc,file = output_file)
   tabular = write.table(maf_coloured, file = output_file, quote = F, sep = "\t", row.names = F, col.names = F, append = TRUE)
 }
 
