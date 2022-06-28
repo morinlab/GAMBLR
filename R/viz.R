@@ -1799,7 +1799,7 @@ ashm_multi_rainbow_plot = function(regions_bed,
                                    custom_colours,
                                    classification_column = "lymphgen",
                                    maf_data,
-                                   ssh_session){
+                                   ssh_session = NULL){
 
   table_name = config::get("results_tables")$ssm
   db = config::get("database_name")
@@ -2030,7 +2030,7 @@ ashm_rainbow_plot = function(mutations_maf,
                              region,
                              custom_colours,
                              hide_ids = TRUE,
-                             ssh_session){
+                             ssh_session = NULL){
 
   table_name = config::get("results_tables")$ssm
   db=config::get("database_name")
