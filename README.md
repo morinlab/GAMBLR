@@ -69,22 +69,22 @@ library(metaviz)
 
 As GAMBL users (GAMBLRs, so to speak) rely on the functionality of this package, the Master branch is protected. All commits must be submitted via pull request on a branch. Please refer to the [GAMBL](https://github.com/morinlab/gambl#contribution-guidelines) documentation for details on how to do this. 
 
-# Run GAMBLR Remote On A Local Machine:
+# Run GAMBLR Remote On A Local Machine
 This section is directed towards running GAMBLR remote on a *local machine*, for exploring a collection of GAMBLR functions. There are two different approaches to ge this to work. We will be going over both in the next sections.
 
 ## Approach 1 - Quick Start (SSH)
 This section details how to deploy GAMBLR with limited functionalities, using ssh_session parameter. This approach requires either a working GSC VPN connection (or is directly accessible if connected to the GSC network).
 
-#### Setup VPN Connection (Only Needed If **Not** Connected to the GSC Network)
+#### Setup VPN Connection
 1. You need a working GSC VPN connection to use this approach. For setting up a VPN connection see [this](https://www.bcgsc.ca/wiki/pages/viewpage.action?spaceKey=SysHelp&title=Learn+how+to+use+VPN) guide. Keep in mind that a **VPN connection is not needed** if your already connected to the GSC network.
 
 #### Clone Repos, Update Paths, Install and Load R Packages
-2. **Clone** [GAMBL](https://github.com/morinlab/gambl) and [GAMBLR](https://github.com/morinlab/GAMBLR) to your local computer. From your terminal run the following commands (folder structures can be whatever you want...)
+2. Clone [GAMBL](https://github.com/morinlab/gambl) and [GAMBLR](https://github.com/morinlab/GAMBLR) to your local computer. From your terminal run the following commands (folder structures can be whatever you want...)
 ```
-mkdir ~/git_repos #create a new folder
+mkdir ~/git_repos
 cd ~/git_repos #set as working directiory
-git clone https://github.com/morinlab/gambl #clone gambl
-git clone https://github.com/morinlab/GAMBLR #clone gamblr
+git clone https://github.com/morinlab/gambl
+git clone https://github.com/morinlab/GAMBLR
 ```
 3. Update the **paths** in your local [config.yml](https://github.com/morinlab/GAMBLR/blob/master/config.yml) to point to the recently cloned, local **gambl** folder (repo_base). In your favorite text editor, edit the line shown below (under *remote*).
 ```
@@ -92,26 +92,24 @@ repo_base: "path/to/your/local/gambl_repo/"
 ```
 4. Set the **working directory** in Rstudio. Open Rstudio on your local machine and locate the repo you cloned in the step 2.
 ```
-setwd(~/git_repos/GMABLR-master)
+setwd("~/git_repos/GMABLR-master")
 ```
 5. Install R packages to you local R studio session.
 ```
-devtools::install() #install gamblr
+devtools::install()
 install.packages("ssh")
-install.packages("tidyverse")
 ```
 6. Load packages.
 ```
 library(GAMBLR)
 library(ssh)
-library(tidyverse)
 ```
 #### Setup SSH Connection in Rstudio
 7. Specify your SSH connection in Rstudio. If your local machine username **does not** match your GSC username, you need to add *"your_username<!-- -->@gphost01.bcgsc.ca"* as the only argument to this function.
 ```
 session = GAMBLR::get_ssh_session()
 ```
-8. Execute the following in Rstudio console to make use of the updated paths in the [config.yml](https://github.com/morinlab/GAMBLR/blob/master/config.yml) from step 3 (line 5 in [test_remote.r](https://github.com/morinlab/GAMBLR/blob/master/test_remote.R))
+8. Execute the following in Rstudio console to make use of the updated paths in the [config.yml](https://github.com/morinlab/GAMBLR/blob/master/config.yml) from step 3.
 ```
 Sys.setenv(R_CONFIG_ACTIVE = "remote")
 ```
@@ -159,7 +157,7 @@ export GSC_PASSPHRASE="passpharase_from_step_1"
 #### Install GAMBLR In Local Rstudio
 7. Open **Rstudio** (locally) and set the working directory to the folder you downloaded in step 2 (in the Rstudio console) and install GAMBLR.
 ```
-setwd(~/git_repos/GAMBLR-master)
+setwd("~/git_repos/GAMBLR-master")
 ```
 8. Install and load GAMBLR into your local R session. 
 ```
@@ -194,8 +192,11 @@ check_gamblr_config()
 get_gambl_metadata() %>%
   head()
 ```
-**Note**,if your seeing the following message when trying to use GAMBLR, please ensure that the config/gambl repo is set up properly (step **5** and **13**) and/or remember to load the *remote* one (i.e `Sys.setenv(R_CONFIG_ACTIVE = "remote")`).
+**Note**, if your seeing the following message when trying to use GAMBLR, please ensure that the config/gambl repo is set up properly (step **5** and **13**) and/or remember to load the *remote* one (i.e `Sys.setenv(R_CONFIG_ACTIVE = "remote")`).
 ```
-get_gambl_metadata(seq_type_filter = "capture") %>% pull(cohort) %>% table()
+get_gambl_metadata(seq_type_filter = "capture") %>%
+  pull(cohort) %>%
+  table()
+  
 Error: '/projects/rmorin/projects/gambl-repos/gambl-rmorin/data/metadata/gambl_all_outcomes.tsv' does not exist.
 ```
