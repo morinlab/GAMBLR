@@ -23,9 +23,8 @@ default:
         lymphgen_template: "no_cnvs.no_sv.with_A53,no_cnvs.no_sv.no_A53,no_cnvs.with_sv.with_A53,with_cnvs.no_sv.no_A53,no_cnvs.with_sv.no_A53,with_cnvs.no_sv.with_A53,with_cnvs.with_sv.no_A53,with_cnvs.with_sv.with_A53"
     results_versioned:
         oncodriveclustl:
-            FL_DLBCL:
-                clusters: "versioned_results/oncodriveclustl-0.0_FL--DLBCL_clusters_results.tsv"
-                elements: "versioned_results/oncodriveclustl-0.0_FL--DLBCL_elements_results.tsv"
+                clusters: "versioned_results/oncodriveclustl-0.0_{abase}_clusters_results.tsv"
+                elements: "versioned_results/oncodriveclustl-0.0_{abase}_elements_results.tsv"
     resources:
         whitelist:
             template: all_the_things/slms_3-1.0_vcf2maf-1.3/level_3/{projection}_whitelist.txt
@@ -63,7 +62,7 @@ default:
         copy_number: "seg_battenberg_hg19"
         sv: "bedpe_manta_hg19"
         copy_number_unmatched: "seg_controlfreec_hg19"
-    
+
     qc_met: "icgc_dart/qc-1.0/99-outputs/{seq_type_filter}.qc_metrics.tsv"
 
     results_flatfiles:
