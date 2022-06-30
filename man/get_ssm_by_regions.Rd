@@ -7,19 +7,16 @@
 get_ssm_by_regions(
   regions_list,
   regions_bed,
-  streamlined = FALSE,
-  basic_columns = TRUE,
-  maf_cols = NULL,
-  return_cols = FALSE,
-  use_name_column = FALSE,
+  streamlined = TRUE,
   maf_data = maf_data,
+  use_name_column = FALSE,
   from_indexed_flatfile = TRUE,
   mode = "slms-3",
   augmented = TRUE,
   seq_type = "genome",
   projection = "grch37",
   min_read_support = 4,
-  ssh_session
+  ssh_session = NULL
 )
 }
 \arguments{
@@ -27,13 +24,9 @@ get_ssm_by_regions(
 
 \item{regions_bed}{Better yet, provide a bed file with the coordinates you want to retrieve.}
 
-\item{streamlined}{Set to TRUE to return only the following columns; start, sample_id and region_name.}
+\item{streamlined}{Return a basic rather than full MAF format, default is FALSE.}
 
-\item{basic_columns}{Set to FALSE to override the default behavior of returning only the following columns; chromosome, start, end and sample_id.}
-
-\item{maf_cols}{if basic_columns is set to FALSE, the user can specify what columns to be returned within the MAF. This parameter can either be a list of indexes (integer) or a list of characters.}
-
-\item{return_cols}{If set to TRUE, a vector with all available column names will be returned. Default is FALSE.}
+\item{use_name_column}{If your bed-format data frame has a name column (must be named "name") these can be used to name your regions.}
 
 \item{from_indexed_flatfile}{Set to TRUE to avoid using the database and instead rely on flatfiles (only works for streamlined data, not full MAF details).}
 

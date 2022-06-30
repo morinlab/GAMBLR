@@ -497,7 +497,7 @@ get_mutation_frequency_bin_matrix = function(regions,
                                              legendFontSize = 10,
                                              from_indexed_flatfile = TRUE,
                                              mode = "slms-3",
-                                             ssh_session){
+                                             ssh_session = NULL){
 
   if(missing(regions)){
     if(missing(regions_df)){
@@ -1220,7 +1220,7 @@ prettyOncoplot = function(maftools_obj,
   #order the data frame the way you want the patients shown
     maf_patients = unique(as.character(maftools_obj@data$Tumor_Sample_Barcode))
     if(any(!maf_patients %in% patients)){
-      extra = maf_patients[which(maf_patients %in% patients)]
+      extra = maf_patients[which(!maf_patients %in% patients)]
       patients = maf_patients[which(maf_patients %in% patients)]
       n_drop = length(extra)
       message(paste(n_drop, "patients are not in your metadata, will drop them from the data before displaying"))
@@ -1864,7 +1864,7 @@ ashm_multi_rainbow_plot = function(regions_bed,
                                    custom_colours,
                                    classification_column = "lymphgen",
                                    maf_data,
-                                   ssh_session){
+                                   ssh_session = NULL){
 
   table_name = config::get("results_tables")$ssm
   db = config::get("database_name")
@@ -2095,7 +2095,7 @@ ashm_rainbow_plot = function(mutations_maf,
                              region,
                              custom_colours,
                              hide_ids = TRUE,
-                             ssh_session){
+                             ssh_session = NULL){
 
   table_name = config::get("results_tables")$ssm
   db=config::get("database_name")
