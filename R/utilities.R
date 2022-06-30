@@ -296,7 +296,7 @@ calc_mutation_frequency_sliding_windows = function(this_region,
                                                    classification_column = "lymphgen",
                                                    from_indexed_flatfile = FALSE,
                                                    mode = "slms-3",
-                                                   ssh_session=ssh_session){
+                                                   ssh_session=NULL){
 
   max_region = 1000000
   if(missing(metadata)){
@@ -1663,7 +1663,7 @@ collate_sbs_results = function(sample_table,
 #' @examples
 #' sample_table = collate_nfkbiz_results(sample_table=sample_table)
 #'
-collate_nfkbiz_results = function(sample_table,seq_type_filter="genome",ssh_session){
+collate_nfkbiz_results = function(sample_table,seq_type_filter="genome",ssh_session=NULL){
   #TO DO: Update to work with hg38 projection
   if(missing(sample_table)){
     sample_table = get_gambl_metadata(seq_type_filter=seq_type_filter) %>%
@@ -1703,7 +1703,7 @@ collate_nfkbiz_results = function(sample_table,seq_type_filter="genome",ssh_sess
 #'
 collate_ashm_results = function(sample_table,
                                 seq_type_filter="genome",
-                                ssh_session){
+                                ssh_session=NULL){
 
   if(missing(sample_table)){
     sample_table = get_gambl_metadata(seq_type_filter=seq_type_filter) %>%
