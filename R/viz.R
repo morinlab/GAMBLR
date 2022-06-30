@@ -1174,6 +1174,7 @@ prettyOncoplot = function(maftools_obj,
                           expressionColumns = c(),
                           numericMetadataMax,
                           sortByColumns,
+                          arrange_descending = FALSE,
                           removeNonMutated = FALSE,
                           minMutationPercent,
                           mutAlpha = 1,
@@ -1187,10 +1188,13 @@ prettyOncoplot = function(maftools_obj,
                           this_forest_object = NULL,
                           custom_colours = NULL,
                           hideTopBarplot = TRUE,
+                          tally_all_mutations = FALSE,
+                          tally_all_mutations_max = 1000,
                           hideSideBarplot = FALSE,
                           box_col = NA,
                           annoAlpha = 1,
                           legend_direction = "horizontal",
+                          ylim = NULL,
                           legend_position = "bottom",
                           legend_row = 3,
                           legend_col = 3,
@@ -1540,7 +1544,11 @@ prettyOncoplot = function(maftools_obj,
   metadata_df = metadata_df %>%
     mutate(across(all_of(expressionColumns), ~ trim_scale_expression(.x)))
   if(!missing(sortByColumns)){
-    metadata_df = arrange(metadata_df, across(sortByColumns))
+    if (arrange_descending) {
+      metadata_df = arrange(metadata_df, across(sortByColumns, desc))
+    } else {
+      metadata_df = arrange(metadata_df, across(sortByColumns))
+    }
     patients_kept = rownames(metadata_df)
   }
   if(verbose){
@@ -1594,7 +1602,28 @@ prettyOncoplot = function(maftools_obj,
   if(hideTopBarplot){
     top_annotation = NULL
   }else{
-    top_annotation = HeatmapAnnotation(cbar = anno_oncoprint_barplot())
+    tally_mutations = maftools_obj@data %>%
+      dplyr::filter(Tumor_Sample_Barcode %in% patients_kept) %>%
+      group_by(Tumor_Sample_Barcode) %>%
+      summarize(n_mutations = n()) %>%
+      ungroup %>%
+      arrange(match(Tumor_Sample_Barcode, patients_kept)) %>%
+      select(n_mutations) %>%
+      mutate(n_mutations = ifelse(n_mutations > tally_all_mutations_max,
+                                  tally_all_mutations_max,
+                                  n_mutations))
+
+    if(is.null(ylim) & ! tally_all_mutations){
+      top_annotation = HeatmapAnnotation(cbar = anno_oncoprint_barplot())
+
+    }else if (!is.null(ylim) & ! tally_all_mutations){
+      top_annotation = HeatmapAnnotation(cbar = anno_oncoprint_barplot(ylim=ylim))
+
+    } else if (is.null(ylim) & tally_all_mutations) {
+      top_annotation = columnAnnotation(" " = anno_barplot(tally_mutations))
+    } else if (! is.null(ylim) & tally_all_mutations) {
+      top_annotation = columnAnnotation(" " = anno_barplot(tally_mutations, ylim=ylim))
+    }
   }
 
   # Handle right annotation for specific genes
