@@ -1213,7 +1213,7 @@ prettyOncoplot = function(maftools_obj,
   #order the data frame the way you want the patients shown
     maf_patients = unique(as.character(maftools_obj@data$Tumor_Sample_Barcode))
     if(any(!maf_patients %in% patients)){
-      extra = maf_patients[which(maf_patients %in% patients)]
+      extra = maf_patients[which(!maf_patients %in% patients)]
       patients = maf_patients[which(maf_patients %in% patients)]
       n_drop = length(extra)
       message(paste(n_drop, "patients are not in your metadata, will drop them from the data before displaying"))
