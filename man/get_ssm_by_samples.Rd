@@ -14,8 +14,12 @@ get_ssm_by_samples(
   flavour = "clustered",
   these_genes,
   min_read_support = 3,
+  basic_columns = TRUE,
+  maf_cols = NULL,
+  return_cols = FALSE,
   subset_from_merge = TRUE,
-  augmented = TRUE
+  augmented = TRUE,
+  ssh_session
 )
 }
 \arguments{
@@ -33,9 +37,17 @@ get_ssm_by_samples(
 
 \item{min_read_support}{Only returns variants with at least this many reads in t_alt_count (for cleaning up augmented MAFs)}
 
+\item{basic_columns}{Return first 45 columns of MAF rather than full details. Default is TRUE.}
+
+\item{maf_cols}{if basic_columns is set to FALSE, the suer can specify what columns to be returned within the MAF. This parameter can either be a list of indexes (integer) or a list of characters.}
+
+\item{return_cols}{If set to TRUE, a vector with all avaialble column names will be returned. Default is FALSE.}
+
 \item{subset_from_merge}{Instead of merging individual MAFs, the data will be subset from a pre-merged MAF of samples with the specified seq_type}
 
 \item{augmented}{default: TRUE. Set to FALSE if you instead want the original MAF from each sample for multi-sample patients instead}
+
+\item{BETA}{optional argument to supply active ssh session connection for remote transfers}
 }
 \value{
 data frame in MAF format.

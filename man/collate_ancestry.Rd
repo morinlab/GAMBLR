@@ -4,7 +4,7 @@
 \alias{collate_ancestry}
 \title{INTERNAL FUNCTION called by collate_results, not meant for out-of-package usage.}
 \usage{
-collate_ancestry(sample_table, somalier_output)
+collate_ancestry(sample_table, seq_type_filter = "genome", somalier_output)
 }
 \arguments{
 \item{sample_table}{A data frame with sample_id as the first column.}

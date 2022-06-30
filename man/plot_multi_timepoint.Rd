@@ -17,9 +17,6 @@ plot_multi_timepoint(mafs, sample_id, genes, show_noncoding = FALSE, detail)
 
 \item{detail}{TODO}
 }
-\value{
-
-}
 \description{
 This function doesn't do anything yet
 }

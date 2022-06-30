@@ -5,8 +5,8 @@
 \title{Finish setting up a new cBioPortal instance or updating an existing portal data set.}
 \usage{
 finalize_study(
+  seq_type_filter = "genome",
   short_name = "GAMBL",
-  include_icgc_data = FALSE,
   human_friendly_name = "GAMBL data",
   project_name = "gambl_minus_icgc",
   description = "GAMBL data without ICGC",
@@ -18,8 +18,6 @@ finalize_study(
 }
 \arguments{
 \item{short_name}{A concise name for your portal project.}
-
-\item{include_icgc_data}{Whether or not you want ICGC and other external data included.}
 
 \item{human_friendly_name}{A slightly more verbose name for your project.}
 
@@ -34,6 +32,8 @@ finalize_study(
 \item{overwrite}{Flag to specify that files should be overwritten if they exist. Default is TRUE.}
 
 \item{out_dir}{The full path to the base directory where the files are being created.}
+
+\item{include_icgc_data}{Whether or not you want ICGC and other external data included.}
 }
 \value{
 Nothing.

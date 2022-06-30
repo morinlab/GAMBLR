@@ -38,6 +38,7 @@ prettyOncoplot(
   box_col = NA,
   annoAlpha = 1,
   legend_direction = "horizontal",
+  ylim = NULL,
   legend_position = "bottom",
   legend_row = 3,
   legend_col = 3,
@@ -110,6 +111,8 @@ prettyOncoplot(
 \item{annoAlpha}{Optional alpha to apply to annotation colours.}
 
 \item{legend_direction}{Direction of lgend, defualt is "horizontal".}
+
+\item{ylim}{Limit for y-axis.}
 
 \item{legend_position}{Position of legend, default is "bottom".}
 

@@ -8,8 +8,10 @@ get_ssm_by_region(
   chromosome,
   qstart,
   qend,
-  region = "",
-  basic_columns = FALSE,
+  region = "chr8:128,723,128-128,774,067",
+  basic_columns = TRUE,
+  maf_cols = NULL,
+  return_cols = FALSE,
   streamlined = FALSE,
   maf_data,
   seq_type = "genome",
@@ -17,7 +19,8 @@ get_ssm_by_region(
   from_indexed_flatfile = TRUE,
   augmented = TRUE,
   min_read_support = 3,
-  mode = "slms-3"
+  mode = "slms-3",
+  ssh_session
 )
 }
 \arguments{
@@ -29,7 +32,11 @@ get_ssm_by_region(
 
 \item{region}{Region formatted like chrX:1234-5678 instead of specifying chromosome, start and end separately.}
 
-\item{basic_columns}{Set to TRUE to override the default behaviour of returning only the first 45 columns of MAF data.}
+\item{basic_columns}{Set to FALSE to override the default behavior of returning only the first 45 columns of MAF data.}
+
+\item{maf_cols}{if basic_columns is set to FALSE, the user can specify what columns to be returned within the MAF. This parameter can either be a list of indexes (integer) or a list of characters.}
+
+\item{return_cols}{If set to TRUE, a vector with all available column names will be returned. Default is FALSE.}
 
 \item{streamlined}{Return a basic rather than full MAF format, default is FALSE.}
 
