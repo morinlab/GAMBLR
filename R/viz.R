@@ -1142,6 +1142,8 @@ plot_sample_circos = function(this_sample_id,
 #' @param groupNames optional vector of group names to be displayed above heatmap. Should be the same length as the number of groups that will be shown. Default is NULL (no labels).
 #' @param verbose Set to TRUE to enable verbose mode (debugging messages.
 #' @param hide_annotations Hide annotations for specifc ashms. argument takes a list with annotations.
+#' @param annotate_specific_genes Optional argument, specifying whether the features should be labelled according to their significance in one of the pathologies. Default is FALSE (no annotation).
+#' @param this_forest_object If annotate_specific_genes is specified, this arguments takes the output of GAMBLR::prettyForestPlot directly to determine the annotations.
 #' @param custom_colours Provide named vector (or named list of vectors) containing custom annotation colours if you do not want to use standartized pallette.
 #' @param legend_direction Direction of lgend, defualt is "horizontal".
 #' @param ylim Limit for y-axis.
@@ -1179,6 +1181,7 @@ prettyOncoplot = function(maftools_obj,
                           expressionColumns = c(),
                           numericMetadataMax,
                           sortByColumns,
+                          arrange_descending = FALSE,
                           removeNonMutated = FALSE,
                           minMutationPercent,
                           mutAlpha = 1,
@@ -1188,8 +1191,12 @@ prettyOncoplot = function(maftools_obj,
                           showTumorSampleBarcode = FALSE,
                           groupNames,
                           hide_annotations,
+                          annotate_specific_genes = FALSE,
+                          this_forest_object = NULL,
                           custom_colours = NULL,
                           hideTopBarplot = TRUE,
+                          tally_all_mutations = FALSE,
+                          tally_all_mutations_max = 1000,
                           hideSideBarplot = FALSE,
                           box_col = NA,
                           annoAlpha = 1,
@@ -1544,7 +1551,11 @@ prettyOncoplot = function(maftools_obj,
   metadata_df = metadata_df %>%
     mutate(across(all_of(expressionColumns), ~ trim_scale_expression(.x)))
   if(!missing(sortByColumns)){
-    metadata_df = arrange(metadata_df, across(sortByColumns))
+    if (arrange_descending) {
+      metadata_df = arrange(metadata_df, across(sortByColumns, desc))
+    } else {
+      metadata_df = arrange(metadata_df, across(sortByColumns))
+    }
     patients_kept = rownames(metadata_df)
   }
   if(verbose){
@@ -1598,17 +1609,71 @@ prettyOncoplot = function(maftools_obj,
   if(hideTopBarplot){
     top_annotation = NULL
   }else{
-    if(is.null(ylim)){
-        top_annotation = HeatmapAnnotation(cbar = anno_oncoprint_barplot())
-    }else{
-        top_annotation = HeatmapAnnotation(cbar = anno_oncoprint_barplot(ylim=ylim))
+    tally_mutations = maftools_obj@data %>%
+      dplyr::filter(Tumor_Sample_Barcode %in% patients_kept) %>%
+      group_by(Tumor_Sample_Barcode) %>%
+      summarize(n_mutations = n()) %>%
+      ungroup %>%
+      arrange(match(Tumor_Sample_Barcode, patients_kept)) %>%
+      select(n_mutations) %>%
+      mutate(n_mutations = ifelse(n_mutations > tally_all_mutations_max,
+                                  tally_all_mutations_max,
+                                  n_mutations))
+
+    if(is.null(ylim) & ! tally_all_mutations){
+      top_annotation = HeatmapAnnotation(cbar = anno_oncoprint_barplot())
+
+    }else if (!is.null(ylim) & ! tally_all_mutations){
+      top_annotation = HeatmapAnnotation(cbar = anno_oncoprint_barplot(ylim=ylim))
+
+    } else if (is.null(ylim) & tally_all_mutations) {
+      top_annotation = columnAnnotation(" " = anno_barplot(tally_mutations))
+    } else if (! is.null(ylim) & tally_all_mutations) {
+      top_annotation = columnAnnotation(" " = anno_barplot(tally_mutations, ylim=ylim))
     }
+  }
+
+  # Handle right annotation for specific genes
+  if (annotate_specific_genes & is.null(this_forest_object)) {
+    message("WARNING: You requested right annotation, but forgot to provide output of GAMBLR::prettyForestPlot")
+    message("No right annotation will be drawn.")
+    right_annotation = NULL
+  } else if (annotate_specific_genes) {
+
+    these_comparisons = this_forest_object$mutmat$comparison %>% levels
+
+    enrichment_label =
+      mat[intersect(genes, genes_kept),patients_kept] %>%
+      rownames_to_column("gene") %>%
+      select(gene) %>%
+      left_join(this_forest_object$fisher %>% select(gene, estimate, q.value)) %>%
+      mutate("Enriched in" = case_when(
+        estimate == "Inf" & q.value <= 0.1 ~ these_comparisons[1],
+        estimate == "-Inf" & q.value <= 0.1 ~ these_comparisons[2],
+        is.na(estimate) ~ "NA",
+        estimate<=1 & q.value <= 0.1 ~ these_comparisons[2],
+        estimate > 1 & q.value <= 0.1 ~ these_comparisons[1],
+        TRUE ~ "Both"
+      )) %>%
+      pull("Enriched in")
+
+    right_annotation = rowAnnotation(" " = enrichment_label,
+                             col = list(" " = c(get_gambl_colours()[these_comparisons], Both = "#ACADAF", "NA" = "#000000")),
+                             simple_anno_size = unit(metadataBarHeight, "mm"),
+                             annotation_legend_param =
+                               list(title = "Enriched in",
+                                    nrow=legend_row,
+                                    ncol = legend_col,
+                                    direction=legend_direction,
+                                    labels_gp = gpar(fontsize = legendFontSize)))
+  } else {
+    right_annotation = NULL
   }
 
   ch = ComplexHeatmap::oncoPrint(mat[intersect(genes, genes_kept),patients_kept],
                                  alter_fun = alter_fun,
                                  top_annotation = top_annotation,
-                                 right_annotation = NULL,
+                                 right_annotation = right_annotation,
                                  col = col,
                                  row_order = gene_order,
                                  column_order = column_order,

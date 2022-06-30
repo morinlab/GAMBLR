@@ -546,10 +546,12 @@ annotate_hotspots = function(mutation_maf,
   for(abase in analysis_base){
     base_path = config::get("repo_base")
 
-    clust_full_path = paste0(base_path, config::get("results_versioned")$oncodriveclustl$FL_DLBCL$clusters)
-    all_full_path = paste0(base_path, config::get("results_versioned")$oncodriveclustl$FL_DLBCL$elements)
-    clust_hotspot = read_tsv(clust_full_path)
-    all_hotspot = read_tsv(all_full_path)
+    clust_full_path = paste0(base_path, config::get("results_versioned")$oncodriveclustl$clusters)
+    clust_full_path = glue::glue(clust_full_path)
+    all_full_path = paste0(base_path, config::get("results_versioned")$oncodriveclustl$elements)
+    all_full_path = glue::glue(all_full_path)
+    clust_hotspot = suppressMessages(readr::read_tsv(clust_full_path))
+    all_hotspot = suppressMessages(readr::read_tsv(all_full_path))
 
   clustered_hotspots = clust_hotspot %>%
     dplyr::select(-RANK) %>%
