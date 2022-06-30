@@ -2,6 +2,37 @@
 coding_class = c("Frame_Shift_Del", "Frame_Shift_Ins", "In_Frame_Del", "In_Frame_Ins", "Missense_Mutation", "Nonsense_Mutation", "Nonstop_Mutation", "Silent", "Splice_Region", "Splice_Site", "Targeted_Region", "Translation_Start_Site")
 rainfall_conv = c("T>C", "T>C", "C>T", "C>T", "T>A", "T>A", "T>G", "T>G", "C>A", "C>A", "C>G", "C>G", "InDel")
 names(rainfall_conv) = c('A>G', 'T>C', 'C>T', 'G>A', 'A>T', 'T>A', 'A>C', 'T>G', 'C>A', 'G>T', 'C>G', 'G>C', 'InDel')
+ssh_session <<- NULL
+
+
+#' Check if code is running remotely and (optionally) attempt a connection and set global ssh_session variable
+#'
+#' @param auto_connect Set to TRUE if you want the function to create an ssh session (if necessary)
+#'
+#' @return NULL. This function makes a new ssh session, if necessary, and stores it in a global variable (ssh_session) 
+#' @export
+#'
+#' @examples
+check_host = function(auto_connect=FALSE){
+  hostname = Sys.info()["nodename"]
+  if(grepl("bcgsc.ca",hostname)){
+    #we are on the GSC network
+  }else{
+    # we are on some computer not on the GSC network (needs ssh_session)
+    print(class(ssh_session))
+    if(class(ssh_session)=="ssh_session"){
+      message("active ssh session detected")
+      return()
+    }else{
+      if(auto_connect){
+        session = get_ssh_session() 
+        assign("ssh_session", session, envir = .GlobalEnv)
+      }else{
+        message("You appear to be using GAMBLR on your local computer. Be sure to set up an ssh session!")
+      }
+    }
+  }
+}
 
 #' Create an ssh session to the GSC (requires active VPN connection)
 #'
@@ -736,10 +767,18 @@ sv_to_custom_track = function(sv_bedpe,
   sv_data = bind_rows(sv_data1, sv_data2)
   sv_data = mutate(sv_data, end = end + 10)
   }else{
-    sv_data = mutate(sv_bedpe, annotation = paste0(1, ":", 2)) %>%
-      dplyr::select(1, 2, 6, tumour_sample_id, annotation)
-
-    colnames(sv_data)=c("chrom", "start", "end", "sample_id", "annotation")
+    colnames(sv_data)[c(1,2,3)]=c("CHROM_A" ,  "START_A", "END_A" )
+    colnames(sv_data)[c(4,5,6)]=c("CHROM_B" ,  "START_B", "END_B" )
+    
+    sv_data_1 = mutate(sv_bedpe, annotation = paste0( CHROM_B, ":", START_B)) %>%
+      dplyr::select(CHROM_A, START_A, END_A, tumour_sample_id, annotation)
+    sv_data_2 = mutate(sv_bedpe, annotation = paste0( CHROM_A, ":", START_A)) %>%
+      dplyr::select(CHROM_B, START_B, END_B, tumour_sample_id, annotation)
+    colnames(sv_data_1)=c("chrom", "start", "end", "sample_id", "annotation")
+    colnames(sv_data_2)=c("chrom", "start", "end", "sample_id", "annotation")
+    sv_data= bind_rows(sv_data_1,sv_data_2)
+    
+   # sv_data = dplyr::select(sv_data,chrom,start,end,sample_id,annotation)
   }
   if(!any(grepl("chr", sv_data[,1]))){
     #add chr
@@ -763,7 +802,7 @@ sv_to_custom_track = function(sv_bedpe,
 
   write_bed = function(coloured_svs, sv_name, output_file_base){
     data_bed = coloured_svs %>%
-      mutate(details = paste0(annotation, "_", sample_id)) %>%
+      mutate(details = paste0(sample_id, "_", annotation)) %>%
       mutate(score = 0, strand = "+", end = end + 1, start1 = start, end1 = end) %>%
       dplyr::select(chrom, start, end, details, score, strand, start1, end1, rgb) %>%
       dplyr::filter(!is.na(rgb)) %>%
@@ -1839,7 +1878,16 @@ get_gambl_colours = function(classification = "all",
                           "DLBCL-C" = "#C41230")
 
   all_colours[["FL"]] = c(dFL = "#99C1B9", cFL = "#D16666", DLBCL = "#479450")
-
+  
+  
+  all_colours[["lymphgenerator"]] = c("MP3"="#5B8565",
+                                      "EGB" = "#98622A",
+                                      "ETB"="#813F3D",
+                                      "aSCI"="#D66B1F",
+                                      "aSEL"="#C41230",
+                                      "MCaP"="#5F8CFF",
+                                      "BNZ"="#8870B6"
+                                      )
   all_colours[["lymphgen"]] = c("EZB-MYC" = "#52000F",
                                 "EZB" = "#721F0F",
                                 "EZB-COMP" = "#C7371A",
