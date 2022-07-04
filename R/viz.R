@@ -4618,3 +4618,112 @@ fancy_qc_plot = function(these_samples,
 
   return(qc_plot)
 }
+
+
+#' Visualize proportional coverage (10X and 30X) for selected samples and add comparison group (optional).
+#'
+#' @param these_samples Data frame with sample IDs (to be plotted) in the first column.
+#' @param metadata Optional, user can provide a metadata df to subset sample IDs from.
+#' @param filter_cohort Optional parameter to be used when these_sample is NULL. Calls get_gambl_metadata() and filters on the cohort supplied in this parameter.
+#' @param filter_pathology Optional parameter to be used when these_sample is NULL. Calls get_gambl_metadata() and filters on the pathology supplied in this parameter.
+#' @param comparison_samples Optional parameter, give the function a list of sample IDs to be compared against the main plotting group.
+#' @param seq_type Selected seq type for incoming QC metrics.
+#' @param plot_subtitle Plotting parameter, subtitle of generated plot.
+#'
+#' @return plot as ggplot object.
+#' @import tidyverse cowplot
+#' @export
+#'
+#' @examples
+#' #Example 1: Compare proportional coverage for all samples compared to all FL cases:
+#' #prepare comparison data:
+#' this_meta = get_gambl_metadata()
+#' all_fl = dplyr::filter(this_meta, pathology == "FL") %>%
+#' dplyr::select(sample_id) %>%
+#'   arrange(sample_id) %>%
+#'   as.data.frame()
+#'
+#' sub_fl = all_fl[c(128:183),]
+#' sub_fl = as.data.frame(sub_fl)
+#' colnames(sub_fl)[1] = "sample_id"
+#'
+#' plot:
+#' my_plot = fancy_propcov_plot(seq_type = "genome", comparison_samples = sub_fl, plot_subtitle = "Proportional coverage for all samples compared to all FL cases")
+#'
+#' Example 2: Visualize proportional coverage for all FL cases (no comparison group)
+#' all_fl = fancy_propcov_plot(filter_pathology = "FL", seq_type = "genome", plot_subtitle = "Proportional coverage for all FL cases")
+#'
+fancy_propcov_plot = function(these_samples,
+                              metadata,
+                              filter_cohort,
+                              filter_pathology,
+                              comparison_samples,
+                              seq_type = "genome",
+                              plot_subtitle = ""){
+
+  #get gambl metadata (if not supplied)
+  if(missing(metadata)){
+    this_meta = get_gambl_metadata()
+  }else{
+    this_meta = metadata
+  }
+
+  #filter metadata on selected cohort (if filter_cohort is called)
+  if(missing(these_samples)){
+    if(!missing(filter_cohort)){
+      these_samples = dplyr::filter(this_meta, cohort == filter_cohort) %>%
+        dplyr::select(sample_id) %>%
+        as.data.frame()
+    }else if(!missing(filter_pathology)){
+      these_samples = dplyr::filter(this_meta, pathology == filter_pathology) %>%
+        dplyr::select(sample_id) %>%
+        as.data.frame()
+    }else{
+      these_samples = dplyr::select(this_meta, sample_id) %>%
+        as.data.frame()
+    }
+  }
+
+  #retrieve data for comparison, provided as a df with sample IDs in the first column (subset from gambl metadata)
+  if(!missing(comparison_samples)){
+    comp_data = collate_qc_results(sample_table = comparison_samples, seq_type_filter = seq_type) %>%
+      dplyr::select(ProportionCoverage10x, ProportionCoverage30x) %>%
+      gather(Type, Value)
+
+    comp_data$Type = as.factor(comp_data$Type)
+
+    levels(comp_data$Type)[levels(comp_data$Type)=="ProportionCoverage10x"] = "comparison_group_10X"
+    levels(comp_data$Type)[levels(comp_data$Type)=="ProportionCoverage30x"] = "comparison_group_30X"
+  }
+
+  #get QC data for selected samples
+  qc_metrics = collate_qc_results(sample_table = these_samples, seq_type_filter = seq_type)
+  message(paste0("QC Metric successfully retreived for ", nrow(qc_metrics), " samples out of a total of ", nrow(these_samples), " samples in input sample table."))
+
+  #data wrangling steps
+  sub_metrics = dplyr::select(qc_metrics, ProportionCoverage10x, ProportionCoverage30x) %>%
+    gather(Type, Value)
+
+  sub_metrics$Type = as.factor(sub_metrics$Type)
+
+  levels(sub_metrics$Type)[levels(sub_metrics$Type)=="ProportionCoverage10x"] = "selected_samples_10X"
+  levels(sub_metrics$Type)[levels(sub_metrics$Type)=="ProportionCoverage30x"] = "selected_samples_30X"
+
+  #combine comparison data with sample data
+  if(!missing(comparison_samples)){
+    sub_metrics = rbind(sub_metrics, comp_data) %>%
+      mutate(Type = factor(Type, levels = c("selected_samples_10X", "comparison_group_10X", "selected_samples_30X", "comparison_group_30X")))
+  }
+
+  #plotting
+  plot = ggplot(data = sub_metrics, aes(x = Type, y = Value, fill = Type)) +
+    geom_violin(trim = FALSE, scale = "width") +
+    stat_summary(fun.y = mean, geom = "point", shape = 23, size = 2, fill = "white") +
+    ylim(0, 1) +
+    labs(title = "Proportion Coverage", subtitle = plot_subtitle, x = "", y = "Fraction") +
+    theme_cowplot() +
+    scale_fill_manual(values = c("#dda15e", "#606c38", "#433D6B", "#6B3254")) +
+    theme(legend.position = "right", legend.title = element_blank(), axis.title.x = element_blank(), axis.text.x = element_blank(), axis.ticks.x = element_blank(), panel.grid.minor = element_blank(), panel.grid.major = element_blank(), panel.background = element_blank())
+
+  return(plot)
+}
