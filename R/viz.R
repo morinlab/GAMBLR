@@ -2899,6 +2899,8 @@ splendidHeatmap = function(this_matrix,
 #' @param coding_only Optional. Set to TRUE to restrict to plotting only coding mutations.
 #' @param from_flatfile If set to true the function will use flat files instead of the database.
 #' @param use_augmented Boolean statement if to use augmented maf, default is FALSE.
+#' @param add_qc_metric Boolean statement, if set to TRUE specified QC metric will be added (second y-axis).
+#' @param seq_type Default is "genome".
 #'
 #' @return plot as ggplot object.
 #' @import tidyverse cowplot
@@ -2926,7 +2928,9 @@ fancy_v_chrcount = function(this_sample,
                             chr_select = paste0("chr", c(1:22)),
                             coding_only = FALSE,
                             from_flatfile = TRUE,
-                            use_augmented_maf = TRUE){
+                            use_augmented_maf = TRUE,
+                            add_qc_metric = FALSE,
+                            seq_type = "genome"){
 
   if(!missing(maf_data)){
     maf = maf_data
@@ -3004,6 +3008,16 @@ fancy_v_chrcount = function(this_sample,
     ymax = max(maf_del$n) + max(maf_dup$n)
   }
 
+  if(add_qc_metric){
+    #get qc data for selected samples
+    sample_df = data.frame(sample_id = this_sample) #build a df from scratch
+    qc_metrics = collate_qc_results(sample_table = sample_df, seq_type_filter = seq_type) %>%
+      dplyr::select(MeanCorrectedCoverage)
+    if(nrow(qc_metrics) < 1){
+      message("No QC metrics available for selected sample...")
+    }
+  }
+
   #plot
   p = ggplot(maf.count, aes(x = Chromosome, y = n, fill = Variant_Type, label = n)) +
         labs(title = plot_title, subtitle = plot_subtitle, x = "", y = "Variants (n)", fill = "") +
@@ -3011,7 +3025,9 @@ fancy_v_chrcount = function(this_sample,
         geom_bar(position = "stack", stat = "identity") +
         {if(ssm)scale_fill_manual(values = get_gambl_colours("indels"))} +
         {if(!ssm)scale_fill_manual(values = get_gambl_colours("svs"))} +
-        scale_y_continuous(expand = c(0, 0), breaks = seq(0, ymax, by = 2)) +
+        {if(add_qc_metric)geom_hline(qc_metrics, mapping = aes(yintercept = MeanCorrectedCoverage / 10), linetype = "dashed", group = 2)} +
+        {if(!add_qc_metric)scale_y_continuous(expand = c(0, 0), breaks = seq(0, ymax + 2, by = 1))} +
+        {if(add_qc_metric)scale_y_continuous(expand = c(0, 0), breaks = seq(0, ymax + 2, by = 1), sec.axis = sec_axis(~.*10, name = "Mean Corrected Coverage (X)", breaks = seq(0, 100, by = 10)))} +
         theme_cowplot() +
         {if(hide_legend)theme(legend.position = "none")} +
         theme(axis.text.x = element_text(angle = 45, hjust = 1))
