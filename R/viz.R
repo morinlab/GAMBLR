@@ -4354,11 +4354,11 @@ fancy_sv_sizedens = function(this_sample,
 #'
 #' @param these_samples Data frame with sample IDs (to be plotted) in the first column.
 #' @param metadata Optional argument, used to derive sample IDs if sample_table is Null.
-#' @param comparison_data Optional argument for plotting mean alignment metrics. Default is plotting the mean for samples provided. This parameter takes a list of smaple IDs.
+#' @param comparison_group Optional argument for plotting mean alignment metrics. Default is plotting the mean for samples provided. This parameter takes a list of sample IDs.
 #' @param seq_type Subset qc metrics to a specific seq_type, default is genome.
 #' @param add_mean Set to TRUE to superimpose mean values of plotted variables. Default is TRUE.
-#' @param limit_cohort If no df with sample IDs is supplied (these_samples = NULL) the function calls get_gambl_metadata and subsets on selected cohort.
-#' @param limit_pathology If no df with sample IDs is supplied (these_samples = NULL) the function calls get_gambl_metadata and subsets on selected pathology.
+#' @param filter_cohort If no df with sample IDs is supplied (these_samples = NULL) the function calls get_gambl_metadata and subsets on selected cohort.
+#' @param filter_pathology If no df with sample IDs is supplied (these_samples = NULL) the function calls get_gambl_metadata and subsets on selected pathology.
 #' @param this_color_palette Optional parameter that holds the selected colours for the plotted bars.
 #' @param plot_sub Optional parameter, add a subtitle to alignment metric plot.
 #'
@@ -4367,37 +4367,46 @@ fancy_sv_sizedens = function(this_sample,
 #' @export
 #'
 #' @examples
-#' sample_table = data.frame(sample_id  = c("09-33003T", "05-18426T", "SP59282"))
-#' fancy_qc_plot(these_samples = sample_table, seq_type = "genome")
+#' all_fl = dplyr::filter(this_meta, pathology == "FL") %>%
+#'   dplyr::select(sample_id) %>%
+#'   arrange(sample_id) %>%
+#'   as.data.frame()
 #'
-fancy_qc_alignment_plot = function(these_samples,
-                         metadata,
-                         comparison_data = NULL,
-                         seq_type = "genome",
-                         add_mean = TRUE,
-                         limit_cohort = NULL,
-                         limit_pathology = NULL,
-                         this_color_palette = c("TotalReads" = "#3D405B",
-                                                "TotalUniquelyMapped" = "#81B29A",
-                                                "TotalDuplicatedreads" = "#E07A5F"),
-                         plot_sub = ""){
+#' all_bl = dplyr::filter(this_meta, pathology == "BL") %>%
+#'   dplyr::select(sample_id) %>%
+#'   arrange(sample_id) %>%
+#'   as.data.frame()
+#'
+#' plot = fancy_alignment_plot(these_samples = all_fl, seq_type = "genome", comparison_group = all_bl, plot_sub = "all FL cases (BL comparison group)")
+#'
+fancy_alignment_plot = function(these_samples,
+                                metadata,
+                                comparison_group,
+                                seq_type = "genome",
+                                add_mean = TRUE,
+                                filter_cohort,
+                                filter_pathology,
+                                this_color_palette = c("TotalReads" = "#3D405B", "TotalUniquelyMapped" = "#81B29A", "TotalDuplicatedreads" = "#E07A5F"),
+                                plot_sub = ""){
 
-  if(missing(these_samples) && missing(metadata)){
-    metadata = get_gambl_metadata()
+  #get gambl metadata (if not supplied)
+  if(missing(metadata)){
+    this_meta = get_gambl_metadata()
+  }else{
+    this_meta = metadata
   }
 
-  if(missing(these_samples) && !is.null(limit_cohort)){
-    these_samples = dplyr::filter(metadata, cohort == limit_cohort) %>%
-      dplyr::select(sample_id) %>%
-      arrange(sample_id) %>%
-      as.data.frame()
-  }
-
-  if(missing(these_samples) && !is.null(limit_pathology)){
-    these_samples = dplyr::filter(metadata, pathology == limit_pathology) %>%
-      dplyr::select(sample_id) %>%
-      arrange(sample_id) %>%
-      as.data.frame()
+  #filter metadata on selected cohort (if filter_cohort is called)
+  if(missing(these_samples)){
+    if(!missing(filter_cohort)){
+      these_samples = dplyr::filter(this_meta, cohort == filter_cohort) %>%
+        dplyr::select(sample_id) %>%
+        as.data.frame()
+    }else if(!missing(filter_pathology)){
+      these_samples = dplyr::filter(this_meta, pathology == filter_pathology) %>%
+        dplyr::select(sample_id) %>%
+        as.data.frame()
+    }
   }
 
   #sanity check incoming sample table
@@ -4419,8 +4428,8 @@ fancy_qc_alignment_plot = function(these_samples,
                                        mean(melt_align$value[melt_align$variable == "TotalUniquelyMapped"]),
                                        mean(melt_align$value[melt_align$variable == "TotalDuplicatedreads"])))
 
-  if(!is.null(comparison_data)){
-    comp_data = collate_qc_results(sample_table = comparison_data, seq_type_filter = seq_type) %>%
+  if(!missing(comparison_group)){
+    comp_data = collate_qc_results(sample_table = comparison_group, seq_type_filter = seq_type) %>%
       dplyr::select(sample_id, TotalReads, TotalUniquelyMapped, TotalDuplicatedreads) %>%
       melt(id.var = "sample_id") %>%
       arrange(sample_id)
@@ -4431,7 +4440,6 @@ fancy_qc_alignment_plot = function(these_samples,
                                        mean(comp_data$value[comp_data$variable == "TotalDuplicatedreads"])))
   }
 
-
   #corrected mean coverage
   melt_cov = dplyr::select(qc_metrics, c(sample_id, MeanCorrectedCoverage)) %>%
     melt(id.var = "sample_id") %>%
@@ -4441,7 +4449,7 @@ fancy_qc_alignment_plot = function(these_samples,
   alignment_plot = ggplot() +
     geom_bar(melt_align, mapping = aes(x = sample_id, y = value, fill = variable), position = "dodge", stat = "identity") +
     {if(add_mean) geom_hline(mean_cov_df, mapping = aes(yintercept = Value, color = Metric))} +
-    {if(!is.null(comparison_data)) geom_hline(mean_cov_df_comp, mapping = aes(yintercept = Value, linetype = Metric), color = "#54555E")} +
+    {if(!missing(comparison_group)) geom_hline(mean_cov_df_comp, mapping = aes(yintercept = Value, linetype = Metric), color = "#54555E")} +
     geom_line(melt_cov, mapping = aes(x = sample_id, y = value * 25000000), group = 1, color = "#5C4966", position = "dodge", stat = "identity") +
     geom_point(melt_cov, mapping = aes(x = sample_id, y = value * 25000000, shape = variable), fill = "#A892B3", color = "#5C4966", size = 3, position = "dodge", stat = "identity") +
     scale_y_continuous(expand = c(0, 0), breaks = seq(0, 3.0e+10, by = 3e+08), sec.axis = sec_axis(~ . / 2500000000, name = "", labels = function(b){paste0(round(b * 100, 0), "X")})) +
@@ -4461,13 +4469,15 @@ fancy_qc_alignment_plot = function(these_samples,
 #' Plot for visualizing QC metrics and allowing for grouping by different metadata columns.
 #'
 #' @param these_samples Data frame with sample IDs (to be plotted) in the first column (has to be named sample_id).
-#' @param seq_type Selected seqtype for incoming QC metrics.
+#' @param filter_cohort Optional parameter to be used when these_sample is NULL. Calls get_gambl_metadata() and filters on the cohort supplied in this parameter.
+#' @param filter_pathology Optional parameter to be used when these_sample is NULL. Calls get_gambl_metadata() and filters on the pathology supplied in this parameter.
+#' @param seq_type Selected seq type for incoming QC metrics.
 #' @param metadata Optional, user can provide a metadata df to subset sample IDs from.
-#' @param sort_by Plotting parameter, set sorting column for barplots.
+#' @param sort_by Plotting parameter, set sorting column for bar plots.
 #' @param plot_data Plotting parameter, define the data type to be plotted.
 #' @param fill_by Plotting parameter, Set fill for bar plot, can be pathology, cohort, etc.
-#' @param comparison_data Optional parameter for adding a comparison group, can be "FL", "DLBCL", etc. Is dependent on comp_factor. If comp_factor is set to pathology, this parameter excepts the same data tytpe.
-#' @param comparison_samples Optional aprameter, give the function a list of sample IDs to be compared against the main plotting group.
+#' @param comparison_data Optional parameter for adding a comparison group, can be "FL", "DLBCL", etc. Is dependent on comp_factor. If comp_factor is set to pathology, this parameter excepts the same data type.
+#' @param comparison_samples Optional parameter, give the function a list of sample IDs to be compared against the main plotting group.
 #' @param comp_factor Optional parameter for specifying the factor type of comparison data. Can be "pathology, "cohort", etc.
 #' @param plot_title Plotting parameter, plot title.
 #' @param plot_subtitle Plotting parameter, subtitle of generated plot.
@@ -4503,7 +4513,7 @@ fancy_qc_plot = function(these_samples,
                          plot_title,
                          plot_subtitle,
                          y_axis_lab,
-                         return_plotdata = FALSE) {
+                         return_plotdata = FALSE){
 
   #return a list of acceptable data types for plotting
   if(return_plotdata){
@@ -4522,18 +4532,19 @@ fancy_qc_plot = function(these_samples,
     this_meta = metadata
   }
 
-  #filter metadata on selected cohort (if filter_cohort is called)
-  if(missing(these_samples) && !missing(filter_cohort)){
-    these_samples = dplyr::filter(this_meta, cohort == filter_cohort) %>%
-      dplyr::select(sample_id) %>%
-      as.data.frame()
-  }
-
-  #filter metadata on pathology (if filter_pathology is called)
-  if(missing(these_samples) && !missing(filter_pathology)){
-    these_samples = dplyr::filter(this_meta, pathology == filter_pathology) %>%
-      dplyr::select(sample_id) %>%
-      as.data.frame()
+  if(missing(these_samples)){
+    if(!missing(filter_cohort)){
+      these_samples = dplyr::filter(this_meta, cohort == filter_cohort) %>%
+        dplyr::select(sample_id) %>%
+        as.data.frame()
+    }else if(!missing(filter_pathology)){
+      these_samples = dplyr::filter(this_meta, pathology == filter_pathology) %>%
+        dplyr::select(sample_id) %>%
+        as.data.frame()
+    }else{
+      these_samples = dplyr::select(this_meta, sample_id) %>%
+        as.data.frame()
+    }
   }
 
   #get QC data for selected samples
@@ -4614,7 +4625,8 @@ fancy_qc_plot = function(these_samples,
     theme_cowplot() +
     scale_y_continuous(expand = c(0, 0)) +
     scale_fill_manual(values = c(list_col)) +
-    theme(legend.position = "right", axis.title.x=element_blank(), axis.text.x=element_blank(), axis.ticks.x=element_blank(), panel.grid.minor = element_blank(), panel.grid.major = element_blank(), panel.background = element_blank())
+    theme(legend.position = "right", axis.title.x = element_blank(), axis.text.x = element_blank(), axis.ticks.x = element_blank(),
+          panel.grid.minor = element_blank(), panel.grid.major = element_blank(), panel.background = element_blank())
 
   return(qc_plot)
 }
