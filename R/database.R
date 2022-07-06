@@ -1746,6 +1746,7 @@ get_ssm_by_regions = function(regions_list,
                               min_read_support = 4,
                               ssh_session = NULL){
 
+
   bed2region = function(x){
     paste0(x[1], ":", as.numeric(x[2]), "-", as.numeric(x[3]))
   }
