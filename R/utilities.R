@@ -12,23 +12,24 @@ ssh_session <<- NULL
 #' @return NULL. This function makes a new ssh session, if necessary, and stores it in a global variable (ssh_session) 
 #' @export
 #'
-#' @examples
+#' @examples ssh_session = get_ssh_session()
 check_host = function(auto_connect=FALSE){
   hostname = Sys.info()["nodename"]
   if(grepl("bcgsc.ca",hostname)){
     #we are on the GSC network
   }else{
     # we are on some computer not on the GSC network (needs ssh_session)
-    print(class(ssh_session))
     if(class(ssh_session)=="ssh_session"){
       message("active ssh session detected")
       return()
     }else{
       if(auto_connect){
-        session = get_ssh_session() 
+        session = get_ssh_session()
         assign("ssh_session", session, envir = .GlobalEnv)
       }else{
         message("You appear to be using GAMBLR on your local computer. Be sure to set up an ssh session!")
+        message("?GAMBLR::get_ssh_session for more info")
+        
       }
     }
   }
@@ -865,6 +866,12 @@ maf_to_custom_track = function(maf_data,
   tabular = write.table(maf_coloured, file = output_file, quote = F, sep = "\t", row.names = F, col.names = F, append = TRUE)
 }
 
+test_glue = function(placeholder="INSERTED"){
+  some_string = "this text has {placeholder}"
+  print(some_string)
+  ss=glue::glue(some_string)
+  print(ss)
+}
 
 #' Bring together all derived sample-level results from many GAMBL pipelines.
 #'

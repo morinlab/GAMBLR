@@ -1004,11 +1004,11 @@ get_combined_sv = function(min_vaf = 0,
                            projection = "grch37",
                            oncogenes){
 
-  if(projection != "grch37"){
-    message("Currently, only grch37 is supported")
-
-  return()
-  }
+  #if(projection != "grch37"){
+  #  message("Currently, only grch37 is supported")
+  #
+  #return()
+  #}
 
   base_path = config::get("project_base")
   sv_file = config::get()$results_flatfiles$sv_combined$icgc_dart
@@ -1107,7 +1107,13 @@ get_manta_sv = function(min_vaf = 0.1,
   #this table stores chromosomes with un-prefixed names. Convert to prefixed chromosome if necessary
   if(from_flatfile){
     sv_file = get_merged_result(tool_name = "manta", projection = projection)
+    #check for missingness
+    if(!file.exists(sv_file)){
+      message("Cannot find file locally. If working remotely, perhaps you forgot to load your config (see below) or sync your files?")
+      message('Sys.setenv(R_CONFIG_ACTIVE= "remote"')
+    }
     all_sv = read_tsv(sv_file, col_types = "cnncnncnccccnnnnccc", col_names = cnames)
+    
   }else{
     con = DBI::dbConnect(RMariaDB::MariaDB(), dbname = db)
     all_sv = dplyr::tbl(con, table_name) %>%
@@ -1682,10 +1688,9 @@ get_ashm_count_matrix = function(regions_bed,
                                 ssh_session=ssh_session)
 
   ashm_counted = ashm_maf %>%
-    group_by(Tumor_Sample_Barcode, region_name) %>%
+    group_by(sample_id, region_name) %>%
     tally()
 
-  colnames(ashm_counted)[1] = "sample_id"
 
   if(missing(sample_metadata)){
     all_meta = get_gambl_metadata() %>%
