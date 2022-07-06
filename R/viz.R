@@ -2948,7 +2948,7 @@ fancy_v_chrcount = function(this_sample,
   #get maf data for a specific sample.
   if(missing(maf_data) && is.null(maf_path)){
     if(ssm){
-      maf = assign_cn_to_ssm(this_sample = this_sample, coding_only = coding_only, from_flatfile = from_flatfile, use_augmented_maf = use_augmented_maf)$maf
+      maf = assign_cn_to_ssm(this_sample = this_sample, coding_only = coding_only, from_flatfile = from_flatfile, use_augmented_maf = use_augmented_maf, seq_type = seq_type)$maf
     }else{
       maf = get_combined_sv(sample_ids = this_sample, projection = projection, min_vaf = min_vaf) %>%
         dplyr::select(CHROM_A, START_A, END_A, manta_name)
@@ -3371,7 +3371,7 @@ fancy_cnbar = function(this_sample,
   cn_levels = cns_count$Type
 
   #plot
-  ggplot(joined_cn, aes(x = CN)) +
+  p = ggplot(joined_cn, aes(x = CN)) +
     geom_bar(aes(y = count, fill = CN, label = count), position = "stack", stat = "identity") +
     geom_line(aes(y = lenght/500000), alpha = 0.5, linetype = "dashed", group = 2) +
     geom_point(aes(y = lenght/500000), colour = "#E6B315", size = 3, group = 2) +
@@ -3382,6 +3382,8 @@ fancy_cnbar = function(this_sample,
     geom_text(aes(x = CN, y = count, label = count), colour = "#000000", size = 5, position = position_stack(vjust = 0.5)) +
     theme_cowplot() +
     theme(legend.position = "none")
+
+  return(p)
 }
 
 
@@ -4402,24 +4404,34 @@ fancy_alignment_plot = function(these_samples,
                                 add_mean = TRUE,
                                 filter_cohort,
                                 filter_pathology,
-                                this_color_palette = c("TotalReads" = "#3D405B", "TotalUniquelyMapped" = "#81B29A", "TotalDuplicatedreads" = "#E07A5F"),
+                                this_color_palette = c("TotalReads" = "#3D405B",
+                                                       "TotalUniquelyMapped" = "#81B29A",
+                                                       "TotalDuplicatedreads" = "#E07A5F"),
                                 plot_sub = ""){
 
   #get gambl metadata (if not supplied)
   if(missing(metadata)){
-    this_meta = get_gambl_metadata()
+    this_meta = get_gambl_metadata(seq_type_filter = seq_type)
   }else{
     this_meta = metadata
   }
 
   #filter metadata on selected cohort (if filter_cohort is called)
   if(missing(these_samples)){
-    if(!missing(filter_cohort)){
+    if(!missing(filter_cohort) && missing(filter_pathology)){
       these_samples = dplyr::filter(this_meta, cohort == filter_cohort) %>%
         dplyr::select(sample_id) %>%
         as.data.frame()
-    }else if(!missing(filter_pathology)){
+    }
+
+    if(!missing(filter_pathology) && missing(filter_cohort)){
       these_samples = dplyr::filter(this_meta, pathology == filter_pathology) %>%
+        dplyr::select(sample_id) %>%
+        as.data.frame()
+    }
+
+    if(!missing(filter_cohort) && !missing(filter_pathology)){
+      these_samples = dplyr::filter(this_meta, pathology == filter_pathology, cohort == filter_cohort) %>%
         dplyr::select(sample_id) %>%
         as.data.frame()
     }
@@ -4432,7 +4444,8 @@ fancy_alignment_plot = function(these_samples,
 
   #get qc data for selected samples
   qc_metrics = collate_qc_results(sample_table = these_samples, seq_type_filter = seq_type)
-  message(paste0("QC Metric successfully retreived for ", nrow(qc_metrics), " samples out of a total of ", nrow(these_samples), " samples in input sample table."))
+  message(paste0("QC Metric successfully retreived for ", nrow(qc_metrics),
+                 " samples out of a total of ", nrow(these_samples), " samples in input sample table."))
 
   #subset alignment metrics
   melt_align = dplyr::select(qc_metrics, c(sample_id, TotalReads, TotalUniquelyMapped, TotalDuplicatedreads)) %>%
@@ -4451,9 +4464,9 @@ fancy_alignment_plot = function(these_samples,
       arrange(sample_id)
 
     mean_cov_df_comp = data.frame (Metric = c("TotalReads", "TotalUniquelyMapped", "TotalDuplicatedreads"),
-                            Value = c (mean(comp_data$value[comp_data$variable == "TotalReads"]),
-                                       mean(comp_data$value[comp_data$variable == "TotalUniquelyMapped"]),
-                                       mean(comp_data$value[comp_data$variable == "TotalDuplicatedreads"])))
+                                   Value = c (mean(comp_data$value[comp_data$variable == "TotalReads"]),
+                                              mean(comp_data$value[comp_data$variable == "TotalUniquelyMapped"]),
+                                              mean(comp_data$value[comp_data$variable == "TotalDuplicatedreads"])))
   }
 
   #corrected mean coverage
@@ -4462,9 +4475,9 @@ fancy_alignment_plot = function(these_samples,
     arrange(sample_id)
 
   #plot alignment data
-  alignment_plot = ggplot() +
+  p = ggplot() +
     geom_bar(melt_align, mapping = aes(x = sample_id, y = value, fill = variable), position = "dodge", stat = "identity") +
-    {if(add_mean) geom_hline(mean_cov_df, mapping = aes(yintercept = Value, color = Metric))} +
+    {if(add_mean)geom_hline(mean_cov_df, mapping = aes(yintercept = Value, color = Metric))} +
     {if(!missing(comparison_group)) geom_hline(mean_cov_df_comp, mapping = aes(yintercept = Value, linetype = Metric), color = "#54555E")} +
     geom_line(melt_cov, mapping = aes(x = sample_id, y = value * 25000000), group = 1, color = "#5C4966", position = "dodge", stat = "identity") +
     geom_point(melt_cov, mapping = aes(x = sample_id, y = value * 25000000, shape = variable), fill = "#A892B3", color = "#5C4966", size = 3, position = "dodge", stat = "identity") +
@@ -4478,7 +4491,7 @@ fancy_alignment_plot = function(these_samples,
     labs(linetype = "Comparison Group", shape = "Corrected Coverage (right y-axis)", fill = "Alignment Metrics", color = "Alignment Metrics (Mean)") +
     theme(legend.position = "right", axis.text.x = element_text(angle = 90, vjust = 0.5), panel.grid.minor = element_blank(), panel.grid.major = element_blank(), panel.background = element_blank())
 
-  return(alignment_plot)
+  return(p)
 }
 
 
@@ -4492,9 +4505,9 @@ fancy_alignment_plot = function(these_samples,
 #' @param sort_by Plotting parameter, set sorting column for bar plots.
 #' @param plot_data Plotting parameter, define the data type to be plotted.
 #' @param fill_by Plotting parameter, Set fill for bar plot, can be pathology, cohort, etc.
-#' @param comparison_data Optional parameter for adding a comparison group, can be "FL", "DLBCL", etc. Is dependent on comp_factor. If comp_factor is set to pathology, this parameter excepts the same data type.
 #' @param comparison_samples Optional parameter, give the function a list of sample IDs to be compared against the main plotting group.
-#' @param comp_factor Optional parameter for specifying the factor type of comparison data. Can be "pathology, "cohort", etc.
+#' @param filter_comp_cohort Optional parameter for filtering the comparison group (cohort).
+#' @param filter_comp_pathology Optional parameter for filtering the comparison group (pathology).
 #' @param plot_title Plotting parameter, plot title.
 #' @param plot_subtitle Plotting parameter, subtitle of generated plot.
 #' @param y_axis_lab Plotting parameter, label of y-axis.
@@ -4506,14 +4519,16 @@ fancy_alignment_plot = function(these_samples,
 #'
 #' @examples
 #' #plot QC metrics (Average base Quality for all BL samples), compared to the same metric for all FL cases (pathology).
-#' qc_avg_basequality = fancy_qc_plot(filter_pathology = "BL",
-#'                                    comparison_data = "FL",
-#'                                    comp_factor = "pathology",
+#' qc_avg_basequality = fancy_qc_plot(filter_pathology = "FL",
+#'                                    filter_cohort = "DLBCL_LSARP_Trios",
+#'                                    filter_comp_cohort = "BL_Pediatric",
+#'                                    filter_comp_pathology = "BL",
 #'                                    sort_by = "AverageBaseQuality",
 #'                                    plot_data = "AverageBaseQuality",
 #'                                    fill_by = "pathology",
 #'                                    plot_title = "Average Base Quality",
-#'                                    y_axis_lab = "Base Quality")
+#'                                    y_axis_lab = "Base Quality",
+#'                                    seq_type = "genome")
 #'
 fancy_qc_plot = function(these_samples,
                          filter_cohort,
@@ -4523,11 +4538,11 @@ fancy_qc_plot = function(these_samples,
                          sort_by,
                          plot_data,
                          fill_by,
-                         comparison_data = NULL,
-                         comparison_samples = NULL,
-                         comp_factor,
-                         plot_title,
-                         plot_subtitle,
+                         comparison_samples,
+                         filter_comp_cohort,
+                         filter_comp_pathology,
+                         plot_title = "",
+                         plot_subtitle = "",
                          y_axis_lab,
                          return_plotdata = FALSE){
 
@@ -4543,29 +4558,31 @@ fancy_qc_plot = function(these_samples,
 
   #get gambl metadata (if not supplied)
   if(missing(metadata)){
-    this_meta = get_gambl_metadata()
+    this_meta = get_gambl_metadata(seq_type_filter = seq_type)
   }else{
     this_meta = metadata
   }
 
+  #filter metadata on selected cohort (if filter_cohort is called)
   if(missing(these_samples)){
-    if(!missing(filter_cohort)){
+    if(!missing(filter_cohort) && missing(filter_pathology)){
       these_samples = dplyr::filter(this_meta, cohort == filter_cohort) %>%
         dplyr::select(sample_id) %>%
         as.data.frame()
-    }else if(!missing(filter_pathology)){
+    }
+
+    if(!missing(filter_pathology) && missing(filter_cohort)){
       these_samples = dplyr::filter(this_meta, pathology == filter_pathology) %>%
         dplyr::select(sample_id) %>%
         as.data.frame()
-    }else{
-      these_samples = dplyr::select(this_meta, sample_id) %>%
+    }
+
+    if(!missing(filter_cohort) && !missing(filter_pathology)){
+      these_samples = dplyr::filter(this_meta, pathology == filter_pathology, cohort == filter_cohort) %>%
+        dplyr::select(sample_id) %>%
         as.data.frame()
     }
   }
-
-  #get QC data for selected samples
-  qc_metrics = collate_qc_results(sample_table = these_samples, seq_type_filter = seq_type)
-  message(paste0("QC Metric successfully retreived for ", nrow(qc_metrics), " samples out of a total of ", nrow(these_samples), " samples in input sample table."))
 
   #aggregate sample list with metadata columns
   qc_meta = qc_metrics %>% inner_join(this_meta)
@@ -4579,7 +4596,7 @@ fancy_qc_plot = function(these_samples,
   mean_df$mean = as.factor(mean_df$mean)
 
   #calculate mean for selected comparison group using a list of IDs provided in comparison_samples
-  if(!is.null(comparison_samples) && is.null(comparison_data)){
+  if(!missing(comparison_samples)){
     comp_data = collate_qc_results(sample_table = comparison_samples, seq_type_filter = seq_type) %>%
       dplyr::select(sample_id, plot_data) %>%
       melt(id.var = "sample_id") %>%
@@ -4594,18 +4611,26 @@ fancy_qc_plot = function(these_samples,
   }
 
   #calculate mean for selected comparison group as a subset of incoming metadata (i.e no list of sample IDs provided for comparison_samples)
-  if(!is.null(comparison_data) && is.null(comparison_samples)){
-    if(comp_factor == "pathology"){
-      comp_samples = dplyr::filter(this_meta, pathology == comparison_data) %>%
-        dplyr::select(sample_id) %>%
-        as.data.frame()
-    }else if(comp_factor == "cohort"){
-      comp_samples = dplyr::filter(this_meta, cohort == comparison_data) %>%
+  if(missing(comparison_samples)){
+    if(!missing(filter_comp_cohort) && missing(filter_comp_pathology)){
+      comp_samples = dplyr::filter(this_meta, cohort == filter_comp_cohort) %>%
         dplyr::select(sample_id) %>%
         as.data.frame()
     }
 
-    comp_data = collate_qc_results(sample_table = comp_samples, seq_type_filter = "genome") %>%
+    if(!missing(filter_comp_pathology) && missing(filter_comp_cohort)){
+      comp_samples = dplyr::filter(this_meta, pathology == filter_comp_pathology) %>%
+        dplyr::select(sample_id) %>%
+        as.data.frame()
+    }
+
+    if(!missing(filter_comp_cohort) && !missing(filter_comp_pathology)){
+      comp_samples = dplyr::filter(this_meta, cohort == filter_comp_cohort, pathology == filter_comp_pathology) %>%
+        dplyr::select(sample_id) %>%
+        as.data.frame()
+      }
+
+    comp_data = collate_qc_results(sample_table = comp_samples, seq_type_filter = seq_type) %>%
       dplyr::select(sample_id, plot_data) %>%
       melt(id.var = "sample_id") %>%
       arrange(sample_id)
@@ -4634,7 +4659,7 @@ fancy_qc_plot = function(these_samples,
   list_col = as.list(sub_cols$hex)
 
   #plotting
-  qc_plot = ggplot(qc_meta, aes_string(paste0("reorder(", "sample_id, -", sort_by, ")"), y = plot_data, fill = fill_by)) +
+  p = ggplot(qc_meta, aes_string(paste0("reorder(", "sample_id, -", sort_by, ")"), y = plot_data, fill = fill_by)) +
     geom_bar(stat = "identity", width = 0.7, position = position_dodge()) +
     geom_hline(mean_df, mapping = aes(yintercept = value, linetype = mean)) +
     labs(title = plot_title, subtitle = plot_subtitle, x = "", y = y_axis_lab) +
@@ -4644,7 +4669,7 @@ fancy_qc_plot = function(these_samples,
     theme(legend.position = "right", axis.title.x = element_blank(), axis.text.x = element_blank(), axis.ticks.x = element_blank(),
           panel.grid.minor = element_blank(), panel.grid.major = element_blank(), panel.background = element_blank())
 
-  return(qc_plot)
+  return(p)
 }
 
 
@@ -4691,23 +4716,28 @@ fancy_propcov_plot = function(these_samples,
 
   #get gambl metadata (if not supplied)
   if(missing(metadata)){
-    this_meta = get_gambl_metadata()
+    this_meta = get_gambl_metadata(seq_type_filter = seq_type)
   }else{
     this_meta = metadata
   }
 
   #filter metadata on selected cohort (if filter_cohort is called)
   if(missing(these_samples)){
-    if(!missing(filter_cohort)){
+    if(!missing(filter_cohort) && missing(filter_pathology)){
       these_samples = dplyr::filter(this_meta, cohort == filter_cohort) %>%
         dplyr::select(sample_id) %>%
         as.data.frame()
-    }else if(!missing(filter_pathology)){
+    }
+
+    if(!missing(filter_pathology) && missing(filter_cohort)){
       these_samples = dplyr::filter(this_meta, pathology == filter_pathology) %>%
         dplyr::select(sample_id) %>%
         as.data.frame()
-    }else{
-      these_samples = dplyr::select(this_meta, sample_id) %>%
+    }
+
+    if(!missing(filter_cohort) && !missing(filter_pathology)){
+      these_samples = dplyr::filter(this_meta, pathology == filter_pathology, cohort == filter_cohort) %>%
+        dplyr::select(sample_id) %>%
         as.data.frame()
     }
   }
@@ -4744,14 +4774,108 @@ fancy_propcov_plot = function(these_samples,
   }
 
   #plotting
-  plot = ggplot(data = sub_metrics, aes(x = Type, y = Value, fill = Type)) +
+  p = ggplot(data = sub_metrics, aes(x = Type, y = Value, fill = Type)) +
     geom_violin(trim = FALSE, scale = "width") +
     stat_summary(fun.y = mean, geom = "point", shape = 23, size = 2, fill = "white") +
     ylim(0, 1) +
     labs(title = "Proportion Coverage", subtitle = plot_subtitle, x = "", y = "Fraction") +
     theme_cowplot() +
     scale_fill_manual(values = c("#dda15e", "#606c38", "#433D6B", "#6B3254")) +
-    theme(legend.position = "right", legend.title = element_blank(), axis.title.x = element_blank(), axis.text.x = element_blank(), axis.ticks.x = element_blank(), panel.grid.minor = element_blank(), panel.grid.major = element_blank(), panel.background = element_blank())
+    theme(legend.position = "right", legend.title = element_blank(), axis.title.x = element_blank(),
+          axis.text.x = element_blank(), axis.ticks.x = element_blank(), panel.grid.minor = element_blank(),
+          panel.grid.major = element_blank(), panel.background = element_blank())
+
+  return(p)
+}
+
+
+#' Visualize proportional metrics for selected samples.
+#'
+#' @param these_samples Data frame with sample IDs (to be plotted) in the first column.
+#' @param metadata Optional, user can provide a metadata df to subset sample IDs from.
+#' @param filter_cohort Optional parameter to be used when these_sample is NULL. Calls get_gambl_metadata() and filters on the cohort supplied in this parameter.
+#' @param filter_pathology Optional parameter to be used when these_sample is NULL. Calls get_gambl_metadata() and filters on the pathology supplied in this parameter.
+#' @param seq_type Selected seq type for incoming QC metrics.
+#' @param plot_subtitle Plotting parameter, subtitle of generated plot.
+#'
+#' @return plot as ggplot object.
+#' @import tidyverse cowplot
+#' @export
+#'
+#' @examples
+#' my_plot = fancy_proportions_plot(filter_cohort = "FL_Kridel", filter_pathology = "FL", seq_type = "genome")
+#'
+fancy_proportions_plot = function(these_samples,
+                                  metadata,
+                                  filter_cohort,
+                                  filter_pathology,
+                                  seq_type = "genome",
+                                  plot_subtitle = ""){
+
+  #get gambl metadata (if not supplied)
+  if(missing(metadata)){
+    this_meta = get_gambl_metadata(seq_type_filter = seq_type)
+  }else{
+    this_meta = metadata
+  }
+
+  #filter metadata on selected cohort (if filter_cohort is called)
+  if(missing(these_samples)){
+    if(!missing(filter_cohort) && missing(filter_pathology)){
+      these_samples = dplyr::filter(this_meta, cohort == filter_cohort) %>%
+        dplyr::select(sample_id) %>%
+        as.data.frame()
+    }
+
+    if(!missing(filter_pathology) && missing(filter_cohort)){
+      these_samples = dplyr::filter(this_meta, pathology == filter_pathology) %>%
+        dplyr::select(sample_id) %>%
+        as.data.frame()
+    }
+
+    if(!missing(filter_cohort) && !missing(filter_pathology)){
+      these_samples = dplyr::filter(this_meta, pathology == filter_pathology, cohort == filter_cohort) %>%
+        dplyr::select(sample_id) %>%
+        as.data.frame()
+    }
+  }
+
+  #get QC data for selected samples
+  qc_metrics = collate_qc_results(sample_table = these_samples, seq_type_filter = seq_type)
+  message(paste0("QC Metric successfully retreived for ", nrow(qc_metrics), " samples out of a total of ", nrow(these_samples), " samples in input sample table."))
+
+  #data wrangling
+  qc_sub = dplyr::select(qc_metrics, sample_id, ProportionReadsDuplicated, ProportionReadsMapped, ProportionCoverage10x, ProportionCoverage30x) %>%
+    gather(Type, Value, -sample_id)
+
+  #get means for each metric
+  mean_df = data.frame(Metric = c("ProportionReadsDuplicated", "ProportionReadsMapped", "ProportionCoverage10x", "ProportionCoverage30x"),
+                       Value = c(mean(qc_sub$Value[qc_sub$Type == "ProportionReadsDuplicated"]),
+                                 mean(qc_sub$Value[qc_sub$Type == "ProportionReadsMapped"]),
+                                 mean(qc_sub$Value[qc_sub$Type == "ProportionCoverage10x"]),
+                                 mean(qc_sub$Value[qc_sub$Type == "ProportionCoverage30x"])))
+
+  #set colors
+  these_colors = c("ProportionReadsDuplicated" = "#B8794D",
+                   "ProportionReadsMapped" = "#366B32",
+                   "ProportionCoverage10x" = "#DDA15E",
+                   "ProportionCoverage30x" = "#433D6B")
+
+  #plotting
+  plot = ggplot(qc_sub, aes(x = sample_id, y = Value, group = Type)) +
+    geom_bar(aes(fill = Type), position = "dodge", stat = "identity") +
+    geom_hline(mean_df, mapping = aes(yintercept = Value, color = Metric), size = 0.5, linetype = "solid") +
+    labs(title = "QC Metrics As Proportions (of All Reads)", subtitle = plot_subtitle, x = "", y = "Proportion") +
+    scale_y_continuous(breaks = seq(0, 1, by = 0.1)) +
+    scale_fill_manual(values = these_colors) +
+    scale_color_manual(values = these_colors) +
+    theme(legend.position = "right", legend.title = element_blank(), axis.title.x = element_blank(),
+          axis.text.x = element_text(angle = 90, vjust = 0.5), axis.ticks.x = element_blank(),
+          panel.grid.major.x = element_line(color = "#454A4D", size = 0.5, linetype = 1),
+          panel.grid.minor.x = element_line(color = "#454A4D", size = 0.5, linetype = 1),
+          panel.grid.major.y = element_blank(), panel.grid.minor.y = element_blank(),
+          axis.line.x = element_line(color = "black", size = 1, linetype = 1),
+          axis.line.y = element_line(color = "black", size = 1, linetype = 1),panel.background = element_blank())
 
   return(plot)
 }
