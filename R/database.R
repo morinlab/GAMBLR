@@ -1111,6 +1111,7 @@ get_manta_sv = function(min_vaf = 0.1,
     if(!file.exists(sv_file)){
       message("Cannot find file locally. If working remotely, perhaps you forgot to load your config (see below) or sync your files?")
       message('Sys.setenv(R_CONFIG_ACTIVE= "remote")')
+      check_host()
     }
     all_sv = read_tsv(sv_file, col_types = "cnncnncnccccnnnnccc", col_names = cnames)
     
