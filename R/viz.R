@@ -4416,7 +4416,7 @@ fancy_alignment_plot = function(these_samples,
     this_meta = metadata
   }
 
-  #filter metadata on selected cohort (if filter_cohort is called)
+  #filter metadata on selected cohort/pathology
   if(missing(these_samples)){
     if(!missing(filter_cohort) && missing(filter_pathology)){
       these_samples = dplyr::filter(this_meta, cohort == filter_cohort) %>%
@@ -4452,10 +4452,10 @@ fancy_alignment_plot = function(these_samples,
     melt(id.var = "sample_id") %>%
     arrange(sample_id)
 
-  mean_cov_df = data.frame (Metric = c("TotalReads", "TotalUniquelyMapped", "TotalDuplicatedreads"),
-                            Value = c (mean(melt_align$value[melt_align$variable == "TotalReads"]),
-                                       mean(melt_align$value[melt_align$variable == "TotalUniquelyMapped"]),
-                                       mean(melt_align$value[melt_align$variable == "TotalDuplicatedreads"])))
+  mean_cov_df = data.frame(Metric = c("TotalReads", "TotalUniquelyMapped", "TotalDuplicatedreads"),
+                           Value = c (mean(melt_align$value[melt_align$variable == "TotalReads"]),
+                                      mean(melt_align$value[melt_align$variable == "TotalUniquelyMapped"]),
+                                      mean(melt_align$value[melt_align$variable == "TotalDuplicatedreads"])))
 
   if(!missing(comparison_group)){
     comp_data = collate_qc_results(sample_table = comparison_group, seq_type_filter = seq_type) %>%
@@ -4463,10 +4463,10 @@ fancy_alignment_plot = function(these_samples,
       melt(id.var = "sample_id") %>%
       arrange(sample_id)
 
-    mean_cov_df_comp = data.frame (Metric = c("TotalReads", "TotalUniquelyMapped", "TotalDuplicatedreads"),
-                                   Value = c (mean(comp_data$value[comp_data$variable == "TotalReads"]),
-                                              mean(comp_data$value[comp_data$variable == "TotalUniquelyMapped"]),
-                                              mean(comp_data$value[comp_data$variable == "TotalDuplicatedreads"])))
+    mean_cov_df_comp = data.frame(Metric = c("TotalReads", "TotalUniquelyMapped", "TotalDuplicatedreads"),
+                                  Value = c (mean(comp_data$value[comp_data$variable == "TotalReads"]),
+                                             mean(comp_data$value[comp_data$variable == "TotalUniquelyMapped"]),
+                                             mean(comp_data$value[comp_data$variable == "TotalDuplicatedreads"])))
   }
 
   #corrected mean coverage
@@ -4543,7 +4543,7 @@ fancy_qc_plot = function(these_samples,
                          filter_comp_pathology,
                          plot_title = "",
                          plot_subtitle = "",
-                         y_axis_lab,
+                         y_axis_lab = "",
                          return_plotdata = FALSE){
 
   #return a list of acceptable data types for plotting
@@ -4552,7 +4552,6 @@ fancy_qc_plot = function(these_samples,
                            "PairsOnDiffCHR", "TotalReads", "TotalUniquelyMapped",
                            "TotalUnmappedreads", "TotalDuplicatedreads", "ProportionReadsDuplicated",
                            "ProportionReadsMapped", "MeanCorrectedCoverage", "ProportionCoverage10x", "ProportionCoverage30x")
-
     return(plotting_variables)
   }
 
@@ -4563,7 +4562,7 @@ fancy_qc_plot = function(these_samples,
     this_meta = metadata
   }
 
-  #filter metadata on selected cohort (if filter_cohort is called)
+  #filter metadata on selected cohort/pathology
   if(missing(these_samples)){
     if(!missing(filter_cohort) && missing(filter_pathology)){
       these_samples = dplyr::filter(this_meta, cohort == filter_cohort) %>%
@@ -4584,15 +4583,17 @@ fancy_qc_plot = function(these_samples,
     }
   }
 
+  #get QC data for selected samples
+  qc_metrics = collate_qc_results(sample_table = these_samples, seq_type_filter = seq_type)
+  message(paste0("QC Metric successfully retreived for ", nrow(qc_metrics), " samples out of a total of ", nrow(these_samples), " samples in input sample table."))
+
   #aggregate sample list with metadata columns
   qc_meta = qc_metrics %>% inner_join(this_meta)
   qc_meta = mutate_if(qc_meta, is.integer, as.factor)
   qc_meta = mutate_if(qc_meta, is.character, as.factor)
 
   #calculate mean (for data type specified in plot_data) for selected samples,
-  mean_df = data.frame(mean  = c("plotted_samples"),
-                       value = c(mean(qc_meta[[plot_data]])))
-
+  mean_df = data.frame(mean = c("plotted_samples"), value = c(mean(qc_meta[[plot_data]])))
   mean_df$mean = as.factor(mean_df$mean)
 
   #calculate mean for selected comparison group using a list of IDs provided in comparison_samples
@@ -4628,15 +4629,14 @@ fancy_qc_plot = function(these_samples,
       comp_samples = dplyr::filter(this_meta, cohort == filter_comp_cohort, pathology == filter_comp_pathology) %>%
         dplyr::select(sample_id) %>%
         as.data.frame()
-      }
+    }
 
     comp_data = collate_qc_results(sample_table = comp_samples, seq_type_filter = seq_type) %>%
       dplyr::select(sample_id, plot_data) %>%
       melt(id.var = "sample_id") %>%
       arrange(sample_id)
 
-    mean_cov_df_comp = data.frame(mean = c("comparison_group"),
-                                  value = c(mean(comp_data$value)))
+    mean_cov_df_comp = data.frame(mean = c("comparison_group"), value = c(mean(comp_data$value)))
 
     #merge with mean value for plotting data
     mean_df = dplyr::full_join(mean_df, mean_cov_df_comp)
@@ -4721,7 +4721,7 @@ fancy_propcov_plot = function(these_samples,
     this_meta = metadata
   }
 
-  #filter metadata on selected cohort (if filter_cohort is called)
+  #filter metadata on selected cohort/pathology
   if(missing(these_samples)){
     if(!missing(filter_cohort) && missing(filter_pathology)){
       these_samples = dplyr::filter(this_meta, cohort == filter_cohort) %>%
@@ -4819,7 +4819,7 @@ fancy_proportions_plot = function(these_samples,
     this_meta = metadata
   }
 
-  #filter metadata on selected cohort (if filter_cohort is called)
+  #filter metadata on selected cohort/pathology
   if(missing(these_samples)){
     if(!missing(filter_cohort) && missing(filter_pathology)){
       these_samples = dplyr::filter(this_meta, cohort == filter_cohort) %>%
