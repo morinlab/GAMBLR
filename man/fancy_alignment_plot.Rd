@@ -10,6 +10,7 @@ fancy_alignment_plot(
   comparison_group,
   seq_type = "genome",
   add_mean = TRUE,
+  add_corrected_coverage = TRUE,
   filter_cohort,
   filter_pathology,
   this_color_palette = c(TotalReads = "#3D405B", TotalUniquelyMapped = "#81B29A",
@@ -27,6 +28,8 @@ fancy_alignment_plot(
 \item{seq_type}{Subset qc metrics to a specific seq_type, default is genome.}
 
 \item{add_mean}{Set to TRUE to superimpose mean values of plotted variables. Default is TRUE.}
+
+\item{add_corrected_coverage}{Set to TRUE to add corrected coverage for selected samples.}
 
 \item{filter_cohort}{If no df with sample IDs is supplied (these_samples = NULL) the function calls get_gambl_metadata and subsets on selected cohort.}
 

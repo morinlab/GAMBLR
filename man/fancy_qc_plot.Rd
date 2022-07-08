@@ -18,7 +18,7 @@ fancy_qc_plot(
   filter_comp_pathology,
   plot_title = "",
   plot_subtitle = "",
-  y_axis_lab,
+  y_axis_lab = "",
   return_plotdata = FALSE
 )
 }
