@@ -4375,6 +4375,7 @@ fancy_sv_sizedens = function(this_sample,
 #' @param comparison_group Optional argument for plotting mean alignment metrics. Default is plotting the mean for samples provided. This parameter takes a list of sample IDs.
 #' @param seq_type Subset qc metrics to a specific seq_type, default is genome.
 #' @param add_mean Set to TRUE to superimpose mean values of plotted variables. Default is TRUE.
+#' @param add_corrected_coverage Set to TRUE to add corrected coverage for selected samples.  
 #' @param filter_cohort If no df with sample IDs is supplied (these_samples = NULL) the function calls get_gambl_metadata and subsets on selected cohort.
 #' @param filter_pathology If no df with sample IDs is supplied (these_samples = NULL) the function calls get_gambl_metadata and subsets on selected pathology.
 #' @param this_color_palette Optional parameter that holds the selected colours for the plotted bars.
@@ -4402,6 +4403,7 @@ fancy_alignment_plot = function(these_samples,
                                 comparison_group,
                                 seq_type = "genome",
                                 add_mean = TRUE,
+                                add_corrected_coverage = TRUE,
                                 filter_cohort,
                                 filter_pathology,
                                 this_color_palette = c("TotalReads" = "#3D405B",
@@ -4435,11 +4437,18 @@ fancy_alignment_plot = function(these_samples,
         dplyr::select(sample_id) %>%
         as.data.frame()
     }
+
+    if(missing(filter_cohort) && missing(filter_pathology)){
+      these_samples = dplyr::select(this_meta, sample_id) %>%
+        as.data.frame
+    }
   }
 
   #sanity check incoming sample table
-  if(typeof(these_samples) != "list"){
-    stop("Please provide input sample IDs (these_samples) in a df with sample IDs in the first column...")
+  if(!missing(these_samples)){
+    if(typeof(these_samples) != "list"){
+      stop("Please provide input sample IDs (these_samples) in a df with sample IDs in the first column...")
+    }
   }
 
   #get qc data for selected samples
@@ -4479,9 +4488,10 @@ fancy_alignment_plot = function(these_samples,
     geom_bar(melt_align, mapping = aes(x = sample_id, y = value, fill = variable), position = "dodge", stat = "identity") +
     {if(add_mean)geom_hline(mean_cov_df, mapping = aes(yintercept = Value, color = Metric))} +
     {if(!missing(comparison_group)) geom_hline(mean_cov_df_comp, mapping = aes(yintercept = Value, linetype = Metric), color = "#54555E")} +
-    geom_line(melt_cov, mapping = aes(x = sample_id, y = value * 25000000), group = 1, color = "#5C4966", position = "dodge", stat = "identity") +
-    geom_point(melt_cov, mapping = aes(x = sample_id, y = value * 25000000, shape = variable), fill = "#A892B3", color = "#5C4966", size = 3, position = "dodge", stat = "identity") +
-    scale_y_continuous(expand = c(0, 0), breaks = seq(0, 3.0e+10, by = 3e+08), sec.axis = sec_axis(~ . / 2500000000, name = "", labels = function(b){paste0(round(b * 100, 0), "X")})) +
+    {if(add_corrected_coverage)geom_line(melt_cov, mapping = aes(x = sample_id, y = value * 25000000), group = 1, color = "#5C4966", position = "dodge", stat = "identity")} +
+    {if(add_corrected_coverage)geom_point(melt_cov, mapping = aes(x = sample_id, y = value * 25000000, shape = variable), fill = "#A892B3", color = "#5C4966", size = 3, position = "dodge", stat = "identity")} +
+    {if(add_corrected_coverage)scale_y_continuous(expand = c(0, 0), breaks = seq(0, max(melt_align$value), by = 3e+08), sec.axis = sec_axis(~ . / 2500000000, name = "", labels = function(b){paste0(round(b * 100, 0), "X")}))} +
+    {if(!add_corrected_coverage)scale_y_continuous(expand = c(0, 0), breaks = seq(0, max(melt_align$value), by = 3e+08))} +
     labs(title = "Alignment Summary", subtitle = plot_sub, x = "", y = "Reads (n)") +
     scale_fill_manual(values = this_color_palette) +
     scale_linetype_manual(values = c("TotalReads" = "solid", "TotalUniquelyMapped" = "dashed", "TotalDuplicatedreads" = "dotted")) +
@@ -4581,6 +4591,11 @@ fancy_qc_plot = function(these_samples,
         dplyr::select(sample_id) %>%
         as.data.frame()
     }
+     
+    if(missing(filter_cohort) && missing(filter_pathology)){
+      these_samples = dplyr::select(this_meta, sample_id) %>%
+        as.data.frame
+    }
   }
 
   #get QC data for selected samples
@@ -4628,6 +4643,11 @@ fancy_qc_plot = function(these_samples,
     if(!missing(filter_comp_cohort) && !missing(filter_comp_pathology)){
       comp_samples = dplyr::filter(this_meta, cohort == filter_comp_cohort, pathology == filter_comp_pathology) %>%
         dplyr::select(sample_id) %>%
+        as.data.frame()
+    }
+
+    if(missing(filter_comp_cohort) && missing(filter_comp_pathology)){
+      comp_samples = dplyr::select(this_meta, sample_id) %>%
         as.data.frame()
     }
 
@@ -4740,6 +4760,11 @@ fancy_propcov_plot = function(these_samples,
         dplyr::select(sample_id) %>%
         as.data.frame()
     }
+
+    if(missing(filter_cohort) && missing(filter_pathology)){
+      these_samples = dplyr::select(this_meta, sample_id) %>%
+        as.data.frame
+    }
   }
 
   #retrieve data for comparison, provided as a df with sample IDs in the first column (subset from gambl metadata)
@@ -4837,6 +4862,11 @@ fancy_proportions_plot = function(these_samples,
       these_samples = dplyr::filter(this_meta, pathology == filter_pathology, cohort == filter_cohort) %>%
         dplyr::select(sample_id) %>%
         as.data.frame()
+    }
+
+    if(missing(filter_cohort) && missing(filter_pathology)){
+      these_samples = dplyr::select(this_meta, sample_id) %>%
+        as.data.frame
     }
   }
 
