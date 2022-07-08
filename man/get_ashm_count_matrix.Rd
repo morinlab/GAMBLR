@@ -11,8 +11,8 @@ get_ashm_count_matrix(
   sample_metadata,
   seq_type,
   use_name_column = FALSE,
-  from_indexed_flatfile = FALSE,
-  ssh_session
+  from_indexed_flatfile = TRUE,
+  ssh_session = NULL
 )
 }
 \arguments{

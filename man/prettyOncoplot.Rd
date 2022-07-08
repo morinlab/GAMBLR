@@ -30,6 +30,8 @@ prettyOncoplot(
   showTumorSampleBarcode = FALSE,
   groupNames,
   hide_annotations,
+  annotate_specific_genes = FALSE,
+  this_forest_object = NULL,
   custom_colours = NULL,
   hideTopBarplot = TRUE,
   hideSideBarplot = FALSE,
@@ -93,6 +95,10 @@ prettyOncoplot(
 \item{groupNames}{optional vector of group names to be displayed above heatmap. Should be the same length as the number of groups that will be shown. Default is NULL (no labels).}
 
 \item{hide_annotations}{Hide annotations for specifc ashms. argument takes a list with annotations.}
+
+\item{annotate_specific_genes}{Optional argument, specifying whether the features should be labelled according to their significance in one of the pathologies. Default is FALSE (no annotation).}
+
+\item{this_forest_object}{If annotate_specific_genes is specified, this arguments takes the output of GAMBLR::prettyForestPlot directly to determine the annotations.}
 
 \item{custom_colours}{Provide named vector (or named list of vectors) containing custom annotation colours if you do not want to use standartized pallette.}
 
