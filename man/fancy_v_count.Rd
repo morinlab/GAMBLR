@@ -17,8 +17,10 @@ fancy_v_count(
   plot_subtitle = "Variant Count For Selected Contigs",
   chr_select = paste0("chr", c(1:22)),
   variant_select = c("DEL", "INS", "DUP"),
+  snp_colours = c(SNP = "#2B9971", DNP = "#993F2B", TNP = "#A62656"),
   hide_legend = FALSE,
   coding_only = FALSE,
+  log10_y = FALSE,
   from_flatfile = TRUE,
   use_augmented_maf = TRUE
 )
@@ -48,9 +50,13 @@ fancy_v_count(
 
 \item{variant_select}{Subtypes of SVs to be incldued in plot, default is DEL, INS and DUP.}
 
+\item{snp_colours}{Optional vector with colours for SNPs (DNP and TNP).}
+
 \item{hide_legend}{Set to True to remove legend from plot, default is FALSE.}
 
 \item{coding_only}{Optional. Set to TRUE to restrict to plotting only coding mutations.}
+
+\item{log10_y}{Set to TRUE to force y axis to be in log10.}
 
 \item{from_flatfile}{If set to true the function will use flat files instead of the database.}
 
