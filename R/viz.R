@@ -3159,8 +3159,10 @@ fancy_snv_chrdistplot = function(this_sample,
 #' @param plot_subtitle Subtitle for created plot.
 #' @param chr_select vector of chromosomes to be included in plot, defaults to autosomes.
 #' @param variant_select Subtypes of SVs to be incldued in plot, default is DEL, INS and DUP.
+#' @param snp_colours Optional vector with colours for SNPs (DNP and TNP).
 #' @param hide_legend Set to True to remove legend from plot, default is FALSE.
 #' @param coding_only Optional. Set to TRUE to restrict to plotting only coding mutations.
+#' @param log10_y Set to TRUE to force y axis to be in log10.
 #' @param from_flatfile If set to true the function will use flat files instead of the database.
 #' @param use_augmented Boolean statement if to use augmented maf, default is FALSE.
 #'
@@ -3184,8 +3186,10 @@ fancy_v_count = function(this_sample,
                          plot_subtitle = "Variant Count For Selected Contigs",
                          chr_select = paste0("chr", c(1:22)),
                          variant_select = c("DEL", "INS", "DUP"),
+                         snp_colours = c("SNP" = "#2B9971", "DNP" = "#993F2B", "TNP" = "#A62656"),
                          hide_legend = FALSE,
                          coding_only = FALSE,
+                         log10_y = FALSE,
                          from_flatfile = TRUE,
                          use_augmented_maf = TRUE){
 
@@ -3246,16 +3250,22 @@ fancy_v_count = function(this_sample,
     group_by(Variant_Type) %>%
     summarize(count = n())
 
+  #get colours
+  indels_cols = get_gambl_colours("indels")
+  colours = append(indels_cols, snp_colours)
+
   #plot
   p = ggplot(sv_count, aes(x = Variant_Type, y = count, fill = Variant_Type, label = count)) +
-        geom_bar(position = "stack", stat = "identity") +
-        labs(title = plot_title, subtitle = plot_subtitle, x = "", y = "Variants (n)", fill = "") +
-        {if(ssm)scale_fill_manual(values = get_gambl_colours("indels"))} +
-        {if(!ssm)scale_fill_manual(values = get_gambl_colours("svs"))} +
-        geom_text(size = 5, position = position_stack(vjust = 0.5)) +
-        scale_y_continuous(expand = c(0, 0)) +
-        {if(hide_legend)theme(legend.position = "none")} +
-        theme_cowplot()
+    geom_bar(position = "stack", stat = "identity") +
+    {if(log10_y)labs(title = plot_title, subtitle = plot_subtitle, x = "", y = "Variants n (log10)", fill = "")} +
+    {if(!log10_y)labs(title = plot_title, subtitle = plot_subtitle, x = "", y = "Variants (n)", fill = "")} +
+    {if(ssm)scale_fill_manual(values = colours)} +
+    {if(!ssm)scale_fill_manual(values = get_gambl_colours("svs"))} +
+    geom_text(size = 5, position = position_stack(vjust = 0.5)) +
+    {if(log10_y)scale_y_log10(expand = c(0, 0))} +
+    {if(!log10_y)scale_y_continuous(expand = c(0, 0))} +
+    {if(hide_legend)theme(legend.position = "none")} +
+    theme_cowplot()
 
   return(p)
 }
@@ -4375,7 +4385,7 @@ fancy_sv_sizedens = function(this_sample,
 #' @param comparison_group Optional argument for plotting mean alignment metrics. Default is plotting the mean for samples provided. This parameter takes a list of sample IDs.
 #' @param seq_type Subset qc metrics to a specific seq_type, default is genome.
 #' @param add_mean Set to TRUE to superimpose mean values of plotted variables. Default is TRUE.
-#' @param add_corrected_coverage Set to TRUE to add corrected coverage for selected samples.  
+#' @param add_corrected_coverage Set to TRUE to add corrected coverage for selected samples.
 #' @param filter_cohort If no df with sample IDs is supplied (these_samples = NULL) the function calls get_gambl_metadata and subsets on selected cohort.
 #' @param filter_pathology If no df with sample IDs is supplied (these_samples = NULL) the function calls get_gambl_metadata and subsets on selected pathology.
 #' @param this_color_palette Optional parameter that holds the selected colours for the plotted bars.
@@ -4591,7 +4601,7 @@ fancy_qc_plot = function(these_samples,
         dplyr::select(sample_id) %>%
         as.data.frame()
     }
-     
+
     if(missing(filter_cohort) && missing(filter_pathology)){
       these_samples = dplyr::select(this_meta, sample_id) %>%
         as.data.frame
