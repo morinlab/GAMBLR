@@ -82,12 +82,14 @@ Interested in how many variants are present in a given sample? A quick way to ov
 fancy_v_count(this_sample = this_sample,
               maf_data = maf,
               ssm = TRUE,
+              variant_select = c("DEL", "DNP", "INS", "SNP"), 
+              log10_y = TRUE, 
+              snp_colours = c("SNP" = "#2B9971", "DNP" = "#993F2B"),
               from_flatfile = TRUE,
               use_augmented_maf = TRUE,
               plot_subtitle = "grch37",
               plot_title = "SSM Count Example",
               chr_select = paste0("chr", c(1:22)),
-              variant_select = c("DEL", "INS"),
               coding_only = FALSE)
 ```
 
