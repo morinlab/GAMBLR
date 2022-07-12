@@ -19,7 +19,9 @@ fancy_v_chrcount(
   chr_select = paste0("chr", c(1:22)),
   coding_only = FALSE,
   from_flatfile = TRUE,
-  use_augmented_maf = TRUE
+  use_augmented_maf = TRUE,
+  add_qc_metric = FALSE,
+  seq_type = "genome"
 )
 }
 \arguments{
@@ -50,6 +52,10 @@ fancy_v_chrcount(
 \item{coding_only}{Optional. Set to TRUE to restrict to plotting only coding mutations.}
 
 \item{from_flatfile}{If set to true the function will use flat files instead of the database.}
+
+\item{add_qc_metric}{Boolean statement, if set to TRUE specified QC metric will be added (second y-axis).}
+
+\item{seq_type}{Default is "genome".}
 
 \item{use_augmented}{Boolean statement if to use augmented maf, default is FALSE.}
 }
