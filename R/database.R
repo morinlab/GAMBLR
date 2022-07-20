@@ -1674,8 +1674,8 @@ get_ashm_count_matrix = function(regions_bed,
                                  sample_metadata,
                                  seq_type,
                                  use_name_column = FALSE,
-                                 from_indexed_flatfile = FALSE,
-                                 ssh_session){
+                                 from_indexed_flatfile = TRUE,
+                                 ssh_session = NULL){
 
   if(missing(regions_bed)){
     regions_bed = grch37_ashm_regions
@@ -1691,7 +1691,6 @@ get_ashm_count_matrix = function(regions_bed,
   ashm_counted = ashm_maf %>%
     group_by(sample_id, region_name) %>%
     tally()
-
 
   if(missing(sample_metadata)){
     all_meta = get_gambl_metadata() %>%
@@ -1860,8 +1859,11 @@ get_ssm_by_region = function(chromosome,
     maf_path = glue::glue(maf_partial_path)
     full_maf_path = paste0(base_path, maf_path)
     full_maf_path_comp = paste0(base_path, maf_path, ".bgz")
-    
-    message(paste("reading from:", full_maf_path))
+    if(!file.exists(full_maf_path_comp)){
+      message("Warning, you are running this on a computer that does not have direct acces to the directed file, prehaps you should try run this with ssh_session as a parameter?")
+    }else if(!is.null(ssh_session)){
+      message("The file you requested exists locally. Are you sure you want to use ssh_session?")
+    }
   }
 
   if(!region == ""){
@@ -1903,7 +1905,6 @@ get_ssm_by_region = function(chromosome,
         }
         tabix_command = paste(tabix_bin, full_maf_path_comp, region, "| cut -f 5,6,7,16,42")
         muts = run_command_remote(ssh_session,tabix_command)
-        
         muts_region = vroom::vroom(I(muts),col_types = "ciici",
                                    col_names=c("Chromosome", "Start_Position", "End_Position", "Tumor_Sample_Barcode", "t_alt_count"))
       }else{

@@ -328,7 +328,7 @@ calc_mutation_frequency_sliding_windows = function(this_region,
                                                    classification_column = "lymphgen",
                                                    from_indexed_flatfile = FALSE,
                                                    mode = "slms-3",
-                                                   ssh_session=ssh_session){
+                                                   ssh_session=NULL){
 
   max_region = 1000000
   if(missing(metadata)){
@@ -578,10 +578,12 @@ annotate_hotspots = function(mutation_maf,
   for(abase in analysis_base){
     base_path = config::get("repo_base")
 
-    clust_full_path = paste0(base_path, config::get("results_versioned")$oncodriveclustl$FL_DLBCL$clusters)
-    all_full_path = paste0(base_path, config::get("results_versioned")$oncodriveclustl$FL_DLBCL$elements)
-    clust_hotspot = read_tsv(clust_full_path)
-    all_hotspot = read_tsv(all_full_path)
+    clust_full_path = paste0(base_path, config::get("results_versioned")$oncodriveclustl$clusters)
+    clust_full_path = glue::glue(clust_full_path)
+    all_full_path = paste0(base_path, config::get("results_versioned")$oncodriveclustl$elements)
+    all_full_path = glue::glue(all_full_path)
+    clust_hotspot = suppressMessages(readr::read_tsv(clust_full_path))
+    all_hotspot = suppressMessages(readr::read_tsv(all_full_path))
 
   clustered_hotspots = clust_hotspot %>%
     dplyr::select(-RANK) %>%
@@ -1711,7 +1713,7 @@ collate_sbs_results = function(sample_table,
 #' @examples
 #' sample_table = collate_nfkbiz_results(sample_table=sample_table)
 #'
-collate_nfkbiz_results = function(sample_table,seq_type_filter="genome",ssh_session){
+collate_nfkbiz_results = function(sample_table,seq_type_filter="genome",ssh_session=NULL){
   #TO DO: Update to work with hg38 projection
   if(missing(sample_table)){
     sample_table = get_gambl_metadata(seq_type_filter=seq_type_filter) %>%
@@ -1751,7 +1753,7 @@ collate_nfkbiz_results = function(sample_table,seq_type_filter="genome",ssh_sess
 #'
 collate_ashm_results = function(sample_table,
                                 seq_type_filter="genome",
-                                ssh_session){
+                                ssh_session=NULL){
 
   if(missing(sample_table)){
     sample_table = get_gambl_metadata(seq_type_filter=seq_type_filter) %>%

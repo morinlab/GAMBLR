@@ -13,7 +13,7 @@ ashm_multi_rainbow_plot(
   custom_colours,
   classification_column = "lymphgen",
   maf_data,
-  ssh_session
+  ssh_session = NULL
 )
 }
 \arguments{
