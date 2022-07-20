@@ -3,6 +3,63 @@ coding_class = c("Frame_Shift_Del", "Frame_Shift_Ins", "In_Frame_Del", "In_Frame
 rainfall_conv = c("T>C", "T>C", "C>T", "C>T", "T>A", "T>A", "T>G", "T>G", "C>A", "C>A", "C>G", "C>G", "InDel")
 names(rainfall_conv) = c('A>G', 'T>C', 'C>T', 'G>A', 'A>T', 'T>A', 'A>C', 'T>G', 'C>A', 'G>T', 'C>G', 'G>C', 'InDel')
 
+#' Count the variants in a region with a variety of filtering options
+#'
+#' @param region 
+#' @param chromosome 
+#' @param start 
+#' @param end 
+#' @param these_samples_metadata 
+#' @param count_by Defaults to counting all variants. Specify 'sample_id' if you want to collapse and count only one per sample
+#' @param seq_type 
+#' @param ssh_session 
+#'
+#' @return
+#' @export
+#'
+#' @examples
+count_ssm_by_region = function(region,chromosome,start,end,these_samples_metadata,count_by,seq_type="genome",ssh_session){
+  if(missing(these_samples_metadata)){
+    these_samples_metadata = get_gambl_metadata(seq_type_filter=seq_type)
+  }
+  if(missing(region)){
+    region_muts = get_ssm_by_region(chromosome=chromosome,qstart=start,qend=end,streamlined = TRUE,ssh_session = ssh_session)
+  }else{
+    region_muts = get_ssm_by_region(region=region,streamlined = TRUE,ssh_session = ssh_session)
+  }
+  keep_muts = left_join(region_muts,these_samples_metadata) %>% dplyr::filter(!is.na(sample_id))
+  if(missing(count_by)){
+    #count everything even if some mutations are from the same patient
+    return(nrow(keep_muts))
+  }else if(count_by == "sample_id"){
+    return(length(unique(keep_muts$sample_id)))
+  }else{
+    print("Not sure what to count")
+  }
+}
+
+#' Split a contiguous genomic region on a chromosome into non-overlapping bins
+#'
+#' @param chromosome 
+#' @param start 
+#' @param end 
+#' @param bin_size 
+#'
+#' @return Data frame describing the bins various ways
+#' @export
+#'
+#' @examples 
+#' chr8q_bins = region_to_bins(chromosome="8",start=48100000,end=146364022,bin_size = 20000)
+region_to_bins = function(chromosome="chr1",start=10000,end=121500000,bin_size=2000){
+  bin_df = data.frame(bin_chr = chromosome,bin_start=seq(start,end,bin_size))
+  bin_df = mutate(bin_df,bin_end = bin_start+ bin_size) %>%
+    dplyr::filter(bin_end<=end) %>% 
+    mutate(region = paste0(bin_chr,":",bin_start,"-",bin_end))
+  
+  return(bin_df)
+  
+}
+
 #' Create an ssh session to the GSC (requires active VPN connection)
 #'
 #' @param host (default is gphost01.bcgsc.ca)

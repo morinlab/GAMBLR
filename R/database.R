@@ -1868,6 +1868,11 @@ get_ssm_by_region = function(chromosome,
     startend = unlist(strsplit(split_chunks[2], "-"))
     qstart = as.numeric(startend[1])
     qend = as.numeric(startend[2])
+  }else{
+    if(projection =="grch37"){
+      chromosome = gsub("chr", "", chromosome)
+    }
+    region=paste0(chromosome,":",qstart,"-",qend)
   }
 
   if(projection =="grch37"){
