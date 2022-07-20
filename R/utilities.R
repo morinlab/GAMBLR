@@ -2,6 +2,38 @@
 coding_class = c("Frame_Shift_Del", "Frame_Shift_Ins", "In_Frame_Del", "In_Frame_Ins", "Missense_Mutation", "Nonsense_Mutation", "Nonstop_Mutation", "Silent", "Splice_Region", "Splice_Site", "Targeted_Region", "Translation_Start_Site")
 rainfall_conv = c("T>C", "T>C", "C>T", "C>T", "T>A", "T>A", "T>G", "T>G", "C>A", "C>A", "C>G", "C>G", "InDel")
 names(rainfall_conv) = c('A>G', 'T>C', 'C>T', 'G>A', 'A>T', 'T>A', 'A>C', 'T>G', 'C>A', 'G>T', 'C>G', 'G>C', 'InDel')
+ssh_session <<- NULL
+
+
+#' Check if code is running remotely and (optionally) attempt a connection and set global ssh_session variable
+#'
+#' @param auto_connect Set to TRUE if you want the function to create an ssh session (if necessary)
+#'
+#' @return NULL. This function makes a new ssh session, if necessary, and stores it in a global variable (ssh_session) 
+#' @export
+#'
+#' @examples ssh_session = get_ssh_session()
+check_host = function(auto_connect=FALSE){
+  hostname = Sys.info()["nodename"]
+  if(grepl("bcgsc.ca",hostname)){
+    #we are on the GSC network
+  }else{
+    # we are on some computer not on the GSC network (needs ssh_session)
+    if(class(ssh_session)=="ssh_session"){
+      message("active ssh session detected")
+      return()
+    }else{
+      if(auto_connect){
+        session = get_ssh_session()
+        assign("ssh_session", session, envir = .GlobalEnv)
+      }else{
+        message("You appear to be using GAMBLR on your local computer. Be sure to set up an ssh session!")
+        message("?GAMBLR::get_ssh_session for more info")
+        
+      }
+    }
+  }
+}
 
 #' Count the variants in a region with a variety of filtering options
 #'
@@ -353,7 +385,7 @@ calc_mutation_frequency_sliding_windows = function(this_region,
                                                    classification_column = "lymphgen",
                                                    from_indexed_flatfile = FALSE,
                                                    mode = "slms-3",
-                                                   ssh_session=ssh_session){
+                                                   ssh_session=NULL){
 
   max_region = 1000000
   if(missing(metadata)){
@@ -603,10 +635,12 @@ annotate_hotspots = function(mutation_maf,
   for(abase in analysis_base){
     base_path = config::get("repo_base")
 
-    clust_full_path = paste0(base_path, config::get("results_versioned")$oncodriveclustl$FL_DLBCL$clusters)
-    all_full_path = paste0(base_path, config::get("results_versioned")$oncodriveclustl$FL_DLBCL$elements)
-    clust_hotspot = read_tsv(clust_full_path)
-    all_hotspot = read_tsv(all_full_path)
+    clust_full_path = paste0(base_path, config::get("results_versioned")$oncodriveclustl$clusters)
+    clust_full_path = glue::glue(clust_full_path)
+    all_full_path = paste0(base_path, config::get("results_versioned")$oncodriveclustl$elements)
+    all_full_path = glue::glue(all_full_path)
+    clust_hotspot = suppressMessages(readr::read_tsv(clust_full_path))
+    all_hotspot = suppressMessages(readr::read_tsv(all_full_path))
 
   clustered_hotspots = clust_hotspot %>%
     dplyr::select(-RANK) %>%
@@ -793,10 +827,18 @@ sv_to_custom_track = function(sv_bedpe,
   sv_data = bind_rows(sv_data1, sv_data2)
   sv_data = mutate(sv_data, end = end + 10)
   }else{
-    sv_data = mutate(sv_bedpe, annotation = paste0(1, ":", 2)) %>%
-      dplyr::select(1, 2, 6, tumour_sample_id, annotation)
-
-    colnames(sv_data)=c("chrom", "start", "end", "sample_id", "annotation")
+    colnames(sv_data)[c(1,2,3)]=c("CHROM_A" ,  "START_A", "END_A" )
+    colnames(sv_data)[c(4,5,6)]=c("CHROM_B" ,  "START_B", "END_B" )
+    
+    sv_data_1 = mutate(sv_bedpe, annotation = paste0( CHROM_B, ":", START_B)) %>%
+      dplyr::select(CHROM_A, START_A, END_A, tumour_sample_id, annotation)
+    sv_data_2 = mutate(sv_bedpe, annotation = paste0( CHROM_A, ":", START_A)) %>%
+      dplyr::select(CHROM_B, START_B, END_B, tumour_sample_id, annotation)
+    colnames(sv_data_1)=c("chrom", "start", "end", "sample_id", "annotation")
+    colnames(sv_data_2)=c("chrom", "start", "end", "sample_id", "annotation")
+    sv_data= bind_rows(sv_data_1,sv_data_2)
+    
+   # sv_data = dplyr::select(sv_data,chrom,start,end,sample_id,annotation)
   }
   if(!any(grepl("chr", sv_data[,1]))){
     #add chr
@@ -820,7 +862,7 @@ sv_to_custom_track = function(sv_bedpe,
 
   write_bed = function(coloured_svs, sv_name, output_file_base){
     data_bed = coloured_svs %>%
-      mutate(details = paste0(annotation, "_", sample_id)) %>%
+      mutate(details = paste0(sample_id, "_", annotation)) %>%
       mutate(score = 0, strand = "+", end = end + 1, start1 = start, end1 = end) %>%
       dplyr::select(chrom, start, end, details, score, strand, start1, end1, rgb) %>%
       dplyr::filter(!is.na(rgb)) %>%
@@ -848,7 +890,9 @@ sv_to_custom_track = function(sv_bedpe,
 #'
 maf_to_custom_track = function(maf_data,
                                these_samples_metadata,
-                               output_file){
+                               output_file,
+                               track_name="GAMBL mutations",
+                               track_description = "mutations from GAMBL"){
 
   #reduce to a bed-like format
   maf_data = dplyr::select(maf_data, Chromosome, Start_Position, End_Position, Tumor_Sample_Barcode)
@@ -876,11 +920,17 @@ maf_to_custom_track = function(maf_data,
   maf_coloured = left_join(maf_bed, samples_coloured, by = "sample_id") %>%
     dplyr::select(-lymphgen) %>%
     dplyr::filter(!is.na(rgb))
-
-  cat('track name="GAMBL mutations" description="Mutations from GAMBL" visibility=2 itemRgb="On"\n', file = output_file)
+  header_ucsc = paste0('track name="',track_name,'" description="', track_description, '" visibility=2 itemRgb="On"\n')
+  cat(header_ucsc,file = output_file)
   tabular = write.table(maf_coloured, file = output_file, quote = F, sep = "\t", row.names = F, col.names = F, append = TRUE)
 }
 
+test_glue = function(placeholder="INSERTED"){
+  some_string = "this text has {placeholder}"
+  print(some_string)
+  ss=glue::glue(some_string)
+  print(ss)
+}
 
 #' Bring together all derived sample-level results from many GAMBL pipelines.
 #'
@@ -1720,7 +1770,7 @@ collate_sbs_results = function(sample_table,
 #' @examples
 #' sample_table = collate_nfkbiz_results(sample_table=sample_table)
 #'
-collate_nfkbiz_results = function(sample_table,seq_type_filter="genome",ssh_session){
+collate_nfkbiz_results = function(sample_table,seq_type_filter="genome",ssh_session=NULL){
   #TO DO: Update to work with hg38 projection
   if(missing(sample_table)){
     sample_table = get_gambl_metadata(seq_type_filter=seq_type_filter) %>%
@@ -1760,7 +1810,7 @@ collate_nfkbiz_results = function(sample_table,seq_type_filter="genome",ssh_sess
 #'
 collate_ashm_results = function(sample_table,
                                 seq_type_filter="genome",
-                                ssh_session){
+                                ssh_session=NULL){
 
   if(missing(sample_table)){
     sample_table = get_gambl_metadata(seq_type_filter=seq_type_filter) %>%
@@ -1894,7 +1944,16 @@ get_gambl_colours = function(classification = "all",
                           "DLBCL-C" = "#C41230")
 
   all_colours[["FL"]] = c(dFL = "#99C1B9", cFL = "#D16666", DLBCL = "#479450")
-
+  
+  
+  all_colours[["lymphgenerator"]] = c("MP3"="#5B8565",
+                                      "EGB" = "#98622A",
+                                      "ETB"="#813F3D",
+                                      "aSCI"="#D66B1F",
+                                      "aSEL"="#C41230",
+                                      "MCaP"="#5F8CFF",
+                                      "BNZ"="#8870B6"
+                                      )
   all_colours[["lymphgen"]] = c("EZB-MYC" = "#52000F",
                                 "EZB" = "#721F0F",
                                 "EZB-COMP" = "#C7371A",

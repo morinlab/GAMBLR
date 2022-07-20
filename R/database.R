@@ -1004,11 +1004,11 @@ get_combined_sv = function(min_vaf = 0,
                            projection = "grch37",
                            oncogenes){
 
-  if(projection != "grch37"){
-    message("Currently, only grch37 is supported")
-
-  return()
-  }
+  #if(projection != "grch37"){
+  #  message("Currently, only grch37 is supported")
+  #
+  #return()
+  #}
 
   base_path = config::get("project_base")
   sv_file = config::get()$results_flatfiles$sv_combined$icgc_dart
@@ -1107,7 +1107,14 @@ get_manta_sv = function(min_vaf = 0.1,
   #this table stores chromosomes with un-prefixed names. Convert to prefixed chromosome if necessary
   if(from_flatfile){
     sv_file = get_merged_result(tool_name = "manta", projection = projection)
+    #check for missingness
+    if(!file.exists(sv_file)){
+      message("Cannot find file locally. If working remotely, perhaps you forgot to load your config (see below) or sync your files?")
+      message('Sys.setenv(R_CONFIG_ACTIVE= "remote")')
+      check_host()
+    }
     all_sv = read_tsv(sv_file, col_types = "cnncnncnccccnnnnccc", col_names = cnames)
+    
   }else{
     con = DBI::dbConnect(RMariaDB::MariaDB(), dbname = db)
     all_sv = dplyr::tbl(con, table_name) %>%
@@ -1667,8 +1674,8 @@ get_ashm_count_matrix = function(regions_bed,
                                  sample_metadata,
                                  seq_type,
                                  use_name_column = FALSE,
-                                 from_indexed_flatfile = FALSE,
-                                 ssh_session){
+                                 from_indexed_flatfile = TRUE,
+                                 ssh_session = NULL){
 
   if(missing(regions_bed)){
     regions_bed = grch37_ashm_regions
@@ -1682,10 +1689,8 @@ get_ashm_count_matrix = function(regions_bed,
                                 ssh_session=ssh_session)
 
   ashm_counted = ashm_maf %>%
-    group_by(Tumor_Sample_Barcode, region_name) %>%
+    group_by(sample_id, region_name) %>%
     tally()
-
-  colnames(ashm_counted)[1] = "sample_id"
 
   if(missing(sample_metadata)){
     all_meta = get_gambl_metadata() %>%
@@ -1783,8 +1788,8 @@ get_ssm_by_regions = function(regions_list,
       dplyr::select(start, sample_id, region_name)
 
   }else{
-    unlisted_df = mutate(unnested_df, chromosome = region_mafs$Chromosome, end = region_mafs$End_Position, start = region_mafs$Start_Position, sample_id = region_mafs$Tumor_Sample_Barcode) %>%
-      dplyr::select(chromosome, start, end, sample_id, region_name)
+    unlisted_df = mutate(unnested_df, Chromosome = region_mafs$Chromosome, End_Position = region_mafs$End_Position, Start_Position = region_mafs$Start_Position, Tumor_Sample_Barcode = region_mafs$Tumor_Sample_Barcode) %>%
+      dplyr::select(Chromosome, Start_Position, End_Position, Tumor_Sample_Barcode, region_name)
   }
   return(unlisted_df)
 }
@@ -1854,8 +1859,11 @@ get_ssm_by_region = function(chromosome,
     maf_path = glue::glue(maf_partial_path)
     full_maf_path = paste0(base_path, maf_path)
     full_maf_path_comp = paste0(base_path, maf_path, ".bgz")
-
-    message(paste("reading from:", full_maf_path))
+    if(!file.exists(full_maf_path_comp)){
+      message("Warning, you are running this on a computer that does not have direct acces to the directed file, prehaps you should try run this with ssh_session as a parameter?")
+    }else if(!is.null(ssh_session)){
+      message("The file you requested exists locally. Are you sure you want to use ssh_session?")
+    }
   }
 
   if(!region == ""){
@@ -1893,10 +1901,15 @@ get_ssm_by_region = function(chromosome,
         # Retrieving mutations per region over ssh connection is only supporting the basic columns for now in an attempt to keep the transfer of unnecessary data to a minimum
         remote_base_path = config::get("project_base",config="default")
         full_maf_path_comp = paste0(remote_base_path, maf_path, ".bgz")
-        message(paste("reading from:", full_maf_path_comp))
+        if(!file.exists(full_maf_path_comp)){
+          message("Cannot find file locally. If working remotely, perhaps you forgot to load your config (see below) or sync your files?")
+          message('Sys.setenv(R_CONFIG_ACTIVE= "remote")')
+          check_host()
+        }else{
+          message(paste("reading from:", full_maf_path_comp))
+        }
         tabix_command = paste(tabix_bin, full_maf_path_comp, region, "| cut -f 5,6,7,16,42")
         muts = run_command_remote(ssh_session,tabix_command)
-        print(tabix_command)
         muts_region = vroom::vroom(I(muts),col_types = "ciici",
                                    col_names=c("Chromosome", "Start_Position", "End_Position", "Tumor_Sample_Barcode", "t_alt_count"))
       }else{
