@@ -40,6 +40,9 @@ lymphgen = merged["lymphgen_template"]
 #here we specify which files are included from the GAMBLR config
 db_maf = flatfiles["ssm"]["template"]["cds"]["deblacklisted"]
 aug_maf = flatfiles["ssm"]["template"]["cds"]["augmented"]
+full_db_maf = flatfiles["ssm"]["template"]["merged"]["deblacklisted"] + ".bgz"
+full_aug_maf = flatfiles["ssm"]["template"]["merged"]["augmented"] + ".bgz"
+
 cnv_combined = flatfiles["cnv_combined"]["template"]
 sv_combined = flatfiles["sv_combined"]["template"]
 blacklist = resources["blacklist"]["template"]
@@ -57,9 +60,33 @@ rule all:
         combined_sv = expand(sv_combined,seq_type=['genome'],projection=projections),
         blacklists = expand(blacklist,seq_type=seq_types,projection=projections),
         lymphgens = expand(lymphgen,flavour=lymphgen_keys),
-        expression = expression
+        expression = expression,
+        indexed_maf = expand(full_db_maf,seq_type=['genome'],projection=projections),
+        indexed_aug_maf = expand(full_aug_maf,seq_type=['genome'],projection=projections)
 
 #Use the relative directory for local file names (outputs) and full path for remote file names (inputs)
+
+rule get_aug_maf:
+    input:
+        maf = SFTP.remote(hostname + project_base + full_aug_maf),
+        maf_index = SFTP.remote(hostname + project_base + full_aug_maf + ".tbi")
+    output:
+        maf = full_aug_maf,
+        maf_index = full_aug_maf + ".tbi"
+    run:
+        shell("cp {input.maf_index} {output.maf_index}")
+        shell("cp {input.maf} {output.maf}")
+
+rule get_indexed_maf:
+    input:
+        maf = SFTP.remote(hostname + project_base + full_db_maf),
+        maf_index = SFTP.remote(hostname + project_base + full_db_maf + ".tbi")
+    output:
+        maf = full_db_maf,
+        maf_index = full_db_maf + ".tbi"
+    run:
+        shell("cp {input.maf_index} {output.maf_index}")
+        shell("cp {input.maf} {output.maf}")
 
 rule get_lymphgen:
     input:

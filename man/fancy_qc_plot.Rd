@@ -13,33 +13,37 @@ fancy_qc_plot(
   sort_by,
   plot_data,
   fill_by,
-  comparison_data = NULL,
-  comparison_samples = NULL,
-  comp_factor,
-  plot_title,
-  plot_subtitle,
-  y_axis_lab,
+  comparison_samples,
+  filter_comp_cohort,
+  filter_comp_pathology,
+  plot_title = "",
+  plot_subtitle = "",
+  y_axis_lab = "",
   return_plotdata = FALSE
 )
 }
 \arguments{
 \item{these_samples}{Data frame with sample IDs (to be plotted) in the first column (has to be named sample_id).}
 
-\item{seq_type}{Selected seqtype for incoming QC metrics.}
+\item{filter_cohort}{Optional parameter to be used when these_sample is NULL. Calls get_gambl_metadata() and filters on the cohort supplied in this parameter.}
+
+\item{filter_pathology}{Optional parameter to be used when these_sample is NULL. Calls get_gambl_metadata() and filters on the pathology supplied in this parameter.}
+
+\item{seq_type}{Selected seq type for incoming QC metrics.}
 
 \item{metadata}{Optional, user can provide a metadata df to subset sample IDs from.}
 
-\item{sort_by}{Plotting parameter, set sorting column for barplots.}
+\item{sort_by}{Plotting parameter, set sorting column for bar plots.}
 
 \item{plot_data}{Plotting parameter, define the data type to be plotted.}
 
 \item{fill_by}{Plotting parameter, Set fill for bar plot, can be pathology, cohort, etc.}
 
-\item{comparison_data}{Optional parameter for adding a comparison group, can be "FL", "DLBCL", etc. Is dependent on comp_factor. If comp_factor is set to pathology, this parameter excepts the same data tytpe.}
+\item{comparison_samples}{Optional parameter, give the function a list of sample IDs to be compared against the main plotting group.}
 
-\item{comparison_samples}{Optional aprameter, give the function a list of sample IDs to be compared against the main plotting group.}
+\item{filter_comp_cohort}{Optional parameter for filtering the comparison group (cohort).}
 
-\item{comp_factor}{Optional parameter for specifying the factor type of comparison data. Can be "pathology, "cohort", etc.}
+\item{filter_comp_pathology}{Optional parameter for filtering the comparison group (pathology).}
 
 \item{plot_title}{Plotting parameter, plot title.}
 
@@ -57,13 +61,15 @@ Plot for visualizing QC metrics and allowing for grouping by different metadata 
 }
 \examples{
 #plot QC metrics (Average base Quality for all BL samples), compared to the same metric for all FL cases (pathology).
-qc_avg_basequality = fancy_qc_plot(filter_pathology = "BL",
-                                   comparison_data = "FL",
-                                   comp_factor = "pathology",
+qc_avg_basequality = fancy_qc_plot(filter_pathology = "FL",
+                                   filter_cohort = "DLBCL_LSARP_Trios",
+                                   filter_comp_cohort = "BL_Pediatric",
+                                   filter_comp_pathology = "BL",
                                    sort_by = "AverageBaseQuality",
                                    plot_data = "AverageBaseQuality",
                                    fill_by = "pathology",
                                    plot_title = "Average Base Quality",
-                                   y_axis_lab = "Base Quality")
+                                   y_axis_lab = "Base Quality",
+                                   seq_type = "genome")
 
 }
