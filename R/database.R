@@ -1,6 +1,8 @@
 #global variables
 coding_class = c("Frame_Shift_Del", "Frame_Shift_Ins", "In_Frame_Del", "In_Frame_Ins", "Missense_Mutation", "Nonsense_Mutation", "Nonstop_Mutation", "Silent", "Splice_Region", "Splice_Site", "Targeted_Region", "Translation_Start_Site")
 cnames = c("CHROM_A", "START_A", "END_A", "CHROM_B", "START_B", "END_B", "NAME", "SOMATIC_SCORE", "STRAND_A", "STRAND_B", "TYPE", "FILTER", "VAF_tumour", "VAF_normal", "DP_tumour", "DP_normal", "tumour_sample_id", "normal_sample_id", "pair_status")
+maf_header = c("Hugo_Symbol"=1,"Entrez_Gene_Id"=2,"Center"=3,"NCBI_Build"=4,"Chromosome"=5,"Start_Position"=6,"End_Position"=7,"Strand"=8,"Variant_Classification"=9,"Variant_Type"=10,"Reference_Allele"=11,"Tumor_Seq_Allele1"=12,"Tumor_Seq_Allele2"=13,"dbSNP_RS"=14,"dbSNP_Val_Status"=15,"Tumor_Sample_Barcode"=16,"Matched_Norm_Sample_Barcode"=17,"Match_Norm_Seq_Allele1"=18,"Match_Norm_Seq_Allele2"=19,"Tumor_Validation_Allele1"=20,"Tumor_Validation_Allele2"=21,"Match_Norm_Validation_Allele1"=22,"Match_Norm_Validation_Allele2"=23,"Verification_Status"=24,"Validation_Status"=25,"Mutation_Status"=26,"Sequencing_Phase"=27,"Sequence_Source"=28,"Validation_Method"=29,"Score"=30,"BAM_File"=31,"Sequencer"=32,"Tumor_Sample_UUID"=33,"Matched_Norm_Sample_UUID"=34,"HGVSc"=35,"HGVSp"=36,"HGVSp_Short"=37,"Transcript_ID"=38,"Exon_Number"=39,"t_depth"=40,"t_ref_count"=41,"t_alt_count"=42,"n_depth"=43,"n_ref_count"=44,"n_alt_count"=45,"all_effects"=46,"Allele"=47,"Gene"=48,"Feature"=49,"Feature_type"=50,"Consequence"=51,"cDNA_position"=52,"CDS_position"=53,"Protein_position"=54,"Amino_acids"=55,"Codons"=56,"Existing_variation"=57,"ALLELE_NUM"=58,"DISTANCE"=59,"STRAND_VEP"=60,"SYMBOL"=61,"SYMBOL_SOURCE"=62,"HGNC_ID"=63,"BIOTYPE"=64,"CANONICAL"=65,"CCDS"=66,"ENSP"=67,"SWISSPROT"=68,"TREMBL"=69,"UNIPARC"=70,"RefSeq"=71,"SIFT"=72,"PolyPhen"=73,"EXON"=74,"INTRON"=75,"DOMAINS"=76,"AF"=77,"AFR_AF"=78,"AMR_AF"=79,"ASN_AF"=80,"EAS_AF"=81,"EUR_AF"=82,"SAS_AF"=83,"AA_AF"=84,"EA_AF"=85,"CLIN_SIG"=86,"SOMATIC"=87,"PUBMED"=88,"MOTIF_NAME"=89,"MOTIF_POS"=90,"HIGH_INF_POS"=91,"MOTIF_SCORE_CHANGE"=92,"IMPACT"=93,"PICK"=94,"VARIANT_CLASS"=95,"TSL"=96,"HGVS_OFFSET"=97,"PHENO"=98,"MINIMISED"=99,"GENE_PHENO"=100,"FILTER"=101,"flanking_bps"=102,"vcf_id"=103,"vcf_qual"=104,"gnomAD_AF"=105,"gnomAD_AFR_AF"=106,"gnomAD_AMR_AF"=107,"gnomAD_ASJ_AF"=108,"gnomAD_EAS_AF"=109,"gnomAD_FIN_AF"=110,"gnomAD_NFE_AF"=111,"gnomAD_OTH_AF"=112,"gnomAD_SAS_AF"=113,"vcf_pos"=114,"gnomADg_AF"=115,"blacklist_count"=116)
+
 
 #' Exclude samples that have been excluded from certain analyses and drop from merges
 #'
@@ -1011,11 +1013,11 @@ get_combined_sv = function(min_vaf = 0,
                            projection = "grch37",
                            oncogenes){
 
-  if(projection != "grch37"){
-    message("Currently, only grch37 is supported")
-
-  return()
-  }
+  #if(projection != "grch37"){
+  #  message("Currently, only grch37 is supported")
+  #
+  #return()
+  #}
 
   base_path = config::get("project_base")
   sv_file = config::get()$results_flatfiles$sv_combined$icgc_dart
@@ -1114,7 +1116,14 @@ get_manta_sv = function(min_vaf = 0.1,
   #this table stores chromosomes with un-prefixed names. Convert to prefixed chromosome if necessary
   if(from_flatfile){
     sv_file = get_merged_result(tool_name = "manta", projection = projection)
+    #check for missingness
+    if(!file.exists(sv_file)){
+      message("Cannot find file locally. If working remotely, perhaps you forgot to load your config (see below) or sync your files?")
+      message('Sys.setenv(R_CONFIG_ACTIVE= "remote")')
+      check_host()
+    }
     all_sv = read_tsv(sv_file, col_types = "cnncnncnccccnnnnccc", col_names = cnames)
+    
   }else{
     con = DBI::dbConnect(RMariaDB::MariaDB(), dbname = db)
     all_sv = dplyr::tbl(con, table_name) %>%
@@ -1746,6 +1755,7 @@ get_ssm_by_regions = function(regions_list,
                               min_read_support = 4,
                               ssh_session = NULL){
 
+
   bed2region = function(x){
     paste0(x[1], ":", as.numeric(x[2]), "-", as.numeric(x[3]))
   }
@@ -1787,8 +1797,8 @@ get_ssm_by_regions = function(regions_list,
       dplyr::select(start, sample_id, region_name)
 
   }else{
-    unlisted_df = mutate(unnested_df, chromosome = region_mafs$Chromosome, end = region_mafs$End_Position, start = region_mafs$Start_Position, sample_id = region_mafs$Tumor_Sample_Barcode) %>%
-      dplyr::select(chromosome, start, end, sample_id, region_name)
+    unlisted_df = mutate(unnested_df, Chromosome = region_mafs$Chromosome, End_Position = region_mafs$End_Position, Start_Position = region_mafs$Start_Position, Tumor_Sample_Barcode = region_mafs$Tumor_Sample_Barcode) %>%
+      dplyr::select(Chromosome, Start_Position, End_Position, Tumor_Sample_Barcode, region_name)
   }
   return(unlisted_df)
 }
@@ -1833,12 +1843,24 @@ get_ssm_by_region = function(chromosome,
                              augmented = TRUE,
                              min_read_support = 3,
                              mode = "slms-3",
+                             maf_columns = c("Chromosome", "Start_Position", "End_Position", "Tumor_Sample_Barcode", "t_alt_count"),
+                             maf_column_types = c("c","i","i","c","i"),
                              ssh_session = NULL){
-
+  #check that maf_columns requested all exist in the header and get their indexes
+  if(!all(maf_columns %in% names(maf_header))){
+    stop("Cannot find one of the requested maf_columns in your MAF header")
+  }
+  maf_indexes = maf_header[maf_columns]
+  maf_column_types = maf_column_types[order(maf_indexes)]
+  maf_indexes = maf_indexes[order(maf_indexes)]
+  maf_columns = names(maf_indexes)
+  maf_indexes = unname(maf_indexes)
+  #this is to put the indexes and their names back into numerical order because cut returns columns that way
+  
   tabix_bin = config::get("dependencies")$tabix
   table_name = config::get("results_tables")$ssm
   db = config::get("database_name")
-
+  
   if(from_indexed_flatfile){
     base_path = config::get("project_base")
 
@@ -1858,11 +1880,15 @@ get_ssm_by_region = function(chromosome,
     maf_path = glue::glue(maf_partial_path)
     full_maf_path = paste0(base_path, maf_path)
     full_maf_path_comp = paste0(base_path, maf_path, ".bgz")
-
+    
     if(!file.exists(full_maf_path_comp)){
+      print(paste("missing:",full_maf_path_comp))
       message("Warning, you are running this on a computer that does not have direct acces to the directed file, prehaps you should try run this with ssh_session as a parameter?")
     }else if(!is.null(ssh_session)){
       message("The file you requested exists locally. Are you sure you want to use ssh_session?")
+    }else{
+      message("using local file")
+      print(paste("HERE:",full_maf_path_comp))
     }
   }
 
@@ -1876,6 +1902,11 @@ get_ssm_by_region = function(chromosome,
     startend = unlist(strsplit(split_chunks[2], "-"))
     qstart = as.numeric(startend[1])
     qend = as.numeric(startend[2])
+  }else{
+    if(projection =="grch37"){
+      chromosome = gsub("chr", "", chromosome)
+    }
+    region=paste0(chromosome,":",qstart,"-",qend)
   }
 
   if(projection =="grch37"){
@@ -1894,18 +1925,32 @@ get_ssm_by_region = function(chromosome,
 
         # NOTE!
         # Retrieving mutations per region over ssh connection is only supporting the basic columns for now in an attempt to keep the transfer of unnecessary data to a minimum
+        
         remote_base_path = config::get("project_base",config="default")
         full_maf_path_comp = paste0(remote_base_path, maf_path, ".bgz")
-        message(paste("reading from:", full_maf_path_comp))
-        tabix_command = paste(tabix_bin, full_maf_path_comp, region, "| cut -f 5,6,7,16,42")
+        if(!file.exists(full_maf_path_comp)){
+          message("Cannot find file locally. If working remotely, perhaps you forgot to load your config (see below) or sync your files?")
+          message('Sys.setenv(R_CONFIG_ACTIVE= "remote")')
+          check_host()
+        }else{
+          message(paste("reading from:", full_maf_path_comp))
+        }
+        
+        tabix_command = paste(tabix_bin, full_maf_path_comp, region, "| cut -f", paste(maf_indexes,collapse=","))
+        print(tabix_command)
+        #stop()
         muts = run_command_remote(ssh_session,tabix_command)
-        muts_region = vroom::vroom(I(muts),col_types = "ciici",
-                                   col_names=c("Chromosome", "Start_Position", "End_Position", "Tumor_Sample_Barcode", "t_alt_count"))
+        muts_region = vroom::vroom(I(muts),col_types = paste(maf_column_types,collapse=""),
+                                   col_names=maf_columns)
       }else{
-        #get column names for maf and read maf
-        maf_head = as.vector(as.matrix(read.table(file = full_maf_path, header = FALSE, stringsAsFactors = FALSE, nrows = 1)))
-        muts = system(paste(tabix_bin, full_maf_path_comp, region), intern = TRUE)
-        muts_region = vroom(I(muts), col_names = maf_head)
+
+        tabix_command = paste(tabix_bin, full_maf_path_comp, region, "| cut -f" , paste(maf_indexes,collapse=","))
+        print(tabix_command)
+        #stop()
+        muts = system(tabix_command, intern = TRUE)
+        
+        muts_region = vroom::vroom(I(muts), col_types = paste(maf_column_types,collapse=""),
+                            col_names=maf_columns)
       }
       if(augmented){
         # drop poorly supported reads but only from augmented MAF
@@ -2200,11 +2245,14 @@ get_gene_expression = function(metadata,
   }else if(!missing(hugo_symbols) & !missing(ensembl_gene_ids)){
     stop("ERROR: Both hugo_symbols and ensembl_gene_ids were provided. Please provide only one type of ID.")
   }
-  tidy_expression_file = config::get("results_merged")$tidy_expression_file
-
-
+  #tidy_expression_file = config::get("results_merged")$tidy_expression_file
+  #use combination of base path and relative path instead of full path for flexibility accross sites
+  tidy_expression_path = config::get("results_merged")$tidy_expression_path
+  base_path = config::get("project_base")
+  tidy_expression_file = paste0(base_path,tidy_expression_path)
+  tidy_expression_file = gsub(".gz$","",tidy_expression_file)
   if(!missing(expression_data)){
-    tidy_expression_data = as.data.frame(expression_data)
+    tidy_expression_data = as.data.frame(expression_data) #is this necessary? Will it unnecessarily duplicate a large object if it's already a data frame?
     if(!missing(hugo_symbols)){
       #lazily filter on the fly to conserve RAM
       wide_expression_data = tidy_expression_data %>%
@@ -2214,34 +2262,50 @@ get_gene_expression = function(metadata,
         slice_head() %>%
         as.data.frame() %>%
         pivot_wider(names_from = Hugo_Symbol, values_from = expression)
-    }
-    if(!missing(ensembl_gene_ids)){
+    }else if(!missing(ensembl_gene_ids)){
       wide_expression_data = tidy_expression_data %>%
         dplyr::filter(ensembl_gene_id %in% ensembl_gene_ids) %>%
         dplyr::select(-Hugo_Symbol) %>%
         as.data.frame() %>%
         pivot_wider(names_from = ensembl_gene_id, values_from = expression)
+    }else{
+      
+      #for when a user wants everything. Need to handle the option of getting back Hugo_Symbol instead
+      wide_expression_data = tidy_expression_data %>%
+        dplyr::select(-Hugo_Symbol) %>%
+        as.data.frame() %>%
+        pivot_wider(names_from = ensembl_gene_id, values_from = expression)
     }
   }else{
+    if(!file.exists(tidy_expression_file)){
+      message("Cannot find file locally. If working remotely, perhaps you forgot to load your config (see below) or sync your files?")
+      message('Sys.setenv(R_CONFIG_ACTIVE= "remote")')
+      check_host()
+    }
     #only ever load the full data frame when absolutely necessary
     if(all_genes & missing(ensembl_gene_ids) & missing(hugo_symbols)){
-      tidy_expression_data = vroom::vroom(tidy_expression_file) %>%
-        as.data.frame()
+      wide_expression_data = read_tsv(tidy_expression_file) %>%
+        as.data.frame() %>% 
+        pivot_wider(names_from = ensembl_gene_id, values_from = expression)
     }else{
       if(!missing(hugo_symbols)){
-        #lazily filter on the fly to conserve RAM
-        wide_expression_data = vroom::vroom(tidy_expression_file) %>%
-          dplyr::filter(Hugo_Symbol %in% hugo_symbols) %>%
+        #lazily filter on the fly to conserve RAM (use grep without regex)
+        genes_regex=paste(c("-e Hugo_Symbol",genes),collapse = " -e ");
+        grep_cmd = paste0("grep -w -F ",genes_regex," ",tidy_expression_file)
+        print(grep_cmd)
+        wide_expression_data = fread(cmd=grep_cmd) %>%
+        #wide_expression_data = read_tsv(tidy_expression_file,lazy=TRUE) %>%
           dplyr::select(-ensembl_gene_id) %>%
+          dplyr::filter(Hugo_Symbol %in% hugo_symbols) %>%
           group_by(mrna_sample_id,Hugo_Symbol) %>% #deal with non 1:1 mapping of Hugo to Ensembl
           slice_head() %>%
           as.data.frame() %>%
           pivot_wider(names_from = Hugo_Symbol, values_from = expression)
       }
       if(!missing(ensembl_gene_ids)){
-        wide_expression_data = vroom::vroom(tidy_expression_file) %>%
-          dplyr::filter(ensembl_gene_id %in% ensembl_gene_ids) %>%
+        wide_expression_data = read_tsv(tidy_expression_file,lazy=TRUE) %>%
           dplyr::select(-Hugo_Symbol) %>%
+          dplyr::filter(ensembl_gene_id %in% ensembl_gene_ids) %>%
           as.data.frame() %>%
           pivot_wider(names_from = ensembl_gene_id, values_from = expression)
 
