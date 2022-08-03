@@ -45,7 +45,7 @@ Imports:
     S4Vectors,
     SRAdb,
     stats,
-    tidyverse,
+    readr (>= 2.1),
     workflowr,
     ggpubr
 Remotes:
