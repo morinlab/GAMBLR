@@ -2764,11 +2764,11 @@ splendidHeatmap = function(this_matrix,
   these_names = NULL
   for (i in 1:length(metadataColumns)){
     this_metadata_column = get_gambl_colours(metadataColumns[i])
-    if (sum(is.na(names(this_metadata_column[unique(these_samples_metadata[,metadataColumns[i]])]))) <= 1 &
-       length(unique(these_samples_metadata[,metadataColumns[i]])) > 1){
-        these_names = c(these_names, metadataColumns[i])
-        my_colours = append(my_colours, list(c(this_metadata_column, "NA" = "#BDBDC1FF")))
-        names(my_colours) = these_names
+    if (sum(is.na(names(this_metadata_column[unlist(c(unique(these_samples_metadata[,metadataColumns[i]])))]))) <= 1 &
+        nrow(unique(these_samples_metadata[,metadataColumns[i]])) > 1){
+      these_names = c(these_names, metadataColumns[i])
+      my_colours = append(my_colours, list(c(this_metadata_column, "NA" = "#BDBDC1FF")))
+      names(my_colours) = these_names
     }
   }
 
@@ -2901,32 +2901,35 @@ splendidHeatmap = function(this_matrix,
 
   used_for_ordering <- colnames(used_for_ordering_df)
 
+  this_is_ordered_df = metadata_df[ (order(match(rownames(metadata_df), used_for_ordering))), ] %>%
+    dplyr::arrange(!!!syms(metadataColumns), desc(!!!syms(numericMetadataColumns)))
+
   # left annotation: stacked feature weights
   ha = rowAnnotation(`feature abundance` = anno_barplot(m, gp = gpar(fill = my_palette[1:length(comparison_groups)+1]),
                                                       bar_width = 1, width = unit(leftStackedWidth, "cm"),
                                                       axis_param = list(side = legend_position, labels_rot = 0)))
 
   #bottom annotation: tracks indicating metadata
-  ha_bottom = HeatmapAnnotation(df = metadata_df[ (order(match(rownames(metadata_df), used_for_ordering))), ] %>%
-    dplyr::arrange(!!!syms(metadataColumns), desc(!!!syms(numericMetadataColumns))) %>%
-    dplyr::select(-splitColumnName), col = my_colours,
-                                     simple_anno_size = unit(metadataBarHeight, "mm"),
-                                     gap = unit(0.25 * metadataBarHeight, "mm"),
-                                     annotation_name_gp = gpar(fontsize = metadataBarFontsize),
-                                     annotation_legend_param = list(nrow = legend_row, ncol = legend_col, direction = legend_direction))
+  ha_bottom = HeatmapAnnotation(df = this_is_ordered_df %>%
+                                        dplyr::select(-splitColumnName),
+                                  col = my_colours,
+                                  simple_anno_size = unit(metadataBarHeight, "mm"),
+                                  gap = unit(0.25 * metadataBarHeight, "mm"),
+                                  annotation_name_gp = gpar(fontsize = metadataBarFontsize),
+                                  annotation_legend_param = list(nrow = legend_row, ncol = legend_col, direction = legend_direction))
 
   #top annotation: groups of interest to split on
   top_bar_colors = list(my_colours[[splitColumnName]] %>% rev)
   names(top_bar_colors) = splitColumnName
   names(top_bar_colors[[splitColumnName]]) = names(top_bar_colors[[splitColumnName]]) %>% rev()
 
-  ha_top = HeatmapAnnotation(df = metadata_df[ (order(match(rownames(metadata_df), used_for_ordering))), ] %>%
-    dplyr::arrange(!!!syms(metadataColumns), desc(!!!syms(numericMetadataColumns))) %>%
-    dplyr::select(splitColumnName), col = top_bar_colors,
-                                    simple_anno_size = unit(metadataBarHeight, "mm"),
-                                    gap = unit(0.25*metadataBarHeight, "mm"),
-                                    annotation_name_gp = gpar(fontsize = fontSizeGene * 1.5),
-                                    annotation_legend_param = list(nrow = legend_row, ncol = legend_col, direction = legend_direction))
+  ha_top = HeatmapAnnotation(df = this_is_ordered_df %>%
+                                    dplyr::select(splitColumnName),
+                              col = top_bar_colors,
+                              simple_anno_size = unit(metadataBarHeight, "mm"),
+                              gap = unit(0.25*metadataBarHeight, "mm"),
+                              annotation_name_gp = gpar(fontsize = fontSizeGene * 1.5),
+                              annotation_legend_param = list(nrow = legend_row, ncol = legend_col, direction = legend_direction))
 
   splendidHM = ComplexHeatmap::Heatmap(used_for_ordering_df,
                                        col = my_palette,
