@@ -2695,6 +2695,7 @@ prettyForestPlot = function(maf,
 #' @param numericMetadataColumns A vector containing the numeric columns you want to plot below.
 #' @param numericMetadataMax A numeric vector of cutoffs to apply to numeric columns above.
 #' @param custom_colours Provide named vector (or named list of vectors) containing custom annotation colours if you do not want to use standartized pallette.
+#' @param prioritize_ordering_on_numeric Logical argument specifying whether to sort on numeric metadata first or other metadata columns. Default is TRUE (sort on numeric metadata, then on other columns).
 #' @param legend_direction Optional argument to indicate whether legend should be in horizontal (default) or vertical position.
 #' @param legend_position Optional argument to indicate where the legend should be drawn. The default is set to bottom, but can also accept top, right, and left.
 #' @param legend_row Fiddle with these to widen or narrow your legend (default 3).
@@ -2893,7 +2894,7 @@ splendidHeatmap = function(this_matrix,
 
   m = t(apply(STACKED, 1, function(x) x/sum(x)))
 
-  if(prioritize_ordering_on_numeric & ! is.null(numericMetadataColumns)){
+  if(prioritize_ordering_on_numeric & ! is.null(numericMetadataColumns)){ # numeric metadata is provided and is prioritized for column sorting
     used_for_ordering_df = t(base::merge(mat_2 %>%
     dplyr::select(-splitColumnName), metadata_df %>%
     rownames_to_column(., "Tumor_Sample_Barcode"), by = "Tumor_Sample_Barcode") %>%
@@ -2905,7 +2906,7 @@ splendidHeatmap = function(this_matrix,
     this_is_ordered_df = metadata_df[ (order(match(rownames(metadata_df), colnames(used_for_ordering_df)))), ] %>%
       dplyr::arrange(desc(!!!syms(numericMetadataColumns)),
         !!!syms(metadataColumns))
-  }else if(! is.null(numericMetadataColumns)){
+  }else if(! is.null(numericMetadataColumns)){ # numeric metadata is provided, but is not prioritized for column sorting
     used_for_ordering_df = t(base::merge(mat_2 %>%
     dplyr::select(-splitColumnName), metadata_df %>%
     rownames_to_column(., "Tumor_Sample_Barcode"), by = "Tumor_Sample_Barcode") %>%
@@ -2917,7 +2918,7 @@ splendidHeatmap = function(this_matrix,
     this_is_ordered_df = metadata_df[ (order(match(rownames(metadata_df), colnames(used_for_ordering_df)))), ] %>%
       dplyr::arrange(!!!syms(metadataColumns),
         desc(!!!syms(numericMetadataColumns)))
-  }else{
+  }else{ # no numeric metadata is proveded to plot
     used_for_ordering_df = t(base::merge(mat_2 %>%
     dplyr::select(-splitColumnName), metadata_df %>%
     rownames_to_column(., "Tumor_Sample_Barcode"), by = "Tumor_Sample_Barcode") %>%

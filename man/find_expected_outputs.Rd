@@ -26,6 +26,9 @@ find_expected_outputs(
 
 \item{target_path}{Path to targets.}
 }
+\value{
+
+}
 \description{
 Get the details including file paths for the anticipated outputs from a pipeline or tool
 }
