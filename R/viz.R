@@ -2728,6 +2728,7 @@ splendidHeatmap = function(this_matrix,
                            metadataColumns = c("pathology"),
                            numericMetadataColumns = NULL,
                            numericMetadataMax = NULL,
+                           prioritize_ordering_on_numeric = TRUE,
                            custom_colours = NULL,
                            legend_direction = "horizontal",
                            legend_position = "bottom",
@@ -2892,17 +2893,42 @@ splendidHeatmap = function(this_matrix,
 
   m = t(apply(STACKED, 1, function(x) x/sum(x)))
 
-  used_for_ordering_df = t(base::merge(mat_2 %>%
+  if(prioritize_ordering_on_numeric & ! is.null(numericMetadataColumns)){
+    used_for_ordering_df = t(base::merge(mat_2 %>%
     dplyr::select(-splitColumnName), metadata_df %>%
     rownames_to_column(., "Tumor_Sample_Barcode"), by = "Tumor_Sample_Barcode") %>%
     column_to_rownames(., var = "Tumor_Sample_Barcode") %>%
-    dplyr::arrange(!!!syms(metadataColumns), desc(!!!syms(numericMetadataColumns))) %>%
-    dplyr::select(FEATURES$Feature))
+      dplyr::arrange(desc(!!!syms(numericMetadataColumns)),
+        !!!syms(metadataColumns)) %>%
+      dplyr::select(FEATURES$Feature))
 
-  used_for_ordering <- colnames(used_for_ordering_df)
+    this_is_ordered_df = metadata_df[ (order(match(rownames(metadata_df), colnames(used_for_ordering_df)))), ] %>%
+      dplyr::arrange(desc(!!!syms(numericMetadataColumns)),
+        !!!syms(metadataColumns))
+  }else if(! is.null(numericMetadataColumns)){
+    used_for_ordering_df = t(base::merge(mat_2 %>%
+    dplyr::select(-splitColumnName), metadata_df %>%
+    rownames_to_column(., "Tumor_Sample_Barcode"), by = "Tumor_Sample_Barcode") %>%
+    column_to_rownames(., var = "Tumor_Sample_Barcode") %>%
+      dplyr::arrange(!!!syms(metadataColumns),
+        desc(!!!syms(numericMetadataColumns))) %>%
+      dplyr::select(FEATURES$Feature))
 
-  this_is_ordered_df = metadata_df[ (order(match(rownames(metadata_df), used_for_ordering))), ] %>%
-    dplyr::arrange(!!!syms(metadataColumns), desc(!!!syms(numericMetadataColumns)))
+    this_is_ordered_df = metadata_df[ (order(match(rownames(metadata_df), colnames(used_for_ordering_df)))), ] %>%
+      dplyr::arrange(!!!syms(metadataColumns),
+        desc(!!!syms(numericMetadataColumns)))
+  }else{
+    used_for_ordering_df = t(base::merge(mat_2 %>%
+    dplyr::select(-splitColumnName), metadata_df %>%
+    rownames_to_column(., "Tumor_Sample_Barcode"), by = "Tumor_Sample_Barcode") %>%
+    column_to_rownames(., var = "Tumor_Sample_Barcode") %>%
+      dplyr::arrange(!!!syms(metadataColumns)) %>%
+      dplyr::select(FEATURES$Feature))
+
+    this_is_ordered_df = metadata_df[ (order(match(rownames(metadata_df), colnames(used_for_ordering_df)))), ] %>%
+      dplyr::arrange(!!!syms(metadataColumns))
+  }
+
 
   # left annotation: stacked feature weights
   ha = rowAnnotation(`feature abundance` = anno_barplot(m, gp = gpar(fill = my_palette[1:length(comparison_groups)+1]),
@@ -2945,7 +2971,7 @@ splendidHeatmap = function(this_matrix,
                                        left_annotation = ha,
                                        bottom_annotation = ha_bottom,
                                        top_annotation = ha_top,
-                                       column_split = dplyr::pull(metadata_df[(order(match(rownames(metadata_df), used_for_ordering))), ], splitColumnName),
+                                       column_split = dplyr::pull(metadata_df[(order(match(rownames(metadata_df), colnames(used_for_ordering_df)))), ], splitColumnName),
                                        column_title = groupNames)
 
   draw(splendidHM, heatmap_legend_side = legend_position, annotation_legend_side = legend_position)
