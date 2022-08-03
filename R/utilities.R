@@ -1943,19 +1943,9 @@ get_gambl_colours = function(classification = "all",
                           "DLBCL-B" = "#FB9A99",
                           "DLBCL-C" = "#C41230")
 
-  all_colours[["lymphgenerator"]] = c("MP3"="#5B8565",
-                                      "EGB" = "#98622A",
-                                      "ETB"="#813F3D",
-                                      "aSCI"="#D66B1F",
-                                      "aSEL"="#C41230",
-                                      "MCaP"="#5F8CFF",
-                                      "BNZ"="#8870B6"
-                                      )
-
   all_colours[["FL"]] = c(dFL = "#99C1B9", cFL = "#D16666", DLBCL = "#479450")
   
-  
-  all_colours[["lymphgenerator"]] = c("MP3"="#5B8565",
+    all_colours[["lymphgenerator"]] = c("MP3"="#5B8565",
                                       "EGB" = "#98622A",
                                       "ETB"="#813F3D",
                                       "aSCI"="#D66B1F",
