@@ -2211,11 +2211,14 @@ get_gene_expression = function(metadata,
   }else if(!missing(hugo_symbols) & !missing(ensembl_gene_ids)){
     stop("ERROR: Both hugo_symbols and ensembl_gene_ids were provided. Please provide only one type of ID.")
   }
-  tidy_expression_file = config::get("results_merged")$tidy_expression_file
-
-
+  #tidy_expression_file = config::get("results_merged")$tidy_expression_file
+  #use combination of base path and relative path instead of full path for flexibility accross sites
+  tidy_expression_path = config::get("results_merged")$tidy_expression_path
+  base_path = config::get("project_base")
+  tidy_expression_file = paste0(base_path,tidy_expression_path)
+  tidy_expression_file = gsub(".gz$","",tidy_expression_file)
   if(!missing(expression_data)){
-    tidy_expression_data = as.data.frame(expression_data)
+    tidy_expression_data = as.data.frame(expression_data) #is this necessary? Will it unnecessarily duplicate a large object if it's already a data frame?
     if(!missing(hugo_symbols)){
       #lazily filter on the fly to conserve RAM
       wide_expression_data = tidy_expression_data %>%
@@ -2225,34 +2228,50 @@ get_gene_expression = function(metadata,
         slice_head() %>%
         as.data.frame() %>%
         pivot_wider(names_from = Hugo_Symbol, values_from = expression)
-    }
-    if(!missing(ensembl_gene_ids)){
+    }else if(!missing(ensembl_gene_ids)){
       wide_expression_data = tidy_expression_data %>%
         dplyr::filter(ensembl_gene_id %in% ensembl_gene_ids) %>%
         dplyr::select(-Hugo_Symbol) %>%
         as.data.frame() %>%
         pivot_wider(names_from = ensembl_gene_id, values_from = expression)
+    }else{
+      
+      #for when a user wants everything. Need to handle the option of getting back Hugo_Symbol instead
+      wide_expression_data = tidy_expression_data %>%
+        dplyr::select(-Hugo_Symbol) %>%
+        as.data.frame() %>%
+        pivot_wider(names_from = ensembl_gene_id, values_from = expression)
     }
   }else{
+    if(!file.exists(tidy_expression_file)){
+      message("Cannot find file locally. If working remotely, perhaps you forgot to load your config (see below) or sync your files?")
+      message('Sys.setenv(R_CONFIG_ACTIVE= "remote")')
+      check_host()
+    }
     #only ever load the full data frame when absolutely necessary
     if(all_genes & missing(ensembl_gene_ids) & missing(hugo_symbols)){
-      tidy_expression_data = vroom::vroom(tidy_expression_file) %>%
-        as.data.frame()
+      wide_expression_data = read_tsv(tidy_expression_file) %>%
+        as.data.frame() %>% 
+        pivot_wider(names_from = ensembl_gene_id, values_from = expression)
     }else{
       if(!missing(hugo_symbols)){
-        #lazily filter on the fly to conserve RAM
-        wide_expression_data = vroom::vroom(tidy_expression_file) %>%
-          dplyr::filter(Hugo_Symbol %in% hugo_symbols) %>%
+        #lazily filter on the fly to conserve RAM (use grep without regex)
+        genes_regex=paste(c("-e Hugo_Symbol",genes),collapse = " -e ");
+        grep_cmd = paste0("grep -w -F ",genes_regex," ",tidy_expression_file)
+        print(grep_cmd)
+        wide_expression_data = fread(cmd=grep_cmd) %>%
+        #wide_expression_data = read_tsv(tidy_expression_file,lazy=TRUE) %>%
           dplyr::select(-ensembl_gene_id) %>%
+          dplyr::filter(Hugo_Symbol %in% hugo_symbols) %>%
           group_by(mrna_sample_id,Hugo_Symbol) %>% #deal with non 1:1 mapping of Hugo to Ensembl
           slice_head() %>%
           as.data.frame() %>%
           pivot_wider(names_from = Hugo_Symbol, values_from = expression)
       }
       if(!missing(ensembl_gene_ids)){
-        wide_expression_data = vroom::vroom(tidy_expression_file) %>%
-          dplyr::filter(ensembl_gene_id %in% ensembl_gene_ids) %>%
+        wide_expression_data = read_tsv(tidy_expression_file,lazy=TRUE) %>%
           dplyr::select(-Hugo_Symbol) %>%
+          dplyr::filter(ensembl_gene_id %in% ensembl_gene_ids) %>%
           as.data.frame() %>%
           pivot_wider(names_from = ensembl_gene_id, values_from = expression)
 
