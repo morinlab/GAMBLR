@@ -166,11 +166,11 @@ get_coding_ssm_status = function(gene_symbols,
       dplyr::filter(Variant_Classification %in% coding_class)
   }
 
-  if(!missing(maf_data) && !is.null(maf_path)){
-    maf_data = get_coding_ssm(projection = projection, seq_type = seq_type, from_flatfile = from_flatfile, augmented = augmented, min_read_support = 3, basic_columns = FALSE, include_silent = include_silent)
+  if(missing(maf_data) & is.null(maf_path)){
+    coding_ssm = get_coding_ssm(projection = projection, seq_type = seq_type, from_flatfile = from_flatfile, augmented = augmented, min_read_support = 3, basic_columns = FALSE, include_silent = include_silent)
   }
 
-  coding_ssm = maf_data %>%
+  coding_ssm = coding_ssm %>%
     dplyr::filter(Variant_Classification %in% coding_class)
 
   coding = coding_ssm %>%
@@ -1306,11 +1306,11 @@ estimate_purity = function(in_maf,
   if(missing(in_maf) & missing(in_seg)){
     CN_new = assign_cn_to_ssm(this_sample = sample_id, coding_only = coding_only, assume_diploid = assume_diploid, genes = genes,seg_file_source = seg_file_source,ssh_session=ssh_session)$maf
   }else if(!missing(in_seg)){
-    CN_new = assign_cn_to_ssm(maf_file = in_maf, seg_file = in_seg, seg_file_source = seg_file_source, coding_only = coding_only, genes = genes,ssh_session=ssh_session)$maf
+    CN_new = assign_cn_to_ssm(this_sample = sample_id, maf_file = in_maf, seg_file = in_seg, seg_file_source = seg_file_source, coding_only = coding_only, genes = genes,ssh_session=ssh_session)$maf
   }else{
     # If no seg file was provided and assume_diploid paramtere is set to true,
     if(assume_diploid){
-      CN_new = assign_cn_to_ssm(maf_file = in_maf, assume_diploid = TRUE, coding_only = coding_only, genes = genes,ssh_session=ssh_session)$maf
+      CN_new = assign_cn_to_ssm(this_sample = sample_id, maf_file = in_maf, assume_diploid = TRUE, coding_only = coding_only, genes = genes,ssh_session=ssh_session)$maf
     }
   }
   # Change any homozygous deletions (CN = 0) to 1 for calculation purposes
