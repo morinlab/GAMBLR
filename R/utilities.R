@@ -1831,7 +1831,7 @@ get_gambl_colours = function(classification = "all",
                             "POS" = "#7F055F",
                             "NEG" = "#E5A4CB")
 
-  all_colours[["BL"]] = c("M53-BL" = "#A6CEE3",
+  all_colours[["BL"]] = c("Q53-BL" = "#A6CEE3",
                           "DLBCL-A" = "#721F0F",
                           "IC-BL" = "#45425A",
                           "DGG-BL" = "#E90C8BFF",
