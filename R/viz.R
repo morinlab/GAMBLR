@@ -2762,6 +2762,20 @@ splendidHeatmap = function(this_matrix,
         dplyr::mutate(across(names(max_list), ~ ifelse(.x > max_list[[cur_column()]], max_list[[cur_column()]], .x)))
   }
 
+  # count N of features for every dsample and add it to metadata
+  metadata_df =
+  this_matrix %>%
+    as.data.frame %>%
+    column_to_rownames("Tumor_Sample_Barcode") %>%
+    rowSums %>%
+    as.data.frame %>%
+    `names<-`("N_features") %>%
+    rownames_to_column ("Tumor_Sample_Barcode") %>%
+    base::merge(metadata_df %>%
+                  rownames_to_column ("Tumor_Sample_Barcode"),
+                .) %>%
+    column_to_rownames("Tumor_Sample_Barcode")
+
   my_colours = NULL
   these_names = NULL
   for (i in 1:length(metadataColumns)){
@@ -2930,7 +2944,6 @@ splendidHeatmap = function(this_matrix,
       dplyr::arrange(!!!syms(metadataColumns))
   }
 
-
   # left annotation: stacked feature weights
   ha = rowAnnotation(`feature abundance` = anno_barplot(m, gp = gpar(fill = my_palette[1:length(comparison_groups)+1]),
                                                       bar_width = 1, width = unit(leftStackedWidth, "cm"),
@@ -2938,7 +2951,7 @@ splendidHeatmap = function(this_matrix,
 
   #bottom annotation: tracks indicating metadata
   ha_bottom = HeatmapAnnotation(
-    df = this_is_ordered_df %>% dplyr::select(-splitColumnName),
+    df = this_is_ordered_df %>% dplyr::select(-c(splitColumnName, N_features)),
     col = my_colours,
     simple_anno_size = unit(metadataBarHeight, "mm"),
     gap = unit(0.25 * metadataBarHeight, "mm"),
@@ -2952,12 +2965,8 @@ splendidHeatmap = function(this_matrix,
   names(top_bar_colors[[splitColumnName]]) = names(top_bar_colors[[splitColumnName]]) %>% rev()
 
   ha_top = HeatmapAnnotation(
-    df = this_is_ordered_df %>% dplyr::select(splitColumnName),
-    col = top_bar_colors,
-    simple_anno_size = unit(metadataBarHeight, "mm"),
-    gap = unit(0.25*metadataBarHeight, "mm"),
-    annotation_name_gp = gpar(fontsize = fontSizeGene * 1.5),
-    annotation_legend_param = list(nrow = legend_row, ncol = legend_col, direction = legend_direction)
+    group = anno_block(gp = gpar(fill = top_bar_colors[[1]], fontsize = fontSizeGene * 1.5), labels = groupNames),
+    "N of features" = anno_barplot(this_is_ordered_df$N_features)
   )
 
   splendidHM = ComplexHeatmap::Heatmap(used_for_ordering_df,
@@ -2973,7 +2982,7 @@ splendidHeatmap = function(this_matrix,
                                        bottom_annotation = ha_bottom,
                                        top_annotation = ha_top,
                                        column_split = dplyr::pull(metadata_df[(order(match(rownames(metadata_df), colnames(used_for_ordering_df)))), ], splitColumnName),
-                                       column_title = groupNames)
+                                       column_title = NULL)
 
   draw(splendidHM, heatmap_legend_side = legend_position, annotation_legend_side = legend_position)
 }
