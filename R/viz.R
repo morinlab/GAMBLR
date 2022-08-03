@@ -11,7 +11,7 @@ colour_aliases = list("COO_consensus" = "coo", "COO" = "coo", "DHITsig_consensus
 #' Plot a rainfall plot for one sample. This function takes in MAF data frame, or path to custom MAF file.
 #' If non are specified, the SSM will be obtained though GAMBLR directly.
 #'
-#' @param this_sample_id Sample id for the sample to display. This is the only required argument.
+#' @param this_sample_id Sample id for the sample to display. This is argument is not required if you want a multi-sample plot but is otherwise needed.
 #' @param label_ashm_genes Boolean argument indicating whether the aSHM regions will be labeled or not.
 #' @param projection Specify projection (grch37 or hg38) of mutations. Default is grch37.
 #' @param chromosome Provide one or more chromosomes to plot. The chr prefix can be inconsistent with projection and will be handled.
@@ -19,7 +19,7 @@ colour_aliases = list("COO_consensus" = "coo", "COO" = "coo", "DHITsig_consensus
 #' @param maf_path Specify path to MAF file if it is not already loaded into data frame.
 #' @param zoom_in_region Provide a specific region in the format "chromosome:start-end" to zoom in to a specific region.
 #' @param label_sv Boolean argument to specify whether label SVs or not. Only supported if a specific chromosome or zoom in region are specified.
-#'
+#' @param seq_type Specify one of "genome" or "capture" when relying on the function to obtain mutations from a region (i.e. if you haven't provided a MAF or single sample_id)
 #'
 #' @return a ggplot2 plot. Print it using print() or save it using ggsave()
 #' @export
@@ -31,7 +31,8 @@ colour_aliases = list("COO_consensus" = "coo", "COO" = "coo", "DHITsig_consensus
 #' prettyRainfallPlot("Raji", chromosome = c(3,9), projection = "hg38", label_ashm_genes = FALSE)
 #' prettyRainfallPlot("Raji", zoom_in_region = "8:125252796-135253201", label_sv = TRUE)
 #' prettyRainfallPlot("Raji", chromosome = 6, label_sv = TRUE)
-#'
+#' prettyRainfallPlot( zoom_in_region = "chr3:5,221,286-5,269,723", seq_type="genome") #multi-sample rainfall plot for one gene region
+
 prettyRainfallPlot = function(this_sample_id,
                               label_ashm_genes = TRUE,
                               projection = "grch37",
@@ -39,9 +40,13 @@ prettyRainfallPlot = function(this_sample_id,
                               this_maf,
                               maf_path,
                               zoom_in_region,
+                              seq_type,
                               label_sv = FALSE) {
   if (missing(this_sample_id)) {
-    stop("You must provide a sample_id to plot")
+    warning("No sample_id was provided. Using all mutations in the MAF within your region!")
+    if(missing(zoom_in_region)){
+      stop("Must provide a zoom_in_region to plot when showing data from more than one patient")
+    }
   }
 
   # allow user to specify chromosome prefix inconsistent with chromosome names
@@ -51,6 +56,7 @@ prettyRainfallPlot = function(this_sample_id,
 
   # allow to zoom in to a specific region
   if (!missing(zoom_in_region)) {
+    region = zoom_in_region
     zoom_in_region = region_to_chunks(zoom_in_region)
     zoom_in_region$chromosome = standardize_chr_prefix(incoming_vector = zoom_in_region$chromosome,
                                                        projection = projection)
@@ -112,17 +118,35 @@ prettyRainfallPlot = function(this_sample_id,
 
   # get ssm for the requested sample
   if (!missing(this_maf)) {
+    if(missing(this_sample_id)){
+      these_ssm=this_maf
+      this_sample_id = "all samples"
+    }else{
     message ("Using the suppplied MAF df to obrain ser of SSM for the specified sample ...")
     these_ssm = this_maf %>%
-      filter(Tumor_Sample_Barcode %in% this_sample_id)
+      dplyr::filter(Tumor_Sample_Barcode %in% this_sample_id)
+    }
   } else if (!missing (maf_path)) {
     message ("Path to custom MAF file was provided, reading SSM using the custom path ...")
-    this_maf = read_tsv(maf_path) %>%
-      filter(Tumor_Sample_Barcode %in% this_sample_id)
-  } else {
+    
+    this_maf = read_tsv(maf_path)
+    if(!missing(this_sample_id)){
+      this_maf = this_maf %>% dplyr::filter(Tumor_Sample_Barcode %in% this_sample_id)
+    }else{
+      this_sample_id = "all samples"
+    }
+  } else if(!missing(this_sample_id)) {
     message ("MAF df or path to custom MAF file was not provided, getting SSM using GAMBLR ...")
     these_ssm = get_ssm_by_sample(this_sample_id,
                                   projection = projection)
+  }else if(!missing(seq_type)){
+    if(missing(this_sample_id)){
+      this_sample_id = "all samples"
+    }
+    message(paste("Will use all mutations for",seq_type, "in this region:",zoom_in_region))
+    these_ssm = get_ssm_by_region(region = region,seq_type = seq_type,projection=projection,
+                                  maf_columns = c("Hugo_Symbol","Chromosome", "Start_Position", "End_Position", "Tumor_Sample_Barcode", "t_alt_count","Reference_Allele","Tumor_Seq_Allele2"),
+                                  maf_column_types = c("c","c","i","i","c","i","c","c"))
   }
 
   # do rainfall calculation using lag
