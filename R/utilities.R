@@ -3570,3 +3570,37 @@ cleanup_maf = function(maf_df){
 
   return(maf_df)
 }
+
+#' Complement maf with missing samples.
+#'
+#' @param incoming_maf The initial MAF data frame to be supplemented with missing samples.
+#' @param these_samples_metadata The metadata data frame that contains Tumor_Sample_Barcode column with ids to be present in the complemented MAF.
+#'
+#' @return maf_df with complemented Tumor_Sample_Barcode and other columns ready to be used downstream
+#' @export
+#'
+#' @examples
+#' small_maf = get_coding_ssm(limit_cohort = "dlbcl_reddy", seq_type = "capture") %>% dplyr::filter(Hugo_Symbol=="MYC")
+#' reddy_meta = get_gambl_metadata(seq_type_filter = "capture") %>% dplyr::filter(cohort=="dlbcl_reddy")
+#' complete_maf = supplement_maf(incoming_maf = small_maf, these_samples_metadata = reddy_meta)
+#'
+supplement_maf <- function(incoming_maf,
+                           these_samples_metadata){
+  missing_sample_ids = setdiff(these_samples_metadata$Tumor_Sample_Barcode,
+                               incoming_maf$Tumor_Sample_Barcode)
+  missing_sample_maf = incoming_maf %>%
+    dplyr::filter(Tumor_Sample_Barcode == "Imaginary Sample ID") %>%
+    add_row(Tumor_Sample_Barcode = missing_sample_ids,
+           Hugo_Symbol = "GARBAGE",
+           Chromosome = ifelse(stringr::str_detect(incoming_maf$Chromosome[1],
+                                                   "chr"),
+                               "chr1",
+                               "1"),
+           Start_Position = 1,
+           End_Position = 1,
+           Variant_Classification = "Missense_Mutation"
+           )
+  full_maf = rbind(incoming_maf,
+                   missing_sample_maf)
+  return(full_maf)
+}
