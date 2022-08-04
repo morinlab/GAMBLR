@@ -1008,7 +1008,7 @@ maf_to_custom_track = function(maf_data,
   }
   samples_coloured = left_join(meta, rgb_df)
   maf_bed = maf_data %>%
-    mutate(score = 0, strand = "+", end = end + 1, start1 = start, end1 = end)
+    mutate(score = 0, strand = "+", start1 = start-1,start=start1, end1 = end)
 
   maf_coloured = left_join(maf_bed, samples_coloured, by = "sample_id") %>%
     dplyr::select(-lymphgen) %>%
