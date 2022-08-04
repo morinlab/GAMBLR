@@ -64,7 +64,8 @@ write_sample_set_hash = function(update=TRUE,new_sample_sets_df){
 #'
 #' @param these_samples_metadata Optionally provide a metadata table or any data frame with a column named sample_id that has been subset to the samples you're working with
 #' @param these_samples Optionally provide a vector of sample_id you are working with
-#' @param sample_set_name Optionaly provide the name of a sample set in GAMBL and the function will load the samples from that set and provide the hash
+#' @param sample_set_name Optionally provide the name of a sample set in GAMBL and the function will load the samples from that set and provide the hash
+#' @param sample_sets_df Optionally provide a data frame of the sample sets instead of relying on/loading the local file from the GAMBL repo
 #' @return The md5 hash of the ordered set of sample_id
 #' @export
 #' @import digest
