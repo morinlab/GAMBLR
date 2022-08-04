@@ -3287,7 +3287,7 @@ cnvKompare = function(patient_id,
   concordant_cytobands =
     for_output %>%
     # output-specific
-    select(ID, cb.chromosome, cb.start, cb.end, name, score) %>%
+    select(ID, cb.chromosome, cb.start, cb.end, name, score, log.ratio) %>%
     dplyr::filter(name %in% names(overall_concordance[overall_concordance == "YES"]))
 
   output$concordant_cytobands = concordant_cytobands
