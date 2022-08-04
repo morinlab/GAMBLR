@@ -51,10 +51,10 @@ write_sample_set_hash = function(update=TRUE,new_sample_sets_df){
     message(paste("Will log digests for",length(set_names),"sample sets"))
     md5_values= c()
     for(set_name in set_names){
-      #print(set_name)
+      print(set_name)
       this_md5 = get_samples_md5_hash(sample_set_name=set_name)
       md5_values=c(md5_values,this_md5)
-      #print(this_md5)
+      print(this_md5)
     }
     all_md5 = data.frame(sample_set = set_names,md5_digest=md5_values)
     write_tsv(all_md5,file=md5_file)
@@ -73,12 +73,13 @@ write_sample_set_hash = function(update=TRUE,new_sample_sets_df){
 #' @examples
 get_samples_md5_hash = function(these_samples_metadata,these_samples,sample_set_name,sample_sets_df){
   if(!missing(these_samples_metadata)){
-    digested = select(these_samples_metadata,sample_id) %>% 
+    collapsed = select(these_samples_metadata,sample_id) %>% 
       arrange() %>% 
-      pull() %>% 
-      digest::digest(serialize = FALSE)
+      pull() %>% paste(.,collapse=",")
+    
+      digested = digest::digest(collapsed,serialize = FALSE)
   }else if(!missing(these_samples)){
-    digested = digest::digest(these_samples[order(these_samples)],serialize=FALSE)
+    digested = digest::digest(paste(these_samples[order(these_samples)],collapse=","),serialize=FALSE)
   }else if(!missing(sample_set_name)){
     
     #UNCOMMENTING THAT PRINT STATMENT MAKES IT WORK! :huh:
@@ -90,10 +91,10 @@ get_samples_md5_hash = function(these_samples_metadata,these_samples,sample_set_
       sample_sets = sample_sets_df
     }
     setname = as.symbol(sample_set_name)
-    digested = dplyr::filter(sample_sets,!!setname==1) %>% 
+    collapsed = dplyr::filter(sample_sets,!!setname==1) %>% 
       select(sample_id) %>%
-      arrange() %>% pull() %>%
-      digest::digest(serialize=FALSE)
+      arrange() %>% pull() %>% paste(.,collapse=",")
+    digested = digest::digest(collapsed,serialize=FALSE)
   }
   return(digested)
 }
