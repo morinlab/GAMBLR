@@ -831,7 +831,8 @@ maf_to_custom_track = function(maf_data,
 #'
 #' @param sample_table A data frame with sample_id as the first column.
 #' @param write_to_file Boolean statement that outputs tsv file if TRUE, default is FALSE.
-#' @param join_with_full_metadata Join with all columns of meta data, default is FALSE.
+#' @param join_with_metadata Join with all columns of meta data, default is FALSE.
+#' @param user_provided_metadata Optional argument to use a user specified metadata df, overwrites get_gambl_metadata in join_with_full_metadata.
 #' @param case_set Optional short name for a pre-defined set of cases.
 #' @param sbs_manipulation Optional variable for transforming sbs values (e.g log, scale).
 #' @param seq_type_filter Filtering criteria, default is genomes.
@@ -842,11 +843,12 @@ maf_to_custom_track = function(maf_data,
 #' @import tidyverse config
 #'
 #' @examples
-#' everything_collated = collate_results(join_with_full_metadata = TRUE)
+#' everything_collated = collate_results(join_with_metadata = TRUE)
 #'
 collate_results = function(sample_table,
                            write_to_file = FALSE,
-                           join_with_full_metadata = FALSE,
+                           join_with_metadata = FALSE,
+                           user_provided_metadata,
                            case_set,
                            sbs_manipulation = "",
                            seq_type_filter = "genome",
@@ -889,18 +891,24 @@ collate_results = function(sample_table,
     write_tsv(sample_table, file = output_file)
   }
   #convenience columns bringing together related information
-  if(join_with_full_metadata){
-  full_meta = get_gambl_metadata(seq_type_filter = seq_type_filter)
-  full_table = left_join(full_meta, sample_table)
-  full_table = full_table %>%
-    mutate("MYC_SV_any" = case_when(ashm_MYC > 3 ~ "POS", manta_MYC_sv == "POS" ~ "POS", ICGC_MYC_sv == "POS" ~ "POS", myc_ba == "POS" ~ "POS", TRUE ~ "NEG"))
+  if(join_with_metadata){
+    if(!missing(user_provided_metadata)){
+      meta_data = user_provided_metadata
+    }else{
+      meta_data = get_gambl_metadata(seq_type_filter = seq_type_filter)
+    }
 
-  full_table = full_table %>%
-    mutate("BCL2_SV_any" = case_when(ashm_BCL2 > 3 ~ "POS", manta_BCL2_sv == "POS" ~ "POS", ICGC_BCL2_sv == "POS" ~ "POS", bcl2_ba == "POS" ~ "POS", TRUE ~ "NEG"))
+    full_table = left_join(meta_data, sample_table)
 
-  full_table =full_table %>%
-    mutate("DoubleHitBCL2" = ifelse(BCL2_SV_any == "POS" & MYC_SV_any == "POS", "Yes", "No"))
-  return(full_table)
+    full_table = full_table %>%
+      mutate("MYC_SV_any" = case_when(ashm_MYC > 3 ~ "POS", manta_MYC_sv == "POS" ~ "POS", ICGC_MYC_sv == "POS" ~ "POS", myc_ba == "POS" ~ "POS", TRUE ~ "NEG"))
+
+    full_table = full_table %>%
+      mutate("BCL2_SV_any" = case_when(ashm_BCL2 > 3 ~ "POS", manta_BCL2_sv == "POS" ~ "POS", ICGC_BCL2_sv == "POS" ~ "POS", bcl2_ba == "POS" ~ "POS", TRUE ~ "NEG"))
+
+    full_table =full_table %>%
+      mutate("DoubleHitBCL2" = ifelse(BCL2_SV_any == "POS" & MYC_SV_any == "POS", "Yes", "No"))
+    return(full_table)
   }
   return(sample_table)
 }
