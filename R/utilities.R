@@ -28,10 +28,10 @@ write_sample_set_hash = function(update=TRUE,new_sample_sets_df){
     #only compare for sample sets that we have in the current file
     md5_values= c()
     for(set_name in set_names){
-      #print(set_name)
+      
       this_md5 = get_samples_md5_hash(sample_set_name=set_name,sample_sets_df = new_sample_sets_df)
       md5_values=c(md5_values,this_md5)
-      #print(this_md5)
+      
     }
     all_md5 = data.frame(sample_set = set_names,new_md5_digest=md5_values)
     oldnew = right_join(original_digests,all_md5,by="sample_set")
@@ -51,10 +51,8 @@ write_sample_set_hash = function(update=TRUE,new_sample_sets_df){
     message(paste("Will log digests for",length(set_names),"sample sets"))
     md5_values= c()
     for(set_name in set_names){
-      print(set_name)
       this_md5 = get_samples_md5_hash(sample_set_name=set_name)
       md5_values=c(md5_values,this_md5)
-      print(this_md5)
     }
     all_md5 = data.frame(sample_set = set_names,md5_digest=md5_values)
     write_tsv(all_md5,file=md5_file)
@@ -66,14 +64,15 @@ write_sample_set_hash = function(update=TRUE,new_sample_sets_df){
 #'
 #' @param these_samples_metadata Optionally provide a metadata table or any data frame with a column named sample_id that has been subset to the samples you're working with
 #' @param these_samples Optionally provide a vector of sample_id you are working with
-#' @param sample_set_name Optionall provide the name of a sample set in GAMBL and the function will load the samples from that set and provide the hash
+#' @param sample_set_name Optionaly provide the name of a sample set in GAMBL and the function will load the samples from that set and provide the hash
 #' @return The md5 hash of the ordered set of sample_id
 #' @export
+#' @import digest
 #'
 #' @examples
 get_samples_md5_hash = function(these_samples_metadata,these_samples,sample_set_name,sample_sets_df){
   if(!missing(these_samples_metadata)){
-    collapsed = select(these_samples_metadata,sample_id) %>% 
+    collapsed = dplyr::select(these_samples_metadata,sample_id) %>% 
       arrange() %>% 
       pull() %>% paste(.,collapse=",")
     
@@ -81,8 +80,6 @@ get_samples_md5_hash = function(these_samples_metadata,these_samples,sample_set_
   }else if(!missing(these_samples)){
     digested = digest::digest(paste(these_samples[order(these_samples)],collapse=","),serialize=FALSE)
   }else if(!missing(sample_set_name)){
-    
-    #UNCOMMENTING THAT PRINT STATMENT MAKES IT WORK! :huh:
     #load the sample set table and pull the samples based on its contents and the name provided
     sample_sets_file = paste0(config::get("repo_base"),"data/metadata/level3_samples_subsets.tsv")
     if(missing(sample_sets_df)){
@@ -92,7 +89,7 @@ get_samples_md5_hash = function(these_samples_metadata,these_samples,sample_set_
     }
     setname = as.symbol(sample_set_name)
     collapsed = dplyr::filter(sample_sets,!!setname==1) %>% 
-      select(sample_id) %>%
+      dplyr::select(sample_id) %>%
       arrange() %>% pull() %>% paste(.,collapse=",")
     digested = digest::digest(collapsed,serialize=FALSE)
   }
