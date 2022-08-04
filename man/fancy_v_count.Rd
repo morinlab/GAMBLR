@@ -60,7 +60,7 @@ fancy_v_count(
 
 \item{from_flatfile}{If set to true the function will use flat files instead of the database.}
 
-\item{use_augmented}{Boolean statement if to use augmented maf, default is FALSE.}
+\item{use_augmented}{Boolean statement if to use augmented maf, default is TRUE.}
 }
 \value{
 plot as ggplot object.

@@ -10,7 +10,6 @@ fancy_qc_plot(
   filter_pathology,
   seq_type = "genome",
   metadata,
-  sort_by,
   plot_data,
   fill_by,
   comparison_samples,
@@ -33,8 +32,6 @@ fancy_qc_plot(
 
 \item{metadata}{Optional, user can provide a metadata df to subset sample IDs from.}
 
-\item{sort_by}{Plotting parameter, set sorting column for bar plots.}
-
 \item{plot_data}{Plotting parameter, define the data type to be plotted.}
 
 \item{fill_by}{Plotting parameter, Set fill for bar plot, can be pathology, cohort, etc.}
@@ -52,6 +49,8 @@ fancy_qc_plot(
 \item{y_axis_lab}{Plotting parameter, label of y-axis.}
 
 \item{return_plotdata}{Optional parameter, if set to TRUE a list of acceptable data types for plotting will be returned, and nothing else.}
+
+\item{sort_by}{Plotting parameter, set sorting column for bar plots.}
 }
 \value{
 plot as ggplot object.
@@ -60,16 +59,15 @@ plot as ggplot object.
 Plot for visualizing QC metrics and allowing for grouping by different metadata columns.
 }
 \examples{
-#plot QC metrics (Average base Quality for all BL samples), compared to the same metric for all FL cases (pathology).
-qc_avg_basequality = fancy_qc_plot(filter_pathology = "FL",
-                                   filter_cohort = "DLBCL_LSARP_Trios",
-                                   filter_comp_cohort = "BL_Pediatric",
-                                   filter_comp_pathology = "BL",
-                                   sort_by = "AverageBaseQuality",
-                                   plot_data = "AverageBaseQuality",
-                                   fill_by = "pathology",
-                                   plot_title = "Average Base Quality",
-                                   y_axis_lab = "Base Quality",
-                                   seq_type = "genome")
+fancy_qc_plot_new(filter_pathology = "FL",
+                 filter_cohort = "FL_Kridel",
+                 filter_comp_pathology = "BL",
+                 filter_comp_cohort = "BL_Pediatric",
+                 plot_data = "AverageBaseQuality",
+                 fill_by = "pathology",
+                 plot_subtitle = "Example Plot",
+                 y_axis_lab = "Average Base Quality",
+                 plot_title = "A. Base Quality For FL_Kridel vs. BL_Pediatric",
+                 seq_type = "genome")
 
 }

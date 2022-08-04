@@ -21,6 +21,8 @@ fancy_ideogram(
   cn_col_seq = 7,
   plot_title = paste0(this_sample),
   plot_subtitle = "Genome-wide Ideogram (grch37).",
+  intersect_regions = FALSE,
+  some_regions,
   include_ssm = TRUE,
   ssm_count = TRUE,
   coding_only = FALSE,
@@ -56,6 +58,12 @@ fancy_ideogram(
 \item{end_col_seq}{Index of column with copy number end coordinates (to be used with either maf_data or maf_path).}
 
 \item{plot_title}{Title of plot (default to sample ID).}
+
+\item{plot_subtitle}{Optional argument for plot subtitle.}
+
+\item{intersect_regions}{Optional boolean argument, if set to TRUE, the function excpects some_regions to perform an intersect (GenomicRanges) with cn_states.}
+
+\item{some_regions}{Bed-like df with regions for subsetting incoming cn_sates to. Columns should be "chrom", "start", "end".}
 
 \item{include_ssm}{Set to TRUE to plot ssms (dels and ins).}
 
