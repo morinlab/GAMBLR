@@ -50,7 +50,7 @@ check_host = function(auto_connect=FALSE){
 #' @export
 #'
 #' @examples
-count_ssm_by_region = function(region,chromosome,start,end,these_samples_metadata,count_by,seq_type="genome",ssh_session){
+count_ssm_by_region = function(region,chromosome,start,end,these_samples_metadata,count_by,seq_type="genome",ssh_session=NULL){
   if(missing(these_samples_metadata)){
     these_samples_metadata = get_gambl_metadata(seq_type_filter=seq_type)
   }
