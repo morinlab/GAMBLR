@@ -2719,6 +2719,7 @@ prettyForestPlot = function(maf,
 #' @param numericMetadataColumns A vector containing the numeric columns you want to plot below.
 #' @param numericMetadataMax A numeric vector of cutoffs to apply to numeric columns above.
 #' @param custom_colours Provide named vector (or named list of vectors) containing custom annotation colours if you do not want to use standartized pallette.
+#' @param prioritize_ordering_on_numeric Logical argument specifying whether to sort on numeric metadata first or other metadata columns. Default is TRUE (sort on numeric metadata, then on other columns).
 #' @param legend_direction Optional argument to indicate whether legend should be in horizontal (default) or vertical position.
 #' @param legend_position Optional argument to indicate where the legend should be drawn. The default is set to bottom, but can also accept top, right, and left.
 #' @param legend_row Fiddle with these to widen or narrow your legend (default 3).
@@ -2752,6 +2753,7 @@ splendidHeatmap = function(this_matrix,
                            metadataColumns = c("pathology"),
                            numericMetadataColumns = NULL,
                            numericMetadataMax = NULL,
+                           prioritize_ordering_on_numeric = TRUE,
                            custom_colours = NULL,
                            legend_direction = "horizontal",
                            legend_position = "bottom",
@@ -2784,15 +2786,29 @@ splendidHeatmap = function(this_matrix,
         dplyr::mutate(across(names(max_list), ~ ifelse(.x > max_list[[cur_column()]], max_list[[cur_column()]], .x)))
   }
 
+  # count N of features for every dsample and add it to metadata
+  metadata_df =
+  this_matrix %>%
+    as.data.frame %>%
+    column_to_rownames("Tumor_Sample_Barcode") %>%
+    rowSums %>%
+    as.data.frame %>%
+    `names<-`("N_features") %>%
+    rownames_to_column ("Tumor_Sample_Barcode") %>%
+    base::merge(metadata_df %>%
+                  rownames_to_column ("Tumor_Sample_Barcode"),
+                .) %>%
+    column_to_rownames("Tumor_Sample_Barcode")
+
   my_colours = NULL
   these_names = NULL
   for (i in 1:length(metadataColumns)){
     this_metadata_column = get_gambl_colours(metadataColumns[i])
-    if (sum(is.na(names(this_metadata_column[unique(these_samples_metadata[,metadataColumns[i]])]))) <= 1 &
-       length(unique(these_samples_metadata[,metadataColumns[i]])) > 1){
-        these_names = c(these_names, metadataColumns[i])
-        my_colours = append(my_colours, list(c(this_metadata_column, "NA" = "#BDBDC1FF")))
-        names(my_colours) = these_names
+    if (sum(is.na(names(this_metadata_column[unlist(c(unique(these_samples_metadata[,metadataColumns[i]])))]))) <= 1 &
+        nrow(unique(these_samples_metadata[,metadataColumns[i]])) > 1){
+      these_names = c(these_names, metadataColumns[i])
+      my_colours = append(my_colours, list(c(this_metadata_column, "NA" = "#BDBDC1FF")))
+      names(my_colours) = these_names
     }
   }
 
@@ -2916,14 +2932,41 @@ splendidHeatmap = function(this_matrix,
 
   m = t(apply(STACKED, 1, function(x) x/sum(x)))
 
-  used_for_ordering_df = t(base::merge(mat_2 %>%
+  if(prioritize_ordering_on_numeric & ! is.null(numericMetadataColumns)){ # numeric metadata is provided and is prioritized for column sorting
+    used_for_ordering_df = t(base::merge(mat_2 %>%
     dplyr::select(-splitColumnName), metadata_df %>%
     rownames_to_column(., "Tumor_Sample_Barcode"), by = "Tumor_Sample_Barcode") %>%
     column_to_rownames(., var = "Tumor_Sample_Barcode") %>%
-    dplyr::arrange(!!!syms(metadataColumns), desc(!!!syms(numericMetadataColumns))) %>%
-    dplyr::select(FEATURES$Feature))
+      dplyr::arrange(desc(!!!syms(numericMetadataColumns)),
+        !!!syms(metadataColumns)) %>%
+      dplyr::select(FEATURES$Feature))
 
-  used_for_ordering <- colnames(used_for_ordering_df)
+    this_is_ordered_df = metadata_df[ (order(match(rownames(metadata_df), colnames(used_for_ordering_df)))), ] %>%
+      dplyr::arrange(desc(!!!syms(numericMetadataColumns)),
+        !!!syms(metadataColumns))
+  }else if(! is.null(numericMetadataColumns)){ # numeric metadata is provided, but is not prioritized for column sorting
+    used_for_ordering_df = t(base::merge(mat_2 %>%
+    dplyr::select(-splitColumnName), metadata_df %>%
+    rownames_to_column(., "Tumor_Sample_Barcode"), by = "Tumor_Sample_Barcode") %>%
+    column_to_rownames(., var = "Tumor_Sample_Barcode") %>%
+      dplyr::arrange(!!!syms(metadataColumns),
+        desc(!!!syms(numericMetadataColumns))) %>%
+      dplyr::select(FEATURES$Feature))
+
+    this_is_ordered_df = metadata_df[ (order(match(rownames(metadata_df), colnames(used_for_ordering_df)))), ] %>%
+      dplyr::arrange(!!!syms(metadataColumns),
+        desc(!!!syms(numericMetadataColumns)))
+  }else{ # no numeric metadata is proveded to plot
+    used_for_ordering_df = t(base::merge(mat_2 %>%
+    dplyr::select(-splitColumnName), metadata_df %>%
+    rownames_to_column(., "Tumor_Sample_Barcode"), by = "Tumor_Sample_Barcode") %>%
+    column_to_rownames(., var = "Tumor_Sample_Barcode") %>%
+      dplyr::arrange(!!!syms(metadataColumns)) %>%
+      dplyr::select(FEATURES$Feature))
+
+    this_is_ordered_df = metadata_df[ (order(match(rownames(metadata_df), colnames(used_for_ordering_df)))), ] %>%
+      dplyr::arrange(!!!syms(metadataColumns))
+  }
 
   # left annotation: stacked feature weights
   ha = rowAnnotation(`feature abundance` = anno_barplot(m, gp = gpar(fill = my_palette[1:length(comparison_groups)+1]),
@@ -2931,26 +2974,24 @@ splendidHeatmap = function(this_matrix,
                                                       axis_param = list(side = legend_position, labels_rot = 0)))
 
   #bottom annotation: tracks indicating metadata
-  ha_bottom = HeatmapAnnotation(df = metadata_df[ (order(match(rownames(metadata_df), used_for_ordering))), ] %>%
-    dplyr::arrange(!!!syms(metadataColumns), desc(!!!syms(numericMetadataColumns))) %>%
-    dplyr::select(-splitColumnName), col = my_colours,
-                                     simple_anno_size = unit(metadataBarHeight, "mm"),
-                                     gap = unit(0.25 * metadataBarHeight, "mm"),
-                                     annotation_name_gp = gpar(fontsize = metadataBarFontsize),
-                                     annotation_legend_param = list(nrow = legend_row, ncol = legend_col, direction = legend_direction))
+  ha_bottom = HeatmapAnnotation(
+    df = this_is_ordered_df %>% dplyr::select(-c(splitColumnName, N_features)),
+    col = my_colours,
+    simple_anno_size = unit(metadataBarHeight, "mm"),
+    gap = unit(0.25 * metadataBarHeight, "mm"),
+    annotation_name_gp = gpar(fontsize = metadataBarFontsize),
+    annotation_legend_param = list(nrow = legend_row, ncol = legend_col, direction = legend_direction)
+  )
 
   #top annotation: groups of interest to split on
   top_bar_colors = list(my_colours[[splitColumnName]] %>% rev)
   names(top_bar_colors) = splitColumnName
   names(top_bar_colors[[splitColumnName]]) = names(top_bar_colors[[splitColumnName]]) %>% rev()
 
-  ha_top = HeatmapAnnotation(df = metadata_df[ (order(match(rownames(metadata_df), used_for_ordering))), ] %>%
-    dplyr::arrange(!!!syms(metadataColumns), desc(!!!syms(numericMetadataColumns))) %>%
-    dplyr::select(splitColumnName), col = top_bar_colors,
-                                    simple_anno_size = unit(metadataBarHeight, "mm"),
-                                    gap = unit(0.25*metadataBarHeight, "mm"),
-                                    annotation_name_gp = gpar(fontsize = fontSizeGene * 1.5),
-                                    annotation_legend_param = list(nrow = legend_row, ncol = legend_col, direction = legend_direction))
+  ha_top = HeatmapAnnotation(
+    group = anno_block(gp = gpar(fill = top_bar_colors[[1]], fontsize = fontSizeGene * 1.5), labels = groupNames),
+    "N of features" = anno_barplot(this_is_ordered_df$N_features)
+  )
 
   splendidHM = ComplexHeatmap::Heatmap(used_for_ordering_df,
                                        col = my_palette,
@@ -2964,8 +3005,8 @@ splendidHeatmap = function(this_matrix,
                                        left_annotation = ha,
                                        bottom_annotation = ha_bottom,
                                        top_annotation = ha_top,
-                                       column_split = dplyr::pull(metadata_df[(order(match(rownames(metadata_df), used_for_ordering))), ], splitColumnName),
-                                       column_title = groupNames)
+                                       column_split = dplyr::pull(metadata_df[(order(match(rownames(metadata_df), colnames(used_for_ordering_df)))), ], splitColumnName),
+                                       column_title = NULL)
 
   draw(splendidHM, heatmap_legend_side = legend_position, annotation_legend_side = legend_position)
 }

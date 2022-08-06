@@ -255,11 +255,11 @@ get_coding_ssm_status = function(gene_symbols,
       dplyr::filter(Variant_Classification %in% coding_class)
   }
 
-  if(!missing(maf_data) && !is.null(maf_path)){
-    maf_data = get_coding_ssm(projection = projection, seq_type = seq_type, from_flatfile = from_flatfile, augmented = augmented, min_read_support = 3, basic_columns = FALSE, include_silent = include_silent)
+  if(missing(maf_data) & is.null(maf_path)){
+    coding_ssm = get_coding_ssm(projection = projection, seq_type = seq_type, from_flatfile = from_flatfile, augmented = augmented, min_read_support = 3, basic_columns = FALSE, include_silent = include_silent)
   }
 
-  coding_ssm = maf_data %>%
+  coding_ssm = coding_ssm %>%
     dplyr::filter(Variant_Classification %in% coding_class)
 
   coding = coding_ssm %>%
@@ -1411,11 +1411,11 @@ estimate_purity = function(in_maf,
   if(missing(in_maf) & missing(in_seg)){
     CN_new = assign_cn_to_ssm(this_sample = sample_id, coding_only = coding_only, assume_diploid = assume_diploid, genes = genes,seg_file_source = seg_file_source,ssh_session=ssh_session)$maf
   }else if(!missing(in_seg)){
-    CN_new = assign_cn_to_ssm(maf_file = in_maf, seg_file = in_seg, seg_file_source = seg_file_source, coding_only = coding_only, genes = genes,ssh_session=ssh_session)$maf
+    CN_new = assign_cn_to_ssm(this_sample = sample_id, maf_file = in_maf, seg_file = in_seg, seg_file_source = seg_file_source, coding_only = coding_only, genes = genes,ssh_session=ssh_session)$maf
   }else{
     # If no seg file was provided and assume_diploid paramtere is set to true,
     if(assume_diploid){
-      CN_new = assign_cn_to_ssm(maf_file = in_maf, assume_diploid = TRUE, coding_only = coding_only, genes = genes,ssh_session=ssh_session)$maf
+      CN_new = assign_cn_to_ssm(this_sample = sample_id, maf_file = in_maf, assume_diploid = TRUE, coding_only = coding_only, genes = genes,ssh_session=ssh_session)$maf
     }
   }
   # Change any homozygous deletions (CN = 0) to 1 for calculation purposes
@@ -1936,7 +1936,7 @@ get_gambl_colours = function(classification = "all",
                             "POS" = "#7F055F",
                             "NEG" = "#E5A4CB")
 
-  all_colours[["BL"]] = c("M53-BL" = "#A6CEE3",
+  all_colours[["BL"]] = c("Q53-BL" = "#A6CEE3",
                           "DLBCL-A" = "#721F0F",
                           "IC-BL" = "#45425A",
                           "DGG-BL" = "#E90C8BFF",
@@ -1944,7 +1944,6 @@ get_gambl_colours = function(classification = "all",
                           "DLBCL-C" = "#C41230")
 
   all_colours[["FL"]] = c(dFL = "#99C1B9", cFL = "#D16666", DLBCL = "#479450")
-  
   
   all_colours[["lymphgenerator"]] = c("MP3"="#5B8565",
                                       "EGB" = "#98622A",
@@ -3570,4 +3569,38 @@ cleanup_maf = function(maf_df){
     mutate(Protein_position = as.numeric(as.character(Protein_position)))
 
   return(maf_df)
+}
+
+#' Complement maf with missing samples.
+#'
+#' @param incoming_maf The initial MAF data frame to be supplemented with missing samples.
+#' @param these_samples_metadata The metadata data frame that contains Tumor_Sample_Barcode column with ids to be present in the complemented MAF.
+#'
+#' @return maf_df with complemented Tumor_Sample_Barcode and other columns ready to be used downstream
+#' @export
+#'
+#' @examples
+#' small_maf = get_coding_ssm(limit_cohort = "dlbcl_reddy", seq_type = "capture") %>% dplyr::filter(Hugo_Symbol=="MYC")
+#' reddy_meta = get_gambl_metadata(seq_type_filter = "capture") %>% dplyr::filter(cohort=="dlbcl_reddy")
+#' complete_maf = supplement_maf(incoming_maf = small_maf, these_samples_metadata = reddy_meta)
+#'
+supplement_maf <- function(incoming_maf,
+                           these_samples_metadata){
+  missing_sample_ids = setdiff(these_samples_metadata$Tumor_Sample_Barcode,
+                               incoming_maf$Tumor_Sample_Barcode)
+  missing_sample_maf = incoming_maf %>%
+    dplyr::filter(Tumor_Sample_Barcode == "Imaginary Sample ID") %>%
+    add_row(Tumor_Sample_Barcode = missing_sample_ids,
+           Hugo_Symbol = "GARBAGE",
+           Chromosome = ifelse(stringr::str_detect(incoming_maf$Chromosome[1],
+                                                   "chr"),
+                               "chr1",
+                               "1"),
+           Start_Position = 1,
+           End_Position = 1,
+           Variant_Classification = "Missense_Mutation"
+           )
+  full_maf = rbind(incoming_maf,
+                   missing_sample_maf)
+  return(full_maf)
 }
