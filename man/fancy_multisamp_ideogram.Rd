@@ -10,10 +10,9 @@ fancy_multisamp_ideogram(
   plot_sub = "grch37",
   chr_anno_dist = 3,
   chr_select = paste0("chr", c(1:22)),
+  include_cn2 = FALSE,
   kompare = FALSE,
   concordance = TRUE,
-  cn_thresholds = data.frame(cn_state = c(0:14), low_thresh = c(0:14), high_thresh =
-    c(1:15)),
   coding_only = FALSE,
   from_flatfile = TRUE,
   use_augmented_maf = TRUE
@@ -30,11 +29,11 @@ fancy_multisamp_ideogram(
 
 \item{chr_select}{Optional parameter to subset plot to specific chromosomes. Default value is chr1-22.}
 
+\item{include_cn2}{Set to TRUE for plotting CN states == 2.}
+
 \item{kompare}{Boolean statement, set to TRUE to call cnvKompare on the selected samples for plotting concordant (or discordant) cn segments across selected chromosomes.}
 
 \item{concordance}{Boolean parameter to be used when kompare = TRUE. Default is TRUE, to plot discordant segments, set parameter to FALSE.}
-
-\item{cn_thresholds}{Optional parameter for specifying thresholds for absolut CN interpretation (from log.ratio value).}
 
 \item{coding_only}{Optional. Set to TRUE to restrict to plotting only coding mutations.}
 
