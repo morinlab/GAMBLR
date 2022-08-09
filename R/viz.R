@@ -3891,9 +3891,9 @@ fancy_ideogram = function(this_sample,
 #' @param plot_sub Subtitle of plot.
 #' @param chr_anno_dist Optional parameter to adjust chromosome annotations, default value is 3, increase to adjust annotations to left.
 #' @param chr_select Optional parameter to subset plot to specific chromosomes. Default value is chr1-22.
+#' @param include_cn2 Set to TRUE for plotting CN states == 2.
 #' @param kompare Boolean statement, set to TRUE to call cnvKompare on the selected samples for plotting concordant (or discordant) cn segments across selected chromosomes.
 #' @param concordance Boolean parameter to be used when kompare = TRUE. Default is TRUE, to plot discordant segments, set parameter to FALSE.
-#' @param cn_thresholds Optional parameter for specifying thresholds for absolut CN interpretation (from log.ratio value).
 #' @param coding_only Optional. Set to TRUE to restrict to plotting only coding mutations.
 #' @param from_flatfile If set to true the function will use flat files instead of the database.
 #' @param use_augmented Boolean statement if to use augmented maf, default is FALSE.
@@ -3918,9 +3918,9 @@ fancy_multisamp_ideogram = function(these_sample_ids,
                                     plot_sub = "grch37",
                                     chr_anno_dist = 3,
                                     chr_select = paste0("chr", c(1:22)),
+                                    include_cn2 = FALSE,
                                     kompare = FALSE,
                                     concordance = TRUE,
-                                    cn_thresholds = data.frame(cn_state = c(0:14), low_thresh = c (0:14), high_thresh = c(1:15)),
                                     coding_only = FALSE,
                                     from_flatfile = TRUE,
                                     use_augmented_maf = TRUE){
@@ -3977,32 +3977,14 @@ fancy_multisamp_ideogram = function(these_sample_ids,
 
     #transform log.ratio to CN states
     cnv_cord$CN_tmp = 2*2^cnv_cord$log.ratio
-
-    #transform log.ratio transformed CN states to absolute CN states.
-    cnv_cord$CN <- rep(NA, nrow(cnv_cord))
-    cnv_cord[cnv_cord$CN_tmp < cn_thresholds$low_thresh[[2]], ][, "CN"] <- "0"
-    cnv_cord[cnv_cord$CN_tmp >= cn_thresholds$low_thresh[[2]] & cnv_cord$CN_tmp < cn_thresholds$high_thresh[[2]], ][, "CN"] <- "1"
-    cnv_cord[cnv_cord$CN_tmp >= cn_thresholds$low_thresh[[3]] & cnv_cord$CN_tmp < cn_thresholds$high_thresh[[3]], ][, "CN"] <- "2"
-    cnv_cord[cnv_cord$CN_tmp >= cn_thresholds$low_thresh[[4]] & cnv_cord$CN_tmp < cn_thresholds$high_thresh[[4]], ][, "CN"] <- "3"
-    cnv_cord[cnv_cord$CN_tmp >= cn_thresholds$low_thresh[[5]] & cnv_cord$CN_tmp < cn_thresholds$high_thresh[[5]], ][, "CN"] <- "4"
-    cnv_cord[cnv_cord$CN_tmp >= cn_thresholds$low_thresh[[6]] & cnv_cord$CN_tmp < cn_thresholds$high_thresh[[6]], ][, "CN"] <- "5"
-    cnv_cord[cnv_cord$CN_tmp >= cn_thresholds$low_thresh[[7]] & cnv_cord$CN_tmp < cn_thresholds$high_thresh[[7]], ][, "CN"] <- "6"
-    cnv_cord[cnv_cord$CN_tmp >= cn_thresholds$low_thresh[[8]] & cnv_cord$CN_tmp < cn_thresholds$high_thresh[[8]], ][, "CN"] <- "7"
-    cnv_cord[cnv_cord$CN_tmp >= cn_thresholds$low_thresh[[9]] & cnv_cord$CN_tmp < cn_thresholds$high_thresh[[9]], ][, "CN"] <- "8"
-    cnv_cord[cnv_cord$CN_tmp >= cn_thresholds$low_thresh[[10]] & cnv_cord$CN_tmp < cn_thresholds$high_thresh[[10]], ][, "CN"] <- "9"
-    cnv_cord[cnv_cord$CN_tmp >= cn_thresholds$low_thresh[[11]] & cnv_cord$CN_tmp < cn_thresholds$high_thresh[[11]], ][, "CN"] <- "10"
-    cnv_cord[cnv_cord$CN_tmp >= cn_thresholds$low_thresh[[12]] & cnv_cord$CN_tmp < cn_thresholds$high_thresh[[12]], ][, "CN"] <- "11"
-    cnv_cord[cnv_cord$CN_tmp >= cn_thresholds$low_thresh[[13]] & cnv_cord$CN_tmp < cn_thresholds$high_thresh[[13]], ][, "CN"] <- "12"
-    cnv_cord[cnv_cord$CN_tmp >= cn_thresholds$low_thresh[[14]] & cnv_cord$CN_tmp < cn_thresholds$high_thresh[[14]], ][, "CN"] <- "13"
-    cnv_cord[cnv_cord$CN_tmp >= cn_thresholds$low_thresh[[15]] & cnv_cord$CN_tmp < cn_thresholds$high_thresh[[15]], ][, "CN"] <- "14"
-
-    cnv_cord$CN = as.factor(cnv_cord$CN)
+    cnv_cord$CN = round(cnv_cord$CN_tmp) %>%
+      as.factor()
 
     colnames(cnv_cord)[2] = "chrom"
     colnames(cnv_cord)[3] = "start"
     colnames(cnv_cord)[4] = "end"
 
-    cn_states = dplyr::select(cnv_cord, ID, chrom, start, end, log.ratio, CN)
+    cn_states = dplyr::select(cnv_cord, ID, chrom, start, end, CN)
   }else{
     #load CN data
     cn_states = get_sample_cn_segments(multiple_samples = TRUE, sample_list = these_sample_ids, streamlined = FALSE)
@@ -4031,14 +4013,14 @@ fancy_multisamp_ideogram = function(these_sample_ids,
   #first sample
   sample1 = samples[1]
   sample1_cn = dplyr::filter(cn_states, ID == sample1)
-  subset_cnstates(cn_segments = sample1_cn, samplen = 1)
+  subset_cnstates(cn_segments = sample1_cn, samplen = 1, include_2 = include_cn2)
   sample1_cn$CN = as.factor(sample1_cn$CN)
   sample1_cn = droplevels(sample1_cn)
 
   #second sample
   sample2 = samples[2]
   sample2_cn = dplyr::filter(cn_states, ID == sample2)
-  subset_cnstates(cn_segments = sample2_cn, samplen = 2)
+  subset_cnstates(cn_segments = sample2_cn, samplen = 2, include_2 = include_cn2)
   sample2_cn$CN = as.factor(sample2_cn$CN)
   sample2_cn = droplevels(sample2_cn)
 
@@ -4046,7 +4028,7 @@ fancy_multisamp_ideogram = function(these_sample_ids,
   if(length(these_sample_ids) > 2){
     sample3 = samples[3]
     sample3_cn = dplyr::filter(cn_states, ID == sample3)
-    subset_cnstates(cn_segments = sample3_cn, samplen = 3)
+    subset_cnstates(cn_segments = sample3_cn, samplen = 3, include_2 = include_cn2)
     sample3_cn$CN = as.factor(sample3_cn$CN)
     sample3_cn = droplevels(sample3_cn)}
 
@@ -4054,14 +4036,19 @@ fancy_multisamp_ideogram = function(these_sample_ids,
   if(length(these_sample_ids) > 3){
     sample4 = samples[4]
     sample4_cn = dplyr::filter(cn_states, ID == sample4)
-    subset_cnstates(cn_segments = sample4_cn, samplen = 4)
+    subset_cnstates(cn_segments = sample4_cn, samplen = 4, include_2 = include_cn2)
     sample4_cn$CN = as.factor(sample4_cn$CN)
     sample4_cn = droplevels(sample4_cn)}
 
   #get colours and combine palette for indels and cn states
   ideogram_palette = get_gambl_colours("copy_number")
-  selected_colours = ideogram_palette[c(17,16,14:11)]
-  names(selected_colours)[c(1:6)] = c("CN0", "CN1", "CN3", "CN4", "CN5", "CN6+")
+  if(include_cn2){
+    selected_colours = ideogram_palette[c(17:11)]
+    names(selected_colours)[c(1:6)] = c("CN0", "CN1", "CN2", "CN3", "CN4", "CN5", "CN6+")
+  }else{
+    selected_colours = ideogram_palette[c(17,16,14:11)]
+    names(selected_colours)[c(1:6)] = c("CN0", "CN1", "CN3", "CN4", "CN5", "CN6+")
+  }
 
   #plot
   if(length(these_sample_ids) >= 2 & length(these_sample_ids) < 4){
@@ -4070,6 +4057,7 @@ fancy_multisamp_ideogram = function(these_sample_ids,
       annotate(geom = "text", x = -2000000, y = segment_data$yend + seg_dist, label = sample1, color = "black", size = 3, hjust = 1) + #sample name annotations
       {if("0" %in% levels(sample1_cn$CN)) geom_segment(data = cn_0_sample1, aes(x = start, xend = end, y = ycoord + seg_dist, yend = ycoord + seg_dist, color = "CN0"), size = seg_size, stat = "identity", position = position_dodge())} +  #cn0
       {if("1" %in% levels(sample1_cn$CN)) geom_segment(data = cn_1_sample1, aes(x = start, xend = end, y = ycoord + seg_dist, yend = ycoord + seg_dist, color = "CN1"), size = seg_size, stat = "identity", position = position_dodge())} +  #cn1
+      {if("2" %in% levels(sample1_cn$CN)) geom_segment(data = cn_2_sample1, aes(x = start, xend = end, y = ycoord + seg_dist, yend = ycoord + seg_dist, color = "CN2"), size = seg_size, stat = "identity", position = position_dodge())} +  #cn2
       {if("3" %in% levels(sample1_cn$CN)) geom_segment(data = cn_3_sample1, aes(x = start, xend = end, y = ycoord + seg_dist, yend = ycoord + seg_dist, color = "CN3"), size = seg_size, stat = "identity", position = position_dodge())} + #cn3
       {if("4" %in% levels(sample1_cn$CN)) geom_segment(data = cn_4_sample1, aes(x = start, xend = end, y = ycoord + seg_dist, yend = ycoord + seg_dist, color = "CN4"), size = seg_size, stat = "identity", position = position_dodge())} + #cn4
       {if("5" %in% levels(sample1_cn$CN)) geom_segment(data = cn_5_sample1, aes(x = start, xend = end, y = ycoord + seg_dist, yend = ycoord + seg_dist, color = "CN5"), size = seg_size, stat = "identity", position = position_dodge())} + #cn5
@@ -4079,6 +4067,7 @@ fancy_multisamp_ideogram = function(these_sample_ids,
       annotate(geom = "text", x = -2000000, y = segment_data$yend - seg_dist, label = sample2, color = "black", size = 3, hjust = 1) + #sample name annotations
       {if("0" %in% levels(sample2_cn$CN)) geom_segment(data = cn_0_sample2, aes(x = start, xend = end, y = ycoord - seg_dist, yend = ycoord - seg_dist, color = "CN0"), size = seg_size, stat = "identity", position = position_dodge())} +  #cn0
       {if("1" %in% levels(sample2_cn$CN)) geom_segment(data = cn_1_sample2, aes(x = start, xend = end, y = ycoord - seg_dist, yend = ycoord - seg_dist, color = "CN1"), size = seg_size, stat = "identity", position = position_dodge())} +  #cn1
+      {if("2" %in% levels(sample2_cn$CN)) geom_segment(data = cn_2_sample2, aes(x = start, xend = end, y = ycoord - seg_dist, yend = ycoord - seg_dist, color = "CN2"), size = seg_size, stat = "identity", position = position_dodge())} +  #cn2
       {if("3" %in% levels(sample2_cn$CN)) geom_segment(data = cn_3_sample2, aes(x = start, xend = end, y = ycoord - seg_dist, yend = ycoord - seg_dist, color = "CN3"), size = seg_size, stat = "identity", position = position_dodge())} + #cn3
       {if("4" %in% levels(sample2_cn$CN)) geom_segment(data = cn_4_sample2, aes(x = start, xend = end, y = ycoord - seg_dist, yend = ycoord - seg_dist, color = "CN4"), size = seg_size, stat = "identity", position = position_dodge())} + #cn4
       {if("5" %in% levels(sample2_cn$CN)) geom_segment(data = cn_5_sample2, aes(x = start, xend = end, y = ycoord - seg_dist, yend = ycoord - seg_dist, color = "CN5"), size = seg_size, stat = "identity", position = position_dodge())} + #cn5
@@ -4089,6 +4078,7 @@ fancy_multisamp_ideogram = function(these_sample_ids,
         annotate(geom = "text", x = -2000000, y = segment_data$yend + seg_dist - 0.28, label = sample3, color = "black", size = 3, hjust = 1) + #sample name annotations
         {if("0" %in% levels(sample3_cn$CN)) geom_segment(data = cn_0_sample3, aes(x = start, xend = end, y = ycoord + seg_dist - 0.28, yend = ycoord + seg_dist - 0.28, color = "CN0"), size = seg_size, stat = "identity", position = position_dodge())} +  #cn0
         {if("1" %in% levels(sample3_cn$CN)) geom_segment(data = cn_1_sample3, aes(x = start, xend = end, y = ycoord + seg_dist - 0.28, yend = ycoord + seg_dist - 0.28, color = "CN1"), size = seg_size, stat = "identity", position = position_dodge())} +  #cn1
+        {if("2" %in% levels(sample3_cn$CN)) geom_segment(data = cn_2_sample3, aes(x = start, xend = end, y = ycoord + seg_dist - 0.28, yend = ycoord + seg_dist - 0.28, color = "CN2"), size = seg_size, stat = "identity", position = position_dodge())} +  #cn2
         {if("3" %in% levels(sample3_cn$CN)) geom_segment(data = cn_3_sample3, aes(x = start, xend = end, y = ycoord + seg_dist - 0.28, yend = ycoord + seg_dist - 0.28, color = "CN3"), size = seg_size, stat = "identity", position = position_dodge())} + #cn3
         {if("4" %in% levels(sample3_cn$CN)) geom_segment(data = cn_4_sample3, aes(x = start, xend = end, y = ycoord + seg_dist - 0.28, yend = ycoord + seg_dist - 0.28, color = "CN4"), size = seg_size, stat = "identity", position = position_dodge())} + #cn4
         {if("5" %in% levels(sample3_cn$CN)) geom_segment(data = cn_5_sample3, aes(x = start, xend = end, y = ycoord + seg_dist - 0.28, yend = ycoord + seg_dist - 0.28, color = "CN5"), size = seg_size, stat = "identity", position = position_dodge())} + #cn5
@@ -4110,6 +4100,7 @@ fancy_multisamp_ideogram = function(these_sample_ids,
       annotate(geom = "text", x = -2000000, y = segment_data$yend - (seg_dist - 0.48), label = sample1, color = "black", size = 3, hjust = 1) + #sample name annotations
       {if("0" %in% levels(sample1_cn$CN)) geom_segment(data = cn_0_sample1, aes(x = start, xend = end, y = ycoord - (seg_dist - 0.48), yend = ycoord - (seg_dist - 0.48), color = "CN0"), size = 3, stat = "identity", position = position_dodge())} +  #cn0
       {if("1" %in% levels(sample1_cn$CN)) geom_segment(data = cn_1_sample1, aes(x = start, xend = end, y = ycoord - (seg_dist - 0.48), yend = ycoord - (seg_dist - 0.48), color = "CN1"), size = 3, stat = "identity", position = position_dodge())} +  #cn1
+      {if("2" %in% levels(sample1_cn$CN)) geom_segment(data = cn_2_sample1, aes(x = start, xend = end, y = ycoord - (seg_dist - 0.48), yend = ycoord - (seg_dist - 0.48), color = "CN2"), size = 3, stat = "identity", position = position_dodge())} +  #cn2
       {if("3" %in% levels(sample1_cn$CN)) geom_segment(data = cn_3_sample1, aes(x = start, xend = end, y = ycoord - (seg_dist - 0.48), yend = ycoord - (seg_dist - 0.48), color = "CN3"), size = 3, stat = "identity", position = position_dodge())} + #cn3
       {if("4" %in% levels(sample1_cn$CN)) geom_segment(data = cn_4_sample1, aes(x = start, xend = end, y = ycoord - (seg_dist - 0.48), yend = ycoord - (seg_dist - 0.48), color = "CN4"), size = 3, stat = "identity", position = position_dodge())} + #cn4
       {if("5" %in% levels(sample1_cn$CN)) geom_segment(data = cn_5_sample1, aes(x = start, xend = end, y = ycoord - (seg_dist - 0.48), yend = ycoord - (seg_dist - 0.48), color = "CN5"), size = 3, stat = "identity", position = position_dodge())} + #cn5
@@ -4119,6 +4110,7 @@ fancy_multisamp_ideogram = function(these_sample_ids,
       annotate(geom = "text", x = -2000000, y = segment_data$yend - seg_dist, label = sample2, color = "black", size = 3, hjust = 1) + #sample name annotations
       {if("0" %in% levels(sample2_cn$CN)) geom_segment(data = cn_0_sample2, aes(x = start, xend = end, y = ycoord - seg_dist, yend = ycoord - seg_dist, color = "CN0"), size = 3, stat = "identity", position = position_dodge())} +  #cn0
       {if("1" %in% levels(sample2_cn$CN)) geom_segment(data = cn_1_sample2, aes(x = start, xend = end, y = ycoord - seg_dist, yend = ycoord - seg_dist, color = "CN1"), size = 3, stat = "identity", position = position_dodge())} +  #cn1
+      {if("2" %in% levels(sample2_cn$CN)) geom_segment(data = cn_2_sample2, aes(x = start, xend = end, y = ycoord - seg_dist, yend = ycoord - seg_dist, color = "CN2"), size = 3, stat = "identity", position = position_dodge())} +  #cn2
       {if("3" %in% levels(sample2_cn$CN)) geom_segment(data = cn_3_sample2, aes(x = start, xend = end, y = ycoord - seg_dist, yend = ycoord - seg_dist, color = "CN3"), size = 3, stat = "identity", position = position_dodge())} + #cn3
       {if("4" %in% levels(sample2_cn$CN)) geom_segment(data = cn_4_sample2, aes(x = start, xend = end, y = ycoord - seg_dist, yend = ycoord - seg_dist, color = "CN4"), size = 3, stat = "identity", position = position_dodge())} + #cn4
       {if("5" %in% levels(sample2_cn$CN)) geom_segment(data = cn_5_sample2, aes(x = start, xend = end, y = ycoord - seg_dist, yend = ycoord - seg_dist, color = "CN5"), size = 3, stat = "identity", position = position_dodge())} + #cn5
@@ -4128,6 +4120,7 @@ fancy_multisamp_ideogram = function(these_sample_ids,
       annotate(geom = "text", x = -2000000, y = segment_data$yend + seg_dist, label = sample3, color = "black", size = 3, hjust = 1) + #sample name annotations
       {if("0" %in% levels(sample3_cn$CN)) geom_segment(data = cn_0_sample3, aes(x = start, xend = end, y = ycoord + seg_dist, yend = ycoord + seg_dist, color = "CN0"), size = 3, stat = "identity", position = position_dodge())} +  #cn0
       {if("1" %in% levels(sample3_cn$CN)) geom_segment(data = cn_1_sample3, aes(x = start, xend = end, y = ycoord + seg_dist, yend = ycoord + seg_dist, color = "CN1"), size = 3, stat = "identity", position = position_dodge())} +  #cn1
+      {if("2" %in% levels(sample3_cn$CN)) geom_segment(data = cn_2_sample3, aes(x = start, xend = end, y = ycoord + seg_dist, yend = ycoord + seg_dist, color = "CN2"), size = 3, stat = "identity", position = position_dodge())} +  #cn2
       {if("3" %in% levels(sample3_cn$CN)) geom_segment(data = cn_3_sample3, aes(x = start, xend = end, y = ycoord + seg_dist, yend = ycoord + seg_dist, color = "CN3"), size = 3, stat = "identity", position = position_dodge())} + #cn3
       {if("4" %in% levels(sample3_cn$CN)) geom_segment(data = cn_4_sample3, aes(x = start, xend = end, y = ycoord + seg_dist, yend = ycoord + seg_dist, color = "CN4"), size = 3, stat = "identity", position = position_dodge())} + #cn4
       {if("5" %in% levels(sample3_cn$CN)) geom_segment(data = cn_5_sample3, aes(x = start, xend = end, y = ycoord + seg_dist, yend = ycoord + seg_dist, color = "CN5"), size = 3, stat = "identity", position = position_dodge())} + #cn5
@@ -4137,6 +4130,7 @@ fancy_multisamp_ideogram = function(these_sample_ids,
       annotate(geom = "text", x = -2000000, y = segment_data$yend  + (seg_dist - 0.48), label = sample4, color = "black", size = 3, hjust = 1) + #sample name annotations
       {if("0" %in% levels(sample4_cn$CN)) geom_segment(data = cn_0_sample4, aes(x = start, xend = end, y = ycoord + (seg_dist - 0.48), yend = ycoord + (seg_dist - 0.48), color = "CN0"), size = 3, stat = "identity", position = position_dodge())} +  #cn0
       {if("1" %in% levels(sample4_cn$CN)) geom_segment(data = cn_1_sample4, aes(x = start, xend = end, y = ycoord + (seg_dist - 0.48), yend = ycoord + (seg_dist - 0.48), color = "CN1"), size = 3, stat = "identity", position = position_dodge())} +  #cn1
+      {if("2" %in% levels(sample4_cn$CN)) geom_segment(data = cn_2_sample4, aes(x = start, xend = end, y = ycoord + (seg_dist - 0.48), yend = ycoord + (seg_dist - 0.48), color = "CN2"), size = 3, stat = "identity", position = position_dodge())} +  #cn2
       {if("3" %in% levels(sample4_cn$CN)) geom_segment(data = cn_3_sample4, aes(x = start, xend = end, y = ycoord + (seg_dist - 0.48), yend = ycoord + (seg_dist - 0.48), color = "CN3"), size = 3, stat = "identity", position = position_dodge())} + #cn3
       {if("4" %in% levels(sample4_cn$CN)) geom_segment(data = cn_4_sample4, aes(x = start, xend = end, y = ycoord + (seg_dist - 0.48), yend = ycoord + (seg_dist - 0.48), color = "CN4"), size = 3, stat = "identity", position = position_dodge())} + #cn4
       {if("5" %in% levels(sample4_cn$CN)) geom_segment(data = cn_5_sample4, aes(x = start, xend = end, y = ycoord + (seg_dist - 0.48), yend = ycoord + (seg_dist - 0.48), color = "CN5"), size = 3, stat = "identity", position = position_dodge())} + #cn5
