@@ -3093,6 +3093,7 @@ adjust_ploidy = function(this_seg,
 #' Helper function called by fancy_multisample_ideo, for sub-setting copy number information based on segments avaialble in cn data
 #'
 #' @param cn_segments DF with copy number segments, usually retrieved from get_sample_cn_segments.
+#' @param include_2 Optional parameter for including or ommit CN state == 2.
 #' @param samplen Numeric value that annotates the sample order.
 #'
 #' @return Nothing.
@@ -3102,13 +3103,16 @@ adjust_ploidy = function(this_seg,
 #' subset_cnstates(cn_segments = cn_states, samplen = 1)
 #'
 subset_cnstates = function(cn_segments,
+                           include_2 = FALSE,
                            samplen){
 
   #transform CN states > 6 = 6 (to reflect the current copy number palette in gamblr)
   cn_segments$CN[cn_segments$CN > 6] = 6
 
   #filter out CN == 2
-  cn_segments = subset(cn_segments, CN != 2)
+  if(!include_2){
+    cn_segments = subset(cn_segments, CN != 2)
+  }
 
   #update CN annotations (if present in cn_segment data).
   cn_segments$CN = paste0("cn_", cn_segments$CN , "_sample", samplen)
