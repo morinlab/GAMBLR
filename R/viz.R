@@ -3723,11 +3723,11 @@ fancy_ideogram = function(this_sample,
     regions_sub = as.data.table(some_regions)
 
     #set keys
-    setkey(incoming_cn, chrom, start, end)
-    setkey(regions_sub, chrom, start, end)
+    data.table::setkey(incoming_cn, chrom, start, end)
+    data.table::setkey(regions_sub, chrom, start, end)
 
     #intersect regions
-    intersect = foverlaps(incoming_cn, regions_sub, nomatch = 0)
+    intersect = data.table::foverlaps(incoming_cn, regions_sub, nomatch = 0)
 
     #transform object to data frame
     inter_df = as.data.frame(intersect)
@@ -3804,10 +3804,10 @@ fancy_ideogram = function(this_sample,
       colnames(maf_tmp)[3] = "end"
       maf_tmp = dplyr::select(maf_tmp, chrom, start, end)
       maf.table = as.data.table(maf_tmp)
-      setkey(maf.table, chrom, start, end)
+      data.table::setkey(maf.table, chrom, start, end)
 
       #intersect regions
-      intersect_maf = foverlaps(maf.table, regions_sub, nomatch = 0)
+      intersect_maf = data.table::foverlaps(maf.table, regions_sub, nomatch = 0)
 
       #transform object to data frame
       inter_maf_df = as.data.frame(intersect_maf)
