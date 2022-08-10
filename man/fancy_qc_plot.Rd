@@ -59,15 +59,15 @@ plot as ggplot object.
 Plot for visualizing QC metrics and allowing for grouping by different metadata columns.
 }
 \examples{
-fancy_qc_plot_new(filter_pathology = "FL",
-                 filter_cohort = "FL_Kridel",
-                 filter_comp_pathology = "BL",
-                 filter_comp_cohort = "BL_Pediatric",
-                 plot_data = "AverageBaseQuality",
-                 fill_by = "pathology",
-                 plot_subtitle = "Example Plot",
-                 y_axis_lab = "Average Base Quality",
-                 plot_title = "A. Base Quality For FL_Kridel vs. BL_Pediatric",
-                 seq_type = "genome")
+fancy_qc_plot(filter_pathology = "FL",
+              filter_cohort = "FL_Kridel",
+              filter_comp_pathology = "BL",
+              filter_comp_cohort = "BL_Pediatric",
+              plot_data = "AverageBaseQuality",
+              fill_by = "pathology",
+              plot_subtitle = "Example Plot",
+              y_axis_lab = "Average Base Quality",
+              plot_title = "A. Base Quality For FL_Kridel vs. BL_Pediatric",
+              seq_type = "genome")
 
 }

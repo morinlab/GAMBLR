@@ -61,7 +61,7 @@ fancy_ideogram(
 
 \item{plot_subtitle}{Optional argument for plot subtitle.}
 
-\item{intersect_regions}{Optional boolean argument, if set to TRUE, the function excpects some_regions to perform an intersect (GenomicRanges) with cn_states.}
+\item{intersect_regions}{Optional Boolean argument, if set to TRUE, the function expects some_regions to perform an intersect with cn_states.}
 
 \item{some_regions}{Bed-like df with regions for subsetting incoming cn_sates to. Columns should be "chrom", "start", "end".}
 

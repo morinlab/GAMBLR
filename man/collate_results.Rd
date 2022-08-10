@@ -7,8 +7,8 @@
 collate_results(
   sample_table,
   write_to_file = FALSE,
-  join_with_metadata = FALSE,
-  user_provided_metadata,
+  join_with_full_metadata = FALSE,
+  these_samples_metadata,
   case_set,
   sbs_manipulation = "",
   seq_type_filter = "genome",
@@ -21,9 +21,9 @@ collate_results(
 
 \item{write_to_file}{Boolean statement that outputs tsv file if TRUE, default is FALSE.}
 
-\item{join_with_metadata}{Join with all columns of meta data, default is FALSE.}
+\item{join_with_full_metadata}{Join with all columns of meta data, default is FALSE.}
 
-\item{user_provided_metadata}{Optional argument to use a user specified metadata df, overwrites get_gambl_metadata in join_with_full_metadata.}
+\item{these_samples_metadata}{Optional argument to use a user specified metadata df, overwrites get_gambl_metadata in join_with_full_metadata.}
 
 \item{case_set}{Optional short name for a pre-defined set of cases.}
 
@@ -40,6 +40,6 @@ A table keyed on biopsy_id that contains a bunch of per-sample results from GAMB
 Bring together all derived sample-level results from many GAMBL pipelines.
 }
 \examples{
-everything_collated = collate_results(join_with_metadata = TRUE)
+everything_collated = collate_results(join_with_full_metadata = TRUE)
 
 }
