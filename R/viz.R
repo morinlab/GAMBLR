@@ -3611,7 +3611,7 @@ fancy_v_sizedis = function(this_sample,
 #' @param cn_col Index of column holding copy number information (to be used with either maf_data or maf_path).
 #' @param plot_title Title of plot (default to sample ID).
 #' @param plot_subtitle Optional argument for plot subtitle.
-#' @param intersect_regions Optional boolean argument, if set to TRUE, the function excpects some_regions to perform an intersect (GenomicRanges) with cn_states.
+#' @param intersect_regions Optional Boolean argument, if set to TRUE, the function expects some_regions to perform an intersect with cn_states.
 #' @param some_regions Bed-like df with regions for subsetting incoming cn_sates to. Columns should be "chrom", "start", "end".
 #' @param include_ssm Set to TRUE to plot ssms (dels and ins).
 #' @param ssm_count Optional parameter to summarize n variants per chromosome, inlcude_ssm must be set to TRUE.
@@ -3619,7 +3619,7 @@ fancy_v_sizedis = function(this_sample,
 #' @param from_flatfile If set to true the function will use flat files instead of the database.
 #' @param use_augmented Boolean statement if to use augmented maf, default is FALSE.
 #'
-#' @import GenomicRanges
+#' @import data.table
 #' @return Nothing.
 #' @export
 #'
@@ -3694,7 +3694,7 @@ fancy_ideogram = function(this_sample,
     colnames(cn_states)[end_col_seq] = "end"
     colnames(cn_states)[cn_col_seq] = "CN"
 
-  }else if (!is.null(seq_path)){
+  }else if(!is.null(seq_path)){
     cn_states = read.table(seq_path, sep = "\t", header = TRUE, row.names = FALSE, col.names = FALSE, quote = FALSE)
     cn_states = as.data.frame(cn_states)
     colnames(cn_states)[chrom_col_seq] = "chrom"
@@ -3718,24 +3718,22 @@ fancy_ideogram = function(this_sample,
 
   if(intersect_regions){
     #filter CN states on intersecting regions
-    #transform regions to Granges objects
-    grl = GRanges(cn_states)
-    gr = GRanges(some_regions)
+    #transform regions to data tables
+    incoming_cn = as.data.table(cn_states)
+    regions_sub = as.data.table(some_regions)
 
-    #intersect regions (GenomicRanges)
-    intersect = subsetByOverlaps(gr, grl)
+    #set keys
+    setkey(incoming_cn, chrom, start, end)
+    setkey(regions_sub, chrom, start, end)
 
-    #transform Granges object to data frame
+    #intersect regions
+    intersect = foverlaps(incoming_cn, regions_sub, nomatch = 0)
+
+    #transform object to data frame
     inter_df = as.data.frame(intersect)
 
-    #rename first column of intersected regions df
-    colnames(inter_df)[1] = "chrom"
-
-    #subset on specific varaibles
-    inter_df = select(inter_df, chrom, start, end)
-
-    #perform a semi join with all cn states (to retain necessary columns)
-    cn_states = dplyr::semi_join(cn_states, inter_df)
+    #organize columns to match the expected format
+    cn_states = select(inter_df, ID, chrom, start, end, LOH_flag, log.ratio, CN, ycoord)
   }
 
   #convert data types
@@ -3800,26 +3798,26 @@ fancy_ideogram = function(this_sample,
 
     if(intersect_regions){
       #filter CN states on intersecting regions
-      #transform regions to Granges objects
       maf_tmp = maf_trans
       colnames(maf_tmp)[1] = "chrom"
       colnames(maf_tmp)[2] = "start"
       colnames(maf_tmp)[3] = "end"
       maf_tmp = dplyr::select(maf_tmp, chrom, start, end)
-      grmaf = GRanges(maf_tmp)
+      maf.table = as.data.table(maf_tmp)
+      setkey(maf.table, chrom, start, end)
 
-      #intersect regions (GenomicRanges)
-      intersect_maf = subsetByOverlaps(grmaf, gr)
+      #intersect regions
+      intersect_maf = foverlaps(maf.table, regions_sub, nomatch = 0)
 
-      #transform Granges object to data frame
+      #transform object to data frame
       inter_maf_df = as.data.frame(intersect_maf)
 
-      #rename first column of intersected regions df
+      #rename columns
       colnames(inter_maf_df)[1] = "Chromosome"
-      colnames(inter_maf_df)[2] = "Start_Position"
-      colnames(inter_maf_df)[3] = "End_Position"
+      colnames(inter_maf_df)[4] = "Start_Position"
+      colnames(inter_maf_df)[5] = "End_Position"
 
-      #subset on specific varaibles
+      #subset
       inter_maf_df = select(inter_maf_df, Chromosome, Start_Position, End_Position)
 
       #perform a semi join with all cn states (to retain necessary columns)
@@ -3881,7 +3879,6 @@ fancy_ideogram = function(this_sample,
 
   return(p)
 }
-
 
 
 #' Generate ideograms for selected sample, visualizing copy number variation segments. Also possible to only plot concordant (or discordant) cn segments between two samples. i.e how two samples differ, or are a like.
@@ -4280,7 +4277,7 @@ comp_report = function(this_sample,
 fancy_circos_plot = function(this_sample,
                              vaf_cutoff = 0,
                              chr_select = paste0("chr", c(1:22)),
-                             manta_calls = TRUE,
+                             use_sv_calls = TRUE,
                              coding_only = FALSE,
                              from_flatfile = TRUE,
                              use_augmented_maf = TRUE,
@@ -4326,7 +4323,7 @@ fancy_circos_plot = function(this_sample,
     n_track = 4
   }
 
-  if(manta_calls){
+  if(use_sv_calls){
     #get variants
     svs = get_combined_sv(sample_ids = this_sample, projection = projection)
 
@@ -4340,13 +4337,7 @@ fancy_circos_plot = function(this_sample,
     svs_df = data.frame(svs_df$CHROM_A, svs_df$START_A, svs_df$END_A, svs_df$CHROM_B, svs_df$START_B, svs_df$END_B, do.call(rbind, strsplit(svs_df$manta_name, split = ":", fixed = TRUE)))
 
     #rename variables
-    names(svs_df)[1] = "CHROM_A"
-    names(svs_df)[2] = "START_A"
-    names(svs_df)[3] = "END_A"
-    names(svs_df)[4] = "CHROM_B"
-    names(svs_df)[5] = "START_B"
-    names(svs_df)[6] = "END_B"
-    names(svs_df)[7] = "TYPE"
+    colnames(svs_df)[1:7] = c("CHROM_A", "START_A", "END_A", "CHROM_B", "START_B", "END_B", "TYPE")
 
     #add chr prefix, if missing
     if(!str_detect(svs_df$CHROM_A, "chr")[1]){
@@ -4730,16 +4721,16 @@ fancy_alignment_plot = function(these_samples,
 #' @export
 #'
 #' @examples
-#' fancy_qc_plot_new(filter_pathology = "FL",
-#'                  filter_cohort = "FL_Kridel",
-#'                  filter_comp_pathology = "BL",
-#'                  filter_comp_cohort = "BL_Pediatric",
-#'                  plot_data = "AverageBaseQuality",
-#'                  fill_by = "pathology",
-#'                  plot_subtitle = "Example Plot",
-#'                  y_axis_lab = "Average Base Quality",
-#'                  plot_title = "A. Base Quality For FL_Kridel vs. BL_Pediatric",
-#'                  seq_type = "genome")
+#' fancy_qc_plot(filter_pathology = "FL",
+#'               filter_cohort = "FL_Kridel",
+#'               filter_comp_pathology = "BL",
+#'               filter_comp_cohort = "BL_Pediatric",
+#'               plot_data = "AverageBaseQuality",
+#'               fill_by = "pathology",
+#'               plot_subtitle = "Example Plot",
+#'               y_axis_lab = "Average Base Quality",
+#'               plot_title = "A. Base Quality For FL_Kridel vs. BL_Pediatric",
+#'               seq_type = "genome")
 #'
 fancy_qc_plot = function(these_samples,
                          filter_cohort,

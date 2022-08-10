@@ -831,8 +831,8 @@ maf_to_custom_track = function(maf_data,
 #'
 #' @param sample_table A data frame with sample_id as the first column.
 #' @param write_to_file Boolean statement that outputs tsv file if TRUE, default is FALSE.
-#' @param join_with_metadata Join with all columns of meta data, default is FALSE.
-#' @param user_provided_metadata Optional argument to use a user specified metadata df, overwrites get_gambl_metadata in join_with_full_metadata.
+#' @param join_with_full_metadata Join with all columns of meta data, default is FALSE.
+#' @param these_samples_metadata Optional argument to use a user specified metadata df, overwrites get_gambl_metadata in join_with_full_metadata.
 #' @param case_set Optional short name for a pre-defined set of cases.
 #' @param sbs_manipulation Optional variable for transforming sbs values (e.g log, scale).
 #' @param seq_type_filter Filtering criteria, default is genomes.
@@ -843,12 +843,12 @@ maf_to_custom_track = function(maf_data,
 #' @import tidyverse config
 #'
 #' @examples
-#' everything_collated = collate_results(join_with_metadata = TRUE)
+#' everything_collated = collate_results(join_with_full_metadata = TRUE)
 #'
 collate_results = function(sample_table,
                            write_to_file = FALSE,
-                           join_with_metadata = FALSE,
-                           user_provided_metadata,
+                           join_with_full_metadata = FALSE,
+                           these_samples_metadata,
                            case_set,
                            sbs_manipulation = "",
                            seq_type_filter = "genome",
@@ -873,15 +873,15 @@ collate_results = function(sample_table,
   }else{
     message("Slow option: not using cached result. I suggest from_cache = TRUE whenever possible")
     #edit this function and add a new function to load any additional results into the main summary table
-    sample_table = collate_ssm_results(sample_table = sample_table,seq_type_filter=seq_type_filter)
-    sample_table = collate_sv_results(sample_table = sample_table,seq_type_filter=seq_type_filter)
-    sample_table = collate_curated_sv_results(sample_table = sample_table,seq_type_filter=seq_type_filter)
-    sample_table = collate_ashm_results(sample_table = sample_table,seq_type_filter=seq_type_filter)
-    sample_table = collate_nfkbiz_results(sample_table = sample_table,seq_type_filter=seq_type_filter)
-    sample_table = collate_csr_results(sample_table = sample_table,seq_type_filter=seq_type_filter)
-    sample_table = collate_ancestry(sample_table = sample_table,seq_type_filter=seq_type_filter)
-    sample_table = collate_sbs_results(sample_table = sample_table, sbs_manipulation = sbs_manipulation,seq_type_filter=seq_type_filter)
-    sample_table = collate_qc_results(sample_table = sample_table,seq_type_filter = seq_type_filter)
+    sample_table = collate_ssm_results(sample_table = sample_table, seq_type_filter = seq_type_filter)
+    sample_table = collate_sv_results(sample_table = sample_table, seq_type_filter = seq_type_filter)
+    sample_table = collate_curated_sv_results(sample_table = sample_table, seq_type_filter = seq_type_filter)
+    sample_table = collate_ashm_results(sample_table = sample_table, seq_type_filter = seq_type_filter)
+    sample_table = collate_nfkbiz_results(sample_table = sample_table, seq_type_filter = seq_type_filter)
+    sample_table = collate_csr_results(sample_table = sample_table, seq_type_filter = seq_type_filter)
+    sample_table = collate_ancestry(sample_table = sample_table, seq_type_filter = seq_type_filter)
+    sample_table = collate_sbs_results(sample_table = sample_table, sbs_manipulation = sbs_manipulation, seq_type_filter = seq_type_filter)
+    sample_table = collate_qc_results(sample_table = sample_table, seq_type_filter = seq_type_filter)
   }
   if(write_to_file){
     output_file = config::get("table_flatfiles")$derived
@@ -891,9 +891,9 @@ collate_results = function(sample_table,
     write_tsv(sample_table, file = output_file)
   }
   #convenience columns bringing together related information
-  if(join_with_metadata){
-    if(!missing(user_provided_metadata)){
-      meta_data = user_provided_metadata
+  if(join_with_full_metadata){
+    if(!missing(these_samples_metadata)){
+      meta_data = these_samples_metadata
     }else{
       meta_data = get_gambl_metadata(seq_type_filter = seq_type_filter)
     }
@@ -906,7 +906,7 @@ collate_results = function(sample_table,
     full_table = full_table %>%
       mutate("BCL2_SV_any" = case_when(ashm_BCL2 > 3 ~ "POS", manta_BCL2_sv == "POS" ~ "POS", ICGC_BCL2_sv == "POS" ~ "POS", bcl2_ba == "POS" ~ "POS", TRUE ~ "NEG"))
 
-    full_table =full_table %>%
+    full_table = full_table %>%
       mutate("DoubleHitBCL2" = ifelse(BCL2_SV_any == "POS" & MYC_SV_any == "POS", "Yes", "No"))
     return(full_table)
   }
