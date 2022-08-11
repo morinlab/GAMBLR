@@ -127,6 +127,36 @@ check_host = function(auto_connect=FALSE){
   }
 }
 
+cache_output = function(result_df,function_name,clobber_mode=F,get_existing = F,
+                        function_params=list(region="chr3:98300000-198022430",bin_size=2000,seq_type="genome"),
+                        additional_details=list(foreground="DLBCL_FL_BL",background="CLL_MM_MCL")){
+  cache_file_name = paste0(config::get("repo_base"),"cached_results/", function_name)
+  for (param in names(function_params)[order(names(function_params))]){
+    cache_file_name = paste0(cache_file_name,"--",param,"-",function_params[[param]])
+  }
+  for (detail in names(additional_details)){
+    cache_file_name = paste0(cache_file_name,"--",detail,"-",additional_details[[detail]])
+  }
+  cache_file_name = paste0(cache_file_name,".tsv")
+  if(file.exists(cache_file_name)){
+    if(get_existing){
+      result_df = read_tsv(cache_file_name)
+      return(result_df)
+    }
+    if(!clobber_mode){
+      warning(paste("file",cache_file_name,"exists!"))
+      stop("Will not overwrite unless you rerun this in clobber_mode = TRUE")
+    }
+  }else{
+    if(get_existing){
+      stop(paste("cannot find cached result for this parameter combination",cache_file_name))
+    }
+  }
+  
+  message(paste("creating/overwriting",cache_file_name))
+  write_tsv(result_df,file=cache_file_name)
+}
+
 #' Count the variants in a region with a variety of filtering options
 #'
 #' @param region 
@@ -134,6 +164,7 @@ check_host = function(auto_connect=FALSE){
 #' @param start 
 #' @param end 
 #' @param these_samples_metadata 
+#' @param all_mutations_in_these_regions If you are calling this function many times (e.g. bins spanning a larger region), to save a ton of time you are strongly encouraged to provide the output of get_ssm_by_region on the entire region of interest and passing it to this function
 #' @param count_by Defaults to counting all variants. Specify 'sample_id' if you want to collapse and count only one per sample
 #' @param seq_type 
 #' @param ssh_session 
@@ -142,21 +173,25 @@ check_host = function(auto_connect=FALSE){
 #' @export
 #'
 #' @examples
-count_ssm_by_region = function(region,chromosome,start,end,these_samples_metadata,count_by,seq_type="genome",ssh_session=NULL){
+count_ssm_by_region = function(region,chromosome,start,end,all_mutations_in_these_regions,these_samples_metadata,count_by,seq_type="genome",ssh_session=NULL){
   if(missing(these_samples_metadata)){
     these_samples_metadata = get_gambl_metadata(seq_type_filter=seq_type)
   }
-  if(missing(region)){
+  if(!missing(all_mutations_in_these_regions)){
+    # function was provided the mutations already so we just need to subset it to the region of interest
+
+    region_muts = dplyr::filter(all_mutations_in_these_regions,Start_Position >= start, Start_Position < end)
+  }else if(missing(region)){
     region_muts = get_ssm_by_region(chromosome=chromosome,qstart=start,qend=end,streamlined = TRUE,ssh_session = ssh_session)
   }else{
     region_muts = get_ssm_by_region(region=region,streamlined = TRUE,ssh_session = ssh_session)
   }
-  keep_muts = left_join(region_muts,these_samples_metadata) %>% dplyr::filter(!is.na(sample_id))
+  keep_muts = dplyr::filter(region_muts,Tumor_Sample_Barcode %in% these_samples_metadata$Tumor_Sample_Barcode) 
   if(missing(count_by)){
     #count everything even if some mutations are from the same patient
     return(nrow(keep_muts))
   }else if(count_by == "sample_id"){
-    return(length(unique(keep_muts$sample_id)))
+    return(length(unique(keep_muts$Tumor_Sample_Barcode)))
   }else{
     print("Not sure what to count")
   }
