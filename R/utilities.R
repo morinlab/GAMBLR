@@ -983,6 +983,8 @@ sv_to_custom_track = function(sv_bedpe,
 maf_to_custom_track = function(maf_data,
                                these_samples_metadata,
                                output_file,
+                               as_bigbed=FALSE,
+                               as_biglolly=FALSE,
                                track_name="GAMBL mutations",
                                track_description = "mutations from GAMBL"){
 
@@ -1012,9 +1014,38 @@ maf_to_custom_track = function(maf_data,
   maf_coloured = left_join(maf_bed, samples_coloured, by = "sample_id") %>%
     dplyr::select(-lymphgen) %>%
     dplyr::filter(!is.na(rgb))
-  header_ucsc = paste0('track name="',track_name,'" description="', track_description, '" visibility=2 itemRgb="On"\n')
-  cat(header_ucsc,file = output_file)
-  tabular = write.table(maf_coloured, file = output_file, quote = F, sep = "\t", row.names = F, col.names = F, append = TRUE)
+  if(as_bigbed | as_biglolly){
+    
+    if(grepl(pattern = ".bb$",x = output_file)){
+      #temp file will be .bed
+      temp_bed = gsub(".bb$",".bed",output_file)
+      
+    }else{
+      stop("please provide an output file name ending in .bb to create a bigBed file")
+    }
+  
+    maf_coloured = mutate(maf_coloured,sample_id=ifelse(dbSNP_RS != "",dbSNP_RS,".")) %>% 
+      arrange(chrom,start)
+    if(as_biglolly){
+      #currently the same code is run either way but this may change so I've separated this until we settle on format
+      #TO DO: collapse based on hot spot definition and update column 4 (score) based on recurrence
+      write.table(maf_coloured, file = temp_bed, quote = F, sep = "\t", row.names = F, col.names = F)
+      #conversion:
+      bigbedtobed = "/Users/rmorin/miniconda3/envs/ucsc/bin/bedToBigBed"
+      bigbed_conversion = paste(bigbedtobed,"-type=bed9",temp_bed,"/Users/rmorin/git/LLMPP/resources/reference/ucsc/hg19.chrom.sizes",output_file)
+      system(bigbed_conversion)
+    }else{
+      write.table(maf_coloured, file = temp_bed, quote = F, sep = "\t", row.names = F, col.names = F)
+      #conversion:
+      bigbedtobed = "/Users/rmorin/miniconda3/envs/ucsc/bin/bedToBigBed"
+      bigbed_conversion = paste(bigbedtobed,"-type=bed9",temp_bed,"/Users/rmorin/git/LLMPP/resources/reference/ucsc/hg19.chrom.sizes",output_file)
+      system(bigbed_conversion)
+    }
+  }else{
+    header_ucsc = paste0('track name="',track_name,'" description="', track_description, '" visibility=2 itemRgb="On"\n')
+    cat(header_ucsc,file = output_file)
+    write.table(maf_coloured, file = output_file, quote = F, sep = "\t", row.names = F, col.names = F, append = TRUE)
+  }
 }
 
 test_glue = function(placeholder="INSERTED"){
