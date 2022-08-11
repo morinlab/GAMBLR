@@ -23,11 +23,11 @@ get_gene_expression(
 
 \item{join_with}{How to restrict cases for the join. Can be one of genome, mrna or "any"}
 
-\item{all_genes}{Set to TRUE to return full expression data frame without any subsetting.}
+\item{all_genes}{Set to TRUE to return full expression data frame without any subsetting. Avoid this if you don't want to use tons of RAM.}
 
 \item{expression_data}{Optional argument to use an already loaded expression data frame (prevent function to re-load full df from flat file or database)}
 
-\item{from_flatfile}{Set to TRUE to obtain mutations from a local flatfile instead of the database.}
+\item{from_flatfile}{Deprecated but left here for backwards compatibility.}
 }
 \value{
 A list.

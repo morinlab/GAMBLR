@@ -16,7 +16,7 @@ get_ssm_by_regions(
   seq_type = "genome",
   projection = "grch37",
   min_read_support = 4,
-  allow_clustered = TRUE
+  ssh_session = NULL
 )
 }
 \arguments{
@@ -39,8 +39,6 @@ get_ssm_by_regions(
 \item{projection}{Obtain variants projected to this reference (one of grch37 or hg38).}
 
 \item{min_read_support}{Only returns variants with at least this many reads in t_alt_count (for cleaning up augmented MAFs).}
-
-\item{allow_clustered}{Logical parameter indicating whether to use SLMS-3 results with clustered events. Default is FALSE.}
 }
 \value{
 Returns a data frame of variants in MAF-like format.

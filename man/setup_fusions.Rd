@@ -6,7 +6,6 @@
 \usage{
 setup_fusions(
   short_name = "GAMBL",
-  include_icgc_data = FALSE,
   human_friendly_name = "GAMBL data",
   project_name = "gambl_minus_icgc",
   description = "GAMBL data without ICGC",
@@ -17,8 +16,6 @@ setup_fusions(
 }
 \arguments{
 \item{short_name}{A concise name for your portal project.}
-
-\item{include_icgc_data}{Whether or not you want ICGC and other external data included.}
 
 \item{human_friendly_name}{A slightly more verbose name for your project.}
 
@@ -31,6 +28,8 @@ setup_fusions(
 \item{gambl_icgc_maf}{Icgc maf origin.}
 
 \item{out_dir}{The full path to the base directory where the files are being created.}
+
+\item{include_icgc_data}{Whether or not you want ICGC and other external data included.}
 }
 \value{
 A vector of sample_id for the patients that have been included.

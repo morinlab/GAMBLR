@@ -10,6 +10,7 @@ calc_mutation_frequency_sliding_windows(
   start_pos,
   end_pos,
   metadata,
+  seq_type,
   slide_by = 100,
   window_size = 1000,
   plot_type = "none",
@@ -20,7 +21,8 @@ calc_mutation_frequency_sliding_windows(
   drop_unmutated = FALSE,
   classification_column = "lymphgen",
   from_indexed_flatfile = FALSE,
-  mode = "slms-3"
+  mode = "slms-3",
+  ssh_session = NULL
 )
 }
 \arguments{

@@ -2,6 +2,114 @@
 coding_class = c("Frame_Shift_Del", "Frame_Shift_Ins", "In_Frame_Del", "In_Frame_Ins", "Missense_Mutation", "Nonsense_Mutation", "Nonstop_Mutation", "Silent", "Splice_Region", "Splice_Site", "Targeted_Region", "Translation_Start_Site")
 rainfall_conv = c("T>C", "T>C", "C>T", "C>T", "T>A", "T>A", "T>G", "T>G", "C>A", "C>A", "C>G", "C>G", "InDel")
 names(rainfall_conv) = c('A>G', 'T>C', 'C>T', 'G>A', 'A>T', 'T>A', 'A>C', 'T>G', 'C>A', 'G>T', 'C>G', 'G>C', 'InDel')
+ssh_session <<- NULL
+
+
+#' Check if code is running remotely and (optionally) attempt a connection and set global ssh_session variable
+#'
+#' @param auto_connect Set to TRUE if you want the function to create an ssh session (if necessary)
+#'
+#' @return NULL. This function makes a new ssh session, if necessary, and stores it in a global variable (ssh_session) 
+#' @export
+#'
+#' @examples ssh_session = get_ssh_session()
+check_host = function(auto_connect=FALSE){
+  hostname = Sys.info()["nodename"]
+  if(grepl("bcgsc.ca",hostname)){
+    #we are on the GSC network
+  }else{
+    # we are on some computer not on the GSC network (needs ssh_session)
+    if(class(ssh_session)=="ssh_session"){
+      message("active ssh session detected")
+      return()
+    }else{
+      if(auto_connect){
+        session = get_ssh_session()
+        assign("ssh_session", session, envir = .GlobalEnv)
+      }else{
+        message("You appear to be using GAMBLR on your local computer. Be sure to set up an ssh session!")
+        message("?GAMBLR::get_ssh_session for more info")
+        
+      }
+    }
+  }
+}
+
+#' Count the variants in a region with a variety of filtering options
+#'
+#' @param region 
+#' @param chromosome 
+#' @param start 
+#' @param end 
+#' @param these_samples_metadata 
+#' @param count_by Defaults to counting all variants. Specify 'sample_id' if you want to collapse and count only one per sample
+#' @param seq_type 
+#' @param ssh_session 
+#'
+#' @return
+#' @export
+#'
+#' @examples
+count_ssm_by_region = function(region,chromosome,start,end,these_samples_metadata,count_by,seq_type="genome",ssh_session){
+  if(missing(these_samples_metadata)){
+    these_samples_metadata = get_gambl_metadata(seq_type_filter=seq_type)
+  }
+  if(missing(region)){
+    region_muts = get_ssm_by_region(chromosome=chromosome,qstart=start,qend=end,streamlined = TRUE,ssh_session = ssh_session)
+  }else{
+    region_muts = get_ssm_by_region(region=region,streamlined = TRUE,ssh_session = ssh_session)
+  }
+  keep_muts = left_join(region_muts,these_samples_metadata) %>% dplyr::filter(!is.na(sample_id))
+  if(missing(count_by)){
+    #count everything even if some mutations are from the same patient
+    return(nrow(keep_muts))
+  }else if(count_by == "sample_id"){
+    return(length(unique(keep_muts$sample_id)))
+  }else{
+    print("Not sure what to count")
+  }
+}
+
+#' Split a contiguous genomic region on a chromosome into non-overlapping bins
+#'
+#' @param chromosome 
+#' @param start 
+#' @param end 
+#' @param bin_size 
+#'
+#' @return Data frame describing the bins various ways
+#' @export
+#'
+#' @examples 
+#' chr8q_bins = region_to_bins(chromosome="8",start=48100000,end=146364022,bin_size = 20000)
+region_to_bins = function(chromosome="chr1",start=10000,end=121500000,bin_size=2000){
+  bin_df = data.frame(bin_chr = chromosome,bin_start=seq(start,end,bin_size))
+  bin_df = mutate(bin_df,bin_end = bin_start+ bin_size) %>%
+    dplyr::filter(bin_end<=end) %>% 
+    mutate(region = paste0(bin_chr,":",bin_start,"-",bin_end))
+  
+  return(bin_df)
+  
+}
+
+#' Create an ssh session to the GSC (requires active VPN connection)
+#'
+#' @param host (default is gphost01.bcgsc.ca)
+#'
+#' @return
+#' @export
+#'
+#' @examples
+get_ssh_session = function(host="gphost01.bcgsc.ca"){
+  if (!requireNamespace("ssh", quietly = TRUE)) {
+    warning("The ssh package must be installed to use this functionality")
+    #Either exit or do something that does not require ssh
+    return(NULL)
+  }
+  session = ssh::ssh_connect(host=host)
+  return(session)
+}
+
 
 
 #' Get regions (bed format) from genes.
@@ -147,11 +255,11 @@ get_coding_ssm_status = function(gene_symbols,
       dplyr::filter(Variant_Classification %in% coding_class)
   }
 
-  if(!missing(maf_data) && !is.null(maf_path)){
-    maf_data = get_coding_ssm(projection = projection, seq_type = seq_type, from_flatfile = from_flatfile, augmented = augmented, min_read_support = 3, basic_columns = FALSE, include_silent = include_silent)
+  if(missing(maf_data) & is.null(maf_path)){
+    coding_ssm = get_coding_ssm(projection = projection, seq_type = seq_type, from_flatfile = from_flatfile, augmented = augmented, min_read_support = 3, basic_columns = FALSE, include_silent = include_silent)
   }
 
-  coding_ssm = maf_data %>%
+  coding_ssm = coding_ssm %>%
     dplyr::filter(Variant_Classification %in% coding_class)
 
   coding = coding_ssm %>%
@@ -265,6 +373,7 @@ calc_mutation_frequency_sliding_windows = function(this_region,
                                                    start_pos,
                                                    end_pos,
                                                    metadata,
+                                                   seq_type,
                                                    slide_by = 100,
                                                    window_size = 1000,
                                                    plot_type = "none",
@@ -275,7 +384,8 @@ calc_mutation_frequency_sliding_windows = function(this_region,
                                                    drop_unmutated = FALSE,
                                                    classification_column = "lymphgen",
                                                    from_indexed_flatfile = FALSE,
-                                                   mode = "slms-3"){
+                                                   mode = "slms-3",
+                                                   ssh_session=NULL){
 
   max_region = 1000000
   if(missing(metadata)){
@@ -299,7 +409,7 @@ calc_mutation_frequency_sliding_windows = function(this_region,
     mutate(end = start + window_size - 1)
   #use foverlaps to assign mutations to bins
   windows.dt = as.data.table(windows)
-  region_ssm = GAMBLR::get_ssm_by_region(region = this_region, streamlined = TRUE, from_indexed_flatfile = from_indexed_flatfile, mode = mode) %>%
+  region_ssm = GAMBLR::get_ssm_by_region(region = this_region, streamlined = FALSE, seq_type=seq_type, from_indexed_flatfile = from_indexed_flatfile, mode = mode,ssh_session=ssh_session) %>%
     dplyr::rename(c("start" = "Start_Position", "sample_id" = "Tumor_Sample_Barcode")) %>%
     mutate(mutated = 1)
 
@@ -411,7 +521,7 @@ sv_to_bedpe_file = function(sv_df,
 
   #add chr prefix if missing
   if(add_chr_prefix){
-    if(!grepl("chr", region_sv$CHROM_A[1])){
+    if(!any(grepl("chr", region_sv$CHROM_A[1]))){
       sv_df = mutate(sv_df, CHROM_A = paste0("chr", CHROM_A)) %>%
         mutate(CHROM_B = paste0("chr", CHROM_B))
     }
@@ -523,11 +633,14 @@ annotate_hotspots = function(mutation_maf,
 
   hotspot_info = list()
   for(abase in analysis_base){
-    base_path = "/projects/rmorin/projects/gambl-repos/gambl-rmorin/results/icgc_dart/oncodriveclustl-0.0/99-outputs/webversion/"
-    clust_full_path = paste0(base_path, abase, "/NO_SILENT_MUTS/", abase, "_clusters_results.tsv")
-    all_full_path = paste0(base_path, abase, "/NO_SILENT_MUTS/", abase, "_elements_results.txt")
-    clust_hotspot = read_tsv(clust_full_path)
-    all_hotspot = read_tsv(all_full_path)
+    base_path = config::get("repo_base")
+
+    clust_full_path = paste0(base_path, config::get("results_versioned")$oncodriveclustl$clusters)
+    clust_full_path = glue::glue(clust_full_path)
+    all_full_path = paste0(base_path, config::get("results_versioned")$oncodriveclustl$elements)
+    all_full_path = glue::glue(all_full_path)
+    clust_hotspot = suppressMessages(readr::read_tsv(clust_full_path))
+    all_hotspot = suppressMessages(readr::read_tsv(all_full_path))
 
   clustered_hotspots = clust_hotspot %>%
     dplyr::select(-RANK) %>%
@@ -573,7 +686,7 @@ annotate_hotspots = function(mutation_maf,
     group_by(MAX_COORD) %>%
     arrange(MAX_COORD, COORDINATE) %>%
     complete(COORDINATE = seq(COORDINATE[1], COORDINATE[2])) %>%
-    fill(CHROMOSOME, .direction = "up") %>%
+    tidyr::fill(CHROMOSOME, .direction = "up") %>%
     dplyr::rename("Start_Position" = "COORDINATE") %>%
     dplyr::rename("Chromosome" = "CHROMOSOME") %>%
     ungroup()
@@ -714,12 +827,20 @@ sv_to_custom_track = function(sv_bedpe,
   sv_data = bind_rows(sv_data1, sv_data2)
   sv_data = mutate(sv_data, end = end + 10)
   }else{
-    sv_data = mutate(sv_bedpe, annotation = paste0(1, ":", 2)) %>%
-      dplyr::select(1, 2, 6, tumour_sample_id, annotation)
-
-    colnames(sv_data)=c("chrom", "start", "end", "sample_id", "annotation")
+    colnames(sv_data)[c(1,2,3)]=c("CHROM_A" ,  "START_A", "END_A" )
+    colnames(sv_data)[c(4,5,6)]=c("CHROM_B" ,  "START_B", "END_B" )
+    
+    sv_data_1 = mutate(sv_bedpe, annotation = paste0( CHROM_B, ":", START_B)) %>%
+      dplyr::select(CHROM_A, START_A, END_A, tumour_sample_id, annotation)
+    sv_data_2 = mutate(sv_bedpe, annotation = paste0( CHROM_A, ":", START_A)) %>%
+      dplyr::select(CHROM_B, START_B, END_B, tumour_sample_id, annotation)
+    colnames(sv_data_1)=c("chrom", "start", "end", "sample_id", "annotation")
+    colnames(sv_data_2)=c("chrom", "start", "end", "sample_id", "annotation")
+    sv_data= bind_rows(sv_data_1,sv_data_2)
+    
+   # sv_data = dplyr::select(sv_data,chrom,start,end,sample_id,annotation)
   }
-  if(!grepl("chr", sv_data[,1])){
+  if(!any(grepl("chr", sv_data[,1]))){
     #add chr
     sv_data[,1] = unlist(lapply(sv_data[,1], function(x){paste0("chr", x)}))
   }
@@ -741,7 +862,7 @@ sv_to_custom_track = function(sv_bedpe,
 
   write_bed = function(coloured_svs, sv_name, output_file_base){
     data_bed = coloured_svs %>%
-      mutate(details = paste0(annotation, "_", sample_id)) %>%
+      mutate(details = paste0(sample_id, "_", annotation)) %>%
       mutate(score = 0, strand = "+", end = end + 1, start1 = start, end1 = end) %>%
       dplyr::select(chrom, start, end, details, score, strand, start1, end1, rgb) %>%
       dplyr::filter(!is.na(rgb)) %>%
@@ -768,12 +889,15 @@ sv_to_custom_track = function(sv_bedpe,
 #' maf_to_custom_track(my_maf_data, "/home/rmorin/private/some_mutations.bed")
 #'
 maf_to_custom_track = function(maf_data,
-                               output_file){
+                               these_samples_metadata,
+                               output_file,
+                               track_name="GAMBL mutations",
+                               track_description = "mutations from GAMBL"){
 
   #reduce to a bed-like format
   maf_data = dplyr::select(maf_data, Chromosome, Start_Position, End_Position, Tumor_Sample_Barcode)
   colnames(maf_data) = c("chrom", "start", "end", "sample_id")
-  if(!grepl("chr", maf_data[,1])){
+  if(!any(grepl("chr", maf_data[,1]))){
     #add chr
     maf_data[,1] = unlist(lapply(maf_data[,1], function(x){paste0("chr", x)}))
   }
@@ -782,28 +906,38 @@ maf_to_custom_track = function(maf_data,
   rgb_df = data.frame(t(col2rgb(lymphgen_cols))) %>%
     mutate(lymphgen = names(lymphgen_cols)) %>%
     unite(col = "rgb", red, green, blue, sep = ",")
-
+  if(missing(these_samples_metadata)){
   meta = get_gambl_metadata() %>%
     dplyr::select(sample_id, lymphgen)
-
+  }else{
+    meta = these_samples_metadata %>%
+      dplyr::select(sample_id, lymphgen)
+  }
   samples_coloured = left_join(meta, rgb_df)
   maf_bed = maf_data %>%
-    mutate(score = 0, strand = "+", end = end + 1, start1 = start, end1 = end)
+    mutate(score = 0, strand = "+", start1 = start-1,start=start1, end1 = end)
 
   maf_coloured = left_join(maf_bed, samples_coloured, by = "sample_id") %>%
     dplyr::select(-lymphgen) %>%
     dplyr::filter(!is.na(rgb))
-
-  cat('track name="GAMBL mutations" description="Mutations from GAMBL" visibility=2 itemRgb="On"\n', file = output_file)
+  header_ucsc = paste0('track name="',track_name,'" description="', track_description, '" visibility=2 itemRgb="On"\n')
+  cat(header_ucsc,file = output_file)
   tabular = write.table(maf_coloured, file = output_file, quote = F, sep = "\t", row.names = F, col.names = F, append = TRUE)
 }
 
+test_glue = function(placeholder="INSERTED"){
+  some_string = "this text has {placeholder}"
+  print(some_string)
+  ss=glue::glue(some_string)
+  print(ss)
+}
 
 #' Bring together all derived sample-level results from many GAMBL pipelines.
 #'
 #' @param sample_table A data frame with sample_id as the first column.
 #' @param write_to_file Boolean statement that outputs tsv file if TRUE, default is FALSE.
 #' @param join_with_full_metadata Join with all columns of meta data, default is FALSE.
+#' @param these_samples_metadata Optional argument to use a user specified metadata df, overwrites get_gambl_metadata in join_with_full_metadata.
 #' @param case_set Optional short name for a pre-defined set of cases.
 #' @param sbs_manipulation Optional variable for transforming sbs values (e.g log, scale).
 #' @param seq_type_filter Filtering criteria, default is genomes.
@@ -819,10 +953,12 @@ maf_to_custom_track = function(maf_data,
 collate_results = function(sample_table,
                            write_to_file = FALSE,
                            join_with_full_metadata = FALSE,
+                           these_samples_metadata,
                            case_set,
                            sbs_manipulation = "",
                            seq_type_filter = "genome",
-                           from_cache = TRUE){
+                           from_cache = TRUE,
+                           ssh_session){
 
   # important: if you are collating results from anything but WGS (e.g RNA-seq libraries) be sure to use biopsy ID as the key in your join
   # the sample_id should probably not even be in this file if we want this to be biopsy-centric
@@ -842,14 +978,15 @@ collate_results = function(sample_table,
   }else{
     message("Slow option: not using cached result. I suggest from_cache = TRUE whenever possible")
     #edit this function and add a new function to load any additional results into the main summary table
-    sample_table = collate_ssm_results(sample_table = sample_table,seq_type_filter=seq_type_filter)
-    sample_table = collate_sv_results(sample_table = sample_table,seq_type_filter=seq_type_filter)
-    sample_table = collate_curated_sv_results(sample_table = sample_table,seq_type_filter=seq_type_filter)
-    sample_table = collate_ashm_results(sample_table = sample_table,seq_type_filter=seq_type_filter)
-    sample_table = collate_nfkbiz_results(sample_table = sample_table,seq_type_filter=seq_type_filter)
-    sample_table = collate_csr_results(sample_table = sample_table,seq_type_filter=seq_type_filter)
-    sample_table = collate_ancestry(sample_table = sample_table,seq_type_filter=seq_type_filter)
-    sample_table = collate_sbs_results(sample_table = sample_table, sbs_manipulation = sbs_manipulation,seq_type_filter=seq_type_filter)
+    sample_table = collate_ssm_results(sample_table = sample_table, seq_type_filter = seq_type_filter)
+    sample_table = collate_sv_results(sample_table = sample_table, seq_type_filter = seq_type_filter)
+    sample_table = collate_curated_sv_results(sample_table = sample_table, seq_type_filter = seq_type_filter)
+    sample_table = collate_ashm_results(sample_table = sample_table, seq_type_filter = seq_type_filter)
+    sample_table = collate_nfkbiz_results(sample_table = sample_table, seq_type_filter = seq_type_filter)
+    sample_table = collate_csr_results(sample_table = sample_table, seq_type_filter = seq_type_filter)
+    sample_table = collate_ancestry(sample_table = sample_table, seq_type_filter = seq_type_filter)
+    sample_table = collate_sbs_results(sample_table = sample_table, sbs_manipulation = sbs_manipulation, seq_type_filter = seq_type_filter)
+    sample_table = collate_qc_results(sample_table = sample_table, seq_type_filter = seq_type_filter)
   }
   if(write_to_file){
     output_file = config::get("table_flatfiles")$derived
@@ -860,17 +997,23 @@ collate_results = function(sample_table,
   }
   #convenience columns bringing together related information
   if(join_with_full_metadata){
-  full_meta = get_gambl_metadata(seq_type_filter = seq_type_filter)
-  full_table = left_join(full_meta, sample_table)
-  full_table = full_table %>%
-    mutate("MYC_SV_any" = case_when(ashm_MYC > 3 ~ "POS", manta_MYC_sv == "POS" ~ "POS", ICGC_MYC_sv == "POS" ~ "POS", myc_ba == "POS" ~ "POS", TRUE ~ "NEG"))
+    if(!missing(these_samples_metadata)){
+      meta_data = these_samples_metadata
+    }else{
+      meta_data = get_gambl_metadata(seq_type_filter = seq_type_filter)
+    }
 
-  full_table = full_table %>%
-    mutate("BCL2_SV_any" = case_when(ashm_BCL2 > 3 ~ "POS", manta_BCL2_sv == "POS" ~ "POS", ICGC_BCL2_sv == "POS" ~ "POS", bcl2_ba == "POS" ~ "POS", TRUE ~ "NEG"))
+    full_table = left_join(meta_data, sample_table)
 
-  full_table =full_table %>%
-    mutate("DoubleHitBCL2" = ifelse(BCL2_SV_any == "POS" & MYC_SV_any == "POS", "Yes", "No"))
-  return(full_table)
+    full_table = full_table %>%
+      mutate("MYC_SV_any" = case_when(ashm_MYC > 3 ~ "POS", manta_MYC_sv == "POS" ~ "POS", ICGC_MYC_sv == "POS" ~ "POS", myc_ba == "POS" ~ "POS", TRUE ~ "NEG"))
+
+    full_table = full_table %>%
+      mutate("BCL2_SV_any" = case_when(ashm_BCL2 > 3 ~ "POS", manta_BCL2_sv == "POS" ~ "POS", ICGC_BCL2_sv == "POS" ~ "POS", bcl2_ba == "POS" ~ "POS", TRUE ~ "NEG"))
+
+    full_table = full_table %>%
+      mutate("DoubleHitBCL2" = ifelse(BCL2_SV_any == "POS" & MYC_SV_any == "POS", "Yes", "No"))
+    return(full_table)
   }
   return(sample_table)
 }
@@ -1042,6 +1185,34 @@ collate_curated_sv_results = function(sample_table,seq_type_filter="genome"){
   return(sample_table)
 }
 
+#' Get wildcards for a sample_id/seq_type combination.
+#'
+#' @param this_sample_id
+#' @param seq_type
+#'
+#' @return
+#' @export
+#'
+#' @examples
+get_sample_wildcards = function(this_sample_id,seq_type){
+  sample_meta = get_gambl_metadata(seq_type_filter = seq_type) %>%
+    dplyr::filter(sample_id==this_sample_id)
+  this_patient_id = sample_meta$patient_id
+  if(sample_meta$pairing_status=="matched"){
+    normal_meta = get_gambl_metadata(seq_type_filter = seq_type,tissue_status_filter = c("normal","tumour")) %>%
+      dplyr::filter(patient_id==this_patient_id) %>% dplyr::filter(tissue_status=="normal")
+      normal_id = normal_meta$sample_id
+      return(list(tumour_sample_id=this_sample_id,
+               normal_sample_id=normal_id,
+               seq_type = seq_type,
+               pairing_status=sample_meta$pairing_status,
+               genome_build=sample_meta$genome_build,
+               unix_group=sample_meta$unix_group))
+  }else{
+    message("This function only works with matched samples for now")
+    return()
+  }
+}
 
 #' Annotate mutations with their copy number information.
 #'
@@ -1070,13 +1241,16 @@ assign_cn_to_ssm = function(this_sample,
                             coding_only = FALSE,
                             from_flatfile = TRUE,
                             use_augmented_maf = TRUE,
-                            tool_name = "slms-3",
+                            tool_name = "battenberg",
                             maf_file,
                             seg_file,
-                            seg_file_source = "ichorCNA",
+                            seg_file_source = "battenberg",
                             assume_diploid = FALSE,
                             genes,
-                            include_silent = FALSE){
+                            include_silent = FALSE,
+                            ssh_session,
+                            seq_type="genome",
+                            projection="grch37"){
 
   database_name = config::get("database_name")
   project_base = config::get("project_base")
@@ -1087,11 +1261,15 @@ assign_cn_to_ssm = function(this_sample,
     maf_sample = fread_maf(maf_file) %>%
       dplyr::mutate(Chromosome = gsub("chr", "", Chromosome))
   }else if(from_flatfile){
-    #get the genome_build for this sample
-    bam_info = get_bams(this_sample)
-    genome_build = bam_info$genome_build
-    unix_group = bam_info$unix_group
-    maf_sample = get_ssm_by_sample(this_sample_id = this_sample, augmented = use_augmented_maf)
+    #get the genome_build and other wildcards for this sample
+    wildcards = get_sample_wildcards(this_sample,seq_type)
+    genome_build = wildcards$genome_build
+    unix_group = wildcards$unix_group
+    seq_type = wildcards$seq_type
+    tumour_sample_id = wildcards$tumour_sample_id
+    normal_sample_id = wildcards$normal_sample_id
+    pairing_status = wildcards$pairing_status
+    maf_sample = get_ssm_by_sample(this_sample_id = this_sample, augmented = use_augmented_maf, ssh_session = ssh_session)
 
   }else{
     #get all the segments for a sample and filter the small ones then assign CN value from the segment to all SSMs in that region
@@ -1132,18 +1310,31 @@ assign_cn_to_ssm = function(this_sample,
     return(list(maf = a_diploid))
 
   }else if(from_flatfile){
-    message(paste("fetching:", tool_name))
-    battenberg_files = fetch_output_files(build = genome_build, base_path = "gambl/battenberg_current", tool = "battenberg", search_pattern = ".igv.seg")
-    battenberg_file = dplyr::filter(battenberg_files, tumour_sample_id == this_sample) %>%
-      dplyr::pull(full_path) %>%
-      as.character()
+    message(paste("trying to find output from:", tool_name))
+    project_base = config::get("project_base",config="default")
+    local_project_base = config::get("project_base")
 
-    message(paste("using flatfile:", battenberg_file))
-    if(length(battenberg_file) > 1){
-      print("WARNING: more than one SEG found for this sample. This shouldn't happen!")
-      battenberg_file = battenberg_file[1]
+    results_path_template = config::get("results_flatfiles")$cnv$battenberg
+    results_path = paste0(project_base, results_path_template)
+    local_results_path = paste0(local_project_base, results_path_template)
+
+    ## NEED TO FIX THIS TO contain tumour/normal ID from metadata and pairing status
+    battenberg_file = glue::glue(results_path)
+    local_battenberg_file = glue::glue(local_results_path)
+
+
+    message(paste("looking for flatfile:", battenberg_file))
+    if(!missing(ssh_session)){
+      print(local_battenberg_file)
+      dirN = dirname(local_battenberg_file)
+
+      suppressMessages(suppressWarnings(dir.create(dirN,recursive = T)))
+      if(!file.exists(local_battenberg_file)){
+
+        ssh::scp_download(ssh_session,battenberg_file,dirN)
+      }
+      battenberg_file = local_battenberg_file
     }
-
     seg_sample = read_tsv(battenberg_file) %>%
       as.data.table() %>%
       dplyr::mutate(size = end - start) %>%
@@ -1170,9 +1361,8 @@ assign_cn_to_ssm = function(this_sample,
     seg_sample = dplyr::mutate(seg_sample, CN = round(2*2^log.ratio))
     seg_sample$LOH_flag = factor(seg_sample$LOH_flag)
   }
-  if(!missing(seg_file_source)){
-    if(seg_file_source == "ichorCNA"){
-      #message("defaulting to ichorCNA format")
+  if(seg_file_source == "ichorCNA"){
+      message("defaulting to ichorCNA format")
       seg_sample = dplyr::rename(seg_sample, c("log.ratio" = "median", "CN" = "copy.number"))
       a.seg = data.table::foverlaps(a, seg_sample, type = "any")
       a$log.ratio = a.seg$log.ratio
@@ -1186,7 +1376,6 @@ assign_cn_to_ssm = function(this_sample,
       a = dplyr::mutate(a, CN = round(2*2^log.ratio))
       seg_sample = dplyr::mutate(seg_sample, CN = round(2*2^log.ratio))
       seg_sample$LOH_flag = factor(seg_sample$LOH_flag)
-    }
   }
   if(!missing(seg_sample)){
     return(list(maf = a, seg = seg_sample))
@@ -1219,25 +1408,22 @@ assign_cn_to_ssm = function(this_sample,
 estimate_purity = function(in_maf,
                            in_seg,
                            sample_id,
-                           seg_file_source = "ichorCNA",
+                           seg_file_source = "battenberg",
                            show_plots = FALSE,
                            assume_diploid = FALSE,
                            coding_only = FALSE,
-                           genes){
+                           genes,
+                           ssh_session){
 
   # Merge the CN info to the corresponding MAF file, uses GAMBLR function
   if(missing(in_maf) & missing(in_seg)){
-    CN_new = assign_cn_to_ssm(this_sample = sample_id, coding_only = coding_only, assume_diploid = assume_diploid, genes = genes)$maf
+    CN_new = assign_cn_to_ssm(this_sample = sample_id, coding_only = coding_only, assume_diploid = assume_diploid, genes = genes,seg_file_source = seg_file_source,ssh_session=ssh_session)$maf
   }else if(!missing(in_seg)){
-    if(seg_file_source == "ichorCNA"){
-      CN_new = assign_cn_to_ssm(maf_file = in_maf, seg_file = in_seg, seg_file_source = "ichorCNA", coding_only = coding_only, genes = genes)$maf
-    }else{
-      CN_new = assign_cn_to_ssm(maf_file = in_maf, seg_file = in_seg, seg_file_source = "", coding_only = coding_only, genes = genes)$maf
-    }
+    CN_new = assign_cn_to_ssm(this_sample = sample_id, maf_file = in_maf, seg_file = in_seg, seg_file_source = seg_file_source, coding_only = coding_only, genes = genes,ssh_session=ssh_session)$maf
   }else{
     # If no seg file was provided and assume_diploid paramtere is set to true,
     if(assume_diploid){
-      CN_new = assign_cn_to_ssm(maf_file = in_maf, assume_diploid = TRUE, coding_only = coding_only, genes = genes)$maf
+      CN_new = assign_cn_to_ssm(this_sample = sample_id, maf_file = in_maf, assume_diploid = TRUE, coding_only = coding_only, genes = genes,ssh_session=ssh_session)$maf
     }
   }
   # Change any homozygous deletions (CN = 0) to 1 for calculation purposes
@@ -1592,14 +1778,14 @@ collate_sbs_results = function(sample_table,
 #' @examples
 #' sample_table = collate_nfkbiz_results(sample_table=sample_table)
 #'
-collate_nfkbiz_results = function(sample_table,seq_type_filter="genome"){
+collate_nfkbiz_results = function(sample_table,seq_type_filter="genome",ssh_session=NULL){
   #TO DO: Update to work with hg38 projection
   if(missing(sample_table)){
     sample_table = get_gambl_metadata(seq_type_filter=seq_type_filter) %>%
       dplyr::select(sample_id, patient_id, biopsy_id)
   }
   this_region = "chr3:101578214-101578365"
-  nfkbiz_ssm = get_ssm_by_region(region = this_region,seq_type = seq_type_filter) %>%
+  nfkbiz_ssm = get_ssm_by_region(region = this_region,seq_type = seq_type_filter,ssh_session=ssh_session) %>%
     pull(Tumor_Sample_Barcode) %>%
     unique
   if(seq_type_filter=="genome"){
@@ -1631,7 +1817,8 @@ collate_nfkbiz_results = function(sample_table,seq_type_filter="genome"){
 #' sample_table = collate_ashm_results(sample_table=sample_table)
 #'
 collate_ashm_results = function(sample_table,
-                                seq_type_filter="genome"){
+                                seq_type_filter="genome",
+                                ssh_session=NULL){
 
   if(missing(sample_table)){
     sample_table = get_gambl_metadata(seq_type_filter=seq_type_filter) %>%
@@ -1640,7 +1827,7 @@ collate_ashm_results = function(sample_table,
   #just annotate BCL2, MYC and CCND1 hypermutation
   regions_df = data.frame(name = c("CCND1","BCL2","MYC"),
   region = c("chr11:69455000-69459900", "chr18:60983000-60989000", "chr8:128747615-128751834"))
-  region_mafs = lapply(regions_df$region, function(x){get_ssm_by_region(region = x, streamlined = TRUE,seq_type=seq_type_filter)})
+  region_mafs = lapply(regions_df$region, function(x){get_ssm_by_region(region = x, streamlined = FALSE,seq_type=seq_type_filter,ssh_session=ssh_session)})
   tibbled_data = tibble(region_mafs, region_name = regions_df$name)
   unnested_df = tibbled_data %>%
     unnest_longer(region_mafs)
@@ -1757,7 +1944,7 @@ get_gambl_colours = function(classification = "all",
                             "POS" = "#7F055F",
                             "NEG" = "#E5A4CB")
 
-  all_colours[["BL"]] = c("M53-BL" = "#A6CEE3",
+  all_colours[["BL"]] = c("Q53-BL" = "#A6CEE3",
                           "DLBCL-A" = "#721F0F",
                           "IC-BL" = "#45425A",
                           "DGG-BL" = "#E90C8BFF",
@@ -1765,7 +1952,15 @@ get_gambl_colours = function(classification = "all",
                           "DLBCL-C" = "#C41230")
 
   all_colours[["FL"]] = c(dFL = "#99C1B9", cFL = "#D16666", DLBCL = "#479450")
-
+  
+  all_colours[["lymphgenerator"]] = c("MP3"="#5B8565",
+                                      "EGB" = "#98622A",
+                                      "ETB"="#813F3D",
+                                      "aSCI"="#D66B1F",
+                                      "aSEL"="#C41230",
+                                      "MCaP"="#5F8CFF",
+                                      "BNZ"="#8870B6"
+                                      )
   all_colours[["lymphgen"]] = c("EZB-MYC" = "#52000F",
                                 "EZB" = "#721F0F",
                                 "EZB-COMP" = "#C7371A",
@@ -1915,6 +2110,7 @@ get_gambl_colours = function(classification = "all",
                   "Grande"="#e90c8b", "Grande, 2019"="#e90c8b")
 
   all_colours[["indels"]] = c("DEL" = "#53B1FC", "INS" = "#FC9C6D")
+  all_colours[["svs"]] = c("DEL" = "#53B1FC", "DUP" = "#FC9C6D")
 
   #print(all_colours)
   for(colslot in names(all_colours)){
@@ -1955,9 +2151,10 @@ get_gambl_colours = function(classification = "all",
 #' bam_details = get_bams(sample=this_sv[1,"tumour_sample_id"])
 #'
 get_bams = function(sample,
-                    patient){
+                    patient
+                    ){
 
-  meta = get_gambl_metadata(tissue_status_filter = c("tumour", "normal"))
+  meta = get_gambl_metadata(tissue_status_filter = c("tumour", "normal"),seq_type_filter="genome")
   meta_mrna = get_gambl_metadata(seq_type_filter = "mrna")
   #get all samples for this patient
   if(missing(patient)){
@@ -1987,6 +2184,10 @@ get_bams = function(sample,
 
   unix_group = dplyr::filter(meta_patient, seq_type == "genome" & tissue_status == "tumour") %>%
     dplyr::pull(unix_group) %>%
+    unique()
+
+  bam_details$pairing_status = dplyr::filter(meta_patient, tissue_status == "tumour") %>%
+    dplyr::pull(pairing_status) %>%
     unique()
 
   bam_details$unix_group = unix_group
@@ -2530,6 +2731,58 @@ collate_lymphgen = function(sample_table,
 }
 
 
+#' INTERNAL FUNCTION called by collate_results, not meant for out-of-package usage.
+#' Collate qc metrics.
+#'
+#' @param sample_table df with sample ids in the first column.
+#' @param seq_type_filter default is genome, capture is also available for unix_group icgc_dart.
+#'
+#' @return The sample table with additional columns.
+#' @import tidyverse
+#'
+#' @examples
+#' sample_table <- data.frame (sample_id  = c("09-33003T", "05-18426T", "BLGSP-71-06-00174-01A-01D", "BLGSP-71-22-00347-01A-12E", "SP59282"))
+#' qc_metrics = collate_qc_results(sample_table = sample_table, seq_type_filter = "genome")
+#'
+collate_qc_results = function(sample_table,
+                              seq_type_filter = "genome"){
+
+  if(! seq_type_filter %in% c("genome", "capture")){
+    stop("Please provide a valid seq_type (\"genome\" or \"capture\").")
+  }
+
+  #get paths
+  base = config::get("project_base") #base
+  qc_template = config::get("qc_met") #qc metric template
+  qc_path = glue::glue(qc_template) #glue wildcards
+  icgc_qc_path_full = paste0(base, qc_path) #combine for icgc_dart qc metric path
+  gambl_qc = gsub("icgc_dart", "gambl", qc_path) #use gsub to substitute icgc_dart in qc path with gambl
+  gambl_qc_path_full = paste0(base, gambl_qc) #combine for gambl qc metric path
+
+  #read in icgc qc data, rename sample id column and filter on samples in sample id in sample_table
+  icgc_qc = suppressMessages(read_tsv(icgc_qc_path_full)) %>%
+    rename(sample_id = UID) %>%
+    dplyr::filter(sample_id %in% dplyr::pull(sample_table, sample_id))
+
+  #read in gambl qc data (if seq_type_filter set to "genome"), rename sample id column and filter on samples in sample id in sample_table
+  if(seq_type_filter == "genome"){
+    gambl_qc = suppressMessages(read_tsv(gambl_qc_path_full)) %>%
+      rename(sample_id = UID) %>%
+      dplyr::filter(sample_id %in% dplyr::pull(sample_table, sample_id))
+
+    #join gambl and icgc QC data
+    full_qc = rbind(gambl_qc, icgc_qc)
+
+    return(full_qc)
+
+    }else{
+      message("Currently, seq_type_filter = \"capture\" is only available for unix_group \"icgc_dart\". Only QC metrics for icgc_dart will be returned.")
+      #TO DO: Remove this once capture metrics have been generated for gambl samples.
+      return(icgc_qc)
+      }
+}
+
+
 #' Will prepare the data frame of binary matrix to be used as NMF input. This means that for the features with SSM and CNV,
 #' they will be squished together as one feature named GeneName-MUTorAMP or GeneName-MUTorLOSS, so the CNV features in the input data frame are expected
 #' to be named GeneName_AMP or GeneName_LOSS. Next, for the genes with hotspot mutations labelled in the input data as
@@ -2953,6 +3206,7 @@ adjust_ploidy = function(this_seg,
 #' Helper function called by fancy_multisample_ideo, for sub-setting copy number information based on segments avaialble in cn data
 #'
 #' @param cn_segments DF with copy number segments, usually retrieved from get_sample_cn_segments.
+#' @param include_2 Optional parameter for including or ommit CN state == 2.
 #' @param samplen Numeric value that annotates the sample order.
 #'
 #' @return Nothing.
@@ -2962,13 +3216,16 @@ adjust_ploidy = function(this_seg,
 #' subset_cnstates(cn_segments = cn_states, samplen = 1)
 #'
 subset_cnstates = function(cn_segments,
+                           include_2 = FALSE,
                            samplen){
 
   #transform CN states > 6 = 6 (to reflect the current copy number palette in gamblr)
   cn_segments$CN[cn_segments$CN > 6] = 6
 
   #filter out CN == 2
-  cn_segments = subset(cn_segments, CN != 2)
+  if(!include_2){
+    cn_segments = subset(cn_segments, CN != 2)
+  }
 
   #update CN annotations (if present in cn_segment data).
   cn_segments$CN = paste0("cn_", cn_segments$CN , "_sample", samplen)
@@ -3155,7 +3412,7 @@ cnvKompare = function(patient_id,
   concordant_cytobands =
     for_output %>%
     # output-specific
-    select(ID, cb.chromosome, cb.start, cb.end, name, score) %>%
+    select(ID, cb.chromosome, cb.start, cb.end, name, score, log.ratio) %>%
     dplyr::filter(name %in% names(overall_concordance[overall_concordance == "YES"]))
 
   output$concordant_cytobands = concordant_cytobands
@@ -3294,4 +3551,68 @@ cnvKompare = function(patient_id,
   message("DONE!")
   return(output)
 
+}
+
+
+#' Transform input maf columns to allow for usage of dplyr verbs
+#'
+#' @param maf_df input MAF data frame.
+#'
+#' @return maf_df with transofmred columns
+#' @export
+#' @import tidyverse
+#'
+#' @examples
+#' ssm_sample = get_ssm_by_sample(this_sample_id = "HTMCP-01-06-00485-01A-01D", tool_name = "slims-3", projection = "grch37")
+#' clean_maf = cleanup_maf(maf_df = ssm_sample)
+#'
+cleanup_maf = function(maf_df){
+
+  #cleanup various columns that store text to make them useful (make numeric, drop denominator etc)
+  maf_df = mutate(maf_df,EXON = gsub("/.+", "", EXON)) %>%
+    mutate(EXON = as.numeric(EXON)) %>%
+    mutate(INTRON = gsub("/.+", "", INTRON)) %>%
+    mutate(INTRON = as.numeric(INTRON)) %>%
+    mutate(CDS_position = gsub("/.+", "", CDS_position)) %>%
+    mutate(CDS_position = as.numeric(as.character(CDS_position))) %>%
+    mutate(cDNA_position = gsub("/.+", "", cDNA_position)) %>%
+    mutate(cDNA_position = as.numeric(as.character(cDNA_position))) %>%
+    mutate(Protein_position = gsub("/.+", "", Protein_position)) %>%
+    mutate(Protein_position = as.numeric(as.character(Protein_position)))
+
+  return(maf_df)
+}
+
+#' Complement maf with missing samples.
+#'
+#' @param incoming_maf The initial MAF data frame to be supplemented with missing samples.
+#' @param these_samples_metadata The metadata data frame that contains Tumor_Sample_Barcode column with ids to be present in the complemented MAF.
+#'
+#' @return maf_df with complemented Tumor_Sample_Barcode and other columns ready to be used downstream
+#' @export
+#'
+#' @examples
+#' small_maf = get_coding_ssm(limit_cohort = "dlbcl_reddy", seq_type = "capture") %>% dplyr::filter(Hugo_Symbol=="MYC")
+#' reddy_meta = get_gambl_metadata(seq_type_filter = "capture") %>% dplyr::filter(cohort=="dlbcl_reddy")
+#' complete_maf = supplement_maf(incoming_maf = small_maf, these_samples_metadata = reddy_meta)
+#'
+supplement_maf <- function(incoming_maf,
+                           these_samples_metadata){
+  missing_sample_ids = setdiff(these_samples_metadata$Tumor_Sample_Barcode,
+                               incoming_maf$Tumor_Sample_Barcode)
+  missing_sample_maf = incoming_maf %>%
+    dplyr::filter(Tumor_Sample_Barcode == "Imaginary Sample ID") %>%
+    add_row(Tumor_Sample_Barcode = missing_sample_ids,
+           Hugo_Symbol = "GARBAGE",
+           Chromosome = ifelse(stringr::str_detect(incoming_maf$Chromosome[1],
+                                                   "chr"),
+                               "chr1",
+                               "1"),
+           Start_Position = 1,
+           End_Position = 1,
+           Variant_Classification = "Missense_Mutation"
+           )
+  full_maf = rbind(incoming_maf,
+                   missing_sample_maf)
+  return(full_maf)
 }

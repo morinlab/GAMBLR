@@ -8,11 +8,12 @@ estimate_purity(
   in_maf,
   in_seg,
   sample_id,
-  seg_file_source = "ichorCNA",
+  seg_file_source = "battenberg",
   show_plots = FALSE,
   assume_diploid = FALSE,
   coding_only = FALSE,
-  genes
+  genes,
+  ssh_session
 )
 }
 \arguments{

@@ -1,4 +1,5 @@
 vignettes/onco_matrix.txt
+.RData
 .Rproj.user
 inst/doc
 Meta
@@ -7,3 +8,4 @@ doc
 .Rhistory
 *.pdf
 data/ggsci_db.rda
+*.bed
