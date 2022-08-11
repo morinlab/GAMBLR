@@ -17,6 +17,7 @@ splendidHeatmap(
   metadataColumns = c("pathology"),
   numericMetadataColumns = NULL,
   numericMetadataMax = NULL,
+  prioritize_ordering_on_numeric = TRUE,
   custom_colours = NULL,
   legend_direction = "horizontal",
   legend_position = "bottom",
@@ -45,6 +46,8 @@ splendidHeatmap(
 \item{numericMetadataColumns}{A vector containing the numeric columns you want to plot below.}
 
 \item{numericMetadataMax}{A numeric vector of cutoffs to apply to numeric columns above.}
+
+\item{prioritize_ordering_on_numeric}{Logical argument specifying whether to sort on numeric metadata first or other metadata columns. Default is TRUE (sort on numeric metadata, then on other columns).}
 
 \item{custom_colours}{Provide named vector (or named list of vectors) containing custom annotation colours if you do not want to use standartized pallette.}
 
