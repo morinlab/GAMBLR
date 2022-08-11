@@ -4,10 +4,12 @@
 \alias{subset_cnstates}
 \title{Helper function called by fancy_multisample_ideo, for sub-setting copy number information based on segments avaialble in cn data}
 \usage{
-subset_cnstates(cn_segments, samplen)
+subset_cnstates(cn_segments, include_2 = FALSE, samplen)
 }
 \arguments{
 \item{cn_segments}{DF with copy number segments, usually retrieved from get_sample_cn_segments.}
+
+\item{include_2}{Optional parameter for including or ommit CN state == 2.}
 
 \item{samplen}{Numeric value that annotates the sample order.}
 }

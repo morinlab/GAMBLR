@@ -46,6 +46,8 @@ plot as ggplot object.
 Visualize (stacked barplot) genomic read-subsets across a selection of samples.
 }
 \examples{
+this_meta = get_gambl_metadata()
+
 all_fl = dplyr::filter(this_meta, pathology == "FL") \%>\%
   dplyr::select(sample_id) \%>\%
   arrange(sample_id) \%>\%

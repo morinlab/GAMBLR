@@ -2,7 +2,7 @@
 % Please edit documentation in R/viz.R
 \name{fancy_multisamp_ideogram}
 \alias{fancy_multisamp_ideogram}
-\title{Generate ideograms for selected sample, visualizing copy number variation segments.}
+\title{Generate ideograms for selected sample, visualizing copy number variation segments. Also possible to only plot concordant (or discordant) cn segments between two samples. i.e how two samples differ, or are a like.}
 \usage{
 fancy_multisamp_ideogram(
   these_sample_ids,
@@ -10,6 +10,9 @@ fancy_multisamp_ideogram(
   plot_sub = "grch37",
   chr_anno_dist = 3,
   chr_select = paste0("chr", c(1:22)),
+  include_cn2 = FALSE,
+  kompare = FALSE,
+  concordance = TRUE,
   coding_only = FALSE,
   from_flatfile = TRUE,
   use_augmented_maf = TRUE
@@ -26,6 +29,12 @@ fancy_multisamp_ideogram(
 
 \item{chr_select}{Optional parameter to subset plot to specific chromosomes. Default value is chr1-22.}
 
+\item{include_cn2}{Set to TRUE for plotting CN states == 2.}
+
+\item{kompare}{Boolean statement, set to TRUE to call cnvKompare on the selected samples for plotting concordant (or discordant) cn segments across selected chromosomes.}
+
+\item{concordance}{Boolean parameter to be used when kompare = TRUE. Default is TRUE, to plot discordant segments, set parameter to FALSE.}
+
 \item{coding_only}{Optional. Set to TRUE to restrict to plotting only coding mutations.}
 
 \item{from_flatfile}{If set to true the function will use flat files instead of the database.}
@@ -36,7 +45,7 @@ fancy_multisamp_ideogram(
 Nothing.
 }
 \description{
-Generate ideograms for selected sample, visualizing copy number variation segments.
+Generate ideograms for selected sample, visualizing copy number variation segments. Also possible to only plot concordant (or discordant) cn segments between two samples. i.e how two samples differ, or are a like.
 }
 \examples{
 
@@ -47,7 +56,7 @@ ideo_2_samp = fancy_multisamp_ideogram(these_sample_ids = two_samples,
                                        chr_anno_dist = 4,
                                        chr_select = paste0("chr", c(1:22)),
                                        coding_only = FALSE,
-                                       from_flatfile = FALSE,
-                                       use_augmented_maf = FALSE)
+                                       from_flatfile = TRUE,
+                                       use_augmented_maf = TRUE)
 
 }
