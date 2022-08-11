@@ -869,6 +869,13 @@ collate_results = function(sample_table,
     output_base = config::get("repo_base")
     output_file = paste0(output_base, output_file)
     output_file = glue::glue(output_file)
+
+    #check for missingness
+    if(!file.exists(output_file)){
+      message("Cannot find file locally. If working remotely, perhaps you forgot to load your config (see below) or sync your files?")
+      message('Sys.setenv(R_CONFIG_ACTIVE = "remote")')
+    }
+
     sample_table = read_tsv(output_file) %>% dplyr::filter(sample_id %in% sample_table$sample_id)
   }else{
     message("Slow option: not using cached result. I suggest from_cache = TRUE whenever possible")
@@ -1230,6 +1237,13 @@ assign_cn_to_ssm = function(this_sample,
       }
       battenberg_file = local_battenberg_file
     }
+
+    #check for missingness
+    if(!file.exists(battenberg_file)){
+      message("Cannot find file locally. If working remotely, perhaps you forgot to load your config (see below) or sync your files?")
+      message('Sys.setenv(R_CONFIG_ACTIVE = "remote")')
+    }
+
     seg_sample = read_tsv(battenberg_file) %>%
       as.data.table() %>%
       dplyr::mutate(size = end - start) %>%

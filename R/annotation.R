@@ -50,6 +50,13 @@ annotate_ssm_blacklist = function(mutations_df,
   blacklist_list = list()
   for(b in blacklist_files){
     full_path = paste0(project_base,b)
+
+    #check for missingness
+    if(!file.exists(full_path)){
+      message("Cannot find file locally. If working remotely, perhaps you forgot to load your config (see below) or sync your files?")
+      message('Sys.setenv(R_CONFIG_ACTIVE = "remote")')
+    }
+
     lifted_blacklist = read_tsv(full_path, col_names = c("chrpos", "blacklist_count"),col_types="ci")
     lifted_blacklist = lifted_blacklist %>%
       separate(chrpos, into = c("Chromosome", "Start_Position"), sep = ":")

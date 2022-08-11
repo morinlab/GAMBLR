@@ -14,6 +14,14 @@ cnames = c("CHROM_A", "START_A", "END_A", "CHROM_B", "START_B", "END_B", "NAME",
 #'
 get_excluded_samples = function(tool_name = "slms-3"){
   base = config::get("repo_base")
+
+  #check for missingness
+  path = paste0(base,"config/exclude.tsv")
+  if(!file.exists(path)){
+    message("Cannot find file locally. If working remotely, perhaps you forgot to load your config (see below) or sync your files?")
+    message('Sys.setenv(R_CONFIG_ACTIVE = "remote")')
+  }
+
   excluded_df = read_tsv(paste0(base,"config/exclude.tsv"))
   excluded_samples = dplyr::filter(excluded_df, pipeline_exclude == tool_name) %>%
     pull(sample_id)
@@ -158,6 +166,13 @@ get_ssm_by_samples = function(these_sample_ids,
       maf_path = glue::glue(maf_template)
       full_maf_path =  paste0(config::get("project_base"), maf_path)
       message(paste("using existing merge:", full_maf_path))
+
+      #check for missingness
+      if(!file.exists(full_maf_path)){
+        message("Cannot find file locally. If working remotely, perhaps you forgot to load your config (see below) or sync your files?")
+        message('Sys.setenv(R_CONFIG_ACTIVE = "remote")')
+        }
+
       maf_df_merge = fread_maf(full_maf_path) %>%
         dplyr::filter(Tumor_Sample_Barcode %in% these_sample_ids)
       #subset maf to only include first 43 columns (default)
@@ -173,6 +188,13 @@ get_ssm_by_samples = function(these_sample_ids,
       maf_path = glue::glue(maf_template)
       full_maf_path =  paste0(config::get("project_base"), maf_path)
       message(paste("using existing merge:", full_maf_path))
+
+      #check for missingness
+      if(!file.exists(full_maf_path)){
+        message("Cannot find file locally. If working remotely, perhaps you forgot to load your config (see below) or sync your files?")
+      message('Sys.setenv(R_CONFIG_ACTIVE = "remote")')
+        }
+
       maf_df_merge = fread_maf(full_maf_path) %>%
         dplyr::filter(Tumor_Sample_Barcode %in% these_sample_ids) %>%
         dplyr::filter(t_alt_count >= min_read_support)
@@ -327,6 +349,13 @@ get_ssm_by_sample = function(this_sample_id,
 
         scp_download(ssh_session,aug_maf_path,dirN)
       }
+
+     #check for missingness
+     if(!file.exists(local_aug_maf_path)){
+      message("Cannot find file locally. If working remotely, perhaps you forgot to load your config (see below) or sync your files?")
+      message('Sys.setenv(R_CONFIG_ACTIVE = "remote")')
+     }
+
       sample_ssm = fread_maf(local_aug_maf_path) %>%
       dplyr::filter(t_alt_count >= min_read_support)
     }else{
@@ -341,10 +370,23 @@ get_ssm_by_sample = function(this_sample_id,
 
         scp_download(ssh_session,full_maf_path,dirN)
       }
+      #check for missingness
+      if(!file.exists(local_full_maf_path)){
+        message("Cannot find file locally. If working remotely, perhaps you forgot to load your config (see below) or sync your files?")
+        message('Sys.setenv(R_CONFIG_ACTIVE = "remote"')
+      }
+
       sample_ssm = fread_maf(local_full_maf_path)
     }
   }else if(augmented && file.exists(aug_maf_path)){
     full_maf_path = aug_maf_path
+
+    #check for missingness
+    if(!file.exists(full_maf_path)){
+      message("Cannot find file locally. If working remotely, perhaps you forgot to load your config (see below) or sync your files?")
+      message('Sys.setenv(R_CONFIG_ACTIVE = "remote")')
+    }
+
     sample_ssm = fread_maf(full_maf_path)
     if(min_read_support){
       # drop poorly supported reads but only from augmented MAF
@@ -355,6 +397,12 @@ get_ssm_by_sample = function(this_sample_id,
       message(paste("ERROR: file does not exist", full_maf_path))
       return()
     }
+    #check for missingness
+    if(!file.exists(full_maf_path)){
+      message("Cannot find file locally. If working remotely, perhaps you forgot to load your config (see below) or sync your files?")
+      message('Sys.setenv(R_CONFIG_ACTIVE = "remote")')
+    }
+
     sample_ssm = fread_maf(full_maf_path)
   }
 
@@ -469,6 +517,18 @@ get_gambl_metadata = function(seq_type_filter = "genome",
     if(biopsy_flatfile==""){
       biopsy_flatfile = paste0(base, config::get("table_flatfiles")$biopsies)
     }
+
+    #check for missingness
+    if(!file.exists(sample_flatfile)){
+      message("Cannot find file locally. If working remotely, perhaps you forgot to load your config (see below) or sync your files?")
+      message('Sys.setenv(R_CONFIG_ACTIVE = "remote")')
+    }
+
+    if(!file.exists(biopsy_flatfile)){
+      message("Cannot find file locally. If working remotely, perhaps you forgot to load your config (see below) or sync your files?")
+      message('Sys.setenv(R_CONFIG_ACTIVE = "remote")')
+    }
+
     sample_meta = suppressMessages(read_tsv(sample_flatfile, guess_max = 100000))
     biopsy_meta = suppressMessages(read_tsv(biopsy_flatfile, guess_max = 100000))
 
@@ -856,6 +916,13 @@ add_icgc_metadata = function(incoming_metadata){
   icgc_publ = mutate(icgc_publ, sex = str_to_upper(sex))
 
   icgc_raw_path = paste0(repo_base,"data/metadata/raw_metadata/ICGC_MALY_seq_md.tsv")
+
+  #check for missingness
+  if(!file.exists(icgc_raw_path)){
+    message("Cannot find file locally. If working remotely, perhaps you forgot to load your config (see below) or sync your files?")
+    message('Sys.setenv(R_CONFIG_ACTIVE = "remote")')
+  }
+
   icgc_raw = suppressMessages(read_tsv(icgc_raw_path))
 
   icgc_raw = icgc_raw %>%
@@ -903,6 +970,13 @@ get_gambl_outcomes = function(patient_ids,
 
   if(from_flatfile){
     outcome_flatfile = paste0(config::get("repo_base"), config::get("table_flatfiles")$outcomes)
+
+    #check for missingness
+    if(!file.exists(outcome_flatfile)){
+      message("Cannot find file locally. If working remotely, perhaps you forgot to load your config (see below) or sync your files?")
+      message('Sys.setenv(R_CONFIG_ACTIVE = "remote")')
+    }
+
     all_outcome = suppressMessages(read_tsv(outcome_flatfile))
 
   }else{
@@ -1021,6 +1095,13 @@ get_combined_sv = function(min_vaf = 0,
     sv_file = config::get()$results_flatfiles$sv_combined$gambl
     sv_file = paste0(base_path, sv_file)
   }
+
+  #check for missingness
+  if(!file.exists(sv_file)){
+    message("Cannot find file locally. If working remotely, perhaps you forgot to load your config (see below) or sync your files?")
+    message('Sys.setenv(R_CONFIG_ACTIVE = "remote")')
+  }
+
   all_sv = read_tsv(sv_file, col_types = "cnncnncnccccnnccncn") %>%
     dplyr::rename(c("VAF_tumour" = "VAF")) %>%
     dplyr::filter(VAF_tumour >= min_vaf)
@@ -1107,6 +1188,13 @@ get_manta_sv = function(min_vaf = 0.1,
   #this table stores chromosomes with un-prefixed names. Convert to prefixed chromosome if necessary
   if(from_flatfile){
     sv_file = get_merged_result(tool_name = "manta", projection = projection)
+
+  #check for missingness
+    if(!file.exists(sv_file)){
+      message("Cannot find file locally. If working remotely, perhaps you forgot to load your config (see below) or sync your files?")
+      message('Sys.setenv(R_CONFIG_ACTIVE = "remote")')
+    }
+
     all_sv = read_tsv(sv_file, col_types = "cnncnncnccccnnnnccc", col_names = cnames)
   }else{
     con = DBI::dbConnect(RMariaDB::MariaDB(), dbname = db)
@@ -1458,6 +1546,12 @@ get_sample_cn_segments = function(this_sample_id,
       cnv_flatfile_template = config::get("results_flatfiles")$cnv_combined$gambl
       cnv_path =  glue::glue(cnv_flatfile_template)
       full_cnv_path =  paste0(config::get("project_base"), cnv_path)
+    }
+
+    #check for missingness
+    if(!file.exists(full_cnv_path)){
+      message("Cannot find file locally. If working remotely, perhaps you forgot to load your config (see below) or sync your files?")
+      message('Sys.setenv(R_CONFIG_ACTIVE = "remote")')
     }
 
     all_segs = read_tsv(full_cnv_path)
@@ -2030,6 +2124,13 @@ get_coding_ssm = function(limit_cohort,
   #read file
   if(from_flatfile){
     message(paste("reading from:", full_maf_path))
+
+  #check for missingness
+    if(!file.exists(full_maf_path)){
+      message("Cannot find file locally. If working remotely, perhaps you forgot to load your config (see below) or sync your files?")
+      message('Sys.setenv(R_CONFIG_ACTIVE = "remote")')
+    }
+
     muts = fread_maf(full_maf_path) %>%
       dplyr::filter(Variant_Classification %in% coding_class) %>%
       as.data.frame()
