@@ -10,11 +10,10 @@ fancy_qc_plot(
   filter_pathology,
   seq_type = "genome",
   metadata,
+  these_samples_metadata,
   plot_data,
-  fill_by,
+  fill_by = "pathology",
   comparison_samples,
-  filter_comp_cohort,
-  filter_comp_pathology,
   plot_title = "",
   plot_subtitle = "",
   y_axis_lab = "",
@@ -32,15 +31,13 @@ fancy_qc_plot(
 
 \item{metadata}{Optional, user can provide a metadata df to subset sample IDs from.}
 
+\item{these_samples_metadata}{GAMBL metadata subset to the cases you want to process.}
+
 \item{plot_data}{Plotting parameter, define the data type to be plotted.}
 
-\item{fill_by}{Plotting parameter, Set fill for bar plot, can be pathology, cohort, etc.}
+\item{fill_by}{Parameter for specifying fill variable for grouped bar plot. Can be any factor from incoming metadata, e.g pathology, cohort, etc.}
 
-\item{comparison_samples}{Optional parameter, give the function a list of sample IDs to be compared against the main plotting group.}
-
-\item{filter_comp_cohort}{Optional parameter for filtering the comparison group (cohort).}
-
-\item{filter_comp_pathology}{Optional parameter for filtering the comparison group (pathology).}
+\item{comparison_samples}{Optional parameter, give the function a list of sample IDs to be compared against the main plotting group. Pathology is default.}
 
 \item{plot_title}{Plotting parameter, plot title.}
 
@@ -61,8 +58,6 @@ Plot for visualizing QC metrics and allowing for grouping by different metadata 
 \examples{
 fancy_qc_plot(filter_pathology = "FL",
               filter_cohort = "FL_Kridel",
-              filter_comp_pathology = "BL",
-              filter_comp_cohort = "BL_Pediatric",
               plot_data = "AverageBaseQuality",
               fill_by = "pathology",
               plot_subtitle = "Example Plot",
