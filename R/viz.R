@@ -128,7 +128,7 @@ prettyRainfallPlot = function(this_sample_id,
     }
   } else if (!missing (maf_path)) {
     message ("Path to custom MAF file was provided, reading SSM using the custom path ...")
-    
+
     this_maf = read_tsv(maf_path)
     if(!missing(this_sample_id)){
       this_maf = this_maf %>% dplyr::filter(Tumor_Sample_Barcode %in% this_sample_id)
@@ -4807,14 +4807,14 @@ fancy_qc_plot = function(these_samples,
                          plot_subtitle = "",
                          y_axis_lab = "",
                          return_plotdata = FALSE){
-  
+
   #return a list of acceptable data types for plotting
   if(return_plotdata){
     plotting_variables = c("AverageBaseQuality", "AverageInsertSize", "AverageReadLength",
                            "PairsOnDiffCHR", "TotalReads", "TotalUniquelyMapped",
                            "TotalUnmappedreads", "TotalDuplicatedreads", "ProportionReadsDuplicated",
                            "ProportionReadsMapped", "MeanCorrectedCoverage", "ProportionCoverage10x", "ProportionCoverage30x")
-    
+
     return(plotting_variables)
   }
 
@@ -4824,13 +4824,13 @@ fancy_qc_plot = function(these_samples,
   }else{
     this_meta = metadata
   }
-  
+
   if(!missing(these_samples_metadata)){
     these_samples = dplyr::select(these_samples_metadata, sample_id) %>%
       as.data.frame(strings.as.factors = FALSE) %>%
       pull(sample_id)
   }
-  
+
   #filter metadata on selected cohort/pathology
   if(missing(these_samples)){
     if(!missing(filter_cohort) && missing(filter_pathology)){
@@ -4838,37 +4838,37 @@ fancy_qc_plot = function(these_samples,
         dplyr::select(sample_id) %>%
         as.data.frame()
     }
-    
+
     if(!missing(filter_pathology) && missing(filter_cohort)){
       these_samples = dplyr::filter(this_meta, pathology == filter_pathology) %>%
         dplyr::select(sample_id) %>%
         as.data.frame()
     }
-    
+
     if(!missing(filter_cohort) && !missing(filter_pathology)){
       these_samples = dplyr::filter(this_meta, pathology == filter_pathology, cohort == filter_cohort) %>%
         dplyr::select(sample_id) %>%
         as.data.frame()
     }
-    
+
     if(missing(filter_cohort) && missing(filter_pathology)){
       these_samples = dplyr::select(this_meta, sample_id) %>%
         as.data.frame
     }
   }
-  
+
   #get QC data for selected samples
   qc_metrics = collate_qc_results(sample_table = these_samples, seq_type_filter = seq_type)
   message(paste0("QC Metric successfully retreived for ", nrow(qc_metrics), " samples out of a total of ", nrow(these_samples), " samples in input sample table."))
-  
+
   #aggregate sample list with metadata columns
-  qc_meta = qc_metrics %>% 
+  qc_meta = qc_metrics %>%
     inner_join(this_meta) %>%
     mutate_if(is.integer, as.factor) %>%
     mutate_if(is.character, as.factor)
-  
+
   qc_meta$group = "main_sample"
-  
+
   #calculate mean for selected comparison group using a list of IDs provided in comparison_samples
   if(!missing(comparison_samples)){
     comp_data = collate_qc_results(sample_table = comparison_samples, seq_type_filter = seq_type) %>%
@@ -4876,11 +4876,11 @@ fancy_qc_plot = function(these_samples,
       melt(id.var = "sample_id") %>%
       arrange(sample_id)
   }
-  
+
   #Retrieve QC metrics for comparison samples, if provided.
   if(!missing(comparison_samples)){
     comp_data = collate_qc_results(sample_table = comparison_samples, seq_type_filter = seq_type)
-    
+
     #aggregate sample list with metadata columns
     comp_meta = comp_data %>% inner_join(this_meta)
     comp_meta = mutate_if(comp_meta, is.integer, as.factor)
@@ -4888,22 +4888,22 @@ fancy_qc_plot = function(these_samples,
     comp_meta$group = "comparison_sample"
     qc_meta = rbind(qc_meta, comp_meta)
   }
-  
+
   #get gambl colours for selected fill and subset to levels in selected factor
   col_gambl = get_gambl_colours(fill_by) %>%
     as.data.frame()
-  
+
   col_gambl$factors = rownames(col_gambl)
   colnames(col_gambl)[1] = "hex"
   row.names(col_gambl) <- NULL
-  
+
   levels_fill = levels(qc_meta$pathology) %>%
     as.data.frame()
-  
+
   colnames(levels_fill)[1] = "factors"
   sub_cols = dplyr::left_join(levels_fill, col_gambl, by = "factors")
   list_col = as.list(sub_cols$hex)
-  
+
   #plotting
   p = ggplot(qc_meta, aes_string(x = paste0("group"), y = plot_data, fill = fill_by, shape = fill_by)) +
     geom_boxplot(mapping = aes(x = group)) +
@@ -4913,7 +4913,7 @@ fancy_qc_plot = function(these_samples,
     scale_fill_manual(values = c(list_col)) +
     theme(legend.position = "right", axis.title.x = element_blank(), axis.text.x = element_blank(), axis.ticks.x = element_blank(),
           panel.grid.minor = element_blank(), panel.grid.major = element_blank(), panel.background = element_blank())
-  
+
   return(p)
 }
 
