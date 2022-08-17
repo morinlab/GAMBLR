@@ -24,6 +24,9 @@ find_files_extract_wildcards(
 
 \item{unix_group}{default value is gambl}
 }
+\value{
+
+}
 \description{
 Title
 }

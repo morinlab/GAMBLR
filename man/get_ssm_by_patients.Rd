@@ -43,6 +43,9 @@ get_ssm_by_patients(
 
 \item{subset_from_merge}{Instead of merging individual MAFs, the data will be subset from a pre-merged MAF of samples with the specified seq_type}
 }
+\value{
+
+}
 \description{
 Get MAF-format data frame for more than one patient using at most one augmented_maf  per patient(i.e. unique superset of variants)
 and combine or subset from a merged MAF (wraps get_ssm_by_samples)

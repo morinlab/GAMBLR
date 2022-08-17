@@ -2,6 +2,95 @@
 coding_class = c("Frame_Shift_Del", "Frame_Shift_Ins", "In_Frame_Del", "In_Frame_Ins", "Missense_Mutation", "Nonsense_Mutation", "Nonstop_Mutation", "Silent", "Splice_Region", "Splice_Site", "Targeted_Region", "Translation_Start_Site")
 rainfall_conv = c("T>C", "T>C", "C>T", "C>T", "T>A", "T>A", "T>G", "T>G", "C>A", "C>A", "C>G", "C>G", "InDel")
 names(rainfall_conv) = c('A>G', 'T>C', 'C>T', 'G>A', 'A>T', 'T>A', 'A>C', 'T>G', 'C>A', 'G>T', 'C>G', 'G>C', 'InDel')
+ssh_session <<- NULL
+
+
+#' Check if code is running remotely and (optionally) attempt a connection and set global ssh_session variable
+#'
+#' @param auto_connect Set to TRUE if you want the function to create an ssh session (if necessary)
+#'
+#' @return NULL. This function makes a new ssh session, if necessary, and stores it in a global variable (ssh_session) 
+#' @export
+#'
+#' @examples ssh_session = get_ssh_session()
+check_host = function(auto_connect=FALSE){
+  hostname = Sys.info()["nodename"]
+  if(grepl("bcgsc.ca",hostname)){
+    #we are on the GSC network
+  }else{
+    # we are on some computer not on the GSC network (needs ssh_session)
+    if(class(ssh_session)=="ssh_session"){
+      message("active ssh session detected")
+      return()
+    }else{
+      if(auto_connect){
+        session = get_ssh_session()
+        assign("ssh_session", session, envir = .GlobalEnv)
+      }else{
+        message("You appear to be using GAMBLR on your local computer. Be sure to set up an ssh session!")
+        message("?GAMBLR::get_ssh_session for more info")
+        
+      }
+    }
+  }
+}
+
+#' Count the variants in a region with a variety of filtering options
+#'
+#' @param region 
+#' @param chromosome 
+#' @param start 
+#' @param end 
+#' @param these_samples_metadata 
+#' @param count_by Defaults to counting all variants. Specify 'sample_id' if you want to collapse and count only one per sample
+#' @param seq_type 
+#' @param ssh_session 
+#'
+#' @return
+#' @export
+#'
+#' @examples
+count_ssm_by_region = function(region,chromosome,start,end,these_samples_metadata,count_by,seq_type="genome",ssh_session){
+  if(missing(these_samples_metadata)){
+    these_samples_metadata = get_gambl_metadata(seq_type_filter=seq_type)
+  }
+  if(missing(region)){
+    region_muts = get_ssm_by_region(chromosome=chromosome,qstart=start,qend=end,streamlined = TRUE,ssh_session = ssh_session)
+  }else{
+    region_muts = get_ssm_by_region(region=region,streamlined = TRUE,ssh_session = ssh_session)
+  }
+  keep_muts = left_join(region_muts,these_samples_metadata) %>% dplyr::filter(!is.na(sample_id))
+  if(missing(count_by)){
+    #count everything even if some mutations are from the same patient
+    return(nrow(keep_muts))
+  }else if(count_by == "sample_id"){
+    return(length(unique(keep_muts$sample_id)))
+  }else{
+    print("Not sure what to count")
+  }
+}
+
+#' Split a contiguous genomic region on a chromosome into non-overlapping bins
+#'
+#' @param chromosome 
+#' @param start 
+#' @param end 
+#' @param bin_size 
+#'
+#' @return Data frame describing the bins various ways
+#' @export
+#'
+#' @examples 
+#' chr8q_bins = region_to_bins(chromosome="8",start=48100000,end=146364022,bin_size = 20000)
+region_to_bins = function(chromosome="chr1",start=10000,end=121500000,bin_size=2000){
+  bin_df = data.frame(bin_chr = chromosome,bin_start=seq(start,end,bin_size))
+  bin_df = mutate(bin_df,bin_end = bin_start+ bin_size) %>%
+    dplyr::filter(bin_end<=end) %>% 
+    mutate(region = paste0(bin_chr,":",bin_start,"-",bin_end))
+  
+  return(bin_df)
+  
+}
 
 #' Create an ssh session to the GSC (requires active VPN connection)
 #'
@@ -260,11 +349,11 @@ get_coding_ssm_status = function(gene_symbols,
       dplyr::filter(Variant_Classification %in% coding_class)
   }
 
-  if(!missing(maf_data) && !is.null(maf_path)){
-    maf_data = get_coding_ssm(projection = projection, seq_type = seq_type, from_flatfile = from_flatfile, augmented = augmented, min_read_support = 3, basic_columns = FALSE, include_silent = include_silent)
+  if(missing(maf_data) & is.null(maf_path)){
+    coding_ssm = get_coding_ssm(projection = projection, seq_type = seq_type, from_flatfile = from_flatfile, augmented = augmented, min_read_support = 3, basic_columns = FALSE, include_silent = include_silent)
   }
 
-  coding_ssm = maf_data %>%
+  coding_ssm = coding_ssm %>%
     dplyr::filter(Variant_Classification %in% coding_class)
 
   coding = coding_ssm %>%
@@ -832,10 +921,18 @@ sv_to_custom_track = function(sv_bedpe,
   sv_data = bind_rows(sv_data1, sv_data2)
   sv_data = mutate(sv_data, end = end + 10)
   }else{
-    sv_data = mutate(sv_bedpe, annotation = paste0(1, ":", 2)) %>%
-      dplyr::select(1, 2, 6, tumour_sample_id, annotation)
-
-    colnames(sv_data)=c("chrom", "start", "end", "sample_id", "annotation")
+    colnames(sv_data)[c(1,2,3)]=c("CHROM_A" ,  "START_A", "END_A" )
+    colnames(sv_data)[c(4,5,6)]=c("CHROM_B" ,  "START_B", "END_B" )
+    
+    sv_data_1 = mutate(sv_bedpe, annotation = paste0( CHROM_B, ":", START_B)) %>%
+      dplyr::select(CHROM_A, START_A, END_A, tumour_sample_id, annotation)
+    sv_data_2 = mutate(sv_bedpe, annotation = paste0( CHROM_A, ":", START_A)) %>%
+      dplyr::select(CHROM_B, START_B, END_B, tumour_sample_id, annotation)
+    colnames(sv_data_1)=c("chrom", "start", "end", "sample_id", "annotation")
+    colnames(sv_data_2)=c("chrom", "start", "end", "sample_id", "annotation")
+    sv_data= bind_rows(sv_data_1,sv_data_2)
+    
+   # sv_data = dplyr::select(sv_data,chrom,start,end,sample_id,annotation)
   }
   if(!any(grepl("chr", sv_data[,1]))){
     #add chr
@@ -859,7 +956,7 @@ sv_to_custom_track = function(sv_bedpe,
 
   write_bed = function(coloured_svs, sv_name, output_file_base){
     data_bed = coloured_svs %>%
-      mutate(details = paste0(annotation, "_", sample_id)) %>%
+      mutate(details = paste0(sample_id, "_", annotation)) %>%
       mutate(score = 0, strand = "+", end = end + 1, start1 = start, end1 = end) %>%
       dplyr::select(chrom, start, end, details, score, strand, start1, end1, rgb) %>%
       dplyr::filter(!is.na(rgb)) %>%
@@ -887,7 +984,9 @@ sv_to_custom_track = function(sv_bedpe,
 #'
 maf_to_custom_track = function(maf_data,
                                these_samples_metadata,
-                               output_file){
+                               output_file,
+                               track_name="GAMBL mutations",
+                               track_description = "mutations from GAMBL"){
 
   #reduce to a bed-like format
   maf_data = dplyr::select(maf_data, Chromosome, Start_Position, End_Position, Tumor_Sample_Barcode)
@@ -910,16 +1009,22 @@ maf_to_custom_track = function(maf_data,
   }
   samples_coloured = left_join(meta, rgb_df)
   maf_bed = maf_data %>%
-    mutate(score = 0, strand = "+", end = end + 1, start1 = start, end1 = end)
+    mutate(score = 0, strand = "+", start1 = start-1,start=start1, end1 = end)
 
   maf_coloured = left_join(maf_bed, samples_coloured, by = "sample_id") %>%
     dplyr::select(-lymphgen) %>%
     dplyr::filter(!is.na(rgb))
-
-  cat('track name="GAMBL mutations" description="Mutations from GAMBL" visibility=2 itemRgb="On"\n', file = output_file)
+  header_ucsc = paste0('track name="',track_name,'" description="', track_description, '" visibility=2 itemRgb="On"\n')
+  cat(header_ucsc,file = output_file)
   tabular = write.table(maf_coloured, file = output_file, quote = F, sep = "\t", row.names = F, col.names = F, append = TRUE)
 }
 
+test_glue = function(placeholder="INSERTED"){
+  some_string = "this text has {placeholder}"
+  print(some_string)
+  ss=glue::glue(some_string)
+  print(ss)
+}
 
 #' Bring together all derived sample-level results from many GAMBL pipelines.
 #'
@@ -1422,11 +1527,11 @@ estimate_purity = function(in_maf,
   if(missing(in_maf) & missing(in_seg)){
     CN_new = assign_cn_to_ssm(this_sample = sample_id, coding_only = coding_only, assume_diploid = assume_diploid, genes = genes,seg_file_source = seg_file_source,ssh_session=ssh_session)$maf
   }else if(!missing(in_seg)){
-    CN_new = assign_cn_to_ssm(maf_file = in_maf, seg_file = in_seg, seg_file_source = seg_file_source, coding_only = coding_only, genes = genes,ssh_session=ssh_session)$maf
+    CN_new = assign_cn_to_ssm(this_sample = sample_id, maf_file = in_maf, seg_file = in_seg, seg_file_source = seg_file_source, coding_only = coding_only, genes = genes,ssh_session=ssh_session)$maf
   }else{
     # If no seg file was provided and assume_diploid paramtere is set to true,
     if(assume_diploid){
-      CN_new = assign_cn_to_ssm(maf_file = in_maf, assume_diploid = TRUE, coding_only = coding_only, genes = genes,ssh_session=ssh_session)$maf
+      CN_new = assign_cn_to_ssm(this_sample = sample_id, maf_file = in_maf, assume_diploid = TRUE, coding_only = coding_only, genes = genes,ssh_session=ssh_session)$maf
     }
   }
   # Change any homozygous deletions (CN = 0) to 1 for calculation purposes
@@ -1947,7 +2052,7 @@ get_gambl_colours = function(classification = "all",
                             "POS" = "#7F055F",
                             "NEG" = "#E5A4CB")
 
-  all_colours[["BL"]] = c("M53-BL" = "#A6CEE3",
+  all_colours[["BL"]] = c("Q53-BL" = "#A6CEE3",
                           "DLBCL-A" = "#721F0F",
                           "IC-BL" = "#45425A",
                           "DGG-BL" = "#E90C8BFF",
@@ -1955,7 +2060,15 @@ get_gambl_colours = function(classification = "all",
                           "DLBCL-C" = "#C41230")
 
   all_colours[["FL"]] = c(dFL = "#99C1B9", cFL = "#D16666", DLBCL = "#479450")
-
+  
+  all_colours[["lymphgenerator"]] = c("MP3"="#5B8565",
+                                      "EGB" = "#98622A",
+                                      "ETB"="#813F3D",
+                                      "aSCI"="#D66B1F",
+                                      "aSEL"="#C41230",
+                                      "MCaP"="#5F8CFF",
+                                      "BNZ"="#8870B6"
+                                      )
   all_colours[["lymphgen"]] = c("EZB-MYC" = "#52000F",
                                 "EZB" = "#721F0F",
                                 "EZB-COMP" = "#C7371A",
@@ -3576,4 +3689,38 @@ cleanup_maf = function(maf_df){
     mutate(Protein_position = as.numeric(as.character(Protein_position)))
 
   return(maf_df)
+}
+
+#' Complement maf with missing samples.
+#'
+#' @param incoming_maf The initial MAF data frame to be supplemented with missing samples.
+#' @param these_samples_metadata The metadata data frame that contains Tumor_Sample_Barcode column with ids to be present in the complemented MAF.
+#'
+#' @return maf_df with complemented Tumor_Sample_Barcode and other columns ready to be used downstream
+#' @export
+#'
+#' @examples
+#' small_maf = get_coding_ssm(limit_cohort = "dlbcl_reddy", seq_type = "capture") %>% dplyr::filter(Hugo_Symbol=="MYC")
+#' reddy_meta = get_gambl_metadata(seq_type_filter = "capture") %>% dplyr::filter(cohort=="dlbcl_reddy")
+#' complete_maf = supplement_maf(incoming_maf = small_maf, these_samples_metadata = reddy_meta)
+#'
+supplement_maf <- function(incoming_maf,
+                           these_samples_metadata){
+  missing_sample_ids = setdiff(these_samples_metadata$Tumor_Sample_Barcode,
+                               incoming_maf$Tumor_Sample_Barcode)
+  missing_sample_maf = incoming_maf %>%
+    dplyr::filter(Tumor_Sample_Barcode == "Imaginary Sample ID") %>%
+    add_row(Tumor_Sample_Barcode = missing_sample_ids,
+           Hugo_Symbol = "GARBAGE",
+           Chromosome = ifelse(stringr::str_detect(incoming_maf$Chromosome[1],
+                                                   "chr"),
+                               "chr1",
+                               "1"),
+           Start_Position = 1,
+           End_Position = 1,
+           Variant_Classification = "Missense_Mutation"
+           )
+  full_maf = rbind(incoming_maf,
+                   missing_sample_maf)
+  return(full_maf)
 }
