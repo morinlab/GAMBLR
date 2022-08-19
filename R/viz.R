@@ -4319,7 +4319,7 @@ comp_report = function(this_sample,
 #' @param this_sample Sample to be plotted.
 #' @param vaf_cutoff Threshold for filtering variants on VAF (events with a VAF > cutoff will be retained).
 #' @param chr_select Optional argument for subsetting on selected chromosomes, default is all autosomes.
-#' @param manta_calls Set to TRUE for get_combined_sv approach of retreiving plot data. Set to FALSE to run assign_cn_to_ssm. Default is TRUE.
+#' @param use_sv_calls Set to TRUE for get_combined_sv approach of retreiving plot data. Set to FALSE to run assign_cn_to_ssm. Default is TRUE.
 #' @param coding_only Optional. Set to TRUE to restrict to plotting only coding mutations.
 #' @param from_flatfile If set to true the function will use flat files instead of the database.
 #' @param use_augmented_maf Boolean statement if to use augmented maf, default is TRUE.
@@ -4435,22 +4435,22 @@ fancy_circos_plot = function(this_sample,
     sv_del$SIZE = sv_del$END_A - sv_del$START_A
     sv_dup$SIZE = sv_dup$END_A - sv_dup$START_A
 
-    }else{
-      maf = assign_cn_to_ssm(this_sample = this_sample, coding_only = coding_only, from_flatfile = from_flatfile, use_augmented_maf = use_augmented_maf)$maf #get maf data
-      maf_tmp = dplyr::select(maf, Chromosome, Start_Position, End_Position, Variant_Type) #select appropiate columns
-      maf_tmp$Variant_Size = maf_tmp$End_Position - maf_tmp$Start_Position # calcualte variant size
-      maf_tmp$Variant_Type = as.factor(maf_tmp$Variant_Type) #transform Variant_Type to factor
-      maf_tmp[maf_tmp==0] <- 1 #transform all lenght coordinates == 0 to 1
+  }else{
+    maf = assign_cn_to_ssm(this_sample = this_sample, coding_only = coding_only, from_flatfile = from_flatfile, use_augmented_maf = use_augmented_maf)$maf #get maf data
+    maf_tmp = dplyr::select(maf, Chromosome, Start_Position, End_Position, Variant_Type) #select appropiate columns
+    maf_tmp$Variant_Size = maf_tmp$End_Position - maf_tmp$Start_Position # calcualte variant size
+    maf_tmp$Variant_Type = as.factor(maf_tmp$Variant_Type) #transform Variant_Type to factor
+    maf_tmp[maf_tmp==0] <- 1 #transform all lenght coordinates == 0 to 1
 
-      if(!str_detect(maf_tmp$Chromosome, "chr")){ #add chr prefic, if missing...
-        maf_tmp = mutate(maf_tmp, Chromosome = paste0("chr", Chromosome))
-      }
-
-      maf_tmp = maf_tmp[maf_tmp$Chromosome %in% chr_select, ] #filter incoming maf on selected chromosomes
-
-      sv_del = dplyr::filter(maf_tmp, Variant_Type == "DEL") #subset on deletions
-      sv_ins = dplyr::filter(maf_tmp, Variant_Type == "INS") #subset on insertions
+    if(!str_detect(maf_tmp$Chromosome, "chr")){ #add chr prefic, if missing...
+      maf_tmp = mutate(maf_tmp, Chromosome = paste0("chr", Chromosome))
     }
+
+    maf_tmp = maf_tmp[maf_tmp$Chromosome %in% chr_select, ] #filter incoming maf on selected chromosomes
+
+    sv_del = dplyr::filter(maf_tmp, Variant_Type == "DEL") #subset on deletions
+    sv_ins = dplyr::filter(maf_tmp, Variant_Type == "INS") #subset on insertions
+  }
 
   #plotting
   #define reference build
@@ -4488,8 +4488,16 @@ fancy_circos_plot = function(this_sample,
   }
 
   #translocations
-  if(manta_calls){
+  if(use_sv_calls){
     RCircos.Ribbon.Plot(sv_trans, track.num = trans_track, by.chromosome = FALSE, twist = TRUE)
+
+    #duplications
+    if(include_dup){
+      RCircos.params$track.background = "sienna2"
+      RCircos.params$max.layers = 1
+      RCircos.Reset.Plot.Parameters(RCircos.params)
+      RCircos.Tile.Plot(sv_dup, track.num = dup_track, side = "in")
+    }
   }
 
   #deletions
@@ -4501,11 +4509,11 @@ fancy_circos_plot = function(this_sample,
   }
 
   #duplications
-  if(include_dup){
+  if(!use_sv_calls){
     RCircos.params$track.background = "sienna2"
     RCircos.params$max.layers = 1
     RCircos.Reset.Plot.Parameters(RCircos.params)
-    RCircos.Tile.Plot(sv_dup, track.num = dup_track, side = "in")
+    RCircos.Tile.Plot(sv_ins, track.num = dup_track, side = "in")
   }
 
   #close connection
