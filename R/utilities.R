@@ -1421,8 +1421,8 @@ estimate_purity = function(in_maf,
   }else if(!missing(in_seg)){
     CN_new = assign_cn_to_ssm(this_sample = sample_id, maf_file = in_maf, seg_file = in_seg, seg_file_source = seg_file_source, coding_only = coding_only, genes = genes,ssh_session=ssh_session)$maf
   }else{
-    # If no seg file was provided and assume_diploid paramtere is set to true,
-    if(assume_diploid){
+    # If no seg file was provided, assume_diploid parameter is automatically set to true
+    if(missing(in_seg)){
       CN_new = assign_cn_to_ssm(this_sample = sample_id, maf_file = in_maf, assume_diploid = TRUE, coding_only = coding_only, genes = genes,ssh_session=ssh_session)$maf
     }
   }
