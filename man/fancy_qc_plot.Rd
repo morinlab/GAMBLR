@@ -56,13 +56,38 @@ plot as ggplot object.
 Plot for visualizing QC metrics and allowing for grouping by different metadata columns.
 }
 \examples{
-fancy_qc_plot(filter_pathology = "FL",
-              filter_cohort = "FL_Kridel",
-              plot_data = "AverageBaseQuality",
-              fill_by = "pathology",
-              plot_subtitle = "Example Plot",
-              y_axis_lab = "Average Base Quality",
-              plot_title = "A. Base Quality For FL_Kridel vs. BL_Pediatric",
-              seq_type = "genome")
+#Example 1 - using these_samples parameter
+#subset on FL cases with QC metrics available and plot
+kridel_fl = get_gambl_metadata() \%>\%
+ dplyr::filter(pathology == "FL", cohort == "FL_Kridel") \%>\%
+ dplyr::select(sample_id) \%>\%
+ pull(sample_id)
+
+my_plot_1 = fancy_qc_plot(these_samples = kridel_fl, 
+                         seq_type = "genome", 
+                         plot_data = "AverageBaseQuality", 
+                         plot_subtitle = "Example Plot", 
+                         y_axis_lab = "Average Base Quality", 
+                         plot_title = "Average Base Quality For FL_Kridel")
+
+#Example 2 - using already filtered metadata (these_samples_metadata)
+fl_metadata = get_gambl_metadata() \%>\%
+ dplyr::filter(pathology == "FL", cohort == "FL_Kridel")
+
+my_plot_2 = fancy_qc_plot(these_samples_metadata = fl_metadata, 
+                         seq_type = "genome", 
+                         plot_data = "AverageBaseQuality", 
+                         plot_subtitle = "Example Plot", 
+                         y_axis_lab = "Average Base Quality", 
+                         plot_title = "Average Base Quality For FL_Kridel")
+
+#Example 3 - using in-house metadata fitlering options
+my_plot_3 = fancy_qc_plot(filter_cohort = "FL_Kridel", 
+                         filter_pathology = "FL", 
+                         seq_type = "genome", 
+                         plot_data = "AverageBaseQuality", 
+                         plot_subtitle = "Example Plot", 
+                         y_axis_lab = "Average Base Quality", 
+                         plot_title = "Average Base Quality For FL_Kridel")
 
 }
