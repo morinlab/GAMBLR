@@ -4633,10 +4633,12 @@ fancy_sv_sizedens = function(this_sample,
   return(p)
 }
 
+
 #' Visualize (stacked barplot) genomic read-subsets across a selection of samples.
 #'
 #' @param these_samples Data frame with sample IDs (to be plotted) in the first column.
 #' @param metadata Optional argument, used to derive sample IDs if sample_table is Null.
+#' @param these_samples_metadata GAMBL metadata subset to the cases you want to process.
 #' @param comparison_group Optional argument for plotting mean alignment metrics. Default is plotting the mean for samples provided. This parameter takes a list of sample IDs.
 #' @param seq_type Subset qc metrics to a specific seq_type, default is genome.
 #' @param add_mean Set to TRUE to superimpose mean values of plotted variables. Default is TRUE.
@@ -4651,22 +4653,27 @@ fancy_sv_sizedens = function(this_sample,
 #' @export
 #'
 #' @examples
-#' this_meta = get_gambl_metadata()
+#' #Example 1 - using these_samples parameter
+#' #subset on FL cases with QC metrics available and plot
+#' kridel_fl = get_gambl_metadata() %>%
+#'  dplyr::filter(pathology == "FL", cohort == "FL_Kridel") %>%
+#'  dplyr::select(sample_id) %>%
+#'  pull(sample_id)
 #'
-#' all_fl = dplyr::filter(this_meta, pathology == "FL") %>%
-#'   dplyr::select(sample_id) %>%
-#'   arrange(sample_id) %>%
-#'   as.data.frame()
+#' my_plot_1 = fancy_alignment_plot(these_samples = kridel_fl, seq_type = "genome")
 #'
-#' all_bl = dplyr::filter(this_meta, pathology == "BL") %>%
-#'   dplyr::select(sample_id) %>%
-#'   arrange(sample_id) %>%
-#'   as.data.frame()
+#' #Example 2 - using already filtered metadata (these_samples_metadata)
+#' fl_metadata = get_gambl_metadata() %>%
+#'  dplyr::filter(pathology == "FL", cohort == "FL_Kridel")
 #'
-#' plot = fancy_alignment_plot(these_samples = all_fl, seq_type = "genome", comparison_group = all_bl, plot_sub = "all FL cases (BL comparison group)")
+#' my_plot_2 = fancy_alignment_plot(these_samples_metadata = fl_metadata, seq_type = "genome")
+#'
+#' #Example 3 - using in-house metadata fitlering options
+#' my_plot_3 = fancy_alignment_plot(filter_cohort = "FL_Kridel", filter_pathology = "FL", seq_type = "genome")
 #'
 fancy_alignment_plot = function(these_samples,
                                 metadata,
+                                these_samples_metadata,
                                 comparison_group,
                                 seq_type = "genome",
                                 add_mean = TRUE,
@@ -4685,36 +4692,32 @@ fancy_alignment_plot = function(these_samples,
     this_meta = metadata
   }
 
+  if(!missing(these_samples_metadata)){
+    these_samples = dplyr::select(these_samples_metadata, sample_id) %>%
+      as.data.frame(strings.as.factors = FALSE) %>%
+      pull(sample_id)
+  }
+  
   #filter metadata on selected cohort/pathology
   if(missing(these_samples)){
     if(!missing(filter_cohort) && missing(filter_pathology)){
       these_samples = dplyr::filter(this_meta, cohort == filter_cohort) %>%
-        dplyr::select(sample_id) %>%
-        as.data.frame()
+        pull(sample_id)
     }
 
     if(!missing(filter_pathology) && missing(filter_cohort)){
       these_samples = dplyr::filter(this_meta, pathology == filter_pathology) %>%
-        dplyr::select(sample_id) %>%
-        as.data.frame()
+        pull(sample_id)
     }
 
     if(!missing(filter_cohort) && !missing(filter_pathology)){
       these_samples = dplyr::filter(this_meta, pathology == filter_pathology, cohort == filter_cohort) %>%
-        dplyr::select(sample_id) %>%
-        as.data.frame()
+        pull(sample_id)
     }
 
     if(missing(filter_cohort) && missing(filter_pathology)){
       these_samples = dplyr::select(this_meta, sample_id) %>%
-        as.data.frame
-    }
-  }
-
-  #sanity check incoming sample table
-  if(!missing(these_samples)){
-    if(typeof(these_samples) != "list"){
-      stop("Please provide input sample IDs (these_samples) in a df with sample IDs in the first column...")
+        pull(sample_id)
     }
   }
 
@@ -4793,14 +4796,39 @@ fancy_alignment_plot = function(these_samples,
 #' @export
 #'
 #' @examples
-#' fancy_qc_plot(filter_pathology = "FL",
-#'               filter_cohort = "FL_Kridel",
-#'               plot_data = "AverageBaseQuality",
-#'               fill_by = "pathology",
-#'               plot_subtitle = "Example Plot",
-#'               y_axis_lab = "Average Base Quality",
-#'               plot_title = "A. Base Quality For FL_Kridel vs. BL_Pediatric",
-#'               seq_type = "genome")
+#' #Example 1 - using these_samples parameter
+#' #subset on FL cases with QC metrics available and plot
+#' kridel_fl = get_gambl_metadata() %>%
+#'  dplyr::filter(pathology == "FL", cohort == "FL_Kridel") %>%
+#'  dplyr::select(sample_id) %>%
+#'  pull(sample_id)
+#'
+#' my_plot_1 = fancy_qc_plot(these_samples = kridel_fl, 
+#'                          seq_type = "genome", 
+#'                          plot_data = "AverageBaseQuality", 
+#'                          plot_subtitle = "Example Plot", 
+#'                          y_axis_lab = "Average Base Quality", 
+#'                          plot_title = "Average Base Quality For FL_Kridel")
+#'
+#' #Example 2 - using already filtered metadata (these_samples_metadata)
+#' fl_metadata = get_gambl_metadata() %>%
+#'  dplyr::filter(pathology == "FL", cohort == "FL_Kridel")
+#'
+#' my_plot_2 = fancy_qc_plot(these_samples_metadata = fl_metadata, 
+#'                          seq_type = "genome", 
+#'                          plot_data = "AverageBaseQuality", 
+#'                          plot_subtitle = "Example Plot", 
+#'                          y_axis_lab = "Average Base Quality", 
+#'                          plot_title = "Average Base Quality For FL_Kridel")
+#'
+#' #Example 3 - using in-house metadata fitlering options
+#' my_plot_3 = fancy_qc_plot(filter_cohort = "FL_Kridel", 
+#'                          filter_pathology = "FL", 
+#'                          seq_type = "genome", 
+#'                          plot_data = "AverageBaseQuality", 
+#'                          plot_subtitle = "Example Plot", 
+#'                          y_axis_lab = "Average Base Quality", 
+#'                          plot_title = "Average Base Quality For FL_Kridel")
 #'
 fancy_qc_plot = function(these_samples,
                          filter_cohort,
@@ -4840,28 +4868,25 @@ fancy_qc_plot = function(these_samples,
   }
 
   #filter metadata on selected cohort/pathology
-  if(missing(these_samples)){
+  if(missing(these_samples) && missing(these_samples_metadata)){
     if(!missing(filter_cohort) && missing(filter_pathology)){
       these_samples = dplyr::filter(this_meta, cohort == filter_cohort) %>%
-        dplyr::select(sample_id) %>%
-        as.data.frame()
+        pull(sample_id)
     }
 
     if(!missing(filter_pathology) && missing(filter_cohort)){
       these_samples = dplyr::filter(this_meta, pathology == filter_pathology) %>%
-        dplyr::select(sample_id) %>%
-        as.data.frame()
+       pull(sample_id)
     }
 
     if(!missing(filter_cohort) && !missing(filter_pathology)){
       these_samples = dplyr::filter(this_meta, pathology == filter_pathology, cohort == filter_cohort) %>%
-        dplyr::select(sample_id) %>%
-        as.data.frame()
+        pull(sample_id)
     }
 
     if(missing(filter_cohort) && missing(filter_pathology)){
       these_samples = dplyr::select(this_meta, sample_id) %>%
-        as.data.frame
+        pull(sample_id)
     }
   }
 
@@ -4926,11 +4951,11 @@ fancy_qc_plot = function(these_samples,
 }
 
 
-
 #' Visualize proportional coverage (10X and 30X) for selected samples and add comparison group (optional).
 #'
 #' @param these_samples Data frame with sample IDs (to be plotted) in the first column.
 #' @param metadata Optional, user can provide a metadata df to subset sample IDs from.
+#' @param these_samples_metadata GAMBL metadata subset to the cases you want to process.
 #' @param filter_cohort Optional parameter to be used when these_sample is NULL. Calls get_gambl_metadata() and filters on the cohort supplied in this parameter.
 #' @param filter_pathology Optional parameter to be used when these_sample is NULL. Calls get_gambl_metadata() and filters on the pathology supplied in this parameter.
 #' @param comparison_samples Optional parameter, give the function a list of sample IDs to be compared against the main plotting group.
@@ -4942,26 +4967,27 @@ fancy_qc_plot = function(these_samples,
 #' @export
 #'
 #' @examples
-#' #Example 1: Compare proportional coverage for all samples compared to all FL cases:
-#' #prepare comparison data:
-#' this_meta = get_gambl_metadata()
-#' all_fl = dplyr::filter(this_meta, pathology == "FL") %>%
-#' dplyr::select(sample_id) %>%
-#'   arrange(sample_id) %>%
-#'   as.data.frame()
+#' #Example 1 - using these_samples parameter
+#' #subset on FL cases with QC metrics available and plot
+#' kridel_fl = get_gambl_metadata() %>%
+#'  dplyr::filter(pathology == "FL", cohort == "FL_Kridel") %>%#
+#'  dplyr::select(sample_id) %>%
+#'  pull(sample_id)
 #'
-#' sub_fl = all_fl[c(128:183),]
-#' sub_fl = as.data.frame(sub_fl)
-#' colnames(sub_fl)[1] = "sample_id"
+#' my_plot_1 = fancy_propcov_plot(these_samples = kridel_fl, seq_type = "genome")
 #'
-#' plot:
-#' my_plot = fancy_propcov_plot(seq_type = "genome", comparison_samples = sub_fl, plot_subtitle = "Proportional coverage for all samples compared to all FL cases")
+#' #Example 2 - using already filtered metadata (these_samples_metadata)
+#' fl_metadata = get_gambl_metadata() %>%
+#'  dplyr::filter(pathology == "FL", cohort == "FL_Kridel")
 #'
-#' Example 2: Visualize proportional coverage for all FL cases (no comparison group)
-#' all_fl = fancy_propcov_plot(filter_pathology = "FL", seq_type = "genome", plot_subtitle = "Proportional coverage for all FL cases")
+#' my_plot_2 = fancy_propcov_plot(these_samples_metadata = fl_metadata, seq_type = "genome")
+#'
+#' #Example 3 - using in-house metadata fitlering options
+#' my_plot_3 = fancy_propcov_plot(filter_cohort = "FL_Kridel", filter_pathology = "FL", seq_type = "genome")
 #'
 fancy_propcov_plot = function(these_samples,
                               metadata,
+                              these_samples_metadata,
                               filter_cohort,
                               filter_pathology,
                               comparison_samples,
@@ -4975,29 +5001,32 @@ fancy_propcov_plot = function(these_samples,
     this_meta = metadata
   }
 
+  if(!missing(these_samples_metadata)){
+    these_samples = dplyr::select(these_samples_metadata, sample_id) %>%
+      as.data.frame(strings.as.factors = FALSE) %>%
+      pull(sample_id)
+  }
+  
   #filter metadata on selected cohort/pathology
-  if(missing(these_samples)){
+  if(missing(these_samples) && missing(these_samples_metadata)){
     if(!missing(filter_cohort) && missing(filter_pathology)){
       these_samples = dplyr::filter(this_meta, cohort == filter_cohort) %>%
-        dplyr::select(sample_id) %>%
-        as.data.frame()
+        pull(sample_id)
     }
 
     if(!missing(filter_pathology) && missing(filter_cohort)){
       these_samples = dplyr::filter(this_meta, pathology == filter_pathology) %>%
-        dplyr::select(sample_id) %>%
-        as.data.frame()
+        pull(sample_id)
     }
 
     if(!missing(filter_cohort) && !missing(filter_pathology)){
       these_samples = dplyr::filter(this_meta, pathology == filter_pathology, cohort == filter_cohort) %>%
-        dplyr::select(sample_id) %>%
-        as.data.frame()
+        pull(sample_id)
     }
 
     if(missing(filter_cohort) && missing(filter_pathology)){
       these_samples = dplyr::select(this_meta, sample_id) %>%
-        as.data.frame
+        pull(sample_id)
     }
   }
 
@@ -5052,6 +5081,7 @@ fancy_propcov_plot = function(these_samples,
 #'
 #' @param these_samples Data frame with sample IDs (to be plotted) in the first column.
 #' @param metadata Optional, user can provide a metadata df to subset sample IDs from.
+#' @param these_samples_metadata GAMBL metadata subset to the cases you want to process.
 #' @param filter_cohort Optional parameter to be used when these_sample is NULL. Calls get_gambl_metadata() and filters on the cohort supplied in this parameter.
 #' @param filter_pathology Optional parameter to be used when these_sample is NULL. Calls get_gambl_metadata() and filters on the pathology supplied in this parameter.
 #' @param seq_type Selected seq type for incoming QC metrics.
@@ -5062,10 +5092,27 @@ fancy_propcov_plot = function(these_samples,
 #' @export
 #'
 #' @examples
-#' my_plot = fancy_proportions_plot(filter_cohort = "FL_Kridel", filter_pathology = "FL", seq_type = "genome")
+#' #Example 1 - using these_samples parameter
+#' #subset on FL cases with QC metrics available and plot
+#' kridel_fl = get_gambl_metadata() %>%
+#'  dplyr::filter(pathology == "FL", cohort == "FL_Kridel") %>%#
+#'  dplyr::select(sample_id) %>%
+#'  pull(sample_id)
+#'
+#' my_plot_1 = fancy_proportions_plot(these_samples = kridel_fl, seq_type = "genome")
+#'
+#' #Example 2 - using already filtered metadata (these_samples_metadata)
+#' fl_metadata = get_gambl_metadata() %>%
+#'  dplyr::filter(pathology == "FL", cohort == "FL_Kridel")
+#'
+#' my_plot_2 = fancy_proportions_plot(these_samples_metadata = fl_metadata, seq_type = "genome")
+#'
+#' #Example 3 - using in-house metadata fitlering options
+#' my_plot_3 = fancy_proportions_plot(filter_cohort = "FL_Kridel", filter_pathology = "FL", seq_type = "genome")
 #'
 fancy_proportions_plot = function(these_samples,
                                   metadata,
+                                  these_samples_metadata,
                                   filter_cohort,
                                   filter_pathology,
                                   seq_type = "genome",
@@ -5078,29 +5125,32 @@ fancy_proportions_plot = function(these_samples,
     this_meta = metadata
   }
 
+  if(!missing(these_samples_metadata)){
+    these_samples = dplyr::select(these_samples_metadata, sample_id) %>%
+      as.data.frame(strings.as.factors = FALSE) %>%
+      pull(sample_id)
+  }
+  
   #filter metadata on selected cohort/pathology
-  if(missing(these_samples)){
+  if(missing(these_samples) && missing(these_samples_metadata)){
     if(!missing(filter_cohort) && missing(filter_pathology)){
       these_samples = dplyr::filter(this_meta, cohort == filter_cohort) %>%
-        dplyr::select(sample_id) %>%
-        as.data.frame()
+        pull(sample_id)
     }
 
     if(!missing(filter_pathology) && missing(filter_cohort)){
       these_samples = dplyr::filter(this_meta, pathology == filter_pathology) %>%
-        dplyr::select(sample_id) %>%
-        as.data.frame()
+        pull(sample_id)
     }
 
     if(!missing(filter_cohort) && !missing(filter_pathology)){
       these_samples = dplyr::filter(this_meta, pathology == filter_pathology, cohort == filter_cohort) %>%
-        dplyr::select(sample_id) %>%
-        as.data.frame()
+        pull(sample_id)
     }
 
     if(missing(filter_cohort) && missing(filter_pathology)){
       these_samples = dplyr::select(this_meta, sample_id) %>%
-        as.data.frame
+        pull(sample_id)
     }
   }
 
