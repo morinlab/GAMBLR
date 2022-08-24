@@ -5,6 +5,98 @@ names(rainfall_conv) = c('A>G', 'T>C', 'C>T', 'G>A', 'A>T', 'T>A', 'A>C', 'T>G',
 ssh_session <<- NULL
 
 
+#' Update or create a file to track unique identifiers for sample sets in GAMBL
+#'
+#' @param update Leave as TRUE for default functionality (i.e. updating the existing table). If the table doesn't exist you probably need to pull from Master.
+#' @param new_sample_sets_df Data frame of all existing and new sample sets. Required when running in default update mode. 
+#'
+#' @return
+#' @export
+#'
+#' @examples
+write_sample_set_hash = function(update=TRUE,new_sample_sets_df){
+  sample_sets_file = paste0(config::get("repo_base"),"data/metadata/level3_samples_subsets.tsv")
+  md5_file = paste0(config::get("repo_base"),"data/metadata/level3_samples_subsets_hashes.tsv")
+  if(update){
+    # load the existing file and update it using the contents of sample_sets_df as well as checking for consistency for existing sample sets
+    if(missing(new_sample_sets_df)){
+      stop("You must provide a data frame containing all the sample sets to update the digests")
+    }
+    original_digests = suppressMessages(read_tsv(md5_file))
+    
+    set_names = dplyr::select(new_sample_sets_df,-sample_id) %>% colnames()
+    #only compare for sample sets that we have in the current file
+    md5_values= c()
+    for(set_name in set_names){
+      
+      this_md5 = get_samples_md5_hash(sample_set_name=set_name,sample_sets_df = new_sample_sets_df)
+      md5_values=c(md5_values,this_md5)
+      
+    }
+    all_md5 = data.frame(sample_set = set_names,new_md5_digest=md5_values)
+    oldnew = right_join(original_digests,all_md5,by="sample_set")
+    #check the rows where md5_digest is not NA (i.e. rows that were there before)
+    to_check = dplyr::filter(oldnew,!is.na(md5_digest))
+    if(any(to_check$md5_digest != to_check$new_md5_digest)){
+      problems = dplyr::filter(to_check,md5_digest!=new_md5_digest)
+      print(problems)
+      stop("some md5 digests do not match. Have these sample sets changed???")
+      
+    }
+    
+  }else{
+    # just create a file that records the md5 digests for existing sample sets
+    sample_sets = suppressMessages(read_tsv(sample_sets_file))
+    set_names = select(sample_sets,-sample_id) %>% colnames()
+    message(paste("Will log digests for",length(set_names),"sample sets"))
+    md5_values= c()
+    for(set_name in set_names){
+      this_md5 = get_samples_md5_hash(sample_set_name=set_name)
+      md5_values=c(md5_values,this_md5)
+    }
+    all_md5 = data.frame(sample_set = set_names,md5_digest=md5_values)
+    write_tsv(all_md5,file=md5_file)
+  }
+
+}
+
+#' Generate an md5 hash for a set of samples to help ensure reproducibility
+#'
+#' @param these_samples_metadata Optionally provide a metadata table or any data frame with a column named sample_id that has been subset to the samples you're working with
+#' @param these_samples Optionally provide a vector of sample_id you are working with
+#' @param sample_set_name Optionally provide the name of a sample set in GAMBL and the function will load the samples from that set and provide the hash
+#' @param sample_sets_df Optionally provide a data frame of the sample sets instead of relying on/loading the local file from the GAMBL repo
+#' @return The md5 hash of the ordered set of sample_id
+#' @export
+#' @import digest
+#'
+#' @examples
+get_samples_md5_hash = function(these_samples_metadata,these_samples,sample_set_name,sample_sets_df){
+  if(!missing(these_samples_metadata)){
+    collapsed = dplyr::select(these_samples_metadata,sample_id) %>% 
+      arrange() %>% 
+      pull() %>% paste(.,collapse=",")
+    
+      digested = digest::digest(collapsed,serialize = FALSE)
+  }else if(!missing(these_samples)){
+    digested = digest::digest(paste(these_samples[order(these_samples)],collapse=","),serialize=FALSE)
+  }else if(!missing(sample_set_name)){
+    #load the sample set table and pull the samples based on its contents and the name provided
+    sample_sets_file = paste0(config::get("repo_base"),"data/metadata/level3_samples_subsets.tsv")
+    if(missing(sample_sets_df)){
+      sample_sets = suppressMessages(read_tsv(sample_sets_file))
+    }else{
+      sample_sets = sample_sets_df
+    }
+    setname = as.symbol(sample_set_name)
+    collapsed = dplyr::filter(sample_sets,!!setname==1) %>% 
+      dplyr::select(sample_id) %>%
+      arrange() %>% pull() %>% paste(.,collapse=",")
+    digested = digest::digest(collapsed,serialize=FALSE)
+  }
+  return(digested)
+}
+
 #' Check if code is running remotely and (optionally) attempt a connection and set global ssh_session variable
 #'
 #' @param auto_connect Set to TRUE if you want the function to create an ssh session (if necessary)
@@ -35,6 +127,36 @@ check_host = function(auto_connect=FALSE){
   }
 }
 
+cache_output = function(result_df,function_name,clobber_mode=F,get_existing = F,
+                        function_params=list(region="chr3:98300000-198022430",bin_size=2000,seq_type="genome"),
+                        additional_details=list(foreground="DLBCL_FL_BL",background="CLL_MM_MCL")){
+  cache_file_name = paste0(config::get("repo_base"),"cached_results/", function_name)
+  for (param in names(function_params)[order(names(function_params))]){
+    cache_file_name = paste0(cache_file_name,"--",param,"-",function_params[[param]])
+  }
+  for (detail in names(additional_details)){
+    cache_file_name = paste0(cache_file_name,"--",detail,"-",additional_details[[detail]])
+  }
+  cache_file_name = paste0(cache_file_name,".tsv")
+  if(file.exists(cache_file_name)){
+    if(get_existing){
+      result_df = read_tsv(cache_file_name)
+      return(result_df)
+    }
+    if(!clobber_mode){
+      warning(paste("file",cache_file_name,"exists!"))
+      stop("Will not overwrite unless you rerun this in clobber_mode = TRUE")
+    }
+  }else{
+    if(get_existing){
+      stop(paste("cannot find cached result for this parameter combination",cache_file_name))
+    }
+  }
+  
+  message(paste("creating/overwriting",cache_file_name))
+  write_tsv(result_df,file=cache_file_name)
+}
+
 #' Count the variants in a region with a variety of filtering options
 #'
 #' @param region 
@@ -42,6 +164,7 @@ check_host = function(auto_connect=FALSE){
 #' @param start 
 #' @param end 
 #' @param these_samples_metadata 
+#' @param all_mutations_in_these_regions If you are calling this function many times (e.g. bins spanning a larger region), to save a ton of time you are strongly encouraged to provide the output of get_ssm_by_region on the entire region of interest and passing it to this function
 #' @param count_by Defaults to counting all variants. Specify 'sample_id' if you want to collapse and count only one per sample
 #' @param seq_type 
 #' @param ssh_session 
@@ -50,21 +173,25 @@ check_host = function(auto_connect=FALSE){
 #' @export
 #'
 #' @examples
-count_ssm_by_region = function(region,chromosome,start,end,these_samples_metadata,count_by,seq_type="genome",ssh_session){
+count_ssm_by_region = function(region,chromosome,start,end,all_mutations_in_these_regions,these_samples_metadata,count_by,seq_type="genome",ssh_session=NULL){
   if(missing(these_samples_metadata)){
     these_samples_metadata = get_gambl_metadata(seq_type_filter=seq_type)
   }
-  if(missing(region)){
+  if(!missing(all_mutations_in_these_regions)){
+    # function was provided the mutations already so we just need to subset it to the region of interest
+
+    region_muts = dplyr::filter(all_mutations_in_these_regions,Start_Position >= start, Start_Position < end)
+  }else if(missing(region)){
     region_muts = get_ssm_by_region(chromosome=chromosome,qstart=start,qend=end,streamlined = TRUE,ssh_session = ssh_session)
   }else{
     region_muts = get_ssm_by_region(region=region,streamlined = TRUE,ssh_session = ssh_session)
   }
-  keep_muts = left_join(region_muts,these_samples_metadata) %>% dplyr::filter(!is.na(sample_id))
+  keep_muts = dplyr::filter(region_muts,Tumor_Sample_Barcode %in% these_samples_metadata$Tumor_Sample_Barcode) 
   if(missing(count_by)){
     #count everything even if some mutations are from the same patient
     return(nrow(keep_muts))
   }else if(count_by == "sample_id"){
-    return(length(unique(keep_muts$sample_id)))
+    return(length(unique(keep_muts$Tumor_Sample_Barcode)))
   }else{
     print("Not sure what to count")
   }
@@ -891,6 +1018,8 @@ sv_to_custom_track = function(sv_bedpe,
 maf_to_custom_track = function(maf_data,
                                these_samples_metadata,
                                output_file,
+                               as_bigbed=FALSE,
+                               as_biglolly=FALSE,
                                track_name="GAMBL mutations",
                                track_description = "mutations from GAMBL"){
 
@@ -920,9 +1049,38 @@ maf_to_custom_track = function(maf_data,
   maf_coloured = left_join(maf_bed, samples_coloured, by = "sample_id") %>%
     dplyr::select(-lymphgen) %>%
     dplyr::filter(!is.na(rgb))
-  header_ucsc = paste0('track name="',track_name,'" description="', track_description, '" visibility=2 itemRgb="On"\n')
-  cat(header_ucsc,file = output_file)
-  tabular = write.table(maf_coloured, file = output_file, quote = F, sep = "\t", row.names = F, col.names = F, append = TRUE)
+  if(as_bigbed | as_biglolly){
+    
+    if(grepl(pattern = ".bb$",x = output_file)){
+      #temp file will be .bed
+      temp_bed = gsub(".bb$",".bed",output_file)
+      
+    }else{
+      stop("please provide an output file name ending in .bb to create a bigBed file")
+    }
+  
+    maf_coloured = mutate(maf_coloured,sample_id=ifelse(dbSNP_RS != "",dbSNP_RS,".")) %>% 
+      arrange(chrom,start)
+    if(as_biglolly){
+      #currently the same code is run either way but this may change so I've separated this until we settle on format
+      #TO DO: collapse based on hot spot definition and update column 4 (score) based on recurrence
+      write.table(maf_coloured, file = temp_bed, quote = F, sep = "\t", row.names = F, col.names = F)
+      #conversion:
+      bigbedtobed = "/Users/rmorin/miniconda3/envs/ucsc/bin/bedToBigBed"
+      bigbed_conversion = paste(bigbedtobed,"-type=bed9",temp_bed,"/Users/rmorin/git/LLMPP/resources/reference/ucsc/hg19.chrom.sizes",output_file)
+      system(bigbed_conversion)
+    }else{
+      write.table(maf_coloured, file = temp_bed, quote = F, sep = "\t", row.names = F, col.names = F)
+      #conversion:
+      bigbedtobed = "/Users/rmorin/miniconda3/envs/ucsc/bin/bedToBigBed"
+      bigbed_conversion = paste(bigbedtobed,"-type=bed9",temp_bed,"/Users/rmorin/git/LLMPP/resources/reference/ucsc/hg19.chrom.sizes",output_file)
+      system(bigbed_conversion)
+    }
+  }else{
+    header_ucsc = paste0('track name="',track_name,'" description="', track_description, '" visibility=2 itemRgb="On"\n')
+    cat(header_ucsc,file = output_file)
+    write.table(maf_coloured, file = output_file, quote = F, sep = "\t", row.names = F, col.names = F, append = TRUE)
+  }
 }
 
 test_glue = function(placeholder="INSERTED"){
