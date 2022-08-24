@@ -249,9 +249,13 @@ check_gambl_metadata = function(metadata_df,to_check="all",show_details=FALSE,fi
 
 get_runs_table = function(seq_type_filter="genome"){
   t_meta = get_gambl_metadata(tissue_status_filter = c("tumour"),seq_type_filter=seq_type_filter) %>% 
-    dplyr::select(sample_id,patient_id,seq_type,genome_build,pairing_status) %>% rename("tumour_sample_id"="sample_id")
+    dplyr::select(sample_id,patient_id,seq_type,genome_build,unix_group,pairing_status) %>% rename("tumour_sample_id"="sample_id")
   n_meta = get_gambl_metadata(tissue_status_filter = c("normal"),seq_type_filter=seq_type_filter) %>%
     dplyr::select(sample_id,patient_id,seq_type,genome_build) %>% rename("normal_sample_id"="sample_id")
+  t_n_pairs = left_join(t_meta,n_meta)
+  #need to substitute in unmatched normals
+  unix_groups = names(config::get("unmatched_normal_ids"))
+  
 }
 
 check_expected_outputs = function(tool_name="battenberg",seq_type_filter="genome"){
