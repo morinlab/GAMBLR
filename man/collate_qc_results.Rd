@@ -2,12 +2,13 @@
 % Please edit documentation in R/utilities.R
 \name{collate_qc_results}
 \alias{collate_qc_results}
-\title{Collate qc metrics.}
+\title{INTERNAL FUNCTION called by collate_results, not meant for out-of-package usage.
+Collate qc metrics.}
 \usage{
-collate_qc_results(sample_table, seq_type_filter = "genome")
+collate_qc_results(sample_table, seq_type_filter)
 }
 \arguments{
-\item{sample_table}{Vector of sample IDs}
+\item{sample_table}{df with sample ids in the first column.}
 
 \item{seq_type_filter}{default is genome, capture is also available for unix_group icgc_dart.}
 }
@@ -15,9 +16,10 @@ collate_qc_results(sample_table, seq_type_filter = "genome")
 The sample table with additional columns.
 }
 \description{
+INTERNAL FUNCTION called by collate_results, not meant for out-of-package usage.
 Collate qc metrics.
 }
 \examples{
-qc_metrics = collate_qc_results(sample_table = sample_table, seq_type_filter = "genome")
+qc_metrics = collate_qc_results(sample_table = sample_table)
 
 }
