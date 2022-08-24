@@ -17,7 +17,11 @@ get_ssm_by_region(
   from_indexed_flatfile = TRUE,
   augmented = TRUE,
   min_read_support = 3,
-  mode = "slms-3"
+  mode = "slms-3",
+  maf_columns = c("Chromosome", "Start_Position", "End_Position",
+    "Tumor_Sample_Barcode", "t_alt_count"),
+  maf_column_types = c("c", "i", "i", "c", "i"),
+  ssh_session = NULL
 )
 }
 \arguments{

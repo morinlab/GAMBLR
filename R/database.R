@@ -1,6 +1,8 @@
 #global variables
 coding_class = c("Frame_Shift_Del", "Frame_Shift_Ins", "In_Frame_Del", "In_Frame_Ins", "Missense_Mutation", "Nonsense_Mutation", "Nonstop_Mutation", "Silent", "Splice_Region", "Splice_Site", "Targeted_Region", "Translation_Start_Site")
 cnames = c("CHROM_A", "START_A", "END_A", "CHROM_B", "START_B", "END_B", "NAME", "SOMATIC_SCORE", "STRAND_A", "STRAND_B", "TYPE", "FILTER", "VAF_tumour", "VAF_normal", "DP_tumour", "DP_normal", "tumour_sample_id", "normal_sample_id", "pair_status")
+maf_header = c("Hugo_Symbol"=1,"Entrez_Gene_Id"=2,"Center"=3,"NCBI_Build"=4,"Chromosome"=5,"Start_Position"=6,"End_Position"=7,"Strand"=8,"Variant_Classification"=9,"Variant_Type"=10,"Reference_Allele"=11,"Tumor_Seq_Allele1"=12,"Tumor_Seq_Allele2"=13,"dbSNP_RS"=14,"dbSNP_Val_Status"=15,"Tumor_Sample_Barcode"=16,"Matched_Norm_Sample_Barcode"=17,"Match_Norm_Seq_Allele1"=18,"Match_Norm_Seq_Allele2"=19,"Tumor_Validation_Allele1"=20,"Tumor_Validation_Allele2"=21,"Match_Norm_Validation_Allele1"=22,"Match_Norm_Validation_Allele2"=23,"Verification_Status"=24,"Validation_Status"=25,"Mutation_Status"=26,"Sequencing_Phase"=27,"Sequence_Source"=28,"Validation_Method"=29,"Score"=30,"BAM_File"=31,"Sequencer"=32,"Tumor_Sample_UUID"=33,"Matched_Norm_Sample_UUID"=34,"HGVSc"=35,"HGVSp"=36,"HGVSp_Short"=37,"Transcript_ID"=38,"Exon_Number"=39,"t_depth"=40,"t_ref_count"=41,"t_alt_count"=42,"n_depth"=43,"n_ref_count"=44,"n_alt_count"=45,"all_effects"=46,"Allele"=47,"Gene"=48,"Feature"=49,"Feature_type"=50,"Consequence"=51,"cDNA_position"=52,"CDS_position"=53,"Protein_position"=54,"Amino_acids"=55,"Codons"=56,"Existing_variation"=57,"ALLELE_NUM"=58,"DISTANCE"=59,"STRAND_VEP"=60,"SYMBOL"=61,"SYMBOL_SOURCE"=62,"HGNC_ID"=63,"BIOTYPE"=64,"CANONICAL"=65,"CCDS"=66,"ENSP"=67,"SWISSPROT"=68,"TREMBL"=69,"UNIPARC"=70,"RefSeq"=71,"SIFT"=72,"PolyPhen"=73,"EXON"=74,"INTRON"=75,"DOMAINS"=76,"AF"=77,"AFR_AF"=78,"AMR_AF"=79,"ASN_AF"=80,"EAS_AF"=81,"EUR_AF"=82,"SAS_AF"=83,"AA_AF"=84,"EA_AF"=85,"CLIN_SIG"=86,"SOMATIC"=87,"PUBMED"=88,"MOTIF_NAME"=89,"MOTIF_POS"=90,"HIGH_INF_POS"=91,"MOTIF_SCORE_CHANGE"=92,"IMPACT"=93,"PICK"=94,"VARIANT_CLASS"=95,"TSL"=96,"HGVS_OFFSET"=97,"PHENO"=98,"MINIMISED"=99,"GENE_PHENO"=100,"FILTER"=101,"flanking_bps"=102,"vcf_id"=103,"vcf_qual"=104,"gnomAD_AF"=105,"gnomAD_AFR_AF"=106,"gnomAD_AMR_AF"=107,"gnomAD_ASJ_AF"=108,"gnomAD_EAS_AF"=109,"gnomAD_FIN_AF"=110,"gnomAD_NFE_AF"=111,"gnomAD_OTH_AF"=112,"gnomAD_SAS_AF"=113,"vcf_pos"=114,"gnomADg_AF"=115,"blacklist_count"=116)
+
 
 #' Exclude samples that have been excluded from certain analyses and drop from merges
 #'
@@ -21,6 +23,7 @@ get_excluded_samples = function(tool_name = "slms-3"){
   return(excluded_samples)
 }
 
+
 #' Get MAF-format data frame for more than one patient using at most one augmented_maf  per patient(i.e. unique superset of variants)
 #' and combine or subset from a merged MAF (wraps get_ssm_by_samples)
 #' See get_ssm_by_samples for more information
@@ -28,25 +31,33 @@ get_excluded_samples = function(tool_name = "slms-3"){
 #' @param these_samples_metadata Optional metadata table
 #' @param tool_name Only supports slms-3 currently
 #' @param projection Obtain variants projected to this reference (one of grch37 or hg38)
-#' @param flavour Currently this function only supports one flavour option but this feature is meant for eventual compatability with additional variant calling parameters/versions
+#' @param flavour Currently this function only supports one flavour option but this feature is meant for eventual compatibility with additional variant calling parameters/versions
 #' @param min_read_support Only returns variants with at least this many reads in t_alt_count (for cleaning up augmented MAFs)
+#' @param basic_columns Return first 43 columns of MAF rather than full details. Default is TRUE.
+#' @param maf_cols if basic_columns is set to FALSE, the user can specify what columns to be returned within the MAF. This parameter can either be a list of indexes (integer) or a list of characters (matching columns in MAF).
+#' @param return_cols If set to TRUE, a vector with all available column names will be returned. Default is FALSE.
 #' @param subset_from_merge Instead of merging individual MAFs, the data will be subset from a pre-merged MAF of samples with the specified seq_type
 #'
 #' @return
 #' @export
 #'
 #' @examples
-#' merged_maf_force_unmatched = get_ssm_by_samples(these_sample_ids=c("HTMCP-01-06-00485-01A-01D","14-35472_tumorA","14-35472_tumorB"))
+#' patients = c("00-14595", "00-15201", "01-12047")
+#' patients_ssm = get_ssm_by_patients(these_patient_ids = patients, seq_type = "genome", min_read_support = 3, basic_columns = TRUE, subset_from_merge = FALSE)
 #'
 get_ssm_by_patients = function(these_patient_ids,
-                              these_samples_metadata,
-                              tool_name = "slms-3",
-                              projection = "grch37",
-                              seq_type = "genome",
-                              flavour = "clustered",
-                              min_read_support = 3,
-                              subset_from_merge = TRUE,
-                              ssh_session){
+                               these_samples_metadata,
+                               tool_name = "slms-3",
+                               projection = "grch37",
+                               seq_type = "genome",
+                               flavour = "clustered",
+                               min_read_support = 3,
+                               basic_columns = TRUE,
+                               maf_cols = NULL,
+                               return_cols = FALSE,
+                               subset_from_merge = TRUE,
+                               augmented = TRUE,
+                               ssh_session){
   if(!subset_from_merge){
     message("WARNING: on-the-fly merges can be extremely slow and consume a lot of memory. Use at your own risk. ")
   }
@@ -54,7 +65,7 @@ get_ssm_by_patients = function(these_patient_ids,
   #always requires augmented MAFs to ensure all variants from the patient are included
   to_exclude = get_excluded_samples(tool_name)
   if(missing(these_samples_metadata)){
-    these_samples_metadata = get_gambl_metadata() %>%
+    these_samples_metadata = get_gambl_metadata(seq_type_filter = seq_type) %>%
       dplyr::filter(patient_id %in% these_patient_ids) %>%
       dplyr::filter(!sample_id %in% to_exclude)
   }else{
@@ -68,16 +79,20 @@ get_ssm_by_patients = function(these_patient_ids,
   #  ungroup()
 
   these_sample_ids = pull(these_samples_metadata, sample_id)
-  return(get_ssm_by_samples(these_sample_ids=these_sample_ids,
-                            these_samples_metadata= these_samples_metadata,
-                            tool_name=tool_name,
-                            projection=projection,
-                            seq_type=seq_type,
-                            flavour=flavour,
-                            min_read_support=min_read_support,
-                            subset_from_merge=subset_from_merge,
-                            augmented=augmented,
-                            ssh_session=ssh_session))
+
+  return(get_ssm_by_samples(these_sample_ids = these_sample_ids,
+                            these_samples_metadata = these_samples_metadata,
+                            tool_name = tool_name,
+                            projection = projection,
+                            seq_type = seq_type,
+                            flavour = flavour,
+                            min_read_support = min_read_support,
+                            subset_from_merge = subset_from_merge,
+                            augmented = augmented,
+                            ssh_session = ssh_session,
+                            basic_columns = basic_columns,
+                            maf_cols = maf_cols,
+                            return_cols = return_cols))
 }
 
 
@@ -91,6 +106,9 @@ get_ssm_by_patients = function(these_patient_ids,
 #' @param flavour Currently this function only supports one flavour option but this feature is meant for eventual compatability with additional variant calling parameters/versions
 #' @param these_genes A vector of genes to subset ssm to.
 #' @param min_read_support Only returns variants with at least this many reads in t_alt_count (for cleaning up augmented MAFs)
+#' @param basic_columns Return first 45 columns of MAF rather than full details. Default is TRUE.
+#' @param maf_cols if basic_columns is set to FALSE, the suer can specify what columns to be returned within the MAF. This parameter can either be a list of indexes (integer) or a list of characters.
+#' @param return_cols If set to TRUE, a vector with all avaialble column names will be returned. Default is FALSE.
 #' @param subset_from_merge Instead of merging individual MAFs, the data will be subset from a pre-merged MAF of samples with the specified seq_type
 #' @param BETA optional argument to supply active ssh session connection for remote transfers
 #'
@@ -108,6 +126,9 @@ get_ssm_by_samples = function(these_sample_ids,
                               flavour = "clustered",
                               these_genes,
                               min_read_support = 3,
+                              basic_columns = TRUE,
+                              maf_cols = NULL,
+                              return_cols = FALSE,
                               subset_from_merge = TRUE,
                               augmented = TRUE,
                               ssh_session){
@@ -117,7 +138,7 @@ get_ssm_by_samples = function(these_sample_ids,
   to_exclude = get_excluded_samples(tool_name)
 
   if(missing(these_samples_metadata)){
-    these_samples_metadata = get_gambl_metadata() %>%
+    these_samples_metadata = get_gambl_metadata(seq_type_filter = seq_type) %>%
       dplyr::filter(sample_id %in% these_sample_ids) %>%
       dplyr::filter(!sample_id %in% to_exclude)
   }else{
@@ -141,6 +162,12 @@ get_ssm_by_samples = function(these_sample_ids,
       message(paste("using existing merge:", full_maf_path))
       maf_df_merge = fread_maf(full_maf_path) %>%
         dplyr::filter(Tumor_Sample_Barcode %in% these_sample_ids)
+      #subset maf to only include first 43 columns (default)
+      if(basic_columns){maf_df_merge = dplyr::select(maf_df_merge, c(1:45))}
+      #subset maf to a specific set of columns (defined in maf_cols)
+      if(!is.null(maf_cols) && !basic_columns){maf_df_merge = dplyr::select(maf_df_merge, all_of(maf_cols))}
+      #print all available columns
+      if(!basic_columns && return_cols){print(colnames(maf_df_merge))}
     }
 
     if(subset_from_merge && augmented){
@@ -151,6 +178,12 @@ get_ssm_by_samples = function(these_sample_ids,
       maf_df_merge = fread_maf(full_maf_path) %>%
         dplyr::filter(Tumor_Sample_Barcode %in% these_sample_ids) %>%
         dplyr::filter(t_alt_count >= min_read_support)
+      #subset maf to only include first 43 columns (default)
+      if(basic_columns){maf_df_merge = dplyr::select(maf_df_merge, c(1:45))}
+      #subset maf to a specific set of columns (defined in maf_cols)
+      if(!is.null(maf_cols) && !basic_columns){maf_df_merge = dplyr::select(maf_df_merge, all_of(maf_cols))}
+      #print all available columns
+      if(!basic_columns && return_cols){print(colnames(maf_df_merge))}
     }
 
     if(!subset_from_merge){
@@ -164,7 +197,10 @@ get_ssm_by_samples = function(these_sample_ids,
           augmented = augmented,
           flavour = flavour,
           min_read_support = min_read_support,
-          verbose=FALSE,
+          basic_columns = basic_columns,
+          maf_cols = maf_cols,
+          return_cols = return_cols,
+          verbose = FALSE,
           ssh_session = ssh_session
         )
         maf_df_list[[this_sample]]=maf_df
@@ -181,6 +217,7 @@ get_ssm_by_samples = function(these_sample_ids,
 }
 
 
+
 #' Get the ssms (i.e. load MAF) for a single sample. This was implemented to allow flexibility because
 #' there are some samples that we may want to use a different set of variants than those in the main GAMBL merge.
 #' The current use case is to allow a force_unmatched output to be used to replace the SSMs from the merge for samples
@@ -195,6 +232,9 @@ get_ssm_by_samples = function(these_sample_ids,
 #' @param augmented default: TRUE. Set to FALSE if you instead want the original MAF from each sample for multi-sample patients instead of the augmented MAF
 #' @param flavour Currently this function only supports one flavour option but this feature is meant for eventual compatability with additional variant calling parameters/versions
 #' @param min_read_support Only returns variants with at least this many reads in t_alt_count (for cleaning up augmented MAFs)
+#' @param basic_columns Return first 43 columns of MAF rather than full details. Default is TRUE.
+#' @param maf_cols if basic_columns is set to FALSE, the suer can specify what columns to be returned within the MAF. This parameter can either be a list of indexes (integer) or a list of characters.
+#' @param return_cols If set to TRUE, a vector with all avaialble column names will be returned. Default is FALSE.
 #' @param verbose Enable for debugging/noisier output
 #' @param ssh_session BETA feature! pass active ssh session object.
 #' If specified, the function will assume the user is not on the network and will temporarily copy the file locally.
@@ -213,6 +253,9 @@ get_ssm_by_sample = function(this_sample_id,
                              augmented = TRUE,
                              flavour = "clustered",
                              min_read_support = 3,
+                             basic_columns = TRUE,
+                             maf_cols = NULL,
+                             return_cols = FALSE,
                              verbose = FALSE,
                              ssh_session){
 
@@ -321,6 +364,22 @@ get_ssm_by_sample = function(this_sample_id,
     sample_ssm = sample_ssm %>%
       dplyr::filter(Hugo_Symbol %in% these_genes)
   }
+
+  #subset maf to only include first 43 columns (default)
+  if(basic_columns){
+    sample_ssm = dplyr::select(sample_ssm, c(1:45))
+    }
+
+  #subset maf to a specific set of columns (defined in maf_cols)
+  if(!is.null(maf_cols) && !basic_columns){
+    sample_ssm = dplyr::select(sample_ssm, all_of(maf_cols))
+    }
+
+  #print all available columns
+  if(!basic_columns && return_cols){
+    print(colnames(sample_ssm))
+    }
+
   return(sample_ssm)
 }
 
@@ -440,7 +499,7 @@ get_gambl_metadata = function(seq_type_filter = "genome",
   sample_meta = sample_meta %>%
     dplyr::filter(seq_type %in% seq_type_filter & tissue_status %in% tissue_status_filter & bam_available %in% c(1,"TRUE")) %>%
     dplyr::select(-sex)
-  #if only normals were requested, just return what we have because there is nothing else to join 
+  #if only normals were requested, just return what we have because there is nothing else to join
   if(tissue_status_filter == "normal"){
     return(sample_meta)
   }
@@ -644,6 +703,13 @@ get_gambl_metadata = function(seq_type_filter = "genome",
 
       all_meta = all_meta %>%
       dplyr::filter(sample_id %in% adult_bl_manuscript_samples)
+
+    }else if(case_set == "BL-DLBCL-manuscript-HTMCP"){
+      adult_bl_manuscript_samples = data.table::fread("/projects/rmorin/projects/gambl-repos/gambl-kdreval/data/metadata/BLGSP--DLBCL-case-set.tsv") %>%
+        pull(Tumor_Sample_Barcode)
+
+      all_meta = all_meta %>%
+      dplyr::filter(sample_id %in% adult_bl_manuscript_samples | cohort == "DLBCL_HTMCP")
 
     }else if(case_set == "FL-DLBCL-all"){
       fl_dlbcl_all_samples = data.table::fread("/projects/rmorin/projects/gambl-repos/gambl-kdreval/data/metadata/FL--DLBCL--all-case-set.tsv") %>%
@@ -947,11 +1013,11 @@ get_combined_sv = function(min_vaf = 0,
                            projection = "grch37",
                            oncogenes){
 
-  if(projection != "grch37"){
-    message("Currently, only grch37 is supported")
-
-  return()
-  }
+  #if(projection != "grch37"){
+  #  message("Currently, only grch37 is supported")
+  #
+  #return()
+  #}
 
   base_path = config::get("project_base")
   sv_file = config::get()$results_flatfiles$sv_combined$icgc_dart
@@ -1050,7 +1116,14 @@ get_manta_sv = function(min_vaf = 0.1,
   #this table stores chromosomes with un-prefixed names. Convert to prefixed chromosome if necessary
   if(from_flatfile){
     sv_file = get_merged_result(tool_name = "manta", projection = projection)
+    #check for missingness
+    if(!file.exists(sv_file)){
+      message("Cannot find file locally. If working remotely, perhaps you forgot to load your config (see below) or sync your files?")
+      message('Sys.setenv(R_CONFIG_ACTIVE= "remote")')
+      check_host()
+    }
     all_sv = read_tsv(sv_file, col_types = "cnncnncnccccnnnnccc", col_names = cnames)
+    
   }else{
     con = DBI::dbConnect(RMariaDB::MariaDB(), dbname = db)
     all_sv = dplyr::tbl(con, table_name) %>%
@@ -1100,7 +1173,7 @@ get_manta_sv = function(min_vaf = 0.1,
 #' Get a specific flavour of LymphGen from the main GAMBL outputs and tidy the composites.
 #' Optionally return a matrix of features instead
 #'
-#' @param flavour 
+#' @param flavour
 #' @param these_samples_metadata
 #' @param return_feature_matrix
 #' @param return_feature_annotation
@@ -1136,138 +1209,138 @@ get_lymphgen = function(these_samples_metadata,
     lg_path = paste0(config::get("project_base"),config::get("results_merged")$lymphgen_template)
     lg_path = glue::glue(lg_path)
   }
-  
+
   lg = readr::read_tsv(lg_path)
   lg_tidy = tidy_lymphgen(lg,lymphgen_column_in = "Subtype.Prediction",lymphgen_column_out = "LymphGen")
   if(return_feature_matrix | return_feature_annotation){
     lg_ord = select(lg_tidy,Sample.Name,LymphGen) %>% arrange(LymphGen) %>% pull(Sample.Name)
     lg_levels = select(lg_tidy,Sample.Name,LymphGen) %>% arrange(LymphGen) %>% pull(LymphGen)
-    all_mcd = separate(lg_tidy,col="MCD.Features",into=c(paste0("Feature_MCD_",seq(1:15))),sep=",") %>% 
-      pivot_longer(starts_with("Feature_"),values_to = "MCD") %>% dplyr::filter(!is.na(MCD)) %>% 
+    all_mcd = separate(lg_tidy,col="MCD.Features",into=c(paste0("Feature_MCD_",seq(1:15))),sep=",") %>%
+      pivot_longer(starts_with("Feature_"),values_to = "MCD") %>% dplyr::filter(!is.na(MCD)) %>%
       pull(MCD) %>% unique()
     all_mcd_genes = str_remove(all_mcd,"_.*")%>% unique()
     all_mcd_df = expand.grid(Sample.Name=unique(lg_tidy$Sample.Name),Feature=all_mcd_genes)
-    feat_mcd = separate(lg_tidy,col="MCD.Features",into=c(paste0("Feature_MCD_",seq(1:15))),sep=",") %>% 
+    feat_mcd = separate(lg_tidy,col="MCD.Features",into=c(paste0("Feature_MCD_",seq(1:15))),sep=",") %>%
       pivot_longer(starts_with("Feature_"),values_to = "Feature") %>% dplyr::filter(!is.na(Feature)) %>% select(Sample.Name,Feature) %>% mutate(present=1)
-    
-    feat_mcd_genes = separate(lg_tidy,col="MCD.Features",into=c(paste0("Feature_MCD_",seq(1:15))),sep=",") %>% 
-      pivot_longer(starts_with("Feature_"),values_to = "Feature") %>% 
-      dplyr::filter(!is.na(Feature)) %>% select(Sample.Name,Feature) %>% mutate(present=1) %>% 
+
+    feat_mcd_genes = separate(lg_tidy,col="MCD.Features",into=c(paste0("Feature_MCD_",seq(1:15))),sep=",") %>%
+      pivot_longer(starts_with("Feature_"),values_to = "Feature") %>%
+      dplyr::filter(!is.na(Feature)) %>% select(Sample.Name,Feature) %>% mutate(present=1) %>%
       mutate(Feature=str_remove(Feature,"_.*")) %>% group_by(Sample.Name,Feature) %>% slice_head()
-    
-    
+
+
     mcd_mat = left_join(all_mcd_df,feat_mcd_genes) %>% mutate(present=replace_na(present,0)) %>%
-      pivot_wider(names_from="Feature",values_from="present") 
+      pivot_wider(names_from="Feature",values_from="present")
     feat_mcd = mutate(feat_mcd_genes,Class="MCD")
-  
-    all_ezb = separate(lg_tidy,col="EZB.Features",into=c(paste0("Feature_MCD_",seq(1:15))),sep=",") %>% 
+
+    all_ezb = separate(lg_tidy,col="EZB.Features",into=c(paste0("Feature_MCD_",seq(1:15))),sep=",") %>%
       pivot_longer(starts_with("Feature_"),values_to = "MCD") %>% dplyr::filter(!is.na(MCD)) %>% pull(MCD) %>% unique()
     all_ezb_genes = str_remove(all_ezb,"_.*")%>% unique()
-    
-    feat_ezb_genes = separate(lg_tidy,col="EZB.Features",into=c(paste0("Feature_MCD_",seq(1:15))),sep=",") %>% 
-      pivot_longer(starts_with("Feature_"),values_to = "Feature") %>% 
-      dplyr::filter(!is.na(Feature)) %>% select(Sample.Name,Feature) %>% mutate(present=1) %>% 
+
+    feat_ezb_genes = separate(lg_tidy,col="EZB.Features",into=c(paste0("Feature_MCD_",seq(1:15))),sep=",") %>%
+      pivot_longer(starts_with("Feature_"),values_to = "Feature") %>%
+      dplyr::filter(!is.na(Feature)) %>% select(Sample.Name,Feature) %>% mutate(present=1) %>%
       mutate(Feature=str_remove(Feature,"_.*")) %>% group_by(Sample.Name,Feature) %>% slice_head()
-    
+
     all_ezb_df = expand.grid(Sample.Name=unique(lg_tidy$Sample.Name),Feature=all_ezb_genes)
-    feat_ezb = separate(lg_tidy,col="EZB.Features",into=c(paste0("Feature_MCD_",seq(1:15))),sep=",") %>% 
+    feat_ezb = separate(lg_tidy,col="EZB.Features",into=c(paste0("Feature_MCD_",seq(1:15))),sep=",") %>%
       pivot_longer(starts_with("Feature_"),values_to = "Feature") %>% dplyr::filter(!is.na(Feature)) %>% select(Sample.Name,Feature) %>% mutate(present=1)
-    
+
     ezb_mat = left_join(all_ezb_df,feat_ezb_genes) %>% mutate(present=replace_na(present,0)) %>%
-      pivot_wider(names_from="Feature",values_from="present") 
+      pivot_wider(names_from="Feature",values_from="present")
     feat_ezb = mutate(feat_ezb_genes,Class="EZB")
-    
-    all_bn2 = separate(lg_tidy,col="BN2.Features",into=c(paste0("Feature_MCD_",seq(1:15))),sep=",") %>% 
+
+    all_bn2 = separate(lg_tidy,col="BN2.Features",into=c(paste0("Feature_MCD_",seq(1:15))),sep=",") %>%
       pivot_longer(starts_with("Feature_"),values_to = "MCD") %>% dplyr::filter(!is.na(MCD)) %>% pull(MCD) %>% unique()
     all_bn2_genes = str_remove(all_bn2,"_.*")%>% unique()
     all_bn2_df = expand.grid(Sample.Name=unique(lg_tidy$Sample.Name),Feature=all_bn2_genes)
-    
-    feat_bn2 = separate(lg_tidy,col="BN2.Features",into=c(paste0("Feature_MCD_",seq(1:15))),sep=",") %>% 
+
+    feat_bn2 = separate(lg_tidy,col="BN2.Features",into=c(paste0("Feature_MCD_",seq(1:15))),sep=",") %>%
       pivot_longer(starts_with("Feature_"),values_to = "Feature") %>% dplyr::filter(!is.na(Feature)) %>%
       select(Sample.Name,Feature) %>% mutate(present=1)
-    
-    feat_bn2_genes = separate(lg_tidy,col="BN2.Features",into=c(paste0("Feature_MCD_",seq(1:15))),sep=",") %>% 
-      pivot_longer(starts_with("Feature_"),values_to = "Feature") %>% 
-      dplyr::filter(!is.na(Feature)) %>% select(Sample.Name,Feature) %>% mutate(present=1) %>% 
+
+    feat_bn2_genes = separate(lg_tidy,col="BN2.Features",into=c(paste0("Feature_MCD_",seq(1:15))),sep=",") %>%
+      pivot_longer(starts_with("Feature_"),values_to = "Feature") %>%
+      dplyr::filter(!is.na(Feature)) %>% select(Sample.Name,Feature) %>% mutate(present=1) %>%
       mutate(Feature=str_remove(Feature,"_.*")) %>% group_by(Sample.Name,Feature) %>% slice_head()
-    
-    
+
+
     bn2_mat = left_join(all_bn2_df,feat_bn2_genes) %>% mutate(present=replace_na(present,0)) %>%
-      pivot_wider(names_from="Feature",values_from="present") 
+      pivot_wider(names_from="Feature",values_from="present")
     feat_bn2 = mutate(feat_bn2_genes,Class="BN2")
-    
-    all_st2 = separate(lg_tidy,col="ST2.Features",into=c(paste0("Feature_MCD_",seq(1:15))),sep=",") %>% 
-      pivot_longer(starts_with("Feature_"),values_to = "MCD") %>% dplyr::filter(!is.na(MCD)) %>% 
+
+    all_st2 = separate(lg_tidy,col="ST2.Features",into=c(paste0("Feature_MCD_",seq(1:15))),sep=",") %>%
+      pivot_longer(starts_with("Feature_"),values_to = "MCD") %>% dplyr::filter(!is.na(MCD)) %>%
       pull(MCD) %>% unique()
     all_st2_genes = str_remove(all_st2,"_.*") %>% unique()
     all_st2_df = expand.grid(Sample.Name=unique(lg_tidy$Sample.Name),Feature=all_st2_genes)
-    
-    feat_st2 = separate(lg_tidy,col="ST2.Features",into=c(paste0("Feature_MCD_",seq(1:15))),sep=",") %>% 
+
+    feat_st2 = separate(lg_tidy,col="ST2.Features",into=c(paste0("Feature_MCD_",seq(1:15))),sep=",") %>%
       pivot_longer(starts_with("Feature_"),values_to = "Feature") %>% dplyr::filter(!is.na(Feature)) %>%
       select(Sample.Name,Feature) %>% mutate(present=1)
-    
-    feat_st2_genes = separate(lg_tidy,col="ST2.Features",into=c(paste0("Feature_MCD_",seq(1:15))),sep=",") %>% 
-      pivot_longer(starts_with("Feature_"),values_to = "Feature") %>% 
-      dplyr::filter(!is.na(Feature)) %>% select(Sample.Name,Feature) %>% mutate(present=1) %>% 
+
+    feat_st2_genes = separate(lg_tidy,col="ST2.Features",into=c(paste0("Feature_MCD_",seq(1:15))),sep=",") %>%
+      pivot_longer(starts_with("Feature_"),values_to = "Feature") %>%
+      dplyr::filter(!is.na(Feature)) %>% select(Sample.Name,Feature) %>% mutate(present=1) %>%
       mutate(Feature=str_remove(Feature,"_.*")) %>% group_by(Sample.Name,Feature) %>% slice_head()
-    
-    
+
+
     st2_mat = left_join(all_st2_df,feat_st2_genes) %>% mutate(present=replace_na(present,0)) %>%
-      pivot_wider(names_from="Feature",values_from="present") 
+      pivot_wider(names_from="Feature",values_from="present")
     feat_st2 = mutate(feat_st2_genes,Class="ST2")
-    
-    all_n1 = separate(lg_tidy,col="N1.Features",into=c(paste0("Feature_MCD_",seq(1:15))),sep=",") %>% 
+
+    all_n1 = separate(lg_tidy,col="N1.Features",into=c(paste0("Feature_MCD_",seq(1:15))),sep=",") %>%
       pivot_longer(starts_with("Feature_"),values_to = "MCD") %>% dplyr::filter(!is.na(MCD)) %>% pull(MCD) %>% unique()
     all_n1_genes = str_remove(all_n1,"_.*") %>% unique()
-    
+
     #all_n1_df = expand.grid(Sample.Name=unique(lg_tidy$Sample.Name),Feature=all_n1)
     all_n1_df = expand.grid(Sample.Name=unique(lg_tidy$Sample.Name),Feature=all_n1_genes)
-    feat_n1 = separate(lg_tidy,col="N1.Features",into=c(paste0("Feature_MCD_",seq(1:15))),sep=",") %>% 
+    feat_n1 = separate(lg_tidy,col="N1.Features",into=c(paste0("Feature_MCD_",seq(1:15))),sep=",") %>%
       pivot_longer(starts_with("Feature_"),values_to = "Feature") %>% dplyr::filter(!is.na(Feature)) %>%
       select(Sample.Name,Feature) %>% mutate(present=1)
-    
-    feat_n1_genes = separate(lg_tidy,col="N1.Features",into=c(paste0("Feature_MCD_",seq(1:15))),sep=",") %>% 
-      pivot_longer(starts_with("Feature_"),values_to = "Feature") %>% 
-      dplyr::filter(!is.na(Feature)) %>% select(Sample.Name,Feature) %>% mutate(present=1) %>% 
+
+    feat_n1_genes = separate(lg_tidy,col="N1.Features",into=c(paste0("Feature_MCD_",seq(1:15))),sep=",") %>%
+      pivot_longer(starts_with("Feature_"),values_to = "Feature") %>%
+      dplyr::filter(!is.na(Feature)) %>% select(Sample.Name,Feature) %>% mutate(present=1) %>%
       mutate(Feature=str_remove(Feature,"_.*")) %>% group_by(Sample.Name,Feature) %>% slice_head()
-    
+
     #n1_mat = left_join(all_n1_df,feat_n1) %>% mutate(present=replace_na(present,0)) %>%
-    #  pivot_wider(names_from="Feature",values_from="present") 
-    
+    #  pivot_wider(names_from="Feature",values_from="present")
+
     n1_mat = left_join(all_n1_df,feat_n1_genes) %>% mutate(present=replace_na(present,0)) %>%
-      pivot_wider(names_from="Feature",values_from="present") 
+      pivot_wider(names_from="Feature",values_from="present")
     feat_n1 = mutate(feat_n1_genes,Class="N1")
-    
+
     all_genes = c(all_n1_genes,all_ezb_genes,all_st2_genes,all_bn2_genes,all_mcd_genes)
     print(table(all_genes))
     feat_all = bind_rows(feat_n1,feat_st2,feat_mcd,feat_ezb,feat_bn2)
-    
+
   if(return_feature_annotation){
     #just give the user the association between each feature and its class along with some summary stats
-    feat_count = group_by(feat_all,Feature,Class) %>% count() 
+    feat_count = group_by(feat_all,Feature,Class) %>% count()
     return(feat_count)
   }
-  
+
   all_mat = left_join(ezb_mat,mcd_mat)
-  all_mat = left_join(all_mat,bn2_mat) 
-  all_mat = left_join(all_mat,n1_mat) 
-  all_mat = left_join(all_mat,st2_mat) 
+  all_mat = left_join(all_mat,bn2_mat)
+  all_mat = left_join(all_mat,n1_mat)
+  all_mat = left_join(all_mat,st2_mat)
   if(!keep_all_rows){
     all_mat = dplyr::filter(all_mat,Sample.Name %in% these_samples_metadata$sample_id)
   }
   all_mat = all_mat %>% column_to_rownames("Sample.Name")
-  
+
     return(all_mat)
   }else{
     if(!keep_original_columns){
-      lg_tidy = dplyr::select(lg_tidy,Sample.Name,LymphGen) 
+      lg_tidy = dplyr::select(lg_tidy,Sample.Name,LymphGen)
     }
     lg_tidy = lg_tidy %>% dplyr::rename("sample_id"="Sample.Name")
     if(!keep_all_rows){
       lg_tidy = dplyr::filter(lg_tidy,sample_id %in% these_samples_metadata$sample_id)
     }
     return(lg_tidy)
-    
+
   }
 }
 
@@ -1608,23 +1681,26 @@ append_to_table = function(table_name,
 get_ashm_count_matrix = function(regions_bed,
                                  maf_data,
                                  sample_metadata,
+                                 seq_type,
                                  use_name_column = FALSE,
-                                 from_indexed_flatfile = FALSE,
-                                 allow_clustered = FALSE){
+                                 from_indexed_flatfile = TRUE,
+                                 ssh_session = NULL){
 
   if(missing(regions_bed)){
     regions_bed = grch37_ashm_regions
   }
   ashm_maf = get_ssm_by_regions(regions_bed = regions_bed,
-                                streamlined = TRUE,
+                                streamlined = FALSE,
+                                seq_type=seq_type,
                                 maf_data = maf_data,
                                 use_name_column = use_name_column,
                                 from_indexed_flatfile = from_indexed_flatfile,
-                                allow_clustered = allow_clustered)
+                                ssh_session=ssh_session)
 
   ashm_counted = ashm_maf %>%
     group_by(sample_id, region_name) %>%
     tally()
+
   if(missing(sample_metadata)){
     all_meta = get_gambl_metadata() %>%
       dplyr::select(sample_id)
@@ -1657,7 +1733,6 @@ get_ashm_count_matrix = function(regions_bed,
 #' @param seq_type The seq_type you want back, default is genome.
 #' @param projection Obtain variants projected to this reference (one of grch37 or hg38).
 #' @param min_read_support Only returns variants with at least this many reads in t_alt_count (for cleaning up augmented MAFs).
-#' @param allow_clustered Logical parameter indicating whether to use SLMS-3 results with clustered events. Default is FALSE.
 #'
 #' @return Returns a data frame of variants in MAF-like format.
 #' @export
@@ -1678,7 +1753,8 @@ get_ssm_by_regions = function(regions_list,
                               seq_type = "genome",
                               projection = "grch37",
                               min_read_support = 4,
-                              allow_clustered = TRUE){
+                              ssh_session = NULL){
+
 
   bed2region = function(x){
     paste0(x[1], ":", as.numeric(x[2]), "-", as.numeric(x[3]))
@@ -1698,14 +1774,14 @@ get_ssm_by_regions = function(regions_list,
                                                                 augmented = augmented,
                                                                 seq_type = seq_type,
                                                                 projection = projection,
-                                                                allow_clustered = allow_clustered)})
+                                                                ssh_session=ssh_session)})
   }else{
     region_mafs = lapply(regions, function(x){get_ssm_by_region(region = x,
                                                                 streamlined = streamlined,
                                                                 maf_data = maf_data,
                                                                 from_indexed_flatfile = from_indexed_flatfile,
                                                                 mode = mode,
-                                                                allow_clustered = allow_clustered)})
+                                                                ssh_session=ssh_session)})
   }
   if(!use_name_column){
     rn = regions
@@ -1721,11 +1797,9 @@ get_ssm_by_regions = function(regions_list,
       dplyr::select(start, sample_id, region_name)
 
   }else{
-    unlisted_df = mutate(unnested_df, chromosome = region_mafs$Chromosome, start = region_mafs$Start_Position, end = region_mafs$End_Position, sample_id = region_mafs$Tumor_Sample_Barcode) %>%
-      dplyr::select(chromosome, start, end, sample_id)
+    unlisted_df = mutate(unnested_df, Chromosome = region_mafs$Chromosome, End_Position = region_mafs$End_Position, Start_Position = region_mafs$Start_Position, Tumor_Sample_Barcode = region_mafs$Tumor_Sample_Barcode) %>%
+      dplyr::select(Chromosome, Start_Position, End_Position, Tumor_Sample_Barcode, region_name)
   }
-  #need to unlist but not using unlist
-  #region_maf = reduce(region_mafs,rbind)
   return(unlisted_df)
 }
 
@@ -1768,12 +1842,25 @@ get_ssm_by_region = function(chromosome,
                              from_indexed_flatfile = TRUE,
                              augmented = TRUE,
                              min_read_support = 3,
-                             mode = "slms-3"){
-
-  tabix_bin = "/home/rmorin/miniconda3/bin/tabix"
+                             mode = "slms-3",
+                             maf_columns = c("Chromosome", "Start_Position", "End_Position", "Tumor_Sample_Barcode", "t_alt_count"),
+                             maf_column_types = c("c","i","i","c","i"),
+                             ssh_session = NULL){
+  #check that maf_columns requested all exist in the header and get their indexes
+  if(!all(maf_columns %in% names(maf_header))){
+    stop("Cannot find one of the requested maf_columns in your MAF header")
+  }
+  maf_indexes = maf_header[maf_columns]
+  maf_column_types = maf_column_types[order(maf_indexes)]
+  maf_indexes = maf_indexes[order(maf_indexes)]
+  maf_columns = names(maf_indexes)
+  maf_indexes = unname(maf_indexes)
+  #this is to put the indexes and their names back into numerical order because cut returns columns that way
+  
+  tabix_bin = config::get("dependencies")$tabix
   table_name = config::get("results_tables")$ssm
   db = config::get("database_name")
-
+  
   if(from_indexed_flatfile){
     base_path = config::get("project_base")
 
@@ -1792,13 +1879,18 @@ get_ssm_by_region = function(chromosome,
 
     maf_path = glue::glue(maf_partial_path)
     full_maf_path = paste0(base_path, maf_path)
-
-    #substitute maf with bed.gz for indexed flatfiles
-    full_maf_path = stringr::str_replace(full_maf_path, ".maf$", ".bed.gz")
-    message(paste("reading from:", full_maf_path))
+    full_maf_path_comp = paste0(base_path, maf_path, ".bgz")
+    
+    if(!file.exists(full_maf_path_comp)){
+      print(paste("missing:",full_maf_path_comp))
+      message("Warning, you are running this on a computer that does not have direct acces to the directed file, prehaps you should try run this with ssh_session as a parameter?")
+    }else if(!is.null(ssh_session)){
+      message("The file you requested exists locally. Are you sure you want to use ssh_session?")
+    }else{
+      message("using local file")
+      print(paste("HERE:",full_maf_path_comp))
+    }
   }
-
-  region = "chr8:128,723,128-128,774,067"
 
   if(!region == ""){
     region = gsub(",", "", region)
@@ -1810,6 +1902,11 @@ get_ssm_by_region = function(chromosome,
     startend = unlist(strsplit(split_chunks[2], "-"))
     qstart = as.numeric(startend[1])
     qend = as.numeric(startend[2])
+  }else{
+    if(projection =="grch37"){
+      chromosome = gsub("chr", "", chromosome)
+    }
+    region=paste0(chromosome,":",qstart,"-",qend)
   }
 
   if(projection =="grch37"){
@@ -1818,30 +1915,46 @@ get_ssm_by_region = function(chromosome,
 
   if(missing(maf_data)){
     if(from_indexed_flatfile){
-      muts = system(paste(tabix_bin, full_maf_path, region), intern = TRUE)
+      if(!is.null(ssh_session)){
+        #Helper function that may come in handy elsewhere so could be moved out of this function if necessary
+        run_command_remote = function(ssh_session,to_run){
+        output = ssh::ssh_exec_internal(ssh_session,to_run)$stdout
+        output = rawToChar(output)
+        return(output)
+        }
 
-      if(length(muts) > 1){
-        muts_region = readr::read_tsv(I(muts), col_names = c("Chromosome", "Start_Position", "End_Position", "Tumor_Sample_Barcode", "Read_Support"))
+        # NOTE!
+        # Retrieving mutations per region over ssh connection is only supporting the basic columns for now in an attempt to keep the transfer of unnecessary data to a minimum
+        
+        remote_base_path = config::get("project_base",config="default")
+        full_maf_path_comp = paste0(remote_base_path, maf_path, ".bgz")
+        if(!file.exists(full_maf_path_comp)){
+          message("Cannot find file locally. If working remotely, perhaps you forgot to load your config (see below) or sync your files?")
+          message('Sys.setenv(R_CONFIG_ACTIVE= "remote")')
+          check_host()
+        }else{
+          message(paste("reading from:", full_maf_path_comp))
+        }
+        
+        tabix_command = paste(tabix_bin, full_maf_path_comp, region, "| cut -f", paste(maf_indexes,collapse=","))
+        print(tabix_command)
+        #stop()
+        muts = run_command_remote(ssh_session,tabix_command)
+        muts_region = vroom::vroom(I(muts),col_types = paste(maf_column_types,collapse=""),
+                                   col_names=maf_columns)
+      }else{
 
-        # this is necessary because when only one row is returned, read_tsv thinks it is a file name
-      }else if (length(muts) == 1){
-        region_with_one_row = stringr::str_split(muts, "\t", n = 4)
-        muts_region = data.frame(Chromosome = unlist(region_with_one_row)[1],
-                                 Start_Position = as.numeric(unlist(region_with_one_row)[2]),
-                                 End_Position = as.numeric(unlist(region_with_one_row)[3]),
-                                 Tumor_Sample_Barcode = unlist(region_with_one_row)[4],
-                                 Read_Support = unlist(region_with_one_row)[5],
-                                 stringsAsFactors = FALSE)
-      } else {
-        muts_region = data.frame(Chromosome = character(),
-                                 Start_Position = character(),
-                                 End_Position = character(),
-                                 Tumor_Sample_Barcode = character(),
-                                 Read_Support = character())
+        tabix_command = paste(tabix_bin, full_maf_path_comp, region, "| cut -f" , paste(maf_indexes,collapse=","))
+        print(tabix_command)
+        #stop()
+        muts = system(tabix_command, intern = TRUE)
+        
+        muts_region = vroom::vroom(I(muts), col_types = paste(maf_column_types,collapse=""),
+                            col_names=maf_columns)
       }
       if(augmented){
         # drop poorly supported reads but only from augmented MAF
-        muts_region = dplyr::filter(muts_region, Read_Support >= min_read_support)
+        muts_region = dplyr::filter(muts_region, t_alt_count >= min_read_support)
       }
     }else{
       con = DBI::dbConnect(RMariaDB::MariaDB(), dbname = db)
@@ -1879,6 +1992,8 @@ get_ssm_by_region = function(chromosome,
 #' @param projection Reference genome build for the coordinates in the MAF file. The default is hg19 genome build.
 #' @param seq_type The seq_type you want back, default is genome.
 #' @param basic_columns Set to TRUE to override the default behavior of returning only the first 45 columns of MAF data.
+#' @param maf_cols if basic_columns is set to FALSE, the user can specify what columns to be returned within the MAF. This parameter can either be a list of indexes (integer) or a list of characters (matching columns in MAF).
+#' @param return_cols If set to TRUE, a vector with all avaialble column names will be returned. Default is FALSE.
 #' @param from_flatfile Set to TRUE to obtain mutations from a local flatfile instead of the database. This can be more efficient and is currently the only option for users who do not have ICGC data access.
 #' @param augmented default: TRUE. Set to FALSE if you instead want the original MAF from each sample for multi-sample patients instead of the augmented MAF
 #' @param min_read_support Only returns variants with at least this many reads in t_alt_count (for cleaning up augmented MAFs)
@@ -1903,6 +2018,8 @@ get_coding_ssm = function(limit_cohort,
                           projection = "grch37",
                           seq_type = "genome",
                           basic_columns = TRUE,
+                          maf_cols = NULL,
+                          return_cols = FALSE,
                           from_flatfile = TRUE,
                           augmented = TRUE,
                           min_read_support = 3,
@@ -2001,6 +2118,16 @@ get_coding_ssm = function(limit_cohort,
   #subset to fewer columns
   if(basic_columns){
     muts = muts[,c(1:45)]
+  }
+
+  #subset maf to a specific set of columns (defined in maf_cols)
+  if(!is.null(maf_cols) && !basic_columns){
+    muts = dplyr::select(muts, all_of(maf_cols))
+  }
+
+  #print all avaialble columns
+  if(!basic_columns && return_cols){
+    print(colnames(muts))
   }
 
   #drop rows for these samples so we can swap in the force_unmatched outputs instead
@@ -2118,11 +2245,14 @@ get_gene_expression = function(metadata,
   }else if(!missing(hugo_symbols) & !missing(ensembl_gene_ids)){
     stop("ERROR: Both hugo_symbols and ensembl_gene_ids were provided. Please provide only one type of ID.")
   }
-  tidy_expression_file = config::get("results_merged")$tidy_expression_file
-
-
+  #tidy_expression_file = config::get("results_merged")$tidy_expression_file
+  #use combination of base path and relative path instead of full path for flexibility accross sites
+  tidy_expression_path = config::get("results_merged")$tidy_expression_path
+  base_path = config::get("project_base")
+  tidy_expression_file = paste0(base_path,tidy_expression_path)
+  tidy_expression_file = gsub(".gz$","",tidy_expression_file)
   if(!missing(expression_data)){
-    tidy_expression_data = as.data.frame(expression_data)
+    tidy_expression_data = as.data.frame(expression_data) #is this necessary? Will it unnecessarily duplicate a large object if it's already a data frame?
     if(!missing(hugo_symbols)){
       #lazily filter on the fly to conserve RAM
       wide_expression_data = tidy_expression_data %>%
@@ -2132,34 +2262,50 @@ get_gene_expression = function(metadata,
         slice_head() %>%
         as.data.frame() %>%
         pivot_wider(names_from = Hugo_Symbol, values_from = expression)
-    }
-    if(!missing(ensembl_gene_ids)){
+    }else if(!missing(ensembl_gene_ids)){
       wide_expression_data = tidy_expression_data %>%
         dplyr::filter(ensembl_gene_id %in% ensembl_gene_ids) %>%
         dplyr::select(-Hugo_Symbol) %>%
         as.data.frame() %>%
         pivot_wider(names_from = ensembl_gene_id, values_from = expression)
+    }else{
+      
+      #for when a user wants everything. Need to handle the option of getting back Hugo_Symbol instead
+      wide_expression_data = tidy_expression_data %>%
+        dplyr::select(-Hugo_Symbol) %>%
+        as.data.frame() %>%
+        pivot_wider(names_from = ensembl_gene_id, values_from = expression)
     }
   }else{
+    if(!file.exists(tidy_expression_file)){
+      message("Cannot find file locally. If working remotely, perhaps you forgot to load your config (see below) or sync your files?")
+      message('Sys.setenv(R_CONFIG_ACTIVE= "remote")')
+      check_host()
+    }
     #only ever load the full data frame when absolutely necessary
     if(all_genes & missing(ensembl_gene_ids) & missing(hugo_symbols)){
-      tidy_expression_data = vroom::vroom(tidy_expression_file) %>%
-        as.data.frame()
+      wide_expression_data = read_tsv(tidy_expression_file) %>%
+        as.data.frame() %>% 
+        pivot_wider(names_from = ensembl_gene_id, values_from = expression)
     }else{
       if(!missing(hugo_symbols)){
-        #lazily filter on the fly to conserve RAM
-        wide_expression_data = vroom::vroom(tidy_expression_file) %>%
-          dplyr::filter(Hugo_Symbol %in% hugo_symbols) %>%
+        #lazily filter on the fly to conserve RAM (use grep without regex)
+        genes_regex=paste(c("-e Hugo_Symbol",genes),collapse = " -e ");
+        grep_cmd = paste0("grep -w -F ",genes_regex," ",tidy_expression_file)
+        print(grep_cmd)
+        wide_expression_data = fread(cmd=grep_cmd) %>%
+        #wide_expression_data = read_tsv(tidy_expression_file,lazy=TRUE) %>%
           dplyr::select(-ensembl_gene_id) %>%
+          dplyr::filter(Hugo_Symbol %in% hugo_symbols) %>%
           group_by(mrna_sample_id,Hugo_Symbol) %>% #deal with non 1:1 mapping of Hugo to Ensembl
           slice_head() %>%
           as.data.frame() %>%
           pivot_wider(names_from = Hugo_Symbol, values_from = expression)
       }
       if(!missing(ensembl_gene_ids)){
-        wide_expression_data = vroom::vroom(tidy_expression_file) %>%
-          dplyr::filter(ensembl_gene_id %in% ensembl_gene_ids) %>%
+        wide_expression_data = read_tsv(tidy_expression_file,lazy=TRUE) %>%
           dplyr::select(-Hugo_Symbol) %>%
+          dplyr::filter(ensembl_gene_id %in% ensembl_gene_ids) %>%
           as.data.frame() %>%
           pivot_wider(names_from = ensembl_gene_id, values_from = expression)
 

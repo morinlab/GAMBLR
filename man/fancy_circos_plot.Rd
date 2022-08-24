@@ -8,6 +8,10 @@ fancy_circos_plot(
   this_sample,
   vaf_cutoff = 0,
   chr_select = paste0("chr", c(1:22)),
+  use_sv_calls = TRUE,
+  coding_only = FALSE,
+  from_flatfile = TRUE,
+  use_augmented_maf = TRUE,
   include_del = TRUE,
   include_dup = TRUE,
   projection = "grch37",
@@ -23,6 +27,12 @@ fancy_circos_plot(
 
 \item{chr_select}{Optional argument for subsetting on selected chromosomes, default is all autosomes.}
 
+\item{coding_only}{Optional. Set to TRUE to restrict to plotting only coding mutations.}
+
+\item{from_flatfile}{If set to true the function will use flat files instead of the database.}
+
+\item{use_augmented_maf}{Boolean statement if to use augmented maf, default is TRUE.}
+
 \item{include_del}{Boolean statement to include SVs of subtype deletion. Default is TRUE.}
 
 \item{include_dup}{Boolean statement to include SVs of subtype duplication. Default is TRUE.}
@@ -34,6 +44,8 @@ fancy_circos_plot(
 \item{gene_list}{Optional parameter to annotate genes on the circos plot from a list of genes (df). Important, gene_list is expected to have the following columns Chromosome:chromStart:chromEnd:Gene.}
 
 \item{gene_name_col}{Index number of gene_list that holds gene names.}
+
+\item{manta_calls}{Set to TRUE for get_combined_sv approach of retreiving plot data. Set to FALSE to run assign_cn_to_ssm. Default is TRUE.}
 }
 \value{
 Nothing.

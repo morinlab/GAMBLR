@@ -9,12 +9,14 @@ get_lymphgen(
   these_samples_metadata,
   flavour,
   return_feature_matrix = FALSE,
+  return_feature_annotation = FALSE,
   lymphgen_file,
-  keep_all_rows = FALSE
+  keep_all_rows = FALSE,
+  keep_original_columns = FALSE
 )
 }
 \arguments{
-\item{flavour}{}
+\item{keep_original_columns}{}
 }
 \value{
 

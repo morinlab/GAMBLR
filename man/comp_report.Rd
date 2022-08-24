@@ -4,7 +4,15 @@
 \alias{comp_report}
 \title{Construct pdf with sample-level plots, using minimum of arguments}
 \usage{
-comp_report(this_sample, export_individual_plots = FALSE, out)
+comp_report(
+  this_sample,
+  export_individual_plots = FALSE,
+  out,
+  seq_data,
+  seq_path = NULL,
+  maf_data,
+  maf_path = NULL
+)
 }
 \arguments{
 \item{this_sample}{Sample ID to be plotted in report.}
@@ -12,6 +20,14 @@ comp_report(this_sample, export_individual_plots = FALSE, out)
 \item{export_individual_plots}{Boolean parameter, set to TRUE to export individual plots.}
 
 \item{out}{Path to output folder.}
+
+\item{seq_data}{Optional parameter with copy number df already loaded into R.}
+
+\item{seq_path}{Optional parameter with path to external cn file.}
+
+\item{maf_data}{Optional parameter with maf like df already loaded into R.}
+
+\item{maf_path}{Optional parameter with path to external maf like file.}
 }
 \value{
 Nothing.
@@ -20,6 +36,6 @@ Nothing.
 Construct pdf with sample-level plots, using minimum of arguments
 }
 \examples{
-comp_report(this_sample = this_sample, out = "../../../newplots/", export_individual_plots = TRUE)
+comp_report(this_sample = "HTMCP-01-06-00422-01A-01D", out = "reports/", export_individual_plots = TRUE)
 
 }
