@@ -12,8 +12,8 @@ fancy_alignment_plot(
   seq_type = "genome",
   add_mean = TRUE,
   add_corrected_coverage = TRUE,
-  filter_cohort,
-  filter_pathology,
+  keep_cohort,
+  keep_pathology,
   this_color_palette = c(TotalReads = "#3D405B", TotalUniquelyMapped = "#81B29A",
     TotalDuplicatedreads = "#E07A5F"),
   plot_sub = ""
@@ -34,9 +34,9 @@ fancy_alignment_plot(
 
 \item{add_corrected_coverage}{Set to TRUE to add corrected coverage for selected samples.}
 
-\item{filter_cohort}{If no df with sample IDs is supplied (these_samples = NULL) the function calls get_gambl_metadata and subsets on selected cohort.}
+\item{keep_cohort}{If no df with sample IDs is supplied (these_samples = NULL) the function calls get_gambl_metadata and subsets on selected cohort.}
 
-\item{filter_pathology}{If no df with sample IDs is supplied (these_samples = NULL) the function calls get_gambl_metadata and subsets on selected pathology.}
+\item{keep_pathology}{If no df with sample IDs is supplied (these_samples = NULL) the function calls get_gambl_metadata and subsets on selected pathology.}
 
 \item{this_color_palette}{Optional parameter that holds the selected colours for the plotted bars.}
 
@@ -65,6 +65,6 @@ fl_metadata = get_gambl_metadata() \%>\%
 my_plot_2 = fancy_alignment_plot(these_samples_metadata = fl_metadata, seq_type = "genome")
 
 #Example 3 - using in-house metadata fitlering options
-my_plot_3 = fancy_alignment_plot(filter_cohort = "FL_Kridel", filter_pathology = "FL", seq_type = "genome")
+my_plot_3 = fancy_alignment_plot(keep_cohort = "FL_Kridel", keep_pathology = "FL", seq_type = "genome")
 
 }

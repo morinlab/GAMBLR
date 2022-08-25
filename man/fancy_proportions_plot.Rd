@@ -8,8 +8,8 @@ fancy_proportions_plot(
   these_samples,
   metadata,
   these_samples_metadata,
-  filter_cohort,
-  filter_pathology,
+  keep_cohort,
+  keep_pathology,
   seq_type = "genome",
   plot_subtitle = ""
 )
@@ -21,9 +21,9 @@ fancy_proportions_plot(
 
 \item{these_samples_metadata}{GAMBL metadata subset to the cases you want to process.}
 
-\item{filter_cohort}{Optional parameter to be used when these_sample is NULL. Calls get_gambl_metadata() and filters on the cohort supplied in this parameter.}
+\item{keep_cohort}{Optional parameter to be used when these_sample is NULL. Calls get_gambl_metadata() and filters on the cohort supplied in this parameter.}
 
-\item{filter_pathology}{Optional parameter to be used when these_sample is NULL. Calls get_gambl_metadata() and filters on the pathology supplied in this parameter.}
+\item{keep_pathology}{Optional parameter to be used when these_sample is NULL. Calls get_gambl_metadata() and filters on the pathology supplied in this parameter.}
 
 \item{seq_type}{Selected seq type for incoming QC metrics.}
 
@@ -52,6 +52,6 @@ fl_metadata = get_gambl_metadata() \%>\%
 my_plot_2 = fancy_proportions_plot(these_samples_metadata = fl_metadata, seq_type = "genome")
 
 #Example 3 - using in-house metadata fitlering options
-my_plot_3 = fancy_proportions_plot(filter_cohort = "FL_Kridel", filter_pathology = "FL", seq_type = "genome")
+my_plot_3 = fancy_proportions_plot(keep_cohort = "FL_Kridel", keep_pathology = "FL", seq_type = "genome")
 
 }

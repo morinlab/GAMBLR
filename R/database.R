@@ -20,8 +20,8 @@ get_excluded_samples = function(tool_name = "slms-3"){
   #check for missingness
   path = paste0(base,"config/exclude.tsv")
   if(!file.exists(path)){
-    message("Cannot find file locally. If working remotely, perhaps you forgot to load your config (see below) or sync your files?")
-    message('Sys.setenv(R_CONFIG_ACTIVE = "remote")')
+    print(paste("missing: ", path))
+    message("Have you cloned the GAMBL repo and added the path to this directory under the local section of your config?")
   }
 
   excluded_df = read_tsv(paste0(base,"config/exclude.tsv"))
@@ -171,6 +171,7 @@ get_ssm_by_samples = function(these_sample_ids,
 
       #check for missingness
       if(!file.exists(full_maf_path)){
+        print(paste("missing: ", full_maf_path))
         message("Cannot find file locally. If working remotely, perhaps you forgot to load your config (see below) or sync your files?")
         message('Sys.setenv(R_CONFIG_ACTIVE = "remote")')
         }
@@ -193,9 +194,10 @@ get_ssm_by_samples = function(these_sample_ids,
 
       #check for missingness
       if(!file.exists(full_maf_path)){
+        print(paste("missing: ", full_maf_path))
         message("Cannot find file locally. If working remotely, perhaps you forgot to load your config (see below) or sync your files?")
-      message('Sys.setenv(R_CONFIG_ACTIVE = "remote")')
-        }
+        message('Sys.setenv(R_CONFIG_ACTIVE = "remote")')
+      }
 
       maf_df_merge = fread_maf(full_maf_path) %>%
         dplyr::filter(Tumor_Sample_Barcode %in% these_sample_ids) %>%
@@ -354,6 +356,7 @@ get_ssm_by_sample = function(this_sample_id,
 
      #check for missingness
      if(!file.exists(local_aug_maf_path)){
+      print(paste("missing: ", local_aug_maf_path))
       message("Cannot find file locally. If working remotely, perhaps you forgot to load your config (see below) or sync your files?")
       message('Sys.setenv(R_CONFIG_ACTIVE = "remote")')
      }
@@ -374,6 +377,7 @@ get_ssm_by_sample = function(this_sample_id,
       }
       #check for missingness
       if(!file.exists(local_full_maf_path)){
+        print(paste("missing: ", local_full_maf_path))
         message("Cannot find file locally. If working remotely, perhaps you forgot to load your config (see below) or sync your files?")
         message('Sys.setenv(R_CONFIG_ACTIVE = "remote"')
       }
@@ -385,6 +389,7 @@ get_ssm_by_sample = function(this_sample_id,
 
     #check for missingness
     if(!file.exists(full_maf_path)){
+      print(paste("missing: ",full_maf_path))
       message("Cannot find file locally. If working remotely, perhaps you forgot to load your config (see below) or sync your files?")
       message('Sys.setenv(R_CONFIG_ACTIVE = "remote")')
     }
@@ -396,11 +401,13 @@ get_ssm_by_sample = function(this_sample_id,
     }
   }else{
     if(!file.exists(full_maf_path)){
+      print(paste("missing: ", full_maf_path))
       message(paste("ERROR: file does not exist", full_maf_path))
       return()
     }
     #check for missingness
     if(!file.exists(full_maf_path)){
+      print(paste("missing: ", full_maf_path))
       message("Cannot find file locally. If working remotely, perhaps you forgot to load your config (see below) or sync your files?")
       message('Sys.setenv(R_CONFIG_ACTIVE = "remote")')
     }
@@ -522,13 +529,13 @@ get_gambl_metadata = function(seq_type_filter = "genome",
 
     #check for missingness
     if(!file.exists(sample_flatfile)){
-      message("Cannot find file locally. If working remotely, perhaps you forgot to load your config (see below) or sync your files?")
-      message('Sys.setenv(R_CONFIG_ACTIVE = "remote")')
+      print(paste("missing: ", sample_flatfile))
+      message("Have you cloned the GAMBL repo and added the path to this directory under the local section of your config?")
     }
 
     if(!file.exists(biopsy_flatfile)){
-      message("Cannot find file locally. If working remotely, perhaps you forgot to load your config (see below) or sync your files?")
-      message('Sys.setenv(R_CONFIG_ACTIVE = "remote")')
+      print(paste("missing: ", biopsy_flatfile))
+      message("Have you cloned the GAMBL repo and added the path to this directory under the local section of your config?")
     }
 
     sample_meta = suppressMessages(read_tsv(sample_flatfile, guess_max = 100000))
@@ -928,8 +935,8 @@ add_icgc_metadata = function(incoming_metadata){
 
   #check for missingness
   if(!file.exists(icgc_raw_path)){
-    message("Cannot find file locally. If working remotely, perhaps you forgot to load your config (see below) or sync your files?")
-    message('Sys.setenv(R_CONFIG_ACTIVE = "remote")')
+    print(paste("missing: ", icgc_raw_path))
+    message("Have you cloned the GAMBL repo and added the path to this directory under the local section of your config?")
   }
 
   icgc_raw = suppressMessages(read_tsv(icgc_raw_path))
@@ -982,8 +989,8 @@ get_gambl_outcomes = function(patient_ids,
 
     #check for missingness
     if(!file.exists(outcome_flatfile)){
-      message("Cannot find file locally. If working remotely, perhaps you forgot to load your config (see below) or sync your files?")
-      message('Sys.setenv(R_CONFIG_ACTIVE = "remote")')
+      print(paste("missing: ", outcome_flatfile))
+      message("Have you cloned the GAMBL repo and added the path to this directory under the local section of your config?")
     }
 
     all_outcome = suppressMessages(read_tsv(outcome_flatfile))
@@ -1107,6 +1114,7 @@ get_combined_sv = function(min_vaf = 0,
 
   #check for missingness
   if(!file.exists(sv_file)){
+    print(paste("missing: ", sv_file))
     message("Cannot find file locally. If working remotely, perhaps you forgot to load your config (see below) or sync your files?")
     message('Sys.setenv(R_CONFIG_ACTIVE = "remote")')
   }
@@ -1200,6 +1208,7 @@ get_manta_sv = function(min_vaf = 0.1,
 
     #check for missingness
     if(!file.exists(sv_file)){
+      print(paste("missing: ", sv_file))
       message("Cannot find file locally. If working remotely, perhaps you forgot to load your config (see below) or sync your files?")
       message('Sys.setenv(R_CONFIG_ACTIVE= "remote")')
       check_host()
@@ -1561,6 +1570,7 @@ get_sample_cn_segments = function(this_sample_id,
 
     #check for missingness
     if(!file.exists(full_cnv_path)){
+      print(paste("missing: ", full_cnv_path))
       message("Cannot find file locally. If working remotely, perhaps you forgot to load your config (see below) or sync your files?")
       message('Sys.setenv(R_CONFIG_ACTIVE = "remote")')
     }
@@ -1971,7 +1981,7 @@ get_ssm_by_region = function(chromosome,
     full_maf_path_comp = paste0(base_path, maf_path, ".bgz")
     
     if(!file.exists(full_maf_path_comp)){
-      print(paste("missing:",full_maf_path_comp))
+      print(paste("missing:", full_maf_path_comp))
       message("Warning, you are running this on a computer that does not have direct acces to the directed file, prehaps you should try run this with ssh_session as a parameter?")
     }else if(!is.null(ssh_session)){
       message("The file you requested exists locally. Are you sure you want to use ssh_session?")
@@ -2018,6 +2028,7 @@ get_ssm_by_region = function(chromosome,
         remote_base_path = config::get("project_base",config="default")
         full_maf_path_comp = paste0(remote_base_path, maf_path, ".bgz")
         if(!file.exists(full_maf_path_comp)){
+          print(paste("missing: ", full_maf_path_comp))
           message("Cannot find file locally. If working remotely, perhaps you forgot to load your config (see below) or sync your files?")
           message('Sys.setenv(R_CONFIG_ACTIVE= "remote")')
           check_host()
@@ -2174,6 +2185,7 @@ get_coding_ssm = function(limit_cohort,
 
   #check for missingness
     if(!file.exists(full_maf_path)){
+      print(paste("missing: ", full_maf_path))
       message("Cannot find file locally. If working remotely, perhaps you forgot to load your config (see below) or sync your files?")
       message('Sys.setenv(R_CONFIG_ACTIVE = "remote")')
     }
@@ -2374,6 +2386,7 @@ get_gene_expression = function(metadata,
     }
   }else{
     if(!file.exists(tidy_expression_file)){
+      print(paste("missing: ", tidy_expression_file))
       message("Cannot find file locally. If working remotely, perhaps you forgot to load your config (see below) or sync your files?")
       message('Sys.setenv(R_CONFIG_ACTIVE= "remote")')
       check_host()

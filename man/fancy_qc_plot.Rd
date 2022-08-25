@@ -6,8 +6,8 @@
 \usage{
 fancy_qc_plot(
   these_samples,
-  filter_cohort,
-  filter_pathology,
+  keep_cohort,
+  keep_pathology,
   seq_type = "genome",
   metadata,
   these_samples_metadata,
@@ -23,9 +23,9 @@ fancy_qc_plot(
 \arguments{
 \item{these_samples}{Data frame with sample IDs (to be plotted) in the first column (has to be named sample_id).}
 
-\item{filter_cohort}{Optional parameter to be used when these_sample is NULL. Calls get_gambl_metadata() and filters on the cohort supplied in this parameter.}
+\item{keep_cohort}{Optional parameter to be used when these_sample is NULL. Calls get_gambl_metadata() and filters on the cohort supplied in this parameter.}
 
-\item{filter_pathology}{Optional parameter to be used when these_sample is NULL. Calls get_gambl_metadata() and filters on the pathology supplied in this parameter.}
+\item{keep_pathology}{Optional parameter to be used when these_sample is NULL. Calls get_gambl_metadata() and filters on the pathology supplied in this parameter.}
 
 \item{seq_type}{Selected seq type for incoming QC metrics.}
 
@@ -64,30 +64,30 @@ kridel_fl = get_gambl_metadata() \%>\%
  pull(sample_id)
 
 my_plot_1 = fancy_qc_plot(these_samples = kridel_fl, 
-                         seq_type = "genome", 
-                         plot_data = "AverageBaseQuality", 
-                         plot_subtitle = "Example Plot", 
-                         y_axis_lab = "Average Base Quality", 
-                         plot_title = "Average Base Quality For FL_Kridel")
+                          seq_type = "genome", 
+                          plot_data = "AverageBaseQuality", 
+                          plot_subtitle = "Example Plot", 
+                          y_axis_lab = "Average Base Quality", 
+                          plot_title = "Average Base Quality For FL_Kridel")
 
 #Example 2 - using already filtered metadata (these_samples_metadata)
 fl_metadata = get_gambl_metadata() \%>\%
  dplyr::filter(pathology == "FL", cohort == "FL_Kridel")
 
 my_plot_2 = fancy_qc_plot(these_samples_metadata = fl_metadata, 
-                         seq_type = "genome", 
-                         plot_data = "AverageBaseQuality", 
-                         plot_subtitle = "Example Plot", 
-                         y_axis_lab = "Average Base Quality", 
-                         plot_title = "Average Base Quality For FL_Kridel")
+                          seq_type = "genome", 
+                          plot_data = "AverageBaseQuality", 
+                          plot_subtitle = "Example Plot", 
+                          y_axis_lab = "Average Base Quality", 
+                          plot_title = "Average Base Quality For FL_Kridel")
 
 #Example 3 - using in-house metadata fitlering options
-my_plot_3 = fancy_qc_plot(filter_cohort = "FL_Kridel", 
-                         filter_pathology = "FL", 
-                         seq_type = "genome", 
-                         plot_data = "AverageBaseQuality", 
-                         plot_subtitle = "Example Plot", 
-                         y_axis_lab = "Average Base Quality", 
-                         plot_title = "Average Base Quality For FL_Kridel")
+my_plot_3 = fancy_qc_plot(keep_cohort = "FL_Kridel", 
+                          keep_pathology = "FL", 
+                          seq_type = "genome", 
+                          plot_data = "AverageBaseQuality", 
+                          plot_subtitle = "Example Plot", 
+                          y_axis_lab = "Average Base Quality", 
+                          plot_title = "Average Base Quality For FL_Kridel")
 
 }

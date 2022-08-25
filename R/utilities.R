@@ -113,10 +113,10 @@ get_ssh_session = function(host="gphost01.bcgsc.ca"){
 
 #' Get regions from genes.
 #'
-#' @param gene_symbol Gene symbol (e.g BCL2).
-#' @param ensembl_id Esemble ID (e.g ENSG00000171791).
+#' @param gene_symbol A vector of one or more gene symbols.
+#' @param ensembl_id A vector of one or more Esemble IDs.
 #' @param genome_build Reference genome build.
-#' @param return_as Specify the type of return. Default is bed (chr:start-end), other acceptable inputs are "df".
+#' @param return_as Specify the type of return. Default is region (chr:start-end), other acceptable arguments are "bed" and "df".
 #'
 #' @return
 #' @export
@@ -128,7 +128,7 @@ get_ssh_session = function(host="gphost01.bcgsc.ca"){
 gene_to_region = function(gene_symbol,
                           ensembl_id,
                           genome_build = "grch37",
-                          return_as = "bed"){
+                          return_as = "region"){
 
   if(genome_build == "grch37"){
     if(!missing(gene_symbol) && missing(ensembl_id)){
@@ -151,19 +151,43 @@ gene_to_region = function(gene_symbol,
   }
 
   if(return_as == "bed"){
-    region = paste0(gene_coordinates$chromosome, ":", gene_coordinates$start, "-", gene_coordinates$end)
+    #return one-row data frame with first 4 standard BED columns. TODO: Ideally also include strand if we have access to it in the initial data frame
+    region = dplyr::select(gene_coordinates, chromosome, start, end, hugo_symbol) %>%
+      as.data.frame() %>%
+      dplyr::arrange(chromosome, start)
+      
+      if(!missing(gene_symbol)){
+        message(paste0(nrow(region), " region(s) returned for ", length(gene_symbol), " gene(s)"))
+        }
+
+      if(!missing(ensembl_id)){
+        message(paste0(nrow(region), " region(s) returned for ", length(ensembl_id), " gene(s)"))
+        }
+
   }else if(return_as == "df"){
     region = dplyr::select(gene_coordinates, chromosome, start, end, gene_name, hugo_symbol, ensembl_gene_id) %>%
       as.data.frame() %>%
       dplyr::arrange(chromosome, start)
-  }
 
-  if(!missing(gene_symbol)){
-    message(paste0(nrow(region), " region(s) returned for ", length(gene_symbol), " gene(s)"))
-  }
+      if(!missing(gene_symbol)){
+          message(paste0(nrow(region), " region(s) returned for ", length(gene_symbol), " gene(s)"))
+        }
 
-  if(!missing(ensembl_id)){
-    message(paste0(nrow(region), " region(s) returned for ", length(ensembl_id), " gene(s)"))
+      if(!missing(ensembl_id)){
+        message(paste0(nrow(region), " region(s) returned for ", length(ensembl_id), " gene(s)"))
+        }
+
+  }else{
+    #default: return in chr:start-end format
+    region = paste0(gene_coordinates$chromosome, ":", gene_coordinates$start, "-", gene_coordinates$end)
+
+    if(!missing(gene_symbol)){
+      message(paste0(length(region), " region(s) returned for ", length(gene_symbol), " gene(s)"))
+      }
+
+    if(!missing(ensembl_id)){
+       message(paste0(length(region), " region(s) returned for ", length(ensembl_id), " gene(s)"))
+      }
   }
 
   return(region)
@@ -1071,6 +1095,7 @@ collate_results = function(sample_table,
 
     #check for missingness
     if(!file.exists(output_file)){
+      print(paste("missing: ", output_file))
       message("Cannot find file locally. If working remotely, perhaps you forgot to load your config (see below) or sync your files?")
       message('Sys.setenv(R_CONFIG_ACTIVE = "remote")')
     }
@@ -1439,6 +1464,7 @@ assign_cn_to_ssm = function(this_sample,
 
     #check for missingness
     if(!file.exists(battenberg_file)){
+      print(paste("missing: ", battenberg_file))
       message("Cannot find file locally. If working remotely, perhaps you forgot to load your config (see below) or sync your files?")
       message('Sys.setenv(R_CONFIG_ACTIVE = "remote")')
     }
@@ -2859,12 +2885,18 @@ collate_qc_results = function(sample_table,
   }
   
   #get paths
-  base = config::get("project_base") #base
-  qc_template = config::get("qc_met") #qc metric template
-  qc_path = glue::glue(qc_template) #glue wildcards
-  icgc_qc_path_full = paste0(base, qc_path) #combine for icgc_dart qc metric path
-  gambl_qc = gsub("icgc_dart", "gambl", qc_path) #use gsub to substitute icgc_dart in qc path with gambl
-  gambl_qc_path_full = paste0(base, gambl_qc) #combine for gambl qc metric path
+  base = config::get("project_base")
+  qc_template = config::get("qc_met")
+
+  #icgc_dart
+  unix_group = "icgc_dart"
+  icgc_qc_path = glue::glue(qc_template)
+  icgc_qc_path_full = paste0(base, icgc_qc_path)
+
+  #gambl
+  unix_group = "gambl"
+  gambl_qc_path = glue::glue(qc_template)
+  gambl_qc_path_full = paste0(base, gambl_qc_path)  
   
   #read in icgc qc data, rename sample id column and filter on samples in sample id in sample_table
   icgc_qc = suppressMessages(read_tsv(icgc_qc_path_full)) %>%
@@ -2883,7 +2915,7 @@ collate_qc_results = function(sample_table,
 
     #print n samples with QC metrics
     qc_samples = length(unique(full_qc$sample_id))
-    message(paste("QC metrics for", qc_samples, "samples retrieved"))
+    message(paste("QC metrics for", qc_samples, "samples retrieved."))
     
   }else{
     message("Currently, seq_type_filter = \"capture\" is only available for unix_group \"icgc_dart\". Only QC metrics for icgc_dart will be returned.")
@@ -2892,7 +2924,7 @@ collate_qc_results = function(sample_table,
 
     #print n samples with QC metrics
     qc_samples = length(unique(icgc_qc$sample_id))
-    message(paste("QC metrics for", qc_samples, "samples retrieved"))
+    message(paste("QC metrics for", qc_samples, "samples retrieved."))
   }
   return(sample_table)
 }

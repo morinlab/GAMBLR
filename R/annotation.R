@@ -49,10 +49,11 @@ annotate_ssm_blacklist = function(mutations_df,
   blacklist_files = glue::glue(blacklist_template)
   blacklist_list = list()
   for(b in blacklist_files){
-    full_path = paste0(project_base,b)
+    full_path = paste0(project_base,b) 
 
     #check for missingness
     if(!file.exists(full_path)){
+      print(paste("missing: ", full_path))
       message("Cannot find file locally. If working remotely, perhaps you forgot to load your config (see below) or sync your files?")
       message('Sys.setenv(R_CONFIG_ACTIVE = "remote")')
     }
