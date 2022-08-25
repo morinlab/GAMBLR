@@ -65,7 +65,7 @@ get_ssm_by_patients = function(these_patient_ids,
   #always requires augmented MAFs to ensure all variants from the patient are included
   to_exclude = get_excluded_samples(tool_name)
   if(missing(these_samples_metadata)){
-    these_samples_metadata = get_gambl_metadata() %>%
+    these_samples_metadata = get_gambl_metadata(seq_type_filter = seq_type) %>%
       dplyr::filter(patient_id %in% these_patient_ids) %>%
       dplyr::filter(!sample_id %in% to_exclude)
   }else{
@@ -138,7 +138,7 @@ get_ssm_by_samples = function(these_sample_ids,
   to_exclude = get_excluded_samples(tool_name)
 
   if(missing(these_samples_metadata)){
-    these_samples_metadata = get_gambl_metadata() %>%
+    these_samples_metadata = get_gambl_metadata(seq_type_filter = seq_type) %>%
       dplyr::filter(sample_id %in% these_sample_ids) %>%
       dplyr::filter(!sample_id %in% to_exclude)
   }else{
@@ -703,6 +703,13 @@ get_gambl_metadata = function(seq_type_filter = "genome",
 
       all_meta = all_meta %>%
       dplyr::filter(sample_id %in% adult_bl_manuscript_samples)
+
+    }else if(case_set == "BL-DLBCL-manuscript-HTMCP"){
+      adult_bl_manuscript_samples = data.table::fread("/projects/rmorin/projects/gambl-repos/gambl-kdreval/data/metadata/BLGSP--DLBCL-case-set.tsv") %>%
+        pull(Tumor_Sample_Barcode)
+
+      all_meta = all_meta %>%
+      dplyr::filter(sample_id %in% adult_bl_manuscript_samples | cohort == "DLBCL_HTMCP")
 
     }else if(case_set == "FL-DLBCL-all"){
       fl_dlbcl_all_samples = data.table::fread("/projects/rmorin/projects/gambl-repos/gambl-kdreval/data/metadata/FL--DLBCL--all-case-set.tsv") %>%
