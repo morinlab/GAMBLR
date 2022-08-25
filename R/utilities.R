@@ -125,73 +125,67 @@ get_ssh_session = function(host="gphost01.bcgsc.ca"){
 #' bcl2_region = gene_to_region(gene_symbol = "BCL2", genome_build = "grch37")
 #' bcl2_region = gene_to_region(ensembl_id = "ENSG00000171791", genome_build = "grch37")
 #'
-gene_to_region = function(gene_symbol,
+gene_to_region_test = function(gene_symbol,
                           ensembl_id,
                           genome_build = "grch37",
                           return_as = "region"){
-
+  
   if(genome_build == "grch37"){
     if(!missing(gene_symbol) && missing(ensembl_id)){
       gene_coordinates = dplyr::filter(grch37_gene_coordinates, hugo_symbol %in% gene_symbol)
     }
-
+    
     if(missing(gene_symbol) && !missing(ensembl_id)){
       gene_coordinates = dplyr::filter(grch37_gene_coordinates, ensembl_gene_id %in% gene_symbol)
     }
   }
-
+  
   if(genome_build == "hg38"){
     if(!missing(gene_symbol) && missing(ensembl_id)){
       gene_coordinates = dplyr::filter(hg38_gene_coordinates, gene_name %in% gene_symbol)
     }
-
+    
     if(missing(gene_symbol) && !missing(ensembl_id)){
       gene_coordinates = dplyr::filter(hg38_gene_coordinates, ensembl_gene_id %in% gene_symbol)
     }
   }
-
+  
   if(return_as == "bed"){
     #return one-row data frame with first 4 standard BED columns. TODO: Ideally also include strand if we have access to it in the initial data frame
     region = dplyr::select(gene_coordinates, chromosome, start, end, hugo_symbol) %>%
       as.data.frame() %>%
       dplyr::arrange(chromosome, start)
-      
-      if(!missing(gene_symbol)){
-        message(paste0(nrow(region), " region(s) returned for ", length(gene_symbol), " gene(s)"))
-        }
-
-      if(!missing(ensembl_id)){
-        message(paste0(nrow(region), " region(s) returned for ", length(ensembl_id), " gene(s)"))
-        }
-
+    
   }else if(return_as == "df"){
     region = dplyr::select(gene_coordinates, chromosome, start, end, gene_name, hugo_symbol, ensembl_gene_id) %>%
       as.data.frame() %>%
       dplyr::arrange(chromosome, start)
 
-      if(!missing(gene_symbol)){
-          message(paste0(nrow(region), " region(s) returned for ", length(gene_symbol), " gene(s)"))
-        }
-
-      if(!missing(ensembl_id)){
-        message(paste0(nrow(region), " region(s) returned for ", length(ensembl_id), " gene(s)"))
-        }
-
   }else{
     #default: return in chr:start-end format
     region = paste0(gene_coordinates$chromosome, ":", gene_coordinates$start, "-", gene_coordinates$end)
-
+  }
+  
+  if(return_as %in% c("bed", "df")){
+    if(!missing(gene_symbol)){
+      message(paste0(nrow(region), " region(s) returned for ", length(gene_symbol), " gene(s)"))
+    }
+    
+    if(!missing(ensembl_id)){
+      message(paste0(nrow(region), " region(s) returned for ", length(ensembl_id), " gene(s)"))
+    }
+  }else{
     if(!missing(gene_symbol)){
       message(paste0(length(region), " region(s) returned for ", length(gene_symbol), " gene(s)"))
-      }
-
+    }
+    
     if(!missing(ensembl_id)){
-       message(paste0(length(region), " region(s) returned for ", length(ensembl_id), " gene(s)"))
-      }
+      message(paste0(length(region), " region(s) returned for ", length(ensembl_id), " gene(s)"))
+    }
   }
-
   return(region)
 }
+
 
 #' Return gennes residing in defined region(s)
 #'
