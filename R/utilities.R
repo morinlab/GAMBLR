@@ -125,7 +125,7 @@ get_ssh_session = function(host="gphost01.bcgsc.ca"){
 #' bcl2_region = gene_to_region(gene_symbol = "BCL2", genome_build = "grch37")
 #' bcl2_region = gene_to_region(ensembl_id = "ENSG00000171791", genome_build = "grch37")
 #'
-gene_to_region_test = function(gene_symbol,
+gene_to_region = function(gene_symbol,
                           ensembl_id,
                           genome_build = "grch37",
                           return_as = "region"){
