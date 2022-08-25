@@ -1221,6 +1221,7 @@ get_sample_wildcards = function(this_sample_id,seq_type){
 #' @param from_flatfile Optional. Instead of the database, load the data from a local MAF and seg file.
 #' @param use_augmented_maf Boolean statement if to use augmented maf, default is FALSE.
 #' @param maf_file Path to maf file.
+#' @param maf_df Optional. Use a maf dataframe instead of a path.
 #' @param seq_file path to seq file.
 #' @param seg_file_source Specify what copy number calling program the input seg file is from, as it handles ichorCNA differently than WisecondorX, Battenberg, etc.
 #' @param assume_diploid Optional. If no local seg file is provided, instead of defaulting to a GAMBL sample, this parameter annotates every mutation as copy neutral.
@@ -1243,6 +1244,7 @@ assign_cn_to_ssm = function(this_sample,
                             use_augmented_maf = TRUE,
                             tool_name = "battenberg",
                             maf_file,
+                            maf_df,
                             seg_file,
                             seg_file_source = "battenberg",
                             assume_diploid = FALSE,
@@ -1260,7 +1262,12 @@ assign_cn_to_ssm = function(this_sample,
   if(!missing(maf_file)){
     maf_sample = fread_maf(maf_file) %>%
       dplyr::mutate(Chromosome = gsub("chr", "", Chromosome))
-  }else if(from_flatfile){
+  }
+  else if(!missing(maf_df)){
+    maf_sample = maf_df %>%
+      dplyr::mutate(Chromosome = gsub("chr", "", Chromosome))
+  }
+  else if(from_flatfile){
     #get the genome_build and other wildcards for this sample
     wildcards = get_sample_wildcards(this_sample,seq_type)
     genome_build = wildcards$genome_build
@@ -1386,6 +1393,7 @@ assign_cn_to_ssm = function(this_sample,
 #' Estimate purity.
 #'
 #' @param in_maf Path to a local maf file.
+#' @param maf_df Optional. Instead of using the path to a maf file, use a local dataframe as the maf file.
 #' @param in_seg Path to a local corresponding seg file for the same sample ID as the input maf.
 #' @param sample_id Specify the sample_id or any other string you want embedded in the file name.
 #' @param seg_file_source Specify what copy number calling program the input seg file is from, as it handles ichorCNA differently than WisecondorX, battenberg, etc.
@@ -1406,6 +1414,7 @@ assign_cn_to_ssm = function(this_sample,
 #' tumour_purity = estimate_purity(in_maf="path/to/file.maf", assume_diploid = TRUE)
 #'
 estimate_purity = function(in_maf,
+                           maf_df,
                            in_seg,
                            sample_id,
                            seg_file_source = "battenberg",
@@ -1416,14 +1425,14 @@ estimate_purity = function(in_maf,
                            ssh_session){
 
   # Merge the CN info to the corresponding MAF file, uses GAMBLR function
-  if(missing(in_maf) & missing(in_seg)){
+  if(missing(in_maf) & missing(in_seg) & missing(maf_df)){
     CN_new = assign_cn_to_ssm(this_sample = sample_id, coding_only = coding_only, assume_diploid = assume_diploid, genes = genes,seg_file_source = seg_file_source,ssh_session=ssh_session)$maf
   }else if(!missing(in_seg)){
-    CN_new = assign_cn_to_ssm(this_sample = sample_id, maf_file = in_maf, seg_file = in_seg, seg_file_source = seg_file_source, coding_only = coding_only, genes = genes,ssh_session=ssh_session)$maf
+    CN_new = assign_cn_to_ssm(this_sample = sample_id, maf_file = in_maf, maf_df = maf_df, seg_file = in_seg, seg_file_source = seg_file_source, coding_only = coding_only, genes = genes,ssh_session=ssh_session)$maf
   }else{
     # If no seg file was provided, assume_diploid parameter is automatically set to true
     if(missing(in_seg)){
-      CN_new = assign_cn_to_ssm(this_sample = sample_id, maf_file = in_maf, assume_diploid = TRUE, coding_only = coding_only, genes = genes,ssh_session=ssh_session)$maf
+      CN_new = assign_cn_to_ssm(this_sample = sample_id, maf_file = in_maf, maf_df = maf_df, assume_diploid = TRUE, coding_only = coding_only, genes = genes,ssh_session=ssh_session)$maf
     }
   }
   # Change any homozygous deletions (CN = 0) to 1 for calculation purposes
