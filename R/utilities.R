@@ -150,20 +150,21 @@ gene_to_region = function(gene_symbol,
     }
   }
   
+  region = dplyr::select(gene_coordinates, chromosome, start, end, gene_name, hugo_symbol, ensembl_gene_id) %>%
+    as.data.frame() %>%
+    dplyr::arrange(chromosome, start) %>% 
+    distinct(.keep_all = TRUE)
+  
   if(return_as == "bed"){
     #return one-row data frame with first 4 standard BED columns. TODO: Ideally also include strand if we have access to it in the initial data frame
-    region = dplyr::select(gene_coordinates, chromosome, start, end, hugo_symbol) %>%
-      as.data.frame() %>%
-      dplyr::arrange(chromosome, start)
+    region = dplyr::select(region, chromosome, start, end, hugo_symbol)
     
   }else if(return_as == "df"){
-    region = dplyr::select(gene_coordinates, chromosome, start, end, gene_name, hugo_symbol, ensembl_gene_id) %>%
-      as.data.frame() %>%
-      dplyr::arrange(chromosome, start)
+    region = region
 
   }else{
     #default: return in chr:start-end format
-    region = paste0(gene_coordinates$chromosome, ":", gene_coordinates$start, "-", gene_coordinates$end)
+    region = paste0(region$chromosome, ":", region$start, "-", region$end)
   }
   
   if(return_as %in% c("bed", "df")){
@@ -187,12 +188,12 @@ gene_to_region = function(gene_symbol,
 }
 
 
+
 #' Return gennes residing in defined region(s)
 #'
-#' @param region Regions to intersect genes with, this should be a bed-like df (chromosome, start, end).
+#' @param region Regions to intersect genes with, this can be either a data frame with regions sorted in the following columns; chromosome, start, end. Or it can be a charachter vector in "region" format, i.e chromosome:start-end.
 #' @param gene_format Parameter for specifying the format of returned genes, default is "hugo", other acceptable inputs are "ensembl".
 #' @param genome_build Reference genome build.
-#' @param chr_select Optional parameter to subset plot to specific chromosomes. Default value is chr1-22.
 #'
 #' @import data.table
 #' @return
@@ -204,8 +205,7 @@ gene_to_region = function(gene_symbol,
 #'
 region_to_gene = function(region,
                           gene_format = "hugo",
-                          genome_build = "grch37",
-                          chr_select = paste0("chr", c(1:22))){
+                          genome_build = "grch37"){
 
   if(genome_build == "grch37"){
     gene_list = grch37_gene_coordinates
@@ -215,8 +215,25 @@ region_to_gene = function(region,
     gene_list = hg38_gene_coordinates
   }
 
+  if(is.data.frame(region)){
+    region_table = as.data.table(region)
+  }else if(is.character(region)){
+    split_chunks = unlist(strsplit(region, ":"))
+    split_chunks = unlist(strsplit(split_chunks, "-"))
+    chromosome = split_chunks[1]
+    start = split_chunks[2]
+    end = split_chunks[3]
+    region = cbind(chromosome, start, end) %>%
+      as.data.frame()
+
+    region_table = as.data.table(region)
+    
+    region_table$chromosome = as.character(region_table$chromosome)
+    region_table$start = as.double(region_table$start)
+    region_table$end = as.double(region_table$end)
+  }
+  
   #transform regions to data tables
-  region_table = as.data.table(region)
   gene_table = as.data.table(gene_list)
 
   #set keys
@@ -242,10 +259,9 @@ region_to_gene = function(region,
   if(!str_detect(genes$chromosome, "chr")){
     genes = mutate(genes, chromosome = paste0("chr", chromosome))}
 
-  genes = genes[genes$chromosome %in% chr_select, ]
-
   genes = as.data.frame(genes) %>%
-      dplyr::arrange(chromosome, start)
+    dplyr::arrange(chromosome, start) %>% 
+    distinct(.keep_all = TRUE)
 
   message(paste0(nrow(genes), " gene(s) returned for ", nrow(region), " region(s)"))
 
