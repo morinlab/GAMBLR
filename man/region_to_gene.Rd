@@ -4,21 +4,14 @@
 \alias{region_to_gene}
 \title{Return gennes residing in defined region(s)}
 \usage{
-region_to_gene(
-  region,
-  gene_format = "hugo",
-  genome_build = "grch37",
-  chr_select = paste0("chr", c(1:22))
-)
+region_to_gene(region, gene_format = "hugo", genome_build = "grch37")
 }
 \arguments{
-\item{region}{Regions to intersect genes with, this should be a bed-like df (chromosome, start, end).}
+\item{region}{Regions to intersect genes with, this can be either a data frame with regions sorted in the following columns; chromosome, start, end. Or it can be a charachter vector in "region" format, i.e chromosome:start-end.}
 
 \item{gene_format}{Parameter for specifying the format of returned genes, default is "hugo", other acceptable inputs are "ensembl".}
 
 \item{genome_build}{Reference genome build.}
-
-\item{chr_select}{Optional parameter to subset plot to specific chromosomes. Default value is chr1-22.}
 }
 \description{
 Return gennes residing in defined region(s)

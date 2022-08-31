@@ -8,17 +8,17 @@ gene_to_region(
   gene_symbol,
   ensembl_id,
   genome_build = "grch37",
-  return_as = "bed"
+  return_as = "region"
 )
 }
 \arguments{
-\item{gene_symbol}{Gene symbol (e.g BCL2).}
+\item{gene_symbol}{A vector of one or more gene symbols.}
 
-\item{ensembl_id}{Esemble ID (e.g ENSG00000171791).}
+\item{ensembl_id}{A vector of one or more Esemble IDs.}
 
 \item{genome_build}{Reference genome build.}
 
-\item{return_as}{Specify the type of return. Default is bed (chr:start-end), other acceptable inputs are "df".}
+\item{return_as}{Specify the type of return. Default is region (chr:start-end), other acceptable arguments are "bed" and "df".}
 }
 \description{
 Get regions from genes.
