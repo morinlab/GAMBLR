@@ -3661,7 +3661,7 @@ fancy_v_sizedis = function(this_sample,
 #' Generate sample-level ideogram with copy number information, ssm and gene annotations, etc.
 #'
 #' @param this_sample Sample to be plotted (for multiple samples, see fancy_multisample_ideogram.
-#' @param gene_annotation Annotate ideogram with a single gene.
+#' @param gene_annotation Annotate ideogram with a set of genes. These genes can either be specified as a vector of characters or a data frame.
 #' @param seq_data Optional parameter with copy number df already loaded into R.
 #' @param seq_path Optional parameter with path to external cn file.
 #' @param maf_data Optional parameter with maf like df already loaded into R.
@@ -3676,21 +3676,45 @@ fancy_v_sizedis = function(this_sample,
 #' @param cn_col Index of column holding copy number information (to be used with either maf_data or maf_path).
 #' @param plot_title Title of plot (default to sample ID).
 #' @param plot_subtitle Optional argument for plot subtitle.
-#' @param intersect_regions Optional Boolean argument, if set to TRUE, the function expects some_regions to perform an intersect with cn_states.
-#' @param some_regions Bed-like df with regions for subsetting incoming cn_sates to. Columns should be "chrom", "start", "end".
+#' @param intersect_regions Optional parameter for subset variant calls to specific regions. Should be either a vector of characters (chr:start-end) or data frame with regions.
 #' @param include_ssm Set to TRUE to plot ssms (dels and ins).
 #' @param ssm_count Optional parameter to summarize n variants per chromosome, inlcude_ssm must be set to TRUE.
 #' @param coding_only Optional. Set to TRUE to restrict to plotting only coding mutations.
 #' @param from_flatfile If set to true the function will use flat files instead of the database.
 #' @param use_augmented Boolean statement if to use augmented maf, default is FALSE.
 #'
-#' @import data.table
+#' @import data.table cowplot
 #' @return Nothing.
 #' @export
 #'
 #' @examples
-#' ideogram_MYC = fancy_ideogram(this_sample = "HTMCP-01-06-00422-01A-01D", gene_annotation = "MYC", include_ssm = TRUE, ssm_count = TRUE, coding_only = FALSE, from_flatfile = FALSE, use_augmented = FALSE)
-#' cnv_ideogram = fancy_ideogram(this_sample = "HTMCP-01-06-00422-01A-01D")
+#' #
+#' fl_genes = dplyr::filter(lymphoma_genes, FL == TRUE) %>%
+#'   dplyr::select(Gene) %>%
+#'   pull(Gene)
+#' 
+#' fl_genes_chr1 = gene_to_region(gene_symbol = fl_genes, return_as = "df") %>%
+#'   dplyr::filter(chromosome == "1") %>%
+#'   pull(hugo_symbol)
+#' 
+#' ideogram_fl_chr1 = fancy_ideogram(this_sample = "HTMCP-01-06-00422-01A-01D",
+#'                                   gene_annotation = fl_genes_chr1, 
+#'                                   intersect_regions = "chr1:10000-249250621",
+#'                                   include_ssm = TRUE, 
+#'                                   ssm_count = TRUE, 
+#'                                   coding_only = FALSE, 
+#'                                   from_flatfile = FALSE, 
+#'                                   use_augmented = FALSE)
+#'  
+#'  fl_regions = gene_to_region(gene_symbol = fl_genes, return_as = "df")
+#'  ideogram_fl = fancy_ideogram(this_sample = "HTMCP-01-06-00422-01A-01D",
+#'                               gene_annotation = fl_genes, 
+#'                               intersect_regions = fl_regions,
+#'                               include_ssm = TRUE, 
+#'                               ssm_count = TRUE, 
+#'                               coding_only = FALSE, 
+#'                               from_flatfile = FALSE, 
+#'                               use_augmented = FALSE)
 #'
 fancy_ideogram = function(this_sample,
                           gene_annotation,
@@ -3708,8 +3732,7 @@ fancy_ideogram = function(this_sample,
                           cn_col_seq = 7,
                           plot_title = paste0(this_sample),
                           plot_subtitle = "Genome-wide Ideogram (grch37).",
-                          intersect_regions = FALSE,
-                          some_regions,
+                          intersect_regions,
                           include_ssm = TRUE,
                           ssm_count = TRUE,
                           coding_only = FALSE,
@@ -3728,14 +3751,10 @@ fancy_ideogram = function(this_sample,
 
   #additional regions to plot
   if(!missing(gene_annotation)){
-    gene = gene_to_region(gene_symbol = gene_annotation, genome_build = "grch37")
-
-    gene.annotate = data.frame(gene) %>%
-      separate(gene, c("chr", "start"), ":") %>%
-      separate(start, c("start", "end"), "-")
-
-    cols.int.gene = c("chr", "start", "end")
-    gene.annotate[cols.int.gene] = sapply(gene.annotate[cols.int.gene], as.integer)
+    gene = gene_to_region(gene_symbol = gene_annotation, genome_build = "grch37", return_as = "df")
+    gene.annotate = gene[gene$chr %in% paste0(c(1:22)), ]
+    cols.int = c("chromosome", "start", "end")
+    gene.annotate[cols.int] = sapply(gene.annotate[cols.int], as.integer)
   }
 
   #build chr table for segment plotting
@@ -3781,18 +3800,52 @@ fancy_ideogram = function(this_sample,
     cn_states = mutate(cn_states, chrom = paste0("chr", chrom))
   }
 
-  if(intersect_regions){
+  if(!missing(intersect_regions)){
     #filter CN states on intersecting regions
     #transform regions to data tables
+    #convenience function for converting intersect regions to a df (if it's a string) and renaming columns to match required format.
+    if(is.list(intersect_regions)){
+      colnames(intersect_regions)[1] = "chrom"
+      colnames(intersect_regions)[2] = "start"
+      colnames(intersect_regions)[3] = "end"
+      if(!str_detect(intersect_regions$chrom, "chr")){
+        intersect_regions = mutate(intersect_regions, chrom = paste0("chr", chrom))
+      }
+      intersect_regions = as.data.table(intersect_regions)
+      intersect_regions$start = as.numeric(intersect_regions$start)
+      intersect_regions$end = as.numeric(intersect_regions$end)
+    }
+    
+    if(is.character(intersect_regions)){
+      if(length(intersect_regions) > 1){
+        message("Please only enter one region, only first region will be regarded. For mutiple regions, kindly provide a data frame with regions of interest")
+      }
+      
+      split_chunks = unlist(strsplit(intersect_regions, ":"))
+      split_chunks = unlist(strsplit(split_chunks, "-"))
+      chrom = split_chunks[1]
+      start = split_chunks[2]
+      end = split_chunks[3]
+      intersect_regions = cbind(chrom, start, end) %>%
+        as.data.frame()
+      
+      intersect_regions$start = as.numeric(intersect_regions$start)
+      intersect_regions$end = as.numeric(intersect_regions$end)
+      
+      if(!str_detect(intersect_regions$chrom, "chr")){
+        intersect_regions = mutate(intersect_regions, chrom = paste0("chr", chrom))
+      }
+    }
+    
     incoming_cn = as.data.table(cn_states)
-    regions_sub = as.data.table(some_regions)
+    regions_sub = as.data.table(intersect_regions)
 
     #set keys
     data.table::setkey(incoming_cn, chrom, start, end)
     data.table::setkey(regions_sub, chrom, start, end)
 
     #intersect regions
-    intersect = data.table::foverlaps(incoming_cn, regions_sub, nomatch = 0)
+    intersect = data.table::foverlaps(regions_sub, incoming_cn, nomatch = 0)
 
     #transform object to data frame
     inter_df = as.data.frame(intersect)
@@ -3818,7 +3871,6 @@ fancy_ideogram = function(this_sample,
 
   #load maf data
   if(include_ssm){
-
     if(!missing(maf_data)){
       maf = maf_data
       maf = as.data.frame(maf)
@@ -3826,7 +3878,6 @@ fancy_ideogram = function(this_sample,
       colnames(maf)[chromosome_col_maf] = "Chromosome"
       colnames(maf)[start_col_maf] = "Start_Position"
       colnames(maf)[end_col_maf] = "End_Position"
-
     }else if (!is.null(maf_path)){
       maf = fread_maf(maf_path)
       maf = as.data.frame(maf)
@@ -3861,7 +3912,7 @@ fancy_ideogram = function(this_sample,
     maf_trans$ystart = as.integer(maf_trans$ystart)
     maf_trans$yend = as.integer(maf_trans$yend)
 
-    if(intersect_regions){
+    if(!missing(intersect_regions)){
       #filter CN states on intersecting regions
       maf_tmp = maf_trans
       colnames(maf_tmp)[1] = "chrom"
@@ -3872,18 +3923,18 @@ fancy_ideogram = function(this_sample,
       data.table::setkey(maf.table, chrom, start, end)
 
       #intersect regions
-      intersect_maf = data.table::foverlaps(maf.table, regions_sub, nomatch = 0)
+      intersect_maf = data.table::foverlaps(regions_sub, maf.table, nomatch = 0)
 
       #transform object to data frame
       inter_maf_df = as.data.frame(intersect_maf)
 
       #rename columns
       colnames(inter_maf_df)[1] = "Chromosome"
-      colnames(inter_maf_df)[4] = "Start_Position"
-      colnames(inter_maf_df)[5] = "End_Position"
+      colnames(inter_maf_df)[2] = "Start_Position"
+      colnames(inter_maf_df)[3] = "End_Position"
 
       #subset
-      inter_maf_df = select(inter_maf_df, Chromosome, Start_Position, End_Position)
+      inter_maf_df = dplyr::select(inter_maf_df, Chromosome, Start_Position, End_Position)
 
       #perform a semi join with all cn states (to retain necessary columns)
       maf_trans = dplyr::semi_join(maf_trans, inter_maf_df)
@@ -3932,8 +3983,8 @@ fancy_ideogram = function(this_sample,
     {if("cn_4" %in% levels(cn_states$CN)) geom_segment(data = cn_4, aes(x = start, xend = end, y = ycoord, yend = ycoord, color = "CN4"), size = 4.7, stat = "identity", position = position_dodge())} + #cn4
     {if("cn_5" %in% levels(cn_states$CN)) geom_segment(data = cn_5, aes(x = start, xend = end, y = ycoord, yend = ycoord, color = "CN5"), size = 4.7, stat = "identity", position = position_dodge())} + #cn5
     {if("cn_6" %in% levels(cn_states$CN)) geom_segment(data = cn_6, aes(x = start, xend = end, y = ycoord, yend = ycoord, color = "CN6+"), size = 4.7, stat = "identity", position = position_dodge())} + #cn6 and more
-    {if(!missing(gene_annotation)) geom_point(data = gene.annotate, aes(x = ((end - start) / 2) + start, y = chr - 0.28), shape = 25, color = "#A63932", fill = "#A63932", stat = "identity", position = position_dodge())} + #gene annotation
-    {if(!missing(gene_annotation)) geom_text(aes((x = gene.annotate$end - gene.annotate$start) / 2 + gene.annotate$start, y = gene.annotate$chr - 0.47), label = gene_annotation, color = "black", size = 3)} + #gene annotation text
+    {if(!missing(gene_annotation)) geom_point(data = gene.annotate, aes(x = ((end - start) / 2) + start, y = chromosome - 0.28), shape = 25, color = "#A63932", fill = "#A63932", stat = "identity", position = position_dodge())} + #gene annotation
+    {if(!missing(gene_annotation)) geom_label(data = gene.annotate, aes((x = end - start) / 2 + start, y = chromosome - 0.52, label = hugo_symbol), fontface = "bold", color = "white", fill = "#A63932", size = 3, check_overlap = TRUE)} + #gene annotation text
     geom_text(aes(x = -10000000 , y = yend, label = segment_data$chr), color = "black", size = 5) + #chr labels
     labs(title = plot_title, subtitle = plot_subtitle) + #plot titles
     scale_colour_manual(name = "", values = selected_colours) + #legend/colours
