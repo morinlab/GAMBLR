@@ -436,8 +436,8 @@ focal_cn_plot = function(region,
 #' @import g3viz tidyverse
 #'
 #' @examples
-#' plot_lollipop = (mutation_df, "MYC", "Mutation data for MYC", "blue")
-#' plot_lollipop = (mutation_df, "BCL2")
+#' pretty_lollipop_plot = (mutation_df, "MYC", "Mutation data for MYC", "blue")
+#' pretty_lollipop_plot = (mutation_df, "BCL2")
 #'
 pretty_lollipop_plot = function(maf_df,
                                 gene,
@@ -4365,80 +4365,113 @@ comp_report = function(this_sample,
 }
 
 
-#' Create a circos plots visualizing translocations and SVs (deletions and duplications).
+#' Create a circos plots visualizing SVS or SSM with gene annotations. 
 #'
 #' @param this_sample Sample to be plotted.
+#' @param gene_list Optional parameter to annotate genes on the circos plot from a list of genes (df). Is compatible with gene_to_region (return_as = "bed") output format. See examples.
+#' @param chr_select Optional argument for subset on selected chromosomes, default is all autosomes.
 #' @param vaf_cutoff Threshold for filtering variants on VAF (events with a VAF > cutoff will be retained).
-#' @param chr_select Optional argument for subsetting on selected chromosomes, default is all autosomes.
-#' @param use_sv_calls Set to TRUE for get_combined_sv approach of retreiving plot data. Set to FALSE to run assign_cn_to_ssm. Default is TRUE.
+#' @param use_sv_calls Set to TRUE for get_combined_sv approach of retrieving plot data. Set to FALSE to plot SSM with assign_cn_to_ssm. Default is TRUE.
 #' @param coding_only Optional. Set to TRUE to restrict to plotting only coding mutations.
-#' @param from_flatfile If set to true the function will use flat files instead of the database.
+#' @param from_flatfile If set to TRUE the function will use flat files instead of the database.
 #' @param use_augmented_maf Boolean statement if to use augmented maf, default is TRUE.
-#' @param include_del Boolean statement to include SVs of subtype deletion. Default is TRUE.
-#' @param include_dup Boolean statement to include SVs of subtype duplication. Default is TRUE.
-#' @param projection Genomic projection for SVs and circos plot. Accepted values are grch37 and hg38.
+#' @param projection Genomic projection for variants and circos plot. Accepted values are grch37 and hg38, default is grch37.
 #' @param out Path to output folder, to where the plot will be exported.
-#' @param gene_list Optional parameter to annotate genes on the circos plot from a list of genes (df). Important, gene_list is expected to have the following columns Chromosome:chromStart:chromEnd:Gene.
-#' @param gene_name_col Index number of gene_list that holds gene names.
+#' @param file_name Optional parameter for specifying the file name of generated circos plot, default is "{this_sample}_circos.pdf".
 #'
 #' @return Nothing.
 #' @import tidyverse RCircos
 #' @export
 #'
 #' @examples
-#' data(RCircos.Gene.Label.Data)
-#' genes = RCircos.Gene.Label.Data
-#' circos_plot = fancy_circos_plot(this_sample = "HTMCP-01-06-00422-01A-01D", out = "some/path/to/a/destination/")
+#' #retrieve gene names for FL genes
+#' fl_genes = dplyr::filter(lymphoma_genes, FL == TRUE) %>% 
+#'  dplyr::select(Gene) %>%
+#'  pull(Gene)
+#'
+#' # get regions for selected genes
+#' fl_genes_list = gene_to_region(gene_symbol = fl_genes, return_as = "bed")
+#'
+#' #construct fancy circos plot with gene annotations
+#' fancy_circos_plot(this_sample = "HTMCP-01-06-00422-01A-01D",
+#'                   gene_list = fl_genes_list,
+#'                   use_sv_calls = TRUE,
+#'                   projection = "grch37",
+#'                   out = "../../plots/", 
+#'                   file_name = "circos_sv.pdf")
 #'
 fancy_circos_plot = function(this_sample,
-                             vaf_cutoff = 0,
+                             gene_list,
                              chr_select = paste0("chr", c(1:22)),
+                             vaf_cutoff = 0,
                              use_sv_calls = TRUE,
                              coding_only = FALSE,
                              from_flatfile = TRUE,
                              use_augmented_maf = TRUE,
-                             include_del = TRUE,
-                             include_dup = TRUE,
                              projection = "grch37",
                              out,
-                             gene_list,
-                             gene_name_col = 4){
+                             file_name = paste0(this_sample, "_circos.pdf")){
 
   #set plotting values based on parameters used
-  if(include_del && include_dup && !missing(gene_list)){
+  if(use_sv_calls && !missing(gene_list)){
     gene_con_track = 1
     gene_name_track = 2
     del_track = 3
     dup_track = 4
     trans_track = 5
     n_track = 5
-  }else if(include_del && include_dup && missing(gene_list)){
+  }else if(use_sv_calls && missing(gene_list)){
     del_track = 1
     dup_track = 2
     trans_track = 3
     n_track = 3
-  }else if(!include_del && !include_dup && !missing(gene_list)){
-    trans_track = 1
-    n_track = 1
-  }else if(!include_del && !include_dup && missing(gene_list)){
-    gene_con_track = 1
-    gene_name_track = 2
-    trans_track = 3
-    n_track = 3
-  }else if(!include_del && include_dup && missing(gene_list)){
-    gene_con_track = 1
-    gene_name_track = 2
-    dup_track = 3
-    trans_track = 4
-    n_track = 4
-  }else if(include_del && !include_dup && missing(gene_list)){
+  }else if(!use_sv_calls && !missing(gene_list)){
     gene_con_track = 1
     gene_name_track = 2
     del_track = 3
-    trans_track = 4
+    ins_track = 4
+    snp_track = 5
+    dnp_track = 6
+    n_track = 6
+   }else if(!use_sv_calls && missing(gene_list)){
+    del_track = 1
+    ins_track = 2
+    snp_track = 3
+    dnp_track = 4
     n_track = 4
-  }
+   }
 
+  #sanity checking incoming gene list and renaming columns if needed
+  if(!missing(gene_list)){
+
+    #check type of incoming gene_list
+    if(!is.list(gene_list)){
+      message("Please ensure that incoming gene list is in fact a data frame with the following columns: chr:start:end:gene")
+    }
+
+    #rename columns, if needed (Rcircos is expecting the column names to always be the same...)
+    if(!"Chromosome" %in% colnames(gene_list)[1]){
+      colnames(gene_list)[1] = "Chromosome"
+    }
+    if(!"chromStart" %in% colnames(gene_list)[2]){
+      colnames(gene_list)[2] = "chromStart"
+    }
+    if(!"chromEnd" %in% colnames(gene_list)[3]){
+      colnames(gene_list)[3] = "chromEnd"
+    }
+    if(!"Gene" %in% colnames(gene_list)[4]){
+      colnames(gene_list)[4] = "Gene"
+    }
+
+    #add "chr" prefix, if needed
+    if(!str_detect(gene_list$Chromosome, "chr")){
+      gene_list = mutate(gene_list, Chromosome = paste0("chr", Chromosome))
+    }
+
+    #filter gene list on selected chromosomes
+    gene_list = gene_list[gene_list$Chromosome %in% chr_select, ]
+  }
+  
   if(use_sv_calls){
     #get variants
     svs = get_combined_sv(sample_ids = this_sample, projection = projection)
@@ -4468,10 +4501,6 @@ fancy_circos_plot = function(this_sample,
     svs_df = svs_df[svs_df$CHROM_A %in% chr_select, ]
     svs_df = svs_df[svs_df$CHROM_B %in% chr_select, ]
 
-    if(!missing(gene_list)){
-      gene_list = gene_list[gene_list$Chromosome %in% chr_select, ]
-    }
-
     #subset df on SV type
     sv_trans = dplyr::filter(svs_df, TYPE == "MantaBND") %>%
       dplyr::select(CHROM_A, START_A, END_A, CHROM_B, START_B, END_B)
@@ -4488,7 +4517,7 @@ fancy_circos_plot = function(this_sample,
 
   }else{
     maf = assign_cn_to_ssm(this_sample = this_sample, coding_only = coding_only, from_flatfile = from_flatfile, use_augmented_maf = use_augmented_maf)$maf #get maf data
-    maf_tmp = dplyr::select(maf, Chromosome, Start_Position, End_Position, Variant_Type) #select appropiate columns
+    maf_tmp = dplyr::select(maf, Chromosome, Start_Position, End_Position, Variant_Type) #select appropriate columns
     maf_tmp$Variant_Size = maf_tmp$End_Position - maf_tmp$Start_Position # calcualte variant size
     maf_tmp$Variant_Type = as.factor(maf_tmp$Variant_Type) #transform Variant_Type to factor
     maf_tmp[maf_tmp==0] <- 1 #transform all lenght coordinates == 0 to 1
@@ -4499,8 +4528,10 @@ fancy_circos_plot = function(this_sample,
 
     maf_tmp = maf_tmp[maf_tmp$Chromosome %in% chr_select, ] #filter incoming maf on selected chromosomes
 
-    sv_del = dplyr::filter(maf_tmp, Variant_Type == "DEL") #subset on deletions
-    sv_ins = dplyr::filter(maf_tmp, Variant_Type == "INS") #subset on insertions
+    ssm_del = dplyr::filter(maf_tmp, Variant_Type == "DEL") #subset on deletions
+    ssm_ins = dplyr::filter(maf_tmp, Variant_Type == "INS") #subset on insertions
+    ssm_snp = dplyr::filter(maf_tmp, Variant_Type == "SNP") #subset on single nucleotide polymorphism
+    ssm_dnp = dplyr::filter(maf_tmp, Variant_Type == "DNP") #subset on dinucleotide polymorphism
   }
 
   #plotting
@@ -4512,7 +4543,7 @@ fancy_circos_plot = function(this_sample,
     data(UCSC.HG38.Human.CytoBandIdeogram)
     cytobands = UCSC.HG38.Human.CytoBandIdeogram
   }
-
+  
   #get chr excluded (reversed of chr included, since RCircos only accept this)
   chr_all = paste0("chr", c(1:22, "X", "Y"))
   chr_exclude = setdiff(chr_all, chr_select)
@@ -4524,7 +4555,7 @@ fancy_circos_plot = function(this_sample,
   RCircos.params = RCircos.Get.Plot.Parameters()
 
   #define plotting parameters
-  out.file = paste0(out, this_sample, "_circos.pdf")
+  out.file = paste0(out, file_name)
   pdf(out.file, height = 7, width = 7)
   RCircos.Set.Plot.Area(margins = 0);
 
@@ -4535,37 +4566,52 @@ fancy_circos_plot = function(this_sample,
   #add gene names
   if(!missing(gene_list)){
     RCircos.Gene.Connector.Plot(gene_list, gene_con_track, "in")
-    RCircos.Gene.Name.Plot(gene_list, gene_name_col, gene_name_track, "in")
+    RCircos.Gene.Name.Plot(gene_list, 4, gene_name_track, "in")
   }
 
-  #translocations
+  #arrange tracks
   if(use_sv_calls){
+    #translocations
     RCircos.Ribbon.Plot(sv_trans, track.num = trans_track, by.chromosome = FALSE, twist = TRUE)
 
     #duplications
-    if(include_dup){
-      RCircos.params$track.background = "sienna2"
-      RCircos.params$max.layers = 1
-      RCircos.Reset.Plot.Parameters(RCircos.params)
-      RCircos.Tile.Plot(sv_dup, track.num = dup_track, side = "in")
-    }
-  }
+    RCircos.params$track.background = "sienna2"
+    RCircos.params$max.layers = 1
+    RCircos.Reset.Plot.Parameters(RCircos.params)
+    RCircos.Tile.Plot(sv_dup, track.num = dup_track, side = "in")
 
-  #deletions
-  if(include_del){
+    #deletions
     RCircos.params$track.background = "steelblue2"
     RCircos.params$max.layers = 1
     RCircos.Reset.Plot.Parameters(RCircos.params)
     RCircos.Tile.Plot(sv_del, track.num = del_track, side = "in")
   }
 
-  #duplications
   if(!use_sv_calls){
+    #ssm insertions
     RCircos.params$track.background = "sienna2"
     RCircos.params$max.layers = 1
     RCircos.Reset.Plot.Parameters(RCircos.params)
-    RCircos.Tile.Plot(sv_ins, track.num = dup_track, side = "in")
-  }
+    RCircos.Tile.Plot(ssm_ins, track.num = ins_track, side = "in")
+
+    #ssm deletions
+    RCircos.params$track.background = "steelblue2"
+    RCircos.params$max.layers = 1
+    RCircos.Reset.Plot.Parameters(RCircos.params)
+    RCircos.Tile.Plot(ssm_del, track.num = del_track, side = "in")
+
+    #ssm snp
+    RCircos.params$track.background = "seagreen"
+    RCircos.params$max.layers = 1
+    RCircos.Reset.Plot.Parameters(RCircos.params)
+    RCircos.Tile.Plot(ssm_snp, track.num = snp_track, side = "in")
+
+    #ssm dnp
+    RCircos.params$track.background = "tomato4"
+    RCircos.params$max.layers = 1
+    RCircos.Reset.Plot.Parameters(RCircos.params)
+    RCircos.Tile.Plot(ssm_dnp, track.num = dnp_track, side = "in")
+    }
 
   #close connection
   dev.off()
