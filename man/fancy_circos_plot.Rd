@@ -2,60 +2,66 @@
 % Please edit documentation in R/viz.R
 \name{fancy_circos_plot}
 \alias{fancy_circos_plot}
-\title{Create a circos plots visualizing translocations and SVs (deletions and duplications).}
+\title{Create a circos plots visualizing SVS or SSM with gene annotations.}
 \usage{
 fancy_circos_plot(
   this_sample,
-  vaf_cutoff = 0,
+  gene_list,
   chr_select = paste0("chr", c(1:22)),
+  vaf_cutoff = 0,
   use_sv_calls = TRUE,
   coding_only = FALSE,
   from_flatfile = TRUE,
   use_augmented_maf = TRUE,
-  include_del = TRUE,
-  include_dup = TRUE,
   projection = "grch37",
   out,
-  gene_list,
-  gene_name_col = 4
+  file_name = paste0(this_sample, "_circos.pdf")
 )
 }
 \arguments{
 \item{this_sample}{Sample to be plotted.}
 
+\item{gene_list}{Optional parameter to annotate genes on the circos plot from a list of genes (df). Is compatible with gene_to_region (return_as = "bed") output format. See examples.}
+
+\item{chr_select}{Optional argument for subset on selected chromosomes, default is all autosomes.}
+
 \item{vaf_cutoff}{Threshold for filtering variants on VAF (events with a VAF > cutoff will be retained).}
 
-\item{chr_select}{Optional argument for subsetting on selected chromosomes, default is all autosomes.}
-
-\item{use_sv_calls}{Set to TRUE for get_combined_sv approach of retreiving plot data. Set to FALSE to run assign_cn_to_ssm. Default is TRUE.}
+\item{use_sv_calls}{Set to TRUE for get_combined_sv approach of retrieving plot data. Set to FALSE to plot SSM with assign_cn_to_ssm. Default is TRUE.}
 
 \item{coding_only}{Optional. Set to TRUE to restrict to plotting only coding mutations.}
 
-\item{from_flatfile}{If set to true the function will use flat files instead of the database.}
+\item{from_flatfile}{If set to TRUE the function will use flat files instead of the database.}
 
 \item{use_augmented_maf}{Boolean statement if to use augmented maf, default is TRUE.}
 
-\item{include_del}{Boolean statement to include SVs of subtype deletion. Default is TRUE.}
-
-\item{include_dup}{Boolean statement to include SVs of subtype duplication. Default is TRUE.}
-
-\item{projection}{Genomic projection for SVs and circos plot. Accepted values are grch37 and hg38.}
+\item{projection}{Genomic projection for variants and circos plot. Accepted values are grch37 and hg38, default is grch37.}
 
 \item{out}{Path to output folder, to where the plot will be exported.}
 
-\item{gene_list}{Optional parameter to annotate genes on the circos plot from a list of genes (df). Important, gene_list is expected to have the following columns Chromosome:chromStart:chromEnd:Gene.}
-
-\item{gene_name_col}{Index number of gene_list that holds gene names.}
+\item{file_name}{Optional parameter for specifying the file name of generated circos plot, default is "{this_sample}_circos.pdf".}
 }
 \value{
 Nothing.
 }
 \description{
-Create a circos plots visualizing translocations and SVs (deletions and duplications).
+Create a circos plots visualizing SVS or SSM with gene annotations.
 }
 \examples{
-data(RCircos.Gene.Label.Data)
-genes = RCircos.Gene.Label.Data
-circos_plot = fancy_circos_plot(this_sample = "HTMCP-01-06-00422-01A-01D", out = "some/path/to/a/destination/")
+#retrieve gene names for FL genes
+fl_genes = dplyr::filter(lymphoma_genes, FL == TRUE) \%>\% 
+ dplyr::select(Gene) \%>\%
+ pull(Gene)
+
+# get regions for selected genes
+fl_genes_list = gene_to_region(gene_symbol = fl_genes, return_as = "bed")
+
+#construct fancy circos plot with gene annotations
+fancy_circos_plot(this_sample = "HTMCP-01-06-00422-01A-01D",
+                  gene_list = fl_genes_list,
+                  use_sv_calls = TRUE,
+                  projection = "grch37",
+                  out = "../../plots/", 
+                  file_name = "circos_sv.pdf")
 
 }
