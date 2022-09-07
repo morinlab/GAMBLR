@@ -2,19 +2,22 @@
 % Please edit documentation in R/viz.R
 \name{fancy_circos_plot}
 \alias{fancy_circos_plot}
-\title{Create a circos plots visualizing SVS or SSM with gene annotations.}
+\title{Create a circos plots visualizing SVS and SSM with optional gene annotations.}
 \usage{
 fancy_circos_plot(
   this_sample,
   gene_list,
+  ssm_calls = TRUE,
+  sv_calls = TRUE,
   chr_select = paste0("chr", c(1:22)),
   vaf_cutoff = 0,
-  use_sv_calls = TRUE,
   coding_only = FALSE,
   from_flatfile = TRUE,
   use_augmented_maf = TRUE,
   projection = "grch37",
+  plot_title = paste0(this_sample),
   out,
+  pdf = TRUE,
   file_name = paste0(this_sample, "_circos.pdf")
 )
 }
@@ -23,11 +26,13 @@ fancy_circos_plot(
 
 \item{gene_list}{Optional parameter to annotate genes on the circos plot from a list of genes (df). Is compatible with gene_to_region (return_as = "bed") output format. See examples.}
 
+\item{ssm_calls}{Boolean parameter for plotting ssm. Default is TRUE.}
+
+\item{sv_calls}{Boolean parameter for plotting SVs, default is TRUE.}
+
 \item{chr_select}{Optional argument for subset on selected chromosomes, default is all autosomes.}
 
 \item{vaf_cutoff}{Threshold for filtering variants on VAF (events with a VAF > cutoff will be retained).}
-
-\item{use_sv_calls}{Set to TRUE for get_combined_sv approach of retrieving plot data. Set to FALSE to plot SSM with assign_cn_to_ssm. Default is TRUE.}
 
 \item{coding_only}{Optional. Set to TRUE to restrict to plotting only coding mutations.}
 
@@ -37,15 +42,19 @@ fancy_circos_plot(
 
 \item{projection}{Genomic projection for variants and circos plot. Accepted values are grch37 and hg38, default is grch37.}
 
+\item{plot_title}{Optional parameter for naming your plot, default is this_sample.}
+
 \item{out}{Path to output folder, to where the plot will be exported.}
 
-\item{file_name}{Optional parameter for specifying the file name of generated circos plot, default is "{this_sample}_circos.pdf".}
+\item{pdf}{Set to FALSE for png, default is TRUE (pdf).}
+
+\item{file_name}{Optional parameter for specifying the file name of generated circos plot, default is "{this_sample}_circos.pdf". If pdf is set to FALSE, a png will be generated, thus the .png extension needs to be attached to the file_name.}
 }
 \value{
 Nothing.
 }
 \description{
-Create a circos plots visualizing SVS or SSM with gene annotations.
+Create a circos plots visualizing SVS and SSM with optional gene annotations.
 }
 \examples{
 #retrieve gene names for FL genes
@@ -56,12 +65,16 @@ fl_genes = dplyr::filter(lymphoma_genes, FL == TRUE) \%>\%
 # get regions for selected genes
 fl_genes_list = gene_to_region(gene_symbol = fl_genes, return_as = "bed")
 
-#construct fancy circos plot with gene annotations
-fancy_circos_plot(this_sample = "HTMCP-01-06-00422-01A-01D",
-                  gene_list = fl_genes_list,
-                  use_sv_calls = TRUE,
-                  projection = "grch37",
-                  out = "../../plots/", 
-                  file_name = "circos_sv.pdf")
+fancy_circos_plot_new(this_sample = "DOHH-2",
+                      ssm_calls = FALSE,
+                      sv_calls = TRUE,
+                      gene_list = fl_genes_list,
+                      chr_select = c("chr8", "chr14", "chr18"),
+                      coding_only = FALSE,
+                      projection = "grch37",
+                      out = "../../plots/", 
+                      plot_title = "DOHH-2 (SVs) Example Plot",
+                      pdf = FALSE, 
+                      file_name = "dohh2_example.png")
 
 }
