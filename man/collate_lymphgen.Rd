@@ -2,25 +2,18 @@
 % Please edit documentation in R/utilities.R
 \name{collate_lymphgen}
 \alias{collate_lymphgen}
-\title{Supplement the "lymphgen" column of the metadata with classification for additional samples.
-Expects at least to have columns "patient_id" to bind on, and "lymphgen" to supplement the data on.}
+\title{Expand a sample_table (meta data) horizontally with different flavours of lymphgen data.}
 \usage{
-collate_lymphgen(sample_table, derived_data_path = "", verbose = TRUE)
+collate_lymphgen(sample_table)
 }
 \arguments{
-\item{sample_table}{Input data frame with metadata.}
-
-\item{derived_data_path}{Optional argument specifying the path to a folder with files following the pattern *lymphgen.txt}
-}
-\value{
-A data frame with a supplemented lymphGen column
+\item{sample_table}{Input data frame with sample IDs in the firs column.}
 }
 \description{
-Supplement the "lymphgen" column of the metadata with classification for additional samples.
-Expects at least to have columns "patient_id" to bind on, and "lymphgen" to supplement the data on.
+Expand a sample_table (meta data) horizontally with different flavours of lymphgen data.
 }
 \examples{
-metadata <- get_gambl_metadata()
-GAMBLR::collate_lymphgen(metadata)
+metadata = get_gambl_metadata()
+colalted_meta = collate_lymphgen(sample_table = metadata)
 
 }
