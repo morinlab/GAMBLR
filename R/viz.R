@@ -1272,6 +1272,9 @@ prettyOncoplot = function(maftools_obj,
       }
       write.table(mat_origin, file = onco_matrix_path, quote = F, sep = "\t")
     }else{
+      if(any(duplicated(genes))){
+        stop("There are duplicated elements in the provided gene list (@param genes). Please ensure only unique entries are present in this list.")
+      }
       om = maftools:::createOncoMatrix(m = maftools_obj, g = genes, add_missing = TRUE)
       mat_origin = om$oncoMatrix
       tsbs = levels(maftools:::getSampleSummary(x = maftools_obj)[,Tumor_Sample_Barcode])
