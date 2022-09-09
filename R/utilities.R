@@ -2835,11 +2835,12 @@ tidy_lymphgen = function(df,
 #'
 #' @examples
 #' metadata <- get_gambl_metadata()
-#' GAMBLR::collate_lymphgen(metadata)
+#' GAMBLR::consolidate_lymphgen(metadata)
 #'
-collate_lymphgen = function(sample_table,
-                            derived_data_path = "",
-                            verbose = TRUE) {
+consolidate_lymphgen = function(sample_table,
+                                derived_data_path = "",
+                                verbose = TRUE){
+
   if (derived_data_path == "") {
     path_to_files = config::get("derived_and_curated")
     project_base = config::get("project_base")
@@ -2901,6 +2902,50 @@ collate_lymphgen = function(sample_table,
                                  relevel=TRUE)
   }
 
+  return(sample_table)
+}
+
+
+#' Expand a sample_table (meta data) horizontally with different flavours of lymphgen data.
+#'
+#' @param sample_table Input data frame with sample IDs in the firs column.
+#'
+#' @return
+#' @export
+#' @import tidyverse
+#'
+#' @examples
+#' metadata = get_gambl_metadata()
+#' colalted_meta = collate_lymphgen(sample_table = metadata)
+#' 
+collate_lymphgen = function(sample_table){
+  
+  #setup paths
+  repo_base = config::get("repo_base") #get repo base
+  flavours = config::get("results_merged_wildcards")$lymphgen_template #get all flavours
+  flavours = str_split(flavours, pattern = ",") #seperate each flavour on ","
+  flavours = unlist(flavours) #unlist flavours
+  lymphgen_template = config::get("results_versioned")$lymphgen_template #get tamplate for lymphgen file path
+  lymphgen_path = paste0(repo_base, lymphgen_template) #combine with repo_base path
+  lymphgen_full_paths = glue::glue(lymphgen_path, flavour = flavours) #substitute {flavour} wildcard in template with actual flavours
+  
+  #print paths
+  message(paste0("Reading from the following paths:"))
+  message(paste0(for(i in lymphgen_full_paths) print(i)))
+  
+  #read files into R
+  for (f in lymphgen_full_paths){
+    this_data = fread(f) #read with fread
+    this_data = tidy_lymphgen(this_data, lymphgen_column_in = "Subtype.Prediction", lymphgen_column_out = "flavour") 
+    this_data = dplyr::select(this_data, Sample.Name, flavour)
+    colnames(this_data)[1] = "sample_id" #change name of first column to match sample_table
+    sample_table = sample_table %>% #left join with incoming sample_table (by sample_id)
+      left_join(this_data, by = "sample_id")
+  }
+  
+  #maybe not the most elegant approach for this, suggestions?
+  colnames(sample_table)[108:115] = flavours[1:8]
+  
   return(sample_table)
 }
 
