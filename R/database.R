@@ -1860,10 +1860,11 @@ get_ssm_by_region = function(chromosome,
   tabix_bin = config::get("dependencies")$tabix
   table_name = config::get("results_tables")$ssm
   db = config::get("database_name")
+  base_path = config::get("project_base")
+  base_path_remote = config::get("project_base",config="default")
   
   if(from_indexed_flatfile){
-    base_path = config::get("project_base")
-
+    
     #test if we have permissions for the full gambl + icgc merge
     if(mode == "slms-3"){
       if(augmented){
@@ -1926,17 +1927,19 @@ get_ssm_by_region = function(chromosome,
         # NOTE!
         # Retrieving mutations per region over ssh connection is only supporting the basic columns for now in an attempt to keep the transfer of unnecessary data to a minimum
         
-        remote_base_path = config::get("project_base",config="default")
-        full_maf_path_comp = paste0(remote_base_path, maf_path, ".bgz")
-        if(!file.exists(full_maf_path_comp)){
-          message("Cannot find file locally. If working remotely, perhaps you forgot to load your config (see below) or sync your files?")
-          message('Sys.setenv(R_CONFIG_ACTIVE= "remote")')
-          check_host()
-        }else{
-          message(paste("reading from:", full_maf_path_comp))
-        }
         
-        tabix_command = paste(tabix_bin, full_maf_path_comp, region, "| cut -f", paste(maf_indexes,collapse=","))
+        remote_tabix_bin = config::get("dependencies",config="default")$tabix
+        
+        full_maf_path_comp = paste0(base_path_remote, maf_path, ".bgz")
+        #if(!file.exists(full_maf_path_comp)){
+        #  message("Cannot find file locally. If working remotely, perhaps you forgot to load your config (see below) or sync your files?")
+        #  message('Sys.setenv(R_CONFIG_ACTIVE= "remote")')
+        #  check_host()
+        #}else{
+          message(paste("reading from:", full_maf_path_comp))
+        #}
+        
+        tabix_command = paste("/home/rmorin/miniconda3/bin/tabix", full_maf_path_comp, region, "| cut -f", paste(maf_indexes,collapse=","))
         print(tabix_command)
         #stop()
         muts = run_command_remote(ssh_session,tabix_command)
