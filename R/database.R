@@ -2397,7 +2397,7 @@ get_gene_expression = function(metadata,
     }else{
       if(!missing(hugo_symbols)){
         #lazily filter on the fly to conserve RAM (use grep without regex)
-        genes_regex=paste(c("-e Hugo_Symbol",genes),collapse = " -e ");
+        genes_regex=paste(c("-e Hugo_Symbol",hugo_symbols),collapse = " -e ");
         grep_cmd = paste0("grep -w -F ",genes_regex," ",tidy_expression_file)
         print(grep_cmd)
         wide_expression_data = fread(cmd=grep_cmd) %>%
