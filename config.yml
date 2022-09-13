@@ -23,7 +23,8 @@ default:
     results_merged_wildcards:
         lymphgen_template: "no_cnvs.no_sv.with_A53,no_cnvs.no_sv.no_A53,no_cnvs.with_sv.with_A53,with_cnvs.no_sv.no_A53,no_cnvs.with_sv.no_A53,with_cnvs.no_sv.with_A53,with_cnvs.with_sv.no_A53,with_cnvs.with_sv.with_A53"
     results_versioned:
-        lymphgen_template: "versioned_results/LymphGen/GAMBL_all_the_things.lymphgen_calls.{flavour}.tsv"
+        lymphgen_template:
+                default: "versioned_results/LymphGen/GAMBL_all_the_things.lymphgen_calls.{flavour}.tsv"
         oncodriveclustl:
                 clusters: "versioned_results/oncodriveclustl-0.0_{abase}_clusters_results.tsv"
                 elements: "versioned_results/oncodriveclustl-0.0_{abase}_elements_results.tsv"
