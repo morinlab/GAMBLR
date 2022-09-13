@@ -4,16 +4,27 @@
 \alias{collate_lymphgen}
 \title{Expand a sample_table (meta data) horizontally with different flavours of lymphgen data.}
 \usage{
-collate_lymphgen(sample_table)
+collate_lymphgen(
+  these_samples_metadata,
+  lymphgen_version = "default",
+  tidy_lymphgen = FALSE
+)
 }
 \arguments{
-\item{sample_table}{Input data frame with sample IDs in the firs column.}
+\item{these_samples_metadata}{Optional parameter with  meta data filtered for sample_ids of interest. If provided, this function will join lymphgen with this meta data, regardless of tidy_lymphgen TRUE/FALSE.}
+
+\item{lymphgen_version}{Version of selected lymphgen, default is "default".}
+
+\item{tidy_lymphgen}{Boolean parameter, set to TRUE for tidy format (i.e long format with no columns dropped). Default is FALSE, which returns the data in a wide format, keeps both the original Subtype.Prediction and tidied LymphGen values and puts the values from each "flavour" in its own column.}
+}
+\value{
+a df with lymphgen information.
 }
 \description{
 Expand a sample_table (meta data) horizontally with different flavours of lymphgen data.
 }
 \examples{
-metadata = get_gambl_metadata()
-colalted_meta = collate_lymphgen(sample_table = metadata)
+this_meta = get_gambl_metadata() \%>\% dplyr::filter(pathology == "FL")
+wide_lymphgen = collate_lymphgen(these_samples_metadata = this_meta, lymphgen_version = "default", tidy_lymphgen = FALSE)
 
 }
