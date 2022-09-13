@@ -2908,46 +2908,74 @@ consolidate_lymphgen = function(sample_table,
 
 #' Expand a sample_table (meta data) horizontally with different flavours of lymphgen data.
 #'
-#' @param sample_table Input data frame with sample IDs in the firs column.
+#' @param these_samples_metadata Optional parameter with  meta data filtered for sample_ids of interest. If provided, this function will join lymphgen with this meta data, regardless of tidy_lymphgen TRUE/FALSE.
+#' @param lymphgen_version Version of selected lymphgen, default is "default".
+#' @param tidy_lymphgen Boolean parameter, set to TRUE for tidy format (i.e long format with no columns dropped). Default is FALSE, which returns the data in a wide format, keeps both the original Subtype.Prediction and tidied LymphGen values and puts the values from each "flavour" in its own column.
 #'
-#' @return
+#' @return a df with lymphgen information.
 #' @export
 #' @import tidyverse
 #'
 #' @examples
-#' metadata = get_gambl_metadata()
-#' colalted_meta = collate_lymphgen(sample_table = metadata)
-#' 
-collate_lymphgen = function(sample_table){
-  
-  #setup paths
-  repo_base = config::get("repo_base") #get repo base
-  flavours = config::get("results_merged_wildcards")$lymphgen_template #get all flavours
-  flavours = str_split(flavours, pattern = ",") #seperate each flavour on ","
-  flavours = unlist(flavours) #unlist flavours
-  lymphgen_template = config::get("results_versioned")$lymphgen_template #get tamplate for lymphgen file path
-  lymphgen_path = paste0(repo_base, lymphgen_template) #combine with repo_base path
-  lymphgen_full_paths = glue::glue(lymphgen_path, flavour = flavours) #substitute {flavour} wildcard in template with actual flavours
-  
-  #print paths
-  message(paste0("Reading from the following paths:"))
-  message(paste0(for(i in lymphgen_full_paths) print(i)))
-  
-  #read files into R
-  for (f in lymphgen_full_paths){
-    this_data = fread(f) #read with fread
-    this_data = tidy_lymphgen(this_data, lymphgen_column_in = "Subtype.Prediction", lymphgen_column_out = "flavour") 
-    this_data = dplyr::select(this_data, Sample.Name, flavour)
-    colnames(this_data)[1] = "sample_id" #change name of first column to match sample_table
-    sample_table = sample_table %>% #left join with incoming sample_table (by sample_id)
-      left_join(this_data, by = "sample_id")
+#' this_meta = get_gambl_metadata() %>% dplyr::filter(pathology == "FL")
+#' wide_lymphgen = collate_lymphgen(these_samples_metadata = this_meta, lymphgen_version = "default", tidy_lymphgen = FALSE)
+#'
+collate_lymphgen = function(these_samples_metadata,
+                            lymphgen_version = "default",
+                            tidy_lymphgen = FALSE){
+
+  #TODO Update the key in the config to match the version once updated, as discussed on PR.
+  if(lymphgen_version == "default"){
+    lymphgen_template = config::get("results_versioned")$lymphgen_template$default
+  }else{
+    stop("Currently, only lymphgen_version default is accepted")
   }
-  
-  #maybe not the most elegant approach for this, suggestions?
-  colnames(sample_table)[108:115] = flavours[1:8]
-  
-  return(sample_table)
+
+  #repo base
+  repo_base = config::get("repo_base")
+  flavours = config::get("results_merged_wildcards")$lymphgen_template
+  flavour = str_split(flavours, pattern = ",")
+  flavour = unlist(flavour)
+  lymphgen_path = paste0(repo_base, lymphgen_template)
+
+  load_lymphgen = function(flavour, lymphgen_path){
+    lg_path = glue::glue(lymphgen_path)
+    if(!file.exists(lg_path)){ #ignore missing flavours.
+      return()
+    }
+    lg_df = read_tsv(lg_path) %>%
+      mutate(flavour = flavour) #append the flavour in its own column called "flavour".
+    return(lg_df)
+  }
+
+  lymphgen_results = lapply(flavour, load_lymphgen, lymphgen_path = lymphgen_path)
+  lymphgen_results = bind_rows(lymphgen_results) #get lymphgen results tables stacked on top of each other, with the results from each flavour identified by the `flavour` column.
+  lymphgen_results = tidy_lymphgen(lymphgen_results, lymphgen_column_in = "Subtype.Prediction", lymphgen_column_out = "LymphGen")
+
+  if(!tidy_lymphgen){
+    lymphgen_untidy = lymphgen_results %>%
+      select(Sample.Name, Subtype.Prediction, LymphGen, flavour) %>%
+      pivot_wider(names_from = flavour,
+                  values_from = c(Subtype.Prediction, LymphGen),
+                  names_glue = "{.value}_{flavour}")
+
+      if(!missing(these_samples_metadata)){
+        meta_data = these_samples_metadata
+        lymphgen_untidy = left_join(meta_data, lymphgen_untidy, by = c("sample_id" = "Sample.Name"))
+      }
+
+      return(lymphgen_untidy)
+
+    }else{
+    if(!missing(these_samples_metadata)){
+      meta_data = these_samples_metadata
+      lymphgen_results = left_join(meta_data, lymphgen_results, by = c("sample_id" = "Sample.Name"))
+    }
+
+    return(lymphgen_results)
+  }
 }
+
 
 
 #' INTERNAL FUNCTION called by collate_results, not meant for out-of-package usage.
