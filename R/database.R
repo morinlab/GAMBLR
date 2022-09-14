@@ -1957,10 +1957,11 @@ get_ssm_by_region = function(chromosome,
   tabix_bin = config::get("dependencies")$tabix
   table_name = config::get("results_tables")$ssm
   db = config::get("database_name")
+  base_path = config::get("project_base")
+  base_path_remote = config::get("project_base",config="default")
   
   if(from_indexed_flatfile){
-    base_path = config::get("project_base")
-
+    
     #test if we have permissions for the full gambl + icgc merge
     if(mode == "slms-3"){
       if(augmented){
@@ -2031,10 +2032,11 @@ get_ssm_by_region = function(chromosome,
           message('Sys.setenv(R_CONFIG_ACTIVE= "remote")')
           check_host()
         }else{
-          message(paste("reading from:", full_maf_path_comp))
-        }
         
-        tabix_command = paste(tabix_bin, full_maf_path_comp, region, "| cut -f", paste(maf_indexes,collapse=","))
+          message(paste("reading from:", full_maf_path_comp))
+        #}
+        
+        tabix_command = paste("/home/rmorin/miniconda3/bin/tabix", full_maf_path_comp, region, "| cut -f", paste(maf_indexes,collapse=","))
         print(tabix_command)
         #stop()
         muts = run_command_remote(ssh_session,tabix_command)

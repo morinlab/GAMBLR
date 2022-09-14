@@ -6,13 +6,14 @@ remote:
 
 default:
     project_base: "/projects/nhl_meta_analysis_scratch/gambl/results_local/"
-    repo_base: "/projects/rmorin/projects/gambl-repos/gambl-rmorin/"
+    repo_base: "/projects/rmorin/projects/gambl-repos/gambl-crushton-canary/"
     archive: "/projects/rmorin/projects/gambl_results/"
     derived_and_curated: "icgc_dart/derived_and_curated_metadata/"
     database_name: "gambl_test"
     results_staging:
         manta: "manta_current/level_3/01-gamblr_preprocess/"
     results_merged:
+        collated: "shared/gambl_{seq_type_filter}_results.tsv"
         tidy_expression_path: "icgc_dart/DESeq2-0.0_salmon-1.0/mrna--gambl-icgc-all/vst-matrix-Hugo_Symbol_tidy.tsv.gz"
         tidy_expression_file: "/projects/rmorin/projects/gambl-repos/gambl-rmorin/results/icgc_dart/DESeq2-0.0_salmon-1.0/mrna--gambl-icgc-all/vst-matrix-Hugo_Symbol_tidy.tsv"
         ex_matrix_file: "/projects/rmorin/projects/gambl-repos/gambl-rmorin/results/icgc_dart/DESeq2-0.0_salmon-1.0/mrna--gambl-icgc-all/vst-matrix.tsv"
@@ -124,7 +125,6 @@ default:
         biopsies: "data/metadata/gambl_biopsy_metadata.tsv"
         samples: "data/metadata/gambl_samples_available.tsv"
         outcomes: "data/metadata/gambl_all_outcomes.tsv"
-        derived: "data/metadata/gambl_{seq_type_filter}_results.tsv"
 
     sample_sets:
         default: "data/metadata/level3_samples_subsets.tsv"
