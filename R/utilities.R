@@ -134,8 +134,10 @@ gene_to_region = function(gene_symbol,
   #set mart based on selected genome projection
   if(genome_build == "grch37"){
     mart = useEnsembl(biomart = "ensembl", dataset = "hsapiens_gene_ensembl", GRCh = 37)
+    chr_select = paste0(c(c(1:22),"X","Y"))
   }else if(genome_build == "hg38"){
     mart = useEnsembl(biomart = "ensembl", dataset = "hsapiens_gene_ensembl")
+    chr_select = paste0("chr", c(c(1:22),"X","Y"))
   }
 
   #retrieve gene coordinates (biomaRt)
@@ -166,6 +168,7 @@ gene_to_region = function(gene_symbol,
   region = dplyr::select(gene_coordinates, chromosome, start, end, gene_name, hugo_symbol, ensembl_gene_id) %>%
     as.data.frame() %>%
     dplyr::arrange(chromosome, start) %>%
+    dplyr::filter(chromosome %in% chr_select) %>%
     mutate_all(na_if,"") %>%
     distinct(.keep_all = TRUE)
   
@@ -2910,19 +2913,19 @@ consolidate_lymphgen = function(sample_table,
 #'
 #' @param these_samples_metadata Optional parameter with  meta data filtered for sample_ids of interest. If provided, this function will join lymphgen with this meta data, regardless of tidy_lymphgen TRUE/FALSE.
 #' @param lymphgen_version Version of selected lymphgen, default is "default".
-#' @param tidy_lymphgen Boolean parameter, set to TRUE for tidy format (i.e long format with no columns dropped). Default is FALSE, which returns the data in a wide format, keeps both the original Subtype.Prediction and tidied LymphGen values and puts the values from each "flavour" in its own column.
+#' @param tidy Boolean parameter, set to TRUE for tidy format (i.e long format with no columns dropped). Default is FALSE, which returns the data in a wide format, keeps both the original Subtype.Prediction and tidied LymphGen values and puts the values from each "flavour" in its own column.
 #'
 #' @return a df with lymphgen information.
 #' @export
 #' @import tidyverse
 #'
 #' @examples
-#' this_meta = get_gambl_metadata() %>% dplyr::filter(pathology == "FL")
-#' wide_lymphgen = collate_lymphgen(these_samples_metadata = this_meta, lymphgen_version = "default", tidy_lymphgen = FALSE)
+#' this_meta = get_gambl_metadata() %>% dplyr::filter(pathology == "DLBCL")
+#' wide_lymphgen = collate_lymphgen(these_samples_metadata = this_meta, lymphgen_version = "default", tidy = FALSE)
 #'
 collate_lymphgen = function(these_samples_metadata,
                             lymphgen_version = "default",
-                            tidy_lymphgen = FALSE){
+                            tidy = FALSE){
 
   #TODO Update the key in the config to match the version once updated, as discussed on PR.
   if(lymphgen_version == "default"){
@@ -2951,25 +2954,25 @@ collate_lymphgen = function(these_samples_metadata,
   lymphgen_results = lapply(flavour, load_lymphgen, lymphgen_path = lymphgen_path)
   lymphgen_results = bind_rows(lymphgen_results) #get lymphgen results tables stacked on top of each other, with the results from each flavour identified by the `flavour` column.
   lymphgen_results = tidy_lymphgen(lymphgen_results, lymphgen_column_in = "Subtype.Prediction", lymphgen_column_out = "LymphGen")
+  colnames(lymphgen_results)[1] = "sample_id"
 
-  if(!tidy_lymphgen){
+  if(!tidy){
     lymphgen_untidy = lymphgen_results %>%
-      select(Sample.Name, Subtype.Prediction, LymphGen, flavour) %>%
+      select(sample_id, Subtype.Prediction, LymphGen, flavour) %>%
       pivot_wider(names_from = flavour,
                   values_from = c(Subtype.Prediction, LymphGen),
                   names_glue = "{.value}_{flavour}")
 
       if(!missing(these_samples_metadata)){
         meta_data = these_samples_metadata
-        lymphgen_untidy = left_join(meta_data, lymphgen_untidy, by = c("sample_id" = "Sample.Name"))
+        lymphgen_untidy = left_join(meta_data, lymphgen_untidy)
       }
 
       return(lymphgen_untidy)
 
     }else{
     if(!missing(these_samples_metadata)){
-      meta_data = these_samples_metadata
-      lymphgen_results = left_join(meta_data, lymphgen_results, by = c("sample_id" = "Sample.Name"))
+      lymphgen_results = left_join(these_samples_metadata, lymphgen_results)
     }
 
     return(lymphgen_results)
