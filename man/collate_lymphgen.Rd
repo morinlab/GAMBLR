@@ -7,7 +7,7 @@
 collate_lymphgen(
   these_samples_metadata,
   lymphgen_version = "default",
-  tidy_lymphgen = FALSE
+  tidy = FALSE
 )
 }
 \arguments{
@@ -15,7 +15,7 @@ collate_lymphgen(
 
 \item{lymphgen_version}{Version of selected lymphgen, default is "default".}
 
-\item{tidy_lymphgen}{Boolean parameter, set to TRUE for tidy format (i.e long format with no columns dropped). Default is FALSE, which returns the data in a wide format, keeps both the original Subtype.Prediction and tidied LymphGen values and puts the values from each "flavour" in its own column.}
+\item{tidy}{Boolean parameter, set to TRUE for tidy format (i.e long format with no columns dropped). Default is FALSE, which returns the data in a wide format, keeps both the original Subtype.Prediction and tidied LymphGen values and puts the values from each "flavour" in its own column.}
 }
 \value{
 a df with lymphgen information.
@@ -24,7 +24,7 @@ a df with lymphgen information.
 Expand a sample_table (meta data) horizontally with different flavours of lymphgen data.
 }
 \examples{
-this_meta = get_gambl_metadata() \%>\% dplyr::filter(pathology == "FL")
-wide_lymphgen = collate_lymphgen(these_samples_metadata = this_meta, lymphgen_version = "default", tidy_lymphgen = FALSE)
+this_meta = get_gambl_metadata() \%>\% dplyr::filter(pathology == "DLBCL")
+wide_lymphgen = collate_lymphgen(these_samples_metadata = this_meta, lymphgen_version = "default", tidy = FALSE)
 
 }
