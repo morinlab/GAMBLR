@@ -469,6 +469,7 @@ trim_scale_expression = function(x){
 }
 
 
+
 #' Count the number of mutations in a sliding window across a region for all samples. Unlikely to be used directly in most cases. See get_mutation_frequency_bin_matrix instead.
 #'
 #' @param this_region Genomic region in bed format.

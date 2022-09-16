@@ -751,7 +751,7 @@ get_gambl_metadata = function(seq_type_filter = "genome",
               lymphgen_column_out = "lymphgen",
               relevel=TRUE)
 
-  all_meta = GAMBLR::collate_lymphgen(all_meta, verbose=FALSE)
+  #all_meta = GAMBLR::collate_lymphgen(all_meta, verbose=FALSE)
 
   # "catchall" pathology for those that need review
   all_meta = all_meta %>%

@@ -102,8 +102,8 @@ lymphgen_anno = left_join(lymphgen_entrez,entrez_map) %>% dplyr::rename("Hugo_Sy
 
 
 library("biomaRt")
-ensembl = useMart("ensembl",dataset="hsapiens_gene_ensembl",version="hg38")
-ensembl = useMart(biomart="ENSEMBL_MART_ENSEMBL", host="grch37.ensembl.org", path="/biomart/martservice" ,dataset="hsapiens_gene_ensembl")
+
+ensembl = useMart(biomart="ENSEMBL_MART_ENSEMBL", host="https://grch37.ensembl.org", path="/biomart/martservice" ,dataset="hsapiens_gene_ensembl")
 #need to get entrezgene_id, hgnc_symbol using ensembl_gene_id
 gene_detail = getBM(attributes=c( 'ensembl_gene_id','entrezgene_id','hgnc_symbol'), 
       filters = 'ensembl_gene_id', 
@@ -138,6 +138,78 @@ lymphoma_genes[lymphoma_genes$hgnc_symbol %in% reddy_genes$hgnc_symbol,"Reddy"]=
 usethis::use_data(lymphoma_genes, overwrite = TRUE)
 
 reddy_only = reddy_genes[which(!reddy_genes$hgnc_symbol %in% lymphoma_genes$hgnc_symbol),"hgnc_symbol"]
+
+ensembl = useMart("ensembl",dataset="hsapiens_gene_ensembl")
+
+reddy_detail = getBM(attributes=c( 'ensembl_gene_id','entrezgene_id','hgnc_symbol'), 
+                    filters = 'hgnc_symbol', 
+                    values = reddy_only$hgnc_symbol, 
+                    mart = ensembl,useCache = FALSE)
+
+#update any based on mapping to Ensembl ID
+lymphoma_genes[lymphoma_genes$ensembl_gene_id %in% reddy_detail$ensembl_gene_id,"Reddy"]=TRUE
+
+#reddy_only = dplyr::filter(reddy_detail,!ensembl_gene_id %in% lymphoma_genes$ensembl_gene_id ) %>% 
+#  group_by(ensembl_gene_id,hgnc_symbol) %>% slice_head() %>% ungroup() %>% dplyr::select(-entrezgene_id) %>% dplyr::rename("Gene"="hgnc_symbol") %>% 
+#  mutate(Reddy=TRUE)
+#lymphoma_genes_comprehensive = bind_rows(reddy_only,lymphoma_genes) %>% dplyr::select(ensembl_gene_id,Gene,Reddy,LymphGen,Chapuy)
+
+
+
+chapuy_genes = system.file("extdata","chapuy_genes.tsv",package="GAMBLR") %>%
+  read_tsv() %>% dplyr::rename("hgnc_symbol"="gene")
+
+lymphoma_genes$Chapuy = FALSE
+lymphoma_genes[lymphoma_genes$hgnc_symbol %in% chapuy_genes$hgnc_symbol,"Chapuy"]=TRUE
+
+#lymphoma_genes_comprehensive[lymphoma_genes_comprehensive$Gene %in% chapuy_genes$hgnc_symbol,"Chapuy"]=TRUE
+#lymphoma_genes_comprehensive[!lymphoma_genes_comprehensive$Gene %in% chapuy_genes$hgnc_symbol,"Chapuy"]=FALSE
+
+
+lymphoma_genes_comprehensive = read_tsv("inst/extdata/lymphoma_genes_comprehensive.tsv")
+
+lacy = read_tsv("inst/extdata/lacy_genes.tsv") %>% dplyr::filter(`Included in statistical analysis`=='Yes',Feature!="Amplification") 
+lacy_genes = pull(lacy,Gene)
+lymphoma_genes$Lacy = FALSE
+lymphoma_genes[lymphoma_genes$hgnc_symbol %in% lacy_genes,"Lacy"]=TRUE
+
+lymphoma_genes_comprehensive$Lacy = FALSE
+lymphoma_genes_comprehensive[lymphoma_genes_comprehensive$Gene %in% lacy_genes,"Lacy"]=TRUE
+
+lacy_ashm = dplyr::filter(lacy,!is.na(`Annotation as aSHM`)) %>% pull(Gene)
+lymphoma_genes_comprehensive$aSHM = FALSE
+lymphoma_genes_comprehensive[lymphoma_genes_comprehensive$Gene %in% lacy_ashm,"aSHM"]=TRUE
+lymphoma_genes_comprehensive[lymphoma_genes_comprehensive$Gene %in% grch37_ashm_regions$gene,"aSHM"]=TRUE
+lymphoma_genes_comprehensive = mutate(lymphoma_genes_comprehensive,aSHM=ifelse(grepl("HIST",Gene),TRUE,aSHM))
+usethis::use_data(lymphoma_genes_comprehensive, overwrite = TRUE)
+
+
+
+#ensembl = useMart(biomart="ENSEMBL_MART_ENSEMBL", host="https://grch37.ensembl.org", path="/biomart/martservice" ,dataset="hsapiens_gene_ensembl")
+#need to get entrezgene_id, hgnc_symbol using ensembl_gene_id
+#gene_detail = getBM(attributes=c( 'ensembl_gene_id','hgnc_symbol','chromosome_name'), 
+#                    filters = 'hgnc_symbol', 
+#                    values = chapuy_only$hgnc_symbol, 
+#                    mart = ensembl,useCache = FALSE) %>% dplyr::filter(chromosome_name %in% c(c(1:22),"X","Y")) %>% 
+#  dplyr::select(-chromosome_name) %>% dplyr::rename("Gene"="hgnc_symbol") %>% 
+#  mutate(Chapuy=TRUE) %>% dplyr:: filter(!Gene %in% lymphoma_genes_comprehensive$Gene)
+
+#lymphoma_genes_comprehensive = bind_rows(gene_detail,lymphoma_genes_comprehensive) %>%
+#  mutate(Reddy=ifelse(is.na(Reddy),FALSE,Reddy))
+
+#lymphoma_genes_comprehensive[lymphoma_genes_comprehensive$Gene %in% lymphgen_anno$Hugo_Symbol,"LymphGen"] = TRUE
+#lymphoma_genes_comprehensive[!lymphoma_genes_comprehensive$Gene %in% lymphgen_anno$Hugo_Symbol,"LymphGen"] = FALSE
+
+#lymphoma_genes_comprehensive %>% dplyr::filter(Chapuy ==FALSE, Reddy==FALSE, LymphGen == FALSE)
+
+lymphoma_genes = dplyr::select(lymphoma_genes,-entrezgene_id) %>% group_by(Gene,ensembl_gene_id) %>% slice_head() %>% ungroup()
+
+#DLBCL_curated_genes = lymphoma_genes %>% dplyr::filter(DLBCL==TRUE) %>% pull(Gene)
+
+#lymphoma_genes_comprehensive$curated = FALSE
+#lymphoma_genes_comprehensive[lymphoma_genes_comprehensive$Gene %in% DLBCL_curated_genes,]$curated = TRUE
+#lymphoma_genes_comprehensive = dplyr::filter(lymphoma_genes_comprehensive,Reddy==TRUE | Chapuy == TRUE | LymphGen == TRUE | curated == TRUE)
+#lymphoma_genes_comprehensive$other_support = ""
 
 # Example SSM data from Grande et. al, 2019
 grande_maf = system.file("extdata", "blood8871418-suppl2-ssm.csv", package = "GAMBLR") %>%

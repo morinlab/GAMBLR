@@ -40,7 +40,12 @@ load_combine_cached_bins = function(function_params=list(bin_size=15000),
   if(!length(cached)==48){
     stop(paste("error: cannot find 48 files using this pattern",cache_file_name))
   }
-  
+  binned_list = list()
+  for(to_add in cached){
+    this_df = read_tsv(to_add,col_types="ciicnnnn")
+    binned_list[[to_add]]=this_df
+  }
+  return(bind_rows(binned_list))
 }
 
 bins_to_bedgraph = function(bin_df,min_value = 3,filename = "test.bed"){
