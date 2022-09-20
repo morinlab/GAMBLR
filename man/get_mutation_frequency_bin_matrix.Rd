@@ -8,11 +8,13 @@ get_mutation_frequency_bin_matrix(
   regions,
   regions_df,
   these_samples_metadata,
+  seq_type = "genome",
   region_padding = 1000,
   metadataColumns = c("pathology"),
   sortByColumns = c("pathology"),
   expressionColumns = c(),
   orientation = "sample_rows",
+  skip_regions = c("MYC", "BCL2", "IGLL5"),
   customColour = NULL,
   slide_by = 100,
   window_size = 500,
@@ -27,8 +29,9 @@ get_mutation_frequency_bin_matrix(
   legend_col = 3,
   legend_direction = "horizontal",
   legendFontSize = 10,
-  from_indexed_flatfile = FALSE,
-  mode = "slms-3"
+  from_indexed_flatfile = TRUE,
+  mode = "slms-3",
+  ssh_session = NULL
 )
 }
 \arguments{

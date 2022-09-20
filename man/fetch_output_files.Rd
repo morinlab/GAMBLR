@@ -11,7 +11,8 @@ fetch_output_files(
   results_dir = "99-outputs",
   seq_type = "genome",
   build = "hg38",
-  search_pattern = "cellularity_ploidy.txt"
+  search_pattern = "cellularity_ploidy.txt",
+  ssh_session
 )
 }
 \arguments{

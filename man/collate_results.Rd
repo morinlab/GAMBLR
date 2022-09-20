@@ -8,10 +8,12 @@ collate_results(
   sample_table,
   write_to_file = FALSE,
   join_with_full_metadata = FALSE,
+  these_samples_metadata,
   case_set,
   sbs_manipulation = "",
   seq_type_filter = "genome",
-  from_cache = TRUE
+  from_cache = TRUE,
+  ssh_session
 )
 }
 \arguments{
@@ -20,6 +22,8 @@ collate_results(
 \item{write_to_file}{Boolean statement that outputs tsv file if TRUE, default is FALSE.}
 
 \item{join_with_full_metadata}{Join with all columns of meta data, default is FALSE.}
+
+\item{these_samples_metadata}{Optional argument to use a user specified metadata df, overwrites get_gambl_metadata in join_with_full_metadata.}
 
 \item{case_set}{Optional short name for a pre-defined set of cases.}
 

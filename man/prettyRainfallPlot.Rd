@@ -13,11 +13,12 @@ prettyRainfallPlot(
   this_maf,
   maf_path,
   zoom_in_region,
+  seq_type,
   label_sv = FALSE
 )
 }
 \arguments{
-\item{this_sample_id}{Sample id for the sample to display. This is the only required argument.}
+\item{this_sample_id}{Sample id for the sample to display. This is argument is not required if you want a multi-sample plot but is otherwise needed.}
 
 \item{label_ashm_genes}{Boolean argument indicating whether the aSHM regions will be labeled or not.}
 
@@ -30,6 +31,8 @@ prettyRainfallPlot(
 \item{maf_path}{Specify path to MAF file if it is not already loaded into data frame.}
 
 \item{zoom_in_region}{Provide a specific region in the format "chromosome:start-end" to zoom in to a specific region.}
+
+\item{seq_type}{Specify one of "genome" or "capture" when relying on the function to obtain mutations from a region (i.e. if you haven't provided a MAF or single sample_id)}
 
 \item{label_sv}{Boolean argument to specify whether label SVs or not. Only supported if a specific chromosome or zoom in region are specified.}
 }
@@ -46,5 +49,5 @@ prettyRainfallPlot("Raji", chromosome = c(3,9,"chr14",22,"X"))
 prettyRainfallPlot("Raji", chromosome = c(3,9), projection = "hg38", label_ashm_genes = FALSE)
 prettyRainfallPlot("Raji", zoom_in_region = "8:125252796-135253201", label_sv = TRUE)
 prettyRainfallPlot("Raji", chromosome = 6, label_sv = TRUE)
-
+prettyRainfallPlot( zoom_in_region = "chr3:5,221,286-5,269,723", seq_type="genome") #multi-sample rainfall plot for one gene region
 }

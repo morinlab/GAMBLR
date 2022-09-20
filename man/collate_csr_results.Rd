@@ -5,7 +5,7 @@
 \title{INTERNAL FUNCTION called by collate_results, not meant for out-of-package usage.
 Collate a few CSR annotations, including MiXCR.}
 \usage{
-collate_csr_results(sample_table)
+collate_csr_results(sample_table, seq_type_filter = "genome")
 }
 \arguments{
 \item{sample_table}{A data frame with sample_id as the first column.}

@@ -5,7 +5,13 @@
 \title{INTERNAL FUNCTION called by collate_results, not meant for out-of-package usage.
 Compute some summary statistics based on SSM calls.}
 \usage{
-collate_ssm_results(sample_table, from_flatfile = TRUE, include_silent = FALSE)
+collate_ssm_results(
+  sample_table,
+  seq_type_filter = "genome",
+  projection = "grch37",
+  from_flatfile = TRUE,
+  include_silent = FALSE
+)
 }
 \arguments{
 \item{sample_table}{A data frame with sample_id as the first column.}

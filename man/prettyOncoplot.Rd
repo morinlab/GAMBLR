@@ -21,6 +21,7 @@ prettyOncoplot(
   expressionColumns = c(),
   numericMetadataMax,
   sortByColumns,
+  arrange_descending = FALSE,
   removeNonMutated = FALSE,
   minMutationPercent,
   mutAlpha = 1,
@@ -30,12 +31,17 @@ prettyOncoplot(
   showTumorSampleBarcode = FALSE,
   groupNames,
   hide_annotations,
+  annotate_specific_genes = FALSE,
+  this_forest_object = NULL,
   custom_colours = NULL,
   hideTopBarplot = TRUE,
+  tally_all_mutations = FALSE,
+  tally_all_mutations_max = 1000,
   hideSideBarplot = FALSE,
   box_col = NA,
   annoAlpha = 1,
   legend_direction = "horizontal",
+  ylim = NULL,
   legend_position = "bottom",
   legend_row = 3,
   legend_col = 3,
@@ -93,6 +99,10 @@ prettyOncoplot(
 
 \item{hide_annotations}{Hide annotations for specifc ashms. argument takes a list with annotations.}
 
+\item{annotate_specific_genes}{Optional argument, specifying whether the features should be labelled according to their significance in one of the pathologies. Default is FALSE (no annotation).}
+
+\item{this_forest_object}{If annotate_specific_genes is specified, this arguments takes the output of GAMBLR::prettyForestPlot directly to determine the annotations.}
+
 \item{custom_colours}{Provide named vector (or named list of vectors) containing custom annotation colours if you do not want to use standartized pallette.}
 
 \item{hideTopBarplot}{Optional argument for removing top bar plot. Default value is TRUE.}
@@ -104,6 +114,8 @@ prettyOncoplot(
 \item{annoAlpha}{Optional alpha to apply to annotation colours.}
 
 \item{legend_direction}{Direction of lgend, defualt is "horizontal".}
+
+\item{ylim}{Limit for y-axis.}
 
 \item{legend_position}{Position of legend, default is "bottom".}
 

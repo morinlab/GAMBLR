@@ -9,9 +9,11 @@ ashm_multi_rainbow_plot(
   regions_to_display,
   exclude_classifications,
   metadata,
+  seq_type,
   custom_colours,
   classification_column = "lymphgen",
-  maf_data
+  maf_data,
+  ssh_session = NULL
 )
 }
 \arguments{
