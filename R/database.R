@@ -227,6 +227,20 @@ get_ssm_by_samples = function(these_sample_ids,
           verbose = FALSE,
           ssh_session = ssh_session
         )
+
+        types <- c("character", "integer", "character", "character", "character", 
+           "integer", "integer", "character", "character", "character", 
+           "character", "character", "character", "character", "logical",
+           "character", "character", "character", "character", "logical",
+           "logical", "logical", "logical", "logical", "logical", 
+           "logical", "logical", "logical", "logical", "logical", 
+           "logical", "logical", "logical", "logical","character",
+           "character", "character", "character", "character", "integer",
+           "integer", "integer", "integer", "integer", "integer")
+
+        types <- paste0("as.", types)
+        purrr::map2_df(maf_df, types, function(x, y) do.call(y, list(x)))
+
         maf_df_list[[this_sample]]=maf_df
       }
       maf_df_merge = bind_rows(maf_df_list)
