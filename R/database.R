@@ -2358,6 +2358,15 @@ get_gene_expression = function(metadata,
   base_path = config::get("project_base")
   tidy_expression_file = paste0(base_path,tidy_expression_path)
   tidy_expression_file = gsub(".gz$","",tidy_expression_file)
+
+  #check permission and updates paths accordingly
+  permissions = file.access(tidy_expression_file, 4)
+  if(permissions == -1 ){
+    message("restricting to non-ICGC data")
+    tidy_expression_path = config::get("results_merged")$tidy_expression_path_gambl
+    tidy_expression_file = paste0(base_path, tidy_expression_path)
+  }
+
   if(!missing(expression_data)){
     tidy_expression_data = as.data.frame(expression_data) #is this necessary? Will it unnecessarily duplicate a large object if it's already a data frame?
     if(!missing(hugo_symbols)){
