@@ -2956,8 +2956,8 @@ tidy_lymphgen = function(df,
     str_detect(.data[[lymphgen_column_in]],"EZB")~"EZB-COMP",
     str_detect(.data[[lymphgen_column_in]],"MCD")~"MCD-COMP",
     str_detect(.data[[lymphgen_column_in]],"N1")~"N1-COMP",
-    str_detect(.data[[lymphgen_column_in]],"ST2")~"ST2-COMP",
-    str_detect(.data[[lymphgen_column_in]],"BN2")~"BN2-COMP"
+    str_detect(.data[[lymphgen_column_in]],"BN2")~"BN2-COMP",
+    str_detect(.data[[lymphgen_column_in]],"ST2")~"ST2-COMP"
   ))
   if(relevel){
     df <- df %>%

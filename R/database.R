@@ -578,7 +578,7 @@ get_gambl_metadata = function(seq_type_filter = "genome",
     dplyr::rename("normal_sample_id" = "sample_id")
 #print(head(sample_meta_normal_genomes))
   sample_meta = sample_meta %>%
-    dplyr::filter(seq_type %in% seq_type_filter & tissue_status %in% tissue_status_filter & bam_available %in% c(1,"TRUE")) %>%
+    dplyr::filter(seq_type %in% seq_type_filter & tissue_status %in% tissue_status_filter) %>%
     dplyr::select(-sex)
   #if only normals were requested, just return what we have because there is nothing else to join
   if(tissue_status_filter == "normal"){
@@ -1227,7 +1227,7 @@ get_manta_sv = function(min_vaf = 0.1,
     }
 
     all_sv = read_tsv(sv_file, col_types = "cnncnncnccccnnnnccc", col_names = cnames)
-    
+
   }else{
     con = DBI::dbConnect(RMariaDB::MariaDB(), dbname = db)
     all_sv = dplyr::tbl(con, table_name) %>%
@@ -1967,15 +1967,15 @@ get_ssm_by_region = function(chromosome,
   maf_columns = names(maf_indexes)
   maf_indexes = unname(maf_indexes)
   #this is to put the indexes and their names back into numerical order because cut returns columns that way
-  
+
   tabix_bin = config::get("dependencies")$tabix
   table_name = config::get("results_tables")$ssm
   db = config::get("database_name")
   base_path = config::get("project_base")
   base_path_remote = config::get("project_base",config="default")
-  
+
   if(from_indexed_flatfile){
-    
+
     #test if we have permissions for the full gambl + icgc merge
     if(mode == "slms-3"){
       if(augmented){
@@ -1992,7 +1992,7 @@ get_ssm_by_region = function(chromosome,
     maf_path = glue::glue(maf_partial_path)
     full_maf_path = paste0(base_path, maf_path)
     full_maf_path_comp = paste0(base_path, maf_path, ".bgz")
-    
+
     if(!file.exists(full_maf_path_comp)){
       print(paste("missing:", full_maf_path_comp))
       message("Warning, you are running this on a computer that does not have direct acces to the directed file, prehaps you should try run this with ssh_session as a parameter?")
@@ -2037,7 +2037,7 @@ get_ssm_by_region = function(chromosome,
 
         # NOTE!
         # Retrieving mutations per region over ssh connection is only supporting the basic columns for now in an attempt to keep the transfer of unnecessary data to a minimum
-      
+
         remote_tabix_bin = config::get("dependencies",config="default")$tabix
 
         full_maf_path_comp = paste0(base_path_remote, maf_path, ".bgz")
@@ -2390,7 +2390,7 @@ get_gene_expression = function(metadata,
         as.data.frame() %>%
         pivot_wider(names_from = ensembl_gene_id, values_from = expression)
     }else{
-      
+
       #for when a user wants everything. Need to handle the option of getting back Hugo_Symbol instead
       wide_expression_data = tidy_expression_data %>%
         dplyr::select(-Hugo_Symbol) %>%
@@ -2407,7 +2407,7 @@ get_gene_expression = function(metadata,
     #only ever load the full data frame when absolutely necessary
     if(all_genes & missing(ensembl_gene_ids) & missing(hugo_symbols)){
       wide_expression_data = read_tsv(tidy_expression_file) %>%
-        as.data.frame() %>% 
+        as.data.frame() %>%
         pivot_wider(names_from = ensembl_gene_id, values_from = expression)
     }else{
       if(!missing(hugo_symbols)){
