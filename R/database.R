@@ -2025,7 +2025,7 @@ get_ssm_by_region = function(chromosome,
     chromosome = gsub("chr", "", chromosome)
   }
 
-  if(missing(maf_data)){
+ if(missing(maf_data)){
     if(from_indexed_flatfile){
       if(!is.null(ssh_session)){
         #Helper function that may come in handy elsewhere so could be moved out of this function if necessary
@@ -2037,19 +2037,18 @@ get_ssm_by_region = function(chromosome,
 
         # NOTE!
         # Retrieving mutations per region over ssh connection is only supporting the basic columns for now in an attempt to keep the transfer of unnecessary data to a minimum
-        
-        remote_base_path = config::get("project_base",config="default")
-        full_maf_path_comp = paste0(remote_base_path, maf_path, ".bgz")
-        if(!file.exists(full_maf_path_comp)){
-          print(paste("missing: ", full_maf_path_comp))
-          message("Cannot find file locally. If working remotely, perhaps you forgot to load your config (see below) or sync your files?")
-          message('Sys.setenv(R_CONFIG_ACTIVE= "remote")')
-          check_host()
-        }else{
-        
+      
+        remote_tabix_bin = config::get("dependencies",config="default")$tabix
+
+        full_maf_path_comp = paste0(base_path_remote, maf_path, ".bgz")
+        #if(!file.exists(full_maf_path_comp)){
+        #  message("Cannot find file locally. If working remotely, perhaps you forgot to load your config (see below) or sync your files?")
+        #  message('Sys.setenv(R_CONFIG_ACTIVE= "remote")')
+        #  check_host()
+        #}else{
           message(paste("reading from:", full_maf_path_comp))
         #}
-        
+
         tabix_command = paste("/home/rmorin/miniconda3/bin/tabix", full_maf_path_comp, region, "| cut -f", paste(maf_indexes,collapse=","))
         print(tabix_command)
         #stop()
@@ -2062,7 +2061,7 @@ get_ssm_by_region = function(chromosome,
         print(tabix_command)
         #stop()
         muts = system(tabix_command, intern = TRUE)
-        
+
         muts_region = vroom::vroom(I(muts), col_types = paste(maf_column_types,collapse=""),
                             col_names=maf_columns)
       }
