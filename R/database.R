@@ -217,7 +217,6 @@ get_ssm_by_samples = function(these_sample_ids,
 }
 
 
-
 #' Get the ssms (i.e. load MAF) for a single sample. This was implemented to allow flexibility because
 #' there are some samples that we may want to use a different set of variants than those in the main GAMBL merge.
 #' The current use case is to allow a force_unmatched output to be used to replace the SSMs from the merge for samples
@@ -225,7 +224,8 @@ get_ssm_by_samples = function(these_sample_ids,
 #' annotate_ssm_blacklist.
 #'
 #' @param this_sample_id Required. The sample_id you want the data from.
-#' @param these_samples_metadata Either a single row or entire metadata table containing your sample_id
+#' @param this_seq_type Required if not specifying these_samples_metadata. The seq_type of the sample you want data from.
+#' @param these_samples_metadata Required if not specifying both this_sample_id and this_seq_type a single row or entire metadata table containing your sample_id
 #' @param tool_name The name of the variant calling pipeline (currently only slms-3 is supported)
 #' @param projection The projection genome build. Supports hg38 and grch37.
 #' @param these_genes A vector of genes to subset ssm to.
@@ -243,9 +243,12 @@ get_ssm_by_samples = function(these_sample_ids,
 #' @export
 #'
 #' @examples
-#' ssm_sample = get_ssm_by_sample(this_sample_id = "HTMCP-01-06-00485-01A-01D", tool_name = "slims-3", projection = "grch37")
+#' this_sample_df = get_ssm_by_sample(this_sample_id = "HTMCP-01-06-00485-01A-01D", this_seq_type = "genome",tool_name = "slims-3", projection = "grch37")
+#' capture_meta = get_gambl_metadata(seq_type_filter = "capture")
+#' ssm_sample = get_ssm_by_sample(this_sample_id = "CASA0002_2015-03-10", projection = "grch37",augmented = T,these_samples_metadata = capture_meta)
 #'
 get_ssm_by_sample = function(this_sample_id,
+                             this_seq_type,
                              these_samples_metadata,
                              tool_name = "slms-3",
                              projection = "grch37",
@@ -258,10 +261,16 @@ get_ssm_by_sample = function(this_sample_id,
                              return_cols = FALSE,
                              verbose = FALSE,
                              ssh_session){
-
+  if(missing(this_seq_type) & missing(these_samples_metadata)){
+    stop("Must provide both a sample_id and seq_type for that sample via this_sample_id and this_seq_type")
+  }
+  if(missing(this_seq_type)){
+    #get it from the metadata
+    this_seq_type = dplyr::filter(these_samples_metadata,sample_id==this_sample_id) %>% pull(seq_type)
+  }
   #figure out which unix_group this sample belongs to
   if(missing(these_samples_metadata)){
-    these_samples_metadata = get_gambl_metadata() %>%
+    these_samples_metadata = get_gambl_metadata(seq_type_filter = this_seq_type) %>%
       dplyr::filter(sample_id == this_sample_id)
 
   }else{
@@ -311,30 +320,32 @@ get_ssm_by_sample = function(this_sample_id,
   if(!missing(ssh_session)){
     #check if file exists
     status = ssh_exec_internal(ssh_session,command=paste("stat",aug_maf_path),error=F)$status
-    aug_maf_path = paste0(aug_maf_path,".gz")
-    local_aug_maf_path = paste0(local_aug_maf_path,".gz")
-    full_maf_path = paste0(full_maf_path,".gz")
-    local_full_maf_path = paste0(local_full_maf_path,".gz")
+    #aug_maf_path = paste0(aug_maf_path,".gz")
+    #local_aug_maf_path = paste0(local_aug_maf_path,".gz")
+    #full_maf_path = paste0(full_maf_path,".gz")
+    #local_full_maf_path = paste0(local_full_maf_path,".gz")
+    #deprecate the usage of gzipped MAF for now
+    
     # first check if we already have a local copy
     # Load data from local copy or get a local copy from the remote path first
     if(status==0){
       if(verbose){
-        message("found:",aug_maf_path)
-        message("local home:",local_aug_maf_path)
+        print(paste("found:",aug_maf_path))
+        print(paste("local home:",local_aug_maf_path))
       }
       dirN = dirname(local_aug_maf_path)
 
       suppressMessages(suppressWarnings(dir.create(dirN,recursive = T)))
       if(!file.exists(local_aug_maf_path)){
-
+        
         scp_download(ssh_session,aug_maf_path,dirN)
       }
       sample_ssm = fread_maf(local_aug_maf_path) %>%
       dplyr::filter(t_alt_count >= min_read_support)
     }else{
       if(verbose){
-        message("will use",full_maf_path)
-        message("local home:",full_maf_path,local_full_maf_path)
+        print(paste("will use",full_maf_path))
+        print(paste("local home:",local_full_maf_path))
       }
       dirN = dirname(local_full_maf_path)
 
@@ -1994,7 +2005,7 @@ get_ssm_by_region = function(chromosome,
 #' @param force_unmatched_samples Optional argument for forcing unmatched samples, using get_ssm_by_samples.
 #' @param projection Reference genome build for the coordinates in the MAF file. The default is hg19 genome build.
 #' @param seq_type The seq_type you want back, default is genome.
-#' @param basic_columns Set to TRUE to override the default behavior of returning only the first 45 columns of MAF data.
+#' @param basic_columns Set to FALSE to override the default behavior of returning only the first 45 columns of MAF data.
 #' @param maf_cols if basic_columns is set to FALSE, the user can specify what columns to be returned within the MAF. This parameter can either be a list of indexes (integer) or a list of characters (matching columns in MAF).
 #' @param return_cols If set to TRUE, a vector with all avaialble column names will be returned. Default is FALSE.
 #' @param from_flatfile Set to TRUE to obtain mutations from a local flatfile instead of the database. This can be more efficient and is currently the only option for users who do not have ICGC data access.
@@ -2027,7 +2038,8 @@ get_coding_ssm = function(limit_cohort,
                           augmented = TRUE,
                           min_read_support = 3,
                           groups = c("gambl", "icgc_dart"),
-                          include_silent = TRUE){
+                          include_silent = TRUE,
+                          engine='fread_maf'){
 
   if(!include_silent){
     coding_class = coding_class[coding_class != "Silent"]
@@ -2085,16 +2097,26 @@ get_coding_ssm = function(limit_cohort,
   #read file
   if(from_flatfile){
     message(paste("reading from:", full_maf_path))
-    muts = fread_maf(full_maf_path) %>%
-      dplyr::filter(Variant_Classification %in% coding_class) %>%
-      as.data.frame()
+   
 
+    if(engine=='fread_maf'){
+      if(basic_columns){
+        #subset to basic columns during read to save time and memory with lazy loading (in theory)
+        select_cols = c(1:45)
+        muts = fread_maf(full_maf_path,select_cols=select_cols) %>%
+          dplyr::filter(Variant_Classification %in% coding_class) %>%
+          as.data.frame()
+      }else{
+        muts = fread_maf(full_maf_path) %>%
+          dplyr::filter(Variant_Classification %in% coding_class) %>%
+          as.data.frame()
+      }
+    }
     mutated_samples = length(unique(muts$Tumor_Sample_Barcode))
     message(paste("mutations from", mutated_samples, "samples"))
-  }
-
-  #use db if not using flatfile
-  if(!from_flatfile){
+  }else{
+    #use db if not using flatfile (mostly deprecated)
+    
     table_name = config::get("results_tables")$ssm
     db = config::get("database_name")
     con = DBI::dbConnect(RMariaDB::MariaDB(), dbname = db)
@@ -2118,10 +2140,7 @@ get_coding_ssm = function(limit_cohort,
   mutated_samples = length(unique(muts$Tumor_Sample_Barcode))
   message(paste("after linking with metadata, we have mutations from", mutated_samples, "samples"))
 
-  #subset to fewer columns
-  if(basic_columns){
-    muts = muts[,c(1:45)]
-  }
+
 
   #subset maf to a specific set of columns (defined in maf_cols)
   if(!is.null(maf_cols) && !basic_columns){

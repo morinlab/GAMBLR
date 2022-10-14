@@ -233,6 +233,7 @@ get_ssh_session = function(host="gphost01.bcgsc.ca"){
     #Either exit or do something that does not require ssh
     return(NULL)
   }
+  message("you should also run this command to ensure the ssh library is loaded:\nlibrary(ssh)")
   session = ssh::ssh_connect(host=host)
   return(session)
 }
