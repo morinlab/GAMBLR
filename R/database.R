@@ -26,8 +26,10 @@ get_excluded_samples = function(tool_name = "slms-3"){
 
 #' Get MAF-format data frame for more than one patient
 #' 
-#' This function returns variants from a set of patients avoiding duplicated mutations from multiple samples from that patient(i.e. unique superset of variants). This is done either by combining the contents of individual MAF files or subsetting from a merged MAF (wraps get_ssm_by_samples)
-#' See get_ssm_by_samples for more information
+#' This function returns variants from a set of patients avoiding duplicated mutations from multiple samples from that patient(i.e. unique superset of variants). 
+#' This is done either by combining the contents of individual MAF files or subsetting from a merged MAF (wraps get_ssm_by_samples)
+#' In most situations, this should never need to be run with subset_from_merge = TRUE. Instead use one of get_coding_ssm or get_ssm_by_region
+#' 
 #' @param these_patient_ids A vector of sample_id that you want results for. This is the only required argument.
 #' @param these_samples_metadata Optional metadata table
 #' @param tool_name Only supports slms-3 currently
@@ -44,8 +46,9 @@ get_excluded_samples = function(tool_name = "slms-3"){
 #'
 #' @examples
 #' patients = c("00-14595", "00-15201", "01-12047")
-#' patients_ssm = get_ssm_by_patients(these_patient_ids = patients, seq_type = "genome", min_read_support = 3, basic_columns = TRUE, subset_from_merge = FALSE)
-#'
+#' patients_maf = get_ssm_by_patients(these_patient_ids = patients, seq_type = "genome", subset_from_merge = FALSE)
+#' patient_meta = get_gambl_metadata(seq_type_filter = "genome") %>% dplyr::filter(patient_id %in% patients)
+#' patients_maf_2 = get_ssm_by_patients(these_samples_metadata = patient_meta,subset_from_merge = FALSE) 
 get_ssm_by_patients = function(these_patient_ids,
                                these_samples_metadata,
                                tool_name = "slms-3",
@@ -56,11 +59,18 @@ get_ssm_by_patients = function(these_patient_ids,
                                basic_columns = TRUE,
                                maf_cols = NULL,
                                return_cols = FALSE,
-                               subset_from_merge = TRUE,
+                               subset_from_merge = FALSE,
                                augmented = TRUE,
+                               engine='fread_maf',
                                ssh_session){
   if(!subset_from_merge){
     message("WARNING: on-the-fly merges can be extremely slow and consume a lot of memory. Use at your own risk. ")
+  }
+  if(missing(these_patient_ids)){
+    if(missing(these_samples_metadata)){
+      stop("must supply either a vector of patient_ids or the metadata for those patients as these_samples_metadata")
+    }
+    these_patient_ids = pull(these_samples_metadata,patient_id) %>% unique()
   }
   augmented = TRUE
   #always requires augmented MAFs to ensure all variants from the patient are included
@@ -93,13 +103,16 @@ get_ssm_by_patients = function(these_patient_ids,
                             ssh_session = ssh_session,
                             basic_columns = basic_columns,
                             maf_cols = maf_cols,
-                            return_cols = return_cols))
+                            return_cols = return_cols,
+                            engine=engine))
 }
 
 
 #' Get MAF-format data frame for more than one sample and combine together
 #' 
-#' This function internally runs get_ssm_by_sample. See get_ssm_by_sample for more information
+#' This function internally runs get_ssm_by_sample. 
+#' In most situations, this should never need to be run with subset_from_merge = TRUE. Instead use one of get_coding_ssm or get_ssm_by_region
+#' See get_ssm_by_sample for more information
 #' 
 #' @param these_sample_ids A vector of sample_id that you want results for. 
 #' @param these_samples_metadata Optional metadata table
@@ -113,14 +126,19 @@ get_ssm_by_patients = function(these_patient_ids,
 #' @param maf_cols if basic_columns is set to FALSE, the suer can specify what columns to be returned within the MAF. This parameter can either be a list of indexes (integer) or a list of characters.
 #' @param return_cols If set to TRUE, a vector with all avaialble column names will be returned. Default is FALSE.
 #' @param subset_from_merge Instead of merging individual MAFs, the data will be subset from a pre-merged MAF of samples with the specified seq_type
+#' @param engine Specify one of readr or fread_maf (default) to change how the large files are loaded prior to subsetting. You may have better performance with one or the other but for me fread_maf is faster and uses a lot less RAM. 
 #' @param ssh_session argument to supply active ssh session connection for remote transfers (only compatible with subset_from_merge=TRUE)
 #'
 #' @return data frame in MAF format.
 #' @export
+#' 
+#' @import dplyr parallel
 #'
 #' @examples
-#' merged_maf_force_unmatched = get_ssm_by_samples(these_sample_ids=c("HTMCP-01-06-00485-01A-01D","14-35472_tumorA","14-35472_tumorB"))
-#'
+#' sample_ssms = get_ssm_by_samples(these_sample_ids=c("HTMCP-01-06-00485-01A-01D","14-35472_tumorA","14-35472_tumorB"))
+#' hg38_ssms = get_ssm_by_samples(these_sample_ids=c("HTMCP-01-06-00485-01A-01D","14-35472_tumorA","14-35472_tumorB"),projection="hg38")
+#' readr_sample_ssms = get_ssm_by_samples(these_sample_ids=c("HTMCP-01-06-00485-01A-01D","14-35472_tumorA","14-35472_tumorB"),subset_from_merge=TRUE,engine="readr")
+#' slow_sample_ssms = get_ssm_by_samples(these_sample_ids=c("HTMCP-01-06-00485-01A-01D","14-35472_tumorA","14-35472_tumorB"),subset_from_merge=TRUE)
 get_ssm_by_samples = function(these_sample_ids,
                               these_samples_metadata,
                               tool_name = "slms-3",
@@ -132,11 +150,12 @@ get_ssm_by_samples = function(these_sample_ids,
                               basic_columns = TRUE,
                               maf_cols = NULL,
                               return_cols = FALSE,
-                              subset_from_merge = TRUE,
+                              subset_from_merge = FALSE,
                               augmented = TRUE,
+                              engine='fread_maf',
                               ssh_session){
   if(!subset_from_merge){
-    message("WARNING: on-the-fly merges can be extremely slow and consume a lot of memory. Use at your own risk. ")
+    message("WARNING: on-the-fly merges can be extremely and consume a lot of memory if many samples are involved. Use at your own risk. ")
   }
   to_exclude = get_excluded_samples(tool_name)
 
@@ -145,13 +164,19 @@ get_ssm_by_samples = function(these_sample_ids,
       dplyr::filter(sample_id %in% these_sample_ids) %>%
       dplyr::filter(!sample_id %in% to_exclude)
   }else{
-    these_samples_metadata = these_samples_metadata %>%
-      dplyr::filter(sample_id %in% these_sample_ids) %>%
-      dplyr::filter(!sample_id %in% to_exclude)
+    if(missing(these_sample_ids)){
+      #assume the user just wants the data for all the sample ids in this data frame
+      these_sample_ids = pull(these_samples_metadata,sample_id)
+    }
+    else{
+      these_samples_metadata = these_samples_metadata %>%
+        dplyr::filter(sample_id %in% these_sample_ids) %>%
+        dplyr::filter(!sample_id %in% to_exclude)
+    }
   }
   #ensure we only have sample_id that are in the remaining metadata (no excluded/unavailable samples)
   these_sample_ids = these_sample_ids[which(these_sample_ids %in% these_samples_metadata$sample_id)]
-
+  maf_column_types = "ccccciiccccccccccccccccccccccnccccccccciiiiii" #for the first 45 standard columns
   if(flavour=="legacy"){
     warning("I lied. Access to the old variant calls is not currently supported in this function")
     # TODO: implement loading of the old merged MAF under icgc_dart... vcf2maf-1.2 ..level_3 as per the other from_flatfile functions
@@ -163,14 +188,37 @@ get_ssm_by_samples = function(these_sample_ids,
       maf_path = glue::glue(maf_template)
       full_maf_path =  paste0(config::get("project_base"), maf_path)
       message(paste("using existing merge:", full_maf_path))
-      maf_df_merge = fread_maf(full_maf_path) %>%
-        dplyr::filter(Tumor_Sample_Barcode %in% these_sample_ids)
-      #subset maf to only include first 43 columns (default)
-      if(basic_columns){maf_df_merge = dplyr::select(maf_df_merge, c(1:45))}
-      #subset maf to a specific set of columns (defined in maf_cols)
-      if(!is.null(maf_cols) && !basic_columns){maf_df_merge = dplyr::select(maf_df_merge, all_of(maf_cols))}
+      if(engine=="fread_maf"){
+        if(basic_columns){
+          maf_df_merge = fread_maf(full_maf_path,select_cols = c(1:45)) %>%
+            dplyr::filter(Tumor_Sample_Barcode %in% these_sample_ids) %>%
+            dplyr::filter(t_alt_count >= min_read_support)
+        }else{
+          maf_df_merge = fread_maf(full_maf_path) %>%
+            dplyr::filter(Tumor_Sample_Barcode %in% these_sample_ids) %>%
+            dplyr::filter(t_alt_count >= min_read_support)
+        }
+      }else if(engine=="readr"){
+        if(basic_columns){
+          maf_df_merge = read_tsv(full_maf_path,col_select = c(1:45),num_threads=12,col_types = maf_column_types,lazy = TRUE) %>%
+            dplyr::filter(Tumor_Sample_Barcode %in% these_sample_ids) %>%
+            dplyr::filter(t_alt_count >= min_read_support)
+        }else{
+          maf_df_merge = fread_maf(full_maf_path) %>%
+            dplyr::filter(Tumor_Sample_Barcode %in% these_sample_ids) %>%
+            dplyr::filter(t_alt_count >= min_read_support)
+        }
+      }else{
+        stop("specify one of readr or fread_maf as the file-reading engine")
+      }
+
+      if(!is.null(maf_cols) && !basic_columns){
+        maf_df_merge = dplyr::select(maf_df_merge, all_of(maf_cols))
+      }
       #print all available columns
-      if(!basic_columns && return_cols){print(colnames(maf_df_merge))}
+      if(!basic_columns && return_cols){
+        print(colnames(maf_df_merge))
+      }
     }
 
     if(subset_from_merge && augmented){
@@ -178,9 +226,18 @@ get_ssm_by_samples = function(these_sample_ids,
       maf_path = glue::glue(maf_template)
       full_maf_path =  paste0(config::get("project_base"), maf_path)
       message(paste("using existing merge:", full_maf_path))
-      maf_df_merge = fread_maf(full_maf_path) %>%
-        dplyr::filter(Tumor_Sample_Barcode %in% these_sample_ids) %>%
-        dplyr::filter(t_alt_count >= min_read_support)
+      #maf_df_merge = read_tsv(full_maf_path) %>%
+      #  dplyr::filter(Tumor_Sample_Barcode %in% these_sample_ids) %>%
+      #  dplyr::filter(t_alt_count >= min_read_support)
+      if(basic_columns){
+        maf_df_merge = fread_maf(full_maf_path,select_cols = c(1:45)) %>%
+          dplyr::filter(Tumor_Sample_Barcode %in% these_sample_ids) %>%
+          dplyr::filter(t_alt_count >= min_read_support)
+      }else{
+        maf_df_merge = fread_maf(full_maf_path) %>%
+          dplyr::filter(Tumor_Sample_Barcode %in% these_sample_ids) %>%
+          dplyr::filter(t_alt_count >= min_read_support)
+      }
       #subset maf to only include first 43 columns (default)
       if(basic_columns){maf_df_merge = dplyr::select(maf_df_merge, c(1:45))}
       #subset maf to a specific set of columns (defined in maf_cols)
@@ -1049,12 +1106,6 @@ get_combined_sv = function(min_vaf = 0,
                            projection = "grch37",
                            oncogenes){
 
-  #if(projection != "grch37"){
-  #  message("Currently, only grch37 is supported")
-  #
-  #return()
-  #}
-
   base_path = config::get("project_base")
   sv_file = config::get()$results_flatfiles$sv_combined$icgc_dart
   if(projection == "hg38"){
@@ -1400,8 +1451,15 @@ get_lymphgen = function(these_samples_metadata,
 get_cn_states = function(regions_list,
                          regions_bed,
                          region_names,
+                         these_samples_metadata,
                          all_cytobands = FALSE,
                          use_cytoband_name = FALSE){
+  this_seq_type="genome" #this only supports genomes currently
+  if(missing(these_samples_metadata)){
+    these_samples_metadata = get_gambl_metadata(seq_type=this_seq_type)
+  }else{
+    these_samples_metadata = dplyr::filter(these_samples_metadata,seq_type==this_seq_type)
+  }
   if(all_cytobands){
     message("Currently, only grch37 is supported")
   }
@@ -1411,6 +1469,7 @@ get_cn_states = function(regions_list,
   }
   if(all_cytobands){
     message("Cytobands are in respect to hg19. This will take awhile but it does work, trust me!")
+    use_cytoband_name = TRUE
     regions_bed = circlize::read.cytoband(species = "hg19")$df
     colnames(regions_bed) = c("chromosome_name", "start_position", "end_position", "name", "dunno")
     if(use_cytoband_name){
@@ -1446,7 +1505,7 @@ get_cn_states = function(regions_list,
     dplyr::rename("sample_id" = "ID")
 
   #fill in any sample/region combinations with missing data as diploid
-  meta_arranged = get_gambl_metadata() %>%
+  meta_arranged = these_samples_metadata %>%
     dplyr::select(sample_id, pathology, lymphgen) %>%
     arrange(pathology, lymphgen)
 
@@ -1745,6 +1804,9 @@ get_ashm_count_matrix = function(regions_bed,
   if(missing(these_samples_metadata)){
     all_meta = get_gambl_metadata(seq_type_filter=seq_type) %>%
       dplyr::select(sample_id)
+  }else{
+    all_meta = these_samples_metadata %>%
+      dplyr::select(sample_id)
   }
   #fill out all combinations so we can get the cases with zero mutations
   eg = expand_grid(sample_id = pull(all_meta, sample_id), region_name = unique(ashm_counted$region_name))
@@ -1778,7 +1840,7 @@ get_ashm_count_matrix = function(regions_bed,
 #' @examples
 #' #basic usage, adding custom names from bundled ashm data frame
 #' regions_bed = grch37_ashm_regions %>% mutate(name = paste(gene, region, sep = "_"))
-#' ashm_maf = get_ssm_by_regions(regions_bed = regions_bed) 
+#' ashm_basic_details = get_ssm_by_regions(regions_bed = regions_bed) 
 #' full_details_maf = get_ssm_by_regions(regions_bed = regions_bed,basic_columns=T)
 get_ssm_by_regions = function(regions_list,
                               regions_bed,
@@ -2075,7 +2137,7 @@ get_coding_ssm = function(limit_cohort,
                           these_samples_metadata,
                           force_unmatched_samples,
                           projection = "grch37",
-                          seq_type = "genome",
+                          seq_type,
                           basic_columns = TRUE,
                           maf_cols = NULL,
                           return_cols = FALSE,
@@ -2091,7 +2153,14 @@ get_coding_ssm = function(limit_cohort,
   }
   if(!missing(these_samples_metadata)){
     all_meta = these_samples_metadata
+    seq_type = pull(all_meta,seq_type) %>% unique()
+    if(length(seq_type)>1){
+      stop("More than one seq_type is in this metadata. You can only run this on one seq_type at a time")
+    }
   }else{
+    if(missing(seq_type)){
+      stop("you must provide either seq_type or these_samples_metadata")
+    }
     all_meta = get_gambl_metadata(from_flatfile = from_flatfile, seq_type_filter = seq_type)
   }
 
