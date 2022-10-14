@@ -2006,8 +2006,10 @@ get_ssm_by_region = function(chromosome,
     }else if(!is.null(ssh_session)){
       message("The file you requested exists locally. Are you sure you want to use ssh_session?")
     }else{
-      message("using local file")
-      print(paste("HERE:",full_maf_path_comp))
+      if(verbose){
+        message("using local file")
+        print(paste("HERE:",full_maf_path_comp))
+      }
     }
   }
 
