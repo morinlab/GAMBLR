@@ -20,7 +20,8 @@ get_coding_ssm(
   augmented = TRUE,
   min_read_support = 3,
   groups = c("gambl", "icgc_dart"),
-  include_silent = TRUE
+  include_silent = TRUE,
+  engine = "fread_maf"
 )
 }
 \arguments{
@@ -40,7 +41,7 @@ get_coding_ssm(
 
 \item{seq_type}{The seq_type you want back, default is genome.}
 
-\item{basic_columns}{Set to TRUE to override the default behavior of returning only the first 45 columns of MAF data.}
+\item{basic_columns}{Set to FALSE to override the default behavior of returning only the first 45 columns of MAF data.}
 
 \item{maf_cols}{if basic_columns is set to FALSE, the user can specify what columns to be returned within the MAF. This parameter can either be a list of indexes (integer) or a list of characters (matching columns in MAF).}
 

@@ -9,10 +9,11 @@ count_ssm_by_region(
   chromosome,
   start,
   end,
+  all_mutations_in_these_regions,
   these_samples_metadata,
   count_by,
   seq_type = "genome",
-  ssh_session
+  ssh_session = NULL
 )
 }
 \arguments{
@@ -23,6 +24,8 @@ count_ssm_by_region(
 \item{start}{}
 
 \item{end}{}
+
+\item{all_mutations_in_these_regions}{If you are calling this function many times (e.g. bins spanning a larger region), to save a ton of time you are strongly encouraged to provide the output of get_ssm_by_region on the entire region of interest and passing it to this function}
 
 \item{these_samples_metadata}{}
 

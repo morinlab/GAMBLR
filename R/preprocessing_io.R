@@ -870,6 +870,7 @@ fread_maf = function(maf_file_path,select_cols){
     fill = TRUE,
     skip = "Hugo_Symbol",
     quote = "",
+    colClasses = colClasses,
     select=select_cols
     )
   

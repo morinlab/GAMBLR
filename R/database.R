@@ -24,8 +24,9 @@ get_excluded_samples = function(tool_name = "slms-3"){
 }
 
 
-#' Get MAF-format data frame for more than one patient using at most one augmented_maf  per patient(i.e. unique superset of variants)
-#' and combine or subset from a merged MAF (wraps get_ssm_by_samples)
+#' Get MAF-format data frame for more than one patient
+#' 
+#' This function returns variants from a set of patients avoiding duplicated mutations from multiple samples from that patient(i.e. unique superset of variants). This is done either by combining the contents of individual MAF files or subsetting from a merged MAF (wraps get_ssm_by_samples)
 #' See get_ssm_by_samples for more information
 #' @param these_patient_ids A vector of sample_id that you want results for. This is the only required argument.
 #' @param these_samples_metadata Optional metadata table
@@ -96,9 +97,11 @@ get_ssm_by_patients = function(these_patient_ids,
 }
 
 
-#' Get MAF-format data frame for more than one sample and combine together (wraps get_ssm_by_sample)
-#' See get_ssm_by_sample for more information
-#' @param these_sample_ids A vector of sample_id that you want results for. This is the only required argument.
+#' Get MAF-format data frame for more than one sample and combine together
+#' 
+#' This function internally runs get_ssm_by_sample. See get_ssm_by_sample for more information
+#' 
+#' @param these_sample_ids A vector of sample_id that you want results for. 
 #' @param these_samples_metadata Optional metadata table
 #' @param tool_name Only supports slms-3 currently
 #' @param augmented default: TRUE. Set to FALSE if you instead want the original MAF from each sample for multi-sample patients instead
@@ -110,7 +113,7 @@ get_ssm_by_patients = function(these_patient_ids,
 #' @param maf_cols if basic_columns is set to FALSE, the suer can specify what columns to be returned within the MAF. This parameter can either be a list of indexes (integer) or a list of characters.
 #' @param return_cols If set to TRUE, a vector with all avaialble column names will be returned. Default is FALSE.
 #' @param subset_from_merge Instead of merging individual MAFs, the data will be subset from a pre-merged MAF of samples with the specified seq_type
-#' @param BETA optional argument to supply active ssh session connection for remote transfers
+#' @param ssh_session argument to supply active ssh session connection for remote transfers (only compatible with subset_from_merge=TRUE)
 #'
 #' @return data frame in MAF format.
 #' @export
@@ -187,24 +190,43 @@ get_ssm_by_samples = function(these_sample_ids,
     }
 
     if(!subset_from_merge){
-      maf_df_list = list()
-      for(this_sample in these_sample_ids){
-        maf_df = get_ssm_by_sample(
-          this_sample_id = this_sample,
-          these_samples_metadata = these_samples_metadata,
-          tool_name = tool_name,
-          projection = projection,
-          augmented = augmented,
-          flavour = flavour,
-          min_read_support = min_read_support,
-          basic_columns = basic_columns,
-          maf_cols = maf_cols,
-          return_cols = return_cols,
-          verbose = FALSE,
-          ssh_session = ssh_session
-        )
-        maf_df_list[[this_sample]]=maf_df
+      if(!missing(ssh_session)){
+        stop("You supplied the argument ssh_session. We do not support this functionality over ssh yet for various reasons. Perhaps use the merges instead?")
+        # TODO (maybe): If we ever want to support this it won't work with mclapply due to interference the threads cause on the connection. 
+        # The for loop below could be revived for this specific case but I don't see a need for this now. Just leaving the code here in case we do eventually find a need.
+        #maf_df_list = list()
+        #for(this_sample in these_sample_ids){
+        #  maf_df = get_ssm_by_sample(
+        #    this_sample_id = this_sample,
+        #    these_samples_metadata = these_samples_metadata,
+        #    tool_name = tool_name,
+        #    projection = projection,
+        #    augmented = augmented,
+        #    flavour = flavour,
+        #    min_read_support = min_read_support,
+        #    basic_columns = basic_columns,
+        #    maf_cols = maf_cols,
+        #    return_cols = return_cols,
+        #    verbose = FALSE,
+        #    ssh_session = ssh_session
+        #  )
+        #  maf_df_list[[this_sample]]=maf_df
+        #}
       }
+      maf_df_list = mclapply(these_sample_ids,function(x){get_ssm_by_sample(
+        this_sample_id=x,
+        these_samples_metadata = these_samples_metadata,
+        tool_name = tool_name,
+        projection = projection,
+        augmented = augmented,
+        flavour = flavour,
+        min_read_support = min_read_support,
+        basic_columns = basic_columns,
+        maf_cols = maf_cols,
+        return_cols = return_cols,
+        verbose = FALSE
+      )},mc.cores = 12)
+      
       maf_df_merge = bind_rows(maf_df_list)
     }
   }
@@ -217,7 +239,10 @@ get_ssm_by_samples = function(these_sample_ids,
 }
 
 
-#' Get the ssms (i.e. load MAF) for a single sample. This was implemented to allow flexibility because
+
+#' Get the ssms (i.e. load MAF) for a single sample. 
+#' 
+#' This was implemented to allow flexibility because
 #' there are some samples that we may want to use a different set of variants than those in the main GAMBL merge.
 #' The current use case is to allow a force_unmatched output to be used to replace the SSMs from the merge for samples
 #' with known contamination in the normal. This will also be useful to apply a blacklist to individual MAFs when coupled with
@@ -365,7 +390,7 @@ get_ssm_by_sample = function(this_sample_id,
     }
   }else{
     if(!file.exists(full_maf_path)){
-      message(paste("ERROR: file does not exist", full_maf_path))
+      message(paste("warning: file does not exist, skipping it.", full_maf_path))
       return()
     }
     sample_ssm = fread_maf(full_maf_path)
@@ -1687,24 +1712,29 @@ append_to_table = function(table_name,
 #' @export
 #'
 #' @examples
-#' matrix = get_ashm_count_matrix(regions_bed = "my_bed.bed", sample_metadata = "GAMBL-metadata")
+#' regions_bed = grch37_ashm_regions %>% mutate(name = paste(gene, region, sep = "_"))
+#' matrix = get_ashm_count_matrix(regions_bed = regions_bed, seq_type="genome")
 #'
 get_ashm_count_matrix = function(regions_bed,
                                  maf_data,
-                                 sample_metadata,
+                                 these_samples_metadata,
                                  seq_type,
-                                 use_name_column = FALSE,
                                  from_indexed_flatfile = TRUE,
                                  ssh_session = NULL){
-
+  if(missing(seq_type)){
+    if(missing(these_samples_metadata)){
+      stop("Must supply either the seq_type or a metadata data frame from which it can be retrieved")
+    }
+    seq_type = head(these_samples_metadata) %>% pull(seq_type)
+  }
   if(missing(regions_bed)){
     regions_bed = grch37_ashm_regions
   }
   ashm_maf = get_ssm_by_regions(regions_bed = regions_bed,
-                                streamlined = FALSE,
+                                streamlined = TRUE,
                                 seq_type=seq_type,
                                 maf_data = maf_data,
-                                use_name_column = use_name_column,
+                                use_name_column = TRUE,
                                 from_indexed_flatfile = from_indexed_flatfile,
                                 ssh_session=ssh_session)
 
@@ -1712,13 +1742,10 @@ get_ashm_count_matrix = function(regions_bed,
     group_by(sample_id, region_name) %>%
     tally()
 
-  if(missing(sample_metadata)){
-    all_meta = get_gambl_metadata() %>%
+  if(missing(these_samples_metadata)){
+    all_meta = get_gambl_metadata(seq_type_filter=seq_type) %>%
       dplyr::select(sample_id)
-  }else{
-    all_meta = dplyr::select(sample_metadata, sample_id)
   }
-
   #fill out all combinations so we can get the cases with zero mutations
   eg = expand_grid(sample_id = pull(all_meta, sample_id), region_name = unique(ashm_counted$region_name))
   all_counts = left_join(eg, ashm_counted) %>%
@@ -1751,8 +1778,8 @@ get_ashm_count_matrix = function(regions_bed,
 #' @examples
 #' #basic usage, adding custom names from bundled ashm data frame
 #' regions_bed = grch37_ashm_regions %>% mutate(name = paste(gene, region, sep = "_"))
-#' ashm_maf = get_ssm_by_regions(regions_bed = regions_bed)
-#'
+#' ashm_maf = get_ssm_by_regions(regions_bed = regions_bed) 
+#' full_details_maf = get_ssm_by_regions(regions_bed = regions_bed,basic_columns=T)
 get_ssm_by_regions = function(regions_list,
                               regions_bed,
                               streamlined = TRUE,
@@ -1764,12 +1791,14 @@ get_ssm_by_regions = function(regions_list,
                               seq_type = "genome",
                               projection = "grch37",
                               min_read_support = 4,
-                              ssh_session = NULL){
+                              ssh_session = NULL,
+                              basic_columns=F){
 
 
   bed2region = function(x){
     paste0(x[1], ":", as.numeric(x[2]), "-", as.numeric(x[3]))
   }
+
   if(missing(regions_list)){
     if(!missing(regions_bed)){
       regions = apply(regions_bed, 1, bed2region)
@@ -1785,24 +1814,31 @@ get_ssm_by_regions = function(regions_list,
                                                                 augmented = augmented,
                                                                 seq_type = seq_type,
                                                                 projection = projection,
-                                                                ssh_session=ssh_session)})
+                                                                ssh_session=ssh_session,
+                                                                basic_columns=basic_columns)})
   }else{
     region_mafs = lapply(regions, function(x){get_ssm_by_region(region = x,
                                                                 streamlined = streamlined,
                                                                 maf_data = maf_data,
                                                                 from_indexed_flatfile = from_indexed_flatfile,
                                                                 mode = mode,
-                                                                ssh_session=ssh_session)})
+                                                                ssh_session=ssh_session,
+                                                                basic_columns=basic_columns)})
   }
   if(!use_name_column){
     rn = regions
   }else{
     rn = regions_bed[["name"]]
   }
+  
+  if(basic_columns){
+    #this must always force the output to be the standard set. 
+    #hence, return everything after binding into one data frame
+    return(bind_rows(region_mafs))
+  }
   tibbled_data = tibble(region_mafs, region_name = rn)
   unnested_df = tibbled_data %>%
     unnest_longer(region_mafs)
-
   if(streamlined){
     unlisted_df = mutate(unnested_df, start = region_mafs$Start_Position, sample_id = region_mafs$Tumor_Sample_Barcode) %>%
       dplyr::select(start, sample_id, region_name)
@@ -1840,6 +1876,7 @@ get_ssm_by_regions = function(regions_list,
 #' my_mutations = get_ssm_by_region(region = "chr8:128,723,128-128,774,067")
 #' #specifying chromosome, start and end individually
 #' my_mutations = get_ssm_by_region(chromosome = "8", qstart = 128723128, qend = 128774067)
+#' bcl2_all_details = get_ssm_by_region(region="chr18:60796500-60988073",basic_columns=T)
 #'
 get_ssm_by_region = function(chromosome,
                              qstart,
@@ -1857,12 +1894,19 @@ get_ssm_by_region = function(chromosome,
                              maf_columns = c("Chromosome", "Start_Position", "End_Position", "Tumor_Sample_Barcode", "t_alt_count"),
                              maf_column_types = c("c","i","i","c","i"),
                              ssh_session = NULL){
+  if(basic_columns){
+    #this means we ignore/clobber the contents of maf_columns so the first 45 are used instead
+    maf_columns = names(maf_header)[c(1:45)]
+    maf_column_types = "ccccciiccccccccccccccccccccccnccccccccciiiiii"
+    streamlined = FALSE
+    #these two arguments are really mutually exclusive so basic_columns must force the other to be FALSE to avoid problems
+  }
   #check that maf_columns requested all exist in the header and get their indexes
   if(!all(maf_columns %in% names(maf_header))){
     stop("Cannot find one of the requested maf_columns in your MAF header")
   }
   maf_indexes = maf_header[maf_columns]
-  maf_column_types = maf_column_types[order(maf_indexes)]
+  
   maf_indexes = maf_indexes[order(maf_indexes)]
   maf_columns = names(maf_indexes)
   maf_indexes = unname(maf_indexes)
@@ -1962,7 +2006,10 @@ get_ssm_by_region = function(chromosome,
         print(tabix_command)
         #stop()
         muts = system(tabix_command, intern = TRUE)
-        
+        print(paste("TYPES:"))
+        print(maf_column_types)
+        print("NAMES:")
+        print(maf_columns)
         muts_region = vroom::vroom(I(muts), col_types = paste(maf_column_types,collapse=""),
                             col_names=maf_columns)
       }
@@ -1987,9 +2034,7 @@ get_ssm_by_region = function(chromosome,
   if(streamlined){
     muts_region = muts_region %>%
       dplyr::select(Start_Position, Tumor_Sample_Barcode)
-  }else if(basic_columns){
-    muts_region = muts_region[, c(1:45)]
-  }
+  }else 
 
   return(muts_region)
 }
