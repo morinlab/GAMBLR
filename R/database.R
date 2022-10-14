@@ -1955,7 +1955,8 @@ get_ssm_by_region = function(chromosome,
                              mode = "slms-3",
                              maf_columns = c("Chromosome", "Start_Position", "End_Position", "Tumor_Sample_Barcode", "t_alt_count"),
                              maf_column_types = c("c","i","i","c","i"),
-                             ssh_session = NULL){
+                             ssh_session = NULL,
+                             verbose=FALSE){
   if(basic_columns){
     #this means we ignore/clobber the contents of maf_columns so the first 45 are used instead
     maf_columns = names(maf_header)[c(1:45)]
@@ -2057,7 +2058,9 @@ get_ssm_by_region = function(chromosome,
         #}
         
         tabix_command = paste("/home/rmorin/miniconda3/bin/tabix", full_maf_path_comp, region, "| cut -f", paste(maf_indexes,collapse=","))
-        print(tabix_command)
+        if(verbose){
+          print(tabix_command)
+        }
         #stop()
         muts = run_command_remote(ssh_session,tabix_command)
         muts_region = vroom::vroom(I(muts),col_types = paste(maf_column_types,collapse=""),
@@ -2065,13 +2068,16 @@ get_ssm_by_region = function(chromosome,
       }else{
 
         tabix_command = paste(tabix_bin, full_maf_path_comp, region, "| cut -f" , paste(maf_indexes,collapse=","))
-        print(tabix_command)
-        #stop()
+        if(verbose){
+          print(tabix_command)
+        }
         muts = system(tabix_command, intern = TRUE)
-        print(paste("TYPES:"))
-        print(maf_column_types)
-        print("NAMES:")
-        print(maf_columns)
+        if(verbose){
+          print(paste("TYPES:"))
+          print(maf_column_types)
+          print("NAMES:")
+          print(maf_columns)
+        }
         muts_region = vroom::vroom(I(muts), col_types = paste(maf_column_types,collapse=""),
                             col_names=maf_columns)
       }
