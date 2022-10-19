@@ -88,7 +88,7 @@ prefixed_segments = get_cn_segments(chromosome ="12",qstart = 122456912, qend = 
 
 #this example uses the bundled bed file of regions containing lymphoma genes
 #warning: This is pretty slow with the full bed file
-cn_matrix = get_cn_states(regions_bed=head(grch37_lymphoma_genes_bed,15), )
+cn_matrix = get_cn_states(regions_bed=head(grch37_lymphoma_genes_bed,15))
 
 #this will just get the matrix for FL cases
 cn_matrix = get_cn_states(these_samples_metadata = get_gambl_metadata() %>% dplyr::filter(pathology=="FL"),all_cytobands = T,use_cytoband_name = T)
