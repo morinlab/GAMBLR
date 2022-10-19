@@ -375,12 +375,12 @@ gene_mutation_tally = function(maf_df,these_samples_metadata,these_genes,groupin
 
 #' Make a word cloud of gene names from a MAF file based on mutation frequency
 #'
-#' @param maf_df 
-#' @param these_genes 
-#' @param other_genes 
-#' @param these_genes_colour 
-#' @param other_genes_colour 
-#' @param colour_index 
+#' @param maf_df A MAF-format data frame containing the mutations you want to summarize in a gene word cloud
+#' @param these_genes An optional vector of gene symbols (defaults to all lymphoma genes)
+#' @param other_genes An optional second vector of gene symbols to include in your cloud in a second colour
+#' @param these_genes_colour Specify the hex code of a colour to use for the first set of genes
+#' @param other_genes_colour Specify another hex code of a colour to use for the second set of genes
+#' @param colour_index Optional named character vector with a name for each gene in these_genes and a colour as the value
 #'
 #' @return data frame with counts for each gene
 #' @export
