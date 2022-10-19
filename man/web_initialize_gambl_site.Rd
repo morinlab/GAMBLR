@@ -16,9 +16,6 @@ web_initialize_gambl_site(
 
 \item{base_directory}{path to base directory}
 }
-\value{
-
-}
 \description{
 Set up a fresh instance of a website to host on gitlab
 }

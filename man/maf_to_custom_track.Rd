@@ -8,6 +8,8 @@ maf_to_custom_track(
   maf_data,
   these_samples_metadata,
   output_file,
+  as_bigbed = FALSE,
+  as_biglolly = FALSE,
   track_name = "GAMBL mutations",
   track_description = "mutations from GAMBL"
 )
