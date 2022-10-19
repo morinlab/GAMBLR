@@ -384,6 +384,8 @@ gene_mutation_tally = function(maf_df,these_samples_metadata,these_genes,groupin
 #'
 #' @return data frame with counts for each gene
 #' @export
+#' @import wordcloud
+#'
 #'
 #' @examples
 prettyGeneCloud = function(maf_df,these_genes,other_genes,
@@ -410,7 +412,7 @@ prettyGeneCloud = function(maf_df,these_genes,other_genes,
     #assign a colour to each gene list
     these_genes_unique = these_genes_unique %>% 
       mutate(this_col=ifelse(Hugo_Symbol %in% these_genes,these_genes_colour,other_genes_colour)) %>% arrange(desc(n))
-    wordcloud(these_genes_unique$Hugo_Symbol,these_genes_unique$n,colors=these_genes_unique$this_col,
+    wordcloud::wordcloud(these_genes_unique$Hugo_Symbol,these_genes_unique$n,colors=these_genes_unique$this_col,
               ordered.colors = T,scale=c(8,0.3),random.order = F)
   }else{
     if(!missing(colour_index)){
@@ -420,9 +422,9 @@ prettyGeneCloud = function(maf_df,these_genes,other_genes,
       }
       these_genes_unique$color=colour_index[these_genes_unique$Hugo_Symbol]
       #make cloud with the user-specified colours mapped to the genes
-      wordcloud(these_genes_unique$Hugo_Symbol,these_genes_unique$n,random.order=F,ordered.colors=T,colors=these_genes_unique$color)
+      wordcloud::wordcloud(these_genes_unique$Hugo_Symbol,these_genes_unique$n,random.order=F,ordered.colors=T,colors=these_genes_unique$color)
     }else{
-      wordcloud(these_genes_unique$Hugo_Symbol,these_genes_unique$n,random.color=TRUE,colors=brewer.pal(12,"Set3"))
+      wordcloud::wordcloud(these_genes_unique$Hugo_Symbol,these_genes_unique$n,random.color=TRUE,colors=brewer.pal(12,"Set3"))
     }
   }
   these_genes_unique = arrange(these_genes_unique,n)
