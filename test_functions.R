@@ -1,4 +1,4 @@
-# This is the working tests from some of the commonly used GAMBLR functions. 
+# This is the working tests from some of the commonly used GAMBLR functions.
 # Theoretically these should all work out-of-the-box and provide sensible outputs
 
 
@@ -18,7 +18,7 @@ non_duplicated_genome_and_capture = get_gambl_metadata(seq_type_filter=c('genome
 patients = c("00-14595", "00-15201", "01-12047")
 patients_maf = get_ssm_by_patients(these_patient_ids = patients, seq_type = "genome", subset_from_merge = FALSE)
 patient_meta = get_gambl_metadata(seq_type_filter = "genome") %>% dplyr::filter(patient_id %in% patients)
-patients_maf_2 = get_ssm_by_patients(these_samples_metadata = patient_meta,subset_from_merge = FALSE) 
+patients_maf_2 = get_ssm_by_patients(these_samples_metadata = patient_meta,subset_from_merge = FALSE)
 
 #or the same information but for a handful of samples
 sample_ssms = get_ssm_by_samples(these_sample_ids=c("HTMCP-01-06-00485-01A-01D","14-35472_tumorA","14-35472_tumorB"))
@@ -38,8 +38,8 @@ ssm_sample = get_ssm_by_sample(this_sample_id = "CASA0002_2015-03-10", projectio
 
 #Coding mutations are probably where most people will want to start. This is how you get a MAF with just CDS variants (including Silent)
 #There are some convenience options for requesting the result to be subset (filtered ) based on certain elements of the metadata
-maf_data = get_coding_ssm(limit_cohort = c("BL_ICGC"))
-maf_data = get_coding_ssm(limit_samples = "HTMCP-01-06-00485-01A-01D")
+maf_data = get_coding_ssm(limit_cohort = c("BL_ICGC"), seq_type = "genome")
+maf_data = get_coding_ssm(limit_samples = "HTMCP-01-06-00485-01A-01D", seq_type = "genome")
 
 #To have ultimate control over what you get, I suggest you just subset the metadata the exact way you want then run it like so:
 my_sample_metadata = get_gambl_metadata(seq_type_filter="capture") %>% dplyr::filter(pathology=="DLBCL")
@@ -58,9 +58,9 @@ bcl2_all_details = get_ssm_by_region(region="chr18:60796500-60988073",basic_colu
 
 regions_bed = grch37_ashm_regions %>% mutate(name = paste(gene, region, sep = "_")) %>% head(20)
 #this will get you the bare minimum basic 3-column information for mutated positions with non-MAF column naming
-ashm_basic = get_ssm_by_regions(regions_bed = regions_bed) 
+ashm_basic = get_ssm_by_regions(regions_bed = regions_bed)
 #you can get all the normal MAF columns and header this way:
-full_details_maf = get_ssm_by_regions(regions_bed = regions_bed,basic_columns=T)
+full_details_maf = get_ssm_by_regions(regions_bed = regions_bed, basic_columns=T)
 
 #functions that use this to do fun stuff:
 regions_bed = grch37_ashm_regions %>% mutate(name = paste(gene, region, sep = "_"))
@@ -68,7 +68,7 @@ matrix = get_ashm_count_matrix(regions_bed = head(regions_bed,15), seq_type="gen
 
 
 #SVs
-get_combined_sv(oncogenes = c("MYC", "BCL2", "BCL6"))
+oncogenes_sv = get_combined_sv(oncogenes = c("MYC", "BCL2", "BCL6"))
 
 #lazily get every SV in the table with default quality filters
 all_sv = get_manta_sv()
@@ -88,7 +88,7 @@ prefixed_segments = get_cn_segments(chromosome ="12",qstart = 122456912, qend = 
 
 #this example uses the bundled bed file of regions containing lymphoma genes
 #warning: This is pretty slow with the full bed file
-cn_matrix = get_cn_states(regions_bed=head(grch37_lymphoma_genes_bed,15))
+cn_matrix = get_cn_states(regions_bed=head(grch37_lymphoma_genes_bed,15), )
 
 #this will just get the matrix for FL cases
 cn_matrix = get_cn_states(these_samples_metadata = get_gambl_metadata() %>% dplyr::filter(pathology=="FL"),all_cytobands = T,use_cytoband_name = T)
