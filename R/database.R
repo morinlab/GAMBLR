@@ -903,11 +903,8 @@ get_gambl_metadata = function(seq_type_filter = "genome",
               lymphgen_column_out = "lymphgen",
               relevel=TRUE)
 
-<<<<<<< HEAD
-=======
   #all_meta = GAMBLR::collate_lymphgen(all_meta, verbose=FALSE)
 
->>>>>>> rmorin-dev
   # "catchall" pathology for those that need review
   all_meta = all_meta %>%
     mutate(pathology = ifelse(nchar(pathology) > 15, "OTHER", pathology))
@@ -2167,16 +2164,12 @@ get_ssm_by_region = function(chromosome,
           print(tabix_command)
         }
         muts = system(tabix_command, intern = TRUE)
-<<<<<<< HEAD
-
-=======
         if(verbose){
           print(paste("TYPES:"))
           print(maf_column_types)
           print("NAMES:")
           print(maf_columns)
         }
->>>>>>> rmorin-dev
         muts_region = vroom::vroom(I(muts), col_types = paste(maf_column_types,collapse=""),
                             col_names=maf_columns)
       }
