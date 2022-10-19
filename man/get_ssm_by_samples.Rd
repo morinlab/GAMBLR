@@ -2,8 +2,7 @@
 % Please edit documentation in R/database.R
 \name{get_ssm_by_samples}
 \alias{get_ssm_by_samples}
-\title{Get MAF-format data frame for more than one sample and combine together (wraps get_ssm_by_sample)
-See get_ssm_by_sample for more information}
+\title{Get MAF-format data frame for more than one sample and combine together}
 \usage{
 get_ssm_by_samples(
   these_sample_ids,
@@ -17,13 +16,13 @@ get_ssm_by_samples(
   basic_columns = TRUE,
   maf_cols = NULL,
   return_cols = FALSE,
-  subset_from_merge = TRUE,
+  subset_from_merge = FALSE,
   augmented = TRUE,
   ssh_session
 )
 }
 \arguments{
-\item{these_sample_ids}{A vector of sample_id that you want results for. This is the only required argument.}
+\item{these_sample_ids}{A vector of sample_id that you want results for.}
 
 \item{these_samples_metadata}{Optional metadata table}
 
@@ -47,16 +46,16 @@ get_ssm_by_samples(
 
 \item{augmented}{default: TRUE. Set to FALSE if you instead want the original MAF from each sample for multi-sample patients instead}
 
-\item{BETA}{optional argument to supply active ssh session connection for remote transfers}
+\item{ssh_session}{argument to supply active ssh session connection for remote transfers (only compatible with subset_from_merge=TRUE)}
 }
 \value{
 data frame in MAF format.
 }
 \description{
-Get MAF-format data frame for more than one sample and combine together (wraps get_ssm_by_sample)
-See get_ssm_by_sample for more information
+This function internally runs get_ssm_by_sample. See get_ssm_by_sample for more information
 }
 \examples{
-merged_maf_force_unmatched = get_ssm_by_samples(these_sample_ids=c("HTMCP-01-06-00485-01A-01D","14-35472_tumorA","14-35472_tumorB"))
+sample_ssms = get_ssm_by_samples(these_sample_ids=c("HTMCP-01-06-00485-01A-01D","14-35472_tumorA","14-35472_tumorB"))
+hg38_ssms = get_ssm_by_samples(these_sample_ids=c("HTMCP-01-06-00485-01A-01D","14-35472_tumorA","14-35472_tumorB"),projection="hg38")
 
 }

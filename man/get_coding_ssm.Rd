@@ -20,7 +20,8 @@ get_coding_ssm(
   augmented = TRUE,
   min_read_support = 3,
   groups = c("gambl", "icgc_dart"),
-  include_silent = TRUE
+  include_silent = TRUE,
+  engine = "fread_maf"
 )
 }
 \arguments{

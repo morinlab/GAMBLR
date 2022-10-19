@@ -359,6 +359,78 @@ prettyRainfallPlot = function(this_sample_id,
   return(p)
 }
 
+gene_mutation_tally = function(maf_df,these_samples_metadata,these_genes,grouping_variable="cohort"){
+  meta = dplyr::select(these_samples_metadata,sample_id,{{grouping_variable}})
+  maf_filt = dplyr::filter(maf_df,Hugo_Symbol %in% these_genes, Variant_Classification %in% coding_class) %>% 
+    dplyr::filter(Variant_Classification !="Silent")
+  meta_anno = left_join(maf_filt,meta,by=c("Tumor_Sample_Barcode"="sample_id")) %>% 
+    group_by(Hugo_Symbol,Tumor_Sample_Barcode) %>% 
+    slice_head() %>% 
+    ungroup()
+  denom = meta %>% group_by(!!sym(grouping_variable)) %>% tally() %>% dplyr::rename(c("total"="n"))
+  meta_anno_tally = group_by(meta_anno,Hugo_Symbol,!!sym(grouping_variable)) %>% tally()
+  meta_anno_tally = full_join(meta_anno_tally,denom) %>% mutate(frequency=100*n/total)
+  return(meta_anno_tally)
+}
+
+#' Make a word cloud of gene names from a MAF file based on mutation frequency
+#'
+#' @param maf_df 
+#' @param these_genes 
+#' @param other_genes 
+#' @param these_genes_colour 
+#' @param other_genes_colour 
+#' @param colour_index 
+#'
+#' @return data frame with counts for each gene
+#' @export
+#'
+#' @examples
+prettyGeneCloud = function(maf_df,these_genes,other_genes,
+                           these_genes_colour="#B2DF8A",
+                           other_genes_colour="#bc42f5",
+                           colour_index){
+  if(missing(these_genes)){
+    these_genes = pull(lymphoma_genes,Gene)
+  }
+  #drop genes not in the list then tally only coding variants (by default). 
+  # TODO: eventually allow an option to collapse samples from the same patient
+  if(missing(other_genes)){
+    these_genes_maf = dplyr::filter(maf_df,Hugo_Symbol %in% these_genes)
+  }else{
+    these_genes_maf = dplyr::filter(maf_df,Hugo_Symbol %in% c(these_genes,other_genes))
+  }
+  
+  #drop non-coding
+  these_genes_maf = dplyr::filter(these_genes_maf,Variant_Classification %in% coding_vc)
+  these_genes_unique = group_by(these_genes_maf,Hugo_Symbol,Tumor_Sample_Barcode) %>% 
+    slice_head() %>% ungroup() %>% group_by(Hugo_Symbol) %>% tally() 
+  print(as.data.frame(head(these_genes_unique,25)))
+  if(!missing(other_genes)){
+    #assign a colour to each gene list
+    these_genes_unique = these_genes_unique %>% 
+      mutate(this_col=ifelse(Hugo_Symbol %in% these_genes,these_genes_colour,other_genes_colour)) %>% arrange(desc(n))
+    wordcloud(these_genes_unique$Hugo_Symbol,these_genes_unique$n,colors=these_genes_unique$this_col,
+              ordered.colors = T,scale=c(8,0.3),random.order = F)
+  }else{
+    if(!missing(colour_index)){
+      #use the colours in colour_index to colour the gene names
+      if(any(!these_genes %in% names(colour_index))){
+        stop("all genes in these_genes must be among the names of colour_index if you specify this variable")
+      }
+      these_genes_unique$color=colour_index[these_genes_unique$Hugo_Symbol]
+      #make cloud with the user-specified colours mapped to the genes
+      wordcloud(these_genes_unique$Hugo_Symbol,these_genes_unique$n,random.order=F,ordered.colors=T,colors=these_genes_unique$color)
+    }else{
+      wordcloud(these_genes_unique$Hugo_Symbol,these_genes_unique$n,random.color=TRUE,colors=brewer.pal(12,"Set3"))
+    }
+  }
+  these_genes_unique = arrange(these_genes_unique,n)
+  these_genes_unique$Hugo_Symbol = factor(these_genes_unique$Hugo_Symbol,levels=these_genes_unique$Hugo_Symbol)
+  return(these_genes_unique)
+}
+  
+
 #' Generate a plot of all CN segments.
 #'
 #' @param region Genomic region for plotting in bed format.

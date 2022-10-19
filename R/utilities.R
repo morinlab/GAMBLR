@@ -233,6 +233,7 @@ get_ssh_session = function(host="gphost01.bcgsc.ca"){
     #Either exit or do something that does not require ssh
     return(NULL)
   }
+  message("you should also run this command to ensure the ssh library is loaded:\nlibrary(ssh)")
   session = ssh::ssh_connect(host=host)
   return(session)
 }
@@ -628,6 +629,7 @@ trim_scale_expression = function(x){
   x = (x - quants[1]) / (quants[2] - quants[1])
   return(x)
 }
+
 
 
 #' Count the number of mutations in a sliding window across a region for all samples. Unlikely to be used directly in most cases. See get_mutation_frequency_bin_matrix instead.

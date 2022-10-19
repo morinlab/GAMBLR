@@ -8,9 +8,8 @@ Values are the number of mutations in that patient in the region.}
 get_ashm_count_matrix(
   regions_bed,
   maf_data,
-  sample_metadata,
+  these_samples_metadata,
   seq_type,
-  use_name_column = FALSE,
   from_indexed_flatfile = TRUE,
   ssh_session = NULL
 )
@@ -20,11 +19,11 @@ get_ashm_count_matrix(
 
 \item{maf_data}{Optionally provide a data frame in the MAF format, otherwise the database will be used.}
 
+\item{from_indexed_flatfile}{Set to TRUE to avoid using the database and instead rely on flatfiles (only works for streamlined data, not full MAF details).}
+
 \item{sample_metadata}{This is used to complete your matrix. All GAMBL samples will be used by default. Provide a data frame with at least sample_id for all samples if you are using non-GAMBL data.}
 
 \item{use_name_column}{Set this to true to force the function to use the value in column "name" to name each feature in the output.}
-
-\item{from_indexed_flatfile}{Set to TRUE to avoid using the database and instead rely on flatfiles (only works for streamlined data, not full MAF details).}
 
 \item{allow_clustered}{Set to TRUE to utilize the latest SLMS-3 variant calls that allow clustered variants.}
 }
@@ -36,6 +35,7 @@ Prepare a matrix with one row per sample and one column per region using a set o
 Values are the number of mutations in that patient in the region.
 }
 \examples{
-matrix = get_ashm_count_matrix(regions_bed = "my_bed.bed", sample_metadata = "GAMBL-metadata")
+regions_bed = grch37_ashm_regions \%>\% mutate(name = paste(gene, region, sep = "_"))
+matrix = get_ashm_count_matrix(regions_bed = regions_bed, seq_type="genome")
 
 }
