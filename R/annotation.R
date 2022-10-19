@@ -231,10 +231,10 @@ annotate_driver_ssm = function(maf_df,
       dplyr::filter(Variant_Classification %in% coding_vc) %>%
       dplyr::filter(Hugo_Symbol %in% driver_genes)
 
-    for(gene in names(include_noncoding)){
-      message(paste("adding", unname(include_noncoding[gene]), "for", gene))
+    for(gene in names(noncoding_regions)){
+      message(paste("adding", unname(noncoding_regions[gene]), "for", gene))
       nc_ssm = maf_df %>%
-      dplyr::filter(Variant_Classification == unname(include_noncoding[gene]))
+      dplyr::filter(Variant_Classification == unname(noncoding_regions[gene]))
 
       if(!is.na(noncoding_regions[gene])){
         #also restrict to coordinates
