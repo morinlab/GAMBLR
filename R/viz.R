@@ -384,7 +384,7 @@ gene_mutation_tally = function(maf_df,these_samples_metadata,these_genes,groupin
 #'
 #' @return data frame with counts for each gene
 #' @export
-#' @import wordcloud
+#' @import wordcloud RColorBrewer
 #'
 #'
 #' @examples
@@ -424,7 +424,7 @@ prettyGeneCloud = function(maf_df,these_genes,other_genes,
       #make cloud with the user-specified colours mapped to the genes
       wordcloud::wordcloud(these_genes_unique$Hugo_Symbol,these_genes_unique$n,random.order=F,ordered.colors=T,colors=these_genes_unique$color)
     }else{
-      wordcloud::wordcloud(these_genes_unique$Hugo_Symbol,these_genes_unique$n,random.color=TRUE,colors=brewer.pal(12,"Set3"))
+      wordcloud::wordcloud(these_genes_unique$Hugo_Symbol,these_genes_unique$n,random.color=TRUE,colors=RColorBrewer::brewer.pal(12,"Set3"))
     }
   }
   these_genes_unique = arrange(these_genes_unique,n)
