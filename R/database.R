@@ -1540,7 +1540,7 @@ get_cn_states = function(regions_list,
                          use_cytoband_name = FALSE){
   this_seq_type="genome" #this only supports genomes currently
   if(missing(these_samples_metadata)){
-    these_samples_metadata = get_gambl_metadata(seq_type=this_seq_type)
+    these_samples_metadata = get_gambl_metadata(seq_type_filter=this_seq_type)
   }else{
     these_samples_metadata = dplyr::filter(these_samples_metadata,seq_type==this_seq_type)
   }
