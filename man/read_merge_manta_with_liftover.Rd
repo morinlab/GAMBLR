@@ -17,9 +17,6 @@ read_merge_manta_with_liftover(
 
 \item{out_dir}{output directory}
 }
-\value{
-
-}
 \description{
 This is a helper function that is not meant to be used routinely
 }
