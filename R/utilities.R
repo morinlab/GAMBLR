@@ -269,14 +269,15 @@ get_ssh_session = function(host="gphost01.bcgsc.ca"){
 }
 
 
-
-#' Get regions (bed format) from genes.
+#' Get regions from genes.
 #'
-#' @param gene_symbol Gene symbol (e.g BCL2).
-#' @param ensembl_id Esemble ID (e.g ENSG00000171791).
-#' @param genome_build Reference genome build (currently, only grch37 supported).
+#' @param gene_symbol A vector of one or more gene symbols.
+#' @param ensembl_id A vector of one or more Esemble IDs.
+#' @param genome_build Reference genome build.
+#' @param return_as Specify the type of return. Default is region (chr:start-end), other acceptable arguments are "bed" and "df".
 #'
-#' @return Gene coordinates in the format "chr:start-end" format.
+#' @import biomaRt
+#' @return
 #' @export
 #'
 #' @examples
@@ -285,17 +286,177 @@ get_ssh_session = function(host="gphost01.bcgsc.ca"){
 #'
 gene_to_region = function(gene_symbol,
                           ensembl_id,
-                          genome_build){
+                          genome_build = "grch37",
+                          return_as = "region"){
+  
+  #set mart based on selected genome projection
+  if(genome_build == "grch37"){
+    mart = useEnsembl(biomart = "ensembl", dataset = "hsapiens_gene_ensembl", GRCh = 37)
+    chr_select = paste0(c(c(1:22),"X","Y"))
+  }else if(genome_build == "hg38"){
+    mart = useEnsembl(biomart = "ensembl", dataset = "hsapiens_gene_ensembl")
+    chr_select = paste0("chr", c(c(1:22),"X","Y"))
+  }
 
-  if(genome_build != "grch37"){
-    message("Currently, only grch37 is supported")
-    return()
+  #retrieve gene coordinates (biomaRt)
+  gene_coordinates = getBM(mart = mart, attributes = c("ensembl_gene_id", "chromosome_name", "start_position", "end_position", "external_gene_name", "hgnc_symbol"))
+
+  #rename columns to match downstream formats
+  colnames(gene_coordinates)[1] = "ensembl_gene_id"
+  colnames(gene_coordinates)[2] = "chromosome"
+  colnames(gene_coordinates)[3] = "start"
+  colnames(gene_coordinates)[4] = "end"
+  colnames(gene_coordinates)[5] = "gene_name"
+  colnames(gene_coordinates)[6] = "hugo_symbol"
+
+  #add "chr" prefix, if hg38 is selected
+  if(genome_build == "hg38"){
+    gene_coordinates = mutate(gene_coordinates, chromosome = paste0("chr", chromosome))
   }
-  if(!missing(gene_symbol)){
-    gene_coordinates = dplyr::filter(grch37_gene_coordinates, hugo_symbol == gene_symbol)
+  
+  #filter on gene_symbol/ensembl_id  
+  if(!missing(gene_symbol) && missing(ensembl_id)){
+    gene_coordinates = dplyr::filter(gene_coordinates, hugo_symbol %in% gene_symbol)
+    }
+    
+  if(missing(gene_symbol) && !missing(ensembl_id)){
+    gene_coordinates = dplyr::filter(gene_coordinates, ensembl_gene_id %in% ensembl_id)
+    }
+
+  region = dplyr::select(gene_coordinates, chromosome, start, end, gene_name, hugo_symbol, ensembl_gene_id) %>%
+    as.data.frame() %>%
+    dplyr::arrange(chromosome, start) %>%
+    dplyr::filter(chromosome %in% chr_select) %>%
+    mutate_all(na_if,"") %>%
+    distinct(.keep_all = TRUE)
+  
+  if(return_as == "bed"){
+    #return one-row data frame with first 4 standard BED columns. TODO: Ideally also include strand if we have access to it in the initial data frame
+    region = dplyr::select(region, chromosome, start, end, hugo_symbol)
+    
+  }else if(return_as == "df"){
+    region = region
+
+  }else{
+    #default: return in chr:start-end format
+    region = paste0(region$chromosome, ":", region$start, "-", region$end)
   }
-  region = paste0(gene_coordinates$chromosome, ":", gene_coordinates$start, "-", gene_coordinates$end)
+  
+  if(return_as %in% c("bed", "df")){
+    if(!missing(gene_symbol)){
+      message(paste0(nrow(region), " region(s) returned for ", length(gene_symbol), " gene(s)"))
+    }
+    
+    if(!missing(ensembl_id)){
+      message(paste0(nrow(region), " region(s) returned for ", length(ensembl_id), " gene(s)"))
+    }
+  }else{
+    if(!missing(gene_symbol)){
+      message(paste0(length(region), " region(s) returned for ", length(gene_symbol), " gene(s)"))
+    }
+    
+    if(!missing(ensembl_id)){
+      message(paste0(length(region), " region(s) returned for ", length(ensembl_id), " gene(s)"))
+    }
+  }
   return(region)
+}
+
+
+#' Return gennes residing in defined region(s)
+#'
+#' @param region Regions to intersect genes with, this can be either a data frame with regions sorted in the following columns; chromosome, start, end. Or it can be a charachter vector in "region" format, i.e chromosome:start-end.
+#' @param gene_format Parameter for specifying the format of returned genes, default is "hugo", other acceptable inputs are "ensembl".
+#' @param genome_build Reference genome build.
+#'
+#' @import data.table biomaRt
+#' @return
+#' @export
+#'
+#' @examples
+#' myc_region = gene_to_region(gene_symbol = "MYC", genome_build = "grch37", return_as = "df")
+#' region = region_to_gene(region = myc_region, gene_format = "hugo", genome_build = "grch37")
+#'
+region_to_gene = function(region,
+                          gene_format = "hugo",
+                          genome_build = "grch37"){
+
+  #set mart based on selected genome projection
+  if(genome_build == "grch37"){
+    mart = useEnsembl(biomart = "ensembl", dataset = "hsapiens_gene_ensembl", GRCh = 37)
+  }else if(genome_build == "hg38"){
+    mart = useEnsembl(biomart = "ensembl", dataset = "hsapiens_gene_ensembl")
+  }
+
+  #retrieve gene coordinates (biomaRt)
+  gene_list = getBM(mart = mart, attributes = c("ensembl_gene_id", "chromosome_name", "start_position", "end_position", "external_gene_name", "hgnc_symbol"))
+  
+  #rename columns to match downstream formats
+  colnames(gene_list)[1] = "ensembl_gene_id"
+  colnames(gene_list)[2] = "chromosome"
+  colnames(gene_list)[3] = "start"
+  colnames(gene_list)[4] = "end"
+  colnames(gene_list)[5] = "gene_name"
+  colnames(gene_list)[6] = "hugo_symbol"
+  
+  #add "chr" prefix, if hg38 is selected
+  if(genome_build == "hg38"){
+    gene_list = mutate(gene_list, chromosome = paste0("chr", chromosome))
+  }
+
+  gene_list = as.data.frame(gene_list)
+  
+  if(is.data.frame(region)){
+    region_table = as.data.table(region)
+  }else if(is.character(region)){
+    split_chunks = unlist(strsplit(region, ":"))
+    split_chunks = unlist(strsplit(split_chunks, "-"))
+    chromosome = split_chunks[1]
+    start = split_chunks[2]
+    end = split_chunks[3]
+    region = cbind(chromosome, start, end) %>%
+      as.data.frame()
+
+    region_table = as.data.table(region)
+    
+    region_table$chromosome = as.character(region_table$chromosome)
+    region_table$start = as.double(region_table$start)
+    region_table$end = as.double(region_table$end)
+  }
+  
+  #transform regions to data tables
+  gene_table = as.data.table(gene_list)
+
+  #set keys
+  data.table::setkey(region_table, chromosome, start, end)
+  data.table::setkey(gene_table, chromosome, start, end)
+
+  #intersect regions
+  intersect = data.table::foverlaps(region_table, gene_table, nomatch = 0)
+  colnames(intersect)[7] = "region_start"
+  colnames(intersect)[8] = "region_end"
+
+  #transform object to data frame
+  inter_df = as.data.frame(intersect)
+
+  #organize columns to match the expected format
+  if(gene_format == "hugo"){
+    genes = dplyr::select(inter_df, chromosome, start, end, hugo_symbol, region_start, region_end)
+  }else if(gene_format == "ensembl"){
+    genes = dplyr::select(inter_df, chromosome, start, end, ensembl_gene_id, region_start, region_end)
+  }
+
+  #paste chr in chromosome column, if not there
+  if(!str_detect(genes$chromosome, "chr")){
+    genes = mutate(genes, chromosome = paste0("chr", chromosome))}
+
+  genes = as.data.frame(genes) %>%
+    dplyr::arrange(chromosome, start) %>% 
+    distinct(.keep_all = TRUE)
+
+  message(paste0(nrow(genes), " gene(s) returned for ", nrow(region), " region(s)"))
+
+  return(genes)
 }
 
 
@@ -1165,10 +1326,20 @@ collate_results = function(sample_table,
   output_file = glue::glue(output_file)
   print(output_file)
   if(from_cache){
-    
-    print(output_file)
-    sample_table = read_tsv(output_file) %>% 
-      dplyr::filter(sample_id %in% sample_table$sample_id)
+    output_file = config::get("table_flatfiles")$derived
+    output_base = config::get("repo_base")
+    output_file = paste0(output_base, output_file)
+    output_file = glue::glue(output_file)
+
+    #check for missingness
+    if(!file.exists(output_file)){
+      print(paste("missing: ", output_file))
+      message("Cannot find file locally. If working remotely, perhaps you forgot to load your config (see below) or sync your files?")
+      message('Sys.setenv(R_CONFIG_ACTIVE = "remote")')
+    }
+
+    sample_table = read_tsv(output_file) %>% dplyr::filter(sample_id %in% sample_table$sample_id)
+
   }else{
     message("Slow option: not using cached result. I suggest from_cache = TRUE whenever possible")
     #edit this function and add a new function to load any additional results into the main summary table
@@ -1533,6 +1704,14 @@ assign_cn_to_ssm = function(this_sample,
       }
       battenberg_file = local_battenberg_file
     }
+
+    #check for missingness
+    if(!file.exists(battenberg_file)){
+      print(paste("missing: ", battenberg_file))
+      message("Cannot find file locally. If working remotely, perhaps you forgot to load your config (see below) or sync your files?")
+      message('Sys.setenv(R_CONFIG_ACTIVE = "remote")')
+    }
+
     seg_sample = read_tsv(battenberg_file) %>%
       as.data.table() %>%
       dplyr::mutate(size = end - start) %>%
@@ -2867,11 +3046,12 @@ tidy_lymphgen = function(df,
 #'
 #' @examples
 #' metadata <- get_gambl_metadata()
-#' GAMBLR::collate_lymphgen(metadata)
+#' GAMBLR::consolidate_lymphgen(metadata)
 #'
-collate_lymphgen = function(sample_table,
-                            derived_data_path = "",
-                            verbose = TRUE) {
+consolidate_lymphgen = function(sample_table,
+                                derived_data_path = "",
+                                verbose = TRUE){
+
   if (derived_data_path == "") {
     path_to_files = config::get("derived_and_curated")
     project_base = config::get("project_base")
@@ -2937,6 +3117,78 @@ collate_lymphgen = function(sample_table,
 }
 
 
+#' Expand a sample_table (meta data) horizontally with different flavours of lymphgen data.
+#'
+#' @param these_samples_metadata Optional parameter with  meta data filtered for sample_ids of interest. If provided, this function will join lymphgen with this meta data, regardless of tidy_lymphgen TRUE/FALSE.
+#' @param lymphgen_version Version of selected lymphgen, default is "default".
+#' @param tidy Boolean parameter, set to TRUE for tidy format (i.e long format with no columns dropped). Default is FALSE, which returns the data in a wide format, keeps both the original Subtype.Prediction and tidied LymphGen values and puts the values from each "flavour" in its own column.
+#'
+#' @return a df with lymphgen information.
+#' @export
+#' @import tidyverse
+#'
+#' @examples
+#' this_meta = get_gambl_metadata() %>% dplyr::filter(pathology == "DLBCL")
+#' wide_lymphgen = collate_lymphgen(these_samples_metadata = this_meta, lymphgen_version = "default", tidy = FALSE)
+#'
+collate_lymphgen = function(these_samples_metadata,
+                            lymphgen_version = "default",
+                            tidy = FALSE){
+
+  #TODO Update the key in the config to match the version once updated, as discussed on PR.
+  if(lymphgen_version == "default"){
+    lymphgen_template = config::get("results_versioned")$lymphgen_template$default
+  }else{
+    stop("Currently, only lymphgen_version default is accepted")
+  }
+
+  #repo base
+  repo_base = config::get("repo_base")
+  flavours = config::get("results_merged_wildcards")$lymphgen_template
+  flavour = str_split(flavours, pattern = ",")
+  flavour = unlist(flavour)
+  lymphgen_path = paste0(repo_base, lymphgen_template)
+
+  load_lymphgen = function(flavour, lymphgen_path){
+    lg_path = glue::glue(lymphgen_path)
+    if(!file.exists(lg_path)){ #ignore missing flavours.
+      return()
+    }
+    lg_df = read_tsv(lg_path) %>%
+      mutate(flavour = flavour) #append the flavour in its own column called "flavour".
+    return(lg_df)
+  }
+
+  lymphgen_results = lapply(flavour, load_lymphgen, lymphgen_path = lymphgen_path)
+  lymphgen_results = bind_rows(lymphgen_results) #get lymphgen results tables stacked on top of each other, with the results from each flavour identified by the `flavour` column.
+  lymphgen_results = tidy_lymphgen(lymphgen_results, lymphgen_column_in = "Subtype.Prediction", lymphgen_column_out = "LymphGen")
+  colnames(lymphgen_results)[1] = "sample_id"
+
+  if(!tidy){
+    lymphgen_untidy = lymphgen_results %>%
+      select(sample_id, Subtype.Prediction, LymphGen, flavour) %>%
+      pivot_wider(names_from = flavour,
+                  values_from = c(Subtype.Prediction, LymphGen),
+                  names_glue = "{.value}_{flavour}")
+
+      if(!missing(these_samples_metadata)){
+        meta_data = these_samples_metadata
+        lymphgen_untidy = left_join(meta_data, lymphgen_untidy)
+      }
+
+      return(lymphgen_untidy)
+
+    }else{
+    if(!missing(these_samples_metadata)){
+      lymphgen_results = left_join(these_samples_metadata, lymphgen_results)
+    }
+
+    return(lymphgen_results)
+  }
+}
+
+
+
 #' INTERNAL FUNCTION called by collate_results, not meant for out-of-package usage.
 #' Collate qc metrics.
 #'
@@ -2947,45 +3199,58 @@ collate_lymphgen = function(sample_table,
 #' @import tidyverse
 #'
 #' @examples
-#' sample_table <- data.frame (sample_id  = c("09-33003T", "05-18426T", "BLGSP-71-06-00174-01A-01D", "BLGSP-71-22-00347-01A-12E", "SP59282"))
-#' qc_metrics = collate_qc_results(sample_table = sample_table, seq_type_filter = "genome")
+#' qc_metrics = collate_qc_results(sample_table = sample_table)
 #'
 collate_qc_results = function(sample_table,
-                              seq_type_filter = "genome"){
-
+                              seq_type_filter){
+  
   if(! seq_type_filter %in% c("genome", "capture")){
     stop("Please provide a valid seq_type (\"genome\" or \"capture\").")
   }
-
+  
   #get paths
-  base = config::get("project_base") #base
-  qc_template = config::get("qc_met") #qc metric template
-  qc_path = glue::glue(qc_template) #glue wildcards
-  icgc_qc_path_full = paste0(base, qc_path) #combine for icgc_dart qc metric path
-  gambl_qc = gsub("icgc_dart", "gambl", qc_path) #use gsub to substitute icgc_dart in qc path with gambl
-  gambl_qc_path_full = paste0(base, gambl_qc) #combine for gambl qc metric path
+  base = config::get("project_base")
+  qc_template = config::get("qc_met")
 
+  #icgc_dart
+  unix_group = "icgc_dart"
+  icgc_qc_path = glue::glue(qc_template)
+  icgc_qc_path_full = paste0(base, icgc_qc_path)
+
+  #gambl
+  unix_group = "gambl"
+  gambl_qc_path = glue::glue(qc_template)
+  gambl_qc_path_full = paste0(base, gambl_qc_path)  
+  
   #read in icgc qc data, rename sample id column and filter on samples in sample id in sample_table
   icgc_qc = suppressMessages(read_tsv(icgc_qc_path_full)) %>%
-    rename(sample_id = UID) %>%
-    dplyr::filter(sample_id %in% dplyr::pull(sample_table, sample_id))
-
+      dplyr::rename(sample_id = UID) %>%
+      dplyr::select(-SeqType)
+  
   #read in gambl qc data (if seq_type_filter set to "genome"), rename sample id column and filter on samples in sample id in sample_table
   if(seq_type_filter == "genome"){
     gambl_qc = suppressMessages(read_tsv(gambl_qc_path_full)) %>%
-      rename(sample_id = UID) %>%
-      dplyr::filter(sample_id %in% dplyr::pull(sample_table, sample_id))
-
+      dplyr::rename(sample_id = UID) %>%
+      dplyr::select(-SeqType)
+    
     #join gambl and icgc QC data
     full_qc = rbind(gambl_qc, icgc_qc)
-    full_qc = left_join(sample_table,full_qc)
-    return(full_qc)
+    sample_table = left_join(sample_table, full_qc)
 
-    }else{
-      message("Currently, seq_type_filter = \"capture\" is only available for unix_group \"icgc_dart\". Only QC metrics for icgc_dart will be returned.")
-      #TO DO: Remove this once capture metrics have been generated for gambl samples.
-      return(icgc_qc)
-      }
+    #print n samples with QC metrics
+    qc_samples = length(unique(full_qc$sample_id))
+    message(paste("QC metrics for", qc_samples, "samples retrieved."))
+    
+  }else{
+    message("Currently, seq_type_filter = \"capture\" is only available for unix_group \"icgc_dart\". Only QC metrics for icgc_dart will be returned.")
+    #TO DO: Remove this once capture metrics have been generated for gambl samples.
+    sample_table = left_join(sample_table, icgc_qc)
+
+    #print n samples with QC metrics
+    qc_samples = length(unique(icgc_qc$sample_id))
+    message(paste("QC metrics for", qc_samples, "samples retrieved."))
+  }
+  return(sample_table)
 }
 
 

@@ -16,7 +16,6 @@ get_ssm_by_sample(
   min_read_support = 3,
   basic_columns = TRUE,
   maf_cols = NULL,
-  return_cols = FALSE,
   verbose = FALSE,
   ssh_session
 )
@@ -43,8 +42,6 @@ get_ssm_by_sample(
 \item{basic_columns}{Return first 43 columns of MAF rather than full details. Default is TRUE.}
 
 \item{maf_cols}{if basic_columns is set to FALSE, the suer can specify what columns to be returned within the MAF. This parameter can either be a list of indexes (integer) or a list of characters.}
-
-\item{return_cols}{If set to TRUE, a vector with all avaialble column names will be returned. Default is FALSE.}
 
 \item{verbose}{Enable for debugging/noisier output}
 

@@ -7,12 +7,13 @@
 fancy_alignment_plot(
   these_samples,
   metadata,
+  these_samples_metadata,
   comparison_group,
   seq_type = "genome",
   add_mean = TRUE,
   add_corrected_coverage = TRUE,
-  filter_cohort,
-  filter_pathology,
+  keep_cohort,
+  keep_pathology,
   this_color_palette = c(TotalReads = "#3D405B", TotalUniquelyMapped = "#81B29A",
     TotalDuplicatedreads = "#E07A5F"),
   plot_sub = ""
@@ -23,6 +24,8 @@ fancy_alignment_plot(
 
 \item{metadata}{Optional argument, used to derive sample IDs if sample_table is Null.}
 
+\item{these_samples_metadata}{GAMBL metadata subset to the cases you want to process.}
+
 \item{comparison_group}{Optional argument for plotting mean alignment metrics. Default is plotting the mean for samples provided. This parameter takes a list of sample IDs.}
 
 \item{seq_type}{Subset qc metrics to a specific seq_type, default is genome.}
@@ -31,9 +34,9 @@ fancy_alignment_plot(
 
 \item{add_corrected_coverage}{Set to TRUE to add corrected coverage for selected samples.}
 
-\item{filter_cohort}{If no df with sample IDs is supplied (these_samples = NULL) the function calls get_gambl_metadata and subsets on selected cohort.}
+\item{keep_cohort}{If no df with sample IDs is supplied (these_samples = NULL) the function calls get_gambl_metadata and subsets on selected cohort.}
 
-\item{filter_pathology}{If no df with sample IDs is supplied (these_samples = NULL) the function calls get_gambl_metadata and subsets on selected pathology.}
+\item{keep_pathology}{If no df with sample IDs is supplied (these_samples = NULL) the function calls get_gambl_metadata and subsets on selected pathology.}
 
 \item{this_color_palette}{Optional parameter that holds the selected colours for the plotted bars.}
 
@@ -46,18 +49,22 @@ plot as ggplot object.
 Visualize (stacked barplot) genomic read-subsets across a selection of samples.
 }
 \examples{
-this_meta = get_gambl_metadata()
+#Example 1 - using these_samples parameter
+#subset on FL cases with QC metrics available and plot
+kridel_fl = get_gambl_metadata() \%>\%
+ dplyr::filter(pathology == "FL", cohort == "FL_Kridel") \%>\%
+ dplyr::select(sample_id) \%>\%
+ pull(sample_id)
 
-all_fl = dplyr::filter(this_meta, pathology == "FL") \%>\%
-  dplyr::select(sample_id) \%>\%
-  arrange(sample_id) \%>\%
-  as.data.frame()
+my_plot_1 = fancy_alignment_plot(these_samples = kridel_fl, seq_type = "genome")
 
-all_bl = dplyr::filter(this_meta, pathology == "BL") \%>\%
-  dplyr::select(sample_id) \%>\%
-  arrange(sample_id) \%>\%
-  as.data.frame()
+#Example 2 - using already filtered metadata (these_samples_metadata)
+fl_metadata = get_gambl_metadata() \%>\%
+ dplyr::filter(pathology == "FL", cohort == "FL_Kridel")
 
-plot = fancy_alignment_plot(these_samples = all_fl, seq_type = "genome", comparison_group = all_bl, plot_sub = "all FL cases (BL comparison group)")
+my_plot_2 = fancy_alignment_plot(these_samples_metadata = fl_metadata, seq_type = "genome")
+
+#Example 3 - using in-house metadata fitlering options
+my_plot_3 = fancy_alignment_plot(keep_cohort = "FL_Kridel", keep_pathology = "FL", seq_type = "genome")
 
 }

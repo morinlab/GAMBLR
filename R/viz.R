@@ -128,7 +128,7 @@ prettyRainfallPlot = function(this_sample_id,
     }
   } else if (!missing (maf_path)) {
     message ("Path to custom MAF file was provided, reading SSM using the custom path ...")
-    
+
     this_maf = read_tsv(maf_path)
     if(!missing(this_sample_id)){
       this_maf = this_maf %>% dplyr::filter(Tumor_Sample_Barcode %in% this_sample_id)
@@ -510,8 +510,8 @@ focal_cn_plot = function(region,
 #' @import g3viz tidyverse
 #'
 #' @examples
-#' plot_lollipop = (mutation_df, "MYC", "Mutation data for MYC", "blue")
-#' plot_lollipop = (mutation_df, "BCL2")
+#' pretty_lollipop_plot = (mutation_df, "MYC", "Mutation data for MYC", "blue")
+#' pretty_lollipop_plot = (mutation_df, "BCL2")
 #'
 pretty_lollipop_plot = function(maf_df,
                                 gene,
@@ -1346,6 +1346,9 @@ prettyOncoplot = function(maftools_obj,
       }
       write.table(mat_origin, file = onco_matrix_path, quote = F, sep = "\t")
     }else{
+      if(any(duplicated(genes))){
+        stop("There are duplicated elements in the provided gene list (@param genes). Please ensure only unique entries are present in this list.")
+      }
       om = maftools:::createOncoMatrix(m = maftools_obj, g = genes, add_missing = TRUE)
       mat_origin = om$oncoMatrix
       tsbs = levels(maftools:::getSampleSummary(x = maftools_obj)[,Tumor_Sample_Barcode])
@@ -3735,7 +3738,7 @@ fancy_v_sizedis = function(this_sample,
 #' Generate sample-level ideogram with copy number information, ssm and gene annotations, etc.
 #'
 #' @param this_sample Sample to be plotted (for multiple samples, see fancy_multisample_ideogram.
-#' @param gene_annotation Annotate ideogram with a single gene.
+#' @param gene_annotation Annotate ideogram with a set of genes. These genes can either be specified as a vector of characters or a data frame.
 #' @param seq_data Optional parameter with copy number df already loaded into R.
 #' @param seq_path Optional parameter with path to external cn file.
 #' @param maf_data Optional parameter with maf like df already loaded into R.
@@ -3750,21 +3753,45 @@ fancy_v_sizedis = function(this_sample,
 #' @param cn_col Index of column holding copy number information (to be used with either maf_data or maf_path).
 #' @param plot_title Title of plot (default to sample ID).
 #' @param plot_subtitle Optional argument for plot subtitle.
-#' @param intersect_regions Optional Boolean argument, if set to TRUE, the function expects some_regions to perform an intersect with cn_states.
-#' @param some_regions Bed-like df with regions for subsetting incoming cn_sates to. Columns should be "chrom", "start", "end".
+#' @param intersect_regions Optional parameter for subset variant calls to specific regions. Should be either a vector of characters (chr:start-end) or data frame with regions.
 #' @param include_ssm Set to TRUE to plot ssms (dels and ins).
 #' @param ssm_count Optional parameter to summarize n variants per chromosome, inlcude_ssm must be set to TRUE.
 #' @param coding_only Optional. Set to TRUE to restrict to plotting only coding mutations.
 #' @param from_flatfile If set to true the function will use flat files instead of the database.
 #' @param use_augmented Boolean statement if to use augmented maf, default is FALSE.
 #'
-#' @import data.table
+#' @import data.table cowplot
 #' @return Nothing.
 #' @export
 #'
 #' @examples
-#' ideogram_MYC = fancy_ideogram(this_sample = "HTMCP-01-06-00422-01A-01D", gene_annotation = "MYC", include_ssm = TRUE, ssm_count = TRUE, coding_only = FALSE, from_flatfile = FALSE, use_augmented = FALSE)
-#' cnv_ideogram = fancy_ideogram(this_sample = "HTMCP-01-06-00422-01A-01D")
+#' #
+#' fl_genes = dplyr::filter(lymphoma_genes, FL == TRUE) %>%
+#'   dplyr::select(Gene) %>%
+#'   pull(Gene)
+#' 
+#' fl_genes_chr1 = gene_to_region(gene_symbol = fl_genes, return_as = "df") %>%
+#'   dplyr::filter(chromosome == "1") %>%
+#'   pull(hugo_symbol)
+#' 
+#' ideogram_fl_chr1 = fancy_ideogram(this_sample = "HTMCP-01-06-00422-01A-01D",
+#'                                   gene_annotation = fl_genes_chr1, 
+#'                                   intersect_regions = "chr1:10000-249250621",
+#'                                   include_ssm = TRUE, 
+#'                                   ssm_count = TRUE, 
+#'                                   coding_only = FALSE, 
+#'                                   from_flatfile = FALSE, 
+#'                                   use_augmented = FALSE)
+#'  
+#'  fl_regions = gene_to_region(gene_symbol = fl_genes, return_as = "df")
+#'  ideogram_fl = fancy_ideogram(this_sample = "HTMCP-01-06-00422-01A-01D",
+#'                               gene_annotation = fl_genes, 
+#'                               intersect_regions = fl_regions,
+#'                               include_ssm = TRUE, 
+#'                               ssm_count = TRUE, 
+#'                               coding_only = FALSE, 
+#'                               from_flatfile = FALSE, 
+#'                               use_augmented = FALSE)
 #'
 fancy_ideogram = function(this_sample,
                           gene_annotation,
@@ -3782,8 +3809,7 @@ fancy_ideogram = function(this_sample,
                           cn_col_seq = 7,
                           plot_title = paste0(this_sample),
                           plot_subtitle = "Genome-wide Ideogram (grch37).",
-                          intersect_regions = FALSE,
-                          some_regions,
+                          intersect_regions,
                           include_ssm = TRUE,
                           ssm_count = TRUE,
                           coding_only = FALSE,
@@ -3802,14 +3828,10 @@ fancy_ideogram = function(this_sample,
 
   #additional regions to plot
   if(!missing(gene_annotation)){
-    gene = gene_to_region(gene_symbol = gene_annotation, genome_build = "grch37")
-
-    gene.annotate = data.frame(gene) %>%
-      separate(gene, c("chr", "start"), ":") %>%
-      separate(start, c("start", "end"), "-")
-
-    cols.int.gene = c("chr", "start", "end")
-    gene.annotate[cols.int.gene] = sapply(gene.annotate[cols.int.gene], as.integer)
+    gene = gene_to_region(gene_symbol = gene_annotation, genome_build = "grch37", return_as = "df")
+    gene.annotate = gene[gene$chr %in% paste0(c(1:22)), ]
+    cols.int = c("chromosome", "start", "end")
+    gene.annotate[cols.int] = sapply(gene.annotate[cols.int], as.integer)
   }
 
   #build chr table for segment plotting
@@ -3855,18 +3877,52 @@ fancy_ideogram = function(this_sample,
     cn_states = mutate(cn_states, chrom = paste0("chr", chrom))
   }
 
-  if(intersect_regions){
+  if(!missing(intersect_regions)){
     #filter CN states on intersecting regions
     #transform regions to data tables
+    #convenience function for converting intersect regions to a df (if it's a string) and renaming columns to match required format.
+    if(is.list(intersect_regions)){
+      colnames(intersect_regions)[1] = "chrom"
+      colnames(intersect_regions)[2] = "start"
+      colnames(intersect_regions)[3] = "end"
+      if(!str_detect(intersect_regions$chrom, "chr")){
+        intersect_regions = mutate(intersect_regions, chrom = paste0("chr", chrom))
+      }
+      intersect_regions = as.data.table(intersect_regions)
+      intersect_regions$start = as.numeric(intersect_regions$start)
+      intersect_regions$end = as.numeric(intersect_regions$end)
+    }
+    
+    if(is.character(intersect_regions)){
+      if(length(intersect_regions) > 1){
+        message("Please only enter one region, only first region will be regarded. For mutiple regions, kindly provide a data frame with regions of interest")
+      }
+      
+      split_chunks = unlist(strsplit(intersect_regions, ":"))
+      split_chunks = unlist(strsplit(split_chunks, "-"))
+      chrom = split_chunks[1]
+      start = split_chunks[2]
+      end = split_chunks[3]
+      intersect_regions = cbind(chrom, start, end) %>%
+        as.data.frame()
+      
+      intersect_regions$start = as.numeric(intersect_regions$start)
+      intersect_regions$end = as.numeric(intersect_regions$end)
+      
+      if(!str_detect(intersect_regions$chrom, "chr")){
+        intersect_regions = mutate(intersect_regions, chrom = paste0("chr", chrom))
+      }
+    }
+    
     incoming_cn = as.data.table(cn_states)
-    regions_sub = as.data.table(some_regions)
+    regions_sub = as.data.table(intersect_regions)
 
     #set keys
     data.table::setkey(incoming_cn, chrom, start, end)
     data.table::setkey(regions_sub, chrom, start, end)
 
     #intersect regions
-    intersect = data.table::foverlaps(incoming_cn, regions_sub, nomatch = 0)
+    intersect = data.table::foverlaps(regions_sub, incoming_cn, nomatch = 0)
 
     #transform object to data frame
     inter_df = as.data.frame(intersect)
@@ -3892,7 +3948,6 @@ fancy_ideogram = function(this_sample,
 
   #load maf data
   if(include_ssm){
-
     if(!missing(maf_data)){
       maf = maf_data
       maf = as.data.frame(maf)
@@ -3900,7 +3955,6 @@ fancy_ideogram = function(this_sample,
       colnames(maf)[chromosome_col_maf] = "Chromosome"
       colnames(maf)[start_col_maf] = "Start_Position"
       colnames(maf)[end_col_maf] = "End_Position"
-
     }else if (!is.null(maf_path)){
       maf = fread_maf(maf_path)
       maf = as.data.frame(maf)
@@ -3935,7 +3989,7 @@ fancy_ideogram = function(this_sample,
     maf_trans$ystart = as.integer(maf_trans$ystart)
     maf_trans$yend = as.integer(maf_trans$yend)
 
-    if(intersect_regions){
+    if(!missing(intersect_regions)){
       #filter CN states on intersecting regions
       maf_tmp = maf_trans
       colnames(maf_tmp)[1] = "chrom"
@@ -3946,18 +4000,18 @@ fancy_ideogram = function(this_sample,
       data.table::setkey(maf.table, chrom, start, end)
 
       #intersect regions
-      intersect_maf = data.table::foverlaps(maf.table, regions_sub, nomatch = 0)
+      intersect_maf = data.table::foverlaps(regions_sub, maf.table, nomatch = 0)
 
       #transform object to data frame
       inter_maf_df = as.data.frame(intersect_maf)
 
       #rename columns
       colnames(inter_maf_df)[1] = "Chromosome"
-      colnames(inter_maf_df)[4] = "Start_Position"
-      colnames(inter_maf_df)[5] = "End_Position"
+      colnames(inter_maf_df)[2] = "Start_Position"
+      colnames(inter_maf_df)[3] = "End_Position"
 
       #subset
-      inter_maf_df = select(inter_maf_df, Chromosome, Start_Position, End_Position)
+      inter_maf_df = dplyr::select(inter_maf_df, Chromosome, Start_Position, End_Position)
 
       #perform a semi join with all cn states (to retain necessary columns)
       maf_trans = dplyr::semi_join(maf_trans, inter_maf_df)
@@ -4006,8 +4060,8 @@ fancy_ideogram = function(this_sample,
     {if("cn_4" %in% levels(cn_states$CN)) geom_segment(data = cn_4, aes(x = start, xend = end, y = ycoord, yend = ycoord, color = "CN4"), size = 4.7, stat = "identity", position = position_dodge())} + #cn4
     {if("cn_5" %in% levels(cn_states$CN)) geom_segment(data = cn_5, aes(x = start, xend = end, y = ycoord, yend = ycoord, color = "CN5"), size = 4.7, stat = "identity", position = position_dodge())} + #cn5
     {if("cn_6" %in% levels(cn_states$CN)) geom_segment(data = cn_6, aes(x = start, xend = end, y = ycoord, yend = ycoord, color = "CN6+"), size = 4.7, stat = "identity", position = position_dodge())} + #cn6 and more
-    {if(!missing(gene_annotation)) geom_point(data = gene.annotate, aes(x = ((end - start) / 2) + start, y = chr - 0.28), shape = 25, color = "#A63932", fill = "#A63932", stat = "identity", position = position_dodge())} + #gene annotation
-    {if(!missing(gene_annotation)) geom_text(aes((x = gene.annotate$end - gene.annotate$start) / 2 + gene.annotate$start, y = gene.annotate$chr - 0.47), label = gene_annotation, color = "black", size = 3)} + #gene annotation text
+    {if(!missing(gene_annotation)) geom_point(data = gene.annotate, aes(x = ((end - start) / 2) + start, y = chromosome - 0.28), shape = 25, color = "#A63932", fill = "#A63932", stat = "identity", position = position_dodge())} + #gene annotation
+    {if(!missing(gene_annotation)) geom_label(data = gene.annotate, aes((x = end - start) / 2 + start, y = chromosome - 0.52, label = hugo_symbol), fontface = "bold", color = "white", fill = "#A63932", size = 3, check_overlap = TRUE)} + #gene annotation text
     geom_text(aes(x = -10000000 , y = yend, label = segment_data$chr), color = "black", size = 5) + #chr labels
     labs(title = plot_title, subtitle = plot_subtitle) + #plot titles
     scale_colour_manual(name = "", values = selected_colours) + #legend/colours
@@ -4388,82 +4442,168 @@ comp_report = function(this_sample,
 }
 
 
-#' Create a circos plots visualizing translocations and SVs (deletions and duplications).
+#' Create a circos plots visualizing SVS and SSM with optional gene annotations. 
 #'
 #' @param this_sample Sample to be plotted.
+#' @param gene_list Optional parameter to annotate genes on the circos plot from a list of genes (df). Is compatible with gene_to_region (return_as = "bed") output format. See examples.
+#' @param ssm_calls Boolean parameter for plotting ssm. Default is TRUE.
+#' @param sv_calls Boolean parameter for plotting SVs, default is TRUE.
+#' @param chr_select Optional argument for subset on selected chromosomes, default is all autosomes.
 #' @param vaf_cutoff Threshold for filtering variants on VAF (events with a VAF > cutoff will be retained).
-#' @param chr_select Optional argument for subsetting on selected chromosomes, default is all autosomes.
-#' @param manta_calls Set to TRUE for get_combined_sv approach of retreiving plot data. Set to FALSE to run assign_cn_to_ssm. Default is TRUE.
 #' @param coding_only Optional. Set to TRUE to restrict to plotting only coding mutations.
-#' @param from_flatfile If set to true the function will use flat files instead of the database.
+#' @param from_flatfile If set to TRUE the function will use flat files instead of the database.
 #' @param use_augmented_maf Boolean statement if to use augmented maf, default is TRUE.
-#' @param include_del Boolean statement to include SVs of subtype deletion. Default is TRUE.
-#' @param include_dup Boolean statement to include SVs of subtype duplication. Default is TRUE.
-#' @param projection Genomic projection for SVs and circos plot. Accepted values are grch37 and hg38.
+#' @param projection Genomic projection for variants and circos plot. Accepted values are grch37 and hg38, default is grch37.
 #' @param out Path to output folder, to where the plot will be exported.
-#' @param gene_list Optional parameter to annotate genes on the circos plot from a list of genes (df). Important, gene_list is expected to have the following columns Chromosome:chromStart:chromEnd:Gene.
-#' @param gene_name_col Index number of gene_list that holds gene names.
+#' @param plot_title Optional parameter for naming your plot, default is this_sample.
+#' @param pdf Set to FALSE for png, default is TRUE (pdf).
+#' @param file_name Optional parameter for specifying the file name of generated circos plot, default is "{this_sample}_circos.pdf". If pdf is set to FALSE, a png will be generated, thus the .png extension needs to be attached to the file_name.
 #'
 #' @return Nothing.
 #' @import tidyverse RCircos
 #' @export
 #'
 #' @examples
-#' data(RCircos.Gene.Label.Data)
-#' genes = RCircos.Gene.Label.Data
-#' circos_plot = fancy_circos_plot(this_sample = "HTMCP-01-06-00422-01A-01D", out = "some/path/to/a/destination/")
+#' #retrieve gene names for FL genes
+#' fl_genes = dplyr::filter(lymphoma_genes, FL == TRUE) %>% 
+#'  dplyr::select(Gene) %>%
+#'  pull(Gene)
+#'
+#' # get regions for selected genes
+#' fl_genes_list = gene_to_region(gene_symbol = fl_genes, return_as = "bed")
+#'
+#' fancy_circos_plot_new(this_sample = "DOHH-2",
+#'                       ssm_calls = FALSE,
+#'                       sv_calls = TRUE,
+#'                       gene_list = fl_genes_list,
+#'                       chr_select = c("chr8", "chr14", "chr18"),
+#'                       coding_only = FALSE,
+#'                       projection = "grch37",
+#'                       out = "../../plots/", 
+#'                       plot_title = "DOHH-2 (SVs) Example Plot",
+#'                       pdf = FALSE, 
+#'                       file_name = "dohh2_example.png")
 #'
 fancy_circos_plot = function(this_sample,
-                             vaf_cutoff = 0,
+                             gene_list,
+                             ssm_calls = TRUE,
+                             sv_calls = TRUE,
                              chr_select = paste0("chr", c(1:22)),
-                             use_sv_calls = TRUE,
+                             vaf_cutoff = 0,
                              coding_only = FALSE,
                              from_flatfile = TRUE,
                              use_augmented_maf = TRUE,
-                             include_del = TRUE,
-                             include_dup = TRUE,
                              projection = "grch37",
+                             plot_title = paste0(this_sample),
                              out,
-                             gene_list,
-                             gene_name_col = 4){
+                             pdf = TRUE,
+                             file_name = paste0(this_sample, "_circos.pdf")){
 
-  #set plotting values based on parameters used
-  if(include_del && include_dup && !missing(gene_list)){
+  #set track properties based on selected plotting data
+  if(ssm_calls && sv_calls && !missing(gene_list)){
     gene_con_track = 1
     gene_name_track = 2
-    del_track = 3
-    dup_track = 4
-    trans_track = 5
-    n_track = 5
-  }else if(include_del && include_dup && missing(gene_list)){
-    del_track = 1
-    dup_track = 2
-    trans_track = 3
-    n_track = 3
-  }else if(!include_del && !include_dup && !missing(gene_list)){
-    trans_track = 1
-    n_track = 1
-  }else if(!include_del && !include_dup && missing(gene_list)){
-    gene_con_track = 1
-    gene_name_track = 2
-    trans_track = 3
-    n_track = 3
-  }else if(!include_del && include_dup && missing(gene_list)){
-    gene_con_track = 1
-    gene_name_track = 2
-    dup_track = 3
-    trans_track = 4
-    n_track = 4
-  }else if(include_del && !include_dup && missing(gene_list)){
-    gene_con_track = 1
-    gene_name_track = 2
-    del_track = 3
-    trans_track = 4
-    n_track = 4
+    sv_del_track = 4
+    sv_dup_track = 5
+    ssm_snp_track = 6
+    ssm_dnp_track = 7
+    ssm_del_track = 8
+    ssm_ins_track = 9
+    trans_track = 10
+  }
+  
+  if(ssm_calls && sv_calls && missing(gene_list)){
+    sv_del_track = 1
+    sv_dup_track = 2
+    ssm_snp_track = 3
+    ssm_dnp_track = 4
+    ssm_del_track = 5
+    ssm_ins_track = 6
+    trans_track = 7
   }
 
-  if(use_sv_calls){
-    #get variants
+  if(ssm_calls && !sv_calls && !missing(gene_list)){
+    gene_con_track = 1
+    gene_name_track = 2
+    ssm_snp_track = 4
+    ssm_dnp_track = 5
+    ssm_del_track = 6
+    ssm_ins_track = 7
+  }
+
+  if(ssm_calls && !sv_calls && missing(gene_list)){
+    ssm_snp_track = 1
+    ssm_dnp_track = 2
+    ssm_del_track = 3
+    ssm_ins_track = 4
+  }
+
+  if(!ssm_calls && sv_calls && !missing(gene_list)){
+    gene_con_track = 1
+    gene_name_track = 2
+    sv_del_track = 4
+    sv_dup_track = 5
+    trans_track = 6
+  }
+
+  if(!ssm_calls && sv_calls && missing(gene_list)){
+    sv_del_track = 1
+    sv_dup_track = 2
+    trans_track = 3
+  }
+
+  #sanity checking incoming gene list and renaming columns if needed
+  if(!missing(gene_list)){
+    #check type of incoming gene_list
+    if(!is.list(gene_list)){
+      message("Please ensure that incoming gene list is in fact a data frame with the following columns: chr:start:end:gene")
+    }
+
+    #rename columns, if needed (Rcircos is expecting the column names to always be the same...)
+    if(!"Chromosome" %in% colnames(gene_list)[1]){
+      colnames(gene_list)[1] = "Chromosome"
+    }
+    if(!"chromStart" %in% colnames(gene_list)[2]){
+      colnames(gene_list)[2] = "chromStart"
+    }
+    if(!"chromEnd" %in% colnames(gene_list)[3]){
+      colnames(gene_list)[3] = "chromEnd"
+    }
+    if(!"Gene" %in% colnames(gene_list)[4]){
+      colnames(gene_list)[4] = "Gene"
+    }
+
+    #add "chr" prefix, if needed
+    if(!str_detect(gene_list$Chromosome, "chr")){
+      gene_list = mutate(gene_list, Chromosome = paste0("chr", Chromosome))
+    }
+
+    #filter gene list on selected chromosomes
+    gene_list = gene_list[gene_list$Chromosome %in% chr_select, ]
+  }
+  
+  #get SSM data
+  if(ssm_calls){
+    maf = assign_cn_to_ssm(this_sample = this_sample, coding_only = coding_only, from_flatfile = from_flatfile, use_augmented_maf = use_augmented_maf)$maf #get maf data
+    maf_tmp = dplyr::select(maf, Chromosome, Start_Position, End_Position, Variant_Type) #select appropriate columns
+    maf_tmp$Variant_Size = maf_tmp$End_Position - maf_tmp$Start_Position # calcualte variant size
+    maf_tmp$Variant_Type = as.factor(maf_tmp$Variant_Type) #transform Variant_Type to factor
+    maf_tmp[maf_tmp==0] <- 1 #transform all lenght coordinates == 0 to 1
+
+    if(!str_detect(maf_tmp$Chromosome, "chr")){ #add chr prefic, if missing...
+      maf_tmp = mutate(maf_tmp, Chromosome = paste0("chr", Chromosome))
+    }
+
+    maf_tmp = maf_tmp[maf_tmp$Chromosome %in% chr_select, ] #filter incoming maf on selected chromosomes
+    ssm_del = dplyr::filter(maf_tmp, Variant_Type == "DEL") #subset on deletions
+    ssm_ins = dplyr::filter(maf_tmp, Variant_Type == "INS") #subset on insertions
+    ssm_snp = dplyr::filter(maf_tmp, Variant_Type == "SNP") #subset on single nucleotide polymorphism
+    ssm_dnp = dplyr::filter(maf_tmp, Variant_Type == "DNP") #subset on dinucleotide polymorphism
+    message(paste0(nrow(ssm_del) + nrow(ssm_dnp) + nrow(ssm_ins) + nrow(ssm_snp)), " SSMs found for ", this_sample)
+  }
+
+  #get SVs
+  if(sv_calls){
     svs = get_combined_sv(sample_ids = this_sample, projection = projection)
 
     #filter on vaf
@@ -4478,22 +4618,18 @@ fancy_circos_plot = function(this_sample,
     #rename variables
     colnames(svs_df)[1:7] = c("CHROM_A", "START_A", "END_A", "CHROM_B", "START_B", "END_B", "TYPE")
 
-    #add chr prefix, if missing
+      #add chr prefix, if missing
     if(!str_detect(svs_df$CHROM_A, "chr")[1]){
       svs_df = mutate(svs_df, CHROM_A = paste0("chr", CHROM_A))
-    }
+      }
 
     if(!str_detect(svs_df$CHROM_B, "chr")[4]){
       svs_df = mutate(svs_df, CHROM_B = paste0("chr", CHROM_B))
-    }
+      }
 
     #subset on selected chromosomes
     svs_df = svs_df[svs_df$CHROM_A %in% chr_select, ]
     svs_df = svs_df[svs_df$CHROM_B %in% chr_select, ]
-
-    if(!missing(gene_list)){
-      gene_list = gene_list[gene_list$Chromosome %in% chr_select, ]
-    }
 
     #subset df on SV type
     sv_trans = dplyr::filter(svs_df, TYPE == "MantaBND") %>%
@@ -4509,22 +4645,8 @@ fancy_circos_plot = function(this_sample,
     sv_del$SIZE = sv_del$END_A - sv_del$START_A
     sv_dup$SIZE = sv_dup$END_A - sv_dup$START_A
 
-    }else{
-      maf = assign_cn_to_ssm(this_sample = this_sample, coding_only = coding_only, from_flatfile = from_flatfile, use_augmented_maf = use_augmented_maf)$maf #get maf data
-      maf_tmp = dplyr::select(maf, Chromosome, Start_Position, End_Position, Variant_Type) #select appropiate columns
-      maf_tmp$Variant_Size = maf_tmp$End_Position - maf_tmp$Start_Position # calcualte variant size
-      maf_tmp$Variant_Type = as.factor(maf_tmp$Variant_Type) #transform Variant_Type to factor
-      maf_tmp[maf_tmp==0] <- 1 #transform all lenght coordinates == 0 to 1
-
-      if(!str_detect(maf_tmp$Chromosome, "chr")){ #add chr prefic, if missing...
-        maf_tmp = mutate(maf_tmp, Chromosome = paste0("chr", Chromosome))
-      }
-
-      maf_tmp = maf_tmp[maf_tmp$Chromosome %in% chr_select, ] #filter incoming maf on selected chromosomes
-
-      sv_del = dplyr::filter(maf_tmp, Variant_Type == "DEL") #subset on deletions
-      sv_ins = dplyr::filter(maf_tmp, Variant_Type == "INS") #subset on insertions
-    }
+    message(paste0(nrow(sv_trans) + nrow(sv_del) + nrow(sv_dup)), " SVs found for ", this_sample)
+  }
 
   #plotting
   #define reference build
@@ -4535,20 +4657,26 @@ fancy_circos_plot = function(this_sample,
     data(UCSC.HG38.Human.CytoBandIdeogram)
     cytobands = UCSC.HG38.Human.CytoBandIdeogram
   }
-
+  
   #get chr excluded (reversed of chr included, since RCircos only accept this)
   chr_all = paste0("chr", c(1:22, "X", "Y"))
   chr_exclude = setdiff(chr_all, chr_select)
 
   #set core components
-  RCircos.Set.Core.Components(cyto.info = cytobands, chr.exclude = chr_exclude, tracks.inside = n_track, tracks.outside = 0)
+  suppressMessages(RCircos::RCircos.Set.Core.Components(cyto.info = cytobands, chr.exclude = chr_exclude, tracks.inside = 10))
 
   #set plot parameters
   RCircos.params = RCircos.Get.Plot.Parameters()
 
   #define plotting parameters
-  out.file = paste0(out, this_sample, "_circos.pdf")
-  pdf(out.file, height = 7, width = 7)
+  out.file = paste0(out, file_name)
+  
+  if(pdf){
+    pdf(out.file, height = 7, width = 7) 
+  }else{
+    png(out.file, height = 7, width = 7, units = "in", res = 300) 
+  }
+  
   RCircos.Set.Plot.Area(margins = 0);
 
   #create empty plot
@@ -4558,32 +4686,71 @@ fancy_circos_plot = function(this_sample,
   #add gene names
   if(!missing(gene_list)){
     RCircos.Gene.Connector.Plot(gene_list, gene_con_track, "in")
-    RCircos.Gene.Name.Plot(gene_list, gene_name_col, gene_name_track, "in")
+    RCircos.Gene.Name.Plot(gene_list, 4, gene_name_track, "in")
   }
 
-  #translocations
-  if(manta_calls){
-    RCircos.Ribbon.Plot(sv_trans, track.num = trans_track, by.chromosome = FALSE, twist = TRUE)
-  }
-
-  #deletions
-  if(include_del){
+  #aadd tracks
+  if(ssm_calls){
+    #ssm deletions
     RCircos.params$track.background = "steelblue2"
     RCircos.params$max.layers = 1
     RCircos.Reset.Plot.Parameters(RCircos.params)
-    RCircos.Tile.Plot(sv_del, track.num = del_track, side = "in")
-  }
+    RCircos.Tile.Plot(ssm_del, track.num = ssm_del_track, side = "in")
 
-  #duplications
-  if(include_dup){
+    #ssm insertions
     RCircos.params$track.background = "sienna2"
     RCircos.params$max.layers = 1
     RCircos.Reset.Plot.Parameters(RCircos.params)
-    RCircos.Tile.Plot(sv_dup, track.num = dup_track, side = "in")
+    RCircos.Tile.Plot(ssm_ins, track.num = ssm_ins_track, side = "in")
+
+    #ssm snp
+    RCircos.params$track.background = "seagreen"
+    RCircos.params$max.layers = 1
+    RCircos.Reset.Plot.Parameters(RCircos.params)
+    RCircos.Tile.Plot(ssm_snp, track.num = ssm_snp_track, side = "in")
+
+    #ssm dnp
+    RCircos.params$track.background = "tomato4"
+    RCircos.params$max.layers = 1
+    RCircos.Reset.Plot.Parameters(RCircos.params)
+    RCircos.Tile.Plot(ssm_dnp, track.num = ssm_dnp_track, side = "in")
   }
 
-  #close connection
-  dev.off()
+  if(sv_calls){
+    #translocations
+    RCircos.Link.Plot(sv_trans, track.num = trans_track, by.chromosome = FALSE)
+
+    #duplications
+    RCircos.params$track.background = "sienna2"
+    RCircos.params$max.layers = 1
+    RCircos.Reset.Plot.Parameters(RCircos.params)
+    RCircos.Tile.Plot(sv_dup, track.num = sv_dup_track, side = "in")
+
+    #deletions
+    RCircos.params$track.background = "steelblue2"
+    RCircos.params$max.layers = 1
+    RCircos.Reset.Plot.Parameters(RCircos.params)
+    RCircos.Tile.Plot(sv_del, track.num = sv_del_track, side = "in")
+  }
+
+  #add plot title and legends
+  if(sv_calls && !ssm_calls){
+    text(x = 0, y = 2.5, plot_title, font = 2, cex = 1.2)
+    legend(x = 2, y = -1.2, legend = c("Del", "Dup"), bty = "n", col = c("steelblue2", "sienna2"), pch = 19, text.col = "black", horiz = FALSE, pt.cex = 2, title = "SVs", inset = c(0.1, 0.1)) 
+  }
+
+  if(!sv_calls && ssm_calls){
+    text(x = 0, y = 2.5, plot_title, font = 2, cex = 1.2)
+    legend(x = 2, y = -1.8, legend = c("SNP", "DNP", "Del", "Ins"), bty = "n", col = c("seagreen", "tomato4", "steelblue2", "sienna2"), pch = 19, text.col = "black", horiz = FALSE, pt.cex = 2, title = "SSM", inset = c(0.1, 0.1)) 
+  }
+
+  if(sv_calls && ssm_calls){
+    text(x = 0, y = 2.5, plot_title, font = 2, cex = 1.2)
+    legend(x = 2, y = -1.2, legend = c("Del", "Dup"), bty = "n", col = c("steelblue2", "sienna2"), pch = 19, text.col = "black", horiz = FALSE, pt.cex = 2, title = "SVs", inset = c(0.1, 0.1)) 
+    legend(x = 2, y = -1.8, legend = c("SNP", "DNP", "Del", "Ins"), bty = "n", col = c("seagreen", "tomato4", "steelblue2", "sienna2"), pch = 19, text.col = "black", horiz = FALSE, pt.cex = 2, title = "SSM", inset = c(0.1, 0.1)) 
+  }
+
+  invisible(dev.off())
 }
 
 
@@ -4699,16 +4866,18 @@ fancy_sv_sizedens = function(this_sample,
   return(p)
 }
 
+
 #' Visualize (stacked barplot) genomic read-subsets across a selection of samples.
 #'
 #' @param these_samples Data frame with sample IDs (to be plotted) in the first column.
 #' @param metadata Optional argument, used to derive sample IDs if sample_table is Null.
+#' @param these_samples_metadata GAMBL metadata subset to the cases you want to process.
 #' @param comparison_group Optional argument for plotting mean alignment metrics. Default is plotting the mean for samples provided. This parameter takes a list of sample IDs.
 #' @param seq_type Subset qc metrics to a specific seq_type, default is genome.
 #' @param add_mean Set to TRUE to superimpose mean values of plotted variables. Default is TRUE.
 #' @param add_corrected_coverage Set to TRUE to add corrected coverage for selected samples.
-#' @param filter_cohort If no df with sample IDs is supplied (these_samples = NULL) the function calls get_gambl_metadata and subsets on selected cohort.
-#' @param filter_pathology If no df with sample IDs is supplied (these_samples = NULL) the function calls get_gambl_metadata and subsets on selected pathology.
+#' @param keep_cohort If no df with sample IDs is supplied (these_samples = NULL) the function calls get_gambl_metadata and subsets on selected cohort.
+#' @param keep_pathology If no df with sample IDs is supplied (these_samples = NULL) the function calls get_gambl_metadata and subsets on selected pathology.
 #' @param this_color_palette Optional parameter that holds the selected colours for the plotted bars.
 #' @param plot_sub Optional parameter, add a subtitle to alignment metric plot.
 #'
@@ -4717,28 +4886,33 @@ fancy_sv_sizedens = function(this_sample,
 #' @export
 #'
 #' @examples
-#' this_meta = get_gambl_metadata()
+#' #Example 1 - using these_samples parameter
+#' #subset on FL cases with QC metrics available and plot
+#' kridel_fl = get_gambl_metadata() %>%
+#'  dplyr::filter(pathology == "FL", cohort == "FL_Kridel") %>%
+#'  dplyr::select(sample_id) %>%
+#'  pull(sample_id)
 #'
-#' all_fl = dplyr::filter(this_meta, pathology == "FL") %>%
-#'   dplyr::select(sample_id) %>%
-#'   arrange(sample_id) %>%
-#'   as.data.frame()
+#' my_plot_1 = fancy_alignment_plot(these_samples = kridel_fl, seq_type = "genome")
 #'
-#' all_bl = dplyr::filter(this_meta, pathology == "BL") %>%
-#'   dplyr::select(sample_id) %>%
-#'   arrange(sample_id) %>%
-#'   as.data.frame()
+#' #Example 2 - using already filtered metadata (these_samples_metadata)
+#' fl_metadata = get_gambl_metadata() %>%
+#'  dplyr::filter(pathology == "FL", cohort == "FL_Kridel")
 #'
-#' plot = fancy_alignment_plot(these_samples = all_fl, seq_type = "genome", comparison_group = all_bl, plot_sub = "all FL cases (BL comparison group)")
+#' my_plot_2 = fancy_alignment_plot(these_samples_metadata = fl_metadata, seq_type = "genome")
+#'
+#' #Example 3 - using in-house metadata fitlering options
+#' my_plot_3 = fancy_alignment_plot(keep_cohort = "FL_Kridel", keep_pathology = "FL", seq_type = "genome")
 #'
 fancy_alignment_plot = function(these_samples,
                                 metadata,
+                                these_samples_metadata,
                                 comparison_group,
                                 seq_type = "genome",
                                 add_mean = TRUE,
                                 add_corrected_coverage = TRUE,
-                                filter_cohort,
-                                filter_pathology,
+                                keep_cohort,
+                                keep_pathology,
                                 this_color_palette = c("TotalReads" = "#3D405B",
                                                        "TotalUniquelyMapped" = "#81B29A",
                                                        "TotalDuplicatedreads" = "#E07A5F"),
@@ -4751,36 +4925,32 @@ fancy_alignment_plot = function(these_samples,
     this_meta = metadata
   }
 
+  if(!missing(these_samples_metadata)){
+    these_samples = dplyr::select(these_samples_metadata, sample_id) %>%
+      as.data.frame(strings.as.factors = FALSE) %>%
+      pull(sample_id)
+  }
+  
   #filter metadata on selected cohort/pathology
   if(missing(these_samples)){
-    if(!missing(filter_cohort) && missing(filter_pathology)){
-      these_samples = dplyr::filter(this_meta, cohort == filter_cohort) %>%
-        dplyr::select(sample_id) %>%
-        as.data.frame()
+    if(!missing(keep_cohort) && missing(keep_pathology)){
+      these_samples = dplyr::filter(this_meta, cohort == keep_cohort) %>%
+        pull(sample_id)
     }
 
-    if(!missing(filter_pathology) && missing(filter_cohort)){
-      these_samples = dplyr::filter(this_meta, pathology == filter_pathology) %>%
-        dplyr::select(sample_id) %>%
-        as.data.frame()
+    if(!missing(keep_pathology) && missing(keep_cohort)){
+      these_samples = dplyr::filter(this_meta, pathology == keep_pathology) %>%
+        pull(sample_id)
     }
 
-    if(!missing(filter_cohort) && !missing(filter_pathology)){
-      these_samples = dplyr::filter(this_meta, pathology == filter_pathology, cohort == filter_cohort) %>%
-        dplyr::select(sample_id) %>%
-        as.data.frame()
+    if(!missing(keep_cohort) && !missing(keep_pathology)){
+      these_samples = dplyr::filter(this_meta, pathology == keep_pathology, cohort == keep_cohort) %>%
+        pull(sample_id)
     }
 
-    if(missing(filter_cohort) && missing(filter_pathology)){
+    if(missing(keep_cohort) && missing(keep_pathology)){
       these_samples = dplyr::select(this_meta, sample_id) %>%
-        as.data.frame
-    }
-  }
-
-  #sanity check incoming sample table
-  if(!missing(these_samples)){
-    if(typeof(these_samples) != "list"){
-      stop("Please provide input sample IDs (these_samples) in a df with sample IDs in the first column...")
+        pull(sample_id)
     }
   }
 
@@ -4840,16 +5010,15 @@ fancy_alignment_plot = function(these_samples,
 #' Plot for visualizing QC metrics and allowing for grouping by different metadata columns.
 #'
 #' @param these_samples Data frame with sample IDs (to be plotted) in the first column (has to be named sample_id).
-#' @param filter_cohort Optional parameter to be used when these_sample is NULL. Calls get_gambl_metadata() and filters on the cohort supplied in this parameter.
-#' @param filter_pathology Optional parameter to be used when these_sample is NULL. Calls get_gambl_metadata() and filters on the pathology supplied in this parameter.
+#' @param keep_cohort Optional parameter to be used when these_sample is NULL. Calls get_gambl_metadata() and filters on the cohort supplied in this parameter.
+#' @param keep_pathology Optional parameter to be used when these_sample is NULL. Calls get_gambl_metadata() and filters on the pathology supplied in this parameter.
 #' @param seq_type Selected seq type for incoming QC metrics.
 #' @param metadata Optional, user can provide a metadata df to subset sample IDs from.
+#' @param these_samples_metadata GAMBL metadata subset to the cases you want to process.
 #' @param sort_by Plotting parameter, set sorting column for bar plots.
 #' @param plot_data Plotting parameter, define the data type to be plotted.
-#' @param fill_by Plotting parameter, Set fill for bar plot, can be pathology, cohort, etc.
-#' @param comparison_samples Optional parameter, give the function a list of sample IDs to be compared against the main plotting group.
-#' @param filter_comp_cohort Optional parameter for filtering the comparison group (cohort).
-#' @param filter_comp_pathology Optional parameter for filtering the comparison group (pathology).
+#' @param fill_by Parameter for specifying fill variable for grouped bar plot. Can be any factor from incoming metadata, e.g pathology, cohort, etc.
+#' @param comparison_samples Optional parameter, give the function a list of sample IDs to be compared against the main plotting group. Pathology is default.
 #' @param plot_title Plotting parameter, plot title.
 #' @param plot_subtitle Plotting parameter, subtitle of generated plot.
 #' @param y_axis_lab Plotting parameter, label of y-axis.
@@ -4860,27 +5029,49 @@ fancy_alignment_plot = function(these_samples,
 #' @export
 #'
 #' @examples
-#' fancy_qc_plot(filter_pathology = "FL",
-#'               filter_cohort = "FL_Kridel",
-#'               filter_comp_pathology = "BL",
-#'               filter_comp_cohort = "BL_Pediatric",
-#'               plot_data = "AverageBaseQuality",
-#'               fill_by = "pathology",
-#'               plot_subtitle = "Example Plot",
-#'               y_axis_lab = "Average Base Quality",
-#'               plot_title = "A. Base Quality For FL_Kridel vs. BL_Pediatric",
-#'               seq_type = "genome")
+#' #Example 1 - using these_samples parameter
+#' #subset on FL cases with QC metrics available and plot
+#' kridel_fl = get_gambl_metadata() %>%
+#'  dplyr::filter(pathology == "FL", cohort == "FL_Kridel") %>%
+#'  dplyr::select(sample_id) %>%
+#'  pull(sample_id)
+#'
+#' my_plot_1 = fancy_qc_plot(these_samples = kridel_fl, 
+#'                           seq_type = "genome", 
+#'                           plot_data = "AverageBaseQuality", 
+#'                           plot_subtitle = "Example Plot", 
+#'                           y_axis_lab = "Average Base Quality", 
+#'                           plot_title = "Average Base Quality For FL_Kridel")
+#'
+#' #Example 2 - using already filtered metadata (these_samples_metadata)
+#' fl_metadata = get_gambl_metadata() %>%
+#'  dplyr::filter(pathology == "FL", cohort == "FL_Kridel")
+#'
+#' my_plot_2 = fancy_qc_plot(these_samples_metadata = fl_metadata, 
+#'                           seq_type = "genome", 
+#'                           plot_data = "AverageBaseQuality", 
+#'                           plot_subtitle = "Example Plot", 
+#'                           y_axis_lab = "Average Base Quality", 
+#'                           plot_title = "Average Base Quality For FL_Kridel")
+#'
+#' #Example 3 - using in-house metadata fitlering options
+#' my_plot_3 = fancy_qc_plot(keep_cohort = "FL_Kridel", 
+#'                           keep_pathology = "FL", 
+#'                           seq_type = "genome", 
+#'                           plot_data = "AverageBaseQuality", 
+#'                           plot_subtitle = "Example Plot", 
+#'                           y_axis_lab = "Average Base Quality", 
+#'                           plot_title = "Average Base Quality For FL_Kridel")
 #'
 fancy_qc_plot = function(these_samples,
-                         filter_cohort,
-                         filter_pathology,
+                         keep_cohort,
+                         keep_pathology,
                          seq_type = "genome",
                          metadata,
+                         these_samples_metadata,
                          plot_data,
-                         fill_by,
+                         fill_by = "pathology",
                          comparison_samples,
-                         filter_comp_cohort,
-                         filter_comp_pathology,
                          plot_title = "",
                          plot_subtitle = "",
                          y_axis_lab = "",
@@ -4892,6 +5083,7 @@ fancy_qc_plot = function(these_samples,
                            "PairsOnDiffCHR", "TotalReads", "TotalUniquelyMapped",
                            "TotalUnmappedreads", "TotalDuplicatedreads", "ProportionReadsDuplicated",
                            "ProportionReadsMapped", "MeanCorrectedCoverage", "ProportionCoverage10x", "ProportionCoverage30x")
+
     return(plotting_variables)
   }
 
@@ -4902,29 +5094,32 @@ fancy_qc_plot = function(these_samples,
     this_meta = metadata
   }
 
+  if(!missing(these_samples_metadata)){
+    these_samples = dplyr::select(these_samples_metadata, sample_id) %>%
+      as.data.frame(strings.as.factors = FALSE) %>%
+      pull(sample_id)
+  }
+
   #filter metadata on selected cohort/pathology
-  if(missing(these_samples)){
-    if(!missing(filter_cohort) && missing(filter_pathology)){
-      these_samples = dplyr::filter(this_meta, cohort == filter_cohort) %>%
-        dplyr::select(sample_id) %>%
-        as.data.frame()
+  if(missing(these_samples) && missing(these_samples_metadata)){
+    if(!missing(keep_cohort) && missing(keep_pathology)){
+      these_samples = dplyr::filter(this_meta, cohort == keep_cohort) %>%
+        pull(sample_id)
     }
 
-    if(!missing(filter_pathology) && missing(filter_cohort)){
-      these_samples = dplyr::filter(this_meta, pathology == filter_pathology) %>%
-        dplyr::select(sample_id) %>%
-        as.data.frame()
+    if(!missing(keep_pathology) && missing(keep_cohort)){
+      these_samples = dplyr::filter(this_meta, pathology == keep_pathology) %>%
+       pull(sample_id)
     }
 
-    if(!missing(filter_cohort) && !missing(filter_pathology)){
-      these_samples = dplyr::filter(this_meta, pathology == filter_pathology, cohort == filter_cohort) %>%
-        dplyr::select(sample_id) %>%
-        as.data.frame()
+    if(!missing(keep_cohort) && !missing(keep_pathology)){
+      these_samples = dplyr::filter(this_meta, pathology == keep_pathology, cohort == keep_cohort) %>%
+        pull(sample_id)
     }
 
-    if(missing(filter_cohort) && missing(filter_pathology)){
+    if(missing(keep_cohort) && missing(keep_pathology)){
       these_samples = dplyr::select(this_meta, sample_id) %>%
-        as.data.frame
+        pull(sample_id)
     }
   }
 
@@ -4933,9 +5128,12 @@ fancy_qc_plot = function(these_samples,
   message(paste0("QC Metric successfully retreived for ", nrow(qc_metrics), " samples out of a total of ", nrow(these_samples), " samples in input sample table."))
 
   #aggregate sample list with metadata columns
-  qc_meta = qc_metrics %>% inner_join(this_meta)
-  qc_meta = mutate_if(qc_meta, is.integer, as.factor)
-  qc_meta = mutate_if(qc_meta, is.character, as.factor)
+  qc_meta = qc_metrics %>%
+    inner_join(this_meta) %>%
+    mutate_if(is.integer, as.factor) %>%
+    mutate_if(is.character, as.factor)
+
+  qc_meta$group = "main_sample"
 
   #calculate mean for selected comparison group using a list of IDs provided in comparison_samples
   if(!missing(comparison_samples)){
@@ -4945,37 +5143,15 @@ fancy_qc_plot = function(these_samples,
       arrange(sample_id)
   }
 
-  #calculate mean for selected comparison group as a subset of incoming metadata (i.e no list of sample IDs provided for comparison_samples)
-  if(missing(comparison_samples)){
-    if(!missing(filter_comp_cohort) && missing(filter_comp_pathology)){
-      comp_samples = dplyr::filter(this_meta, cohort == filter_comp_cohort) %>%
-        dplyr::select(sample_id) %>%
-        as.data.frame()
-    }
-
-    if(!missing(filter_comp_pathology) && missing(filter_comp_cohort)){
-      comp_samples = dplyr::filter(this_meta, pathology == filter_comp_pathology) %>%
-        dplyr::select(sample_id) %>%
-        as.data.frame()
-    }
-
-    if(!missing(filter_comp_cohort) && !missing(filter_comp_pathology)){
-      comp_samples = dplyr::filter(this_meta, cohort == filter_comp_cohort, pathology == filter_comp_pathology) %>%
-        dplyr::select(sample_id) %>%
-        as.data.frame()
-    }
-
-    if(missing(filter_comp_cohort) && missing(filter_comp_pathology)){
-      comp_samples = dplyr::select(this_meta, sample_id) %>%
-        as.data.frame()
-    }
-
-    comp_data = collate_qc_results(sample_table = comp_samples, seq_type_filter = seq_type)
+  #Retrieve QC metrics for comparison samples, if provided.
+  if(!missing(comparison_samples)){
+    comp_data = collate_qc_results(sample_table = comparison_samples, seq_type_filter = seq_type)
 
     #aggregate sample list with metadata columns
     comp_meta = comp_data %>% inner_join(this_meta)
     comp_meta = mutate_if(comp_meta, is.integer, as.factor)
     comp_meta = mutate_if(comp_meta, is.character, as.factor)
+    comp_meta$group = "comparison_sample"
     qc_meta = rbind(qc_meta, comp_meta)
   }
 
@@ -4995,9 +5171,9 @@ fancy_qc_plot = function(these_samples,
   list_col = as.list(sub_cols$hex)
 
   #plotting
-  p = ggplot(qc_meta, aes_string(y = plot_data, fill = fill_by, shape = fill_by)) +
-    geom_boxplot(mapping = aes_string(x = fill_by)) +
-    geom_jitter(mapping = aes_string(x = fill_by)) +
+  p = ggplot(qc_meta, aes_string(x = paste0("group"), y = plot_data, fill = fill_by, shape = fill_by)) +
+    geom_boxplot(mapping = aes(x = group)) +
+    geom_jitter(mapping = aes(x = group)) +
     labs(title = plot_title, subtitle = plot_subtitle, x = "", y = y_axis_lab) +
     theme_cowplot() +
     scale_fill_manual(values = c(list_col)) +
@@ -5012,8 +5188,9 @@ fancy_qc_plot = function(these_samples,
 #'
 #' @param these_samples Data frame with sample IDs (to be plotted) in the first column.
 #' @param metadata Optional, user can provide a metadata df to subset sample IDs from.
-#' @param filter_cohort Optional parameter to be used when these_sample is NULL. Calls get_gambl_metadata() and filters on the cohort supplied in this parameter.
-#' @param filter_pathology Optional parameter to be used when these_sample is NULL. Calls get_gambl_metadata() and filters on the pathology supplied in this parameter.
+#' @param these_samples_metadata GAMBL metadata subset to the cases you want to process.
+#' @param keep_cohort Optional parameter to be used when these_sample is NULL. Calls get_gambl_metadata() and filters on the cohort supplied in this parameter.
+#' @param keep_pathology Optional parameter to be used when these_sample is NULL. Calls get_gambl_metadata() and filters on the pathology supplied in this parameter.
 #' @param comparison_samples Optional parameter, give the function a list of sample IDs to be compared against the main plotting group.
 #' @param seq_type Selected seq type for incoming QC metrics.
 #' @param plot_subtitle Plotting parameter, subtitle of generated plot.
@@ -5023,28 +5200,29 @@ fancy_qc_plot = function(these_samples,
 #' @export
 #'
 #' @examples
-#' #Example 1: Compare proportional coverage for all samples compared to all FL cases:
-#' #prepare comparison data:
-#' this_meta = get_gambl_metadata()
-#' all_fl = dplyr::filter(this_meta, pathology == "FL") %>%
-#' dplyr::select(sample_id) %>%
-#'   arrange(sample_id) %>%
-#'   as.data.frame()
+#' #Example 1 - using these_samples parameter
+#' #subset on FL cases with QC metrics available and plot
+#' kridel_fl = get_gambl_metadata() %>%
+#'  dplyr::filter(pathology == "FL", cohort == "FL_Kridel") %>%#
+#'  dplyr::select(sample_id) %>%
+#'  pull(sample_id)
 #'
-#' sub_fl = all_fl[c(128:183),]
-#' sub_fl = as.data.frame(sub_fl)
-#' colnames(sub_fl)[1] = "sample_id"
+#' my_plot_1 = fancy_propcov_plot(these_samples = kridel_fl, seq_type = "genome")
 #'
-#' plot:
-#' my_plot = fancy_propcov_plot(seq_type = "genome", comparison_samples = sub_fl, plot_subtitle = "Proportional coverage for all samples compared to all FL cases")
+#' #Example 2 - using already filtered metadata (these_samples_metadata)
+#' fl_metadata = get_gambl_metadata() %>%
+#'  dplyr::filter(pathology == "FL", cohort == "FL_Kridel")
 #'
-#' Example 2: Visualize proportional coverage for all FL cases (no comparison group)
-#' all_fl = fancy_propcov_plot(filter_pathology = "FL", seq_type = "genome", plot_subtitle = "Proportional coverage for all FL cases")
+#' my_plot_2 = fancy_propcov_plot(these_samples_metadata = fl_metadata, seq_type = "genome")
+#'
+#' #Example 3 - using in-house metadata fitlering options
+#' my_plot_3 = fancy_propcov_plot(keep_cohort = "FL_Kridel", keep_pathology = "FL", seq_type = "genome")
 #'
 fancy_propcov_plot = function(these_samples,
                               metadata,
-                              filter_cohort,
-                              filter_pathology,
+                              these_samples_metadata,
+                              keep_cohort,
+                              keep_pathology,
                               comparison_samples,
                               seq_type = "genome",
                               plot_subtitle = ""){
@@ -5056,29 +5234,32 @@ fancy_propcov_plot = function(these_samples,
     this_meta = metadata
   }
 
+  if(!missing(these_samples_metadata)){
+    these_samples = dplyr::select(these_samples_metadata, sample_id) %>%
+      as.data.frame(strings.as.factors = FALSE) %>%
+      pull(sample_id)
+  }
+  
   #filter metadata on selected cohort/pathology
-  if(missing(these_samples)){
-    if(!missing(filter_cohort) && missing(filter_pathology)){
-      these_samples = dplyr::filter(this_meta, cohort == filter_cohort) %>%
-        dplyr::select(sample_id) %>%
-        as.data.frame()
+  if(missing(these_samples) && missing(these_samples_metadata)){
+    if(!missing(keep_cohort) && missing(keep_pathology)){
+      these_samples = dplyr::filter(this_meta, cohort == keep_cohort) %>%
+        pull(sample_id)
     }
 
-    if(!missing(filter_pathology) && missing(filter_cohort)){
-      these_samples = dplyr::filter(this_meta, pathology == filter_pathology) %>%
-        dplyr::select(sample_id) %>%
-        as.data.frame()
+    if(!missing(keep_pathology) && missing(keep_cohort)){
+      these_samples = dplyr::filter(this_meta, pathology == keep_pathology) %>%
+        pull(sample_id)
     }
 
-    if(!missing(filter_cohort) && !missing(filter_pathology)){
-      these_samples = dplyr::filter(this_meta, pathology == filter_pathology, cohort == filter_cohort) %>%
-        dplyr::select(sample_id) %>%
-        as.data.frame()
+    if(!missing(keep_cohort) && !missing(keep_pathology)){
+      these_samples = dplyr::filter(this_meta, pathology == keep_pathology, cohort == keep_cohort) %>%
+        pull(sample_id)
     }
 
-    if(missing(filter_cohort) && missing(filter_pathology)){
+    if(missing(keep_cohort) && missing(keep_pathology)){
       these_samples = dplyr::select(this_meta, sample_id) %>%
-        as.data.frame
+        pull(sample_id)
     }
   }
 
@@ -5133,8 +5314,9 @@ fancy_propcov_plot = function(these_samples,
 #'
 #' @param these_samples Data frame with sample IDs (to be plotted) in the first column.
 #' @param metadata Optional, user can provide a metadata df to subset sample IDs from.
-#' @param filter_cohort Optional parameter to be used when these_sample is NULL. Calls get_gambl_metadata() and filters on the cohort supplied in this parameter.
-#' @param filter_pathology Optional parameter to be used when these_sample is NULL. Calls get_gambl_metadata() and filters on the pathology supplied in this parameter.
+#' @param these_samples_metadata GAMBL metadata subset to the cases you want to process.
+#' @param keep_cohort Optional parameter to be used when these_sample is NULL. Calls get_gambl_metadata() and filters on the cohort supplied in this parameter.
+#' @param keep_pathology Optional parameter to be used when these_sample is NULL. Calls get_gambl_metadata() and filters on the pathology supplied in this parameter.
 #' @param seq_type Selected seq type for incoming QC metrics.
 #' @param plot_subtitle Plotting parameter, subtitle of generated plot.
 #'
@@ -5143,12 +5325,29 @@ fancy_propcov_plot = function(these_samples,
 #' @export
 #'
 #' @examples
-#' my_plot = fancy_proportions_plot(filter_cohort = "FL_Kridel", filter_pathology = "FL", seq_type = "genome")
+#' #Example 1 - using these_samples parameter
+#' #subset on FL cases with QC metrics available and plot
+#' kridel_fl = get_gambl_metadata() %>%
+#'  dplyr::filter(pathology == "FL", cohort == "FL_Kridel") %>%#
+#'  dplyr::select(sample_id) %>%
+#'  pull(sample_id)
+#'
+#' my_plot_1 = fancy_proportions_plot(these_samples = kridel_fl, seq_type = "genome")
+#'
+#' #Example 2 - using already filtered metadata (these_samples_metadata)
+#' fl_metadata = get_gambl_metadata() %>%
+#'  dplyr::filter(pathology == "FL", cohort == "FL_Kridel")
+#'
+#' my_plot_2 = fancy_proportions_plot(these_samples_metadata = fl_metadata, seq_type = "genome")
+#'
+#' #Example 3 - using in-house metadata fitlering options
+#' my_plot_3 = fancy_proportions_plot(keep_cohort = "FL_Kridel", keep_pathology = "FL", seq_type = "genome")
 #'
 fancy_proportions_plot = function(these_samples,
                                   metadata,
-                                  filter_cohort,
-                                  filter_pathology,
+                                  these_samples_metadata,
+                                  keep_cohort,
+                                  keep_pathology,
                                   seq_type = "genome",
                                   plot_subtitle = ""){
 
@@ -5159,29 +5358,32 @@ fancy_proportions_plot = function(these_samples,
     this_meta = metadata
   }
 
+  if(!missing(these_samples_metadata)){
+    these_samples = dplyr::select(these_samples_metadata, sample_id) %>%
+      as.data.frame(strings.as.factors = FALSE) %>%
+      pull(sample_id)
+  }
+  
   #filter metadata on selected cohort/pathology
-  if(missing(these_samples)){
-    if(!missing(filter_cohort) && missing(filter_pathology)){
-      these_samples = dplyr::filter(this_meta, cohort == filter_cohort) %>%
-        dplyr::select(sample_id) %>%
-        as.data.frame()
+  if(missing(these_samples) && missing(these_samples_metadata)){
+    if(!missing(keep_cohort) && missing(keep_pathology)){
+      these_samples = dplyr::filter(this_meta, cohort == keep_cohort) %>%
+        pull(sample_id)
     }
 
-    if(!missing(filter_pathology) && missing(filter_cohort)){
-      these_samples = dplyr::filter(this_meta, pathology == filter_pathology) %>%
-        dplyr::select(sample_id) %>%
-        as.data.frame()
+    if(!missing(keep_pathology) && missing(keep_cohort)){
+      these_samples = dplyr::filter(this_meta, pathology == keep_pathology) %>%
+        pull(sample_id)
     }
 
-    if(!missing(filter_cohort) && !missing(filter_pathology)){
-      these_samples = dplyr::filter(this_meta, pathology == filter_pathology, cohort == filter_cohort) %>%
-        dplyr::select(sample_id) %>%
-        as.data.frame()
+    if(!missing(keep_cohort) && !missing(keep_pathology)){
+      these_samples = dplyr::filter(this_meta, pathology == keep_pathology, cohort == keep_cohort) %>%
+        pull(sample_id)
     }
 
-    if(missing(filter_cohort) && missing(filter_pathology)){
+    if(missing(keep_cohort) && missing(keep_pathology)){
       these_samples = dplyr::select(this_meta, sample_id) %>%
-        as.data.frame
+        pull(sample_id)
     }
   }
 

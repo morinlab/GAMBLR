@@ -19,6 +19,7 @@ Suggests:
     testthat
 biocViews:
 Imports:
+    biomaRt,
     broom,
     circlize,
     ComplexHeatmap,

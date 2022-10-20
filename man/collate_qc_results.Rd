@@ -5,7 +5,7 @@
 \title{INTERNAL FUNCTION called by collate_results, not meant for out-of-package usage.
 Collate qc metrics.}
 \usage{
-collate_qc_results(sample_table, seq_type_filter = "genome")
+collate_qc_results(sample_table, seq_type_filter)
 }
 \arguments{
 \item{sample_table}{df with sample ids in the first column.}
@@ -20,7 +20,6 @@ INTERNAL FUNCTION called by collate_results, not meant for out-of-package usage.
 Collate qc metrics.
 }
 \examples{
-sample_table <- data.frame (sample_id  = c("09-33003T", "05-18426T", "BLGSP-71-06-00174-01A-01D", "BLGSP-71-22-00347-01A-12E", "SP59282"))
-qc_metrics = collate_qc_results(sample_table = sample_table, seq_type_filter = "genome")
+qc_metrics = collate_qc_results(sample_table = sample_table)
 
 }

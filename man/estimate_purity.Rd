@@ -6,6 +6,7 @@
 \usage{
 estimate_purity(
   in_maf,
+  maf_df,
   in_seg,
   sample_id,
   seg_file_source = "battenberg",
@@ -18,6 +19,8 @@ estimate_purity(
 }
 \arguments{
 \item{in_maf}{Path to a local maf file.}
+
+\item{maf_df}{Optional. Instead of using the path to a maf file, use a local dataframe as the maf file.}
 
 \item{in_seg}{Path to a local corresponding seg file for the same sample ID as the input maf.}
 

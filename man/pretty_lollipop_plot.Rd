@@ -22,7 +22,7 @@ Nothing
 Generate a more visually appealing and flexible lollipop plot.
 }
 \examples{
-plot_lollipop = (mutation_df, "MYC", "Mutation data for MYC", "blue")
-plot_lollipop = (mutation_df, "BCL2")
+pretty_lollipop_plot = (mutation_df, "MYC", "Mutation data for MYC", "blue")
+pretty_lollipop_plot = (mutation_df, "BCL2")
 
 }

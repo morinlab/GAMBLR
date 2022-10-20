@@ -14,17 +14,17 @@ prettyGeneCloud(
 )
 }
 \arguments{
-\item{maf_df}{}
+\item{maf_df}{A MAF-format data frame containing the mutations you want to summarize in a gene word cloud}
 
-\item{these_genes}{}
+\item{these_genes}{An optional vector of gene symbols (defaults to all lymphoma genes)}
 
-\item{other_genes}{}
+\item{other_genes}{An optional second vector of gene symbols to include in your cloud in a second colour}
 
-\item{these_genes_colour}{}
+\item{these_genes_colour}{Specify the hex code of a colour to use for the first set of genes}
 
-\item{other_genes_colour}{}
+\item{other_genes_colour}{Specify another hex code of a colour to use for the second set of genes}
 
-\item{colour_index}{}
+\item{colour_index}{Optional named character vector with a name for each gene in these_genes and a colour as the value}
 }
 \value{
 data frame with counts for each gene

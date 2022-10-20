@@ -21,8 +21,7 @@ fancy_ideogram(
   cn_col_seq = 7,
   plot_title = paste0(this_sample),
   plot_subtitle = "Genome-wide Ideogram (grch37).",
-  intersect_regions = FALSE,
-  some_regions,
+  intersect_regions,
   include_ssm = TRUE,
   ssm_count = TRUE,
   coding_only = FALSE,
@@ -33,7 +32,7 @@ fancy_ideogram(
 \arguments{
 \item{this_sample}{Sample to be plotted (for multiple samples, see fancy_multisample_ideogram.}
 
-\item{gene_annotation}{Annotate ideogram with a single gene.}
+\item{gene_annotation}{Annotate ideogram with a set of genes. These genes can either be specified as a vector of characters or a data frame.}
 
 \item{seq_data}{Optional parameter with copy number df already loaded into R.}
 
@@ -61,9 +60,7 @@ fancy_ideogram(
 
 \item{plot_subtitle}{Optional argument for plot subtitle.}
 
-\item{intersect_regions}{Optional Boolean argument, if set to TRUE, the function expects some_regions to perform an intersect with cn_states.}
-
-\item{some_regions}{Bed-like df with regions for subsetting incoming cn_sates to. Columns should be "chrom", "start", "end".}
+\item{intersect_regions}{Optional parameter for subset variant calls to specific regions. Should be either a vector of characters (chr:start-end) or data frame with regions.}
 
 \item{include_ssm}{Set to TRUE to plot ssms (dels and ins).}
 
@@ -84,7 +81,32 @@ Nothing.
 Generate sample-level ideogram with copy number information, ssm and gene annotations, etc.
 }
 \examples{
-ideogram_MYC = fancy_ideogram(this_sample = "HTMCP-01-06-00422-01A-01D", gene_annotation = "MYC", include_ssm = TRUE, ssm_count = TRUE, coding_only = FALSE, from_flatfile = FALSE, use_augmented = FALSE)
-cnv_ideogram = fancy_ideogram(this_sample = "HTMCP-01-06-00422-01A-01D")
+#
+fl_genes = dplyr::filter(lymphoma_genes, FL == TRUE) \%>\%
+  dplyr::select(Gene) \%>\%
+  pull(Gene)
+
+fl_genes_chr1 = gene_to_region(gene_symbol = fl_genes, return_as = "df") \%>\%
+  dplyr::filter(chromosome == "1") \%>\%
+  pull(hugo_symbol)
+
+ideogram_fl_chr1 = fancy_ideogram(this_sample = "HTMCP-01-06-00422-01A-01D",
+                                  gene_annotation = fl_genes_chr1, 
+                                  intersect_regions = "chr1:10000-249250621",
+                                  include_ssm = TRUE, 
+                                  ssm_count = TRUE, 
+                                  coding_only = FALSE, 
+                                  from_flatfile = FALSE, 
+                                  use_augmented = FALSE)
+ 
+ fl_regions = gene_to_region(gene_symbol = fl_genes, return_as = "df")
+ ideogram_fl = fancy_ideogram(this_sample = "HTMCP-01-06-00422-01A-01D",
+                              gene_annotation = fl_genes, 
+                              intersect_regions = fl_regions,
+                              include_ssm = TRUE, 
+                              ssm_count = TRUE, 
+                              coding_only = FALSE, 
+                              from_flatfile = FALSE, 
+                              use_augmented = FALSE)
 
 }

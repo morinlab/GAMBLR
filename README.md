@@ -3,13 +3,13 @@
 ## Getting Started
 
 
-This package relies heavily on a MariaDB/MySQL database hosted on the GSC network. Because of this, you can't use many of the functions outside of the network. You will also need a config file that contains the credentials that give you access to one of the databases. If you have the appropriate approvals, you can make a copy of the credentials file in the home directory of another GAMBL user. 
+This package relies heavily on a MariaDB/MySQL database hosted on the GSC network. Because of this, you can't use many of the functions outside of the network. You will also need a config file that contains the credentials that give you access to one of the databases. If you have the appropriate approvals, you can make a copy of the credentials file in the home directory of another GAMBL user.
 
 ```
 cp /home/rmorin/.my.cnf ~/.my.cnf && chgrp morinlab ~/.my.cnf && chmod 750 ~/.my.cnf
 ```
 
-It is extremely important that you ensure the file has the right unix group (`morinlab`) and is not readable by "all". The output of `ls -l` should look exactly as shown below (with your username shown instead of rmorin). 
+It is extremely important that you ensure the file has the right unix group (`morinlab`) and is not readable by "all". The output of `ls -l` should look exactly as shown below (with your username shown instead of rmorin).
 
 ```
 -rwxr-x--- 1 rmorin morinlab 54 Mar 31 08:41 /home/rmorin/.my.cnf
@@ -21,14 +21,14 @@ To confirm your connection works, connect to the database using the mysql client
 mysql gambl_test
 ```
 
-If you see a mysql prompt then you are ready to go. You can also see what tables are available and run queries here if you like. 
+If you see a mysql prompt then you are ready to go. You can also see what tables are available and run queries here if you like.
 
 ```
-show tables; 
+show tables;
 #don't forget the semicolon!
 ```
 
-Instead of writing your own queries, it's more likely that you will want to use the dbplyr package and the convenience functions provided in GAMBLR. Adding new functionality is highly encouraged. 
+Instead of writing your own queries, it's more likely that you will want to use the dbplyr package and the convenience functions provided in GAMBLR. Adding new functionality is highly encouraged.
 
 ## Installation
 
@@ -38,7 +38,7 @@ Clone the repo to your home directory (not your gambl working directory)
 git clone git@github.com:morinlab/GAMBLR.git
 ```
 
-In Rstudio (on a gphost), set your working directory to the place you just cloned the repo. 
+In Rstudio (on a gphost), set your working directory to the place you just cloned the repo.
 
 ```
 setwd("~/GAMBLR")
@@ -67,7 +67,7 @@ library(metaviz)
 
 ## Contributing
 
-As GAMBL users (GAMBLRs, so to speak) rely on the functionality of this package, the Master branch is protected. All commits must be submitted via pull request on a branch. Please refer to the [GAMBL](https://github.com/morinlab/gambl#contribution-guidelines) documentation for details on how to do this. 
+As GAMBL users (GAMBLRs, so to speak) rely on the functionality of this package, the Master branch is protected. All commits must be submitted via pull request on a branch. Please refer to the [GAMBL](https://github.com/morinlab/gambl#contribution-guidelines) documentation for details on how to do this.
 
 # Run GAMBLR Remote On A Local Machine
 This section is directed towards running GAMBLR remote on a *local machine*, for exploring a collection of GAMBLR functions. There are two different approaches to ge this to work. We will be going over both in the next sections.
@@ -92,7 +92,7 @@ repo_base: "path/to/your/local/gambl_repo/"
 ```
 4. Set the **working directory** in Rstudio. Open Rstudio on your local machine and locate the repo you cloned in the step 2.
 ```
-setwd("~/git_repos/GMABLR-master")
+setwd("~/git_repos/GAMBLR-master")
 ```
 5. Install R packages to you local R studio session.
 ```
@@ -120,7 +120,7 @@ get_gambl_metadata() %>%
   head()
 ```
 ## Approach 2 - The Full Instalation (Snakemake)
-This section details how to obtain GAMBLR with **full** functionality, using a dedicated snake file to retrieve all necessary files and dependencies. 
+This section details how to obtain GAMBLR with **full** functionality, using a dedicated snake file to retrieve all necessary files and dependencies.
 
 #### Before You Get Started
 1. Make sure you have a working SSH key **setup with a pass phrase**. If not, follow instructions at [GSC Wiki](https://www.bcgsc.ca/wiki/login.action?os_destination=%2Fpages%2Fviewpage.action%3FspaceKey%3DSysHelp%26title%3DSetup%2BPassword-less%2BSSH&permissionViolation=true). Warning, this will **not** work with a pass phrase-less SSH connection.
@@ -159,7 +159,7 @@ export GSC_PASSPHRASE="passpharase_from_step_1"
 ```
 setwd("~/git_repos/GAMBLR-master")
 ```
-8. Install and load GAMBLR into your local R session. 
+8. Install and load GAMBLR into your local R session.
 ```
 devtools::install()
 ```
@@ -178,7 +178,7 @@ conda activate snakemake_gambl
 snakemake -s get_gambl_results.smk --cores 1
 ```
 #### Use GAMBLR Functions Locally
-12. In Rstudio (local), open [test_remote.R](https://github.com/morinlab/GAMBLR/blob/master/test_remote.R) in GAMBLR master folder. 
+12. In Rstudio (local), open [test_remote.R](https://github.com/morinlab/GAMBLR/blob/master/test_remote.R) in GAMBLR master folder.
 13. Execute the following in Rstudio console to make use of the updated paths in the [config.yml](https://github.com/morinlab/GAMBLR/blob/master/config.yml) from step 5 (line 5 in [test_remote.r](https://github.com/morinlab/GAMBLR/blob/master/test_remote.R))
 ```
 Sys.setenv(R_CONFIG_ACTIVE = "remote")
@@ -197,6 +197,6 @@ get_gambl_metadata() %>%
 get_gambl_metadata(seq_type_filter = "capture") %>%
   pull(cohort) %>%
   table()
-  
+
 Error: '/projects/rmorin/projects/gambl-repos/gambl-rmorin/data/metadata/gambl_all_outcomes.tsv' does not exist.
 ```

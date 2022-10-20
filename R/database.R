@@ -16,6 +16,14 @@ maf_header = c("Hugo_Symbol"=1,"Entrez_Gene_Id"=2,"Center"=3,"NCBI_Build"=4,"Chr
 #'
 get_excluded_samples = function(tool_name = "slms-3"){
   base = config::get("repo_base")
+
+  #check for missingness
+  path = paste0(base,"config/exclude.tsv")
+  if(!file.exists(path)){
+    print(paste("missing: ", path))
+    message("Have you cloned the GAMBL repo and added the path to this directory under the local section of your config?")
+  }
+
   excluded_df = read_tsv(paste0(base,"config/exclude.tsv"))
   excluded_samples = dplyr::filter(excluded_df, pipeline_exclude == tool_name) %>%
     pull(sample_id)
@@ -38,7 +46,6 @@ get_excluded_samples = function(tool_name = "slms-3"){
 #' @param min_read_support Only returns variants with at least this many reads in t_alt_count (for cleaning up augmented MAFs)
 #' @param basic_columns Return first 43 columns of MAF rather than full details. Default is TRUE.
 #' @param maf_cols if basic_columns is set to FALSE, the user can specify what columns to be returned within the MAF. This parameter can either be a list of indexes (integer) or a list of characters (matching columns in MAF).
-#' @param return_cols If set to TRUE, a vector with all available column names will be returned. Default is FALSE.
 #' @param subset_from_merge Instead of merging individual MAFs, the data will be subset from a pre-merged MAF of samples with the specified seq_type
 #'
 #' @return
@@ -58,7 +65,6 @@ get_ssm_by_patients = function(these_patient_ids,
                                min_read_support = 3,
                                basic_columns = TRUE,
                                maf_cols = NULL,
-                               return_cols = FALSE,
                                subset_from_merge = FALSE,
                                augmented = TRUE,
                                engine='fread_maf',
@@ -103,7 +109,6 @@ get_ssm_by_patients = function(these_patient_ids,
                             ssh_session = ssh_session,
                             basic_columns = basic_columns,
                             maf_cols = maf_cols,
-                            return_cols = return_cols,
                             engine=engine))
 }
 
@@ -124,7 +129,6 @@ get_ssm_by_patients = function(these_patient_ids,
 #' @param min_read_support Only returns variants with at least this many reads in t_alt_count (for cleaning up augmented MAFs)
 #' @param basic_columns Return first 45 columns of MAF rather than full details. Default is TRUE.
 #' @param maf_cols if basic_columns is set to FALSE, the suer can specify what columns to be returned within the MAF. This parameter can either be a list of indexes (integer) or a list of characters.
-#' @param return_cols If set to TRUE, a vector with all avaialble column names will be returned. Default is FALSE.
 #' @param subset_from_merge Instead of merging individual MAFs, the data will be subset from a pre-merged MAF of samples with the specified seq_type
 #' @param engine Specify one of readr or fread_maf (default) to change how the large files are loaded prior to subsetting. You may have better performance with one or the other but for me fread_maf is faster and uses a lot less RAM. 
 #' @param ssh_session argument to supply active ssh session connection for remote transfers (only compatible with subset_from_merge=TRUE)
@@ -149,7 +153,6 @@ get_ssm_by_samples = function(these_sample_ids,
                               min_read_support = 3,
                               basic_columns = TRUE,
                               maf_cols = NULL,
-                              return_cols = FALSE,
                               subset_from_merge = FALSE,
                               augmented = TRUE,
                               engine='fread_maf',
@@ -188,6 +191,14 @@ get_ssm_by_samples = function(these_sample_ids,
       maf_path = glue::glue(maf_template)
       full_maf_path =  paste0(config::get("project_base"), maf_path)
       message(paste("using existing merge:", full_maf_path))
+
+      #check for missingness
+      if(!file.exists(full_maf_path)){
+        print(paste("missing: ", full_maf_path))
+        message("Cannot find file locally. If working remotely, perhaps you forgot to load your config (see below) or sync your files?")
+        message('Sys.setenv(R_CONFIG_ACTIVE = "remote")')
+        }
+
       if(engine=="fread_maf"){
         if(basic_columns){
           maf_df_merge = fread_maf(full_maf_path,select_cols = c(1:45)) %>%
@@ -215,10 +226,6 @@ get_ssm_by_samples = function(these_sample_ids,
       if(!is.null(maf_cols) && !basic_columns){
         maf_df_merge = dplyr::select(maf_df_merge, all_of(maf_cols))
       }
-      #print all available columns
-      if(!basic_columns && return_cols){
-        print(colnames(maf_df_merge))
-      }
     }
 
     if(subset_from_merge && augmented){
@@ -226,6 +233,14 @@ get_ssm_by_samples = function(these_sample_ids,
       maf_path = glue::glue(maf_template)
       full_maf_path =  paste0(config::get("project_base"), maf_path)
       message(paste("using existing merge:", full_maf_path))
+
+      #check for missingness
+      if(!file.exists(full_maf_path)){
+        print(paste("missing: ", full_maf_path))
+        message("Cannot find file locally. If working remotely, perhaps you forgot to load your config (see below) or sync your files?")
+        message('Sys.setenv(R_CONFIG_ACTIVE = "remote")')
+      }
+
       #maf_df_merge = read_tsv(full_maf_path) %>%
       #  dplyr::filter(Tumor_Sample_Barcode %in% these_sample_ids) %>%
       #  dplyr::filter(t_alt_count >= min_read_support)
@@ -242,8 +257,6 @@ get_ssm_by_samples = function(these_sample_ids,
       if(basic_columns){maf_df_merge = dplyr::select(maf_df_merge, c(1:45))}
       #subset maf to a specific set of columns (defined in maf_cols)
       if(!is.null(maf_cols) && !basic_columns){maf_df_merge = dplyr::select(maf_df_merge, all_of(maf_cols))}
-      #print all available columns
-      if(!basic_columns && return_cols){print(colnames(maf_df_merge))}
     }
 
     if(!subset_from_merge){
@@ -263,7 +276,6 @@ get_ssm_by_samples = function(these_sample_ids,
         #    min_read_support = min_read_support,
         #    basic_columns = basic_columns,
         #    maf_cols = maf_cols,
-        #    return_cols = return_cols,
         #    verbose = FALSE,
         #    ssh_session = ssh_session
         #  )
@@ -280,7 +292,6 @@ get_ssm_by_samples = function(these_sample_ids,
         min_read_support = min_read_support,
         basic_columns = basic_columns,
         maf_cols = maf_cols,
-        return_cols = return_cols,
         verbose = FALSE
       )},mc.cores = 12)
       
@@ -316,7 +327,6 @@ get_ssm_by_samples = function(these_sample_ids,
 #' @param min_read_support Only returns variants with at least this many reads in t_alt_count (for cleaning up augmented MAFs)
 #' @param basic_columns Return first 43 columns of MAF rather than full details. Default is TRUE.
 #' @param maf_cols if basic_columns is set to FALSE, the suer can specify what columns to be returned within the MAF. This parameter can either be a list of indexes (integer) or a list of characters.
-#' @param return_cols If set to TRUE, a vector with all avaialble column names will be returned. Default is FALSE.
 #' @param verbose Enable for debugging/noisier output
 #' @param ssh_session BETA feature! pass active ssh session object.
 #' If specified, the function will assume the user is not on the network and will temporarily copy the file locally.
@@ -340,7 +350,6 @@ get_ssm_by_sample = function(this_sample_id,
                              min_read_support = 3,
                              basic_columns = TRUE,
                              maf_cols = NULL,
-                             return_cols = FALSE,
                              verbose = FALSE,
                              ssh_session){
   if(missing(this_seq_type) & missing(these_samples_metadata)){
@@ -422,6 +431,14 @@ get_ssm_by_sample = function(this_sample_id,
         
         scp_download(ssh_session,aug_maf_path,dirN)
       }
+
+     #check for missingness
+     if(!file.exists(local_aug_maf_path)){
+      print(paste("missing: ", local_aug_maf_path))
+      message("Cannot find file locally. If working remotely, perhaps you forgot to load your config (see below) or sync your files?")
+      message('Sys.setenv(R_CONFIG_ACTIVE = "remote")')
+     }
+
       sample_ssm = fread_maf(local_aug_maf_path) %>%
       dplyr::filter(t_alt_count >= min_read_support)
     }else{
@@ -436,10 +453,25 @@ get_ssm_by_sample = function(this_sample_id,
 
         scp_download(ssh_session,full_maf_path,dirN)
       }
+      #check for missingness
+      if(!file.exists(local_full_maf_path)){
+        print(paste("missing: ", local_full_maf_path))
+        message("Cannot find file locally. If working remotely, perhaps you forgot to load your config (see below) or sync your files?")
+        message('Sys.setenv(R_CONFIG_ACTIVE = "remote"')
+      }
+
       sample_ssm = fread_maf(local_full_maf_path)
     }
   }else if(augmented && file.exists(aug_maf_path)){
     full_maf_path = aug_maf_path
+
+    #check for missingness
+    if(!file.exists(full_maf_path)){
+      print(paste("missing: ",full_maf_path))
+      message("Cannot find file locally. If working remotely, perhaps you forgot to load your config (see below) or sync your files?")
+      message('Sys.setenv(R_CONFIG_ACTIVE = "remote")')
+    }
+
     sample_ssm = fread_maf(full_maf_path)
     if(min_read_support){
       # drop poorly supported reads but only from augmented MAF
@@ -447,9 +479,17 @@ get_ssm_by_sample = function(this_sample_id,
     }
   }else{
     if(!file.exists(full_maf_path)){
+      print(paste("missing: ", full_maf_path))
       message(paste("warning: file does not exist, skipping it.", full_maf_path))
       return()
     }
+    #check for missingness
+    if(!file.exists(full_maf_path)){
+      print(paste("missing: ", full_maf_path))
+      message("Cannot find file locally. If working remotely, perhaps you forgot to load your config (see below) or sync your files?")
+      message('Sys.setenv(R_CONFIG_ACTIVE = "remote")')
+    }
+
     sample_ssm = fread_maf(full_maf_path)
   }
 
@@ -466,11 +506,6 @@ get_ssm_by_sample = function(this_sample_id,
   #subset maf to a specific set of columns (defined in maf_cols)
   if(!is.null(maf_cols) && !basic_columns){
     sample_ssm = dplyr::select(sample_ssm, all_of(maf_cols))
-    }
-
-  #print all available columns
-  if(!basic_columns && return_cols){
-    print(colnames(sample_ssm))
     }
 
   return(sample_ssm)
@@ -564,6 +599,18 @@ get_gambl_metadata = function(seq_type_filter = "genome",
     if(biopsy_flatfile==""){
       biopsy_flatfile = paste0(base, config::get("table_flatfiles")$biopsies)
     }
+
+    #check for missingness
+    if(!file.exists(sample_flatfile)){
+      print(paste("missing: ", sample_flatfile))
+      message("Have you cloned the GAMBL repo and added the path to this directory under the local section of your config?")
+    }
+
+    if(!file.exists(biopsy_flatfile)){
+      print(paste("missing: ", biopsy_flatfile))
+      message("Have you cloned the GAMBL repo and added the path to this directory under the local section of your config?")
+    }
+
     sample_meta = suppressMessages(read_tsv(sample_flatfile, guess_max = 100000))
     biopsy_meta = suppressMessages(read_tsv(biopsy_flatfile, guess_max = 100000))
 
@@ -958,6 +1005,13 @@ add_icgc_metadata = function(incoming_metadata){
   icgc_publ = mutate(icgc_publ, sex = str_to_upper(sex))
 
   icgc_raw_path = paste0(repo_base,"data/metadata/raw_metadata/ICGC_MALY_seq_md.tsv")
+
+  #check for missingness
+  if(!file.exists(icgc_raw_path)){
+    print(paste("missing: ", icgc_raw_path))
+    message("Have you cloned the GAMBL repo and added the path to this directory under the local section of your config?")
+  }
+
   icgc_raw = suppressMessages(read_tsv(icgc_raw_path))
 
   icgc_raw = icgc_raw %>%
@@ -1005,6 +1059,13 @@ get_gambl_outcomes = function(patient_ids,
 
   if(from_flatfile){
     outcome_flatfile = paste0(config::get("repo_base"), config::get("table_flatfiles")$outcomes)
+
+    #check for missingness
+    if(!file.exists(outcome_flatfile)){
+      print(paste("missing: ", outcome_flatfile))
+      message("Have you cloned the GAMBL repo and added the path to this directory under the local section of your config?")
+    }
+
     all_outcome = suppressMessages(read_tsv(outcome_flatfile))
 
   }else{
@@ -1117,6 +1178,14 @@ get_combined_sv = function(min_vaf = 0,
     sv_file = config::get()$results_flatfiles$sv_combined$gambl
     sv_file = paste0(base_path, sv_file)
   }
+
+  #check for missingness
+  if(!file.exists(sv_file)){
+    print(paste("missing: ", sv_file))
+    message("Cannot find file locally. If working remotely, perhaps you forgot to load your config (see below) or sync your files?")
+    message('Sys.setenv(R_CONFIG_ACTIVE = "remote")')
+  }
+
   all_sv = read_tsv(sv_file, col_types = "cnncnncnccccnnccncn") %>%
     dplyr::rename(c("VAF_tumour" = "VAF")) %>%
     dplyr::filter(VAF_tumour >= min_vaf)
@@ -1203,12 +1272,15 @@ get_manta_sv = function(min_vaf = 0.1,
   #this table stores chromosomes with un-prefixed names. Convert to prefixed chromosome if necessary
   if(from_flatfile){
     sv_file = get_merged_result(tool_name = "manta", projection = projection)
+
     #check for missingness
     if(!file.exists(sv_file)){
+      print(paste("missing: ", sv_file))
       message("Cannot find file locally. If working remotely, perhaps you forgot to load your config (see below) or sync your files?")
       message('Sys.setenv(R_CONFIG_ACTIVE= "remote")')
       check_host()
     }
+
     all_sv = read_tsv(sv_file, col_types = "cnncnncnccccnnnnccc", col_names = cnames)
 
   }else{
@@ -1456,7 +1528,7 @@ get_cn_states = function(regions_list,
                          use_cytoband_name = FALSE){
   this_seq_type="genome" #this only supports genomes currently
   if(missing(these_samples_metadata)){
-    these_samples_metadata = get_gambl_metadata(seq_type=this_seq_type)
+    these_samples_metadata = get_gambl_metadata(seq_type_filter=this_seq_type)
   }else{
     these_samples_metadata = dplyr::filter(these_samples_metadata,seq_type==this_seq_type)
   }
@@ -1569,6 +1641,13 @@ get_sample_cn_segments = function(this_sample_id,
       cnv_flatfile_template = config::get("results_flatfiles")$cnv_combined$gambl
       cnv_path =  glue::glue(cnv_flatfile_template)
       full_cnv_path =  paste0(config::get("project_base"), cnv_path)
+    }
+
+    #check for missingness
+    if(!file.exists(full_cnv_path)){
+      print(paste("missing: ", full_cnv_path))
+      message("Cannot find file locally. If working remotely, perhaps you forgot to load your config (see below) or sync your files?")
+      message('Sys.setenv(R_CONFIG_ACTIVE = "remote")')
     }
 
     all_segs = read_tsv(full_cnv_path)
@@ -2001,7 +2080,7 @@ get_ssm_by_region = function(chromosome,
     full_maf_path_comp = paste0(base_path, maf_path, ".bgz")
 
     if(!file.exists(full_maf_path_comp)){
-      print(paste("missing:",full_maf_path_comp))
+      print(paste("missing:", full_maf_path_comp))
       message("Warning, you are running this on a computer that does not have direct acces to the directed file, prehaps you should try run this with ssh_session as a parameter?")
     }else if(!is.null(ssh_session)){
       message("The file you requested exists locally. Are you sure you want to use ssh_session?")
@@ -2034,7 +2113,7 @@ get_ssm_by_region = function(chromosome,
     chromosome = gsub("chr", "", chromosome)
   }
 
-  if(missing(maf_data)){
+ if(missing(maf_data)){
     if(from_indexed_flatfile){
       if(!is.null(ssh_session)){
         #Helper function that may come in handy elsewhere so could be moved out of this function if necessary
@@ -2046,7 +2125,6 @@ get_ssm_by_region = function(chromosome,
 
         # NOTE!
         # Retrieving mutations per region over ssh connection is only supporting the basic columns for now in an attempt to keep the transfer of unnecessary data to a minimum
-
 
         remote_tabix_bin = config::get("dependencies",config="default")$tabix
 
@@ -2122,7 +2200,6 @@ get_ssm_by_region = function(chromosome,
 #' @param seq_type The seq_type you want back, default is genome.
 #' @param basic_columns Set to FALSE to override the default behavior of returning only the first 45 columns of MAF data.
 #' @param maf_cols if basic_columns is set to FALSE, the user can specify what columns to be returned within the MAF. This parameter can either be a list of indexes (integer) or a list of characters (matching columns in MAF).
-#' @param return_cols If set to TRUE, a vector with all avaialble column names will be returned. Default is FALSE.
 #' @param from_flatfile Set to TRUE to obtain mutations from a local flatfile instead of the database. This can be more efficient and is currently the only option for users who do not have ICGC data access.
 #' @param augmented default: TRUE. Set to FALSE if you instead want the original MAF from each sample for multi-sample patients instead of the augmented MAF
 #' @param min_read_support Only returns variants with at least this many reads in t_alt_count (for cleaning up augmented MAFs)
@@ -2148,7 +2225,6 @@ get_coding_ssm = function(limit_cohort,
                           seq_type,
                           basic_columns = TRUE,
                           maf_cols = NULL,
-                          return_cols = FALSE,
                           from_flatfile = TRUE,
                           augmented = TRUE,
                           min_read_support = 3,
@@ -2219,7 +2295,13 @@ get_coding_ssm = function(limit_cohort,
   #read file
   if(from_flatfile){
     message(paste("reading from:", full_maf_path))
-   
+
+  #check for missingness
+    if(!file.exists(full_maf_path)){
+      print(paste("missing: ", full_maf_path))
+      message("Cannot find file locally. If working remotely, perhaps you forgot to load your config (see below) or sync your files?")
+      message('Sys.setenv(R_CONFIG_ACTIVE = "remote")')
+    }
 
     if(engine=='fread_maf'){
       if(basic_columns){
@@ -2267,11 +2349,6 @@ get_coding_ssm = function(limit_cohort,
   #subset maf to a specific set of columns (defined in maf_cols)
   if(!is.null(maf_cols) && !basic_columns){
     muts = dplyr::select(muts, all_of(maf_cols))
-  }
-
-  #print all avaialble columns
-  if(!basic_columns && return_cols){
-    print(colnames(muts))
   }
 
   #drop rows for these samples so we can swap in the force_unmatched outputs instead
@@ -2395,6 +2472,15 @@ get_gene_expression = function(metadata,
   base_path = config::get("project_base")
   tidy_expression_file = paste0(base_path,tidy_expression_path)
   tidy_expression_file = gsub(".gz$","",tidy_expression_file)
+
+  #check permission and updates paths accordingly
+  permissions = file.access(tidy_expression_file, 4)
+  if(permissions == -1 ){
+    message("restricting to non-ICGC data")
+    tidy_expression_path = config::get("results_merged")$tidy_expression_path_gambl
+    tidy_expression_file = paste0(base_path, tidy_expression_path)
+  }
+
   if(!missing(expression_data)){
     tidy_expression_data = as.data.frame(expression_data) #is this necessary? Will it unnecessarily duplicate a large object if it's already a data frame?
     if(!missing(hugo_symbols)){
@@ -2422,6 +2508,7 @@ get_gene_expression = function(metadata,
     }
   }else{
     if(!file.exists(tidy_expression_file)){
+      print(paste("missing: ", tidy_expression_file))
       message("Cannot find file locally. If working remotely, perhaps you forgot to load your config (see below) or sync your files?")
       message('Sys.setenv(R_CONFIG_ACTIVE= "remote")')
       check_host()
@@ -2434,7 +2521,7 @@ get_gene_expression = function(metadata,
     }else{
       if(!missing(hugo_symbols)){
         #lazily filter on the fly to conserve RAM (use grep without regex)
-        genes_regex=paste(c("-e Hugo_Symbol",genes),collapse = " -e ");
+        genes_regex=paste(c("-e Hugo_Symbol",hugo_symbols),collapse = " -e ");
         grep_cmd = paste0("grep -w -F ",genes_regex," ",tidy_expression_file)
         print(grep_cmd)
         wide_expression_data = fread(cmd=grep_cmd) %>%
