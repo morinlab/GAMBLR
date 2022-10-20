@@ -4,7 +4,7 @@
 \alias{fread_maf}
 \title{Title}
 \usage{
-fread_maf(maf_file_path)
+fread_maf(maf_file_path, select_cols)
 }
 \arguments{
 \item{maf_file_path}{}
