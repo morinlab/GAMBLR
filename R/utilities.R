@@ -5,6 +5,36 @@ names(rainfall_conv) = c('A>G', 'T>C', 'C>T', 'G>A', 'A>T', 'T>A', 'A>C', 'T>G',
 ssh_session <<- NULL
 
 
+compare_coding_mutation_pattern = function(maf_df1,maf_df2,gene){
+  if(missing(maf_df1) | missing(maf_df2)){
+    stop("must provide two data frames containing mutations you would like to compare")
+  }
+  if(missing(gene)){
+    stop("Must provide the Hugo_Symbol of a single gene that is present in both maf files")
+  }
+  missense_positions1 = dplyr::filter(maf_df1,Hugo_Symbol==gene,!Variant_Classification %in% c("Silent","Splice_Site","Splice_Region"),Variant_Type=="SNP") %>%
+    pull(HGVSp_Short) %>% str_remove_all("p.\\w") %>% str_extract("\\d+") %>% as.numeric()
+  missense_positions2 = dplyr::filter(maf_df2,Hugo_Symbol==gene,!Variant_Classification %in% c("Silent","Splice_Site","Splice_Region"),Variant_Type=="SNP") %>%
+    pull(HGVSp_Short) %>% str_remove_all("p.\\w") %>% str_extract("\\d+") %>% as.numeric()
+ if(length(missense_positions1)==0 | length(missense_positions2)==0 ){
+   message(paste("no mutations for",gene,"in one or both data sets"))
+   return(list(kl=15))
+ }
+  #generate range of amino acids based on what we can infer from the MAF (not ideal)
+  max_pos = max(c(missense_positions1,missense_positions2))
+  full_df = data.frame(position=c(1:max_pos))
+  df1 = data.frame(position=missense_positions1) %>% group_by(position) %>% tally() %>% rename("group1"="n")
+  df2 = data.frame(position=missense_positions2) %>% group_by(position) %>% tally() %>% rename("group2"="n")
+  full_df = left_join(full_df,df1) %>% mutate(group1=ifelse(is.na(group1),0,group1))
+  full_df = left_join(full_df,df2) %>% mutate(group2=ifelse(is.na(group2),0,group2))
+  # convert to the format needed by KL
+  all_counts = dplyr::select(full_df,-position) %>% t()
+  all_counts[1,]=all_counts[1,]/sum(all_counts[1,])
+  all_counts[2,]=all_counts[2,]/sum(all_counts[2,])
+  kl_out = KL(all_counts)
+  return(list(df=full_df,kl=unname(kl_out)))
+}
+
 #' Update or create a file to track unique identifiers for sample sets in GAMBL
 #'
 #' @param update Leave as TRUE for default functionality (i.e. updating the existing table). If the table doesn't exist you probably need to pull from Master.
@@ -1553,6 +1583,7 @@ get_sample_wildcards = function(this_sample_id,seq_type){
 #' @param from_flatfile Optional. Instead of the database, load the data from a local MAF and seg file.
 #' @param use_augmented_maf Boolean statement if to use augmented maf, default is FALSE.
 #' @param maf_file Path to maf file.
+#' @param maf_df Optional. Use a maf dataframe instead of a path.
 #' @param seq_file path to seq file.
 #' @param seg_file_source Specify what copy number calling program the input seg file is from, as it handles ichorCNA differently than WisecondorX, Battenberg, etc.
 #' @param assume_diploid Optional. If no local seg file is provided, instead of defaulting to a GAMBL sample, this parameter annotates every mutation as copy neutral.
@@ -1575,6 +1606,7 @@ assign_cn_to_ssm = function(this_sample,
                             use_augmented_maf = TRUE,
                             tool_name = "battenberg",
                             maf_file,
+                            maf_df,
                             seg_file,
                             seg_file_source = "battenberg",
                             assume_diploid = FALSE,
@@ -1592,7 +1624,12 @@ assign_cn_to_ssm = function(this_sample,
   if(!missing(maf_file)){
     maf_sample = fread_maf(maf_file) %>%
       dplyr::mutate(Chromosome = gsub("chr", "", Chromosome))
-  }else if(from_flatfile){
+  }
+  else if(!missing(maf_df)){
+    maf_sample = maf_df %>%
+      dplyr::mutate(Chromosome = gsub("chr", "", Chromosome))
+  }
+  else if(from_flatfile){
     #get the genome_build and other wildcards for this sample
     wildcards = get_sample_wildcards(this_sample,seq_type)
     genome_build = wildcards$genome_build
@@ -1726,6 +1763,7 @@ assign_cn_to_ssm = function(this_sample,
 #' Estimate purity.
 #'
 #' @param in_maf Path to a local maf file.
+#' @param maf_df Optional. Instead of using the path to a maf file, use a local dataframe as the maf file.
 #' @param in_seg Path to a local corresponding seg file for the same sample ID as the input maf.
 #' @param sample_id Specify the sample_id or any other string you want embedded in the file name.
 #' @param seg_file_source Specify what copy number calling program the input seg file is from, as it handles ichorCNA differently than WisecondorX, battenberg, etc.
@@ -1746,6 +1784,7 @@ assign_cn_to_ssm = function(this_sample,
 #' tumour_purity = estimate_purity(in_maf="path/to/file.maf", assume_diploid = TRUE)
 #'
 estimate_purity = function(in_maf,
+                           maf_df,
                            in_seg,
                            sample_id,
                            seg_file_source = "battenberg",
@@ -1756,14 +1795,14 @@ estimate_purity = function(in_maf,
                            ssh_session){
 
   # Merge the CN info to the corresponding MAF file, uses GAMBLR function
-  if(missing(in_maf) & missing(in_seg)){
+  if(missing(in_maf) & missing(in_seg) & missing(maf_df)){
     CN_new = assign_cn_to_ssm(this_sample = sample_id, coding_only = coding_only, assume_diploid = assume_diploid, genes = genes,seg_file_source = seg_file_source,ssh_session=ssh_session)$maf
   }else if(!missing(in_seg)){
-    CN_new = assign_cn_to_ssm(this_sample = sample_id, maf_file = in_maf, seg_file = in_seg, seg_file_source = seg_file_source, coding_only = coding_only, genes = genes,ssh_session=ssh_session)$maf
+    CN_new = assign_cn_to_ssm(this_sample = sample_id, maf_file = in_maf, maf_df = maf_df, seg_file = in_seg, seg_file_source = seg_file_source, coding_only = coding_only, genes = genes,ssh_session=ssh_session)$maf
   }else{
-    # If no seg file was provided and assume_diploid paramtere is set to true,
-    if(assume_diploid){
-      CN_new = assign_cn_to_ssm(this_sample = sample_id, maf_file = in_maf, assume_diploid = TRUE, coding_only = coding_only, genes = genes,ssh_session=ssh_session)$maf
+    # If no seg file was provided, assume_diploid parameter is automatically set to true
+    if(missing(in_seg)){
+      CN_new = assign_cn_to_ssm(this_sample = sample_id, maf_file = in_maf, maf_df = maf_df, assume_diploid = TRUE, coding_only = coding_only, genes = genes,ssh_session=ssh_session)$maf
     }
   }
   # Change any homozygous deletions (CN = 0) to 1 for calculation purposes
@@ -2257,7 +2296,7 @@ collate_sv_results = function(sample_table,
 #' # install_github("morinlab/ggsci")
 #'
 get_gambl_colours = function(classification = "all",
-                             alpha = 1){
+                             alpha = 1,as_list=FALSE){
 
   all_colours = list()
   everything = c()
@@ -2469,6 +2508,12 @@ get_gambl_colours = function(classification = "all",
     return(all_colours[[classification]])
   }else if(lc_class %in% names(all_colours)){
     return(all_colours[[lc_class]])
+  }else if(as_list){
+    return(all_colours)
+  }else if(as_dataframe){
+    df_ugly = data.frame(name=names(unlist(all_col,use.names = T)),colour=unlist(all_col,use.names = T))
+    df_tidy = separate(df_ugly,name,into=c("group","name"),sep="\\.")
+    return(df_tidy)
   }else{
     return(everything)
   }
