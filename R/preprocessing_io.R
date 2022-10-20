@@ -733,12 +733,17 @@ find_files_extract_wildcards = function(tool_results_path,
 
 #' Title
 #'
-#' @param maf_file_path
+#' @param maf_file_path path to maf that is about to be read.
+#' @param select_cols Optional parameter for specifying what columns are to be returned. If not specified, all columns will be kept.
+#' @param return_cols Optional parameter for returning the names of all available MAF columns. If set to TRUE column names will eb returned and no MAF will be read. Default is FALSE.
 #'
 #' @return a data table containing MAF data from a MAF file
 #' @export
 #'
-fread_maf = function(maf_file_path,select_cols){
+fread_maf = function(maf_file_path,
+                     select_cols,
+                     return_cols = FALSE){
+
   colClasses=c(Hugo_Symbol="character",
                Entrez_Gene_Id="integer",
                Center="character",
@@ -855,9 +860,13 @@ fread_maf = function(maf_file_path,select_cols){
                vcf_pos="integer",
                gnomADg_AF="character",
                blacklist_count="numeric")
+
   if(missing(select_cols)){
     #get all column names from the variable that defines the classes
     select_cols = names(colClasses)
+    if(return_cols){
+      return(select_cols)
+    }
   }
   maf_dt = data.table::fread(
     file = maf_file_path,

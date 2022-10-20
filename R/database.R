@@ -46,7 +46,6 @@ get_excluded_samples = function(tool_name = "slms-3"){
 #' @param min_read_support Only returns variants with at least this many reads in t_alt_count (for cleaning up augmented MAFs)
 #' @param basic_columns Return first 43 columns of MAF rather than full details. Default is TRUE.
 #' @param maf_cols if basic_columns is set to FALSE, the user can specify what columns to be returned within the MAF. This parameter can either be a list of indexes (integer) or a list of characters (matching columns in MAF).
-#' @param return_cols If set to TRUE, a vector with all available column names will be returned. Default is FALSE.
 #' @param subset_from_merge Instead of merging individual MAFs, the data will be subset from a pre-merged MAF of samples with the specified seq_type
 #'
 #' @return
@@ -66,7 +65,6 @@ get_ssm_by_patients = function(these_patient_ids,
                                min_read_support = 3,
                                basic_columns = TRUE,
                                maf_cols = NULL,
-                               return_cols = FALSE,
                                subset_from_merge = FALSE,
                                augmented = TRUE,
                                engine='fread_maf',
@@ -111,7 +109,6 @@ get_ssm_by_patients = function(these_patient_ids,
                             ssh_session = ssh_session,
                             basic_columns = basic_columns,
                             maf_cols = maf_cols,
-                            return_cols = return_cols,
                             engine=engine))
 }
 
@@ -132,7 +129,6 @@ get_ssm_by_patients = function(these_patient_ids,
 #' @param min_read_support Only returns variants with at least this many reads in t_alt_count (for cleaning up augmented MAFs)
 #' @param basic_columns Return first 45 columns of MAF rather than full details. Default is TRUE.
 #' @param maf_cols if basic_columns is set to FALSE, the suer can specify what columns to be returned within the MAF. This parameter can either be a list of indexes (integer) or a list of characters.
-#' @param return_cols If set to TRUE, a vector with all avaialble column names will be returned. Default is FALSE.
 #' @param subset_from_merge Instead of merging individual MAFs, the data will be subset from a pre-merged MAF of samples with the specified seq_type
 #' @param engine Specify one of readr or fread_maf (default) to change how the large files are loaded prior to subsetting. You may have better performance with one or the other but for me fread_maf is faster and uses a lot less RAM. 
 #' @param ssh_session argument to supply active ssh session connection for remote transfers (only compatible with subset_from_merge=TRUE)
@@ -157,7 +153,6 @@ get_ssm_by_samples = function(these_sample_ids,
                               min_read_support = 3,
                               basic_columns = TRUE,
                               maf_cols = NULL,
-                              return_cols = FALSE,
                               subset_from_merge = FALSE,
                               augmented = TRUE,
                               engine='fread_maf',
@@ -223,10 +218,6 @@ get_ssm_by_samples = function(these_sample_ids,
       if(!is.null(maf_cols) && !basic_columns){
         maf_df_merge = dplyr::select(maf_df_merge, all_of(maf_cols))
       }
-      #print all available columns
-      if(!basic_columns && return_cols){
-        print(colnames(maf_df_merge))
-      }
     }
 
     if(subset_from_merge && augmented){
@@ -258,8 +249,6 @@ get_ssm_by_samples = function(these_sample_ids,
       if(basic_columns){maf_df_merge = dplyr::select(maf_df_merge, c(1:45))}
       #subset maf to a specific set of columns (defined in maf_cols)
       if(!is.null(maf_cols) && !basic_columns){maf_df_merge = dplyr::select(maf_df_merge, all_of(maf_cols))}
-      #print all available columns
-      if(!basic_columns && return_cols){print(colnames(maf_df_merge))}
     }
 
     if(!subset_from_merge){
@@ -279,7 +268,6 @@ get_ssm_by_samples = function(these_sample_ids,
         #    min_read_support = min_read_support,
         #    basic_columns = basic_columns,
         #    maf_cols = maf_cols,
-        #    return_cols = return_cols,
         #    verbose = FALSE,
         #    ssh_session = ssh_session
         #  )
@@ -296,7 +284,6 @@ get_ssm_by_samples = function(these_sample_ids,
         min_read_support = min_read_support,
         basic_columns = basic_columns,
         maf_cols = maf_cols,
-        return_cols = return_cols,
         verbose = FALSE
       )},mc.cores = 12)
       
@@ -332,7 +319,6 @@ get_ssm_by_samples = function(these_sample_ids,
 #' @param min_read_support Only returns variants with at least this many reads in t_alt_count (for cleaning up augmented MAFs)
 #' @param basic_columns Return first 43 columns of MAF rather than full details. Default is TRUE.
 #' @param maf_cols if basic_columns is set to FALSE, the suer can specify what columns to be returned within the MAF. This parameter can either be a list of indexes (integer) or a list of characters.
-#' @param return_cols If set to TRUE, a vector with all avaialble column names will be returned. Default is FALSE.
 #' @param verbose Enable for debugging/noisier output
 #' @param ssh_session BETA feature! pass active ssh session object.
 #' If specified, the function will assume the user is not on the network and will temporarily copy the file locally.
@@ -356,7 +342,6 @@ get_ssm_by_sample = function(this_sample_id,
                              min_read_support = 3,
                              basic_columns = TRUE,
                              maf_cols = NULL,
-                             return_cols = FALSE,
                              verbose = FALSE,
                              ssh_session){
   if(missing(this_seq_type) & missing(these_samples_metadata)){
@@ -513,11 +498,6 @@ get_ssm_by_sample = function(this_sample_id,
   #subset maf to a specific set of columns (defined in maf_cols)
   if(!is.null(maf_cols) && !basic_columns){
     sample_ssm = dplyr::select(sample_ssm, all_of(maf_cols))
-    }
-
-  #print all available columns
-  if(!basic_columns && return_cols){
-    print(colnames(sample_ssm))
     }
 
   return(sample_ssm)
@@ -2212,7 +2192,6 @@ get_ssm_by_region = function(chromosome,
 #' @param seq_type The seq_type you want back, default is genome.
 #' @param basic_columns Set to FALSE to override the default behavior of returning only the first 45 columns of MAF data.
 #' @param maf_cols if basic_columns is set to FALSE, the user can specify what columns to be returned within the MAF. This parameter can either be a list of indexes (integer) or a list of characters (matching columns in MAF).
-#' @param return_cols If set to TRUE, a vector with all avaialble column names will be returned. Default is FALSE.
 #' @param from_flatfile Set to TRUE to obtain mutations from a local flatfile instead of the database. This can be more efficient and is currently the only option for users who do not have ICGC data access.
 #' @param augmented default: TRUE. Set to FALSE if you instead want the original MAF from each sample for multi-sample patients instead of the augmented MAF
 #' @param min_read_support Only returns variants with at least this many reads in t_alt_count (for cleaning up augmented MAFs)
@@ -2238,7 +2217,6 @@ get_coding_ssm = function(limit_cohort,
                           seq_type,
                           basic_columns = TRUE,
                           maf_cols = NULL,
-                          return_cols = FALSE,
                           from_flatfile = TRUE,
                           augmented = TRUE,
                           min_read_support = 3,
@@ -2363,11 +2341,6 @@ get_coding_ssm = function(limit_cohort,
   #subset maf to a specific set of columns (defined in maf_cols)
   if(!is.null(maf_cols) && !basic_columns){
     muts = dplyr::select(muts, all_of(maf_cols))
-  }
-
-  #print all avaialble columns
-  if(!basic_columns && return_cols){
-    print(colnames(muts))
   }
 
   #drop rows for these samples so we can swap in the force_unmatched outputs instead
