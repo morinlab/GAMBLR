@@ -261,28 +261,27 @@ get_ssm_by_samples = function(these_sample_ids,
 
     if(!subset_from_merge){
       if(!missing(ssh_session)){
-        stop("You supplied the argument ssh_session. We do not support this functionality over ssh yet for various reasons. Perhaps use the merges instead?")
-        # TODO (maybe): If we ever want to support this it won't work with mclapply due to interference the threads cause on the connection. 
-        # The for loop below could be revived for this specific case but I don't see a need for this now. Just leaving the code here in case we do eventually find a need.
-        #maf_df_list = list()
-        #for(this_sample in these_sample_ids){
-        #  maf_df = get_ssm_by_sample(
-        #    this_sample_id = this_sample,
-        #    these_samples_metadata = these_samples_metadata,
-        #    tool_name = tool_name,
-        #    projection = projection,
-        #    augmented = augmented,
-        #    flavour = flavour,
-        #    min_read_support = min_read_support,
-        #    basic_columns = basic_columns,
-        #    maf_cols = maf_cols,
-        #    verbose = FALSE,
-        #    ssh_session = ssh_session
-        #  )
-        #  maf_df_list[[this_sample]]=maf_df
-        #}
-      }
-      maf_df_list = mclapply(these_sample_ids,function(x){get_ssm_by_sample(
+        #stop("You supplied the argument ssh_session. We do not support this functionality over ssh yet for various reasons. Perhaps use the merges instead?")
+        
+        maf_df_list = list()
+        for(this_sample in these_sample_ids){
+          maf_df = get_ssm_by_sample(
+            this_sample_id = this_sample,
+            these_samples_metadata = these_samples_metadata,
+            tool_name = tool_name,
+            projection = projection,
+            augmented = augmented,
+            flavour = flavour,
+            min_read_support = min_read_support,
+            basic_columns = basic_columns,
+            maf_cols = maf_cols,
+            verbose = FALSE,
+            ssh_session = ssh_session
+          )
+          maf_df_list[[this_sample]]=maf_df
+        }
+      }else{
+        maf_df_list = mclapply(these_sample_ids,function(x){get_ssm_by_sample(
         this_sample_id=x,
         these_samples_metadata = these_samples_metadata,
         tool_name = tool_name,
@@ -293,8 +292,8 @@ get_ssm_by_samples = function(these_sample_ids,
         basic_columns = basic_columns,
         maf_cols = maf_cols,
         verbose = FALSE
-      )},mc.cores = 12)
-      
+        )},mc.cores = 12)
+      }
       maf_df_merge = bind_rows(maf_df_list)
     }
   }

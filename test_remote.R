@@ -88,7 +88,7 @@ session = GAMBLR::get_ssh_session() # If your local machine username doesn't
 # match your GSC username, you need to add "<your_username>@gphost01.bcgsc.ca"
 # as the only argument to this function.
 test_ssm = get_ssm_by_samples(these_sample_ids = c("14-24534_tumorA","14-24534_tumorB"),
-                              ssh_session = session,subset_from_merge = F)
+                              ssh_session = session,subset_from_merge = T)
 
 table(test_ssm$Tumor_Sample_Barcode)
 
