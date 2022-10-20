@@ -11,7 +11,7 @@ fread_maf(maf_file_path, select_cols, return_cols = FALSE)
 
 \item{select_cols}{Optional parameter for specifying what columns are to be returned. If not specified, all columns will be kept.}
 
-\item{return_cols}{Optional parameter for returning the names of all available MAF columns. If set to TRUE column names will eb returned and no MAF will be read. Default is FALSE.}
+\item{return_cols}{Optional parameter for returning the names of all available MAF columns. If set to TRUE a character vector of column names will be returned, and no MAF will be read. Default is FALSE.}
 }
 \value{
 a data table containing MAF data from a MAF file

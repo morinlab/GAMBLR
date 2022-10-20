@@ -191,6 +191,14 @@ get_ssm_by_samples = function(these_sample_ids,
       maf_path = glue::glue(maf_template)
       full_maf_path =  paste0(config::get("project_base"), maf_path)
       message(paste("using existing merge:", full_maf_path))
+
+      #check for missingness
+      if(!file.exists(full_maf_path)){
+        print(paste("missing: ", full_maf_path))
+        message("Cannot find file locally. If working remotely, perhaps you forgot to load your config (see below) or sync your files?")
+        message('Sys.setenv(R_CONFIG_ACTIVE = "remote")')
+        }
+
       if(engine=="fread_maf"){
         if(basic_columns){
           maf_df_merge = fread_maf(full_maf_path,select_cols = c(1:45)) %>%
