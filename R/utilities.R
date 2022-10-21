@@ -1320,13 +1320,14 @@ collate_results = function(sample_table,
   if(write_to_file){
     from_cache = FALSE #override default automatically for nonsense combination of options
   }
+  
+  output_file = config::get("results_merged")$collated
+  output_base = config::get("repo_base")
+  output_file = paste0(output_base, output_file)
+  output_file = glue::glue(output_file)
+  print(output_file)
 
   if(from_cache){
-    output_file = config::get("results_merged")$collated
-    output_base = config::get("project_base")
-    output_file = paste0(output_base, output_file)
-    output_file = glue::glue(output_file)
-
     #check for missingness
     if(!file.exists(output_file)){
       print(paste("missing: ", output_file))
@@ -1375,7 +1376,6 @@ collate_results = function(sample_table,
   }
   return(sample_table)
 }
-
 
 #' INTERNAL FUNCTION called by collate_results, not meant for out-of-package usage.
 #' Extract derived results stored in the database (these are usually slower to derive on the fly).
