@@ -1210,6 +1210,7 @@ sv_to_custom_track = function(sv_bedpe,
 #'
 maf_to_custom_track = function(maf_data,
                                these_samples_metadata,
+                               seq_type="genome",
                                output_file,
                                as_bigbed=FALSE,
                                as_biglolly=FALSE,
@@ -1229,16 +1230,17 @@ maf_to_custom_track = function(maf_data,
     mutate(lymphgen = names(lymphgen_cols)) %>%
     unite(col = "rgb", red, green, blue, sep = ",")
   if(missing(these_samples_metadata)){
-  meta = get_gambl_metadata() %>%
-    dplyr::select(sample_id, lymphgen)
+    meta = get_gambl_metadata(seq_type_filter = seq_type) %>% dplyr::select(sample_id,lymphgen)
   }else{
-    meta = these_samples_metadata %>%
-      dplyr::select(sample_id, lymphgen)
+    meta = these_samples_metadata %>% dplyr::select(sample_id,lymphgen)
   }
+  print(maf_data)
+  
   samples_coloured = left_join(meta, rgb_df)
+  print(samples_coloured)
   maf_bed = maf_data %>%
     mutate(score = 0, strand = "+", start1 = start-1,start=start1, end1 = end)
-
+  print(maf_bed)
   maf_coloured = left_join(maf_bed, samples_coloured, by = "sample_id") %>%
     dplyr::select(-lymphgen) %>%
     dplyr::filter(!is.na(rgb))
@@ -1252,7 +1254,7 @@ maf_to_custom_track = function(maf_data,
       stop("please provide an output file name ending in .bb to create a bigBed file")
     }
   
-    maf_coloured = mutate(maf_coloured,sample_id=ifelse(dbSNP_RS != "",dbSNP_RS,".")) %>% 
+    maf_coloured = mutate(maf_coloured,sample_id="redacted") %>% 
       arrange(chrom,start)
     if(as_biglolly){
       #currently the same code is run either way but this may change so I've separated this until we settle on format
