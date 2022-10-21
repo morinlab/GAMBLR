@@ -1320,14 +1320,10 @@ collate_results = function(sample_table,
   if(write_to_file){
     from_cache = FALSE #override default automatically for nonsense combination of options
   }
-  output_file = config::get("results_merged")$collated
-  output_base = config::get("project_base")
-  output_file = paste0(output_base, output_file)
-  output_file = glue::glue(output_file)
-  print(output_file)
+
   if(from_cache){
-    output_file = config::get("table_flatfiles")$derived
-    output_base = config::get("repo_base")
+    output_file = config::get("results_merged")$collated
+    output_base = config::get("project_base")
     output_file = paste0(output_base, output_file)
     output_file = glue::glue(output_file)
 
@@ -1365,7 +1361,7 @@ collate_results = function(sample_table,
       meta_data = get_gambl_metadata(seq_type_filter = seq_type_filter)
     }
 
-    full_table = left_join(meta_data, sample_table)
+    full_table = left_join(sample_table, meta_data)
 
     full_table = full_table %>%
       mutate("MYC_SV_any" = case_when(ashm_MYC > 3 ~ "POS", manta_MYC_sv == "POS" ~ "POS", ICGC_MYC_sv == "POS" ~ "POS", myc_ba == "POS" ~ "POS", TRUE ~ "NEG"))
