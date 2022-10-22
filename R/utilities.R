@@ -1228,7 +1228,7 @@ maf_to_custom_track = function(maf_data,
     #add chr
     maf_data[,1] = unlist(lapply(maf_data[,1], function(x){paste0("chr", x)}))
   }
-  lymphgen_cols = get_gambl_colours(colour_column)
+  lymphgen_cols = get_gambl_colours(colour_column,verbose=verbose)
   
   colour_df = data.frame(group = names(lymphgen_cols), colour = lymphgen_cols)
   
@@ -2317,7 +2317,8 @@ get_gambl_colours = function(classification = "all",
                              alpha = 1,
                              as_list=FALSE,
                              as_dataframe=FALSE,
-                             return_available=FALSE){
+                             return_available=FALSE,
+                             verbose=FALSE){
 
   all_colours = list()
   everything = c()
@@ -2348,7 +2349,7 @@ get_gambl_colours = function(classification = "all",
                           "M53-BL" = "#A6CEE3", #added because genetic subgroup still refers to it this way
                           "DLBCL-A" = "#721F0F",
                           "IC-BL" = "#45425A",
-                          "DGG-BL" = "#E90C8BFF",
+                          "DGG-BL" = "#E90C8B",
                           "DLBCL-B" = "#FB9A99",
                           "DLBCL-C" = "#C41230")
 
@@ -2514,12 +2515,14 @@ get_gambl_colours = function(classification = "all",
   all_colours[["svs"]] = c("DEL" = "#53B1FC", "DUP" = "#FC9C6D")
   all_colours[["genetic_subgroup"]] = c(all_colours[["lymphgen"]],all_colours[["BL"]],all_colours[["FL"]])
   #print(all_colours)
-  for(colslot in names(all_colours)){
-    raw_cols = all_colours[[colslot]]
-    raw_cols_rgb = col2rgb(raw_cols)
-    alpha_cols = rgb(raw_cols_rgb[1L, ], raw_cols_rgb[2L, ], raw_cols_rgb[3L, ], alpha = alpha * 255L, names = names(raw_cols), maxColorValue = 255L)
-    names(alpha_cols) = names(raw_cols)
-    all_colours[[colslot]] = alpha_cols
+  if(alpha <1){
+    for(colslot in names(all_colours)){
+      raw_cols = all_colours[[colslot]]
+      raw_cols_rgb = col2rgb(raw_cols)
+      alpha_cols = rgb(raw_cols_rgb[1L, ], raw_cols_rgb[2L, ], raw_cols_rgb[3L, ], alpha = alpha * 255L, names = names(raw_cols), maxColorValue = 255L)
+      names(alpha_cols) = names(raw_cols)
+      all_colours[[colslot]] = alpha_cols
+    }
   }
   for(this_group in names(all_colours)){
     everything = c(everything, all_colours[[this_group]])
