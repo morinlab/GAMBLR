@@ -1947,6 +1947,7 @@ get_ssm_by_regions = function(regions_list,
     }
   }
   if(missing(maf_data)){
+    print(regions)
     region_mafs = lapply(regions, function(x){get_ssm_by_region(region = x,
                                                                 streamlined = streamlined,
                                                                 from_indexed_flatfile = from_indexed_flatfile,
@@ -1974,6 +1975,7 @@ get_ssm_by_regions = function(regions_list,
   if(basic_columns){
     #this must always force the output to be the standard set. 
     #hence, return everything after binding into one data frame
+    print("bind_rows")
     return(bind_rows(region_mafs))
   }
   tibbled_data = tibble(region_mafs, region_name = rn)
@@ -2032,7 +2034,7 @@ get_ssm_by_region = function(chromosome,
                              min_read_support = 3,
                              mode = "slms-3",
                              maf_columns = c("Chromosome", "Start_Position", "End_Position", "Tumor_Sample_Barcode", "t_alt_count"),
-                             maf_column_types = c("c","i","i","c","i"),
+                             maf_column_types = "ciici",
                              ssh_session = NULL,
                              verbose=FALSE){
   if(basic_columns){
@@ -2115,6 +2117,9 @@ get_ssm_by_region = function(chromosome,
  if(missing(maf_data)){
     if(from_indexed_flatfile){
       if(!is.null(ssh_session)){
+        if(verbose){
+          print("ssh session!")
+        }
         #Helper function that may come in handy elsewhere so could be moved out of this function if necessary
         run_command_remote = function(ssh_session,to_run){
         output = ssh::ssh_exec_internal(ssh_session,to_run)$stdout
@@ -2142,7 +2147,7 @@ get_ssm_by_region = function(chromosome,
         }
         #stop()
         muts = run_command_remote(ssh_session,tabix_command)
-        muts_region = vroom::vroom(I(muts),col_types = paste(maf_column_types,collapse=""),
+        muts_region = vroom::vroom(I(muts),col_types = maf_column_types,
                                    col_names=maf_columns)
       }else{
 
@@ -2157,8 +2162,19 @@ get_ssm_by_region = function(chromosome,
           print("NAMES:")
           print(maf_columns)
         }
-        muts_region = vroom::vroom(I(muts), col_types = paste(maf_column_types,collapse=""),
+        if(length(muts)==0){
+          maf_types_sep = str_split(maf_column_types,pattern="")[[1]] %>% 
+            str_replace_all("c","character") %>%
+            str_replace_all("i|n","numeric") 
+          
+          muts_region = read.table(textConnection(""), col.names = maf_columns,colClasses = maf_types_sep)
+        }else{
+          muts_region = vroom::vroom(I(muts), col_types = paste(maf_column_types,collapse=""),
                             col_names=maf_columns)
+        }
+        if(verbose){
+          print('SUCCESS')
+        }
       }
       if(augmented){
         # drop poorly supported reads but only from augmented MAF
@@ -2181,7 +2197,7 @@ get_ssm_by_region = function(chromosome,
   if(streamlined){
     muts_region = muts_region %>%
       dplyr::select(Start_Position, Tumor_Sample_Barcode)
-  }else 
+  }
 
   return(muts_region)
 }

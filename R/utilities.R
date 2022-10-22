@@ -1213,37 +1213,58 @@ maf_to_custom_track = function(maf_data,
                                seq_type="genome",
                                output_file,
                                as_bigbed=FALSE,
+                               colour_column = "lymphgen",
                                as_biglolly=FALSE,
                                track_name="GAMBL mutations",
-                               track_description = "mutations from GAMBL"){
+                               track_description = "mutations from GAMBL",
+                               verbose=FALSE,
+                               padding_size=0){
 
   #reduce to a bed-like format
   maf_data = dplyr::select(maf_data, Chromosome, Start_Position, End_Position, Tumor_Sample_Barcode)
   colnames(maf_data) = c("chrom", "start", "end", "sample_id")
+  maf_data = mutate(maf_data,end = end + padding_size)
   if(!any(grepl("chr", maf_data[,1]))){
     #add chr
     maf_data[,1] = unlist(lapply(maf_data[,1], function(x){paste0("chr", x)}))
   }
-  lymphgen_cols = get_gambl_colours("lymphgen")
-  colour_df = data.frame(lymphgen = names(lymphgen_cols), colour = lymphgen_cols)
+  lymphgen_cols = get_gambl_colours(colour_column)
+  
+  colour_df = data.frame(group = names(lymphgen_cols), colour = lymphgen_cols)
+  
   rgb_df = data.frame(t(col2rgb(lymphgen_cols))) %>%
-    mutate(lymphgen = names(lymphgen_cols)) %>%
+    mutate(group = names(lymphgen_cols),hex=unname(lymphgen_cols)) %>%
     unite(col = "rgb", red, green, blue, sep = ",")
-  if(missing(these_samples_metadata)){
-    meta = get_gambl_metadata(seq_type_filter = seq_type) %>% dplyr::select(sample_id,lymphgen)
-  }else{
-    meta = these_samples_metadata %>% dplyr::select(sample_id,lymphgen)
+  if(verbose){
+    print(rgb_df)
   }
-  print(maf_data)
+  if(missing(these_samples_metadata)){
+    meta = get_gambl_metadata(seq_type_filter = seq_type) %>% dplyr::select(sample_id,all_of(colour_column))
+  }else{
+    meta = these_samples_metadata %>% dplyr::select(sample_id,all_of(colour_column))
+  }
+  colnames(meta)[2]="group"
+ 
   
   samples_coloured = left_join(meta, rgb_df)
-  print(samples_coloured)
+  if(verbose){
+    print(samples_coloured)
+  }
+  
   maf_bed = maf_data %>%
     mutate(score = 0, strand = "+", start1 = start-1,start=start1, end1 = end)
-  print(maf_bed)
+  if(verbose){
+    print(head(maf_bed))
+  }
   maf_coloured = left_join(maf_bed, samples_coloured, by = "sample_id") %>%
-    dplyr::select(-lymphgen) %>%
-    dplyr::filter(!is.na(rgb))
+    dplyr::select(-group) %>%
+    mutate(rgb=ifelse(is.na(rgb),"0,0,0",rgb))
+  maf_summary = group_by(maf_coloured,hex) %>% tally()
+  if(verbose){
+    print(maf_summary)
+    print(head(maf_coloured))
+  }
+  maf_coloured = dplyr::select(maf_coloured,-hex)
   if(as_bigbed | as_biglolly){
     
     if(grepl(pattern = ".bb$",x = output_file)){
@@ -1328,11 +1349,6 @@ collate_results = function(sample_table,
   output_file = glue::glue(output_file)
   print(output_file)
   if(from_cache){
-    output_file = config::get("table_flatfiles")$derived
-    output_base = config::get("repo_base")
-    output_file = paste0(output_base, output_file)
-    output_file = glue::glue(output_file)
-
     #check for missingness
     if(!file.exists(output_file)){
       print(paste("missing: ", output_file))
@@ -2298,7 +2314,10 @@ collate_sv_results = function(sample_table,
 #' # install_github("morinlab/ggsci")
 #'
 get_gambl_colours = function(classification = "all",
-                             alpha = 1,as_list=FALSE){
+                             alpha = 1,
+                             as_list=FALSE,
+                             as_dataframe=FALSE,
+                             return_available=FALSE){
 
   all_colours = list()
   everything = c()
@@ -2326,6 +2345,7 @@ get_gambl_colours = function(classification = "all",
                             "NEG" = "#E5A4CB")
 
   all_colours[["BL"]] = c("Q53-BL" = "#A6CEE3",
+                          "M53-BL" = "#A6CEE3", #added because genetic subgroup still refers to it this way
                           "DLBCL-A" = "#721F0F",
                           "IC-BL" = "#45425A",
                           "DGG-BL" = "#E90C8BFF",
@@ -2492,7 +2512,7 @@ get_gambl_colours = function(classification = "all",
 
   all_colours[["indels"]] = c("DEL" = "#53B1FC", "INS" = "#FC9C6D")
   all_colours[["svs"]] = c("DEL" = "#53B1FC", "DUP" = "#FC9C6D")
-
+  all_colours[["genetic_subgroup"]] = c(all_colours[["lymphgen"]],all_colours[["BL"]],all_colours[["FL"]])
   #print(all_colours)
   for(colslot in names(all_colours)){
     raw_cols = all_colours[[colslot]]
@@ -2506,7 +2526,16 @@ get_gambl_colours = function(classification = "all",
   }
   #return matching value from lowercase version of the argument if it exists
   lc_class = stringr::str_to_lower(classification)
+  if(return_available){
+    return(names(all_colours))
+  }
   if(classification %in% names(all_colours)){
+    if(as_dataframe){
+      some_col=all_colours[[classification]]
+      df_ugly = data.frame(name=names(some_col),colour=unname(some_col))
+      df_tidy = mutate(df_ugly,group=classification)
+      return(df_tidy)
+    }
     return(all_colours[[classification]])
   }else if(lc_class %in% names(all_colours)){
     return(all_colours[[lc_class]])
