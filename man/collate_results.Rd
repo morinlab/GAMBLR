@@ -53,4 +53,9 @@ fl_collated = collate_results(seq_type_filter = "genome", these_samples_metadata
 #get collated results for all genome samples and join with full metadata
 everything_collated = collate_results(seq_type_filter = "genome", from_cache = TRUE, join_with_full_metadata = TRUE)
 
+#another example using the sample_table parameter (and cached results)
+fl_samples = get_gambl_metadata(seq_type_filter = "genome") \%>\% dplyr::filter(pathology == "FL") \%>\% dplyr::select(sample_id, patient_id, biopsy_id)
+fl_collated= collate_results(sample_table = fl_samples, seq_type_filter = "genome", from_cache = TRUE)
+
+
 }
