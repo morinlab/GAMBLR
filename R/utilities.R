@@ -1311,7 +1311,11 @@ test_glue = function(placeholder="INSERTED"){
 #'
 #' #get collated results for all genome samples and join with full metadata
 #' everything_collated = collate_results(seq_type_filter = "genome", from_cache = TRUE, join_with_full_metadata = TRUE)
-
+#'
+#' #another example using the sample_table parameter (and cached results)
+#' fl_samples = get_gambl_metadata(seq_type_filter = "genome") %>% dplyr::filter(pathology == "FL") %>% dplyr::select(sample_id, patient_id, biopsy_id)
+#' fl_collated= collate_results(sample_table = fl_samples, seq_type_filter = "genome", from_cache = TRUE)
+#'
 #'
 collate_results = function(sample_table,
                            write_to_file = FALSE,
@@ -1376,7 +1380,7 @@ collate_results = function(sample_table,
       meta_data = get_gambl_metadata(seq_type_filter = seq_type_filter)
     }
 
-    full_table = left_join(sample_table, meta_data)
+    full_table = left_join(meta_data, sample_table)
 
     full_table = full_table %>%
       mutate("MYC_SV_any" = case_when(ashm_MYC > 3 ~ "POS", manta_MYC_sv == "POS" ~ "POS", ICGC_MYC_sv == "POS" ~ "POS", myc_ba == "POS" ~ "POS", TRUE ~ "NEG"))
