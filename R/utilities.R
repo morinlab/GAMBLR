@@ -1292,14 +1292,26 @@ test_glue = function(placeholder="INSERTED"){
 #' @param case_set Optional short name for a pre-defined set of cases.
 #' @param sbs_manipulation Optional variable for transforming sbs values (e.g log, scale).
 #' @param seq_type_filter Filtering criteria, default is genomes.
-#' @param from_cache Boolean variable for using cached results, default is TRUE.
+#' @param from_cache Boolean variable for using cached results, default is TRUE. If write_to_file is TRUE, this aprameter auto-defaults to FALSE. 
 #'
 #' @return A table keyed on biopsy_id that contains a bunch of per-sample results from GAMBL
 #' @export
 #' @import tidyverse config
 #'
 #' @examples
-#' everything_collated = collate_results(join_with_full_metadata = TRUE)
+#' #generate new cached results for all genome samples in gambl (Warning, is this what you really want to do?)
+#' genome_collated = collate_results(seq_type_filter = "genome", from_cache = FALSE, write_to_file = TRUE)
+#'
+#' #get collated results for all capture samples, using chached results
+#' capture_collated_eerything = collate_results( seq_type_filter = "capture", from_cache = TRUE, write_to_file = FALSE)
+#'
+#' #use an already subset metadata table for getting collated results (cheched)
+#' metadata = get_gambl_metadata(seq_type_filter = "genome") %>% dplyr::filter(pathology == "FL")
+#' fl_collated = collate_results(seq_type_filter = "genome", these_samples_metadata = metadata, write_to_file = FALSE, from_cache = TRUE)
+#'
+#' #get collated results for all genome samples and join with full metadata
+#' everything_collated = collate_results(seq_type_filter = "genome", from_cache = TRUE, join_with_full_metadata = TRUE)
+
 #'
 collate_results = function(sample_table,
                            write_to_file = FALSE,
@@ -1321,8 +1333,9 @@ collate_results = function(sample_table,
     from_cache = FALSE #override default automatically for nonsense combination of options
   }
   
+  #get paths to cached results, for from_cache = TRUE and for writing new cached results.
   output_file = config::get("results_merged")$collated
-  output_base = config::get("repo_base")
+  output_base = config::get("project_base")
   output_file = paste0(output_base, output_file)
   output_file = glue::glue(output_file)
   print(output_file)
@@ -1335,6 +1348,7 @@ collate_results = function(sample_table,
       message('Sys.setenv(R_CONFIG_ACTIVE = "remote")')
     }
 
+    #read chached results
     sample_table = read_tsv(output_file) %>% dplyr::filter(sample_id %in% sample_table$sample_id)
 
   }else{
@@ -1351,7 +1365,7 @@ collate_results = function(sample_table,
     sample_table = collate_qc_results(sample_table = sample_table, seq_type_filter = seq_type_filter)
   }
   if(write_to_file){
-    
+    #write results from "slow option" to new chached results file
     write_tsv(sample_table, file = output_file)
   }
   #convenience columns bringing together related information
