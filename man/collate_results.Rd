@@ -31,7 +31,7 @@ collate_results(
 
 \item{seq_type_filter}{Filtering criteria, default is genomes.}
 
-\item{from_cache}{Boolean variable for using cached results, default is TRUE.}
+\item{from_cache}{Boolean variable for using cached results, default is TRUE. If write_to_file is TRUE, this aprameter auto-defaults to FALSE.}
 }
 \value{
 A table keyed on biopsy_id that contains a bunch of per-sample results from GAMBL
@@ -40,6 +40,17 @@ A table keyed on biopsy_id that contains a bunch of per-sample results from GAMB
 Bring together all derived sample-level results from many GAMBL pipelines.
 }
 \examples{
-everything_collated = collate_results(join_with_full_metadata = TRUE)
+#generate new cached results for all genome samples in gambl (Warning, is this what you really want to do?)
+genome_collated = collate_results(seq_type_filter = "genome", from_cache = FALSE, write_to_file = TRUE)
+
+#get collated results for all capture samples, using chached results
+capture_collated_eerything = collate_results( seq_type_filter = "capture", from_cache = TRUE, write_to_file = FALSE)
+
+#use an already subset metadata table for getting collated results (cheched)
+metadata = get_gambl_metadata(seq_type_filter = "genome") \%>\% dplyr::filter(pathology == "FL")
+fl_collated = collate_results(seq_type_filter = "genome", these_samples_metadata = metadata, write_to_file = FALSE, from_cache = TRUE)
+
+#get collated results for all genome samples and join with full metadata
+everything_collated = collate_results(seq_type_filter = "genome", from_cache = TRUE, join_with_full_metadata = TRUE)
 
 }
