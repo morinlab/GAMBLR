@@ -1286,13 +1286,13 @@ test_glue = function(placeholder="INSERTED"){
 #' Bring together all derived sample-level results from many GAMBL pipelines.
 #'
 #' @param sample_table A data frame with sample_id as the first column.
-#' @param write_to_file Boolean statement that outputs tsv file if TRUE, default is FALSE.
+#' @param write_to_file Boolean statement that outputs tsv file (/projects/nhl_meta_analysis_scratch/gambl/results_local/shared/gambl_{seq_type_filter}_results.tsv) if TRUE, default is FALSE.
 #' @param join_with_full_metadata Join with all columns of meta data, default is FALSE.
 #' @param these_samples_metadata Optional argument to use a user specified metadata df, overwrites get_gambl_metadata in join_with_full_metadata.
 #' @param case_set Optional short name for a pre-defined set of cases.
 #' @param sbs_manipulation Optional variable for transforming sbs values (e.g log, scale).
 #' @param seq_type_filter Filtering criteria, default is genomes.
-#' @param from_cache Boolean variable for using cached results, default is TRUE. If write_to_file is TRUE, this aprameter auto-defaults to FALSE. 
+#' @param from_cache Boolean variable for using cached results (/projects/nhl_meta_analysis_scratch/gambl/results_local/shared/gambl_{seq_type_filter}_results.tsv), default is TRUE. If write_to_file is TRUE, this parameter auto-defaults to FALSE.
 #'
 #' @return A table keyed on biopsy_id that contains a bunch of per-sample results from GAMBL
 #' @export
@@ -1302,10 +1302,10 @@ test_glue = function(placeholder="INSERTED"){
 #' #generate new cached results for all genome samples in gambl (Warning, is this what you really want to do?)
 #' genome_collated = collate_results(seq_type_filter = "genome", from_cache = FALSE, write_to_file = TRUE)
 #'
-#' #get collated results for all capture samples, using chached results
-#' capture_collated_eerything = collate_results( seq_type_filter = "capture", from_cache = TRUE, write_to_file = FALSE)
+#' #get collated results for all capture samples, using cached results
+#' capture_collated_everything = collate_results( seq_type_filter = "capture", from_cache = TRUE, write_to_file = FALSE)
 #'
-#' #use an already subset metadata table for getting collated results (cheched)
+#' #use an already subset metadata table for getting collated results (cached)
 #' metadata = get_gambl_metadata(seq_type_filter = "genome") %>% dplyr::filter(pathology == "FL")
 #' fl_collated = collate_results(seq_type_filter = "genome", join_with_full_metadata = TRUE, these_samples_metadata = metadata, write_to_file = FALSE, from_cache = TRUE)
 #'
@@ -1352,7 +1352,7 @@ collate_results = function(sample_table,
       message('Sys.setenv(R_CONFIG_ACTIVE = "remote")')
     }
 
-    #read chached results
+    #read cached results
     sample_table = read_tsv(output_file) %>% dplyr::filter(sample_id %in% sample_table$sample_id)
 
   }else{
@@ -1369,7 +1369,7 @@ collate_results = function(sample_table,
     sample_table = collate_qc_results(sample_table = sample_table, seq_type_filter = seq_type_filter)
   }
   if(write_to_file){
-    #write results from "slow option" to new chached results file
+    #write results from "slow option" to new cached results file
     write_tsv(sample_table, file = output_file)
   }
   #convenience columns bringing together related information
