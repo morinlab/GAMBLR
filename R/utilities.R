@@ -874,7 +874,7 @@ region_to_chunks = function(region){
 }
 
 
-#' Convert mutation data to a shereable format.
+#' Convert mutation data to a shareable format.
 #'
 #' `sanitize_maf_data` returns oncomatrix of patient/gene data indicating only data needed to produce oncoplot.
 #'
@@ -1280,16 +1280,29 @@ maf_to_custom_track = function(maf_data,
     if(as_biglolly){
       #currently the same code is run either way but this may change so I've separated this until we settle on format
       #TO DO: collapse based on hot spot definition and update column 4 (score) based on recurrence
+      #needs to have size column
+      maf_score_options = factor(maf_coloured$rgb)
+      maf_coloured$score = as.numeric(maf_score_options)
+      
+      #determine frequency of each event per group to assign the size
+      maf_coloured = group_by(maf_coloured,start,rgb) %>% mutate(size=n())
+      
+      #maf_coloured = mutate(maf_coloured,size=10)
+        
       write.table(maf_coloured, file = temp_bed, quote = F, sep = "\t", row.names = F, col.names = F)
       #conversion:
+      autosql_file = "/Users/rmorin/git/LLMPP/resources/reference/ucsc/bigLollyExample3.as"
+      
       bigbedtobed = "/Users/rmorin/miniconda3/envs/ucsc/bin/bedToBigBed"
-      bigbed_conversion = paste(bigbedtobed,"-type=bed9",temp_bed,"/Users/rmorin/git/LLMPP/resources/reference/ucsc/hg19.chrom.sizes",output_file)
+      bigbed_conversion = paste0(bigbedtobed," -as=",autosql_file," -type=bed9+1 ",temp_bed," /Users/rmorin/git/LLMPP/resources/reference/ucsc/hg19.chrom.sizes ",output_file)
+      print(bigbed_conversion)
       system(bigbed_conversion)
     }else{
       write.table(maf_coloured, file = temp_bed, quote = F, sep = "\t", row.names = F, col.names = F)
       #conversion:
       bigbedtobed = "/Users/rmorin/miniconda3/envs/ucsc/bin/bedToBigBed"
       bigbed_conversion = paste(bigbedtobed,"-type=bed9",temp_bed,"/Users/rmorin/git/LLMPP/resources/reference/ucsc/hg19.chrom.sizes",output_file)
+      
       system(bigbed_conversion)
     }
   }else{
