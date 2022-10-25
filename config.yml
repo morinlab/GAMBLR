@@ -27,7 +27,8 @@ default:
         oncodriveclustl:
                 clusters: "versioned_results/oncodriveclustl-0.0_{abase}_clusters_results.tsv"
                 elements: "versioned_results/oncodriveclustl-0.0_{abase}_elements_results.tsv"
-        curated_blacklist: "versioned_results/curated_blacklist/candidateblacklist.schmitz.{projection}.tsv"
+    etc:
+      curated_blacklist: "etc/curated_blacklist/candidateblacklist.schmitz.{projection}.tsv"
     resources:
         whitelist:
             template: all_the_things/slms_3-1.0_vcf2maf-1.3/level_3/{projection}_whitelist.txt
