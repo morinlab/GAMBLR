@@ -1291,20 +1291,36 @@ test_glue = function(placeholder="INSERTED"){
 #' Bring together all derived sample-level results from many GAMBL pipelines.
 #'
 #' @param sample_table A data frame with sample_id as the first column.
-#' @param write_to_file Boolean statement that outputs tsv file if TRUE, default is FALSE.
+#' @param write_to_file Boolean statement that outputs tsv file (/projects/nhl_meta_analysis_scratch/gambl/results_local/shared/gambl_{seq_type_filter}_results.tsv) if TRUE, default is FALSE.
 #' @param join_with_full_metadata Join with all columns of meta data, default is FALSE.
 #' @param these_samples_metadata Optional argument to use a user specified metadata df, overwrites get_gambl_metadata in join_with_full_metadata.
 #' @param case_set Optional short name for a pre-defined set of cases.
 #' @param sbs_manipulation Optional variable for transforming sbs values (e.g log, scale).
 #' @param seq_type_filter Filtering criteria, default is genomes.
-#' @param from_cache Boolean variable for using cached results, default is TRUE.
+#' @param from_cache Boolean variable for using cached results (/projects/nhl_meta_analysis_scratch/gambl/results_local/shared/gambl_{seq_type_filter}_results.tsv), default is TRUE. If write_to_file is TRUE, this parameter auto-defaults to FALSE.
 #'
 #' @return A table keyed on biopsy_id that contains a bunch of per-sample results from GAMBL
 #' @export
 #' @import tidyverse config
 #'
 #' @examples
-#' everything_collated = collate_results(join_with_full_metadata = TRUE)
+#' #generate new cached results for all genome samples in gambl (Warning, is this what you really want to do?)
+#' genome_collated = collate_results(seq_type_filter = "genome", from_cache = FALSE, write_to_file = TRUE)
+#'
+#' #get collated results for all capture samples, using cached results
+#' capture_collated_everything = collate_results( seq_type_filter = "capture", from_cache = TRUE, write_to_file = FALSE)
+#'
+#' #use an already subset metadata table for getting collated results (cached)
+#' metadata = get_gambl_metadata(seq_type_filter = "genome") %>% dplyr::filter(pathology == "FL")
+#' fl_collated = collate_results(seq_type_filter = "genome", join_with_full_metadata = TRUE, these_samples_metadata = metadata, write_to_file = FALSE, from_cache = TRUE)
+#'
+#' #get collated results for all genome samples and join with full metadata
+#' everything_collated = collate_results(seq_type_filter = "genome", from_cache = TRUE, join_with_full_metadata = TRUE)
+#'
+#' #another example demonstrating correct usage of the sample_table parameter.
+#' fl_samples = get_gambl_metadata(seq_type_filter = "genome") %>% dplyr::filter(pathology == "FL") %>% dplyr::select(sample_id, patient_id, biopsy_id)
+#' fl_collated = collate_results(sample_table = fl_samples, seq_type_filter = "genome", from_cache = TRUE)
+#'
 #'
 collate_results = function(sample_table,
                            write_to_file = FALSE,
@@ -1324,6 +1340,8 @@ collate_results = function(sample_table,
   if(write_to_file){
     from_cache = FALSE #override default automatically for nonsense combination of options
   }
+  
+  #get paths to cached results, for from_cache = TRUE and for writing new cached results.
   output_file = config::get("results_merged")$collated
   output_base = config::get("project_base")
   output_file = paste0(output_base, output_file)
@@ -1337,6 +1355,7 @@ collate_results = function(sample_table,
       message('Sys.setenv(R_CONFIG_ACTIVE = "remote")')
     }
 
+    #read cached results
     sample_table = read_tsv(output_file) %>% dplyr::filter(sample_id %in% sample_table$sample_id)
 
   }else{
@@ -1353,7 +1372,7 @@ collate_results = function(sample_table,
     sample_table = collate_qc_results(sample_table = sample_table, seq_type_filter = seq_type_filter)
   }
   if(write_to_file){
-    
+    #write results from "slow option" to new cached results file
     write_tsv(sample_table, file = output_file)
   }
   #convenience columns bringing together related information
@@ -1378,7 +1397,6 @@ collate_results = function(sample_table,
   }
   return(sample_table)
 }
-
 
 #' INTERNAL FUNCTION called by collate_results, not meant for out-of-package usage.
 #' Extract derived results stored in the database (these are usually slower to derive on the fly).
