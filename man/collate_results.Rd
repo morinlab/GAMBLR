@@ -12,8 +12,7 @@ collate_results(
   case_set,
   sbs_manipulation = "",
   seq_type_filter = "genome",
-  from_cache = TRUE,
-  ssh_session
+  from_cache = TRUE
 )
 }
 \arguments{

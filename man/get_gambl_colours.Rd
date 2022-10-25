@@ -4,7 +4,14 @@
 \alias{get_gambl_colours}
 \title{Get some colour schemes for annotating figures.}
 \usage{
-get_gambl_colours(classification = "all", alpha = 1, as_list = FALSE)
+get_gambl_colours(
+  classification = "all",
+  alpha = 1,
+  as_list = FALSE,
+  as_dataframe = FALSE,
+  return_available = FALSE,
+  verbose = FALSE
+)
 }
 \arguments{
 \item{classification}{(optionally request only colours for pathology, lymphgen, mutation or copy_number).}

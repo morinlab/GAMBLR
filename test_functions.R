@@ -1,7 +1,8 @@
 # This is the working tests from some of the commonly used GAMBLR functions.
 # Theoretically these should all work out-of-the-box and provide sensible outputs
 
-
+library(GAMBLR)
+library(tidyverse)
 #starting point for most things: metadata for the samples you are working with (or all samples for one seq_type)
 my_metadata = get_gambl_metadata() #by default, just the tumour genomes are returned
 

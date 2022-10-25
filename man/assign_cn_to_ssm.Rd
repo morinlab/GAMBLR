@@ -17,7 +17,6 @@ assign_cn_to_ssm(
   assume_diploid = FALSE,
   genes,
   include_silent = FALSE,
-  ssh_session,
   seq_type = "genome",
   projection = "grch37"
 )

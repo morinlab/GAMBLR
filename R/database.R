@@ -67,8 +67,9 @@ get_ssm_by_patients = function(these_patient_ids,
                                maf_cols = NULL,
                                subset_from_merge = FALSE,
                                augmented = TRUE,
-                               engine='fread_maf',
-                               ssh_session){
+                               engine='fread_maf'
+                               ){
+  check_remote_configuration(auto_connect = TRUE)
   if(!subset_from_merge){
     message("WARNING: on-the-fly merges can be extremely slow and consume a lot of memory. Use at your own risk. ")
   }
@@ -106,7 +107,6 @@ get_ssm_by_patients = function(these_patient_ids,
                             min_read_support = min_read_support,
                             subset_from_merge = subset_from_merge,
                             augmented = augmented,
-                            ssh_session = ssh_session,
                             basic_columns = basic_columns,
                             maf_cols = maf_cols,
                             engine=engine))
@@ -131,7 +131,6 @@ get_ssm_by_patients = function(these_patient_ids,
 #' @param maf_cols if basic_columns is set to FALSE, the suer can specify what columns to be returned within the MAF. This parameter can either be a list of indexes (integer) or a list of characters.
 #' @param subset_from_merge Instead of merging individual MAFs, the data will be subset from a pre-merged MAF of samples with the specified seq_type
 #' @param engine Specify one of readr or fread_maf (default) to change how the large files are loaded prior to subsetting. You may have better performance with one or the other but for me fread_maf is faster and uses a lot less RAM. 
-#' @param ssh_session argument to supply active ssh session connection for remote transfers (only compatible with subset_from_merge=TRUE)
 #'
 #' @return data frame in MAF format.
 #' @export
@@ -155,8 +154,8 @@ get_ssm_by_samples = function(these_sample_ids,
                               maf_cols = NULL,
                               subset_from_merge = FALSE,
                               augmented = TRUE,
-                              engine='fread_maf',
-                              ssh_session){
+                              engine='fread_maf'){
+  remote_session = check_remote_configuration(auto_connect = TRUE)
   if(!subset_from_merge){
     message("WARNING: on-the-fly merges can be extremely and consume a lot of memory if many samples are involved. Use at your own risk. ")
   }
@@ -260,9 +259,7 @@ get_ssm_by_samples = function(these_sample_ids,
     }
 
     if(!subset_from_merge){
-      if(!missing(ssh_session)){
-        #stop("You supplied the argument ssh_session. We do not support this functionality over ssh yet for various reasons. Perhaps use the merges instead?")
-        
+      if(remote_session){
         maf_df_list = list()
         for(this_sample in these_sample_ids){
           maf_df = get_ssm_by_sample(
@@ -275,9 +272,7 @@ get_ssm_by_samples = function(these_sample_ids,
             min_read_support = min_read_support,
             basic_columns = basic_columns,
             maf_cols = maf_cols,
-            verbose = FALSE,
-            ssh_session = ssh_session
-          )
+            verbose = FALSE)
           maf_df_list[[this_sample]]=maf_df
         }
       }else{
@@ -327,7 +322,6 @@ get_ssm_by_samples = function(these_sample_ids,
 #' @param basic_columns Return first 43 columns of MAF rather than full details. Default is TRUE.
 #' @param maf_cols if basic_columns is set to FALSE, the suer can specify what columns to be returned within the MAF. This parameter can either be a list of indexes (integer) or a list of characters.
 #' @param verbose Enable for debugging/noisier output
-#' @param ssh_session BETA feature! pass active ssh session object.
 #' If specified, the function will assume the user is not on the network and will temporarily copy the file locally.
 #'
 #' @return data frame in MAF format.
@@ -349,8 +343,9 @@ get_ssm_by_sample = function(this_sample_id,
                              min_read_support = 3,
                              basic_columns = TRUE,
                              maf_cols = NULL,
-                             verbose = FALSE,
-                             ssh_session){
+                             verbose = FALSE
+                             ){
+  remote_session = check_remote_configuration(auto_connect = TRUE)
   if(missing(this_seq_type) & missing(these_samples_metadata)){
     stop("Must provide both a sample_id and seq_type for that sample via this_sample_id and this_seq_type")
   }
@@ -407,9 +402,9 @@ get_ssm_by_sample = function(this_sample_id,
   }else{
     warning("Currently the only flavour available to this function is 'clustered'")
   }
-  if(!missing(ssh_session)){
+  if(remote_session){
     #check if file exists
-    status = ssh_exec_internal(ssh_session,command=paste("stat",aug_maf_path),error=F)$status
+    status = ssh::ssh_exec_internal(ssh_session,command=paste("stat",aug_maf_path),error=F)$status
     #aug_maf_path = paste0(aug_maf_path,".gz")
     #local_aug_maf_path = paste0(local_aug_maf_path,".gz")
     #full_maf_path = paste0(full_maf_path,".gz")
@@ -428,7 +423,7 @@ get_ssm_by_sample = function(this_sample_id,
       suppressMessages(suppressWarnings(dir.create(dirN,recursive = T)))
       if(!file.exists(local_aug_maf_path)){
         
-        scp_download(ssh_session,aug_maf_path,dirN)
+        ssh::scp_download(ssh_session,aug_maf_path,dirN)
       }
 
      #check for missingness
@@ -450,7 +445,7 @@ get_ssm_by_sample = function(this_sample_id,
       suppressMessages(suppressWarnings(dir.create(dirN,recursive = T)))
       if(!file.exists(local_full_maf_path)){
 
-        scp_download(ssh_session,full_maf_path,dirN)
+        ssh::scp_download(ssh_session,full_maf_path,dirN)
       }
       #check for missingness
       if(!file.exists(local_full_maf_path)){
@@ -587,7 +582,9 @@ get_gambl_metadata = function(seq_type_filter = "genome",
                               biopsy_flatfile = "",
                               only_available = TRUE,
                               seq_type_priority="genome"){
-
+  
+  check_remote_configuration() 
+  #this needs to be in any function that reads files from the bundled GAMBL outputs synced by Snakemake
   outcome_table = get_gambl_outcomes(from_flatfile = from_flatfile)
 
   if(from_flatfile){
@@ -1744,9 +1741,8 @@ get_cn_segments = function(chromosome = "",
                            region,
                            with_chr_prefix = FALSE,
                            streamlined = FALSE,
-                           from_flatfile = FALSE,
-                           ssh_session){
-
+                           from_flatfile = FALSE){
+  remote_session = check_remote_configuration()
   db = config::get("database_name")
   table_name = config::get("results_tables")$copy_number
   table_name_unmatched = config::get("results_tables")$copy_number_unmatched
@@ -1856,8 +1852,7 @@ get_ashm_count_matrix = function(regions_bed,
                                  maf_data,
                                  these_samples_metadata,
                                  seq_type,
-                                 from_indexed_flatfile = TRUE,
-                                 ssh_session = NULL){
+                                 from_indexed_flatfile = TRUE){
   if(missing(seq_type)){
     if(missing(these_samples_metadata)){
       stop("Must supply either the seq_type or a metadata data frame from which it can be retrieved")
@@ -1872,8 +1867,7 @@ get_ashm_count_matrix = function(regions_bed,
                                 seq_type=seq_type,
                                 maf_data = maf_data,
                                 use_name_column = TRUE,
-                                from_indexed_flatfile = from_indexed_flatfile,
-                                ssh_session=ssh_session)
+                                from_indexed_flatfile = from_indexed_flatfile)
 
   ashm_counted = ashm_maf %>%
     group_by(sample_id, region_name) %>%
@@ -1931,7 +1925,6 @@ get_ssm_by_regions = function(regions_list,
                               seq_type = "genome",
                               projection = "grch37",
                               min_read_support = 4,
-                              ssh_session = NULL,
                               basic_columns=F){
 
 
@@ -1955,7 +1948,6 @@ get_ssm_by_regions = function(regions_list,
                                                                 augmented = augmented,
                                                                 seq_type = seq_type,
                                                                 projection = projection,
-                                                                ssh_session=ssh_session,
                                                                 basic_columns=basic_columns)})
   }else{
     region_mafs = lapply(regions, function(x){get_ssm_by_region(region = x,
@@ -1963,7 +1955,6 @@ get_ssm_by_regions = function(regions_list,
                                                                 maf_data = maf_data,
                                                                 from_indexed_flatfile = from_indexed_flatfile,
                                                                 mode = mode,
-                                                                ssh_session=ssh_session,
                                                                 basic_columns=basic_columns)})
   }
   if(!use_name_column){
@@ -2035,8 +2026,8 @@ get_ssm_by_region = function(chromosome,
                              mode = "slms-3",
                              maf_columns = c("Chromosome", "Start_Position", "End_Position", "Tumor_Sample_Barcode", "t_alt_count"),
                              maf_column_types = "ciici",
-                             ssh_session = NULL,
                              verbose=FALSE){
+  remote_session = check_remote_configuration(auto_connect = TRUE)
   if(basic_columns){
     #this means we ignore/clobber the contents of maf_columns so the first 45 are used instead
     maf_columns = names(maf_header)[c(1:45)]
@@ -2082,14 +2073,12 @@ get_ssm_by_region = function(chromosome,
 
     if(!file.exists(full_maf_path_comp)){
       print(paste("missing:", full_maf_path_comp))
-      message("Warning, you are running this on a computer that does not have direct acces to the directed file, prehaps you should try run this with ssh_session as a parameter?")
-    }else if(!is.null(ssh_session)){
-      message("The file you requested exists locally. Are you sure you want to use ssh_session?")
-    }else{
+      check_host(verbose=TRUE)
       if(verbose){
         message("using local file")
         print(paste("HERE:",full_maf_path_comp))
       }
+      stop("failed to find the file needed for this")
     }
   }
 
@@ -2116,7 +2105,7 @@ get_ssm_by_region = function(chromosome,
 
  if(missing(maf_data)){
     if(from_indexed_flatfile){
-      if(!is.null(ssh_session)){
+      if(remote_session){
         if(verbose){
           print("ssh session!")
         }
@@ -2246,7 +2235,7 @@ get_coding_ssm = function(limit_cohort,
                           groups = c("gambl", "icgc_dart"),
                           include_silent = TRUE,
                           engine='fread_maf'){
-
+  remote_session = check_remote_configuration()
   if(!include_silent){
     coding_class = coding_class[coding_class != "Silent"]
   }
