@@ -61,12 +61,6 @@ annotate_ssm_blacklist = function(mutations_df,
     }
     combined_blacklist = do.call("rbind", blacklist_list)
   
-    # Collapse variant counts per Start_Position
-    # combined_blacklist = mutate(combined_blacklist, Start_Position = as.integer(Start_Position)) %>%
-    #   group_by(Start_Position, Chromosome) %>%
-    #   summarize(blacklist_count = sum(blacklist_count)) %>%
-    #   ungroup()
-  
     if(return_blacklist){
       return(combined_blacklist)
     }
