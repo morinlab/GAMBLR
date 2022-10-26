@@ -60,7 +60,7 @@ annotate_ssm_blacklist = function(mutations_df,
       blacklist_list[[b]] = lifted_blacklist
     }
     combined_blacklist = do.call("rbind", blacklist_list)
-  
+    
     if(return_blacklist){
       return(combined_blacklist)
     }
@@ -72,8 +72,8 @@ annotate_ssm_blacklist = function(mutations_df,
     }
     if(str_detect(mutations_df$Chromosome, "chr")[1]){
       combined_blacklist = mutate(combined_blacklist, Chromosome = paste0("chr", Chromosome))
-  
     }
+    
     mutations_df = left_join(mutations_df,combined_blacklist,by = c("Chromosome", "Start_Position")) %>%
       mutate(blacklist_count = replace_na(blacklist_count, 0))
     
@@ -85,9 +85,8 @@ annotate_ssm_blacklist = function(mutations_df,
       } else {
         message("0 variants were dropped")
       }
-      
     }
-    }else{
+  }else{
       repo_base = config::get("repo_base")
       full_path = paste0(repo_base, config::get("resources")$curated_blacklist)
       additional_blacklist = glue(full_path) %>% read_tsv()
@@ -105,11 +104,9 @@ annotate_ssm_blacklist = function(mutations_df,
         } else {
           message("0 variants were dropped")
         }
-  
       }
-  
     }
-
+  
   #drop anything that exceeds our threshold but keep NA
   mutations_df = dplyr::filter(mutations_df, is.na(blacklist_count) | blacklist_count < drop_threshold)
   if(invert){
