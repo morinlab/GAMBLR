@@ -87,25 +87,25 @@ annotate_ssm_blacklist = function(mutations_df,
       }
     }
   }else{
-      repo_base = config::get("repo_base")
-      full_path = paste0(repo_base, config::get("resources")$curated_blacklist)
-      additional_blacklist = glue(full_path) %>% read_tsv()
-      additional_blacklist = additional_blacklist %>%
-        separate(chrpos, into = c("Chromosome", "Start_Position"), sep = ":") %>% mutate(Start_Position = as.numeric(Start_Position))
-  
-      mutations_df = left_join(mutations_df,additional_blacklist,by = c("Chromosome", "Start_Position")) %>%
-        mutate(blacklist_count = replace_na(blacklist_count, 0))
-      dropped = dplyr::filter(mutations_df, blacklist_count > drop_threshold)
-      mutations_df = dplyr::filter(mutations_df, is.na(blacklist_count) | blacklist_count < drop_threshold)
-      if(verbose){
-        if(nrow(dropped) > 0 ){
-          ndrop = length(dropped$Tumor_Sample_Barcode)
-          message(paste(ndrop, "variants were dropped"))
-        } else {
-          message("0 variants were dropped")
-        }
+    repo_base = config::get("repo_base")
+    full_path = paste0(repo_base, config::get("resources")$curated_blacklist)
+    additional_blacklist = glue(full_path) %>% read_tsv()
+    additional_blacklist = additional_blacklist %>%
+      separate(chrpos, into = c("Chromosome", "Start_Position"), sep = ":") %>% mutate(Start_Position = as.numeric(Start_Position))
+
+    mutations_df = left_join(mutations_df,additional_blacklist,by = c("Chromosome", "Start_Position")) %>%
+      mutate(blacklist_count = replace_na(blacklist_count, 0))
+    dropped = dplyr::filter(mutations_df, blacklist_count > drop_threshold)
+    mutations_df = dplyr::filter(mutations_df, is.na(blacklist_count) | blacklist_count < drop_threshold)
+    if(verbose){
+      if(nrow(dropped) > 0 ){
+        ndrop = length(dropped$Tumor_Sample_Barcode)
+        message(paste(ndrop, "variants were dropped"))
+      } else {
+        message("0 variants were dropped")
       }
     }
+  }
   
   #drop anything that exceeds our threshold but keep NA
   mutations_df = dplyr::filter(mutations_df, is.na(blacklist_count) | blacklist_count < drop_threshold)
