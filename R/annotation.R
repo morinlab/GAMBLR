@@ -76,7 +76,6 @@ annotate_ssm_blacklist = function(mutations_df,
     
     mutations_df = left_join(mutations_df,combined_blacklist,by = c("Chromosome", "Start_Position")) %>%
       mutate(blacklist_count = replace_na(blacklist_count, 0))
-    
     dropped = dplyr::filter(mutations_df, blacklist_count > drop_threshold)
     if(verbose){
       if(nrow(dropped) > 0 ){
@@ -96,7 +95,6 @@ annotate_ssm_blacklist = function(mutations_df,
     mutations_df = left_join(mutations_df,additional_blacklist,by = c("Chromosome", "Start_Position")) %>%
       mutate(blacklist_count = replace_na(blacklist_count, 0))
     dropped = dplyr::filter(mutations_df, blacklist_count > drop_threshold)
-    mutations_df = dplyr::filter(mutations_df, is.na(blacklist_count) | blacklist_count < drop_threshold)
     if(verbose){
       if(nrow(dropped) > 0 ){
         ndrop = length(dropped$Tumor_Sample_Barcode)
