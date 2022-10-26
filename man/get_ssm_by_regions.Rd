@@ -16,7 +16,8 @@ get_ssm_by_regions(
   seq_type = "genome",
   projection = "grch37",
   min_read_support = 4,
-  ssh_session = NULL
+  ssh_session = NULL,
+  basic_columns = F
 )
 }
 \arguments{
@@ -49,6 +50,6 @@ Efficiently retrieve all mutations across a range of genomic regions.
 \examples{
 #basic usage, adding custom names from bundled ashm data frame
 regions_bed = grch37_ashm_regions \%>\% mutate(name = paste(gene, region, sep = "_"))
-ashm_maf = get_ssm_by_regions(regions_bed = regions_bed)
-
+ashm_basic_details = get_ssm_by_regions(regions_bed = regions_bed) 
+full_details_maf = get_ssm_by_regions(regions_bed = regions_bed,basic_columns=T)
 }

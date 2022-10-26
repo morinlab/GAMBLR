@@ -19,7 +19,7 @@ collate_results(
 \arguments{
 \item{sample_table}{A data frame with sample_id as the first column.}
 
-\item{write_to_file}{Boolean statement that outputs tsv file if TRUE, default is FALSE.}
+\item{write_to_file}{Boolean statement that outputs tsv file (/projects/nhl_meta_analysis_scratch/gambl/results_local/shared/gambl_{seq_type_filter}_results.tsv) if TRUE, default is FALSE.}
 
 \item{join_with_full_metadata}{Join with all columns of meta data, default is FALSE.}
 
@@ -31,7 +31,7 @@ collate_results(
 
 \item{seq_type_filter}{Filtering criteria, default is genomes.}
 
-\item{from_cache}{Boolean variable for using cached results, default is TRUE.}
+\item{from_cache}{Boolean variable for using cached results (/projects/nhl_meta_analysis_scratch/gambl/results_local/shared/gambl_{seq_type_filter}_results.tsv), default is TRUE. If write_to_file is TRUE, this parameter auto-defaults to FALSE.}
 }
 \value{
 A table keyed on biopsy_id that contains a bunch of per-sample results from GAMBL
@@ -40,6 +40,22 @@ A table keyed on biopsy_id that contains a bunch of per-sample results from GAMB
 Bring together all derived sample-level results from many GAMBL pipelines.
 }
 \examples{
-everything_collated = collate_results(join_with_full_metadata = TRUE)
+#generate new cached results for all genome samples in gambl (Warning, is this what you really want to do?)
+genome_collated = collate_results(seq_type_filter = "genome", from_cache = FALSE, write_to_file = TRUE)
+
+#get collated results for all capture samples, using cached results
+capture_collated_everything = collate_results( seq_type_filter = "capture", from_cache = TRUE, write_to_file = FALSE)
+
+#use an already subset metadata table for getting collated results (cached)
+metadata = get_gambl_metadata(seq_type_filter = "genome") \%>\% dplyr::filter(pathology == "FL")
+fl_collated = collate_results(seq_type_filter = "genome", join_with_full_metadata = TRUE, these_samples_metadata = metadata, write_to_file = FALSE, from_cache = TRUE)
+
+#get collated results for all genome samples and join with full metadata
+everything_collated = collate_results(seq_type_filter = "genome", from_cache = TRUE, join_with_full_metadata = TRUE)
+
+#another example demonstrating correct usage of the sample_table parameter.
+fl_samples = get_gambl_metadata(seq_type_filter = "genome") \%>\% dplyr::filter(pathology == "FL") \%>\% dplyr::select(sample_id, patient_id, biopsy_id)
+fl_collated = collate_results(sample_table = fl_samples, seq_type_filter = "genome", from_cache = TRUE)
+
 
 }

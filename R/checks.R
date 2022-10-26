@@ -97,10 +97,15 @@ check_file_details = function(relative_paths){
   return(not_found)
 }
 
-check_gamblr_config = function(mode="default",compare_timestamps=FALSE,ssh_session,archive_mode=FALSE,force_backup=FALSE){
+check_gamblr_config = function(mode="default",
+                               compare_timestamps=FALSE,
+                               ssh_session,
+                               archive_mode=FALSE,
+                               force_backup=FALSE){
   files_to_check = c()
   #get all the wildcards we'll need
   seq_type = get_template_wildcards("seq_types")
+  seq_type_filter = seq_type
   unix_group = get_template_wildcards("unix_groups")
   projection = get_template_wildcards("projections")
   

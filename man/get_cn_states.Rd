@@ -8,6 +8,7 @@ get_cn_states(
   regions_list,
   regions_bed,
   region_names,
+  these_samples_metadata,
   all_cytobands = FALSE,
   use_cytoband_name = FALSE
 )

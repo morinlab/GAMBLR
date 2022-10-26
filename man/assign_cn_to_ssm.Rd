@@ -11,6 +11,7 @@ assign_cn_to_ssm(
   use_augmented_maf = TRUE,
   tool_name = "battenberg",
   maf_file,
+  maf_df,
   seg_file,
   seg_file_source = "battenberg",
   assume_diploid = FALSE,
@@ -31,6 +32,8 @@ assign_cn_to_ssm(
 \item{use_augmented_maf}{Boolean statement if to use augmented maf, default is FALSE.}
 
 \item{maf_file}{Path to maf file.}
+
+\item{maf_df}{Optional. Use a maf dataframe instead of a path.}
 
 \item{seg_file_source}{Specify what copy number calling program the input seg file is from, as it handles ichorCNA differently than WisecondorX, Battenberg, etc.}
 

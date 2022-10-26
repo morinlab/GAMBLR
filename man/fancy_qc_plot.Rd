@@ -6,15 +6,14 @@
 \usage{
 fancy_qc_plot(
   these_samples,
-  filter_cohort,
-  filter_pathology,
+  keep_cohort,
+  keep_pathology,
   seq_type = "genome",
   metadata,
+  these_samples_metadata,
   plot_data,
-  fill_by,
+  fill_by = "pathology",
   comparison_samples,
-  filter_comp_cohort,
-  filter_comp_pathology,
   plot_title = "",
   plot_subtitle = "",
   y_axis_lab = "",
@@ -24,23 +23,21 @@ fancy_qc_plot(
 \arguments{
 \item{these_samples}{Data frame with sample IDs (to be plotted) in the first column (has to be named sample_id).}
 
-\item{filter_cohort}{Optional parameter to be used when these_sample is NULL. Calls get_gambl_metadata() and filters on the cohort supplied in this parameter.}
+\item{keep_cohort}{Optional parameter to be used when these_sample is NULL. Calls get_gambl_metadata() and filters on the cohort supplied in this parameter.}
 
-\item{filter_pathology}{Optional parameter to be used when these_sample is NULL. Calls get_gambl_metadata() and filters on the pathology supplied in this parameter.}
+\item{keep_pathology}{Optional parameter to be used when these_sample is NULL. Calls get_gambl_metadata() and filters on the pathology supplied in this parameter.}
 
 \item{seq_type}{Selected seq type for incoming QC metrics.}
 
 \item{metadata}{Optional, user can provide a metadata df to subset sample IDs from.}
 
+\item{these_samples_metadata}{GAMBL metadata subset to the cases you want to process.}
+
 \item{plot_data}{Plotting parameter, define the data type to be plotted.}
 
-\item{fill_by}{Plotting parameter, Set fill for bar plot, can be pathology, cohort, etc.}
+\item{fill_by}{Parameter for specifying fill variable for grouped bar plot. Can be any factor from incoming metadata, e.g pathology, cohort, etc.}
 
-\item{comparison_samples}{Optional parameter, give the function a list of sample IDs to be compared against the main plotting group.}
-
-\item{filter_comp_cohort}{Optional parameter for filtering the comparison group (cohort).}
-
-\item{filter_comp_pathology}{Optional parameter for filtering the comparison group (pathology).}
+\item{comparison_samples}{Optional parameter, give the function a list of sample IDs to be compared against the main plotting group. Pathology is default.}
 
 \item{plot_title}{Plotting parameter, plot title.}
 
@@ -59,15 +56,38 @@ plot as ggplot object.
 Plot for visualizing QC metrics and allowing for grouping by different metadata columns.
 }
 \examples{
-fancy_qc_plot(filter_pathology = "FL",
-              filter_cohort = "FL_Kridel",
-              filter_comp_pathology = "BL",
-              filter_comp_cohort = "BL_Pediatric",
-              plot_data = "AverageBaseQuality",
-              fill_by = "pathology",
-              plot_subtitle = "Example Plot",
-              y_axis_lab = "Average Base Quality",
-              plot_title = "A. Base Quality For FL_Kridel vs. BL_Pediatric",
-              seq_type = "genome")
+#Example 1 - using these_samples parameter
+#subset on FL cases with QC metrics available and plot
+kridel_fl = get_gambl_metadata() \%>\%
+ dplyr::filter(pathology == "FL", cohort == "FL_Kridel") \%>\%
+ dplyr::select(sample_id) \%>\%
+ pull(sample_id)
+
+my_plot_1 = fancy_qc_plot(these_samples = kridel_fl, 
+                          seq_type = "genome", 
+                          plot_data = "AverageBaseQuality", 
+                          plot_subtitle = "Example Plot", 
+                          y_axis_lab = "Average Base Quality", 
+                          plot_title = "Average Base Quality For FL_Kridel")
+
+#Example 2 - using already filtered metadata (these_samples_metadata)
+fl_metadata = get_gambl_metadata() \%>\%
+ dplyr::filter(pathology == "FL", cohort == "FL_Kridel")
+
+my_plot_2 = fancy_qc_plot(these_samples_metadata = fl_metadata, 
+                          seq_type = "genome", 
+                          plot_data = "AverageBaseQuality", 
+                          plot_subtitle = "Example Plot", 
+                          y_axis_lab = "Average Base Quality", 
+                          plot_title = "Average Base Quality For FL_Kridel")
+
+#Example 3 - using in-house metadata fitlering options
+my_plot_3 = fancy_qc_plot(keep_cohort = "FL_Kridel", 
+                          keep_pathology = "FL", 
+                          seq_type = "genome", 
+                          plot_data = "AverageBaseQuality", 
+                          plot_subtitle = "Example Plot", 
+                          y_axis_lab = "Average Base Quality", 
+                          plot_title = "Average Base Quality For FL_Kridel")
 
 }

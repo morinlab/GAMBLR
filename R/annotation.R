@@ -1,6 +1,7 @@
 #adding coding_vc to global enviroment
 coding_vc = c("Frame_Shift_Del", "Frame_Shift_Ins", "In_Frame_Del", "In_Frame_Ins", "Missense_Mutation", "Nonsense_Mutation", "Nonstop_Mutation", "Splice_Region", "Splice_Site", "Targeted_Region", "Translation_Start_Site")
 
+
 #' Annotate and auto-drop a MAF data frame with existing blacklists to remove variants that would be dropped during the merge process.
 #'
 #' @param mutations_df df with mutation data.
@@ -53,6 +54,15 @@ annotate_ssm_blacklist = function(mutations_df,
     blacklist_list = list()
     for(b in blacklist_files){
       full_path = paste0(project_base,b)
+
+      
+      #check for missingness
+      if(!file.exists(full_path)){
+        print(paste("missing: ", full_path))
+        message("Cannot find file locally. If working remotely, perhaps you forgot to load your config (see below) or sync your files?")
+        message('Sys.setenv(R_CONFIG_ACTIVE = "remote")')
+      }
+
       lifted_blacklist = read_tsv(full_path, col_names = c("chrpos", "blacklist_count"),col_types="ci")
       lifted_blacklist = lifted_blacklist %>%
         separate(chrpos, into = c("Chromosome", "Start_Position"), sep = ":") %>% mutate(Start_Position = as.numeric(Start_Position))
@@ -237,10 +247,10 @@ annotate_driver_ssm = function(maf_df,
       dplyr::filter(Variant_Classification %in% coding_vc) %>%
       dplyr::filter(Hugo_Symbol %in% driver_genes)
 
-    for(gene in names(include_noncoding)){
-      message(paste("adding", unname(include_noncoding[gene]), "for", gene))
+    for(gene in names(noncoding_regions)){
+      message(paste("adding", unname(noncoding_regions[gene]), "for", gene))
       nc_ssm = maf_df %>%
-      dplyr::filter(Variant_Classification == unname(include_noncoding[gene]))
+      dplyr::filter(Variant_Classification == unname(noncoding_regions[gene]))
 
       if(!is.na(noncoding_regions[gene])){
         #also restrict to coordinates

@@ -12,15 +12,15 @@ get_coding_ssm(
   these_samples_metadata,
   force_unmatched_samples,
   projection = "grch37",
-  seq_type = "genome",
+  seq_type,
   basic_columns = TRUE,
   maf_cols = NULL,
-  return_cols = FALSE,
   from_flatfile = TRUE,
   augmented = TRUE,
   min_read_support = 3,
   groups = c("gambl", "icgc_dart"),
-  include_silent = TRUE
+  include_silent = TRUE,
+  engine = "fread_maf"
 )
 }
 \arguments{
@@ -40,11 +40,9 @@ get_coding_ssm(
 
 \item{seq_type}{The seq_type you want back, default is genome.}
 
-\item{basic_columns}{Set to TRUE to override the default behavior of returning only the first 45 columns of MAF data.}
+\item{basic_columns}{Set to FALSE to override the default behavior of returning only the first 45 columns of MAF data.}
 
 \item{maf_cols}{if basic_columns is set to FALSE, the user can specify what columns to be returned within the MAF. This parameter can either be a list of indexes (integer) or a list of characters (matching columns in MAF).}
-
-\item{return_cols}{If set to TRUE, a vector with all avaialble column names will be returned. Default is FALSE.}
 
 \item{from_flatfile}{Set to TRUE to obtain mutations from a local flatfile instead of the database. This can be more efficient and is currently the only option for users who do not have ICGC data access.}
 

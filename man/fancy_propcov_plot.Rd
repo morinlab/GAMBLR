@@ -7,8 +7,9 @@
 fancy_propcov_plot(
   these_samples,
   metadata,
-  filter_cohort,
-  filter_pathology,
+  these_samples_metadata,
+  keep_cohort,
+  keep_pathology,
   comparison_samples,
   seq_type = "genome",
   plot_subtitle = ""
@@ -19,9 +20,11 @@ fancy_propcov_plot(
 
 \item{metadata}{Optional, user can provide a metadata df to subset sample IDs from.}
 
-\item{filter_cohort}{Optional parameter to be used when these_sample is NULL. Calls get_gambl_metadata() and filters on the cohort supplied in this parameter.}
+\item{these_samples_metadata}{GAMBL metadata subset to the cases you want to process.}
 
-\item{filter_pathology}{Optional parameter to be used when these_sample is NULL. Calls get_gambl_metadata() and filters on the pathology supplied in this parameter.}
+\item{keep_cohort}{Optional parameter to be used when these_sample is NULL. Calls get_gambl_metadata() and filters on the cohort supplied in this parameter.}
+
+\item{keep_pathology}{Optional parameter to be used when these_sample is NULL. Calls get_gambl_metadata() and filters on the pathology supplied in this parameter.}
 
 \item{comparison_samples}{Optional parameter, give the function a list of sample IDs to be compared against the main plotting group.}
 
@@ -36,22 +39,22 @@ plot as ggplot object.
 Visualize proportional coverage (10X and 30X) for selected samples and add comparison group (optional).
 }
 \examples{
-#Example 1: Compare proportional coverage for all samples compared to all FL cases:
-#prepare comparison data:
-this_meta = get_gambl_metadata()
-all_fl = dplyr::filter(this_meta, pathology == "FL") \%>\%
-dplyr::select(sample_id) \%>\%
-  arrange(sample_id) \%>\%
-  as.data.frame()
+#Example 1 - using these_samples parameter
+#subset on FL cases with QC metrics available and plot
+kridel_fl = get_gambl_metadata() \%>\%
+ dplyr::filter(pathology == "FL", cohort == "FL_Kridel") \%>\%#
+ dplyr::select(sample_id) \%>\%
+ pull(sample_id)
 
-sub_fl = all_fl[c(128:183),]
-sub_fl = as.data.frame(sub_fl)
-colnames(sub_fl)[1] = "sample_id"
+my_plot_1 = fancy_propcov_plot(these_samples = kridel_fl, seq_type = "genome")
 
-plot:
-my_plot = fancy_propcov_plot(seq_type = "genome", comparison_samples = sub_fl, plot_subtitle = "Proportional coverage for all samples compared to all FL cases")
+#Example 2 - using already filtered metadata (these_samples_metadata)
+fl_metadata = get_gambl_metadata() \%>\%
+ dplyr::filter(pathology == "FL", cohort == "FL_Kridel")
 
-Example 2: Visualize proportional coverage for all FL cases (no comparison group)
-all_fl = fancy_propcov_plot(filter_pathology = "FL", seq_type = "genome", plot_subtitle = "Proportional coverage for all FL cases")
+my_plot_2 = fancy_propcov_plot(these_samples_metadata = fl_metadata, seq_type = "genome")
+
+#Example 3 - using in-house metadata fitlering options
+my_plot_3 = fancy_propcov_plot(keep_cohort = "FL_Kridel", keep_pathology = "FL", seq_type = "genome")
 
 }

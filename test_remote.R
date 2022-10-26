@@ -23,9 +23,12 @@ config::get("repo_base")
 # 1. get the metadata for genome and capture samples
 all_meta = get_gambl_metadata()
 all_meta = mutate(all_meta,pathology=ifelse(pathology=="BLL","BL",pathology))
-cap_meta = get_gambl_metadata(seq_type_filter = "capture")
+genome_meta = get_gambl_metadata(seq_type_filter = c("genome","capture"),seq_type_priority = "genome") %>% dplyr::filter(seq_type=="genome")
+cap_meta = get_gambl_metadata(seq_type_filter = c("genome","capture"),seq_type_priority = "genome") %>% dplyr::filter(seq_type=="capture")
 
-cap_meta = cap_meta %>% dplyr::filter(!sample_id %in% all_meta$sample_id)
+dplyr::filter(genome_meta,Tumor_Sample_Barcode %in% cap_meta$Tumor_Sample_Barcode) %>% nrow()
+
+
 
 #load collated summary results
 collated = collate_results(from_cache=TRUE)
@@ -36,7 +39,7 @@ dim(collated)
 
 #2. get mutations (assuming the files have been synced)
 # all these should proceed without error
-coding_ssm = get_coding_ssm(these_samples_metadata = all_meta,seq_type = "genome")
+coding_ssm = get_coding_ssm(these_samples_metadata = genome_meta,seq_type = "genome")
 
 cap_ssm = get_coding_ssm(these_samples_metadata = cap_meta,seq_type = "capture")
 
@@ -48,7 +51,7 @@ dim(coding_ssm)
 dim(cap_ssm)
 # [1] 626822     45
 
-which(coding_ssm$Tumor_Sample_Barcode %in% cap_ssm$Tumor_Sample_Barcode)
+coding_ssm$Tumor_Sample_Barcode[which(coding_ssm$Tumor_Sample_Barcode %in% cap_ssm$Tumor_Sample_Barcode)]
 # no overlap of IDs between the two because we used seq_type_priority
 
 all_ssm = bind_rows(coding_ssm,cap_ssm)

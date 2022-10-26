@@ -4,10 +4,14 @@
 \alias{fread_maf}
 \title{Title}
 \usage{
-fread_maf(maf_file_path)
+fread_maf(maf_file_path, select_cols, return_cols = FALSE)
 }
 \arguments{
-\item{maf_file_path}{}
+\item{maf_file_path}{path to maf that is about to be read.}
+
+\item{select_cols}{Optional parameter for specifying what columns are to be returned. If not specified, all columns will be kept.}
+
+\item{return_cols}{Optional parameter for returning the names of all available MAF columns. If set to TRUE a character vector of column names will be returned, and no MAF will be read. Default is FALSE.}
 }
 \value{
 a data table containing MAF data from a MAF file

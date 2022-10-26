@@ -2,8 +2,7 @@
 % Please edit documentation in R/database.R
 \name{get_ssm_by_samples}
 \alias{get_ssm_by_samples}
-\title{Get MAF-format data frame for more than one sample and combine together (wraps get_ssm_by_sample)
-See get_ssm_by_sample for more information}
+\title{Get MAF-format data frame for more than one sample and combine together}
 \usage{
 get_ssm_by_samples(
   these_sample_ids,
@@ -16,14 +15,14 @@ get_ssm_by_samples(
   min_read_support = 3,
   basic_columns = TRUE,
   maf_cols = NULL,
-  return_cols = FALSE,
-  subset_from_merge = TRUE,
+  subset_from_merge = FALSE,
   augmented = TRUE,
+  engine = "fread_maf",
   ssh_session
 )
 }
 \arguments{
-\item{these_sample_ids}{A vector of sample_id that you want results for. This is the only required argument.}
+\item{these_sample_ids}{A vector of sample_id that you want results for.}
 
 \item{these_samples_metadata}{Optional metadata table}
 
@@ -41,22 +40,25 @@ get_ssm_by_samples(
 
 \item{maf_cols}{if basic_columns is set to FALSE, the suer can specify what columns to be returned within the MAF. This parameter can either be a list of indexes (integer) or a list of characters.}
 
-\item{return_cols}{If set to TRUE, a vector with all avaialble column names will be returned. Default is FALSE.}
-
 \item{subset_from_merge}{Instead of merging individual MAFs, the data will be subset from a pre-merged MAF of samples with the specified seq_type}
 
 \item{augmented}{default: TRUE. Set to FALSE if you instead want the original MAF from each sample for multi-sample patients instead}
 
-\item{BETA}{optional argument to supply active ssh session connection for remote transfers}
+\item{engine}{Specify one of readr or fread_maf (default) to change how the large files are loaded prior to subsetting. You may have better performance with one or the other but for me fread_maf is faster and uses a lot less RAM.}
+
+\item{ssh_session}{argument to supply active ssh session connection for remote transfers (only compatible with subset_from_merge=TRUE)}
 }
 \value{
 data frame in MAF format.
 }
 \description{
-Get MAF-format data frame for more than one sample and combine together (wraps get_ssm_by_sample)
+This function internally runs get_ssm_by_sample.
+In most situations, this should never need to be run with subset_from_merge = TRUE. Instead use one of get_coding_ssm or get_ssm_by_region
 See get_ssm_by_sample for more information
 }
 \examples{
-merged_maf_force_unmatched = get_ssm_by_samples(these_sample_ids=c("HTMCP-01-06-00485-01A-01D","14-35472_tumorA","14-35472_tumorB"))
-
+sample_ssms = get_ssm_by_samples(these_sample_ids=c("HTMCP-01-06-00485-01A-01D","14-35472_tumorA","14-35472_tumorB"))
+hg38_ssms = get_ssm_by_samples(these_sample_ids=c("HTMCP-01-06-00485-01A-01D","14-35472_tumorA","14-35472_tumorB"),projection="hg38")
+readr_sample_ssms = get_ssm_by_samples(these_sample_ids=c("HTMCP-01-06-00485-01A-01D","14-35472_tumorA","14-35472_tumorB"),subset_from_merge=TRUE,engine="readr")
+slow_sample_ssms = get_ssm_by_samples(these_sample_ids=c("HTMCP-01-06-00485-01A-01D","14-35472_tumorA","14-35472_tumorB"),subset_from_merge=TRUE)
 }

@@ -2,14 +2,11 @@
 % Please edit documentation in R/database.R
 \name{get_ssm_by_sample}
 \alias{get_ssm_by_sample}
-\title{Get the ssms (i.e. load MAF) for a single sample. This was implemented to allow flexibility because
-there are some samples that we may want to use a different set of variants than those in the main GAMBL merge.
-The current use case is to allow a force_unmatched output to be used to replace the SSMs from the merge for samples
-with known contamination in the normal. This will also be useful to apply a blacklist to individual MAFs when coupled with
-annotate_ssm_blacklist.}
+\title{Get the ssms (i.e. load MAF) for a single sample.}
 \usage{
 get_ssm_by_sample(
   this_sample_id,
+  this_seq_type,
   these_samples_metadata,
   tool_name = "slms-3",
   projection = "grch37",
@@ -19,7 +16,6 @@ get_ssm_by_sample(
   min_read_support = 3,
   basic_columns = TRUE,
   maf_cols = NULL,
-  return_cols = FALSE,
   verbose = FALSE,
   ssh_session
 )
@@ -27,7 +23,9 @@ get_ssm_by_sample(
 \arguments{
 \item{this_sample_id}{Required. The sample_id you want the data from.}
 
-\item{these_samples_metadata}{Either a single row or entire metadata table containing your sample_id}
+\item{this_seq_type}{Required if not specifying these_samples_metadata. The seq_type of the sample you want data from.}
+
+\item{these_samples_metadata}{Required if not specifying both this_sample_id and this_seq_type a single row or entire metadata table containing your sample_id}
 
 \item{tool_name}{The name of the variant calling pipeline (currently only slms-3 is supported)}
 
@@ -45,8 +43,6 @@ get_ssm_by_sample(
 
 \item{maf_cols}{if basic_columns is set to FALSE, the suer can specify what columns to be returned within the MAF. This parameter can either be a list of indexes (integer) or a list of characters.}
 
-\item{return_cols}{If set to TRUE, a vector with all avaialble column names will be returned. Default is FALSE.}
-
 \item{verbose}{Enable for debugging/noisier output}
 
 \item{ssh_session}{BETA feature! pass active ssh session object.
@@ -56,13 +52,15 @@ If specified, the function will assume the user is not on the network and will t
 data frame in MAF format.
 }
 \description{
-Get the ssms (i.e. load MAF) for a single sample. This was implemented to allow flexibility because
+This was implemented to allow flexibility because
 there are some samples that we may want to use a different set of variants than those in the main GAMBL merge.
 The current use case is to allow a force_unmatched output to be used to replace the SSMs from the merge for samples
 with known contamination in the normal. This will also be useful to apply a blacklist to individual MAFs when coupled with
 annotate_ssm_blacklist.
 }
 \examples{
-ssm_sample = get_ssm_by_sample(this_sample_id = "HTMCP-01-06-00485-01A-01D", tool_name = "slims-3", projection = "grch37")
+this_sample_df = get_ssm_by_sample(this_sample_id = "HTMCP-01-06-00485-01A-01D", this_seq_type = "genome",tool_name = "slims-3", projection = "grch37")
+capture_meta = get_gambl_metadata(seq_type_filter = "capture")
+ssm_sample = get_ssm_by_sample(this_sample_id = "CASA0002_2015-03-10", projection = "grch37",augmented = T,these_samples_metadata = capture_meta)
 
 }

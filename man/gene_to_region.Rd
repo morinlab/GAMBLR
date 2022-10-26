@@ -2,22 +2,26 @@
 % Please edit documentation in R/utilities.R
 \name{gene_to_region}
 \alias{gene_to_region}
-\title{Get regions (bed format) from genes.}
+\title{Get regions from genes.}
 \usage{
-gene_to_region(gene_symbol, ensembl_id, genome_build)
+gene_to_region(
+  gene_symbol,
+  ensembl_id,
+  genome_build = "grch37",
+  return_as = "region"
+)
 }
 \arguments{
-\item{gene_symbol}{Gene symbol (e.g BCL2).}
+\item{gene_symbol}{A vector of one or more gene symbols.}
 
-\item{ensembl_id}{Esemble ID (e.g ENSG00000171791).}
+\item{ensembl_id}{A vector of one or more Esemble IDs.}
 
-\item{genome_build}{Reference genome build (currently, only grch37 supported).}
-}
-\value{
-Gene coordinates in the format "chr:start-end" format.
+\item{genome_build}{Reference genome build.}
+
+\item{return_as}{Specify the type of return. Default is region (chr:start-end), other acceptable arguments are "bed" and "df".}
 }
 \description{
-Get regions (bed format) from genes.
+Get regions from genes.
 }
 \examples{
 bcl2_region = gene_to_region(gene_symbol = "BCL2", genome_build = "grch37")
