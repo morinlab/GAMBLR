@@ -47,80 +47,75 @@ annotate_ssm_blacklist = function(mutations_df,
   if(missing(project_base)){
     project_base = config::get("project_base")
   }
-  blacklist_files = glue::glue(blacklist_template)
-  blacklist_list = list()
-  for(b in blacklist_files){
-    full_path = paste0(project_base,b)
-    lifted_blacklist = read_tsv(full_path, col_names = c("chrpos", "blacklist_count"),col_types="ci")
-    lifted_blacklist = lifted_blacklist %>%
-      separate(chrpos, into = c("Chromosome", "Start_Position"), sep = ":")
-
-    blacklist_list[[b]] = lifted_blacklist
-  }
-  combined_blacklist = do.call("rbind", blacklist_list)
-
-  # Collapse variant counts per Start_Position
-  combined_blacklist = mutate(combined_blacklist, Start_Position = as.integer(Start_Position)) %>%
-    group_by(Start_Position, Chromosome) %>%
-    summarize(blacklist_count = sum(blacklist_count)) %>%
-    ungroup()
-
-  if(return_blacklist){
-    return(combined_blacklist)
-  }
-
-  #join using chromosome and position
-  if(verbose){
-    print(head(mutations_df))
-    print(head(combined_blacklist))
-  }
-  if(str_detect(mutations_df$Chromosome, "chr")[1]){
-    combined_blacklist = mutate(combined_blacklist, Chromosome = paste0("chr", Chromosome))
-
-  }
-  mutations_df = left_join(mutations_df,combined_blacklist,by = c("Chromosome", "Start_Position")) %>%
-    mutate(blacklist_count = replace_na(blacklist_count, 0))
-
-  if (use_curated_blacklist){
-    repo_base = config::get("repo_base")
-    full_path = paste0(repo_base, config::get("etc")$curated_blacklist)
-    additional_blacklist = glue(full_path) %>% read_tsv()
-    additional_blacklist = additional_blacklist %>%
-      separate(chrpos, into = c("Chromosome", "Start_Position"), sep = ":")
-
-    additional_blacklist = mutate(additional_blacklist, Start_Position = as.integer(Start_Position)) %>%
-      group_by(Start_Position, Chromosome) %>%
-      summarize(blacklist_schmitz = sum(blacklist_schmitz)) %>%
-      ungroup()
-
-    if(str_detect(mutations_df$Chromosome, "chr")[1]){
-      additional_blacklist = mutate(additional_blacklist, Chromosome = paste0("chr", Chromosome))
+  
+  if(!use_curated_blacklist){
+    blacklist_files = glue::glue(blacklist_template)
+    blacklist_list = list()
+    for(b in blacklist_files){
+      full_path = paste0(project_base,b)
+      lifted_blacklist = read_tsv(full_path, col_names = c("chrpos", "blacklist_count"),col_types="ci")
+      lifted_blacklist = lifted_blacklist %>%
+        separate(chrpos, into = c("Chromosome", "Start_Position"), sep = ":")
+  
+      blacklist_list[[b]] = lifted_blacklist
     }
-    mutations_df = left_join(mutations_df,additional_blacklist,by = c("Chromosome", "Start_Position")) %>%
-      mutate(blacklist_schmitz = replace_na(blacklist_schmitz, 0))
-    dropped = dplyr::filter(mutations_df, blacklist_schmitz > drop_threshold)
-    mutations_df = dplyr::filter(mutations_df, is.na(blacklist_schmitz) | blacklist_schmitz < drop_threshold)
+    combined_blacklist = do.call("rbind", blacklist_list)
+  
+    # Collapse variant counts per Start_Position
+    combined_blacklist = mutate(combined_blacklist, Start_Position = as.integer(Start_Position)) %>%
+      group_by(Start_Position, Chromosome) %>%
+      summarize(blacklist_count = sum(blacklist_count)) %>%
+      ungroup()
+  
+    if(return_blacklist){
+      return(combined_blacklist)
+    }
+  
+    #join using chromosome and position
     if(verbose){
-      if(length(dropped) > 0 ){
+      print(head(mutations_df))
+      print(head(combined_blacklist))
+    }
+    if(str_detect(mutations_df$Chromosome, "chr")[1]){
+      combined_blacklist = mutate(combined_blacklist, Chromosome = paste0("chr", Chromosome))
+  
+    }
+    mutations_df = left_join(mutations_df,combined_blacklist,by = c("Chromosome", "Start_Position")) %>%
+      mutate(blacklist_count = replace_na(blacklist_count, 0))
+    
+    dropped = dplyr::filter(mutations_df, blacklist_count > drop_threshold)
+    if(verbose){
+      if(nrow(dropped) > 0 ){
         ndrop = length(dropped$Tumor_Sample_Barcode)
         message(paste(ndrop, "variants were dropped"))
       } else {
         message("0 variants were dropped")
       }
-
+      
+    }
+    }else{
+      repo_base = config::get("repo_base")
+      full_path = paste0(repo_base, config::get("resources")$curated_blacklist)
+      additional_blacklist = glue(full_path) %>% read_tsv()
+      additional_blacklist = additional_blacklist %>%
+        separate(chrpos, into = c("Chromosome", "Start_Position"), sep = ":") %>% mutate(Start_Position = as.numeric(Start_Position))
+  
+      mutations_df = left_join(mutations_df,additional_blacklist,by = c("Chromosome", "Start_Position")) %>%
+        mutate(blacklist_count = replace_na(blacklist_count, 0))
+      dropped = dplyr::filter(mutations_df, blacklist_count > drop_threshold)
+      mutations_df = dplyr::filter(mutations_df, is.na(blacklist_count) | blacklist_count < drop_threshold)
+      if(verbose){
+        if(nrow(dropped) > 0 ){
+          ndrop = length(dropped$Tumor_Sample_Barcode)
+          message(paste(ndrop, "variants were dropped"))
+        } else {
+          message("0 variants were dropped")
+        }
+  
+      }
+  
     }
 
-  }
-  dropped = dplyr::filter(mutations_df, blacklist_count > drop_threshold)
-  if(verbose){
-    if(length(dropped) > 0 ){
-      ndrop = length(dropped$Tumor_Sample_Barcode)
-      message(paste(ndrop, "variants were dropped"))
-    } else {
-      message("0 variants were dropped")
-    }
-
-  }
   #drop anything that exceeds our threshold but keep NA
   mutations_df = dplyr::filter(mutations_df, is.na(blacklist_count) | blacklist_count < drop_threshold)
   if(invert){
