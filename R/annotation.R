@@ -55,17 +55,17 @@ annotate_ssm_blacklist = function(mutations_df,
       full_path = paste0(project_base,b)
       lifted_blacklist = read_tsv(full_path, col_names = c("chrpos", "blacklist_count"),col_types="ci")
       lifted_blacklist = lifted_blacklist %>%
-        separate(chrpos, into = c("Chromosome", "Start_Position"), sep = ":")
+        separate(chrpos, into = c("Chromosome", "Start_Position"), sep = ":") %>% mutate(Start_Position = as.numeric(Start_Position))
   
       blacklist_list[[b]] = lifted_blacklist
     }
     combined_blacklist = do.call("rbind", blacklist_list)
   
     # Collapse variant counts per Start_Position
-    combined_blacklist = mutate(combined_blacklist, Start_Position = as.integer(Start_Position)) %>%
-      group_by(Start_Position, Chromosome) %>%
-      summarize(blacklist_count = sum(blacklist_count)) %>%
-      ungroup()
+    # combined_blacklist = mutate(combined_blacklist, Start_Position = as.integer(Start_Position)) %>%
+    #   group_by(Start_Position, Chromosome) %>%
+    #   summarize(blacklist_count = sum(blacklist_count)) %>%
+    #   ungroup()
   
     if(return_blacklist){
       return(combined_blacklist)
