@@ -11,7 +11,7 @@ get_cn_segments(
   qend,
   projection = "grch37",
   this_seq_type = "genome",
-  with_chr_prefix = FALSE,
+  remove_chr_prefix = FALSE,
   streamlined = FALSE,
   from_flatfile = TRUE
 )
@@ -29,7 +29,7 @@ get_cn_segments(
 
 \item{this_seq_type}{Seq type for returned Cn segments. Currently, only genome is supported. Capture samples will be added once processed through CNV protocols.}
 
-\item{with_chr_prefix}{Prepend all chromosome names with chr (required by some downstream analyses). Default is FALSE.}
+\item{remove_chr_prefix}{Prepend all chromosome names with chr (required by some downstream analyses). Default is FALSE.}
 
 \item{streamlined}{Return a basic rather than full MAF format.}
 
@@ -48,7 +48,7 @@ segments_region_grch37 = get_cn_segments(chromosome = "chr8",
                                          qend = 128774067,
                                          projection = "grch37", 
                                          this_seq_type = "genome", 
-                                         with_chr_prefix = FALSE, 
+                                         remove_chr_prefix = FALSE, 
                                          from_flatfile = TRUE, 
                                          streamlined = FALSE) 
                                     
@@ -56,7 +56,7 @@ segments_region_grch37 = get_cn_segments(chromosome = "chr8",
 segments_region_hg38 = get_cn_segments(region = "chr8:128,723,128-128,774,067",
                                        projection = "hg38", 
                                        this_seq_type = "genome", 
-                                       with_chr_prefix = TRUE, 
+                                       remove_chr_prefix = TRUE, 
                                        from_flatfile = TRUE, 
                                        streamlined = FALSE) 
 
