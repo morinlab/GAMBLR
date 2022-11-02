@@ -1508,6 +1508,11 @@ prettyOncoplot = function(maftools_obj,
       grid.rect(x, y, w-unit(spacing, "pt"), h*height_scaling,
                 gp = gpar(fill = col["Missense_Mutation"], col = box_col))
     },
+    #small green
+    Silent = function(x, y, w, h) {
+      grid.rect(x, y, w-unit(spacing, "pt"), h*height_scaling,
+                gp = gpar(fill = col["purple"], col = box_col))
+    },
     hot_spot = function(x, y, w, h) {
       grid.rect(x, y, w-unit(spacing, "pt"), (height_scaling/5)*h,
                 gp = gpar(fill = "white", col = box_col))
@@ -1609,6 +1614,9 @@ prettyOncoplot = function(maftools_obj,
   if (! is.null(custom_colours)){
     colours = custom_colours
   }
+
+  colours[["Silent"]] = "#A020F0"
+
   if(highlightHotspots){
     hot_samples = dplyr::filter(maftools_obj@data, hot_spot == TRUE & Hugo_Symbol %in% genes) %>%
       dplyr::select(Hugo_Symbol, Tumor_Sample_Barcode) %>%
@@ -1700,10 +1708,10 @@ prettyOncoplot = function(maftools_obj,
   }
   heatmap_legend_param = list(title = "Alterations",
                          at = c("RNA", "3'UTR" , "Nonsense_Mutation", "Splice_Site","Splice_Region", "Nonstop_Mutation", "Translation_Start_Site",
-                         "In_Frame_Ins", "In_Frame_Del", "Frame_Shift_Ins", "Frame_Shift_Del", "Multi_Hit", "Missense_Mutation", "hot_spot"),
+                         "In_Frame_Ins", "In_Frame_Del", "Frame_Shift_Ins", "Frame_Shift_Del", "Multi_Hit", "Missense_Mutation", "Silent", "hot_spot"),
                          labels = c("RNA", "3'UTR", "Nonsense Mutation", "Splice Site","Splice Region", "Nonstop Mutation", "Translation Start Site",
                          "In Frame Insertion", "In Frame Deletion", "Frame Shift Insertion", "Frame Shift Deletion",
-                         "Multi Hit", "Missense Mutation", "Hotspot"),
+                         "Multi Hit", "Missense Mutation", "Silent", "Hotspot"),
                          nrow = annotation_row, ncol = annotation_col,
                          legend_direction = legend_direction,
                          labels_gp = gpar(fontsize = legendFontSize))
