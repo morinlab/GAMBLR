@@ -1719,99 +1719,170 @@ get_sample_cn_segments = function(this_sample_id,
 
 #' Retrieve all copy number segments from the GAMBL database that overlap with a single genomic coordinate range.
 #'
-#' @param chromosome The chromosome you are restricting to.
-#' @param qstart Start coordinate of the range you are restricting to.
-#' @param qend End coordinate of the range you are restricting to.
-#' @param region Region formatted like chrX:1234-5678 instead of specifying chromosome, start and end separately.
-#' @param with_chr_prefix Prepend all chromosome names with chr (required by some downstream analyses).
+#' @param region Region formatted like chrX:1234-5678 or X:1234-56789.
+#' @param chromosome The chromosome you are restricting to. Required parameter if region is not specified.
+#' @param qstart Start coordinate of the range you are restricting to. Required parameter if region is not specified.
+#' @param qend End coordinate of the range you are restricting to. Required parameter if region is not specified.
+#' @param projection Selected genome projection for returned Cn segments.
+#' @param this_seq_type Seq type for returned Cn segments. Currently, only genome is supported. Capture samples will be added once processed through CNV protocols.
+#' @param with_chr_prefix Prepend all chromosome names with chr (required by some downstream analyses). Default is FALSE. 
 #' @param streamlined Return a basic rather than full MAF format.
-#' @param from_flatfile Set to FALSE by default.
+#' @param from_flatfile Set to TRUE by default.
 #'
-#' @return A data frame containing all the MAF data columns (one row per mutation).
+#' @return A data frame with CN segments for either full genome, or specified region.
 #' @export
-#' @import tidyverse DBI RMariaDB
+#' @import DBI RMariaDB
+#' @depend tidyverse
 #'
 #' @examples
-#' #basic usage
-#' my_segments = get_cn_segments(region="chr8:128,723,128-128,774,067")
-#' #specifying chromosome, start and end individually
-#' my_segments = get_cn_segments(chromosome="8",qstart=128723128,qend=128774067)
-#' #Asking for chromosome names to have a chr prefix (default is un-prefixed)
-#' prefixed_segments = get_cn_segments(chromosome ="12",qstart = 122456912, qend = 122464036, with_chr_prefix = TRUE)
+#' #Example using chromosome, qstart and qend parameters:
+#' segments_region_grch37 = get_cn_segments(chromosome = "chr8",
+#'                                          qstart = 128723128,
+#'                                          qend = 128774067,
+#'                                          projection = "grch37", 
+#'                                          this_seq_type = "genome", 
+#'                                          with_chr_prefix = FALSE, 
+#'                                          from_flatfile = TRUE, 
+#'                                          streamlined = FALSE) 
+#'                                     
+#' #Example using the regions parameter:
+#' segments_region_hg38 = get_cn_segments(region = "chr8:128,723,128-128,774,067",
+#'                                        projection = "hg38", 
+#'                                        this_seq_type = "genome", 
+#'                                        with_chr_prefix = TRUE, 
+#'                                        from_flatfile = TRUE, 
+#'                                        streamlined = FALSE) 
 #'
-get_cn_segments = function(chromosome = "",
+#'
+get_cn_segments = function(region,
+                           chromosome,
                            qstart,
                            qend,
-                           region,
+                           projection = "grch37",
+                           this_seq_type = "genome",
                            with_chr_prefix = FALSE,
                            streamlined = FALSE,
-                           from_flatfile = FALSE,
-                           ssh_session){
-
-  db = config::get("database_name")
-  table_name = config::get("results_tables")$copy_number
-  table_name_unmatched = config::get("results_tables")$copy_number_unmatched
+                           from_flatfile = TRUE){
+  
+  #checks
+  #check seq type and return a message if anything besides "genome" is called. To be updated once capture samples have been processed through CNV protocols.
+  if(this_seq_type!="genome"){
+    stop("Currently, only genome samples are available for this function. Please select a valid seq type (i.e genome). Compatibility for capture samples will be added soon...")
+  }
+  
+  #get wildcards from this_seq_type (lazy)
+  seq_type = this_seq_type
+  
+  #perform wrangling on the region to have it in the correct format. 
   if(!missing(region)){
     region = gsub(",", "", region)
-    #format is chr6:37060224-37151701
     split_chunks = unlist(strsplit(region, ":"))
     chromosome = split_chunks[1]
     startend = unlist(strsplit(split_chunks[2], "-"))
     qstart = startend[1]
     qend = startend[2]
   }
-  if(grepl("chr", chromosome)){
+  
+  #deal with chr prefixes for region, based on selected genome projection.
+  if(projection == "grch37"){
+    if(grepl("chr", chromosome)){
+      chromosome = gsub("chr", "", chromosome)
+    }
   }else{
-    chromosome = paste0("chr", chromosome)
-  }
-
-  #chr prefix the query chromosome to match how it's stored in the table.
-  #This isn't yet standardized in the db so it's just a workaround "for now".
-  if(from_flatfile){
-    base_dir = config::get(config="default")$project_base
-
-    unmatched_path = config::get()$results_directories$controlfreec
-
-    #separated by which genome the sample was aligned to
-    unmatched_hg38_path = paste0(unmatched_path, "from--genome--hg38/")
-    unmatched_grch37_path = paste0(unmatched_path, "from--genome--grch37/")
-  }else{
-    con = DBI::dbConnect(RMariaDB::MariaDB(), dbname = db)
-
-    #remove the prefix if this is false (or leave as is otherwise)
-    if(missing(qstart) & missing(region)){
-      all_segs_matched = dplyr::tbl(con, table_name) %>%
-        as.data.frame()
-
-      all_segs_unmatched = dplyr::tbl(con, table_name_unmatched) %>%
-        as.data.frame()
-    }else{
-
-      #TODO improve this query to allow for partial overlaps, create Issue on Github?
-      all_segs_matched = dplyr::tbl(con, table_name) %>%
-        dplyr::filter((chrom == chromosome & start <= qstart & end >= qend) | (chrom == chromosome & start >= qstart & end <= qend)) %>%
-        as.data.frame() %>%
-        dplyr::mutate(method = "battenberg")
-
-      # get controlfreec segments for samples with missing battenberg results like unpaired
-      all_segs_unmatched = dplyr::tbl(con, table_name_unmatched) %>%
-        dplyr::filter((chrom == chromosome & start <= qstart & end >= qend) | (chrom == chromosome & start >= qstart & end <= qend)) %>%
-        as.data.frame() %>%
-        dplyr::filter(! ID %in% all_segs_matched$ID)  %>%
-        dplyr::mutate(method = "controlfreec")
-
-      DBI::dbDisconnect(con)
+    if(!grepl("chr", chromosome)){
+      chromosome = paste0("chr", chromosome)
     }
   }
-  all_segs = rbind(all_segs_matched, all_segs_unmatched)
-  all_segs = dplyr::mutate(all_segs, CN = round(2*2^log.ratio))
-  if(! with_chr_prefix){
-    all_segs = all_segs %>%
-      dplyr::mutate(chrom = gsub("chr", "", chrom))
+  
+  #sanity check type of qstart en qend
+  if(!is.numeric(qstart)){
+    qstart = as.numeric(qstart)
   }
+  
+  if(!is.numeric(qend)){
+    qend = as.numeric(qend)
+  }
+  
+  if(from_flatfile){
+    cnv_flatfile_template = config::get("results_flatfiles")$cnv_combined$icgc_dart
+    cnv_path =  glue::glue(cnv_flatfile_template)
+    full_cnv_path =  paste0(config::get("project_base", config = "default"), cnv_path)
+    
+    #check permissions to ICGC data.
+    permissions = file.access(full_cnv_path, 4)
+    if(permissions == -1){
+      message("restricting to non-ICGC data")
+      cnv_flatfile_template = config::get("results_flatfiles")$cnv_combined$gambl
+      cnv_path =  glue::glue(cnv_flatfile_template)
+      full_cnv_path =  paste0(config::get("project_base"), cnv_path)
+    }
+    
+    #check for missingness.
+    if(!file.exists(full_cnv_path)){
+      print(paste("missing: ", full_cnv_path))
+      message("Cannot find file locally. If working remotely, perhaps you forgot to load your config (see below) or sync your files?")
+      message('Sys.setenv(R_CONFIG_ACTIVE = "remote")')
+    }
+    
+    #read cnv data into R.
+    all_segs = read_tsv(full_cnv_path)
+    
+    #subset to regions, if specified.
+    all_segs = all_segs %>%
+      dplyr::filter((chrom == chromosome & start <= qstart & end >= qend) | (chrom == chromosome & start >= qstart & end <= qend)) %>%
+      as.data.frame()
+    
+  }else{
+    db = config::get("database_name")
+    table_name = config::get("results_tables")$copy_number
+    table_name_unmatched = config::get("results_tables")$copy_number_unmatched
+    con = DBI::dbConnect(RMariaDB::MariaDB(), dbname = db)
+    
+    #get matched.
+    all_segs_matched = dplyr::tbl(con, table_name) %>%
+      as.data.frame()
+    
+    #get unmatched.
+    all_segs_unmatched = dplyr::tbl(con, table_name_unmatched) %>%
+      as.data.frame()
+    
+    #subset to regions, if specified.
+    all_segs_matched = all_segs_matched %>%
+      dplyr::filter((chrom == chromosome & start <= qstart & end >= qend) | (chrom == chromosome & start >= qstart & end <= qend)) %>%
+      as.data.frame() %>%
+      dplyr::mutate(method = "battenberg")
+      
+    all_segs_unmatched = all_segs_unmatched %>%
+      dplyr::filter((chrom == chromosome & start <= qstart & end >= qend) | (chrom == chromosome & start >= qstart & end <= qend)) %>%
+      as.data.frame() %>%
+      dplyr::filter(! ID %in% all_segs_matched$ID)  %>%
+      dplyr::mutate(method = "controlfreec")
+      
+      DBI::dbDisconnect(con)
+      
+      all_segs = rbind(all_segs_matched, all_segs_unmatched)
+  }
+  
+  #mutate CN states.
+  all_segs = dplyr::mutate(all_segs, CN = round(2*2^log.ratio))
+
+  #deal with chromosome prefixes
+  if(!with_chr_prefix){
+    if(str_detect(all_segs$chrom, "chr")[1]){
+      all_segs = dplyr::mutate(all_segs, chrom = gsub("chr", "", chrom))
+    }
+  }else{
+    if(!str_detect(all_segs$chrom, "chr")[1]){
+      all_segs = mutate(all_segs, chrom = paste0("chr", chrom))
+      }
+    }
+  
+  #subset to only a few columns with streamlined = TRUE.
   if(streamlined){
     all_segs = dplyr::select(all_segs, ID, CN)
   }
+  
+  #return data frame with CN segments
   return(all_segs)
 }
 
