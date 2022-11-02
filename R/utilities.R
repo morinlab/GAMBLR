@@ -1596,13 +1596,16 @@ get_sample_wildcards = function(this_sample_id,seq_type){
 #' @param coding_only Optional. set to TRUE to rescrict to only coding variants.
 #' @param from_flatfile Optional. Instead of the database, load the data from a local MAF and seg file.
 #' @param use_augmented_maf Boolean statement if to use augmented maf, default is FALSE.
+#' @param tool_name name of tool to be sued, default is "battenberg".
 #' @param maf_file Path to maf file.
 #' @param maf_df Optional. Use a maf dataframe instead of a path.
-#' @param seq_file path to seq file.
+#' @param seg_file path to seq file.
 #' @param seg_file_source Specify what copy number calling program the input seg file is from, as it handles ichorCNA differently than WisecondorX, Battenberg, etc.
 #' @param assume_diploid Optional. If no local seg file is provided, instead of defaulting to a GAMBL sample, this parameter annotates every mutation as copy neutral.
 #' @param genes Genes of interest.
 #' @param include_silent Logical parameter indicating whether to include siment mutations into coding mutations. Default is FALSE
+#' @param this_seq_type Specified seq type for returned data.
+#' @param projection specified genome projection that returned data is in reference to.
 #'
 #' @return A list containing a data frame (MAF-like format) with two extra columns:
 #' log.ratio is the log ratio from the seg file (NA when no overlap was found)
@@ -1626,10 +1629,10 @@ assign_cn_to_ssm = function(this_sample,
                             assume_diploid = FALSE,
                             genes,
                             include_silent = FALSE,
-                            ssh_session,
-                            seq_type="genome",
-                            projection="grch37"){
-
+                            ssh_session, 
+                            this_seq_type = "genome",
+                            projection = "grch37"){
+  seq_type = this_seq_type
   database_name = config::get("database_name")
   project_base = config::get("project_base")
   if(!include_silent){
@@ -1652,7 +1655,7 @@ assign_cn_to_ssm = function(this_sample,
     tumour_sample_id = wildcards$tumour_sample_id
     normal_sample_id = wildcards$normal_sample_id
     pairing_status = wildcards$pairing_status
-    maf_sample = get_ssm_by_sample(this_sample_id = this_sample, augmented = use_augmented_maf, ssh_session = ssh_session)
+    maf_sample = get_ssm_by_sample(this_sample_id = this_sample, this_seq_type = this_seq_type, augmented = use_augmented_maf, ssh_session = ssh_session)
 
   }else{
     #get all the segments for a sample and filter the small ones then assign CN value from the segment to all SSMs in that region
@@ -2310,7 +2313,11 @@ collate_sv_results = function(sample_table,
 #' # install_github("morinlab/ggsci")
 #'
 get_gambl_colours = function(classification = "all",
-                             alpha = 1,as_list=FALSE){
+                             alpha = 1,
+                             as_list=FALSE,
+                             as_dataframe=FALSE,
+                             return_available=FALSE,
+                             verbose=FALSE){
 
   all_colours = list()
   everything = c()
@@ -2338,9 +2345,10 @@ get_gambl_colours = function(classification = "all",
                             "NEG" = "#E5A4CB")
 
   all_colours[["BL"]] = c("Q53-BL" = "#A6CEE3",
+                          "M53-BL" = "#A6CEE3", #added because genetic subgroup still refers to it this way
                           "DLBCL-A" = "#721F0F",
                           "IC-BL" = "#45425A",
-                          "DGG-BL" = "#E90C8BFF",
+                          "DGG-BL" = "#E90C8B",
                           "DLBCL-B" = "#FB9A99",
                           "DLBCL-C" = "#C41230")
 
@@ -2504,21 +2512,32 @@ get_gambl_colours = function(classification = "all",
 
   all_colours[["indels"]] = c("DEL" = "#53B1FC", "INS" = "#FC9C6D")
   all_colours[["svs"]] = c("DEL" = "#53B1FC", "DUP" = "#FC9C6D")
-
+  all_colours[["genetic_subgroup"]] = c(all_colours[["lymphgen"]],all_colours[["BL"]],all_colours[["FL"]])
   #print(all_colours)
-  for(colslot in names(all_colours)){
-    raw_cols = all_colours[[colslot]]
-    raw_cols_rgb = col2rgb(raw_cols)
-    alpha_cols = rgb(raw_cols_rgb[1L, ], raw_cols_rgb[2L, ], raw_cols_rgb[3L, ], alpha = alpha * 255L, names = names(raw_cols), maxColorValue = 255L)
-    names(alpha_cols) = names(raw_cols)
-    all_colours[[colslot]] = alpha_cols
+  if(alpha <1){
+    for(colslot in names(all_colours)){
+      raw_cols = all_colours[[colslot]]
+      raw_cols_rgb = col2rgb(raw_cols)
+      alpha_cols = rgb(raw_cols_rgb[1L, ], raw_cols_rgb[2L, ], raw_cols_rgb[3L, ], alpha = alpha * 255L, names = names(raw_cols), maxColorValue = 255L)
+      names(alpha_cols) = names(raw_cols)
+      all_colours[[colslot]] = alpha_cols
+    }
   }
   for(this_group in names(all_colours)){
     everything = c(everything, all_colours[[this_group]])
   }
   #return matching value from lowercase version of the argument if it exists
   lc_class = stringr::str_to_lower(classification)
+  if(return_available){
+    return(names(all_colours))
+  }
   if(classification %in% names(all_colours)){
+    if(as_dataframe){
+      some_col=all_colours[[classification]]
+      df_ugly = data.frame(name=names(some_col),colour=unname(some_col))
+      df_tidy = mutate(df_ugly,group=classification)
+      return(df_tidy)
+    }
     return(all_colours[[classification]])
   }else if(lc_class %in% names(all_colours)){
     return(all_colours[[lc_class]])
