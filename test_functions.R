@@ -162,9 +162,6 @@ samples_cn_segments = get_sample_cn_segments(multiple_samples = TRUE, sample_lis
 #assign cn to ssm, annotate mutations with copy number information
 cn_list = assign_cn_to_ssm(this_sample = "HTMCP-01-06-00422-01A-01D", this_seq_type = "genome", coding_only = TRUE)
 
-#assign cn to ssm, annotate mutations (already loaded maf) with copy number information
-cn_list_multiple = assign_cn_to_ssm(maf_df = sample_ssms, this_seq_type = "genome", coding_only = TRUE)
-
 #get gene cn and expression, get copy number and expression for a single gene
 MYC_cn_expression = get_gene_cn_and_expression(gene_symbol = "MYC")
 
