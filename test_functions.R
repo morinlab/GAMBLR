@@ -33,7 +33,7 @@ chr1q_genes = region_to_gene(region = "1:142600000-249250621", gene_format = "en
 #collate results, collate all genome samples, using cached results
 genome_collated = collate_results(seq_type_filter = "genome", from_cache = TRUE)
 
-#collate results, get collated results for all capture samples, using chached results
+#collate results, get collated results for all capture samples, using cached results
 capture_collated = collate_results(seq_type_filter = "capture", from_cache = TRUE)
 
 #collate results, use an already subset metadata table for getting collated results (cached)
@@ -141,10 +141,10 @@ myc_locus_sv = get_manta_sv(region = "8:128723128-128774067")
 my_segments = get_cn_segments(region = "chr8:128,723,128-128,774,067", projection = "grch37", this_seq_type = "genome", streamlined = FALSE, from_flatfile = TRUE)
 
 #get cn segments for specified region, using chromosome, qstart and qend parameters.
-my_segments_all = get_cn_segments(chromosome = "8", qstart = 128723128, qend = 128774067, projection = "hg38", this_seq_type = "genome", with_chr_prefix = TRUE, streamlined = FALSE, from_flatfile = TRUE)
+my_segments_2 = get_cn_segments(chromosome = "8", qstart = 128723128, qend = 128774067, projection = "hg38", this_seq_type = "genome", remove_chr_prefix = TRUE, streamlined = FALSE, from_flatfile = TRUE)
 
 #get cn segments, using a previously defined region (from gene_to_region) and filtering out all copy number states equal to 2
-myc_cns = get_cn_segments(region = myc_region, projection = "grch37", this_seq_type = "genome", streamlined = FALSE, from_flatfile = TRUE, with_chr_prefix = FALSE) %>% dplyr::filter(CN != 2)
+myc_cns = get_cn_segments(region = myc_region, projection = "grch37", this_seq_type = "genome", streamlined = FALSE, from_flatfile = TRUE, remove_chr_prefix = FALSE) %>% dplyr::filter(CN != 2)
 
 #get cn states, this example uses the bundled bed file of regions containing lymphoma genes, warning: This is pretty slow with the full bed file
 cn_matrix = get_cn_states(regions_bed = head(grch37_lymphoma_genes_bed, 15))
