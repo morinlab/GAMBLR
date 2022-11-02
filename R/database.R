@@ -24,7 +24,7 @@ get_excluded_samples = function(tool_name = "slms-3"){
     message("Have you cloned the GAMBL repo and added the path to this directory under the local section of your config?")
   }
 
-  excluded_df = read_tsv(paste0(base,"config/exclude.tsv"))
+  excluded_df = suppressMessages(read_tsv(paste0(base,"config/exclude.tsv")))
   excluded_samples = dplyr::filter(excluded_df, pipeline_exclude == tool_name) %>%
     pull(sample_id)
 
@@ -211,7 +211,7 @@ get_ssm_by_samples = function(these_sample_ids,
         }
       }else if(engine=="readr"){
         if(basic_columns){
-          maf_df_merge = read_tsv(full_maf_path,col_select = c(1:45),num_threads=12,col_types = maf_column_types,lazy = TRUE) %>%
+          maf_df_merge = suppressMessages(read_tsv(full_maf_path,col_select = c(1:45),num_threads=12,col_types = maf_column_types,lazy = TRUE)) %>%
             dplyr::filter(Tumor_Sample_Barcode %in% these_sample_ids) %>%
             dplyr::filter(t_alt_count >= min_read_support)
         }else{
@@ -708,7 +708,7 @@ get_gambl_metadata = function(seq_type_filter = "genome",
         dplyr::filter(cohort != "CLL_LSARP_Trios")
     }else if(case_set == "tFL-study"){
       #update all DLBCLs in this file to indicate they're transformations
-      transformed_manual = read_tsv("/projects/rmorin/projects/gambl-repos/gambl-rmorin/data/metadata/raw_metadata/gambl_tFL_manual.tsv")
+      transformed_manual = suppressMessages(read_tsv("/projects/rmorin/projects/gambl-repos/gambl-rmorin/data/metadata/raw_metadata/gambl_tFL_manual.tsv"))
 
       all_meta = left_join(all_meta, transformed_manual)
       fl_meta_kridel = all_meta %>%
@@ -1186,7 +1186,7 @@ get_combined_sv = function(min_vaf = 0,
     message('Sys.setenv(R_CONFIG_ACTIVE = "remote")')
   }
 
-  all_sv = read_tsv(sv_file, col_types = "cnncnncnccccnnccncn") %>%
+  all_sv = suppressMessages(read_tsv(sv_file, col_types = "cnncnncnccccnnccncn")) %>%
     dplyr::rename(c("VAF_tumour" = "VAF")) %>%
     dplyr::filter(VAF_tumour >= min_vaf)
 
@@ -1281,7 +1281,7 @@ get_manta_sv = function(min_vaf = 0.1,
       check_host()
     }
 
-    all_sv = read_tsv(sv_file, col_types = "cnncnncnccccnnnnccc", col_names = cnames)
+    all_sv = suppressMessages(read_tsv(sv_file, col_types = "cnncnncnccccnnnnccc", col_names = cnames))
 
   }else{
     con = DBI::dbConnect(RMariaDB::MariaDB(), dbname = db)
@@ -1369,7 +1369,7 @@ get_lymphgen = function(these_samples_metadata,
     lg_path = glue::glue(lg_path)
   }
 
-  lg = readr::read_tsv(lg_path)
+  lg = suppressMessages(read_tsv(lg_path))
   lg_tidy = tidy_lymphgen(lg,lymphgen_column_in = "Subtype.Prediction",lymphgen_column_out = "LymphGen")
   if(return_feature_matrix | return_feature_annotation){
     lg_ord = select(lg_tidy,Sample.Name,LymphGen) %>% arrange(LymphGen) %>% pull(Sample.Name)
@@ -1650,7 +1650,7 @@ get_sample_cn_segments = function(this_sample_id,
       message('Sys.setenv(R_CONFIG_ACTIVE = "remote")')
     }
 
-    all_segs = read_tsv(full_cnv_path)
+    all_segs = suppressMessages(read_tsv(full_cnv_path))
     if (!missing(this_sample_id) & !multiple_samples) {
       all_segs = dplyr::filter(all_segs, ID %in% this_sample_id)
     } else if (!missing(sample_list)) {
@@ -1825,7 +1825,7 @@ get_cn_segments = function(region,
     }
     
     #read cnv data into R.
-    all_segs = read_tsv(full_cnv_path)
+    all_segs = suppressMessages((full_cnv_path))
     
     #subset to regions, if specified.
     all_segs = all_segs %>%
@@ -2586,7 +2586,7 @@ get_gene_expression = function(metadata,
     }
     #only ever load the full data frame when absolutely necessary
     if(all_genes & missing(ensembl_gene_ids) & missing(hugo_symbols)){
-      wide_expression_data = read_tsv(tidy_expression_file) %>%
+      wide_expression_data = suppressMessages(read_tsv(tidy_expression_file)) %>%
         as.data.frame() %>%
         pivot_wider(names_from = ensembl_gene_id, values_from = expression)
     }else{
@@ -2605,7 +2605,7 @@ get_gene_expression = function(metadata,
           pivot_wider(names_from = Hugo_Symbol, values_from = expression)
       }
       if(!missing(ensembl_gene_ids)){
-        wide_expression_data = read_tsv(tidy_expression_file,lazy=TRUE) %>%
+        wide_expression_data = suppressMessages(read_tsv(tidy_expression_file,lazy=TRUE)) %>%
           dplyr::select(-Hugo_Symbol) %>%
           dplyr::filter(ensembl_gene_id %in% ensembl_gene_ids) %>%
           as.data.frame() %>%

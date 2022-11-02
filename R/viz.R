@@ -129,7 +129,7 @@ prettyRainfallPlot = function(this_sample_id,
   } else if (!missing (maf_path)) {
     message ("Path to custom MAF file was provided, reading SSM using the custom path ...")
 
-    this_maf = read_tsv(maf_path)
+    this_maf = suppressMessages(read_tsv(maf_path))
     if(!missing(this_sample_id)){
       this_maf = this_maf %>% dplyr::filter(Tumor_Sample_Barcode %in% this_sample_id)
     }else{

@@ -1353,7 +1353,7 @@ collate_results = function(sample_table,
     }
 
     #read cached results
-    sample_table = read_tsv(output_file) %>% dplyr::filter(sample_id %in% sample_table$sample_id)
+    sample_table = suppressMessages(read_tsv(output_file) %>% dplyr::filter(sample_id %in% sample_table$sample_id))
 
   }else{
     message("Slow option: not using cached result. I suggest from_cache = TRUE whenever possible")
