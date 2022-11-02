@@ -18,7 +18,7 @@ assign_cn_to_ssm(
   genes,
   include_silent = FALSE,
   ssh_session,
-  seq_type = "genome",
+  this_seq_type = "genome",
   projection = "grch37"
 )
 }
@@ -31,9 +31,13 @@ assign_cn_to_ssm(
 
 \item{use_augmented_maf}{Boolean statement if to use augmented maf, default is FALSE.}
 
+\item{tool_name}{name of tool to be sued, default is "battenberg".}
+
 \item{maf_file}{Path to maf file.}
 
 \item{maf_df}{Optional. Use a maf dataframe instead of a path.}
+
+\item{seg_file}{path to seq file.}
 
 \item{seg_file_source}{Specify what copy number calling program the input seg file is from, as it handles ichorCNA differently than WisecondorX, Battenberg, etc.}
 
@@ -43,7 +47,9 @@ assign_cn_to_ssm(
 
 \item{include_silent}{Logical parameter indicating whether to include siment mutations into coding mutations. Default is FALSE}
 
-\item{seq_file}{path to seq file.}
+\item{this_seq_type}{Specified seq type for returned data.}
+
+\item{projection}{specified genome projection that returned data is in reference to.}
 }
 \value{
 A list containing a data frame (MAF-like format) with two extra columns:
