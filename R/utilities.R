@@ -4166,7 +4166,7 @@ collate_ighv_results = function(sample_table,
 
   # Remove entries where number of missing V regions is 3 or more then remove missing column
   print("Removing rows that exceed missing threshold")
-  mixcr_results = mixcr_table %>% dplyr::filter(missing <= missing_threshold) %>% select(-missing)
+  mixcr_results = mixcr_table %>% dplyr::filter(missing <= missing_threshold) %>% dplyr::select(-missing)
 
   # Join rows to sample_table
   print("Joining tables")
