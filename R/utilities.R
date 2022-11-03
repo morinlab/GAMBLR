@@ -4110,7 +4110,7 @@ supplement_maf <- function(incoming_maf,
 #'
 #' @param sample_table        A data frame with sample_id as the first column.
 #' @param results_directory   Directory containging MiXCR/IgBLASTN results
-#' @param missing_threshold    Limit for missing IGH regions during MiXCR assembly. Default is 2.
+#' @param missing_threshold   Limit for missing IGH regions during MiXCR assembly. Default is 2.
 #'
 #' @return Samples table.
 #' @import tidyverse
