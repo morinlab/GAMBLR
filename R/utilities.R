@@ -1369,7 +1369,7 @@ collate_results = function(sample_table,
     sample_table = collate_ancestry(sample_table = sample_table, seq_type_filter = seq_type_filter)
     sample_table = collate_sbs_results(sample_table = sample_table, sbs_manipulation = sbs_manipulation, seq_type_filter = seq_type_filter)
     sample_table = collate_qc_results(sample_table = sample_table, seq_type_filter = seq_type_filter)
-    sample_table = collate_ighv_results(sample_table = sample_table, seq_type_filter = seq_type_filter, results_directory = mixcr_results_directory, missing_threshold = missing_threshold)
+    sample_table = collate_igblast_results(sample_table = sample_table, seq_type_filter = seq_type_filter, results_directory = mixcr_results_directory, missing_threshold = missing_threshold)
   }
   if(write_to_file){
     #write results from "slow option" to new cached results file
@@ -4109,17 +4109,17 @@ supplement_maf <- function(incoming_maf,
 #' Identify samples with mutated IGHV from MiXCR + IgBLAST results
 #'
 #' @param sample_table        A data frame with sample_id as the first column.
-#' @param results_directory   Directory containging MiXCR/IgBLASTN results
-#' @param missing_threshold   Limit for missing IGH regions during MiXCR assembly. Default is 2.
+#' @param results_directory   Directory containging MiXCR/IgBLASTN results. Depends on files having the columns "mutatedStatus" and "numMissingRegions"
+#' @param missing_threshold   Limit for missing IGH regions during MiXCR assembly. Default is 2. Higher thresholds may return less accurate mutation status.
 #'
 #' @return Samples table.
 #' @import tidyverse
-#' @import stats
-#' @examples
-#' sample_table = collate_nfkbiz_results(sample_table=sample_table)
+#'
+#' @examples 
+#' sample_table = collate_ighv_results(sample_table = sample_table, results_directory=".../01-mixcr/{seq_type}/", missing_threshold=3)
 #'
 
-collate_ighv_results = function(sample_table,
+collate_igblast_results = function(sample_table,
                                 seq_type_filter = "genome",
                                 results_directory = "",
                                 missing_threshold = 2){
