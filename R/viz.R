@@ -3108,6 +3108,7 @@ splendidHeatmap = function(this_matrix,
 #' @param variant_type_col Index of column holding Variant Type (to be used with either maf_data or maf_path).
 #' @param chromosome_col Index of column holding Chromosome (to be used with either maf_data or maf_path).
 #' @param plot_title Title of plot (default to sample ID).
+#' @param y_interval Optional parameter for specifying intervals on y-axis.
 #' @param hide_legend Set to True to remove legend from plot, default is FALSE.
 #' @param plot_subtitle Subtitle for created plot.
 #' @param chr_select vector of chromosomes to be included in plot, defaults to autosomes.
@@ -3138,6 +3139,7 @@ fancy_v_chrcount = function(this_sample,
                             variant_type_col = 10,
                             chromosome_col = 5,
                             plot_title = paste0(this_sample),
+                            y_interval = 1,
                             hide_legend = FALSE,
                             plot_subtitle = "Variant Count Distribution Per Chromosome",
                             chr_select = paste0("chr", c(1:22)),
@@ -3241,8 +3243,8 @@ fancy_v_chrcount = function(this_sample,
         {if(ssm)scale_fill_manual(values = get_gambl_colours("indels"))} +
         {if(!ssm)scale_fill_manual(values = get_gambl_colours("svs"))} +
         {if(add_qc_metric)geom_hline(qc_metrics, mapping = aes(yintercept = MeanCorrectedCoverage / 10), linetype = "dashed", group = 2)} +
-        {if(!add_qc_metric)scale_y_continuous(expand = c(0, 0), breaks = seq(0, ymax + 2, by = 1))} +
-        {if(add_qc_metric)scale_y_continuous(expand = c(0, 0), breaks = seq(0, ymax + 2, by = 1), sec.axis = sec_axis(~.*10, name = "Mean Corrected Coverage (X)", breaks = seq(0, 100, by = 10)))} +
+        {if(!add_qc_metric)scale_y_continuous(expand = c(0, 0), breaks = seq(0, ymax + 2, by = y_interval))} +
+        {if(add_qc_metric)scale_y_continuous(expand = c(0, 0), breaks = seq(0, ymax + 2, by = y_interval), sec.axis = sec_axis(~.*10, name = "Mean Corrected Coverage (X)", breaks = seq(0, 100, by = 10)))} +
         theme_cowplot() +
         {if(hide_legend)theme(legend.position = "none")} +
         theme(axis.text.x = element_text(angle = 45, hjust = 1))
@@ -3448,7 +3450,7 @@ fancy_v_count = function(this_sample,
   }
 
   #add chr prefix if missing
-  if(!str_detect(maf$Chromosome, "chr")){
+  if(!str_detect(maf$Chromosome, "chr")[1]){
     maf = mutate(maf, Chromosome = paste0("chr", Chromosome))
   }
 
@@ -3705,7 +3707,7 @@ fancy_v_sizedis = function(this_sample,
   }
 
   #add chr prefix if missing
-  if(!str_detect(maf$Chromosome, "chr")){
+  if(!str_detect(maf$Chromosome, "chr")[1]){
     maf = mutate(maf, Chromosome = paste0("chr", Chromosome))
   }
 
