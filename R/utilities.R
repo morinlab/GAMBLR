@@ -1323,6 +1323,8 @@ collate_results = function(sample_table,
                            these_samples_metadata,
                            case_set,
                            sbs_manipulation = "",
+                           mixcr_results_directory = "",
+                           missing_threshold = 2,
                            seq_type_filter = "genome",
                            from_cache = TRUE,
                            ssh_session){
@@ -1367,6 +1369,7 @@ collate_results = function(sample_table,
     sample_table = collate_ancestry(sample_table = sample_table, seq_type_filter = seq_type_filter)
     sample_table = collate_sbs_results(sample_table = sample_table, sbs_manipulation = sbs_manipulation, seq_type_filter = seq_type_filter)
     sample_table = collate_qc_results(sample_table = sample_table, seq_type_filter = seq_type_filter)
+    sample_table = collate_ighv_results(sample_table = sample_table, seq_type_filter = seq_type_filter, results_directory = mixcr_results_directory, missing_threshold = missing_threshold)
   }
   if(write_to_file){
     #write results from "slow option" to new cached results file
@@ -4101,3 +4104,74 @@ supplement_maf <- function(incoming_maf,
                    missing_sample_maf)
   return(full_maf)
 }
+
+#' INTERNAL FUNCTION called by collate_results, not meant for out-of-package usage.
+#' Identify samples with mutated IGHV from MiXCR + IgBLAST results
+#'
+#' @param sample_table        A data frame with sample_id as the first column.
+#' @param results_directory   Directory containging MiXCR/IgBLASTN results
+#' @param missing_threshold    Limit for missing IGH regions during MiXCR assembly. Default is 2.
+#'
+#' @return Samples table.
+#' @import tidyverse
+#' @import stats
+#' @examples
+#' sample_table = collate_nfkbiz_results(sample_table=sample_table)
+#'
+
+collate_ighv_results = function(sample_table,
+                                seq_type_filter = "genome",
+                                results_directory = "",
+                                missing_threshold = 2){
+  if (missing(sample_table)) {
+    sample_table = get_gambl_metadata(seq_type_filter = seq_type_filter) %>%
+                    dplyr::select(sample_id, patient_id, biopsy_id)
+  }
+  
+  # Check seq_type_filter is genome or mrna
+  if (seq_type_filter=="capture") {
+    message("'capture' seq_type_filter doesn't make sense for this tool. Use 'genome' or 'mrna'.")
+    return (sample_table)
+  }
+  # Look in mixcr-1.2/results if no results directory specified
+  if (results_directory == "") {
+    base = config::get("project_base")
+    results_directory = glue(paste0(base, "gambl/mixcr-1.2/01-mixcr/{seq_type_filter}/"))
+  }
+  print(paste0("Searching for MiXCR results in directory:", results_directory))
+
+  # Make table with necessary columns from result files
+  mixcr_table = data.frame(biopsy_id=character(),
+                            mixcr_mutated=character(),
+                            missing=double())
+  for (sample_id in sample_table$sample_id) {
+    mixcr_results = glue(paste0(results_directory,"{sample_id}/mixcr.{sample_id}.clonotypes.IGH.igblast.txt"))
+    # Check if sample_id results file exists
+    if (file.exists(mixcr_results)) {
+      mixcr = suppressMessages(read_tsv(mixcr_results))
+      # Some results may be empty due to not having (productive) clones
+      if (nrow(mixcr)==0) {
+        next
+      }
+      # Get results from first clonotype (highest fraction)
+      entry = c(sample_table[sample_table$sample_id==sample_id,]$biopsy_id, 
+                mixcr$mutatedStatus[1], 
+                mixcr$numMissingRegions[1])
+      mixcr_table[nrow(mixcr_table) + 1,] <- entry
+    }
+  }
+  # Remove entries that are empty
+  print("Removing empty entries")
+  mixcr_results = mixcr_table %>% dplyr::filter(rowSums(is.na(mixcr_table)) != ncol(mixcr_table)) %>% as.data.frame()
+
+  # Remove entries where number of missing V regions is 3 or more then remove missing column
+  print("Removing rows that exceed missing threshold")
+  mixcr_results = mixcr_table %>% dplyr::filter(missing <= missing_threshold) %>% select(-missing)
+
+  # Join rows to sample_table
+  print("Joining tables")
+  sample_table = dplyr::left_join(sample_table, mixcr_results)
+  return(sample_table)
+}
+
+
