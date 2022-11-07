@@ -6,7 +6,11 @@ library(tidyverse)
 #skip this next line if you are running on the GSC network
 Sys.setenv(R_CONFIG_ACTIVE= "remote")
 
-check_gamblr_config() #check for missing local files
+check_gamblr_config() #check for missing local files. If a file is missing you need to figure out why. Most common explanations:
+# 1. you haven't yet run get_gambl_results.smk and need to do that
+# 2. someone added a new file to GAMBLR but hasn't updated the snakefile to support the syncing of that file locally (or telling this function it's not expected). 
+# To avoid future confusion this should be addressed by updating either this function, the function it calls or the snakefile. 
+# 3. 
 
 session = get_ssh_session() #only run this if you have an active VPN connection
 check_gamblr_config(compare_timestamps = T,ssh_session=session)
