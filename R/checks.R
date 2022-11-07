@@ -97,8 +97,20 @@ check_file_details = function(relative_paths){
   return(not_found)
 }
 
-check_gamblr_config = function(mode="default",
-                               compare_timestamps=FALSE,
+#' Check that the GAMBLR config you have loaded will work in your setup
+#' 
+#' This function is mostly for remote GAMBLRs to ensure they keep their local mirror of the GAMBL data up-to-date. It 
+#'
+#' @param compare_timestamps Whether the function will compare timestamps on your local files to the remote copy. Only relevant if you are working remotely.
+#' @param ssh_session The ssh_session object see get_ssh_session() for more information. Only relevant if you are working remotely.
+#' @param archive_mode This is not currently working but the idea here is to keep a GSC archive of GAMBL in sync with the actively updated outputs
+#' @param force_backup 
+#'
+#' @return
+#' @export
+#'
+#' @examples
+check_gamblr_config = function(compare_timestamps=FALSE,
                                ssh_session,
                                archive_mode=FALSE,
                                force_backup=FALSE){
@@ -111,6 +123,7 @@ check_gamblr_config = function(mode="default",
   
   #data frame for seq_type/projection expansion
   projection_expanded = tidyr::expand_grid(seq_type = get_template_wildcards("seq_types"),projection = get_template_wildcards("projections"))
+  print(projection_expanded)
   #resources section of config (only needs blacklist right now)
   blacklist_f = config::get("resources")$blacklist$template
   blacklist_f = mutate(projection_expanded,output=glue::glue(blacklist_f)) %>% pull(output)
