@@ -30,8 +30,7 @@ get_mutation_frequency_bin_matrix(
   legend_direction = "horizontal",
   legendFontSize = 10,
   from_indexed_flatfile = TRUE,
-  mode = "slms-3",
-  ssh_session = NULL
+  mode = "slms-3"
 )
 }
 \arguments{

@@ -25,8 +25,72 @@ copy_no_clobber = function(from_file,to_file,force=FALSE){
     file.copy(from_file,to_file)
   }
 }
+#' Check for a remote session and automagically confirm setup will work properly
+#' 
+#' This function determines if a user is working in GAMBLR remotely and, if so, will
+#' check if their config is loaded properly and ssh_session is available. 
+#'
+#' @param auto_connect Set to TRUE to ensure an ssh_session is created if absent
+#'
+#' @return
+#' @export
+#'
+#' @examples
+check_remote_configuration = function(auto_connect=FALSE){
+  remote_gamblr = check_host(auto_connect=auto_connect)
+  if(remote_gamblr){
+    #code is running on a non-GSC computer. Check that the config is set up properly
+    if(exists("R_CONFIG_ACTIVE")){
+      if(!R_CONFIG_ACTIVE=="remote"){
+        warn(paste("WARNING: config set to",R_CONFIG_ACTIVE, "but you appear to be working on a remote hoste"))
+      }
+    }else{
+      stop('You seem to be running this on a remote computer but have not set R_CONFIG_ACTIVE properly\nTry running Sys.setenv(R_CONFIG_ACTIVE= "remote")')
+    }
+  }
+  return(remote_gamblr)
+}
 
-check_times = function(relative_paths,ssh_session,archive_mode=FALSE,force_backup=FALSE){
+#' Check if code is running remotely and react accordingly.
+#' 
+#' The function will (optionally) attempt a connection if necessary, and stores it in a global variable (ssh_session) 
+#' 
+#' @param auto_connect Set to TRUE if you want the function to create an ssh session (if necessary)
+#' @param verbose Set this to TRUE for verbose messages from the function
+#' 
+#' @return TRUE if a remote session is detected, FALSE otherwise.
+#' 
+#' @export
+#'
+#' @examples check_host(auto_connect=TRUE)
+check_host = function(auto_connect=FALSE,verbose=FALSE){
+  hostname = Sys.info()["nodename"]
+  if(grepl("bcgsc.ca",hostname)){
+    #we are on the GSC network
+    return(FALSE)
+  }else{
+    # we are on some computer not on the GSC network (needs ssh_session)
+    if(exists("ssh_session") && class(ssh_session)=="ssh_session"){
+      if(verbose){
+        message("active ssh session detected")
+      }
+    }else{
+      if(auto_connect){
+        session = get_ssh_session()
+        assign("ssh_session", session, envir = .GlobalEnv)
+      }else{
+        if(verbose){
+          message("You appear to be using GAMBLR on your local computer. Be sure to set up an ssh session!")
+          message("requires an active VPN connection to the GSC")
+          message("?GAMBLR::get_ssh_session for more info")
+        }
+      }
+    }
+  }
+  return(TRUE)
+}
+
+check_times = function(relative_paths,archive_mode=FALSE,force_backup=FALSE){
   
   local_base = base_path=config::get("project_base")
   remote_base = base_path=config::get("project_base",config="default")
@@ -49,9 +113,9 @@ check_times = function(relative_paths,ssh_session,archive_mode=FALSE,force_backu
       mtime = stringr::str_remove(mtime,"\\s\\d+:\\d+:\\d+")
       #print(mtime)
       
-      
+      remote_session = check_remote_configuration(auto_connect=TRUE)
       #print(remote_f)
-      if(!missing(ssh_session)){
+      if(remote_session){
         output = ssh::ssh_exec_internal(ssh_session,paste("stat -L ",remote_f,"| grep Modify"))$stdout
       
         output = rawToChar(output) %>% stringr::str_extract(.,"\\d+-\\d+-\\d+")
@@ -180,7 +244,7 @@ check_gamblr_config = function(compare_timestamps=FALSE,
     print(mia)
   }
   if(compare_timestamps){
-    check_times(files_to_check,ssh_session,archive_mode,force_backup)
+    check_times(files_to_check,archive_mode,force_backup)
   }
   print("DONE!")
 }

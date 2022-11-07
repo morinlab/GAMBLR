@@ -16,8 +16,7 @@ get_ssm_by_patients(
   maf_cols = NULL,
   subset_from_merge = FALSE,
   augmented = TRUE,
-  engine = "fread_maf",
-  ssh_session
+  engine = "fread_maf"
 )
 }
 \arguments{

@@ -127,35 +127,6 @@ get_samples_md5_hash = function(these_samples_metadata,these_samples,sample_set_
   return(digested)
 }
 
-#' Check if code is running remotely and (optionally) attempt a connection and set global ssh_session variable
-#'
-#' @param auto_connect Set to TRUE if you want the function to create an ssh session (if necessary)
-#'
-#' @return NULL. This function makes a new ssh session, if necessary, and stores it in a global variable (ssh_session) 
-#' @export
-#'
-#' @examples ssh_session = get_ssh_session()
-check_host = function(auto_connect=FALSE){
-  hostname = Sys.info()["nodename"]
-  if(grepl("bcgsc.ca",hostname)){
-    #we are on the GSC network
-  }else{
-    # we are on some computer not on the GSC network (needs ssh_session)
-    if(class(ssh_session)=="ssh_session"){
-      message("active ssh session detected")
-      return()
-    }else{
-      if(auto_connect){
-        session = get_ssh_session()
-        assign("ssh_session", session, envir = .GlobalEnv)
-      }else{
-        message("You appear to be using GAMBLR on your local computer. Be sure to set up an ssh session!")
-        message("?GAMBLR::get_ssh_session for more info")
-        
-      }
-    }
-  }
-}
 
 cache_output = function(result_df,function_name,clobber_mode=F,get_existing = F,
                         function_params=list(region="chr3:98300000-198022430",bin_size=2000,seq_type="genome"),
@@ -197,13 +168,12 @@ cache_output = function(result_df,function_name,clobber_mode=F,get_existing = F,
 #' @param all_mutations_in_these_regions If you are calling this function many times (e.g. bins spanning a larger region), to save a ton of time you are strongly encouraged to provide the output of get_ssm_by_region on the entire region of interest and passing it to this function
 #' @param count_by Defaults to counting all variants. Specify 'sample_id' if you want to collapse and count only one per sample
 #' @param seq_type 
-#' @param ssh_session 
 #'
 #' @return
 #' @export
 #'
 #' @examples
-count_ssm_by_region = function(region,chromosome,start,end,all_mutations_in_these_regions,these_samples_metadata,count_by,seq_type="genome",ssh_session=NULL){
+count_ssm_by_region = function(region,chromosome,start,end,all_mutations_in_these_regions,these_samples_metadata,count_by,seq_type="genome"){
   if(missing(these_samples_metadata)){
     these_samples_metadata = get_gambl_metadata(seq_type_filter=seq_type)
   }
@@ -212,9 +182,9 @@ count_ssm_by_region = function(region,chromosome,start,end,all_mutations_in_thes
 
     region_muts = dplyr::filter(all_mutations_in_these_regions,Start_Position >= start, Start_Position < end)
   }else if(missing(region)){
-    region_muts = get_ssm_by_region(chromosome=chromosome,qstart=start,qend=end,streamlined = TRUE,ssh_session = ssh_session)
+    region_muts = get_ssm_by_region(chromosome=chromosome,qstart=start,qend=end,streamlined = TRUE)
   }else{
-    region_muts = get_ssm_by_region(region=region,streamlined = TRUE,ssh_session = ssh_session)
+    region_muts = get_ssm_by_region(region=region,streamlined = TRUE)
   }
   keep_muts = dplyr::filter(region_muts,Tumor_Sample_Barcode %in% these_samples_metadata$Tumor_Sample_Barcode) 
   if(missing(count_by)){
@@ -704,8 +674,7 @@ calc_mutation_frequency_sliding_windows = function(this_region,
                                                    drop_unmutated = FALSE,
                                                    classification_column = "lymphgen",
                                                    from_indexed_flatfile = FALSE,
-                                                   mode = "slms-3",
-                                                   ssh_session=NULL){
+                                                   mode = "slms-3"){
 
   max_region = 1000000
   if(missing(metadata)){
@@ -729,7 +698,7 @@ calc_mutation_frequency_sliding_windows = function(this_region,
     mutate(end = start + window_size - 1)
   #use foverlaps to assign mutations to bins
   windows.dt = as.data.table(windows)
-  region_ssm = GAMBLR::get_ssm_by_region(region = this_region, streamlined = FALSE, seq_type=seq_type, from_indexed_flatfile = from_indexed_flatfile, mode = mode,ssh_session=ssh_session) %>%
+  region_ssm = GAMBLR::get_ssm_by_region(region = this_region, streamlined = FALSE, seq_type=seq_type, from_indexed_flatfile = from_indexed_flatfile, mode = mode) %>%
     dplyr::rename(c("start" = "Start_Position", "sample_id" = "Tumor_Sample_Barcode")) %>%
     mutate(mutated = 1)
 
@@ -874,7 +843,7 @@ region_to_chunks = function(region){
 }
 
 
-#' Convert mutation data to a shereable format.
+#' Convert mutation data to a shareable format.
 #'
 #' `sanitize_maf_data` returns oncomatrix of patient/gene data indicating only data needed to produce oncoplot.
 #'
@@ -1280,16 +1249,29 @@ maf_to_custom_track = function(maf_data,
     if(as_biglolly){
       #currently the same code is run either way but this may change so I've separated this until we settle on format
       #TO DO: collapse based on hot spot definition and update column 4 (score) based on recurrence
+      #needs to have size column
+      maf_score_options = factor(maf_coloured$rgb)
+      maf_coloured$score = as.numeric(maf_score_options)
+      
+      #determine frequency of each event per group to assign the size
+      maf_coloured = group_by(maf_coloured,start,rgb) %>% mutate(size=n())
+      
+      #maf_coloured = mutate(maf_coloured,size=10)
+        
       write.table(maf_coloured, file = temp_bed, quote = F, sep = "\t", row.names = F, col.names = F)
       #conversion:
+      autosql_file = "/Users/rmorin/git/LLMPP/resources/reference/ucsc/bigLollyExample3.as"
+      
       bigbedtobed = "/Users/rmorin/miniconda3/envs/ucsc/bin/bedToBigBed"
-      bigbed_conversion = paste(bigbedtobed,"-type=bed9",temp_bed,"/Users/rmorin/git/LLMPP/resources/reference/ucsc/hg19.chrom.sizes",output_file)
+      bigbed_conversion = paste0(bigbedtobed," -as=",autosql_file," -type=bed9+1 ",temp_bed," /Users/rmorin/git/LLMPP/resources/reference/ucsc/hg19.chrom.sizes ",output_file)
+      print(bigbed_conversion)
       system(bigbed_conversion)
     }else{
       write.table(maf_coloured, file = temp_bed, quote = F, sep = "\t", row.names = F, col.names = F)
       #conversion:
       bigbedtobed = "/Users/rmorin/miniconda3/envs/ucsc/bin/bedToBigBed"
       bigbed_conversion = paste(bigbedtobed,"-type=bed9",temp_bed,"/Users/rmorin/git/LLMPP/resources/reference/ucsc/hg19.chrom.sizes",output_file)
+      
       system(bigbed_conversion)
     }
   }else{
@@ -1309,20 +1291,36 @@ test_glue = function(placeholder="INSERTED"){
 #' Bring together all derived sample-level results from many GAMBL pipelines.
 #'
 #' @param sample_table A data frame with sample_id as the first column.
-#' @param write_to_file Boolean statement that outputs tsv file if TRUE, default is FALSE.
+#' @param write_to_file Boolean statement that outputs tsv file (/projects/nhl_meta_analysis_scratch/gambl/results_local/shared/gambl_{seq_type_filter}_results.tsv) if TRUE, default is FALSE.
 #' @param join_with_full_metadata Join with all columns of meta data, default is FALSE.
 #' @param these_samples_metadata Optional argument to use a user specified metadata df, overwrites get_gambl_metadata in join_with_full_metadata.
 #' @param case_set Optional short name for a pre-defined set of cases.
 #' @param sbs_manipulation Optional variable for transforming sbs values (e.g log, scale).
 #' @param seq_type_filter Filtering criteria, default is genomes.
-#' @param from_cache Boolean variable for using cached results, default is TRUE.
+#' @param from_cache Boolean variable for using cached results (/projects/nhl_meta_analysis_scratch/gambl/results_local/shared/gambl_{seq_type_filter}_results.tsv), default is TRUE. If write_to_file is TRUE, this parameter auto-defaults to FALSE.
 #'
 #' @return A table keyed on biopsy_id that contains a bunch of per-sample results from GAMBL
 #' @export
 #' @import tidyverse config
 #'
 #' @examples
-#' everything_collated = collate_results(join_with_full_metadata = TRUE)
+#' #generate new cached results for all genome samples in gambl (Warning, is this what you really want to do?)
+#' genome_collated = collate_results(seq_type_filter = "genome", from_cache = FALSE, write_to_file = TRUE)
+#'
+#' #get collated results for all capture samples, using cached results
+#' capture_collated_everything = collate_results( seq_type_filter = "capture", from_cache = TRUE, write_to_file = FALSE)
+#'
+#' #use an already subset metadata table for getting collated results (cached)
+#' metadata = get_gambl_metadata(seq_type_filter = "genome") %>% dplyr::filter(pathology == "FL")
+#' fl_collated = collate_results(seq_type_filter = "genome", join_with_full_metadata = TRUE, these_samples_metadata = metadata, write_to_file = FALSE, from_cache = TRUE)
+#'
+#' #get collated results for all genome samples and join with full metadata
+#' everything_collated = collate_results(seq_type_filter = "genome", from_cache = TRUE, join_with_full_metadata = TRUE)
+#'
+#' #another example demonstrating correct usage of the sample_table parameter.
+#' fl_samples = get_gambl_metadata(seq_type_filter = "genome") %>% dplyr::filter(pathology == "FL") %>% dplyr::select(sample_id, patient_id, biopsy_id)
+#' fl_collated = collate_results(sample_table = fl_samples, seq_type_filter = "genome", from_cache = TRUE)
+#'
 #'
 collate_results = function(sample_table,
                            write_to_file = FALSE,
@@ -1331,8 +1329,7 @@ collate_results = function(sample_table,
                            case_set,
                            sbs_manipulation = "",
                            seq_type_filter = "genome",
-                           from_cache = TRUE,
-                           ssh_session){
+                           from_cache = TRUE){
 
   # important: if you are collating results from anything but WGS (e.g RNA-seq libraries) be sure to use biopsy ID as the key in your join
   # the sample_id should probably not even be in this file if we want this to be biopsy-centric
@@ -1343,6 +1340,8 @@ collate_results = function(sample_table,
   if(write_to_file){
     from_cache = FALSE #override default automatically for nonsense combination of options
   }
+  
+  #get paths to cached results, for from_cache = TRUE and for writing new cached results.
   output_file = config::get("results_merged")$collated
   output_base = config::get("project_base")
   output_file = paste0(output_base, output_file)
@@ -1356,6 +1355,7 @@ collate_results = function(sample_table,
       message('Sys.setenv(R_CONFIG_ACTIVE = "remote")')
     }
 
+    #read cached results
     sample_table = read_tsv(output_file) %>% dplyr::filter(sample_id %in% sample_table$sample_id)
 
   }else{
@@ -1372,7 +1372,7 @@ collate_results = function(sample_table,
     sample_table = collate_qc_results(sample_table = sample_table, seq_type_filter = seq_type_filter)
   }
   if(write_to_file){
-    
+    #write results from "slow option" to new cached results file
     write_tsv(sample_table, file = output_file)
   }
   #convenience columns bringing together related information
@@ -1397,7 +1397,6 @@ collate_results = function(sample_table,
   }
   return(sample_table)
 }
-
 
 #' INTERNAL FUNCTION called by collate_results, not meant for out-of-package usage.
 #' Extract derived results stored in the database (these are usually slower to derive on the fly).
@@ -1630,10 +1629,9 @@ assign_cn_to_ssm = function(this_sample,
                             assume_diploid = FALSE,
                             genes,
                             include_silent = FALSE,
-                            ssh_session,
                             seq_type="genome",
                             projection="grch37"){
-
+  remote_session = check_remote_configuration(auto_connect = TRUE )
   database_name = config::get("database_name")
   project_base = config::get("project_base")
   if(!include_silent){
@@ -1656,7 +1654,7 @@ assign_cn_to_ssm = function(this_sample,
     tumour_sample_id = wildcards$tumour_sample_id
     normal_sample_id = wildcards$normal_sample_id
     pairing_status = wildcards$pairing_status
-    maf_sample = get_ssm_by_sample(this_sample_id = this_sample, augmented = use_augmented_maf, ssh_session = ssh_session)
+    maf_sample = get_ssm_by_sample(this_sample_id = this_sample, augmented = use_augmented_maf)
 
   }else{
     #get all the segments for a sample and filter the small ones then assign CN value from the segment to all SSMs in that region
@@ -1711,7 +1709,7 @@ assign_cn_to_ssm = function(this_sample,
 
 
     message(paste("looking for flatfile:", battenberg_file))
-    if(!missing(ssh_session)){
+    if(remote_session){
       print(local_battenberg_file)
       dirN = dirname(local_battenberg_file)
 
@@ -1809,18 +1807,17 @@ estimate_purity = function(in_maf,
                            show_plots = FALSE,
                            assume_diploid = FALSE,
                            coding_only = FALSE,
-                           genes,
-                           ssh_session){
+                           genes){
 
   # Merge the CN info to the corresponding MAF file, uses GAMBLR function
   if(missing(in_maf) & missing(in_seg) & missing(maf_df)){
-    CN_new = assign_cn_to_ssm(this_sample = sample_id, coding_only = coding_only, assume_diploid = assume_diploid, genes = genes,seg_file_source = seg_file_source,ssh_session=ssh_session)$maf
+    CN_new = assign_cn_to_ssm(this_sample = sample_id, coding_only = coding_only, assume_diploid = assume_diploid, genes = genes,seg_file_source = seg_file_source)$maf
   }else if(!missing(in_seg)){
-    CN_new = assign_cn_to_ssm(this_sample = sample_id, maf_file = in_maf, maf_df = maf_df, seg_file = in_seg, seg_file_source = seg_file_source, coding_only = coding_only, genes = genes,ssh_session=ssh_session)$maf
+    CN_new = assign_cn_to_ssm(this_sample = sample_id, maf_file = in_maf, maf_df = maf_df, seg_file = in_seg, seg_file_source = seg_file_source, coding_only = coding_only, genes = genes)$maf
   }else{
     # If no seg file was provided, assume_diploid parameter is automatically set to true
     if(missing(in_seg)){
-      CN_new = assign_cn_to_ssm(this_sample = sample_id, maf_file = in_maf, maf_df = maf_df, assume_diploid = TRUE, coding_only = coding_only, genes = genes,ssh_session=ssh_session)$maf
+      CN_new = assign_cn_to_ssm(this_sample = sample_id, maf_file = in_maf, maf_df = maf_df, assume_diploid = TRUE, coding_only = coding_only, genes = genes)$maf
     }
   }
   # Change any homozygous deletions (CN = 0) to 1 for calculation purposes
@@ -2175,14 +2172,14 @@ collate_sbs_results = function(sample_table,
 #' @examples
 #' sample_table = collate_nfkbiz_results(sample_table=sample_table)
 #'
-collate_nfkbiz_results = function(sample_table,seq_type_filter="genome",ssh_session=NULL){
+collate_nfkbiz_results = function(sample_table,seq_type_filter="genome"){
   #TO DO: Update to work with hg38 projection
   if(missing(sample_table)){
     sample_table = get_gambl_metadata(seq_type_filter=seq_type_filter) %>%
       dplyr::select(sample_id, patient_id, biopsy_id)
   }
   this_region = "chr3:101578214-101578365"
-  nfkbiz_ssm = get_ssm_by_region(region = this_region,seq_type = seq_type_filter,ssh_session=ssh_session) %>%
+  nfkbiz_ssm = get_ssm_by_region(region = this_region,seq_type = seq_type_filter) %>%
     pull(Tumor_Sample_Barcode) %>%
     unique
   if(seq_type_filter=="genome"){
@@ -2214,8 +2211,7 @@ collate_nfkbiz_results = function(sample_table,seq_type_filter="genome",ssh_sess
 #' sample_table = collate_ashm_results(sample_table=sample_table)
 #'
 collate_ashm_results = function(sample_table,
-                                seq_type_filter="genome",
-                                ssh_session=NULL){
+                                seq_type_filter="genome"){
 
   if(missing(sample_table)){
     sample_table = get_gambl_metadata(seq_type_filter=seq_type_filter) %>%
@@ -2224,7 +2220,7 @@ collate_ashm_results = function(sample_table,
   #just annotate BCL2, MYC and CCND1 hypermutation
   regions_df = data.frame(name = c("CCND1","BCL2","MYC"),
   region = c("chr11:69455000-69459900", "chr18:60983000-60989000", "chr8:128747615-128751834"))
-  region_mafs = lapply(regions_df$region, function(x){get_ssm_by_region(region = x, streamlined = FALSE,seq_type=seq_type_filter,ssh_session=ssh_session)})
+  region_mafs = lapply(regions_df$region, function(x){get_ssm_by_region(region = x, streamlined = FALSE,seq_type=seq_type_filter)})
   tibbled_data = tibble(region_mafs, region_name = regions_df$name)
   unnested_df = tibbled_data %>%
     unnest_longer(region_mafs)

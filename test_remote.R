@@ -4,7 +4,8 @@ library(GAMBLR)
 library(tidyverse)
 #library(ssh)
 #skip this next line if you are running on the GSC network
-Sys.setenv(R_CONFIG_ACTIVE= "remote")
+Sys.setenv(R_CONFIG_ACTIVE= "remote") 
+#Even when working remotely, this step should be handled by the bundled Rprofile but users are responsible for copying that to the right location
 
 check_gamblr_config() #check for missing local files. If a file is missing you need to figure out why. Most common explanations:
 # 1. you haven't yet run get_gambl_results.smk and need to do that

@@ -612,8 +612,7 @@ fetch_output_files = function(tool,
                               results_dir = "99-outputs",
                               seq_type = "genome",
                               build = "hg38",
-                              search_pattern = "cellularity_ploidy.txt",
-                              ssh_session){
+                              search_pattern = "cellularity_ploidy.txt"){
 
   if(!grepl("^/", base_path)){
     project_base = config::get("project_base",config="default")

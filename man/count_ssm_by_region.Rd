@@ -12,8 +12,7 @@ count_ssm_by_region(
   all_mutations_in_these_regions,
   these_samples_metadata,
   count_by,
-  seq_type = "genome",
-  ssh_session = NULL
+  seq_type = "genome"
 )
 }
 \arguments{
@@ -32,8 +31,6 @@ count_ssm_by_region(
 \item{count_by}{Defaults to counting all variants. Specify 'sample_id' if you want to collapse and count only one per sample}
 
 \item{seq_type}{}
-
-\item{ssh_session}{}
 }
 \description{
 Count the variants in a region with a variety of filtering options
