@@ -1729,7 +1729,7 @@ get_sample_cn_segments = function(this_sample_id,
 #' @param streamlined Return a basic rather than full MAF format.
 #' @param from_flatfile Set to TRUE by default.
 #'
-#' @return A data frame with CN segments for either full genome, or specified region.
+#' @return A data frame with CN segments for the specified region.
 #' @export
 #' @import DBI RMariaDB
 #' @depend tidyverse
