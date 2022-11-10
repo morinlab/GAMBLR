@@ -1,0 +1,137 @@
+---
+title: "CN Tutorial - GAMBLR"
+author: "Adam Mattsson"
+date: "November 10, 2022"
+output:
+  html_document:
+    toc: yes
+    toc_float: yes
+    number_sections: yes
+  pdf_document:
+    toc: yes
+---
+```{r setup, include = FALSE}
+knitr::opts_chunk$set(warning = FALSE, message = FALSE)
+```
+
+```{r load_packages, message = FALSE, warning = FALSE, echo = FALSE, results = 'hide'}
+library(GAMBLR)
+library(tidyverse)
+library(rmarkdown)
+library(knitr)
+library(grid)
+library(g3viz)
+library(maftools)
+```
+
+# CN & SV
+This vignette demonstrates how to return Copy Number (CN) and Structural Variant (SV) data in a variety of different ways. The method of choice might be different for any given application or planned downstream analysis, as well as what information you, as a researcher, have at hand. This vignette also highlights how to visualize CN data, using established GAMBLR functions. 
+
+## Let's get started
+A good way to start is to retrieve metadata for all GAMBL samples. In this tutorial, we are only interested in samples with seq type **genome**. To get metadata for all such samples, we call `get_gambl_metadata`. Let us also subset the main metadata based on a few criteria.
+```{r get_gambl_metadata, message = FALSE, warning = FALSE}
+#get metadata for all samples
+all_metadata = get_gambl_metadata(seq_type_filter = "genome")
+
+#subset metadata to only include DLBCL samples
+dlbcl_metadata = dplyr::filter(all_metadata, pathology == "DLBCL")
+
+#subset metadata to only include DLBCL and FL samples
+dlbcl_fl_metadata = dplyr::filter(all_metadata, pathology %in% c("DLBCL", "FL"))
+
+#peek return
+paged_table(all_metadata, options = list(rows.print = 5, cols.print = 5))
+```
+
+While we are at it, let us also define a few variables that we will use in the subsequent steps.
+```{r set_variables, message = FALSE, warning = FALSE}
+#define a sample
+this_sample_id = "HTMCP-01-06-00422-01A-01D"
+sample_list = c("00-15201_tumorA", "00-15201_tumorB")
+
+#return regions for an example gene
+myc_region = gene_to_region(gene_symbol = "MYC", genome_build = "grch37", return_as = "region")
+
+#print myc_region
+myc_region
+
+#subset first 15 rows from the lymphoma genes bed file
+some_lymphoma_genes = head(grch37_lymphoma_genes_bed, 15)
+
+#peek lymphoma genes
+head(some_lymphoma_genes, 5)
+```
+
+## CN
+### CN Segments
+If we are interested in CN segments in specific genomic regions, the recommended approach is to call `get_cn_segments`. This function takes a variety of parameters that will allow the user to easily define what regions they are interested in. For example, if this function is being called using the `region` parameter, the function expects a region defined in the following format; **"chr:start-end"**. It is also possible to individually specify these coordinates with `chr`, `qstart` and `qend`. Another parameter to be aware of is `streamlined`, similarly to other GAMBLR function, this parameter controls the number of columns present in the returned data frame. If set to `FALSE`, full MAF-like format is returned and with this parameter set to `TRUE` only basic columns are kept. In addition, the parameter `remove_chr_prefix` is available for dealing with chr prefixes of the returned data frame. In the following example we are demonstrating how to use these different parameters in various combinations.
+```{r get_cn_segments, message = FALSE, warning = FALSE}
+#using the region parameter
+my_segments_grch37 = get_cn_segments(region = "chr8:128,723,128-128,774,067", 
+                              projection = "grch37", 
+                              this_seq_type = "genome", 
+                              streamlined = FALSE, 
+                              from_flatfile = TRUE)
+
+#peek return
+paged_table(my_segments_grch37, options = list(rows.print = 5, cols.print = 5))
+
+#get cn segments for specified region, using chromosome, qstart and qend parameters.
+my_segments_hg38 = get_cn_segments(chromosome = "8", 
+                                qstart = 128723128, 
+                                qend = 128774067, 
+                                projection = "hg38", 
+                                this_seq_type = "genome", 
+                                remove_chr_prefix = TRUE, 
+                                streamlined = TRUE, 
+                                from_flatfile = TRUE)
+
+#peek return
+paged_table(my_segments_hg38, options = list(rows.print = 5, cols.print = 5))
+
+#get cn segments, using a previously defined region (from gene_to_region) and filtering out all copy number states equal to 2
+myc_cns = get_cn_segments(region = myc_region, 
+                          projection = "grch37",
+                          this_seq_type = "genome", 
+                          streamlined = FALSE, 
+                          from_flatfile = TRUE, 
+                          remove_chr_prefix = FALSE) %>% dplyr::filter(CN != 2)
+
+#peek return
+paged_table(myc_cns, options = list(rows.print = 5, cols.print = 5))
+```
+
+### CN States
+
+```{r return_cn_states, message = FALSE, warning = FALSE}
+
+```
+
+### Sample CN Segments
+
+```{r return_cn_segments, message = FALSE, warning = FALSE}
+
+```
+
+### Assign CN to SSM
+
+```{r assign_cn_to_ssm, message = FALSE, warning = FALSE}
+
+```
+
+## SV
+
+### Combined SVs
+
+```{r get_combined_sv, message = FALSE, warning = FALSE}
+
+```
+
+### Manta SVs
+
+```{r get_manta_sv, message = FALSE, warning = FALSE}
+
+```
+
+## Visualization
+###
