@@ -40,7 +40,7 @@ prettyRainfallPlot = function(this_sample_id,
                               this_maf,
                               maf_path,
                               zoom_in_region,
-                              seq_type,
+                              seq_type = "genome",
                               label_sv = FALSE) {
   if (missing(this_sample_id)) {
     warning("No sample_id was provided. Using all mutations in the MAF within your region!")
@@ -138,7 +138,7 @@ prettyRainfallPlot = function(this_sample_id,
   } else if(!missing(this_sample_id)) {
     message ("MAF df or path to custom MAF file was not provided, getting SSM using GAMBLR ...")
     these_ssm = get_ssm_by_sample(this_sample_id,
-                                  projection = projection)
+                                  projection = projection, this_seq_type = seq_type)
   }else if(!missing(seq_type)){
     if(missing(this_sample_id)){
       this_sample_id = "all samples"
@@ -2051,7 +2051,9 @@ ashm_multi_rainbow_plot = function(regions_bed,
   p = muts_anno %>%
         ggplot() +
         geom_point(aes(x = start, y = sample_id, colour = classification), alpha = 0.4, size = 0.6) +
-        theme(axis.text.y = element_blank()) +
+        labs(title = "", subtitle = "", x = "", y = "Sample") +
+        theme_cowplot() + 
+        theme(axis.text.y = element_blank(), axis.ticks.y = element_blank(), plot.margin = margin(1,1,1,1, "cm")) +
         facet_wrap(~region_name, scales = "free_x") +
         guides(color = guide_legend(reverse = TRUE,
                                     override.aes = list(size = 3),
@@ -2245,7 +2247,10 @@ ashm_rainbow_plot = function(mutations_maf,
   #add a fake mutation at the start position for each sample to ensure every sample shows up
   fake_mutations = data.frame(Tumor_Sample_Barcode = pull(metadata, sample_id), Start_Position = qstart - 1000)
   mutation_positions = rbind(mutation_positions, fake_mutations)
-  meta_arranged$classification = factor(meta_arranged[,classification_column], levels = unique(meta_arranged[,classification_column]))
+
+  meta_arranged$classification = meta_arranged[[classification_column]] %>%
+    as.factor()
+
   muts_anno = dplyr::left_join(mutation_positions, meta_arranged, by = c("Tumor_Sample_Barcode" = "sample_id"))
   muts_anno$sample_id = factor(muts_anno$Tumor_Sample_Barcode, levels = unique(meta_arranged$sample_id))
   if(missing(custom_colours)){
@@ -2262,13 +2267,19 @@ ashm_rainbow_plot = function(mutations_maf,
     bed = bed %>%
       mutate(size = end - start) %>%
       mutate(midpoint = start + size / 2)
-    height = length(unique(meta_arranged$sample_id)) + 8
-    p = p + geom_rect(data = bed, aes(xmin = start, xmax = end, ymin = 0, ymax = height + 5), alpha = 0.1) +
+    height = length(unique(meta_arranged$sample_id)) + 10
+    p = p + geom_rect(data = bed, aes(xmin = start, xmax = end, ymin = 0, ymax = height + 20), alpha = 0.1) +
       geom_text(data = bed, aes(x = midpoint, y = height, label = name), size = 2.5, angle = 90) +
       guides(color = guide_legend(reverse = TRUE, override.aes = list(size = 3)))
   }
+
+  p = p +
+    labs(title = "", subtitle = "", x = "", y = "Sample") +
+    theme_cowplot() + 
+    theme(plot.margin = margin(1,1,1,1, "cm"))
+  
   if(hide_ids){
-    p = p + theme(axis.text.y = element_blank())
+    p = p + theme(axis.text.y = element_blank(), axis.ticks.y = element_blank())
   }else{
     p = p + theme(axis.text.y = element_text(size = 5))
   }
