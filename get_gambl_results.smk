@@ -29,13 +29,12 @@ repo_base = config["default"]["repo_base"]
 
 flatfiles = config["default"]["results_flatfiles"]
 merged = config['default']['results_merged']
+versioned = config['default']['results_versioned']
 resources = config["default"]["resources"]
 wildcards = config["default"]["results_merged_wildcards"]
 
 expression = merged["tidy_expression_path"]
-print(merged)
-lymphgen_keys = wildcards["lymphgen_template"].split(",")
-lymphgen = merged["lymphgen_template"]
+collated = merged["collated"]
 
 #here we specify which files are included from the GAMBLR config
 db_maf = flatfiles["ssm"]["template"]["cds"]["deblacklisted"]
@@ -59,12 +58,20 @@ rule all:
         combined_cnv = expand(cnv_combined,seq_type=['genome'],projection=projections),
         combined_sv = expand(sv_combined,seq_type=['genome'],projection=projections),
         blacklists = expand(blacklist,seq_type=seq_types,projection=projections),
-        lymphgens = expand(lymphgen,flavour=lymphgen_keys),
         expression = expression,
-        indexed_maf = expand(full_db_maf,seq_type=['genome'],projection=projections),
-        indexed_aug_maf = expand(full_aug_maf,seq_type=['genome'],projection=projections)
+        collated = expand(collated,seq_type_filter=['genome','capture']),
+        indexed_maf = expand(full_db_maf,seq_type=['genome','capture'],projection=projections),
+        indexed_aug_maf = expand(full_aug_maf,seq_type=['genome','capture'],projection=projections)
 
 #Use the relative directory for local file names (outputs) and full path for remote file names (inputs)
+
+rule get_collated:
+    input:
+        collated_tsv = SFTP.remote(hostname + project_base + collated)
+    output:
+        collated_tsv = collated
+    run:
+        shell("cp {input.collated_tsv} {output.collated_tsv}")
 
 rule get_aug_maf:
     input:
@@ -88,13 +95,13 @@ rule get_indexed_maf:
         shell("cp {input.maf_index} {output.maf_index}")
         shell("cp {input.maf} {output.maf}")
 
-rule get_lymphgen:
-    input:
-        lymphgen = SFTP.remote(hostname + project_base + lymphgen)
-    output:
-        lymphgen = lymphgen
-    run:
-         shell("cp {input.lymphgen} {output.lymphgen}")
+#rule get_lymphgen:
+#    input:
+#        lymphgen = SFTP.remote(hostname + repo_base + lymphgen)
+#    output:
+#        lymphgen = lymphgen
+#    run:
+#         shell("cp {input.lymphgen} {output.lymphgen}")
 
 rule get_expression:
     input:

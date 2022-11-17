@@ -5,11 +5,7 @@
 \title{INTERNAL FUNCTION called by collate_results, not meant for out-of-package usage.
 Determine the hypermutation status of a few genes.}
 \usage{
-collate_ashm_results(
-  sample_table,
-  seq_type_filter = "genome",
-  ssh_session = NULL
-)
+collate_ashm_results(sample_table, seq_type_filter = "genome")
 }
 \arguments{
 \item{sample_table}{A data frame with sample_id as the first column.}

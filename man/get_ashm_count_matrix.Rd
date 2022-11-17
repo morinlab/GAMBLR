@@ -10,8 +10,7 @@ get_ashm_count_matrix(
   maf_data,
   these_samples_metadata,
   seq_type,
-  from_indexed_flatfile = TRUE,
-  ssh_session = NULL
+  from_indexed_flatfile = TRUE
 )
 }
 \arguments{

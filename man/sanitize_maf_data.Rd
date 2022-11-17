@@ -2,7 +2,7 @@
 % Please edit documentation in R/utilities.R
 \name{sanitize_maf_data}
 \alias{sanitize_maf_data}
-\title{Convert mutation data to a shereable format.}
+\title{Convert mutation data to a shareable format.}
 \usage{
 sanitize_maf_data(
   mutation_maf_path,

@@ -13,8 +13,7 @@ estimate_purity(
   show_plots = FALSE,
   assume_diploid = FALSE,
   coding_only = FALSE,
-  genes,
-  ssh_session
+  genes
 )
 }
 \arguments{
