@@ -36,7 +36,7 @@ get_cn_segments(
 \item{from_flatfile}{Set to TRUE by default.}
 }
 \value{
-A data frame with CN segments for either full genome, or specified region.
+A data frame with CN segments for the specified region.
 }
 \description{
 Retrieve all copy number segments from the GAMBL database that overlap with a single genomic coordinate range.

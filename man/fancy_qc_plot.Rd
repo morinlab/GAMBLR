@@ -13,9 +13,10 @@ fancy_qc_plot(
   these_samples_metadata,
   plot_data,
   fill_by = "pathology",
+  labels = c("sample_id", "cohort"),
+  interactive = FALSE,
   comparison_samples,
   plot_title = "",
-  plot_subtitle = "",
   y_axis_lab = "",
   return_plotdata = FALSE
 )
@@ -37,11 +38,13 @@ fancy_qc_plot(
 
 \item{fill_by}{Parameter for specifying fill variable for grouped bar plot. Can be any factor from incoming metadata, e.g pathology, cohort, etc.}
 
+\item{labels}{If HTML plot version is rendered, you can specify what labels should be visible when hovering over the dots. Default is sample id and cohort. This parameter expects a vector of charachters.}
+
+\item{interactive}{Boolean parameter for generating interactive plot (HTML). Default is FALSE.}
+
 \item{comparison_samples}{Optional parameter, give the function a list of sample IDs to be compared against the main plotting group. Pathology is default.}
 
 \item{plot_title}{Plotting parameter, plot title.}
-
-\item{plot_subtitle}{Plotting parameter, subtitle of generated plot.}
 
 \item{y_axis_lab}{Plotting parameter, label of y-axis.}
 
@@ -61,33 +64,32 @@ Plot for visualizing QC metrics and allowing for grouping by different metadata 
 kridel_fl = get_gambl_metadata() \%>\%
  dplyr::filter(pathology == "FL", cohort == "FL_Kridel") \%>\%
  dplyr::select(sample_id) \%>\%
- pull(sample_id)
 
-my_plot_1 = fancy_qc_plot(these_samples = kridel_fl, 
-                          seq_type = "genome", 
-                          plot_data = "AverageBaseQuality", 
-                          plot_subtitle = "Example Plot", 
-                          y_axis_lab = "Average Base Quality", 
+my_plot_1 = fancy_qc_plot(these_samples = kridel_fl,
+                          seq_type = "genome",
+                          interactive = FALSE,
+                          plot_data = "AverageBaseQuality",
+                          y_axis_lab = "Average Base Quality",
                           plot_title = "Average Base Quality For FL_Kridel")
 
 #Example 2 - using already filtered metadata (these_samples_metadata)
 fl_metadata = get_gambl_metadata() \%>\%
  dplyr::filter(pathology == "FL", cohort == "FL_Kridel")
 
-my_plot_2 = fancy_qc_plot(these_samples_metadata = fl_metadata, 
-                          seq_type = "genome", 
-                          plot_data = "AverageBaseQuality", 
-                          plot_subtitle = "Example Plot", 
-                          y_axis_lab = "Average Base Quality", 
+my_plot_2 = fancy_qc_plot(these_samples_metadata = fl_metadata,
+                          seq_type = "genome",
+                          interactive = TRUE,
+                          labels = c("cohort", "pathology")
+                          plot_data = "AverageBaseQuality",
+                          y_axis_lab = "Average Base Quality",
                           plot_title = "Average Base Quality For FL_Kridel")
 
-#Example 3 - using in-house metadata fitlering options
-my_plot_3 = fancy_qc_plot(keep_cohort = "FL_Kridel", 
-                          keep_pathology = "FL", 
-                          seq_type = "genome", 
-                          plot_data = "AverageBaseQuality", 
-                          plot_subtitle = "Example Plot", 
-                          y_axis_lab = "Average Base Quality", 
+#Example 3 - using in-house metadata filtering options
+my_plot_3 = fancy_qc_plot(keep_cohort = "FL_Kridel",
+                          keep_pathology = "FL",
+                          seq_type = "genome",
+                          plot_data = "AverageBaseQuality",
+                          y_axis_lab = "Average Base Quality",
                           plot_title = "Average Base Quality For FL_Kridel")
 
 }
