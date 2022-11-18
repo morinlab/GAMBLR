@@ -3,12 +3,12 @@ title: "SSM Tutorial - GAMBLR"
 author: "Adam Mattsson"
 date: "November 10, 2022"
 output:
+  pdf_document:
+    toc: yes
   html_document:
     toc: yes
     toc_float: yes
     number_sections: yes
-  pdf_document:
-    toc: yes
 ---
 ```{r setup, include = FALSE}
 knitr::opts_chunk$set(warning = FALSE, message = FALSE)
@@ -24,26 +24,21 @@ library(g3viz)
 library(maftools)
 ```
 
-# SSM
-This vignette demonstrates how to work with SSM results within GAMBLR, all the way from obtaining results (in various ways), linking with metadata, performing data analysis and annotations to producing publication ready figures.
+# Simple Somatic Mutations
+This vignette demonstrates how to work with Simple Somatic Mutations (SSM) results within GAMBLR, all the way from obtaining results (in various ways), linking with metadata, performing data analysis and annotations to producing publication ready figures.
 
 ## Metadata
 First, lets start with retrieving metadata for all GAMBL samples with `seqtype` *genome*.
 ```{r metadata, message = FALSE, warning = FALSE}
 #get gambl metadata for all samples
-this_metadata = get_gambl_metadata(seq_type_filter = "genome",
-                                   seq_type_priority = "genome",
-                                   remove_benchmarking = TRUE,
-                                   with_outcomes = TRUE,
-                                   from_flatfile = TRUE,
-                                   only_available = TRUE)
+this_metadata = get_gambl_metadata(seq_type_filter = "genome")
 
 #subset metadata on a set of samples (samples classified as DLBCL for pathology)
 dlbcl_metadata = dplyr::filter(this_metadata, 
                                pathology == "DLBCL")
 
 #peek return
-paged_table(dlbcl_metadata, options = list(rows.print = 5, cols.print = 5))
+head(dlbcl_metadata, 10)
 ```
 
 ## Get SSM data
@@ -58,16 +53,10 @@ this_sample = "00-15201_tumorA"
 #get_ssm_by_sample
 this_sample_ssm = get_ssm_by_sample(this_sample_id = this_sample, 
                                     this_seq_type = "genome",
-                                    projection = "grch37",
-                                    tool_name = "slims-3",
-                                    flavour = "clustered",
-                                    min_read_support = 3,
-                                    augmented = TRUE,
-                                    basic_columns = TRUE,
-                                    verbose = FALSE)
+                                    projection = "grch37")
 
 #peek return
-paged_table(this_sample_ssm, options = list(rows.print = 5, cols.print = 5))
+head(this_sample_ssm, 10)
 ```
 
 To return SSMs for multiple samples one can use `get_ssm_by_samples`. Note, this function wraps `get_ssm_by_sample`.
@@ -80,15 +69,9 @@ these_samples = c("HTMCP-01-06-00485-01A-01D",
 #get_ssm_by_samples
 these_samples_ssm = get_ssm_by_samples(these_sample_ids = these_samples,
                                        projection = "grch37",
-                                       seq_type = "genome",
-                                       tool_name = "slms-3",
-                                       flavour = "clustered",
-                                       min_read_support = 3,
-                                       augmented = TRUE,
-                                       basic_columns = TRUE,
-                                       subset_from_merge = TRUE)
+                                       seq_type = "genome")
 #peek return
-paged_table(these_samples_ssm, options = list(rows.print = 5, cols.print = 5))
+head(these_samples_ssm, 10)
 ```
 
 ### By Patient
@@ -102,15 +85,9 @@ these_patients = c("00-14595",
 #get_ssm_by_patients
 these_patients_ssm = get_ssm_by_patients(these_patient_ids = these_patients,
                                          seq_type = "genome",
-                                         projection = "grch37",
-                                         tool_name = "slms-3",
-                                         flavour = "clustered",
-                                         min_read_support = 3,
-                                         augmented = TRUE,
-                                         basic_columns = TRUE,
-                                         subset_from_merge = TRUE)
+                                         projection = "grch37")
 #peek return
-paged_table(these_patients_ssm, options = list(rows.print = 5, cols.print = 5))
+head(these_patients_ssm, 10)
 ```
 
 ### By Region
@@ -123,16 +100,10 @@ myc_region = gene_to_region(gene_symbol = "MYC",
 #get all SSMs that are residing in the defined MYC region
 myc_ssm = get_ssm_by_region(region = myc_region,
                             projection = "grch37",
-                            seq_type = "genome",
-                            mode = "slms-3",
-                            min_read_support = 3,
-                            from_indexed_flatfile = TRUE,
-                            augmented = TRUE,
-                            basic_columns = TRUE,
-                            streamlined = FALSE)
+                            seq_type = "genome")
 
 #peek return
-paged_table(myc_ssm, options = list(rows.print = 5, cols.print = 5))
+head(myc_ssm, 10)
 ```
 
 For multiple regions, refer to `get_ssm_by_regions`. In this example we are returning SSMs for all ASHM regions (hyper mutated) across all samples. 
@@ -144,20 +115,14 @@ ashm_regions_bed = grch37_ashm_regions %>%
 #get ssm for all ashm regions
 ashm_ssm = get_ssm_by_regions(regions_bed = ashm_regions_bed,
                               projection = "grch37",
-                              seq_type = "genome",
-                              mode = "slms-3",
-                              min_read_support = 3,
-                              from_indexed_flatfile = TRUE,
-                              augmented = TRUE,
-                              streamlined = TRUE,
-                              use_name_column = FALSE)
+                              seq_type = "genome")
 
 #peek return
-paged_table(ashm_ssm, options = list(rows.print = 5, cols.print = 5))
+head(ashm_ssm, 10)
 ```
 
 ### Coding SSM
-Lastly, another way to retrieve SSMs is to call `get_coding_ssm`. This function reads in all coding SSMs from the GAMBL database. Convenient filtering parameters are included in this function for easy and straight-forward subset to specific pathologist, cohorts, and sample IDs. If these parameters are not called, coding SSMs will be returned for all samples. In the example bellow, we are using a metadata subset (DLBCL cases) for retrieving coding ssm.
+Lastly, another way to retrieve SSMs is to call `get_coding_ssm`. This function returns coding SSMs for any given sample. This function is a convenient option for anyone interested in plotting coding mutations. Convenient filtering parameters are included in this function for easy and straight-forward subset to specific pathologist, cohorts, and sample IDs. If these parameters are not called, coding SSMs will be returned for all samples. In the example bellow, we are using a metadata subset (DLBCL cases) for retrieving coding ssm.
 ```{r get_coding_ssm, message = FALSE, warning = FALSE}
 #create metadata subset
 my_sample_metadata = get_gambl_metadata(seq_type_filter = "genome") %>%
@@ -166,16 +131,10 @@ my_sample_metadata = get_gambl_metadata(seq_type_filter = "genome") %>%
 #get SSMs for all samples in metadata subset
 all_coding_ssm = get_coding_ssm(these_samples_metadata = my_sample_metadata,
                                 projection = "grch37", 
-                                seq_type = "genome",
-                                groups = c("gambl", "icgc_dart"),
-                                min_read_support = 3,
-                                from_flatfile = TRUE,
-                                augmented = TRUE,
-                                basic_columns = TRUE,
-                                include_silent = TRUE)
+                                seq_type = "genome")
 
 #peek return
-paged_table(all_coding_ssm, options = list(rows.print = 5, cols.print = 5))
+head(all_coding_ssm, 10)
 ```
 
 ## Annotating SSMs
@@ -187,14 +146,10 @@ Annotate and auto-drop a MAF data frame with existing blacklists to remove varia
 #annotate ssm calls (all coding SSMs)
 deblacklisted_ssm = annotate_ssm_blacklist(mutations_df = all_coding_ssm, 
                                            genome_build = "grch37",   
-                                           seq_type = "genome",
-                                           return_blacklist = FALSE,
-                                           verbose = TRUE,
-                                           invert = FALSE,
-                                           drop_threshold = 4)
+                                           seq_type = "genome")
 
 #peek return
-paged_table(deblacklisted_ssm, options = list(rows.print = 5, cols.print = 5))
+head(deblacklisted_ssm, 10)
 ```
 
 ### Drivers
@@ -205,7 +160,7 @@ driver_ssm = annotate_driver_ssm(maf_df = this_sample_ssm,
                                  lymphoma_type = c("DLBCL"))
 
 #peek return
-paged_table(driver_ssm, options = list(rows.print = 5, cols.print = 5))
+head(driver_ssm, 10)
 ```
 
 ### Hotspots
@@ -218,7 +173,7 @@ this_sample_ssm_hot = annotate_hotspots(mutation_maf = this_sample_ssm,
                                         analysis_base = c("FL--DLBCL"))
 
 #peek return
-paged_table(this_sample_ssm_hot, options = list(rows.print = 5, cols.print = 5))
+head(this_sample_ssm_hot, 10)
 ```
 
 ### Review Hotspots
@@ -230,7 +185,7 @@ this_sample_ssm_hot_rev = review_hotspots(annotated_maf = this_sample_ssm_hot,
                                           genome_build = "grch37")
 
 #peek return
-paged_table(this_sample_ssm_hot_rev, options = list(rows.print = 5, cols.print = 5))
+head(this_sample_ssm_hot_rev, 10)
 ```
 
 ### Custom Track (UCSC)
@@ -455,15 +410,15 @@ get_mutation_frequency_bin_matrix(these_samples_metadata = dlbcl_bl_meta,
 ```
 
 ### Oncoplots
-Commonly, we will want to generate visualizations that only show genes deemed relevant for a given malignancy (and above some frequency threshold). For this purpose we have `prettyOncoplot` available. In the example bellow, we are looking at all coding SSM (genome samples) and the relevant genes for two malignancies (BL and DLBCL). This plotting function has a large collection of parameters that are avaialble for further customization and manipulation of the returned plot. Please refer to the documentation for a complete explenation of each parameter. 
-```{r pretty_oncoplot, dpi = 150, fig.height = 12, fig.width = 18, warning = FALSE, message = FALSE}
+Commonly, we will want to generate visualizations that only show genes deemed relevant for a given malignancy (and above some frequency threshold). For this purpose we have `prettyOncoplot` available. In the example bellow, we are looking at all coding SSM (genome samples) and the relevant genes for two malignancies (BL and DLBCL). This plotting function has a large collection of parameters that are available for further customization and manipulation of the returned plot. Please refer to the documentation for a complete explenation of each parameter. 
+```{r pretty_oncoplot_1, dpi = 150, fig.height = 12, fig.width = 18, warning = FALSE, message = FALSE}
 # Load the master merged MAF (coding only). It's usually more efficient to do this than to try to add filters to this query. Instead, just filter the data afterward
 maf_data = get_coding_ssm(seq_type = "genome")
 maf_metadata = get_gambl_metadata()
 maf = read.maf(maf_data, clinicalData = maf_metadata)
 
 #define some genes of interest
-bl_genes = c("MYC", "ID3", "TP53", "ARID1A", "FBXO11", 
+bl_genes = c("NFKBIZ", "ID3", "TP53", "ARID1A", "FBXO11", 
              "GNA13", "TCF3", "TFAP4", "HNRNPU", "FOXO1",
              "CCND3", "SMARCA4", "DDX3X")
 
@@ -502,14 +457,31 @@ prettyOncoplot(maftools_obj = maf,
                metadataBarHeight = 5,
                metadataBarFontsize = 8,
                fontSizeGene = 11,
-               metadataColumns = c("pathology",
-                                   "lymphgen",
-                                   "sex",
-                                   "EBV_status_inf",
-                                   "cohort"),
-               sortByColumns = c("pathology",
-                                 "lymphgen",
-                                 "sex",
-                                 "EBV_status_inf",
-                                 "cohort"))
+               metadataColumns = c("pathology", "lymphgen", "sex", "EBV_status_inf", "cohort"),
+               sortByColumns = c("pathology", "lymphgen", "sex", "EBV_status_inf", "cohort"))
+```
+
+As previous stated, `prettyOncoplot` has many parameters that can be called to further customize the plot and aggregate the data that are to be plotted. In reality, if all features of this plotting functions were to be demonstrated, a dedicated vignette for this purpose might be the way to go. Even so, here is another example were we include non coding regions (3' UTR, NFKBIZ).
+```{r pretty_oncoplot_2, dpi = 150, fig.height = 12, fig.width = 18, warning = FALSE, message = FALSE}
+#get SSM for NFKBIZ UTR region
+nfkbiz_utr_region = "chr3:101,578,185-101,579,902"
+nfkbiz_ssm = get_ssm_by_region(region = nfkbiz_utr_region, seq_type = "genome", projection = "grch37", basic_columns = TRUE)
+
+#rbind nfkbiz SSM with big mutation data frame
+maf_data = rbind(maf_data, nfkbiz_ssm)
+maf = read.maf(maf_data, clinicalData = maf_metadata)
+
+#create prettyOncoplot
+prettyOncoplot(maftools_obj = maf,
+               genes = genes,
+               these_samples_metadata = maf_metadata,
+               include_noncoding=list("NFKBIZ" = c("3'UTR")),
+               splitGeneGroups = gene_groups,
+               keepGeneOrder = TRUE,
+               splitColumnName = "pathology",
+               metadataBarHeight = 5,
+               metadataBarFontsize = 8,
+               fontSizeGene = 11,
+               metadataColumns = c("pathology", "lymphgen", "sex", "EBV_status_inf", "cohort"),
+               sortByColumns = c("pathology", "lymphgen", "sex", "EBV_status_inf", "cohort"))
 ```
