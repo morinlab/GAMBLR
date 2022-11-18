@@ -40,7 +40,7 @@ prettyRainfallPlot = function(this_sample_id,
                               this_maf,
                               maf_path,
                               zoom_in_region,
-                              seq_type = "genome",
+                              seq_type,
                               label_sv = FALSE) {
   if (missing(this_sample_id)) {
     warning("No sample_id was provided. Using all mutations in the MAF within your region!")
@@ -1211,7 +1211,7 @@ plot_sample_circos = function(this_sample_id,
 #' @param maftools_obj A maftools object containing the mutations you want to plot.
 #' @param onco_matrix_path Provide a path to an onco_matrix file instead of a MAF object if the former is unavailable (this limits functionality a bit).
 #' @param genes An optional list of genes to restrict your plot to.
-#' @param include_noncoding List of non-coding regions to be included, default is "NFKBIZ - 3'UTR" and "HNRNPH1 - Splice_Region").. Specify like this: include_noncoding=list("NFKBIZ" = c("3'UTR"), "HNRNPH1" = "Splice_Region")
+#' @param include_noncoding List of non-coding regions to be included, default is NULL. Specify like this: include_noncoding=list("NFKBIZ" = c("3'UTR"), "HNRNPH1" = "Splice_Region")
 #' @param keepGeneOrder Set to TRUE if you want to preserve the gene order specified.
 #' @param keepSampleOrder Set to TRUE if you want to preserve the sample order specified.
 #' @param highlightHotspots Set to TRUE to highlight hot spots. Default is FALSE.
@@ -2251,8 +2251,11 @@ ashm_rainbow_plot = function(mutations_maf,
   meta_arranged$classification = meta_arranged[[classification_column]] %>%
     as.factor()
 
-  muts_anno = dplyr::left_join(mutation_positions, meta_arranged, by = c("Tumor_Sample_Barcode" = "sample_id"))
+  muts_anno = dplyr::left_join(mutation_positions, meta_arranged, by = c("Tumor_Sample_Barcode" = "sample_id")) %>%
+    subset(!is.na(classification))
+
   muts_anno$sample_id = factor(muts_anno$Tumor_Sample_Barcode, levels = unique(meta_arranged$sample_id))
+
   if(missing(custom_colours)){
     p = ggplot(muts_anno) +
       geom_point(aes(x = Start_Position, y = sample_id, colour = classification), alpha = 0.4)
@@ -2285,6 +2288,7 @@ ashm_rainbow_plot = function(mutations_maf,
   }
   return(p)
 }
+
 
   #' This function doesn't do anything yet
 #'
@@ -4976,7 +4980,8 @@ fancy_alignment_plot = function(these_samples,
   }
 
   #get qc data for selected samples
-  qc_metrics = collate_qc_results(sample_table = these_samples, seq_type_filter = seq_type)
+  qc_metrics = collate_results(sample_table = these_samples, seq_type_filter = seq_type)
+
   message(paste0("QC Metric successfully retreived for ", nrow(qc_metrics),
                  " samples out of a total of ", nrow(these_samples), " samples in input sample table."))
 
@@ -4991,7 +4996,7 @@ fancy_alignment_plot = function(these_samples,
                                       mean(melt_align$value[melt_align$variable == "TotalDuplicatedreads"])))
 
   if(!missing(comparison_group)){
-    comp_data = collate_qc_results(sample_table = comparison_group, seq_type_filter = seq_type) %>%
+    comp_data = collate_results(sample_table = comparison_group, seq_type_filter = seq_type) %>%
       dplyr::select(sample_id, TotalReads, TotalUniquelyMapped, TotalDuplicatedreads) %>%
       melt(id.var = "sample_id") %>%
       arrange(sample_id)
@@ -5028,6 +5033,7 @@ fancy_alignment_plot = function(these_samples,
 }
 
 
+
 #' Plot for visualizing QC metrics and allowing for grouping by different metadata columns.
 #'
 #' @param these_samples Data frame with sample IDs (to be plotted) in the first column (has to be named sample_id).
@@ -5039,14 +5045,15 @@ fancy_alignment_plot = function(these_samples,
 #' @param sort_by Plotting parameter, set sorting column for bar plots.
 #' @param plot_data Plotting parameter, define the data type to be plotted.
 #' @param fill_by Parameter for specifying fill variable for grouped bar plot. Can be any factor from incoming metadata, e.g pathology, cohort, etc.
+#' @param labels If HTML plot version is rendered, you can specify what labels should be visible when hovering over the dots. Default is sample id and cohort. This parameter expects a vector of charachters.
+#' @param interactive Boolean parameter for generating interactive plot (HTML). Default is FALSE.
 #' @param comparison_samples Optional parameter, give the function a list of sample IDs to be compared against the main plotting group. Pathology is default.
 #' @param plot_title Plotting parameter, plot title.
-#' @param plot_subtitle Plotting parameter, subtitle of generated plot.
 #' @param y_axis_lab Plotting parameter, label of y-axis.
 #' @param return_plotdata Optional parameter, if set to TRUE a list of acceptable data types for plotting will be returned, and nothing else.
 #'
 #' @return plot as ggplot object.
-#' @import tidyverse cowplot
+#' @import tidyverse cowplot ggbeeswarm plotly
 #' @export
 #'
 #' @examples
@@ -5055,33 +5062,32 @@ fancy_alignment_plot = function(these_samples,
 #' kridel_fl = get_gambl_metadata() %>%
 #'  dplyr::filter(pathology == "FL", cohort == "FL_Kridel") %>%
 #'  dplyr::select(sample_id) %>%
-#'  pull(sample_id)
 #'
-#' my_plot_1 = fancy_qc_plot(these_samples = kridel_fl, 
-#'                           seq_type = "genome", 
-#'                           plot_data = "AverageBaseQuality", 
-#'                           plot_subtitle = "Example Plot", 
-#'                           y_axis_lab = "Average Base Quality", 
+#' my_plot_1 = fancy_qc_plot(these_samples = kridel_fl,
+#'                           seq_type = "genome",
+#'                           interactive = FALSE,
+#'                           plot_data = "AverageBaseQuality",
+#'                           y_axis_lab = "Average Base Quality",
 #'                           plot_title = "Average Base Quality For FL_Kridel")
 #'
 #' #Example 2 - using already filtered metadata (these_samples_metadata)
 #' fl_metadata = get_gambl_metadata() %>%
 #'  dplyr::filter(pathology == "FL", cohort == "FL_Kridel")
 #'
-#' my_plot_2 = fancy_qc_plot(these_samples_metadata = fl_metadata, 
-#'                           seq_type = "genome", 
-#'                           plot_data = "AverageBaseQuality", 
-#'                           plot_subtitle = "Example Plot", 
-#'                           y_axis_lab = "Average Base Quality", 
+#' my_plot_2 = fancy_qc_plot(these_samples_metadata = fl_metadata,
+#'                           seq_type = "genome",
+#'                           interactive = TRUE,
+#'                           labels = c("cohort", "pathology")
+#'                           plot_data = "AverageBaseQuality",
+#'                           y_axis_lab = "Average Base Quality",
 #'                           plot_title = "Average Base Quality For FL_Kridel")
 #'
-#' #Example 3 - using in-house metadata fitlering options
-#' my_plot_3 = fancy_qc_plot(keep_cohort = "FL_Kridel", 
-#'                           keep_pathology = "FL", 
-#'                           seq_type = "genome", 
-#'                           plot_data = "AverageBaseQuality", 
-#'                           plot_subtitle = "Example Plot", 
-#'                           y_axis_lab = "Average Base Quality", 
+#' #Example 3 - using in-house metadata filtering options
+#' my_plot_3 = fancy_qc_plot(keep_cohort = "FL_Kridel",
+#'                           keep_pathology = "FL",
+#'                           seq_type = "genome",
+#'                           plot_data = "AverageBaseQuality",
+#'                           y_axis_lab = "Average Base Quality",
 #'                           plot_title = "Average Base Quality For FL_Kridel")
 #'
 fancy_qc_plot = function(these_samples,
@@ -5092,12 +5098,13 @@ fancy_qc_plot = function(these_samples,
                          these_samples_metadata,
                          plot_data,
                          fill_by = "pathology",
+                         labels = c("sample_id", "cohort"),
+                         interactive = FALSE,
                          comparison_samples,
                          plot_title = "",
-                         plot_subtitle = "",
                          y_axis_lab = "",
                          return_plotdata = FALSE){
-
+  
   #return a list of acceptable data types for plotting
   if(return_plotdata){
     plotting_variables = c("AverageBaseQuality", "AverageInsertSize", "AverageReadLength",
@@ -5130,7 +5137,7 @@ fancy_qc_plot = function(these_samples,
 
     if(!missing(keep_pathology) && missing(keep_cohort)){
       these_samples = dplyr::filter(this_meta, pathology == keep_pathology) %>%
-       pull(sample_id)
+        pull(sample_id)
     }
 
     if(!missing(keep_cohort) && !missing(keep_pathology)){
@@ -5145,7 +5152,7 @@ fancy_qc_plot = function(these_samples,
   }
 
   #get QC data for selected samples
-  qc_metrics = collate_qc_results(sample_table = these_samples, seq_type_filter = seq_type)
+  qc_metrics = collate_results(sample_table = these_samples, seq_type_filter = seq_type)
   message(paste0("QC Metric successfully retreived for ", nrow(qc_metrics), " samples out of a total of ", nrow(these_samples), " samples in input sample table."))
 
   #aggregate sample list with metadata columns
@@ -5156,17 +5163,9 @@ fancy_qc_plot = function(these_samples,
 
   qc_meta$group = "main_sample"
 
-  #calculate mean for selected comparison group using a list of IDs provided in comparison_samples
-  if(!missing(comparison_samples)){
-    comp_data = collate_qc_results(sample_table = comparison_samples, seq_type_filter = seq_type) %>%
-      dplyr::select(sample_id, plot_data) %>%
-      melt(id.var = "sample_id") %>%
-      arrange(sample_id)
-  }
-
   #Retrieve QC metrics for comparison samples, if provided.
   if(!missing(comparison_samples)){
-    comp_data = collate_qc_results(sample_table = comparison_samples, seq_type_filter = seq_type)
+    comp_data = collate_results(sample_table = comparison_samples, seq_type_filter = seq_type)
 
     #aggregate sample list with metadata columns
     comp_meta = comp_data %>% inner_join(this_meta)
@@ -5184,7 +5183,7 @@ fancy_qc_plot = function(these_samples,
   colnames(col_gambl)[1] = "hex"
   row.names(col_gambl) <- NULL
 
-  levels_fill = levels(qc_meta$pathology) %>%
+  levels_fill = levels(qc_meta[[fill_by]]) %>%
     as.data.frame()
 
   colnames(levels_fill)[1] = "factors"
@@ -5192,15 +5191,21 @@ fancy_qc_plot = function(these_samples,
   list_col = as.list(sub_cols$hex)
 
   #plotting
-  p = ggplot(qc_meta, aes_string(x = paste0("group"), y = plot_data, fill = fill_by, shape = fill_by)) +
-    geom_boxplot(mapping = aes(x = group)) +
-    geom_jitter(mapping = aes(x = group)) +
-    labs(title = plot_title, subtitle = plot_subtitle, x = "", y = y_axis_lab) +
+  p = ggplot(qc_meta) +
+    {if(interactive)aes_string(x = paste0("group"), y = plot_data, fill = fill_by, label1 = labels[1], label2 = labels[2])} +
+    {if(!interactive)aes_string(x = paste0("group"), y = plot_data, fill = fill_by)} +
+    geom_boxplot(mapping = aes(x = group), outlier.shape = NA) +
+    geom_quasirandom() +
+    labs(title = plot_title, x = "", y = y_axis_lab) +
     theme_cowplot() +
     scale_fill_manual(values = c(list_col)) +
     theme(legend.position = "right", axis.title.x = element_blank(), axis.text.x = element_blank(), axis.ticks.x = element_blank(),
           panel.grid.minor = element_blank(), panel.grid.major = element_blank(), panel.background = element_blank())
 
+  #make plot interactive (html) with plotly.
+  if(interactive){
+    p = ggplotly(p)
+  }
   return(p)
 }
 
@@ -5297,7 +5302,7 @@ fancy_propcov_plot = function(these_samples,
   }
 
   #get QC data for selected samples
-  qc_metrics = collate_qc_results(sample_table = these_samples, seq_type_filter = seq_type)
+  qc_metrics = collate_results(sample_table = these_samples, seq_type_filter = seq_type)
   message(paste0("QC Metric successfully retreived for ", nrow(qc_metrics), " samples out of a total of ", nrow(these_samples), " samples in input sample table."))
 
   #data wrangling steps
@@ -5409,7 +5414,7 @@ fancy_proportions_plot = function(these_samples,
   }
 
   #get QC data for selected samples
-  qc_metrics = collate_qc_results(sample_table = these_samples, seq_type_filter = seq_type)
+  qc_metrics = collate_results(sample_table = these_samples, seq_type_filter = seq_type)
   message(paste0("QC Metric successfully retreived for ", nrow(qc_metrics), " samples out of a total of ", nrow(these_samples), " samples in input sample table."))
 
   #data wrangling
