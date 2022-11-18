@@ -1,7 +1,7 @@
 ---
-title: "CN Tutorial - GAMBLR"
+title: "CN & SV Tutorial - GAMBLR"
 author: "Adam Mattsson"
-date: "November 10, 2022"
+date: "November 18, 2022"
 output:
   html_document:
     toc: yes
@@ -24,7 +24,7 @@ library(g3viz)
 library(maftools)
 ```
 
-# CN & SV
+# Copy Number & Structural Variants
 This vignette demonstrates how to return Copy Number (CN) and Structural Variant (SV) data in a variety of different ways. The method of choice might be different for any given application or planned downstream analysis, as well as what information you, as a researcher, have at hand. This vignette also highlights how to visualize CN data, using established GAMBLR functions. 
 
 ## Let's get started
