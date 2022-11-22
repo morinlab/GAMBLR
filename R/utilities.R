@@ -4121,10 +4121,23 @@ supplement_maf <- function(incoming_maf,
 
 #' Classify FL samples into cFL/dFL subgroups.
 #'
+#' Use the random forest prediction model to assemble the binary matrix and use it to classify FL tummors into cFL/dFL
+#'
+#' @param these_samples_metadata The metadata data frame that contains sample_id column with ids for the samples to be classified.
+#' @param maf_data The MAF data frame to be used for matrix assembling. At least must contain the first 45 columns of standard MAF format.
+#' @param model The RF model. Classifier from the paper describing cFL is used. It is not recommended to change the value of this parameter.
+#' @param seq_type The seq_type of the samples. Only really used to retrerive mutations when maf data is not provided and to be retreived through GAMBLR. Defaults to genome.
+#' @param output The output to be returned after prediction is done. Can be one of predictoins, matrix, or both. Defaults to predictions.
+#'
 #' @return data frame with classification, binary matrix used in classification, or both
 #' @export
 #' @import tidyverse randomForest
-
+#'
+#' @examples
+#' test_meta <- get_gambl_metadata(case_set="tFL-study")
+#' predictions = classify_fl(these_samples_metadata = test_meta)
+#' predictions = classify_fl(these_samples_metadata = test_meta, output = "both")
+#'
 classify_fl <- function(
     these_samples_metadata,
     maf_data,
