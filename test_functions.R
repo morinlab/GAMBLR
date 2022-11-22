@@ -29,7 +29,7 @@ fl_genes_df = gene_to_region(gene_symbol = fl_genes, genome_build = "grch37", re
 gene_in_this_region = region_to_gene(region = myc_region, gene_format = "hugo", genome_build = "grch37")
 
 #region to gene, wider example using larger region (q-arm, chromosome 1) and using another geneom build (hg38) and gene format (ensembl)
-chr1q_genes = region_to_gene(region = "1:142600000-249250621", gene_format = "ensembl", genome_build = "hg38")
+chr1q_genes = region_to_gene(region = "chr1:142600000-249250621", gene_format = "ensembl", genome_build = "hg38")
 
 #collate results, collate all genome samples, using cached results
 genome_collated = collate_results(seq_type_filter = "genome", from_cache = TRUE)
