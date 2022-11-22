@@ -1634,6 +1634,9 @@ assign_cn_to_ssm = function(this_sample,
                             include_silent = FALSE,
                             this_seq_type = "genome",
                             projection = "grch37"){
+
+  seq_type = this_seq_type
+  
   remote_session = check_remote_configuration(auto_connect = TRUE)
   database_name = config::get("database_name")
   project_base = config::get("project_base")
