@@ -33,11 +33,11 @@ get_excluded_samples = function(tool_name = "slms-3"){
 
 
 #' Get MAF-format data frame for more than one patient
-#' 
-#' This function returns variants from a set of patients avoiding duplicated mutations from multiple samples from that patient(i.e. unique superset of variants). 
+#'
+#' This function returns variants from a set of patients avoiding duplicated mutations from multiple samples from that patient(i.e. unique superset of variants).
 #' This is done either by combining the contents of individual MAF files or subsetting from a merged MAF (wraps get_ssm_by_samples)
 #' In most situations, this should never need to be run with subset_from_merge = TRUE. Instead use one of get_coding_ssm or get_ssm_by_region
-#' 
+#'
 #' @param these_patient_ids A vector of sample_id that you want results for. This is the only required argument.
 #' @param these_samples_metadata Optional metadata table
 #' @param tool_name Only supports slms-3 currently
@@ -55,7 +55,7 @@ get_excluded_samples = function(tool_name = "slms-3"){
 #' patients = c("00-14595", "00-15201", "01-12047")
 #' patients_maf = get_ssm_by_patients(these_patient_ids = patients, seq_type = "genome", subset_from_merge = FALSE)
 #' patient_meta = get_gambl_metadata(seq_type_filter = "genome") %>% dplyr::filter(patient_id %in% patients)
-#' patients_maf_2 = get_ssm_by_patients(these_samples_metadata = patient_meta,subset_from_merge = FALSE) 
+#' patients_maf_2 = get_ssm_by_patients(these_samples_metadata = patient_meta,subset_from_merge = FALSE)
 get_ssm_by_patients = function(these_patient_ids,
                                these_samples_metadata,
                                tool_name = "slms-3",
@@ -114,12 +114,12 @@ get_ssm_by_patients = function(these_patient_ids,
 
 
 #' Get MAF-format data frame for more than one sample and combine together
-#' 
-#' This function internally runs get_ssm_by_sample. 
+#'
+#' This function internally runs get_ssm_by_sample.
 #' In most situations, this should never need to be run with subset_from_merge = TRUE. Instead use one of get_coding_ssm or get_ssm_by_region
 #' See get_ssm_by_sample for more information
-#' 
-#' @param these_sample_ids A vector of sample_id that you want results for. 
+#'
+#' @param these_sample_ids A vector of sample_id that you want results for.
 #' @param these_samples_metadata Optional metadata table
 #' @param tool_name Only supports slms-3 currently
 #' @param augmented default: TRUE. Set to FALSE if you instead want the original MAF from each sample for multi-sample patients instead
@@ -130,11 +130,11 @@ get_ssm_by_patients = function(these_patient_ids,
 #' @param basic_columns Return first 45 columns of MAF rather than full details. Default is TRUE.
 #' @param maf_cols if basic_columns is set to FALSE, the suer can specify what columns to be returned within the MAF. This parameter can either be a list of indexes (integer) or a list of characters.
 #' @param subset_from_merge Instead of merging individual MAFs, the data will be subset from a pre-merged MAF of samples with the specified seq_type
-#' @param engine Specify one of readr or fread_maf (default) to change how the large files are loaded prior to subsetting. You may have better performance with one or the other but for me fread_maf is faster and uses a lot less RAM. 
+#' @param engine Specify one of readr or fread_maf (default) to change how the large files are loaded prior to subsetting. You may have better performance with one or the other but for me fread_maf is faster and uses a lot less RAM.
 #'
 #' @return data frame in MAF format.
 #' @export
-#' 
+#'
 #' @import dplyr parallel
 #'
 #' @examples
@@ -302,8 +302,8 @@ get_ssm_by_samples = function(these_sample_ids,
 
 
 
-#' Get the ssms (i.e. load MAF) for a single sample. 
-#' 
+#' Get the ssms (i.e. load MAF) for a single sample.
+#'
 #' This was implemented to allow flexibility because
 #' there are some samples that we may want to use a different set of variants than those in the main GAMBL merge.
 #' The current use case is to allow a force_unmatched output to be used to replace the SSMs from the merge for samples
@@ -410,7 +410,7 @@ get_ssm_by_sample = function(this_sample_id,
     #full_maf_path = paste0(full_maf_path,".gz")
     #local_full_maf_path = paste0(local_full_maf_path,".gz")
     #deprecate the usage of gzipped MAF for now
-    
+
     # first check if we already have a local copy
     # Load data from local copy or get a local copy from the remote path first
     if(status==0){
@@ -422,7 +422,7 @@ get_ssm_by_sample = function(this_sample_id,
 
       suppressMessages(suppressWarnings(dir.create(dirN,recursive = T)))
       if(!file.exists(local_aug_maf_path)){
-        
+
         ssh::scp_download(ssh_session,aug_maf_path,dirN)
       }
 
@@ -582,8 +582,8 @@ get_gambl_metadata = function(seq_type_filter = "genome",
                               biopsy_flatfile = "",
                               only_available = TRUE,
                               seq_type_priority="genome"){
-  
-  check_remote_configuration() 
+
+  check_remote_configuration()
   #this needs to be in any function that reads files from the bundled GAMBL outputs synced by Snakemake
   outcome_table = get_gambl_outcomes(from_flatfile = from_flatfile)
 
@@ -834,21 +834,24 @@ get_gambl_metadata = function(seq_type_filter = "genome",
         dplyr::filter(cohort %in% c("BL_Adult", "BL_cell_lines", "BL_ICGC", "BLGSP_Bcell_UNC", "BL_Pediatric") | (sample_id == "06-29223T"))
 
     }else if(case_set == "BL-DLBCL-manuscript"){
-      adult_bl_manuscript_samples = data.table::fread("/projects/rmorin/projects/gambl-repos/gambl-kdreval/data/metadata/BLGSP--DLBCL-case-set.tsv") %>%
+      set_file = paste0(base, "data/metadata/BLGSP--DLBCL-case-set.tsv")
+      adult_bl_manuscript_samples = read_tsv(set_file) %>%
         pull(Tumor_Sample_Barcode)
 
       all_meta = all_meta %>%
       dplyr::filter(sample_id %in% adult_bl_manuscript_samples)
 
     }else if(case_set == "BL-DLBCL-manuscript-HTMCP"){
-      adult_bl_manuscript_samples = data.table::fread("/projects/rmorin/projects/gambl-repos/gambl-kdreval/data/metadata/BLGSP--DLBCL-case-set.tsv") %>%
+      set_file = paste0(base, "data/metadata/BLGSP--DLBCL-case-set.tsv")
+      adult_bl_manuscript_samples = read_tsv(set_file) %>%
         pull(Tumor_Sample_Barcode)
 
       all_meta = all_meta %>%
       dplyr::filter(sample_id %in% adult_bl_manuscript_samples | cohort == "DLBCL_HTMCP")
 
     }else if(case_set == "FL-DLBCL-all"){
-      fl_dlbcl_all_samples = data.table::fread("/projects/rmorin/projects/gambl-repos/gambl-kdreval/data/metadata/FL--DLBCL--all-case-set.tsv") %>%
+      set_file = paste0(base, "data/metadata/FL--DLBCL--all-case-set.tsv")
+      fl_dlbcl_all_samples = read_tsv(set_file) %>%
         pull(Tumor_Sample_Barcode)
 
       all_meta = all_meta %>%
@@ -1912,7 +1915,7 @@ get_ashm_count_matrix = function(regions_bed,
 #' @examples
 #' #basic usage, adding custom names from bundled ashm data frame
 #' regions_bed = grch37_ashm_regions %>% mutate(name = paste(gene, region, sep = "_"))
-#' ashm_basic_details = get_ssm_by_regions(regions_bed = regions_bed) 
+#' ashm_basic_details = get_ssm_by_regions(regions_bed = regions_bed)
 #' full_details_maf = get_ssm_by_regions(regions_bed = regions_bed,basic_columns=T)
 get_ssm_by_regions = function(regions_list,
                               regions_bed,
@@ -1962,9 +1965,9 @@ get_ssm_by_regions = function(regions_list,
   }else{
     rn = regions_bed[["name"]]
   }
-  
+
   if(basic_columns){
-    #this must always force the output to be the standard set. 
+    #this must always force the output to be the standard set.
     #hence, return everything after binding into one data frame
     print("bind_rows")
     return(bind_rows(region_mafs))
@@ -2040,7 +2043,7 @@ get_ssm_by_region = function(chromosome,
     stop("Cannot find one of the requested maf_columns in your MAF header")
   }
   maf_indexes = maf_header[maf_columns]
-  
+
   maf_indexes = maf_indexes[order(maf_indexes)]
   maf_columns = names(maf_indexes)
   maf_indexes = unname(maf_indexes)
@@ -2152,10 +2155,10 @@ get_ssm_by_region = function(chromosome,
           print(maf_columns)
         }
         if(length(muts)==0){
-          maf_types_sep = str_split(maf_column_types,pattern="")[[1]] %>% 
+          maf_types_sep = str_split(maf_column_types,pattern="")[[1]] %>%
             str_replace_all("c","character") %>%
-            str_replace_all("i|n","numeric") 
-          
+            str_replace_all("i|n","numeric")
+
           muts_region = read.table(textConnection(""), col.names = maf_columns,colClasses = maf_types_sep)
         }else{
           muts_region = vroom::vroom(I(muts), col_types = paste(maf_column_types,collapse=""),
@@ -2324,7 +2327,7 @@ get_coding_ssm = function(limit_cohort,
     message(paste("mutations from", mutated_samples, "samples"))
   }else{
     #use db if not using flatfile (mostly deprecated)
-    
+
     table_name = config::get("results_tables")$ssm
     db = config::get("database_name")
     con = DBI::dbConnect(RMariaDB::MariaDB(), dbname = db)
