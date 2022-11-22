@@ -16,6 +16,7 @@ annotate_ssm_blacklist(
   blacklist_file_template,
   drop_threshold = 4,
   return_blacklist = FALSE,
+  use_curated_blacklist = FALSE,
   verbose = FALSE,
   invert = FALSE
 )

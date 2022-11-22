@@ -18,6 +18,9 @@ get_lymphgen(
 \arguments{
 \item{keep_original_columns}{}
 }
+\value{
+
+}
 \description{
 Get a specific flavour of LymphGen from the main GAMBL outputs and tidy the composites.
 Optionally return a matrix of features instead
