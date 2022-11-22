@@ -4119,7 +4119,11 @@ supplement_maf <- function(incoming_maf,
 }
 
 
-
+#' Classify FL samples into cFL/dFL subgroups.
+#'
+#' @return data frame with classification, binary matrix used in classification, or both
+#' @export
+#' @import tidyverse randomForest
 
 classify_fl <- function(
     these_samples_metadata,
@@ -4143,10 +4147,10 @@ classify_fl <- function(
     hotspot_features <- req_features[grepl("HOTSPOT|inKATdomain", req_features)]
     ashm_features <- req_features[grepl("_TSS|_intronic|_intron_1", req_features)]
     ashm_features_bed <- grch37_ashm_regions %>%
-        mutate(
+        dplyr::mutate(
             name = gsub("-", "_", grch37_ashm_regions$name)
         ) %>%
-        filter(name %in% ashm_features | name %in% c("PAX5_TSS_1", "SGK1_TSS_1"))
+        dplyr::filter(name %in% ashm_features | name %in% c("PAX5_TSS_1", "SGK1_TSS_1"))
 
     req_features <- gsub(
         "HOTSPOT|_TSS|inKATdomain|_intronic|_intron_1",
