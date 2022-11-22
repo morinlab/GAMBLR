@@ -16,8 +16,7 @@ get_ssm_by_sample(
   min_read_support = 3,
   basic_columns = TRUE,
   maf_cols = NULL,
-  verbose = FALSE,
-  ssh_session
+  verbose = FALSE
 )
 }
 \arguments{
@@ -43,9 +42,7 @@ get_ssm_by_sample(
 
 \item{maf_cols}{if basic_columns is set to FALSE, the suer can specify what columns to be returned within the MAF. This parameter can either be a list of indexes (integer) or a list of characters.}
 
-\item{verbose}{Enable for debugging/noisier output}
-
-\item{ssh_session}{BETA feature! pass active ssh session object.
+\item{verbose}{Enable for debugging/noisier output
 If specified, the function will assume the user is not on the network and will temporarily copy the file locally.}
 }
 \value{

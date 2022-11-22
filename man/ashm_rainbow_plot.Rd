@@ -13,8 +13,7 @@ ashm_rainbow_plot(
   bed,
   region,
   custom_colours,
-  hide_ids = TRUE,
-  ssh_session = NULL
+  hide_ids = TRUE
 )
 }
 \arguments{

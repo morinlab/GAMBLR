@@ -16,7 +16,6 @@ get_ssm_by_regions(
   seq_type = "genome",
   projection = "grch37",
   min_read_support = 4,
-  ssh_session = NULL,
   basic_columns = F
 )
 }

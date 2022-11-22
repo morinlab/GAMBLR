@@ -594,8 +594,7 @@ get_mutation_frequency_bin_matrix = function(regions,
                                              legend_direction = "horizontal",
                                              legendFontSize = 10,
                                              from_indexed_flatfile = TRUE,
-                                             mode = "slms-3",
-                                             ssh_session = NULL){
+                                             mode = "slms-3"){
 
   if(missing(regions)){
     if(missing(regions_df)){
@@ -610,7 +609,7 @@ get_mutation_frequency_bin_matrix = function(regions,
     slide_by = slide_by, plot_type = "none", window_size = window_size,
     min_count_per_bin = min_count_per_bin, return_count = TRUE,
     metadata = these_samples_metadata,
-    from_indexed_flatfile = from_indexed_flatfile, mode = mode,ssh_session=ssh_session)})
+    from_indexed_flatfile = from_indexed_flatfile, mode = mode)})
 
   all= do.call("rbind", dfs)
 
@@ -1972,8 +1971,7 @@ ashm_multi_rainbow_plot = function(regions_bed,
                                    seq_type,
                                    custom_colours,
                                    classification_column = "lymphgen",
-                                   maf_data,
-                                   ssh_session = NULL){
+                                   maf_data){
 
   table_name = config::get("results_tables")$ssm
   db = config::get("database_name")
@@ -2014,9 +2012,9 @@ ashm_multi_rainbow_plot = function(regions_bed,
   regions = pull(regions_bed, regions)
   names = pull(regions_bed, names)
   if(missing(maf_data)){
-    region_mafs = lapply(regions, function(x){get_ssm_by_region(region = x, streamlined = TRUE,ssh_session=ssh_session,seq_type = seq_type)})
+    region_mafs = lapply(regions, function(x){get_ssm_by_region(region = x, streamlined = TRUE,seq_type = seq_type)})
   }else{
-    region_mafs = lapply(regions, function(x){get_ssm_by_region(region = x, streamlined = TRUE, maf_data = maf_data,ssh_session=ssh_session)})
+    region_mafs = lapply(regions, function(x){get_ssm_by_region(region = x, streamlined = TRUE, maf_data = maf_data)})
   }
   tibbled_data = tibble(region_mafs, region_name = names)
   unnested_df = tibbled_data %>%
@@ -2205,8 +2203,7 @@ ashm_rainbow_plot = function(mutations_maf,
                              bed,
                              region,
                              custom_colours,
-                             hide_ids = TRUE,
-                             ssh_session = NULL){
+                             hide_ids = TRUE){
 
   table_name = config::get("results_tables")$ssm
   db=config::get("database_name")
@@ -2218,10 +2215,10 @@ ashm_rainbow_plot = function(mutations_maf,
     qstart = as.numeric(startend[1])
     qend = as.numeric(startend[2])
     if(missing(mutations_maf)){
-      mutations_maf = get_ssm_by_region(region = region, streamlined = TRUE,ssh_session=ssh_session,from_indexed_flatfile = T)
+      mutations_maf = get_ssm_by_region(region = region, streamlined = TRUE,from_indexed_flatfile = T)
     }else{
       #ensure it only contains mutations in the region specified
-      mutations_maf = get_ssm_by_region(region = region, streamlined = TRUE, maf_data = mutations_maf,ssh_session=ssh_session)
+      mutations_maf = get_ssm_by_region(region = region, streamlined = TRUE, maf_data = mutations_maf)
     }
   }
   if(!missing(classification_column)){

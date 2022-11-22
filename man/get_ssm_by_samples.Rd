@@ -17,8 +17,7 @@ get_ssm_by_samples(
   maf_cols = NULL,
   subset_from_merge = FALSE,
   augmented = TRUE,
-  engine = "fread_maf",
-  ssh_session
+  engine = "fread_maf"
 )
 }
 \arguments{
@@ -45,8 +44,6 @@ get_ssm_by_samples(
 \item{augmented}{default: TRUE. Set to FALSE if you instead want the original MAF from each sample for multi-sample patients instead}
 
 \item{engine}{Specify one of readr or fread_maf (default) to change how the large files are loaded prior to subsetting. You may have better performance with one or the other but for me fread_maf is faster and uses a lot less RAM.}
-
-\item{ssh_session}{argument to supply active ssh session connection for remote transfers (only compatible with subset_from_merge=TRUE)}
 }
 \value{
 data frame in MAF format.
