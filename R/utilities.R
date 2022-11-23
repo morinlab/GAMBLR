@@ -1291,7 +1291,6 @@ test_glue = function(placeholder="INSERTED"){
 #' @param these_samples_metadata Optional argument to use a user specified metadata df, overwrites get_gambl_metadata in join_with_full_metadata.
 #' @param case_set Optional short name for a pre-defined set of cases.
 #' @param sbs_manipulation Optional variable for transforming sbs values (e.g log, scale).
-#' @param mixcr_results_directory Optional path to MiXCR results.
 #' @param seq_type_filter Filtering criteria, default is genomes.
 #' @param from_cache Boolean variable for using cached results (/projects/nhl_meta_analysis_scratch/gambl/results_local/shared/gambl_{seq_type_filter}_results.tsv), default is TRUE. If write_to_file is TRUE, this parameter auto-defaults to FALSE.
 #'
