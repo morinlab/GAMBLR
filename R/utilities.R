@@ -1291,6 +1291,7 @@ test_glue = function(placeholder="INSERTED"){
 #' @param these_samples_metadata Optional argument to use a user specified metadata df, overwrites get_gambl_metadata in join_with_full_metadata.
 #' @param case_set Optional short name for a pre-defined set of cases.
 #' @param sbs_manipulation Optional variable for transforming sbs values (e.g log, scale).
+#' @param mixcr_results_directory Optional path to MiXCR results.
 #' @param seq_type_filter Filtering criteria, default is genomes.
 #' @param from_cache Boolean variable for using cached results (/projects/nhl_meta_analysis_scratch/gambl/results_local/shared/gambl_{seq_type_filter}_results.tsv), default is TRUE. If write_to_file is TRUE, this parameter auto-defaults to FALSE.
 #'
@@ -1323,8 +1324,6 @@ collate_results = function(sample_table,
                            these_samples_metadata,
                            case_set,
                            sbs_manipulation = "",
-                           mixcr_results_directory = "",
-                           missing_threshold = 2,
                            seq_type_filter = "genome",
                            from_cache = TRUE,
                            ssh_session){
@@ -1333,7 +1332,7 @@ collate_results = function(sample_table,
   # the sample_id should probably not even be in this file if we want this to be biopsy-centric
   if(missing(sample_table)){
     sample_table = get_gambl_metadata(seq_type_filter = seq_type_filter) %>%
-      dplyr::select(sample_id, patient_id, biopsy_id)
+      dplyr::select(sample_id, patient_id, biopsy_id, unix_group)
   }
   if(write_to_file){
     from_cache = FALSE #override default automatically for nonsense combination of options
@@ -1369,7 +1368,7 @@ collate_results = function(sample_table,
     sample_table = collate_ancestry(sample_table = sample_table, seq_type_filter = seq_type_filter)
     sample_table = collate_sbs_results(sample_table = sample_table, sbs_manipulation = sbs_manipulation, seq_type_filter = seq_type_filter)
     sample_table = collate_qc_results(sample_table = sample_table, seq_type_filter = seq_type_filter)
-    sample_table = collate_igblast_results(sample_table = sample_table, seq_type_filter = seq_type_filter, results_directory = mixcr_results_directory, missing_threshold = missing_threshold)
+    sample_table = collate_igblast_results(sample_table = sample_table, seq_type_filter = seq_type_filter)
   }
   if(write_to_file){
     #write results from "slow option" to new cached results file
@@ -4125,48 +4124,42 @@ collate_igblast_results = function(sample_table,
                                 missing_threshold = 2){
   if (missing(sample_table)) {
     sample_table = get_gambl_metadata(seq_type_filter = seq_type_filter) %>%
-                    dplyr::select(sample_id, patient_id, biopsy_id)
+                    dplyr::select(sample_id, biopsy_id, unix_group)
   }
   
-  # Check seq_type_filter is genome or mrna
-  if (seq_type_filter=="capture") {
-    message("'capture' seq_type_filter doesn't make sense for this tool. Use 'genome' or 'mrna'.")
-    return (sample_table)
-  }
-  # Look in mixcr-1.2/results if no results directory specified
+  # Look in mixcr-1.2/99-outputs if no results directory specified
   if (results_directory == "") {
-    base = config::get("project_base")
-    results_directory = glue(paste0(base, "gambl/mixcr-1.2/01-mixcr/{seq_type_filter}/"))
+    results_directory = paste0(config::get("project_base"),config::get("results_directories")$mixcr, "txt/{seq_type_filter}/mixcr.{sample_id}.clonotypes.IGH.igblast.txt")
   }
-  print(paste0("Searching for MiXCR results in directory:", results_directory))
+  print(paste("Searching for MiXCR results in directory:", results_directory))
 
-  # Make table with necessary columns from result files
-  mixcr_table = data.frame(biopsy_id=character(),
-                            mixcr_mutated=character(),
-                            missing=double())
-  for (sample_id in sample_table$sample_id) {
-    mixcr_results = glue(paste0(results_directory,"{sample_id}/mixcr.{sample_id}.clonotypes.IGH.igblast.txt"))
-    # Check if sample_id results file exists
-    if (file.exists(mixcr_results)) {
-      mixcr = suppressMessages(read_tsv(mixcr_results))
-      # Some results may be empty due to not having (productive) clones
-      if (nrow(mixcr)==0) {
-        next
-      }
-      # Get results from first clonotype (highest fraction)
-      entry = c(sample_table[sample_table$sample_id==sample_id,]$biopsy_id, 
-                mixcr$mutatedStatus[1], 
-                mixcr$numMissingRegions[1])
-      mixcr_table[nrow(mixcr_table) + 1,] <- entry
-    }
+  # Create dataframe from data in sample_table
+  mixcr_table = data.frame(sample_id = sample_table$sample_id,
+                            biopsy_id = sample_table$biopsy_id,
+                            unix_group = sample_table$unix_group,
+                            mixcr_mutated = "placeholder",
+                            missing = "placeholder")
+  
+  # Create column with potential filename for sample_id unix_group combination
+  mixcr_table = mixcr_table %>% dplyr::mutate(file_path = glue::glue(results_directory))
+
+  # Filter down to only sample_ids with existing files then read file contents into own column (this takes some time)
+  mixcr_table = mixcr_table[file.exists(mixcr_table$file_path),] %>% dplyr::mutate(results = suppressMessages(lapply(file_path, read_tsv)))
+  message(paste(nrow(mixcr_table), "MiXCR results files found."))
+
+  # Extract required columns (only extract top column, this is clonotype with highest fraction)
+  for (i in seq_len(nrow(mixcr_table))) {
+    mixcr_table$mixcr_mutated[i] <- mixcr_table$results[[i]]$mutatedStatus[1]
+    mixcr_table$missing[i] <- mixcr_table$results[[i]]$numMissingRegions[1]
   }
   # Remove entries that are empty
   print("Removing empty entries")
   mixcr_results = mixcr_table %>% dplyr::filter(rowSums(is.na(mixcr_table)) != ncol(mixcr_table)) %>% as.data.frame()
 
   # Remove entries where number of missing V regions is 3 or more then remove missing column
-  print("Removing rows that exceed missing threshold")
-  mixcr_results = mixcr_table %>% dplyr::filter(missing <= missing_threshold) %>% dplyr::select(-missing)
+  print(paste("Removing rows that exceed missing threshold of", missing_threshold))
+  mixcr_results = mixcr_results %>% dplyr::filter(missing <= missing_threshold) %>% dplyr::select(-missing, -results, -file_path, -unix_group, -sample_id)
+  message(paste(nrow(mixcr_results), glue::glue("MiXCR results contained top clones with <= {missing_threshold} missing regions.")))
 
   # Join rows to sample_table
   print("Joining tables")
