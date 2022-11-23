@@ -4107,14 +4107,14 @@ supplement_maf <- function(incoming_maf,
 #' Identify samples with mutated IGHV from MiXCR + IgBLAST results
 #'
 #' @param sample_table        A data frame with sample_id as the first column.
-#' @param results_directory   Directory containging MiXCR/IgBLASTN results. Depends on files having the columns "mutatedStatus" and "numMissingRegions"
+#' @param results_directory   Optional parameter to override default directory specified in config. Path to MiXCR/IgBLAST results files, path requires `unix_group`, `seq_type_filter` and `sample_id` wildcards. Depends on files having the columns "mutatedStatus" and "numMissingRegions".
 #' @param missing_threshold   Limit for missing IGH regions during MiXCR assembly. Default is 2. Higher thresholds may return less accurate mutation status.
 #'
 #' @return Samples table.
 #' @import tidyverse
 #'
 #' @examples 
-#' sample_table = collate_igblast_results(sample_table = sample_table, results_directory="*/01-mixcr/{seq_type}/", missing_threshold=3)
+#' sample_table = collate_igblast_results(sample_table = sample_table, results_directory="/projects/rmorin/projects/gambl-repos/gambl-*/results/{unix_group}/mixcr-1.2/99-outputs/txt/{seq_type_filter}/mixcr.{sample_id}.clonotypes.IGH.igblast.txt", missing_threshold=3)
 #'
 
 collate_igblast_results = function(sample_table,

@@ -15,7 +15,7 @@ collate_igblast_results(
 \arguments{
 \item{sample_table}{A data frame with sample_id as the first column.}
 
-\item{results_directory}{Directory containging MiXCR/IgBLASTN results. Depends on files having the columns "mutatedStatus" and "numMissingRegions"}
+\item{results_directory}{Optional parameter to override default directory specified in config. Path to MiXCR/IgBLAST results files, path requires \code{unix_group}, \code{seq_type_filter} and \code{sample_id} wildcards. Depends on files having the columns "mutatedStatus" and "numMissingRegions".}
 
 \item{missing_threshold}{Limit for missing IGH regions during MiXCR assembly. Default is 2. Higher thresholds may return less accurate mutation status.}
 }
@@ -27,6 +27,6 @@ INTERNAL FUNCTION called by collate_results, not meant for out-of-package usage.
 Identify samples with mutated IGHV from MiXCR + IgBLAST results
 }
 \examples{
-sample_table = collate_igblast_results(sample_table = sample_table, results_directory="*/01-mixcr/{seq_type}/", missing_threshold=3)
+sample_table = collate_igblast_results(sample_table = sample_table, results_directory="/projects/rmorin/projects/gambl-repos/gambl-*/results/{unix_group}/mixcr-1.2/99-outputs/txt/{seq_type_filter}/mixcr.{sample_id}.clonotypes.IGH.igblast.txt", missing_threshold=3)
 
 }
