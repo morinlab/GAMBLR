@@ -27,6 +27,6 @@ INTERNAL FUNCTION called by collate_results, not meant for out-of-package usage.
 Identify samples with mutated IGHV from MiXCR + IgBLAST results
 }
 \examples{
-sample_table = collate_ighv_results(sample_table = sample_table, results_directory=".../01-mixcr/{seq_type}/", missing_threshold=3)
+sample_table = collate_igblast_results(sample_table = sample_table, results_directory="*/01-mixcr/{seq_type}/", missing_threshold=3)
 
 }

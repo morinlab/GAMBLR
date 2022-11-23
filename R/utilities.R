@@ -4114,7 +4114,7 @@ supplement_maf <- function(incoming_maf,
 #' @import tidyverse
 #'
 #' @examples 
-#' sample_table = collate_ighv_results(sample_table = sample_table, results_directory=".../01-mixcr/{seq_type}/", missing_threshold=3)
+#' sample_table = collate_igblast_results(sample_table = sample_table, results_directory="*/01-mixcr/{seq_type}/", missing_threshold=3)
 #'
 
 collate_igblast_results = function(sample_table,
