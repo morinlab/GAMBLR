@@ -1207,6 +1207,95 @@ get_combined_sv = function(min_vaf = 0,
   return(all_sv)
 }
 
+#' Load the manta output for a set of samples from their bedpe files from Manta
+#' 
+#' This is a convenience wrapper function for get_manta_sv_by_sample. See that function for more information.
+#'
+#' @param these_samples_metadata The only required parameter is a metadata table (data frame) that must contain a row for each sample you want the data from. The additional columns the data frame needs to contain, besides sample_id, are: unix_group, genome_build, seq_type, pairing_status
+#'
+#' @return a data frame containing the Manta outputs from all sample_id in these_samples_metadata in a bedpe-like format with additional columns extracted from the VCF column. TODO (this doesn't actually happen yet)
+#' @export 
+#'
+#' @examples
+get_manta_sv_by_samples = function(these_samples_metadata){
+  all_bedpe = list()
+  samples = pull(these_samples_metadata,sample_id)
+  for(sample in samples){
+    this_bedpe = get_manta_sv_by_sample(this_sample_id=sample,these_samples_metadata=these_samples_metadata)
+    if(nrow(this_bedpe)>0){
+      all_bedpe[[sample]]=this_bedpe
+    }
+  }
+  merged_bedpe = do.call("bind_rows",all_bedpe)
+  return(merged_bedpe)
+}
+
+#' Load the manta output for a set of samples from a bedpe file
+#'
+#' @param min_vaf TODO Not yet implemented but see get_manta_sv for details
+#' @param min_score TODO Not yet implemented but see get_manta_sv for details
+#' @param pass TODO Not yet implemented but see get_manta_sv for details
+#' @param this_sample_id The single sample_id you want to obtain the result from. TODO make this optional and pull it from these_samples_metadata if not provided
+#' @param these_samples_metadata A metadata table containing at least one row (metadata for this_sample_id)
+#' @param with_chr_prefix TODO Not yet implemented but see get_manta_sv for details
+#' @param projection TODO Not yet implemented but see get_manta_sv for details
+#'
+#' @return a data frame containing the Manta outputs from this_sample_id in a bedpe-like format with additional columns extracted from the VCF column. TODO (this doesn't actually happen yet)
+
+#' @export
+#'
+#' @examples my_bedpe_df = get_manta_sv_by_sample(this_sample_id="170458-BC01",these_samples_metadata=get_gambl_metadata(seq_type_filter="genome"))
+get_manta_sv_by_sample = function(min_vaf = 0.1,
+                                  min_score = 40,
+                                  pass = TRUE,
+                                  this_sample_id,
+                                  these_samples_metadata,
+                                  with_chr_prefix = FALSE,
+                                  from_flatfile = TRUE,
+                                  projection = "grch37"){
+  remote_session = check_remote_configuration(auto_connect = TRUE)
+  path_template = config::get("results_flatfiles")$sv_manta$template
+  remote_path_template = paste0(config::get("project_base",config="default"),path_template)
+  path_template = paste0(config::get("project_base"),path_template)
+  
+  these_samples_metadata = dplyr::filter(these_samples_metadata,sample_id == this_sample_id)
+  if(!nrow(these_samples_metadata==1)){
+    stop("metadata does not seem to contain your this_sample_id or you didn't provide one")
+  }
+  tumour_sample_id = this_sample_id
+  unix_group = pull(these_samples_metadata,unix_group)
+  seq_type = pull(these_samples_metadata,seq_type)
+  genome_build = pull(these_samples_metadata,genome_build)
+  pairing_status = pull(these_samples_metadata,pairing_status)
+  if(pairing_status=="matched"){
+    normal_sample_id=pull(these_samples_metadata,normal_sample_id)
+  }else{
+    normal_sample_id = config::get("unmatched_normal_ids")[[unix_group]][[seq_type]][[genome_build]]
+  }
+  print(paste(tumour_sample_id,normal_sample_id))
+  bedpe_path = glue::glue(path_template)
+  remote_bedpe_path = glue::glue(remote_path_template)
+  print(bedpe_path)
+  if(remote_session){
+    #need to scp the file here if it's the first time we have requested it at this site
+    print(remote_bedpe_path)
+    if(!file.exists(bedpe_path)){
+      print("need to copy the file here")
+      dirN = dirname(bedpe_path)
+      suppressMessages(suppressWarnings(dir.create(dirN,recursive = T)))
+      ssh::scp_download(ssh_session,remote_bedpe_path,dirN)
+    }
+    bedpe_dat = read_tsv(bedpe_path,comment="##")
+    if(nrow(bedpe_dat)==0){
+      return(bedpe_dat)
+    }
+    colnames(bedpe_dat)[1]="CHROM_A"
+    bedpe_dat = bedpe_dat %>% dplyr::select(1:21) %>%
+      mutate(tumour_sample_id=tumour_sample_id,normal_sample_id=normal_sample_id)
+    bedpe_dat$SCORE = 10
+    return(bedpe_dat)
+  }
+}
 
 #' Retrieve Manta SVs from the database and filter.
 #'
