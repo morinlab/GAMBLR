@@ -228,6 +228,9 @@ region_to_bins = function(chromosome="chr1",start=10000,end=121500000,bin_size=2
 #'
 #' @examples
 get_ssh_session = function(host="gphost01.bcgsc.ca"){
+  if(!is.null(config::get("host"))){
+    host = config::get("host")
+  }
   if (!requireNamespace("ssh", quietly = TRUE)) {
     warning("The ssh package must be installed to use this functionality")
     #Either exit or do something that does not require ssh
