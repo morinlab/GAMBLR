@@ -11,7 +11,7 @@ get_cn_segments(
   qend,
   projection = "grch37",
   this_seq_type = "genome",
-  remove_chr_prefix = FALSE,
+  with_chr_prefix = FALSE,
   streamlined = FALSE,
   from_flatfile = TRUE
 )
@@ -29,7 +29,7 @@ get_cn_segments(
 
 \item{this_seq_type}{Seq type for returned Cn segments. Currently, only genome is supported. Capture samples will be added once processed through CNV protocols.}
 
-\item{remove_chr_prefix}{Prepend all chromosome names with chr (required by some downstream analyses). Default is FALSE.}
+\item{with_chr_prefix}{Boolean parameter for toggling if chr prefixes should be present in the return, default is FLASE.}
 
 \item{streamlined}{Return a basic rather than full MAF format.}
 
@@ -45,20 +45,12 @@ Retrieve all copy number segments from the GAMBL database that overlap with a si
 #Example using chromosome, qstart and qend parameters:
 segments_region_grch37 = get_cn_segments(chromosome = "chr8",
                                          qstart = 128723128,
-                                         qend = 128774067,
-                                         projection = "grch37", 
-                                         this_seq_type = "genome", 
-                                         remove_chr_prefix = FALSE, 
-                                         from_flatfile = TRUE, 
-                                         streamlined = FALSE) 
+                                         qend = 128774067) 
                                     
 #Example using the regions parameter:
 segments_region_hg38 = get_cn_segments(region = "chr8:128,723,128-128,774,067",
                                        projection = "hg38", 
-                                       this_seq_type = "genome", 
-                                       remove_chr_prefix = TRUE, 
-                                       from_flatfile = TRUE, 
-                                       streamlined = FALSE) 
+                                       with_chr_prefix = TRUE) 
 
 
 }

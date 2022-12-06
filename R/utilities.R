@@ -2398,7 +2398,8 @@ get_gambl_colours = function(classification = "all",
         "Translation_Start_Site" = unname(blood_cols["Lavendar"]),
         "Splice_Site" = unname(blood_cols["Orange"]),
         "Splice_Region" = unname(blood_cols["Orange"]),
-        "3'UTR" = unname(blood_cols["Yellow"]))
+        "3'UTR" = unname(blood_cols["Yellow"]),
+        "Silent" = "#A020F0")
 
   all_colours[["rainfall"]] =
     c(

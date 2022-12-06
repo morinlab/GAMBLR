@@ -1507,14 +1507,13 @@ prettyOncoplot = function(maftools_obj,
       grid.rect(x, y, w-unit(spacing, "pt"), h*height_scaling,
                 gp = gpar(fill = col["Missense_Mutation"], col = box_col))
     },
-    #small green
-    Silent = function(x, y, w, h) {
-      grid.rect(x, y, w-unit(spacing, "pt"), h*height_scaling,
-                gp = gpar(fill = col["purple"], col = box_col))
-    },
     hot_spot = function(x, y, w, h) {
       grid.rect(x, y, w-unit(spacing, "pt"), (height_scaling/5)*h,
                 gp = gpar(fill = "white", col = box_col))
+    },
+    Silent = function(x, y, w, h) {
+      grid.rect(x, y, w-unit(spacing, "pt"), (height_scaling/5)*h,
+                gp = gpar(fill = col["Silent"], col = box_col))
     }
   )
   #automagically assign colours for other metadata columns.
@@ -1613,8 +1612,6 @@ prettyOncoplot = function(maftools_obj,
   if (! is.null(custom_colours)){
     colours = custom_colours
   }
-
-  colours[["Silent"]] = "#A020F0"
 
   if(highlightHotspots){
     hot_samples = dplyr::filter(maftools_obj@data, hot_spot == TRUE & Hugo_Symbol %in% genes) %>%
@@ -2050,8 +2047,8 @@ ashm_multi_rainbow_plot = function(regions_bed,
         ggplot() +
         geom_point(aes(x = start, y = sample_id, colour = classification), alpha = 0.4, size = 0.6) +
         labs(title = "", subtitle = "", x = "", y = "Sample") +
-        theme_cowplot() + 
-        theme(axis.text.y = element_blank(), axis.ticks.y = element_blank(), plot.margin = margin(1,1,1,1, "cm")) +
+        theme_Morons() + 
+        theme(axis.text.y = element_blank(), axis.ticks.y = element_blank(), plot.margin = margin(1,1,1,1, "cm"), title = element_blank(), plot.subtitle = element_blank(), axis.title.x = element_blank()) +
         facet_wrap(~region_name, scales = "free_x") +
         guides(color = guide_legend(reverse = TRUE,
                                     override.aes = list(size = 3),
@@ -2274,9 +2271,9 @@ ashm_rainbow_plot = function(mutations_maf,
   }
 
   p = p +
-    labs(title = "", subtitle = "", x = "", y = "Sample") +
-    theme_cowplot() + 
-    theme(plot.margin = margin(1,1,1,1, "cm"))
+    labs(y = "Sample") +
+    theme_Morons() + 
+    theme(plot.margin = margin(1,1,1,1, "cm"), title = element_blank(), plot.subtitle = element_blank(), axis.title.x = element_blank())
   
   if(hide_ids){
     p = p + theme(axis.text.y = element_blank(), axis.ticks.y = element_blank())

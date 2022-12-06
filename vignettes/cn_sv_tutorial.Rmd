@@ -82,7 +82,7 @@ my_segments_hg38 = get_cn_segments(chromosome = "8",
                                 qend = 128774067, 
                                 projection = "hg38", 
                                 this_seq_type = "genome", 
-                                remove_chr_prefix = TRUE, 
+                                with_chr_prefix = TRUE, 
                                 streamlined = TRUE, 
                                 from_flatfile = TRUE)
 
@@ -95,7 +95,7 @@ myc_cns = get_cn_segments(region = myc_region,
                           this_seq_type = "genome", 
                           streamlined = FALSE, 
                           from_flatfile = TRUE, 
-                          remove_chr_prefix = FALSE) %>% dplyr::filter(CN != 2)
+                          with_chr_prefix = FALSE) %>% dplyr::filter(CN != 2)
 
 #peek return
 paged_table(myc_cns, options = list(rows.print = 5, cols.print = 5))
