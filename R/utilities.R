@@ -4390,7 +4390,12 @@ classify_fl <- function(
 #' @return data frame with classification, binary matrix used in classification, or both
 #' @export
 #' @import data.table circlize tidyverse
-
+#'
+#' @examples
+#' test_meta <- get_gambl_metadata(case_set = "DLBCL-unembargoed")
+#' predictions <- classify_dlbcl_chapuy(these_samples_metadata = test_meta)
+#' matrix_and_predictions <- classify_dlbcl_chapuy(these_samples_metadata = test_meta, output = "both")
+#'
 classify_dlbcl_chapuy <- function(
     these_samples_metadata,
     maf_data,
