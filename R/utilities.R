@@ -4386,7 +4386,19 @@ classify_fl <- function(
 
 }
 
-
+#' Classify DLBCLs according to genetic subgroups of Chapuy et al.
+#'
+#' Use the feature weights from NMF model to assemble the binary matrix and classify DLBCL tumors based on C0-C5 system of Chapuy et al
+#'
+#' @param these_samples_metadata The metadata data frame that contains sample_id column with ids for the samples to be classified.
+#' @param maf_data The MAF data frame to be used for matrix assembling. At least must contain the first 45 columns of standard MAF format.
+#' @param seg_data The SEG data frame to be used for matrix assembling. Must be of standard SEG formatting, for example, as returned by get_sample_cn_segments.
+#' @param sv_data The SV data frame to be used for matrix assembling. Must be of standard BEDPE formatting, for example, as returned by get_combined_sv.
+#' @param seq_type The seq_type of the samples. Only used to retrerive data through GAMBLR when it is not provided. Defaults to grch37.
+#' @param projection The projection of the samples. Only used to retrerive data through GAMBLR when it is not provided. Defaults to genome.
+#' @param output The output to be returned after prediction is done. Can be one of predictoins, matrix, or both. Defaults to predictions.
+#' @param adjust_ploidy Whether to perform ploidy adjustment for the CNV data. Defaults to TRUE (recommended).
+#'
 #' @return data frame with classification, binary matrix used in classification, or both
 #' @export
 #' @import data.table circlize tidyverse
