@@ -50,5 +50,5 @@ In most situations, this should never need to be run with subset_from_merge = TR
 patients = c("00-14595", "00-15201", "01-12047")
 patients_maf = get_ssm_by_patients(these_patient_ids = patients, seq_type = "genome", subset_from_merge = FALSE)
 patient_meta = get_gambl_metadata(seq_type_filter = "genome") \%>\% dplyr::filter(patient_id \%in\% patients)
-patients_maf_2 = get_ssm_by_patients(these_samples_metadata = patient_meta,subset_from_merge = FALSE) 
+patients_maf_2 = get_ssm_by_patients(these_samples_metadata = patient_meta,subset_from_merge = FALSE)
 }
