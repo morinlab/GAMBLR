@@ -4387,7 +4387,9 @@ classify_fl <- function(
 }
 
 
-
+#' @return data frame with classification, binary matrix used in classification, or both
+#' @export
+#' @import data.table circlize tidyverse
 
 classify_dlbcl_chapuy <- function(
     these_samples_metadata,
