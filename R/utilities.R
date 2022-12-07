@@ -2357,8 +2357,21 @@ get_gambl_colours = function(classification = "all",
                                       "aSCI"="#D66B1F",
                                       "aSEL"="#C41230",
                                       "MCaP"="#5F8CFF",
-                                      "BNZ"="#8870B6"
+                                      "BNZ"="#8870B6",
+                                      "EZB"="#721F0F",
+                                      "ST2"="#C41230",
+                                      "UNCLASS"="#05631E"
                                       )
+
+  all_colours[["chapuy_classifier"]] = c(
+    C0 = "#bebebe",
+    C1 = "#803D99",
+    C2 ="#00A2D2",
+    C3 = "#F39123",
+    C4 = "#50BFAD",
+    C5 = "#DE292A"
+  )
+
   all_colours[["lymphgen"]] = c("EZB-MYC" = "#52000F",
                                 "EZB" = "#721F0F",
                                 "EZB-COMP" = "#C7371A",
