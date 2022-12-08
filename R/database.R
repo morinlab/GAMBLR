@@ -1706,7 +1706,16 @@ get_sample_cn_segments = function(this_sample_id,
 
   all_segs = dplyr::mutate(all_segs, CN = round(2*2^log.ratio))
 
-  if(!with_chr_prefix){all_segs = all_segs %>% dplyr::mutate(chrom = gsub("chr", "", chrom))}
+  #deal with chr prefixes
+  if(!with_chr_prefix){
+    all_segs = all_segs %>%
+      dplyr::mutate(chrom = gsub("chr", "", chrom))
+  }else{
+    if(!grepl("chr", all_segs$chrom)){
+      all_segs$chrom = paste0("chr", all_segs$chrom)
+      }
+  }
+  
   if(streamlined){all_segs = dplyr::select(all_segs, ID, CN)}
 
   return(all_segs)
