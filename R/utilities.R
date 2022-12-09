@@ -1636,7 +1636,7 @@ assign_cn_to_ssm = function(this_sample,
                             projection = "grch37"){
 
   seq_type = this_seq_type
-  
+
   remote_session = check_remote_configuration(auto_connect = TRUE)
   database_name = config::get("database_name")
   project_base = config::get("project_base")
@@ -4146,7 +4146,7 @@ supplement_maf <- function(incoming_maf,
 #' @param these_samples_metadata The metadata data frame that contains sample_id column with ids for the samples to be classified.
 #' @param maf_data The MAF data frame to be used for matrix assembling. At least must contain the first 45 columns of standard MAF format.
 #' @param model The RF model. Classifier from the paper describing cFL is used. It is not recommended to change the value of this parameter.
-#' @param seq_type The seq_type of the samples. Only really used to retrerive mutations when maf data is not provided and to be retreived through GAMBLR. Defaults to genome.
+#' @param this_seq_type The seq_type of the samples. Only really used to retrerive mutations when maf data is not provided and to be retreived through GAMBLR. Defaults to genome.
 #' @param output The output to be returned after prediction is done. Can be one of predictoins, matrix, or both. Defaults to predictions.
 #'
 #' @return data frame with classification, binary matrix used in classification, or both
@@ -4162,7 +4162,7 @@ classify_fl <- function(
     these_samples_metadata,
     maf_data,
     model = RFmodel_FL,
-    seq_type = "genome",
+    this_seq_type = "genome",
     output = "predictions"
 ) {
 
@@ -4209,7 +4209,7 @@ classify_fl <- function(
        )
        maf_data =  get_ssm_by_samples(
             these_samples_metadata = these_samples_metadata,
-            seq_type = seq_type,
+            seq_type = this_seq_type,
             subset_from_merge = TRUE,
             augmented = FALSE
        )
@@ -4243,7 +4243,7 @@ classify_fl <- function(
         message(
             "The metadata was not provided. Retreiving the metadata through GAMBLR..."
         )
-        these_samples_metadata <- get_gambl_metadata(seq_type_filter = seq_type) %>%
+        these_samples_metadata <- get_gambl_metadata(seq_type_filter = this_seq_type) %>%
             filter(sample_id %in% maf_data$Tumor_Sample_Barcode)
 
     }else{
@@ -4315,7 +4315,7 @@ classify_fl <- function(
         ashm_features_bed,
         maf_data = maf_data,
         these_samples_metadata = these_samples_metadata,
-        seq_type = seq_type
+        seq_type = this_seq_type
     )
 
     ashm_matrix[ashm_matrix<=5] = 0
@@ -4414,7 +4414,7 @@ classify_fl <- function(
 #' @param maf_data The MAF data frame to be used for matrix assembling. At least must contain the first 45 columns of standard MAF format.
 #' @param seg_data The SEG data frame to be used for matrix assembling. Must be of standard SEG formatting, for example, as returned by get_sample_cn_segments.
 #' @param sv_data The SV data frame to be used for matrix assembling. Must be of standard BEDPE formatting, for example, as returned by get_combined_sv.
-#' @param seq_type The seq_type of the samples. Only used to retrerive data through GAMBLR when it is not provided. Defaults to grch37.
+#' @param this_seq_type The seq_type of the samples. Only used to retrerive data through GAMBLR when it is not provided. Defaults to grch37.
 #' @param projection The projection of the samples. Only used to retrerive data through GAMBLR when it is not provided. Defaults to genome.
 #' @param output The output to be returned after prediction is done. Can be one of predictoins, matrix, or both. Defaults to predictions.
 #' @param adjust_ploidy Whether to perform ploidy adjustment for the CNV data. Defaults to TRUE (recommended).
@@ -4433,7 +4433,7 @@ classify_dlbcl_chapuy <- function(
     maf_data,
     seg_data,
     sv_data,
-    seq_type = "genome",
+    this_seq_type = "genome",
     projection = "grch37",
     output = "predictions",
     adjust_ploidy = TRUE
@@ -4443,7 +4443,7 @@ classify_dlbcl_chapuy <- function(
         message("No metadata is provided.")
         message("Will retreive metadata for all DLBCL genomes in GAMBL.")
         these_samples_metadata <- get_gambl_metadata(
-            seq_type_filter = seq_type
+            seq_type_filter = this_seq_type
         ) %>%
         dplyr::filter(pathology == "DLBCL")
     }
@@ -4454,7 +4454,7 @@ classify_dlbcl_chapuy <- function(
         message("Retreiving the mutations data from GAMBL...")
         maf_data =  get_ssm_by_samples(
             these_samples_metadata = these_samples_metadata,
-            seq_type = seq_type,
+            seq_type = this_seq_type,
             projection = projection,
             subset_from_merge = TRUE,
             augmented = FALSE
