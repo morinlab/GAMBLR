@@ -33,7 +33,7 @@ find_expected_outputs = function(targ_df,
     if(missing(targ_df)){
       filename_end_pattern = ".somaticSV.bedpe"
 
-      targ_df = read_tsv(target_path, col_names = c("file")) %>%
+      targ_df = suppressMessages(read_tsv(target_path, col_names = c("file"))) %>%
         dplyr::filter(str_detect(file, pattern = filename_end_pattern))
 
       targ_df = mutate(targ_df, file_path = paste0(repo_base, file)) %>%
@@ -55,7 +55,7 @@ find_expected_outputs = function(targ_df,
   }else if(tool_name == "gridss"){
     filename_end_pattern = ".gridss_somatic_filtered.bedpe"
 
-    targ_df = read_tsv(target_path, col_names = c("file")) %>%
+    targ_df = suppressMessages(read_tsv(target_path, col_names = c("file"))) %>%
       dplyr::filter(str_detect(file, pattern = filename_end_pattern))
 
     targ_df = mutate(targ_df, file_path = paste0(repo_base, file)) %>%
@@ -190,7 +190,7 @@ populate_each_tool_result = function(tool,
     parse_sequenza = function(sequenza_files){
 
       seq_data=sequenza_files %>%
-        purrr::map(read_tsv) %>% #read each file into a list of tibbles
+        purrr::map(suppressMessages(read_tsv)) %>% #read each file into a list of tibbles
         purrr::map(head, 1) %>% #just keep the first line
         purrr::reduce(rbind) %>% #rbind the elements all back into one
         dplyr::rename(sequenza_cellularity = cellularity, sequenza_ploidy = ploidy) #change the column names
@@ -341,7 +341,7 @@ populate_each_tool_result = function(tool,
     # parse purity and ploidy values from copy number caller and add to database
     parse_batt = function(batt_file){
       batt_data =  batt_file %>%
-        purrr::map(read_tsv) %>%
+        purrr::map(suppressMessages(read_tsv)) %>%
         purrr::reduce(rbind) %>%
         dplyr::rename(battenberg_cellularity = cellularity, battenberg_ploidy = ploidy, battenberg_psi = psi)
 
@@ -414,7 +414,7 @@ read_merge_manta_with_liftover = function(bedpe_paths = c(),
         print("using liftOver")
         svbed = liftover_bedpe(full_path) #load and convert to grch37 coordinates
       }else{
-        svbed = read_tsv(full_path, comment = "##", col_types = "cddcddccccccccccccccccc")
+        svbed = suppressMessages(read_tsv(full_path, comment = "##", col_types = "cddcddccccccccccccccccc"))
       }
 
       this_patient = colnames(svbed)[23]
@@ -488,7 +488,7 @@ process_all_manta_bedpe = function(file_df,
 
   process_manta = function(bedpe_file, liftover_to_hg19 = FALSE, liftover_to_hg38 = FALSE, only_return_missing = FALSE, projection = "grch37"){
     cnames = c("CHROM_A", "START_A", "END_A", "CHROM_B", "START_B", "END_B", "NAME", "SOMATIC_SCORE", "STRAND_A", "STRAND_B", "TYPE", "FILTER", "VAF_tumour", "VAF_normal", "DP_tumour", "DP_normal", "tumour_sample_id", "normal_sample_id", "pair_status")
-    svbed = read_tsv(bedpe_file, comment = "##", col_types = "cddcddccccccccccccccccc")
+    svbed = suppressMessages(read_tsv(bedpe_file, comment = "##", col_types = "cddcddccccccccccccccccc"))
     this_patient = colnames(svbed)[23]
     this_normal = colnames(svbed)[22]
 
@@ -513,7 +513,7 @@ process_all_manta_bedpe = function(file_df,
     if(file.exists(out_file)){
       if(!only_return_missing){
         print(paste("LOADING", out_file))
-        svbed = read_tsv(out_file, col_types = "ccccccccccccnnnnccc", col_names = cnames)
+        svbed = suppressMessages(read_tsv(out_file, col_types = "ccccccccccccnnnnccc", col_names = cnames))
         return(svbed)
       }
       else{
@@ -898,7 +898,7 @@ tidy_gene_expression = function(return_df = FALSE){
   tidy_expression_file = config::get("results_merged")$tidy_expression_file
   print("Loading and tidying the full matrix file...")
 
-  ex_tidy = read_tsv(ex_matrix_file) %>%
+  ex_tidy = suppressMessages(read_tsv(ex_matrix_file)) %>%
     dplyr::select(-gene_id) %>%
     dplyr::rename("Hugo_Symbol" = "hgnc_symbol") %>%
     pivot_longer(-c(Hugo_Symbol, ensembl_gene_id), names_to = "sample_id", values_to = "expression")
@@ -1019,10 +1019,10 @@ liftover_bedpe = function(bedpe_file,
   if(!missing(bedpe_file)){
     if(missing(col_names)){
       message("imposing column names")
-      original_bedpe = read_tsv(bedpe_file, comment = "##", col_types="cddcddccccccccccccccccc")
+      original_bedpe = suppressMessages(read_tsv(bedpe_file, comment = "##", col_types="cddcddccccccccccccccccc"))
     }else{
       message(paste("using column names", col_names, sep = ": "))
-      original_bedpe = read_tsv(bedpe_file, col_names = col_names, col_types = col_types)
+      original_bedpe = suppressMessages(read_tsv(bedpe_file, col_names = col_names, col_types = col_types))
     }
   }else{
     original_bedpe = bedpe_df
@@ -1107,7 +1107,7 @@ liftover_bedpe = function(bedpe_file,
     first_ok = subset(lifted, no_problem)
 
     output = rtracklayer::export(first_ok, format = "bed") %>%
-      read_tsv(col_names = c("chrom", "start", "end", "score", "strand", "nothing", "s1", "e1", "junk", "more", "stuff", "nada")) %>%
+      suppressMessages(read_tsv(col_names = c("chrom", "start", "end", "score", "strand", "nothing", "s1", "e1", "junk", "more", "stuff", "nada"))) %>%
       dplyr::select("chrom", "start", "end")
 
     return(output)

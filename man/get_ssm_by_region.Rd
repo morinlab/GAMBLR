@@ -18,8 +18,8 @@ get_ssm_by_region(
   augmented = TRUE,
   min_read_support = 3,
   mode = "slms-3",
-  maf_columns = c("Chromosome", "Start_Position", "End_Position", "Tumor_Sample_Barcode",
-    "t_alt_count"),
+  maf_columns = c("Chromosome", "Start_Position", "End_Position",
+    "Tumor_Sample_Barcode", "t_alt_count"),
   maf_column_types = "ciici",
   verbose = FALSE
 )
