@@ -16,21 +16,14 @@ count_ssm_by_region(
 )
 }
 \arguments{
-\item{region}{}
-
-\item{chromosome}{}
-
-\item{start}{}
-
-\item{end}{}
-
 \item{all_mutations_in_these_regions}{If you are calling this function many times (e.g. bins spanning a larger region), to save a ton of time you are strongly encouraged to provide the output of get_ssm_by_region on the entire region of interest and passing it to this function}
-
-\item{these_samples_metadata}{}
 
 \item{count_by}{Defaults to counting all variants. Specify 'sample_id' if you want to collapse and count only one per sample}
 
 \item{seq_type}{}
+}
+\value{
+
 }
 \description{
 Count the variants in a region with a variety of filtering options

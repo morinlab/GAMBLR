@@ -12,12 +12,6 @@ region_to_bins(
 )
 }
 \arguments{
-\item{chromosome}{}
-
-\item{start}{}
-
-\item{end}{}
-
 \item{bin_size}{}
 }
 \value{

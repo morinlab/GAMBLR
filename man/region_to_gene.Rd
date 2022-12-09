@@ -13,6 +13,9 @@ region_to_gene(region, gene_format = "hugo", genome_build = "grch37")
 
 \item{genome_build}{Reference genome build.}
 }
+\value{
+
+}
 \description{
 Return gennes residing in defined region(s)
 }

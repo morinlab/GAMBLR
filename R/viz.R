@@ -3025,6 +3025,7 @@ splendidHeatmap = function(this_matrix,
   }
 
   m = t(apply(STACKED, 1, function(x) x/sum(x)))
+  m[is.na(m)] <- 0
 
   if(prioritize_ordering_on_numeric & ! is.null(numericMetadataColumns)){ # numeric metadata is provided and is prioritized for column sorting
     used_for_ordering_df = t(base::merge(mat_2 %>%
