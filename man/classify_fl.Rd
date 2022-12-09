@@ -8,7 +8,7 @@ classify_fl(
   these_samples_metadata,
   maf_data,
   model = RFmodel_FL,
-  seq_type = "genome",
+  this_seq_type = "genome",
   output = "predictions"
 )
 }
@@ -19,7 +19,7 @@ classify_fl(
 
 \item{model}{The RF model. Classifier from the paper describing cFL is used. It is not recommended to change the value of this parameter.}
 
-\item{seq_type}{The seq_type of the samples. Only really used to retrerive mutations when maf data is not provided and to be retreived through GAMBLR. Defaults to genome.}
+\item{this_seq_type}{The seq_type of the samples. Only really used to retrerive mutations when maf data is not provided and to be retreived through GAMBLR. Defaults to genome.}
 
 \item{output}{The output to be returned after prediction is done. Can be one of predictoins, matrix, or both. Defaults to predictions.}
 }

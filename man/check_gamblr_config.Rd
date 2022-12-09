@@ -20,12 +20,9 @@ check_gamblr_config(
 
 \item{force_backup}{}
 }
-<<<<<<< HEAD
 \value{
 
 }
-=======
->>>>>>> master
 \description{
 This function is mostly for remote GAMBLRs to ensure they keep their local mirror of the GAMBL data up-to-date. It
 }
