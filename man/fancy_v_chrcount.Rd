@@ -14,6 +14,7 @@ fancy_v_chrcount(
   variant_type_col = 10,
   chromosome_col = 5,
   plot_title = paste0(this_sample),
+  y_interval = 1,
   hide_legend = FALSE,
   plot_subtitle = "Variant Count Distribution Per Chromosome",
   chr_select = paste0("chr", c(1:22)),
@@ -42,6 +43,8 @@ fancy_v_chrcount(
 \item{chromosome_col}{Index of column holding Chromosome (to be used with either maf_data or maf_path).}
 
 \item{plot_title}{Title of plot (default to sample ID).}
+
+\item{y_interval}{Optional parameter for specifying intervals on y-axis.}
 
 \item{hide_legend}{Set to True to remove legend from plot, default is FALSE.}
 

@@ -141,7 +141,7 @@ cache_output = function(result_df,function_name,clobber_mode=F,get_existing = F,
   cache_file_name = paste0(cache_file_name,".tsv")
   if(file.exists(cache_file_name)){
     if(get_existing){
-      result_df = read_tsv(cache_file_name)
+      result_df = suppressMessages(read_tsv(cache_file_name))
       return(result_df)
     }
     if(!clobber_mode){
@@ -1356,7 +1356,7 @@ collate_results = function(sample_table,
     }
 
     #read cached results
-    sample_table = read_tsv(output_file) %>% dplyr::filter(sample_id %in% sample_table$sample_id)
+    sample_table = suppressMessages(read_tsv(output_file) %>% dplyr::filter(sample_id %in% sample_table$sample_id))
 
   }else{
     message("Slow option: not using cached result. I suggest from_cache = TRUE whenever possible")
@@ -1599,13 +1599,16 @@ get_sample_wildcards = function(this_sample_id,seq_type){
 #' @param coding_only Optional. set to TRUE to rescrict to only coding variants.
 #' @param from_flatfile Optional. Instead of the database, load the data from a local MAF and seg file.
 #' @param use_augmented_maf Boolean statement if to use augmented maf, default is FALSE.
+#' @param tool_name name of tool to be sued, default is "battenberg".
 #' @param maf_file Path to maf file.
 #' @param maf_df Optional. Use a maf dataframe instead of a path.
-#' @param seq_file path to seq file.
+#' @param seg_file path to seq file.
 #' @param seg_file_source Specify what copy number calling program the input seg file is from, as it handles ichorCNA differently than WisecondorX, Battenberg, etc.
 #' @param assume_diploid Optional. If no local seg file is provided, instead of defaulting to a GAMBL sample, this parameter annotates every mutation as copy neutral.
 #' @param genes Genes of interest.
 #' @param include_silent Logical parameter indicating whether to include siment mutations into coding mutations. Default is FALSE
+#' @param this_seq_type Specified seq type for returned data.
+#' @param projection specified genome projection that returned data is in reference to.
 #'
 #' @return A list containing a data frame (MAF-like format) with two extra columns:
 #' log.ratio is the log ratio from the seg file (NA when no overlap was found)
@@ -1629,9 +1632,12 @@ assign_cn_to_ssm = function(this_sample,
                             assume_diploid = FALSE,
                             genes,
                             include_silent = FALSE,
-                            seq_type="genome",
-                            projection="grch37"){
-  remote_session = check_remote_configuration(auto_connect = TRUE )
+                            this_seq_type = "genome",
+                            projection = "grch37"){
+
+  seq_type = this_seq_type
+  
+  remote_session = check_remote_configuration(auto_connect = TRUE)
   database_name = config::get("database_name")
   project_base = config::get("project_base")
   if(!include_silent){
@@ -1654,7 +1660,7 @@ assign_cn_to_ssm = function(this_sample,
     tumour_sample_id = wildcards$tumour_sample_id
     normal_sample_id = wildcards$normal_sample_id
     pairing_status = wildcards$pairing_status
-    maf_sample = get_ssm_by_sample(this_sample_id = this_sample, augmented = use_augmented_maf)
+    maf_sample = get_ssm_by_sample(this_sample_id = this_sample, this_seq_type = this_seq_type, augmented = use_augmented_maf)
 
   }else{
     #get all the segments for a sample and filter the small ones then assign CN value from the segment to all SSMs in that region
@@ -1673,7 +1679,7 @@ assign_cn_to_ssm = function(this_sample,
   }
 
   if(!missing(seg_file)){
-    seg_sample = read_tsv(seg_file) %>%
+    seg_sample = suppressMessages(read_tsv(seg_file)) %>%
       dplyr::mutate(size = end - start) %>%
       dplyr::filter(size > 100)
 
@@ -1728,7 +1734,7 @@ assign_cn_to_ssm = function(this_sample,
       message('Sys.setenv(R_CONFIG_ACTIVE = "remote")')
     }
 
-    seg_sample = read_tsv(battenberg_file) %>%
+    seg_sample = suppressMessages(read_tsv(battenberg_file)) %>%
       as.data.table() %>%
       dplyr::mutate(size = end - start) %>%
       dplyr::filter(size > 100) %>%
@@ -1951,7 +1957,7 @@ refresh_full_table = function(table_name,
                               connection,
                               file_path){
 
-  table_data = read_tsv(file_path)
+  table_data = suppressMessages(read_tsv(file_path))
   dbWriteTable(con, table_name, table_data, overwrite = TRUE)
   print(paste("POPULATING table:", table_name, "USING path:", file_path))
 }
@@ -2004,7 +2010,7 @@ sanity_check_metadata = function(){
   all_metadata_df = all_metadata_info %>%
     column_to_rownames(var = "key")
   #all samples with different seq_type and protocol must have a unique sample_id
-  sample_df = read_tsv(all_metadata_df["samples", "file"])
+  sample_df = suppressMessages(read_tsv(all_metadata_df["samples", "file"]))
   tumour_samples = sample_df %>%
     dplyr::select(patient_id, sample_id, biopsy_id, seq_type, protocol) %>%
     dplyr::filter(!is.na(biopsy_id))
@@ -2048,7 +2054,7 @@ collate_ancestry = function(sample_table,
   if(missing(somalier_output)){
     somalier_output = "/projects/rmorin/projects/gambl-repos/gambl-rmorin/results/gambl/somalier_current/02-ancestry/2020_08_07.somalier-ancestry.tsv"
   }
-  somalier_all = read_tsv(somalier_output)
+  somalier_all = suppressMessages(read_tsv(somalier_output))
   somalier_all = mutate(somalier_all, sample_id = str_remove(`#sample_id`, pattern = ":.+")) %>%
     dplyr::select(-`#sample_id`, -given_ancestry)
   somalier_all = dplyr::select(somalier_all, sample_id, predicted_ancestry, PC1, PC2, PC3, PC4, PC5)
@@ -2071,7 +2077,7 @@ collate_extra_metadata = function(sample_table,
                                   file_path){
 
   file_path = "/projects/rmorin/projects/gambl-repos/gambl-mutect2-lhilton/experiments/2021-04-21-Trios-MiXCR/trios_relapse_timing.tsv"
-  extra_df = read_tsv(file_path)
+  extra_df = suppressMessages(read_tsv(file_path))
   sample_table = left_join(sample_table, extra_df, by = c("sample_id" = "biopsy_id"))
 }
 
@@ -2405,7 +2411,8 @@ get_gambl_colours = function(classification = "all",
         "Translation_Start_Site" = unname(blood_cols["Lavendar"]),
         "Splice_Site" = unname(blood_cols["Orange"]),
         "Splice_Region" = unname(blood_cols["Orange"]),
-        "3'UTR" = unname(blood_cols["Yellow"]))
+        "3'UTR" = unname(blood_cols["Yellow"]),
+        "Silent" = "#A020F0")
 
   all_colours[["rainfall"]] =
     c(
@@ -2732,7 +2739,7 @@ FtestCNV = function(gistic_lesions,
     return(NULL)
   }
   # read lesions from gistic utput to collect event/case
-  lesions = readr::read_tsv(gistic_lesions, col_names = TRUE) %>%
+  lesions = suppressMessages(read_tsv(gistic_lesions, col_names = TRUE)) %>%
     dplyr::filter(!grepl("CN", `Unique Name`)) %>%
     dplyr::select(-tail(names(.), 1), -`Residual q values after removing segments shared with higher peaks`, -`Broad or Focal`, -`Amplitude Threshold`, -`q values`) %>%
     dplyr::filter (! Descriptor %in% blacklisted_regions)
@@ -3197,7 +3204,7 @@ collate_lymphgen = function(these_samples_metadata,
     if(!file.exists(lg_path)){ #ignore missing flavours.
       return()
     }
-    lg_df = read_tsv(lg_path) %>%
+    lg_df = suppressMessages(read_tsv(lg_path)) %>%
       mutate(flavour = flavour) #append the flavour in its own column called "flavour".
     return(lg_df)
   }
@@ -3529,7 +3536,7 @@ calculate_pga = function(this_seg,
   # work out the seg file
   if (!missing(seg_path)) {
     message(paste0("Reading thhe seg file from ", seg_path))
-    this_seg = read_tsv(seg_path)
+    this_seg = suppressMessages(read_tsv(seg_path))
   }
 
   # preserve the sample ids to account later for those with 0 PGA
@@ -3640,7 +3647,7 @@ adjust_ploidy = function(this_seg,
   # if the seg is a local file, read it in
   if (!missing(seg_path)) {
     message(paste0("Reading thhe seg file from ", seg_path))
-    this_seg = read_tsv(seg_path)
+    this_seg = suppressMessages(read_tsv(seg_path))
   }
 
   # ensure consistent chromosome prefixing
@@ -3843,7 +3850,7 @@ cnvKompare = function(patient_id,
 
   # get the multi-sample seg file
   if (!missing(seg_path)) {
-    these_samples_seg = read_tsv(seg_path) %>%
+    these_samples_seg = suppressMessages(read_tsv(seg_path)) %>%
       `names<-`(c(ID, chrom, start, end, LOH_flag, log.ratio)) %>%
       dplyr::mutate(CN = (2 * 2 ^ log.ratio))
   } else if (!missing(this_seg)) {

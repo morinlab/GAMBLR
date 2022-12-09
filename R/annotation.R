@@ -63,7 +63,7 @@ annotate_ssm_blacklist = function(mutations_df,
         message('Sys.setenv(R_CONFIG_ACTIVE = "remote")')
       }
 
-      lifted_blacklist = read_tsv(full_path, col_names = c("chrpos", "blacklist_count"),col_types="ci")
+      lifted_blacklist = suppressMessages(read_tsv(full_path, col_names = c("chrpos", "blacklist_count"),col_types="ci"))
       lifted_blacklist = lifted_blacklist %>%
         separate(chrpos, into = c("Chromosome", "Start_Position"), sep = ":") %>% mutate(Start_Position = as.numeric(Start_Position))
   
@@ -122,6 +122,7 @@ annotate_ssm_blacklist = function(mutations_df,
   }
   return(mutations_df)
 }
+
 
 
 #' Annotates recurrent CNVs.
