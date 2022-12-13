@@ -281,3 +281,97 @@ gsub(
 )
 
 usethis::use_data(chapuy_features, overwrite = TRUE)
+
+
+# Lacy classifier
+
+# RF model
+RFmodel_Lacy <- system.file(
+  "extdata",
+  "Lacy_rf_model.rds",
+  package="GAMBLR") %>%
+  readRDS
+
+# Features
+lacy_features <- list()
+
+lacy_features$all <- system.file(
+  "extdata",
+  "lacy_weights.tsv",
+  package="GAMBLR") %>%
+  read_tsv
+
+lacy_features$cnv <-
+lacy_features$all$Feature[
+    str_detect(lacy_features$all$Feature, "amp|del")
+  ] %>%
+  as.data.frame %>%
+  dplyr::rename(
+    "Gene" = "."
+  ) %>%
+  dplyr::mutate(
+    Feature = Gene,
+    CNV = ifelse(
+      grepl(
+        "amp",
+        Gene
+      ),
+      "AMP",
+      "DEL"
+    ),
+    Dual = ifelse(
+      grepl(
+        "_OR_",
+        Gene
+      ),
+      "TRUE",
+      "FALSE"
+    ),
+    Gene = gsub(
+    '[_][A-Za-z]*',
+    "",
+    Gene)
+  )
+
+lacy_features$shm <-
+  lacy_features$all$Feature[
+    str_detect(lacy_features$all$Feature, "_S")
+  ]
+
+lacy_features$hotspots <-
+  lacy_features$all$Feature[
+    str_detect(lacy_features$all$Feature, "_noncan")
+  ] %>%
+  gsub(
+    "_noncan",
+    "",
+    .
+  )
+
+lacy_features$ssm <-
+  lacy_features$all$Feature[
+    str_detect(
+      lacy_features$all$Feature,
+      "_noncan|_S|amp|del",
+      negate = TRUE)
+  ] %>%
+  gsub(
+    '[_][0-9]*',
+    "",
+    .
+  )
+
+lacy_features$ssm <-
+c(
+  lacy_features$ssm,
+  lacy_features$cnv %>%
+      dplyr::filter(
+        Dual == "TRUE"
+      ) %>%
+      pull(
+        Gene
+      )
+) %>% sort
+
+usethis::use_data(RFmodel_Lacy, overwrite = TRUE)
+usethis::use_data(lacy_features, overwrite = TRUE)
