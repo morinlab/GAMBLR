@@ -336,7 +336,57 @@ lacy_features$all$Feature[
 lacy_features$shm <-
   lacy_features$all$Feature[
     str_detect(lacy_features$all$Feature, "_S")
-  ]
+  ] %>%
+  as.data.frame %>%
+  mutate(
+    Gene = gsub(
+      "_S",
+      "",
+      `.`
+    )
+  ) %>%
+  `names<-`(c(
+    "Feature",
+    "Gene"
+  )) %>%
+  mutate(
+    genome_build = "grch37"
+  )
+
+lacy_features$grch37$shm <-
+lacy_features$shm %>%
+    left_join(
+        .,
+        grch37_gene_coordinates,
+        by=c("Gene"="gene_name")
+    ) %>%
+    dplyr::select(chromosome, start, end, everything()) %>%
+    arrange(chromosome, start, end) %>%
+    dplyr::mutate(
+      feature_start = start - 2000,
+      feature_end = start + 2000,
+    )
+
+lacy_features$hg38$shm <-
+hg38_gene_coordinates %>%
+    dplyr::filter(
+        ensembl_gene_id %in% c(
+            lacy_features$grch37$shm$ensembl_gene_id,
+            "ENSG00000278677",
+            "ENSG00000273802",
+            "ENSG00000286522",
+            "ENSG00000273983")
+    ) %>%
+    dplyr::mutate(
+        Feature = lacy_features$grch37$shm$Feature,
+        genome_build = "hg38",
+        Gene = gene_name,
+        feature_start = start-2000,
+        feature_end = start+2000,
+    ) %>%
+    select(
+        colnames(lacy_features$grch37$shm)
+    )
 
 lacy_features$hotspots <-
   lacy_features$all$Feature[
