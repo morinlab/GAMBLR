@@ -4284,41 +4284,6 @@ classify_fl <- function(
             )
     }
 
-    ssm_available <- colnames(ssm_matrix)
-    ssm_requested <- c(
-        ssm_features,
-        hotspot_features
-    )
-    ssm_missing <- setdiff(
-        ssm_requested,
-        ssm_available
-    )
-
-    if(length(ssm_missing)>0){
-        message(
-            "ATTENTION: Not all features are available in maf data!"
-        )
-        message(
-            paste0(
-                "A total of ",
-                length(
-                   ssm_missing
-                ),
-                " features are missing:"
-            )
-        )
-        message(
-            paste(
-                ssm_missing,
-                collapse=", "
-            )
-        )
-        message(
-            "They will be set to 0, which may affect model performance."
-        )
-        ssm_matrix[,ssm_missing] <- 0
-    }
-
     # Generate binary matrix for ashm
     ashm_matrix <- get_ashm_count_matrix(
         ashm_features_bed,
@@ -4337,43 +4302,25 @@ classify_fl <- function(
             "SGK1_TSS" = "SGK1_TSS_1"
     )
 
-    ashm_available <- colnames(ashm_matrix)
-
-    ashm_missing <- setdiff(
-        ashm_features,
-        ashm_available
-    )
-
-    if(length(ashm_missing)>0){
-        message(
-            "ATTENTION: Not all aSHM features are available in maf data!"
-        )
-        message(
-            paste0(
-                "A total of ",
-                length(
-                   ashm_missing
-                ),
-                " aSHM features are missing:"
-            )
-        )
-        message(
-            paste(
-                ashm_missing,
-                collapse=", "
-            )
-        )
-        message(
-            "They will be set to 0, which may affect model performance."
-        )
-        ashm_matrix[,ashm_missing] <- 0
-    }
 
     # Combine together the SSM, hotspots, and aSHM
     assembled_matrix <- bind_cols(
             ssm_matrix,
             ashm_matrix
-        ) %>%
+        )
+
+    # Check for missing features
+    assembled_matrix <- check_for_missing_features(
+        assembled_matrix,
+        c(
+          ssm_features,
+          hotspot_features,
+          ashm_features
+        )
+    )
+
+    # Ensure consistent ordering
+    assembled_matrix <- assembled_matrix %>%
         select(
             rownames(
                 model$importance
@@ -4790,35 +4737,10 @@ classify_dlbcl_chapuy <- function(
     ) %>% as.data.frame
 
     # Check if any features are missing
-    missing_features <- setdiff(
-        chapuy_features$feature_weights$Feature,
-        colnames(chapuy_feature_matrix$complete_matrix)
+    chapuy_feature_matrix$complete_matrix <- check_for_missing_features(
+      chapuy_feature_matrix$complete_matrix,
+      chapuy_features$feature_weights$Feature
     )
-
-    if(length(missing_features)>0){
-        message(
-            "ATTENTION: Not all features are available in the data!"
-        )
-        message(
-            paste0(
-                "A total of ",
-                length(
-                   missing_features
-                ),
-                " features are missing:"
-            )
-        )
-        message(
-            paste(
-                missing_features,
-                collapse=", "
-            )
-        )
-        message(
-            "They will be set to 0, which may affect model performance."
-        )
-        chapuy_feature_matrix$complete_matrix[,missing_features] <- 0
-    }
 
     # This is to ensure consistent ordering for a fool-proof downstream calculations
     chapuy_feature_matrix$complete_matrix <- chapuy_feature_matrix$complete_matrix %>%
@@ -5118,12 +5040,10 @@ classify_dlbcl_lacy <- function(
     ) %>% as.data.frame
 
     # Check if any features are missing
-    missing_features <- setdiff(
-        lacy_features$all$Feature,
-        colnames(lacy_feature_matrix$complete)
+    lacy_feature_matrix$complete <- check_for_missing_features(
+      lacy_feature_matrix$complete,
+      lacy_features$all$Feature
     )
-
-    lacy_feature_matrix$complete[,missing_features] <- 0
 
     # Handle the features where mutation or CNV is considered
     deduplicate_features <- function(Row, DataFrame) {
@@ -5235,4 +5155,44 @@ classify_dlbcl_lacy <- function(
       )
     }
 
+}
+
+
+check_for_missing_features <- function(
+    incoming_matrix,
+    feature_set
+){
+    # Check if any features are missing
+    missing_features <- setdiff(
+        feature_set,
+        colnames(incoming_matrix)
+    )
+
+    if(length(missing_features)>0){
+        message(
+            "ATTENTION: Not all features are available in the data!"
+        )
+        message(
+            paste0(
+                "A total of ",
+                length(
+                   missing_features
+                ),
+                " features are missing:"
+            )
+        )
+        message(
+            paste(
+                missing_features,
+                collapse=", "
+            )
+        )
+        message(
+            "They will be set to 0, which may affect model performance."
+        )
+        incoming_matrix[,missing_features] <- 0
+
+    }
+
+    return(incoming_matrix)
 }
