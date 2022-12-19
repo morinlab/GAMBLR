@@ -5158,6 +5158,14 @@ classify_dlbcl_lacy <- function(
 }
 
 
+#' Check matrix against missing features.
+#'
+#' Operate on the matrix supplied by user and check it for any features missing compared to the provided set.
+#'
+#' @param incoming_matrix The incoming matrix to be checked for any missing features.
+#' @param feature_set The feature set.
+#' @return matrix where column names correspond to all features from the provided set
+#'
 check_for_missing_features <- function(
     incoming_matrix,
     feature_set
