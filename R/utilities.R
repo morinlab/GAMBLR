@@ -4486,11 +4486,10 @@ classify_dlbcl <- function(
           message("No SV data is provided.")
           message("Will retreive SVs available through GAMBL.")
 
-          sv_data <- get_combined_sv(
-              sample_ids = these_samples_metadata$sample_id,
-              oncogenes = chapuy_features$sv_features,
-              projection = projection
-          )
+          sv_data <- get_manta_sv() %>%
+              dplyr::filter(
+                tumour_sample_id %in% these_samples_metadata$sample_id
+              )
       }
 
       sv_data <- sv_data %>%
