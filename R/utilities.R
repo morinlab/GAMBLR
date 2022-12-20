@@ -2378,14 +2378,7 @@ get_gambl_colours = function(classification = "all",
     C5 = "#DE292A"
   )
 
-  all_colours[["lacy_classifier"]] = c(
-    BCL2 = "#da8c1e",
-    MYD88 = "#512962",
-    NEC = "#a52c28",
-    NOTCH2 = "#c5457a",
-    "SOCS1/SGK1" = "#2e4a7c",
-    "TET2/SGK1" = "#64a53a"
-  )
+  all_colours[["lacy_classifier"]] = all_colours[["hmrn"]]
 
   all_colours[["lymphgen"]] = c("EZB-MYC" = "#52000F",
                                 "EZB" = "#721F0F",
