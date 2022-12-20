@@ -4357,7 +4357,11 @@ classify_fl <- function(
 
 #' Classify DLBCLs according to genetic subgroups.
 #'
-#' Use the feature weights from NMF model to assemble the binary matrix and classify DLBCL tumors
+#' Using the user-provided or GAMBLR-retrieved data, this function will assemble the matrix according to the approach of
+#' Chapuy et al (2018) or Lacy et al (2020) classifiers. Since neither of this classifiers is publicly released, we have implemented a solution
+#' that closely (> 92% accuracy) recapitulates each of these systems. For the classifier of Chapuy et al, the constructed matrix will be
+#' used to calculate class probability using the feature weights from bundled NMF model. For the Lacy et al classifier, the matrix will be
+#' used for prediction of random forest model,  which is supplied with the GAMBLR package.
 #'
 #' @param these_samples_metadata The metadata data frame that contains sample_id column with ids for the samples to be classified.
 #' @param maf_data The MAF data frame to be used for matrix assembling. At least must contain the first 45 columns of standard MAF format.
@@ -4367,6 +4371,7 @@ classify_fl <- function(
 #' @param projection The projection of the samples. Only used to retrerive data through GAMBLR when it is not provided. Defaults to grch37.
 #' @param output The output to be returned after prediction is done. Can be one of predictoins, matrix, or both. Defaults to predictions.
 #' @param adjust_ploidy Whether to perform ploidy adjustment for the CNV data. Defaults to TRUE (recommended).
+#' @param include_N1 When running Lacy classifieer, indicate whether to set samples with NOTCH1 mutations to N1 group as described in Runge et al (2021). Defaults to FALSE.
 #'
 #' @return data frame with classification, binary matrix used in classification, or both
 #' @export
@@ -4387,7 +4392,8 @@ classify_dlbcl <- function(
     projection = "grch37",
     output = "predictions",
     method = "chapuy",
-    adjust_ploidy = TRUE
+    adjust_ploidy = TRUE,
+    include_N1 = FALSE
 ){
     # If no metadata is provided, just get all DLBCLs
     if(missing(these_samples_metadata)){
@@ -4506,7 +4512,8 @@ classify_dlbcl <- function(
           maf_data,
           seg_data,
           projection = projection,
-          output = output
+          output = output,
+          include_N1 = include_N1
       )
     }else{
       stop("You requested an unvalid method. Please choole one of chapuy or lacy")
@@ -4829,6 +4836,7 @@ classify_dlbcl_chapuy <- function(
 #' @param sv_data The SV data frame to be used for matrix assembling. Must be of standard BEDPE formatting, for example, as returned by get_combined_sv.
 #' @param projection The projection of the samples. Only used to retrerive data through GAMBLR when it is not provided. Defaults to grch37.
 #' @param output The output to be returned after prediction is done. Can be one of predictoins, matrix, or both. Defaults to predictions.
+#' @param include_N1 Whether to set samples with NOTCH1 mutations to N1 group as described in Runge et al (2021). Defaults to FALSE.
 #' @return data frame with classification, binary matrix used in classification, or both
 #' @import data.table randomForest tidyverse
 #'
@@ -4838,7 +4846,8 @@ classify_dlbcl_lacy <- function(
     seg_data,
     sv_data,
     projection = "grch37",
-    output = "predictions"
+    output = "predictions",
+    include_N1 = FALSE
 ){
 
     # Assembling matrix of Lacy features
@@ -5127,6 +5136,32 @@ classify_dlbcl_lacy <- function(
       .,
       by="sample_id"
     )
+
+    # Manually set samples to N1 if user chooses to do so
+    if(include_N1){
+      n1_samples = maf_data %>%
+          dplyr::filter(
+            Hugo_Symbol=="NOTCH1"
+          ) %>%
+          dplyr::filter(
+            str_detect(
+              Variant_Classification,
+              "Frame_Shift"
+            )
+          )  %>% 
+          pull(
+            Tumor_Sample_Barcode
+          )
+      
+      predictions <- predictions %>%
+        dplyr::mutate(
+          Lacy_cluster = ifelse(
+            sample_id %in% n1_samples,
+            "NOTCH1",
+            as.character(Lacy_cluster)
+          )
+        )
+    }
 
     if(output == "predictions"){
       return(predictions)
