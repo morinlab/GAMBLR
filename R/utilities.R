@@ -4149,7 +4149,7 @@ supplement_maf <- function(incoming_maf,
 #' @param maf_data The MAF data frame to be used for matrix assembling. At least must contain the first 45 columns of standard MAF format.
 #' @param model The RF model. Classifier from the paper describing cFL is used. It is not recommended to change the value of this parameter.
 #' @param this_seq_type The seq_type of the samples. Only really used to retrerive mutations when maf data is not provided and to be retreived through GAMBLR. Defaults to genome.
-#' @param output The output to be returned after prediction is done. Can be one of predictoins, matrix, or both. Defaults to predictions.
+#' @param output The output to be returned after prediction is done. Can be one of predictions, matrix, or both. Defaults to predictions.
 #'
 #' @return data frame with classification, binary matrix used in classification, or both
 #' @export
@@ -4360,8 +4360,10 @@ classify_fl <- function(
 #' Using the user-provided or GAMBLR-retrieved data, this function will assemble the matrix according to the approach of
 #' Chapuy et al (2018) or Lacy et al (2020) classifiers. Since neither of this classifiers is publicly released, we have implemented a solution
 #' that closely (> 92% accuracy) recapitulates each of these systems. For the classifier of Chapuy et al, the constructed matrix will be
-#' used to calculate class probability using the feature weights from bundled NMF model. For the Lacy et al classifier, the matrix will be
-#' used for prediction of random forest model,  which is supplied with the GAMBLR package.
+#' used to calculate class probability using the bundled feature weights obtained from our reproduction of the classifier. For the Lacy et al
+#' classifier, the matrix will be used for prediction of random forest model, which is supplied with the GAMBLR package. Following the modification
+#' of Lacy classifier described in Runge et al (PMID 33010029), specifying the method of this function as hmrn will also consider
+#' truncating mutations in NOTCH1 for the separate N1 subgroup.
 #'
 #' @param these_samples_metadata The metadata data frame that contains sample_id column with ids for the samples to be classified.
 #' @param maf_data The MAF data frame to be used for matrix assembling. At least must contain the first 45 columns of standard MAF format.
@@ -4369,9 +4371,9 @@ classify_fl <- function(
 #' @param sv_data The SV data frame to be used for matrix assembling. Must be of standard BEDPE formatting, for example, as returned by get_combined_sv.
 #' @param this_seq_type The seq_type of the samples. Only used to retrerive data through GAMBLR when it is not provided. Defaults to genome.
 #' @param projection The projection of the samples. Only used to retrerive data through GAMBLR when it is not provided. Defaults to grch37.
-#' @param output The output to be returned after prediction is done. Can be one of predictoins, matrix, or both. Defaults to predictions.
+#' @param output The output to be returned after prediction is done. Can be one of predictions, matrix, or both. Defaults to both.
+#' @param method Classification method. One of chapuy (used as default), lacy, or hmrn.
 #' @param adjust_ploidy Whether to perform ploidy adjustment for the CNV data. Defaults to TRUE (recommended).
-#' @param include_N1 When running Lacy classifieer, indicate whether to set samples with NOTCH1 mutations to N1 group as described in Runge et al (2021). Defaults to FALSE.
 #'
 #' @return data frame with classification, binary matrix used in classification, or both
 #' @export
@@ -4379,9 +4381,10 @@ classify_fl <- function(
 #'
 #' @examples
 #' test_meta <- get_gambl_metadata(case_set = "DLBCL-unembargoed")
-#' predictions_chapuy <- classify_dlbcl(these_samples_metadata = test_meta)
+#' predictions_chapuy <- classify_dlbcl(these_samples_metadata = test_meta, output = "predictions")
 #' predictions_lacy <- classify_dlbcl(these_samples_metadata = test_meta, method = "lacy")
-#' matrix_and_predictions <- classify_dlbcl(these_samples_metadata = test_meta, output = "both")
+#' predictions_hmrn <- classify_dlbcl(these_samples_metadata = test_meta, method = "hmrn", output = "predictions")
+#' matrix_and_predictions <- classify_dlbcl(these_samples_metadata = test_meta)
 #'
 classify_dlbcl <- function(
     these_samples_metadata,
@@ -4390,10 +4393,9 @@ classify_dlbcl <- function(
     sv_data,
     this_seq_type = "genome",
     projection = "grch37",
-    output = "predictions",
+    output = "both",
     method = "chapuy",
-    adjust_ploidy = TRUE,
-    include_N1 = FALSE
+    adjust_ploidy = TRUE
 ){
     # If no metadata is provided, just get all DLBCLs
     if(missing(these_samples_metadata)){
@@ -4512,11 +4514,22 @@ classify_dlbcl <- function(
           maf_data,
           seg_data,
           projection = projection,
-          output = output,
-          include_N1 = include_N1
+          output = output
       )
-    }else{
-      stop("You requested an unvalid method. Please choole one of chapuy or lacy")
+
+    }else if (method=="hmrn") {
+      predictions <- classify_dlbcl_lacy(
+          these_samples_metadata,
+          maf_data,
+          seg_data,
+          projection = projection,
+          output = output,
+          include_N1 = TRUE
+      )
+    }
+
+    else{
+      stop("You requested an unvalid method. Please choose one of chapuy, lacy or hmrn")
     }
 
     return(predictions)
@@ -4534,7 +4547,7 @@ classify_dlbcl <- function(
 #' @param seg_data The SEG data frame to be used for matrix assembling. Must be of standard SEG formatting, for example, as returned by get_sample_cn_segments.
 #' @param sv_data The SV data frame to be used for matrix assembling. Must be of standard BEDPE formatting, for example, as returned by get_combined_sv.
 #' @param projection The projection of the samples. Only used to retrerive data through GAMBLR when it is not provided. Defaults to grch37.
-#' @param output The output to be returned after prediction is done. Can be one of predictoins, matrix, or both. Defaults to predictions.
+#' @param output The output to be returned after prediction is done. Can be one of predictions, matrix, or both. Defaults to both.
 #' @return data frame with classification, binary matrix used in classification, or both
 #' @import data.table circlize tidyverse
 #'
@@ -4544,7 +4557,7 @@ classify_dlbcl_chapuy <- function(
     seg_data,
     sv_data,
     projection = "grch37",
-    output = "predictions"
+    output = "both"
 ){
     # Assembling the feature matrix based on the guidance
     # non-synonymous mutations, 2; synonymous mutations, 1; no-mutation, 0;
@@ -4835,8 +4848,8 @@ classify_dlbcl_chapuy <- function(
 #' @param seg_data The SEG data frame to be used for matrix assembling. Must be of standard SEG formatting, for example, as returned by get_sample_cn_segments.
 #' @param sv_data The SV data frame to be used for matrix assembling. Must be of standard BEDPE formatting, for example, as returned by get_combined_sv.
 #' @param projection The projection of the samples. Only used to retrerive data through GAMBLR when it is not provided. Defaults to grch37.
-#' @param output The output to be returned after prediction is done. Can be one of predictoins, matrix, or both. Defaults to predictions.
-#' @param include_N1 Whether to set samples with NOTCH1 mutations to N1 group as described in Runge et al (2021). Defaults to FALSE.
+#' @param output The output to be returned after prediction is done. Can be one of predictions, matrix, or both. Defaults to both.
+#' @param include_N1 Whether to set samples with NOTCH1 truncating mutations to N1 group as described in Runge et al (2021). Defaults to FALSE.
 #' @return data frame with classification, binary matrix used in classification, or both
 #' @import data.table randomForest tidyverse
 #'
@@ -4846,7 +4859,7 @@ classify_dlbcl_lacy <- function(
     seg_data,
     sv_data,
     projection = "grch37",
-    output = "predictions",
+    output = "both",
     include_N1 = FALSE
 ){
 
@@ -5135,6 +5148,9 @@ classify_dlbcl_lacy <- function(
       predictions,
       .,
       by="sample_id"
+    ) %>%
+    mutate(
+      Lacy_cluster = as.character(Lacy_cluster)
     )
 
     # Manually set samples to N1 if user chooses to do so
@@ -5148,11 +5164,11 @@ classify_dlbcl_lacy <- function(
               Variant_Classification,
               "Frame_Shift"
             )
-          )  %>% 
+          )  %>%
           pull(
             Tumor_Sample_Barcode
           )
-      
+
       predictions <- predictions %>%
         dplyr::mutate(
           Lacy_cluster = ifelse(
@@ -5160,7 +5176,19 @@ classify_dlbcl_lacy <- function(
             "NOTCH1",
             as.character(Lacy_cluster)
           )
+        ) %>%
+        dplyr::rename(
+          "hmrn_cluster" = "Lacy_cluster"
         )
+      if (output == "both") {
+      return(
+        list(
+          hmrn_matrix = lacy_feature_matrix$complete,
+          hmrn_predictons = predictions
+        )
+      )
+      }
+
     }
 
     if(output == "predictions"){
