@@ -13,7 +13,8 @@ classify_dlbcl(
   projection = "grch37",
   output = "predictions",
   method = "chapuy",
-  adjust_ploidy = TRUE
+  adjust_ploidy = TRUE,
+  include_N1 = FALSE
 )
 }
 \arguments{
@@ -32,12 +33,18 @@ classify_dlbcl(
 \item{output}{The output to be returned after prediction is done. Can be one of predictoins, matrix, or both. Defaults to predictions.}
 
 \item{adjust_ploidy}{Whether to perform ploidy adjustment for the CNV data. Defaults to TRUE (recommended).}
+
+\item{include_N1}{When running Lacy classifieer, indicate whether to set samples with NOTCH1 mutations to N1 group as described in Runge et al (2021). Defaults to FALSE.}
 }
 \value{
 data frame with classification, binary matrix used in classification, or both
 }
 \description{
-Use the feature weights from NMF model to assemble the binary matrix and classify DLBCL tumors
+Using the user-provided or GAMBLR-retrieved data, this function will assemble the matrix according to the approach of
+Chapuy et al (2018) or Lacy et al (2020) classifiers. Since neither of this classifiers is publicly released, we have implemented a solution
+that closely (> 92\% accuracy) recapitulates each of these systems. For the classifier of Chapuy et al, the constructed matrix will be
+used to calculate class probability using the feature weights from bundled NMF model. For the Lacy et al classifier, the matrix will be
+used for prediction of random forest model,  which is supplied with the GAMBLR package.
 }
 \examples{
 test_meta <- get_gambl_metadata(case_set = "DLBCL-unembargoed")

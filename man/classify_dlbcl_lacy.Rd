@@ -10,7 +10,8 @@ classify_dlbcl_lacy(
   seg_data,
   sv_data,
   projection = "grch37",
-  output = "predictions"
+  output = "predictions",
+  include_N1 = FALSE
 )
 }
 \arguments{
@@ -25,6 +26,8 @@ classify_dlbcl_lacy(
 \item{projection}{The projection of the samples. Only used to retrerive data through GAMBLR when it is not provided. Defaults to grch37.}
 
 \item{output}{The output to be returned after prediction is done. Can be one of predictoins, matrix, or both. Defaults to predictions.}
+
+\item{include_N1}{Whether to set samples with NOTCH1 mutations to N1 group as described in Runge et al (2021). Defaults to FALSE.}
 }
 \value{
 data frame with classification, binary matrix used in classification, or both
