@@ -10,7 +10,7 @@ classify_dlbcl_chapuy(
   seg_data,
   sv_data,
   projection = "grch37",
-  output = "predictions"
+  output = "both"
 )
 }
 \arguments{
@@ -24,7 +24,7 @@ classify_dlbcl_chapuy(
 
 \item{projection}{The projection of the samples. Only used to retrerive data through GAMBLR when it is not provided. Defaults to grch37.}
 
-\item{output}{The output to be returned after prediction is done. Can be one of predictoins, matrix, or both. Defaults to predictions.}
+\item{output}{The output to be returned after prediction is done. Can be one of predictions, matrix, or both. Defaults to both.}
 }
 \value{
 data frame with classification, binary matrix used in classification, or both

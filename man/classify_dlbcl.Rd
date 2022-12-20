@@ -11,10 +11,9 @@ classify_dlbcl(
   sv_data,
   this_seq_type = "genome",
   projection = "grch37",
-  output = "predictions",
+  output = "both",
   method = "chapuy",
-  adjust_ploidy = TRUE,
-  include_N1 = FALSE
+  adjust_ploidy = TRUE
 )
 }
 \arguments{
@@ -30,11 +29,11 @@ classify_dlbcl(
 
 \item{projection}{The projection of the samples. Only used to retrerive data through GAMBLR when it is not provided. Defaults to grch37.}
 
-\item{output}{The output to be returned after prediction is done. Can be one of predictoins, matrix, or both. Defaults to predictions.}
+\item{output}{The output to be returned after prediction is done. Can be one of predictions, matrix, or both. Defaults to both.}
+
+\item{method}{Classification method. One of chapuy (used as default), lacy, or hmrn.}
 
 \item{adjust_ploidy}{Whether to perform ploidy adjustment for the CNV data. Defaults to TRUE (recommended).}
-
-\item{include_N1}{When running Lacy classifieer, indicate whether to set samples with NOTCH1 mutations to N1 group as described in Runge et al (2021). Defaults to FALSE.}
 }
 \value{
 data frame with classification, binary matrix used in classification, or both
@@ -43,13 +42,16 @@ data frame with classification, binary matrix used in classification, or both
 Using the user-provided or GAMBLR-retrieved data, this function will assemble the matrix according to the approach of
 Chapuy et al (2018) or Lacy et al (2020) classifiers. Since neither of this classifiers is publicly released, we have implemented a solution
 that closely (> 92\% accuracy) recapitulates each of these systems. For the classifier of Chapuy et al, the constructed matrix will be
-used to calculate class probability using the feature weights from bundled NMF model. For the Lacy et al classifier, the matrix will be
-used for prediction of random forest model,  which is supplied with the GAMBLR package.
+used to calculate class probability using the bundled feature weights obtained from our reproduction of the classifier. For the Lacy et al
+classifier, the matrix will be used for prediction of random forest model, which is supplied with the GAMBLR package. Following the modification
+of Lacy classifier described in Runge et al (PMID 33010029), specifying the method of this function as hmrn will also consider
+truncating mutations in NOTCH1 for the separate N1 subgroup.
 }
 \examples{
 test_meta <- get_gambl_metadata(case_set = "DLBCL-unembargoed")
-predictions_chapuy <- classify_dlbcl(these_samples_metadata = test_meta)
+predictions_chapuy <- classify_dlbcl(these_samples_metadata = test_meta, output = "predictions")
 predictions_lacy <- classify_dlbcl(these_samples_metadata = test_meta, method = "lacy")
-matrix_and_predictions <- classify_dlbcl(these_samples_metadata = test_meta, output = "both")
+predictions_hmrn <- classify_dlbcl(these_samples_metadata = test_meta, method = "hmrn", output = "predictions")
+matrix_and_predictions <- classify_dlbcl(these_samples_metadata = test_meta)
 
 }

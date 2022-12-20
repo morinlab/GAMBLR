@@ -21,7 +21,7 @@ classify_fl(
 
 \item{this_seq_type}{The seq_type of the samples. Only really used to retrerive mutations when maf data is not provided and to be retreived through GAMBLR. Defaults to genome.}
 
-\item{output}{The output to be returned after prediction is done. Can be one of predictoins, matrix, or both. Defaults to predictions.}
+\item{output}{The output to be returned after prediction is done. Can be one of predictions, matrix, or both. Defaults to predictions.}
 }
 \value{
 data frame with classification, binary matrix used in classification, or both
