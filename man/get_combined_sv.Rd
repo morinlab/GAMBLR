@@ -19,7 +19,7 @@ get_combined_sv(
 
 \item{with_chr_prefix}{Prepend all chromosome names with chr (required by some downstream analyses)}
 
-\item{projection}{The projection genome build. Currently only grch37 is supported but hg38 should be easy to add.}
+\item{projection}{The projection genome build.}
 
 \item{oncogenes}{A character vector of genes commonly involved in translocations. Possible values: CCND1, CIITA, SOCS1, BCL2, RFTN1, BCL6, MYC, PAX5.}
 }

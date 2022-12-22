@@ -38,7 +38,7 @@ get_manta_sv(
 
 \item{with_chr_prefix}{Prepend all chromosome names with chr (required by some downstream analyses).}
 
-\item{from_flatfile}{Set to FALSE by default.}
+\item{from_flatfile}{Set to TRUE by default.}
 
 \item{projection}{The projection genome build. Currently only grch37 is supported.}
 
