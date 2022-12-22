@@ -242,11 +242,11 @@ get_ssh_session = function(host="gphost01.bcgsc.ca"){
 #' Get regions from genes.
 #'
 #' @param gene_symbol A vector of one or more gene symbols.
-#' @param ensembl_id A vector of one or more Esemble IDs.
+#' @param ensembl_id A vector of one or more Ensemble IDs.
 #' @param genome_build Reference genome build.
 #' @param return_as Specify the type of return. Default is region (chr:start-end), other acceptable arguments are "bed" and "df".
 #'
-#' @import biomaRt
+#' @import tidyverse
 #' @return
 #' @export
 #'
@@ -258,40 +258,24 @@ gene_to_region = function(gene_symbol,
                           ensembl_id,
                           genome_build = "grch37",
                           return_as = "region"){
-  
+
   #set mart based on selected genome projection
   if(genome_build == "grch37"){
-    mart = useEnsembl(biomart = "ensembl", dataset = "hsapiens_gene_ensembl", GRCh = 37)
+    gene_coordinates = grch37_gene_coordinates
     chr_select = paste0(c(c(1:22),"X","Y"))
   }else if(genome_build == "hg38"){
-    mart = useEnsembl(biomart = "ensembl", dataset = "hsapiens_gene_ensembl")
+    gene_coordinates = hg38_gene_coordinates
     chr_select = paste0("chr", c(c(1:22),"X","Y"))
   }
 
-  #retrieve gene coordinates (biomaRt)
-  gene_coordinates = getBM(mart = mart, attributes = c("ensembl_gene_id", "chromosome_name", "start_position", "end_position", "external_gene_name", "hgnc_symbol"))
-
-  #rename columns to match downstream formats
-  colnames(gene_coordinates)[1] = "ensembl_gene_id"
-  colnames(gene_coordinates)[2] = "chromosome"
-  colnames(gene_coordinates)[3] = "start"
-  colnames(gene_coordinates)[4] = "end"
-  colnames(gene_coordinates)[5] = "gene_name"
-  colnames(gene_coordinates)[6] = "hugo_symbol"
-
-  #add "chr" prefix, if hg38 is selected
-  if(genome_build == "hg38"){
-    gene_coordinates = mutate(gene_coordinates, chromosome = paste0("chr", chromosome))
-  }
-  
-  #filter on gene_symbol/ensembl_id  
+  #filter on gene_symbol/ensembl_id
   if(!missing(gene_symbol) && missing(ensembl_id)){
     gene_coordinates = dplyr::filter(gene_coordinates, hugo_symbol %in% gene_symbol)
-    }
-    
+  }
+
   if(missing(gene_symbol) && !missing(ensembl_id)){
     gene_coordinates = dplyr::filter(gene_coordinates, ensembl_gene_id %in% ensembl_id)
-    }
+  }
 
   region = dplyr::select(gene_coordinates, chromosome, start, end, gene_name, hugo_symbol, ensembl_gene_id) %>%
     as.data.frame() %>%
@@ -299,11 +283,11 @@ gene_to_region = function(gene_symbol,
     dplyr::filter(chromosome %in% chr_select) %>%
     mutate_all(na_if,"") %>%
     distinct(.keep_all = TRUE)
-  
+
   if(return_as == "bed"){
     #return one-row data frame with first 4 standard BED columns. TODO: Ideally also include strand if we have access to it in the initial data frame
     region = dplyr::select(region, chromosome, start, end, hugo_symbol)
-    
+
   }else if(return_as == "df"){
     region = region
 
@@ -311,12 +295,12 @@ gene_to_region = function(gene_symbol,
     #default: return in chr:start-end format
     region = paste0(region$chromosome, ":", region$start, "-", region$end)
   }
-  
+
   if(return_as %in% c("bed", "df")){
     if(!missing(gene_symbol)){
       message(paste0(nrow(region), " region(s) returned for ", length(gene_symbol), " gene(s)"))
     }
-    
+
     if(!missing(ensembl_id)){
       message(paste0(nrow(region), " region(s) returned for ", length(ensembl_id), " gene(s)"))
     }
@@ -324,7 +308,7 @@ gene_to_region = function(gene_symbol,
     if(!missing(gene_symbol)){
       message(paste0(length(region), " region(s) returned for ", length(gene_symbol), " gene(s)"))
     }
-    
+
     if(!missing(ensembl_id)){
       message(paste0(length(region), " region(s) returned for ", length(ensembl_id), " gene(s)"))
     }
@@ -333,13 +317,13 @@ gene_to_region = function(gene_symbol,
 }
 
 
-#' Return gennes residing in defined region(s)
+#' Return genes residing in defined region(s)
 #'
-#' @param region Regions to intersect genes with, this can be either a data frame with regions sorted in the following columns; chromosome, start, end. Or it can be a charachter vector in "region" format, i.e chromosome:start-end.
+#' @param region Regions to intersect genes with, this can be either a data frame with regions sorted in the following columns; chromosome, start, end. Or it can be a character vector in "region" format, i.e chromosome:start-end.
 #' @param gene_format Parameter for specifying the format of returned genes, default is "hugo", other acceptable inputs are "ensembl".
 #' @param genome_build Reference genome build.
 #'
-#' @import data.table biomaRt
+#' @import data.table tidyverse
 #' @return
 #' @export
 #'
@@ -353,14 +337,11 @@ region_to_gene = function(region,
 
   #set mart based on selected genome projection
   if(genome_build == "grch37"){
-    mart = useEnsembl(biomart = "ensembl", dataset = "hsapiens_gene_ensembl", GRCh = 37)
+    gene_list = grch37_gene_coordinates
   }else if(genome_build == "hg38"){
-    mart = useEnsembl(biomart = "ensembl", dataset = "hsapiens_gene_ensembl")
+    gene_list = hg38_gene_coordinates
   }
 
-  #retrieve gene coordinates (biomaRt)
-  gene_list = getBM(mart = mart, attributes = c("ensembl_gene_id", "chromosome_name", "start_position", "end_position", "external_gene_name", "hgnc_symbol"))
-  
   #rename columns to match downstream formats
   colnames(gene_list)[1] = "ensembl_gene_id"
   colnames(gene_list)[2] = "chromosome"
@@ -368,14 +349,9 @@ region_to_gene = function(region,
   colnames(gene_list)[4] = "end"
   colnames(gene_list)[5] = "gene_name"
   colnames(gene_list)[6] = "hugo_symbol"
-  
-  #add "chr" prefix, if hg38 is selected
-  if(genome_build == "hg38"){
-    gene_list = mutate(gene_list, chromosome = paste0("chr", chromosome))
-  }
 
   gene_list = as.data.frame(gene_list)
-  
+
   if(is.data.frame(region)){
     region_table = as.data.table(region)
   }else if(is.character(region)){
@@ -388,12 +364,12 @@ region_to_gene = function(region,
       as.data.frame()
 
     region_table = as.data.table(region)
-    
+
     region_table$chromosome = as.character(region_table$chromosome)
     region_table$start = as.double(region_table$start)
     region_table$end = as.double(region_table$end)
   }
-  
+
   #transform regions to data tables
   gene_table = as.data.table(gene_list)
 
@@ -421,7 +397,7 @@ region_to_gene = function(region,
     genes = mutate(genes, chromosome = paste0("chr", chromosome))}
 
   genes = as.data.frame(genes) %>%
-    dplyr::arrange(chromosome, start) %>% 
+    dplyr::arrange(chromosome, start) %>%
     distinct(.keep_all = TRUE)
 
   message(paste0(nrow(genes), " gene(s) returned for ", nrow(region), " region(s)"))
