@@ -1594,8 +1594,10 @@ get_cn_states = function(regions_list,
 #' Get all segments for a single (or multiple) sample_id(s).
 #'
 #' @param this_sample_id Optional argument, single sample_id for the sample to retrieve segments for.
-#' @param multiple_samples Set to TRUE to return cn segments for multiple samples (list) pf samples to be specified in samples_list parameter.
-#' @param samples_list Optional vector of type character with one sample per row, rewuired if multiple_samples is set to TRUE.
+#' @param multiple_samples Set to TRUE to return cn segments for multiple samples (list) of samples to be specified in samples_list parameter.
+#' @param samples_list Optional vector of type character with one sample per row, required if multiple_samples is set to TRUE.
+#' @param from_flatfile Set to TRUE by default.
+#' @param projection Selected genome projection for returned CN segments.
 #' @param with_chr_prefix Set to TRUE to add a chr prefix to chromosome names.
 #' @param streamlined Return a minimal output rather than full details.
 #'
