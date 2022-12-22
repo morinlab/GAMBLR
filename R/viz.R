@@ -3236,8 +3236,8 @@ fancy_v_chrcount = function(this_sample,
 
   if(add_qc_metric){
     #get qc data for selected samples
-    sample_df = data.frame(sample_id = this_sample) #build a df from scratch
-    qc_metrics = collate_qc_results(sample_table = sample_df, seq_type_filter = seq_type) %>%
+    sample_df = data.frame(sample_id = this_sample)
+    qc_metrics = collate_results(sample_table = sample_df, seq_type_filter = seq_type) %>%
       dplyr::select(MeanCorrectedCoverage)
     if(nrow(qc_metrics) < 1){
       message("No QC metrics available for selected sample...")
