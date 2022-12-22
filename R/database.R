@@ -1146,7 +1146,7 @@ get_gambl_outcomes = function(patient_ids,
 #' @param min_vaf The minimum tumour VAF for a SV to be returned. Recommended: 0. (default: 0)
 #' @param sample_ids A character vector of tumour sample IDs you wish to retrieve SVs for.
 #' @param with_chr_prefix Prepend all chromosome names with chr (required by some downstream analyses)
-#' @param projection The projection genome build. Currently only grch37 is supported but hg38 should be easy to add.
+#' @param projection The projection genome build.
 #' @param oncogenes A character vector of genes commonly involved in translocations. Possible values: CCND1, CIITA, SOCS1, BCL2, RFTN1, BCL6, MYC, PAX5.
 #'
 #'
