@@ -2630,3 +2630,250 @@ get_gene_expression = function(metadata,
   }
   return(expression_wider)
 }
+
+
+#' Load the manta output for a set of samples from their bedpe files from Manta
+#'
+#' This is a convenience wrapper function for get_manta_sv_by_sample. See that function for more information.
+#'
+#' @param these_samples_metadata The only required parameter is a metadata table (data frame) that must contain a row for each sample you want the data from. The additional columns the data frame needs to contain, besides sample_id, are: unix_group, genome_build, seq_type, pairing_status
+#' @param min_vaf The minimum tumour VAF for a SV to be returned.
+#' @param min_score The lowest Manta somatic score for a SV to be returned.
+#' @param pass If set to TRUE, include SVs that are annotated with PASS in FILTER column. Default is TRUE.
+#' @param with_chr_prefix Prepend all chromosome names with chr (required by some downstream analyses).
+#' @param from_flatfile Set to TRUE by default.
+#' @param projection The projection genome build. Currently only grch37 is supported.
+#'
+#' @return a data frame containing the Manta outputs from all sample_id in these_samples_metadata in a bedpe-like format with additional columns extracted from the VCF column.
+#' @import tidyverse
+#' @export
+#'
+#' @examples
+#' my_samples = c("00-20702T", "00-15201_tumorB")
+#'
+#' multi_meta = get_gambl_metadata() %>% dplyr::filter(sample_id %in% my_samples)
+#'
+#' my_samples_sv = get_manta_sv_by_samples(these_samples_metadata = multi_meta)
+#'
+get_manta_sv_by_samples = function(these_samples_metadata,
+                                   this_sample_id,
+                                   min_vaf = 0.1,
+                                   min_score = 40,
+                                   pass = TRUE,
+                                   with_chr_prefix = FALSE,
+                                   from_flatfile = TRUE,
+                                   projection = "grch37"){
+
+  #check remote configuration
+  remote_session = check_remote_configuration(auto_connect = TRUE)
+
+  #check selected projection
+  if(projection != "grch37"){
+    stop("Currently, only grch37 is supported")
+  }
+
+  #create an empty list.
+  all_bedpe = list()
+
+  #get sample IDs from provided metadata.
+  samples = pull(these_samples_metadata, sample_id)
+
+  #wrap get_manta_sv_by_sample.
+  all_bedpe = lapply(samples, function(x){get_manta_sv_by_sample(this_sample_id = x,
+                                                                 min_vaf = min_vaf,
+                                                                 min_score = min_score,
+                                                                 pass = pass,
+                                                                 with_chr_prefix = with_chr_prefix,
+                                                                 from_flatfile = from_flatfile,
+                                                                 projection = projection)})
+
+  #un-nest list into long format.
+  merged_bedpe = bind_rows(all_bedpe, .id = "column_label")
+
+  #return merged manta SVs.
+  return(merged_bedpe)
+}
+
+
+#' Load the manta output for 1 sample from a bedpe file. This function requires 1 sample specified in the this_sample_id parameter, or a metadata subset to 1 sample (these_samples_metadata). For multiple samples, please refer to get_manta_sv_by_samples.
+#'
+#' @param min_vaf The minimum tumour VAF for a SV to be returned.
+#' @param min_score The lowest Manta somatic score for a SV to be returned.
+#' @param pass If set to TRUE, include SVs that are annotated with PASS in FILTER column. Default is TRUE.
+#' @param this_sample_id The single sample_id you want to obtain the result from.
+#' @param these_samples_metadata A metadata table containing metadata for this_sample_id, or sample of interest. If no sample ID is provided with this_sample_id, the function will extract sample ID from these_samples_metadata.
+#' @param with_chr_prefix Prepend all chromosome names with chr (required by some downstream analyses).
+#' @param from_flatfile Set to TRUE by default.
+#' @param projection The projection genome build. Currently only grch37 is supported.
+#'
+#' @return a data frame containing the Manta outputs from this_sample_id in a bedpe-like format with additional columns extracted from the VCF column.
+#' @import tidyverse
+#' @export
+#'
+#' @examples
+#' #minimum parameters
+#' my_bedpe_df = get_manta_sv_by_sample(this_sample_id = "00-14595_tumorA")
+#'
+#' #extended parameter usage
+#' my_metadata = get_gambl_metadata() %>% dplyr::filter(sample_id = "00-14595_tumorA")
+#'
+#' my_bedpe_df = get_manta_sv_by_sample(these_samples_metadata = my_metadata,
+#'                                      min_vaf = 0.05,
+#'                                      min_score = 30,
+#'                                      pass = FALSE,
+#'                                      with_chr_prefix = TRUE)
+#'
+get_manta_sv_by_sample = function(min_vaf = 0.1,
+                                  min_score = 40,
+                                  pass = TRUE,
+                                  this_sample_id,
+                                  these_samples_metadata,
+                                  with_chr_prefix = FALSE,
+                                  from_flatfile = TRUE,
+                                  projection = "grch37"){
+
+  #check remote configuration
+  remote_session = check_remote_configuration(auto_connect = TRUE)
+
+  #check selected projection
+  if(projection != "grch37"){
+    stop("Currently, only grch37 is supported")
+  }
+
+  #retrieve sample ID from metadata, or get metadata for provided sample ID
+  #get sample ID from metadata and check if metadata contains more than 1 row
+  if(missing(this_sample_id)){
+    if(!missing(these_samples_metadata)){
+      this_sample_id = pull(these_samples_metadata, sample_id)
+      if(!nrow(these_samples_metadata==1)){
+        stop("Your metadata seems to be having more than one sample (or zero samples), please refer to get_manta_sv_by_samples if you indeed are interested in returning results for multiple samples...")
+      }
+    }
+  }
+
+  #get metadata and subset based on the provided sample ID
+  if(!missing(this_sample_id)){
+    if(missing(these_samples_metadata)){
+      these_samples_metadata = get_gambl_metadata() %>%
+        dplyr::filter(sample_id == this_sample_id)
+      if(!nrow(these_samples_metadata==1)){
+        stop("Fetched metadata contains more than one row, or the data frame is empty (subset to the provided sample ID). Considder giving this funciton an already subset metadata with the sample ID of interest...")
+      }
+    }
+  }
+
+  #last check
+  if(missing(this_sample_id) && missing(these_samples_metadata)){
+    stop("please provide either a sample ID (this_sample_id) or an already subset metadata (these_samples_metadata)...")
+  }
+
+  #get wildcards
+  tumour_sample_id = this_sample_id
+  unix_group = pull(these_samples_metadata, unix_group)
+  seq_type = pull(these_samples_metadata, seq_type)
+  genome_build = projection
+  pairing_status = pull(these_samples_metadata, pairing_status)
+
+  if(pairing_status == "matched"){
+    normal_sample_id = pull(these_samples_metadata, normal_sample_id)
+  }else{
+    normal_sample_id = config::get("unmatched_normal_ids")[[unix_group]][[seq_type]][[genome_build]]
+  }
+
+  if(from_flatfile){
+    if(remote_session){
+      #need to scp the file here if it's the first time we have requested it at this site
+      remote_path_template = paste0(config::get("project_base", config = "default"), path_template)
+      remote_bedpe_path = glue::glue(remote_path_template)
+      print(remote_bedpe_path)
+
+      if(!file.exists(bedpe_path)){
+        print("need to copy the file here")
+        dirN = dirname(bedpe_path)
+        suppressMessages(suppressWarnings(dir.create(dirN, recursive = T)))
+        ssh::scp_download(ssh_session, remote_bedpe_path, dirN)
+      }
+
+    #read remote path
+    bedpe_dat = suppressMessages(read_tsv(remote_bedpe_path, comment = "##"))
+
+    }else{
+      #get paths
+      path_template = config::get("results_flatfiles")$sv_manta$template
+      path_template = paste0(config::get("project_base"), path_template)
+      bedpe_path = glue::glue(path_template)
+      print(paste0("Reading from: ", bedpe_path))
+
+      #check for missingness
+      if(!file.exists(bedpe_path)){
+        print(paste("missing: ", bedpe_path))
+        message("Cannot find file locally. If working remotely, perhaps you forgot to load your config (see below) or sync your files?")
+        message('Sys.setenv(R_CONFIG_ACTIVE= "remote")')
+        check_host()
+      }
+      bedpe_dat = suppressMessages(read_tsv(bedpe_path, comment = "##"))
+    }
+  }else{
+    stop("This funciton only works with flat_file = TRUE (i.e no database support), please considder changing this parameter...")
+  }
+
+  #data wrangling
+  bedpe_dat = bedpe_dat %>%
+    dplyr::rename("CHROM_A" = "#CHROM_A") %>%
+    mutate(tumour_sample_id = tumour_sample_id, normal_sample_id = normal_sample_id, NAME = ".") %>%
+    mutate(pair_status = pairing_status) %>%
+    mutate(SOMATIC_SCORE = gsub(".*SOMATICSCORE=","", as.character(INFO_A)))
+
+  #extract some more VCF information
+  vcf_normal = str_split_fixed(bedpe_dat[[normal_sample_id]], ":", 6) %>%
+    as.data.frame() %>%
+    rename(GT_normal = 1, PR_normal = 2, SR_normal = 3, TR_normal = 4, DP_normal = 5, VAF_normal = 6)
+
+  vcf_tumour = str_split_fixed(bedpe_dat[[tumour_sample_id]], ":", 6) %>%
+    as.data.frame() %>%
+    rename(GT_tumour = 1, PR_tumour = 2, SR_tumour = 3, TR_tumour = 4, DP_tumour = 5, VAF_tumour = 6)
+
+  bedpe_dat = cbind(bedpe_dat, vcf_normal, vcf_tumour)
+
+  #substitute empty strings with NAs (variants specified as "imprecise" in info field, does not have all FORMAT IDs)
+  bedpe_dat[bedpe_dat == ""] <- NA
+
+  #subset NAs (in VAF_normal) to new data frame, i.e variants stated as "imprecise" as described above.
+  NAs = subset(bedpe_dat, is.na(VAF_normal))
+
+  #shift cells for such variants, necessary to retrieve VAF and DP from VCF fields (they are there, but shifted one cell to the left, due to the missing of "SR" FORMAT).
+  NAs$VAF_normal = NAs$DP_normal
+  NAs$DP_normal = NAs$TR_normal
+  NAs$VAF_tumour = NAs$DP_tumour
+  NAs$DP_tumour = NAs$TR_tumour
+
+  #drop the same NAs from the original dataframe (i.e "imprecise" variants).
+  bedpe_dat_narm = bedpe_dat %>% drop_na()
+
+  #rbind wrangled imprecise variants with all other variants, and presenting the data in expected format (sorted and column-order).
+  bedpe_dat = rbind(bedpe_dat_narm, NAs) %>%
+    arrange(CHROM_A, CHROM_B, START_A) %>%
+    dplyr::select("CHROM_A", "START_A", "END_A", "CHROM_B", "START_B", "END_B",
+                  "NAME", "SOMATIC_SCORE", "STRAND_A", "STRAND_B", "TYPE", "FILTER",
+                  "VAF_tumour", "VAF_normal", "DP_tumour", "DP_normal", "tumour_sample_id",
+                  "normal_sample_id", "pair_status")
+
+  #VAF and somatic score filtering.
+  bedpe_dat = bedpe_dat %>%
+    dplyr::filter(VAF_tumour >= min_vaf & SOMATIC_SCORE >= min_score)
+
+  #filter on FILTER (variant callers variant filter criteria).
+  if(pass){
+    bedpe_dat = bedpe_dat %>%
+      dplyr::filter(FILTER == "PASS")
+  }
+
+  #deal with chr prefixes.
+  if(with_chr_prefix){
+    bedpe_dat = bedpe_dat %>%
+      dplyr::mutate(CHROM_A = case_when(str_detect(CHROM_A, "chr") ~ CHROM_A, TRUE ~ paste0("chr", CHROM_A))) %>%
+      dplyr::mutate(CHROM_B = case_when(str_detect(CHROM_B, "chr") ~ CHROM_B, TRUE ~ paste0("chr", CHROM_B)))
+  }
+
+  return(bedpe_dat)
+}
