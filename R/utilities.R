@@ -1093,8 +1093,13 @@ review_hotspots = function(annotated_maf,
 #' @export
 #'
 #' @examples
+#' #custom track withj annotations
 #' all_sv = get_manta_sv()
-#' sv_to_custom_track(all_sv, output_file = "GAMBL_sv_custom_track.bed", is_annotated = FALSE)
+#' annotated_sv = annotate_sv(sv_data = all_sv)
+#' sv_to_custom_track(annotated_sv, output_file = "GAMBL_sv_custom_track_annotated.bed", is_annotated = TRUE)
+#'
+#' #custom track (no anotatated SVs)
+#' sv_to_custom_track(all_sv, output_file = "GAMBL_sv_custom_track_annotated.bed", is_annotated = FALSE)
 #'
 sv_to_custom_track = function(sv_bedpe,
                               output_file,
@@ -1102,48 +1107,48 @@ sv_to_custom_track = function(sv_bedpe,
                               sv_name = "all"){
 
   if(is_annotated){
-  #reduce to a bed-like format
-  sv_data1 = mutate(sv_bedpe, annotation = paste0(chrom1, ":", start1, "_", fusion)) %>%
-    dplyr::select(chrom2, start2, end2, tumour_sample_id, annotation, fusion)
+    #reduce to a bed-like format
+    sv_data1 = mutate(annotated_sv, annotation = paste0(chrom1, ":", start1, "_", fusion)) %>%
+      dplyr::select(chrom2, start2, end2, tumour_sample_id, annotation, fusion)
 
-  sv_data2 = mutate(sv_bedpe, annotation = paste0(chrom2, ":", start2, "_", fusion)) %>%
-    dplyr::select(chrom1, start1, end1, tumour_sample_id, annotation, fusion)
+    sv_data2 = mutate(annotated_sv, annotation = paste0(chrom2, ":", start2, "_", fusion)) %>%
+      dplyr::select(chrom1, start1, end1, tumour_sample_id, annotation, fusion)
 
-  print(head(sv_data1))
-  print(head(sv_data2))
-  colnames(sv_data1) = c("chrom", "start", "end", "sample_id", "annotation", "fusion")
-  colnames(sv_data2) = c("chrom", "start", "end", "sample_id", "annotation", "fusion")
-  sv_data = bind_rows(sv_data1, sv_data2)
-  sv_data = mutate(sv_data, end = end + 10)
+    print(head(sv_data1))
+    print(head(sv_data2))
+    colnames(sv_data1) = c("chrom", "start", "end", "sample_id", "annotation", "fusion")
+    colnames(sv_data2) = c("chrom", "start", "end", "sample_id", "annotation", "fusion")
+    sv_data = bind_rows(sv_data1, sv_data2)
+    sv_data = mutate(sv_data, end = end + 10)
   }else{
-    colnames(sv_data)[c(1,2,3)]=c("CHROM_A" ,  "START_A", "END_A" )
-    colnames(sv_data)[c(4,5,6)]=c("CHROM_B" ,  "START_B", "END_B" )
-    
     sv_data_1 = mutate(sv_bedpe, annotation = paste0( CHROM_B, ":", START_B)) %>%
       dplyr::select(CHROM_A, START_A, END_A, tumour_sample_id, annotation)
+
     sv_data_2 = mutate(sv_bedpe, annotation = paste0( CHROM_A, ":", START_A)) %>%
       dplyr::select(CHROM_B, START_B, END_B, tumour_sample_id, annotation)
-    colnames(sv_data_1)=c("chrom", "start", "end", "sample_id", "annotation")
-    colnames(sv_data_2)=c("chrom", "start", "end", "sample_id", "annotation")
-    sv_data= bind_rows(sv_data_1,sv_data_2)
-    
-   # sv_data = dplyr::select(sv_data,chrom,start,end,sample_id,annotation)
+
+    colnames(sv_data_1) = c("chrom", "start", "end", "sample_id", "annotation")
+    colnames(sv_data_2) = c("chrom", "start", "end", "sample_id", "annotation")
+    sv_data = bind_rows(sv_data_1, sv_data_2)
+
   }
   if(!any(grepl("chr", sv_data[,1]))){
     #add chr
     sv_data[,1] = unlist(lapply(sv_data[,1], function(x){paste0("chr", x)}))
   }
+
   coo_cols = get_gambl_colours("COO")
   path_cols = get_gambl_colours("pathology")
   all_cols = c(coo_cols, path_cols)
   colour_df = data.frame(coo = names(all_cols), colour = all_cols)
+
   rgb_df = data.frame(t(col2rgb(all_cols))) %>%
     mutate(consensus_coo_dhitsig = names(all_cols)) %>%
     unite(col = "rgb", red, green, blue, sep = ",")
 
   meta = get_gambl_metadata() %>%
     dplyr::select(sample_id, "consensus_coo_dhitsig", pathology) %>%
-      mutate(consensus_coo_dhitsig = if_else(consensus_coo_dhitsig == "NA", pathology, consensus_coo_dhitsig))
+    mutate(consensus_coo_dhitsig = if_else(consensus_coo_dhitsig == "NA", pathology, consensus_coo_dhitsig))
 
   samples_coloured = left_join(meta, rgb_df)
   sv_bed_coloured = left_join(sv_data, samples_coloured) %>%
