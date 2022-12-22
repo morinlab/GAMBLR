@@ -2608,9 +2608,10 @@ theme_Morons = function(base_size = 14,
 #' Create a forest plot comparing mutation frequencies for a set of genes between two groups.
 #'
 #' @param maf A maf data frame. Minimum required columns are Hugo_Symbol and Tumor_Sample_Barcode.
-#' @param mutmat Optional argument for binary mutation matrix. If not supplied, function will generate this amtrix from the file used in argument "maf".
+#' @param mutmat Optional argument for binary mutation matrix. If not supplied, function will generate this matrix from the file used in argument "maf".
 #' @param metadata Metadata for the comparisons. Minimum required columns are Tumor_Sample_Barcode and the column assigning each case to one of two groups.
-#' @param genes An optional list of genes to restrict your plot to.
+#' @param genes An optional list of genes to restrict your plot to. If no gene-list is supplied, the function will extract all mutated genes from the incoming maf. See n_mutations parameter for more info.
+#' @param n_mutations Optional parameter for when no gene list is provided. This parameter ensures only genes with n mutations are kept in the gene list. Default value is 1, this means all genes in the incoming maf will be plotted.
 #' @param comparison_column Mandatory: the name of the metadata column containing the comparison values.
 #' @param rm_na_samples Set to TRUE to remove 0 mutation samples. Default is FALSE.
 #' @param comparison_values Optional: If the comparison column contains more than two values or is not a factor, specify a character vector of length two in the order you would like the factor levels to be set, reference group first.
@@ -2630,7 +2631,7 @@ theme_Morons = function(base_size = 14,
 #'   dplyr::filter(pairing_status == "matched") %>%
 #'   dplyr::filter(consensus_pathology %in% c("FL", "DLBCL"))
 #'
-#' maf = get_coding_ssm(limit_samples = metadata$sample_id, basic_columns = TRUE)
+#' maf = get_coding_ssm(limit_samples = metadata$sample_id, basic_columns = TRUE, seq_type = "genome")
 #'
 #' prettyForestPlot(maf = maf,
 #'                  metadata = metadata,
@@ -2644,6 +2645,7 @@ prettyForestPlot = function(maf,
                             mutmat,
                             metadata,
                             genes,
+                            n_mutations = 1,
                             comparison_column,
                             rm_na_samples = FALSE,
                             comparison_values = FALSE,
@@ -2652,12 +2654,6 @@ prettyForestPlot = function(maf,
                             custom_colours = FALSE,
                             custom_labels = FALSE,
                             max_q = 1){
-
-  #Subset the maf file to the specified genes
-  {
-    if(!exists("genes"))
-      stop("Please provide a character vector of genes you wish to compare. ")
-  }
 
   #If no comparison_values are specified, derive the comparison_values from the specified comparison_column
   if(comparison_values[1] == FALSE){
@@ -2677,10 +2673,22 @@ prettyForestPlot = function(maf,
 
   #Ensure the metadata comparison column is a factor with levels matching the input
   metadata$comparison = factor(metadata[[comparison_column]], levels = comparison_values)
+
+  #read maf into r
   if(!missing(maf)){
+    #extract gene symbols from maf with minimum N mutations (if no genes list is provided)
+    if(missing(genes)){
+      genes = maf %>%
+        dplyr::select(Hugo_Symbol) %>%
+        add_count(Hugo_Symbol) %>%
+        distinct(Hugo_Symbol, .keep_all = TRUE) %>%
+        dplyr::filter(n >= n_mutations) %>%
+        pull(Hugo_Symbol)
+    }
     maf = maf[maf$Hugo_Symbol %in% genes, ]
     maf = maf[maf$Tumor_Sample_Barcode %in% metadata$Tumor_Sample_Barcode, ]
   }
+
   #If separate_hotspots = true, confirm the input maf is hotspot annotated
   if(!missing(mutmat)){
     #add the required columns from the metadata and make the names consistent
@@ -2705,7 +2713,7 @@ prettyForestPlot = function(maf,
         dplyr::filter(`NA` == 0) #filter out all samples that show no mutations in the selected genes (i.e na_samples = 1).
     }
     if("NA" %in% colnames(mutmat)){
-    mutmat = dplyr::select(mutmat, -`NA`) #remove NA column (if there).
+      mutmat = dplyr::select(mutmat, -`NA`) #remove NA column (if there).
     }
   }else{
     message("provide a MAF or mutation matrix")
