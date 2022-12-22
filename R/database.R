@@ -1220,7 +1220,7 @@ get_combined_sv = function(min_vaf = 0,
 #' @param qend Query end coordinate of the range you are restricting to.
 #' @param region Region formatted like chrX:1234-5678 instead of specifying chromosome, start and end separately.
 #' @param with_chr_prefix Prepend all chromosome names with chr (required by some downstream analyses).
-#' @param from_flatfile Set to FALSE by default.
+#' @param from_flatfile Set to TRUE by default.
 #' @param projection The projection genome build. Currently only grch37 is supported.
 #'
 #' @return A data frame in a bedpe-like format with additional columns that allow filtering of high-confidence SVs.
