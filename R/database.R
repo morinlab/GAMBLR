@@ -2688,9 +2688,10 @@ get_manta_sv_by_samples = function(these_samples_metadata,
                                                                  projection = projection)})
 
   #un-nest list into long format.
-  merged_bedpe = bind_rows(all_bedpe, .id = "column_label")
+  merged_bedpe = bind_rows(all_bedpe)
 
   #return merged manta SVs.
+  rownames(merged_bedpe) <- NULL 
   return(merged_bedpe)
 }
 
@@ -2781,28 +2782,10 @@ get_manta_sv_by_sample = function(min_vaf = 0.1,
   }
 
   if(from_flatfile){
-    if(remote_session){
-      #need to scp the file here if it's the first time we have requested it at this site
-      remote_path_template = paste0(config::get("project_base", config = "default"), path_template)
-      remote_bedpe_path = glue::glue(remote_path_template)
-      print(remote_bedpe_path)
-
-      if(!file.exists(bedpe_path)){
-        print("need to copy the file here")
-        dirN = dirname(bedpe_path)
-        suppressMessages(suppressWarnings(dir.create(dirN, recursive = T)))
-        ssh::scp_download(ssh_session, remote_bedpe_path, dirN)
-      }
-
-    #read remote path
-    bedpe_dat = suppressMessages(read_tsv(remote_bedpe_path, comment = "##"))
-
-    }else{
-      #get paths
+    if(!remote_session){
       path_template = config::get("results_flatfiles")$sv_manta$template
       path_template = paste0(config::get("project_base"), path_template)
       bedpe_path = glue::glue(path_template)
-      print(paste0("Reading from: ", bedpe_path))
 
       #check for missingness
       if(!file.exists(bedpe_path)){
@@ -2811,7 +2794,29 @@ get_manta_sv_by_sample = function(min_vaf = 0.1,
         message('Sys.setenv(R_CONFIG_ACTIVE= "remote")')
         check_host()
       }
+      
+      #read file
       bedpe_dat = suppressMessages(read_tsv(bedpe_path, comment = "##"))
+      
+    }else{
+      #remote path, i.e the path to the requested file
+      remote_path_template = paste0(config::get("project_base", config = "default"), path_template)
+      remote_bedpe_path = glue::glue(remote_path_template)
+      
+      #local path, i.e the path to the local file
+      local_path_template = paste0(config::get("project_base", config = "remote"), path_template)
+      local_bedpe_path = glue::glue(local_path_template)
+      
+      #check if the local file is existing, if not, get it with ssh
+      if(!file.exists(local_bedpe_path)){
+        cat(paste0("Local file not found.\ntrying to copy requested file: ", remote_bedpe_path, "\n", "To: ", local_bedpe_path))
+        dirN = dirname(local_bedpe_path)
+        suppressMessages(suppressWarnings(dir.create(dirN, recursive = T)))
+        ssh::scp_download(ssh_session, remote_bedpe_path, dirN)
+      }
+      
+      #read remote path
+      bedpe_dat = suppressMessages(read_tsv(local_bedpe_path, comment = "##"))
     }
   }else{
     stop("This funciton only works with flat_file = TRUE (i.e no database support), please considder changing this parameter...")
@@ -2875,5 +2880,6 @@ get_manta_sv_by_sample = function(min_vaf = 0.1,
       dplyr::mutate(CHROM_B = case_when(str_detect(CHROM_B, "chr") ~ CHROM_B, TRUE ~ paste0("chr", CHROM_B)))
   }
 
+  rownames(bedpe_dat) <- NULL 
   return(bedpe_dat)
 }
