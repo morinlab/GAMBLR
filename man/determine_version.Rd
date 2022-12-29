@@ -21,3 +21,8 @@ data frame
 This function determines if a user is requesting the latest version
 of the bundled data or wants to access one of the earlier veresions.
 }
+\examples{
+determine_version()
+determine_version(this_genome_build = "hg38")
+
+}

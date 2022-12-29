@@ -13,6 +13,9 @@
 #' @import config dplyr readr git2r GAMBLR.data
 #'
 #' @examples
+#' determine_version()
+#' determine_version(this_genome_build = "hg38")
+#'
 determine_version <- function(
     mode = "somatic_hypermutation_locations",
     this_genome_build = "grch37"
