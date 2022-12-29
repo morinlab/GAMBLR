@@ -1000,6 +1000,7 @@ assemble_file_details = function(file_details_df,
 #' @param bedpe_file Either specify the path to a bedpe file
 #' @param bedpe_df Or specify the bedpe data in a data frame
 #' @param target_build Specify which build the data should be lifted to (must be one of hg19, grch37, hg38, grch38)
+#' @param print_head Boolean parameter to toggle if the head of the original bedpe file should be printed. Default si
 #'
 #' @return Data frame containing original bedpe data with new coordinates
 #' @export
@@ -1014,7 +1015,8 @@ liftover_bedpe = function(bedpe_file,
                           target_build = "grch37",
                           col_names,
                           col_types,
-                          standard_bed = FALSE){
+                          standard_bed = FALSE,
+                          print_head = TRUE){
 
   if(!missing(bedpe_file)){
     if(missing(col_names)){
@@ -1038,8 +1040,10 @@ liftover_bedpe = function(bedpe_file,
     original_bedpe = original_bedpe %>%
       dplyr::mutate(CHROM_A = ifelse(!grepl("chr", CHROM_A), paste0("chr", CHROM_A), CHROM_A),
                     CHROM_B = ifelse(!grepl("chr", CHROM_B), paste0("chr", CHROM_B), CHROM_B))
-
-    print(head(original_bedpe))
+    
+    if(print_head){
+      print(head(original_bedpe))
+    }
 
     char_vec = original_bedpe %>%
       tidyr::unite(united, sep = "\t") %>%
