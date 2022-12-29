@@ -52,7 +52,8 @@ Imports:
 Remotes:
     morinlab/g3viz,
     cBioPortal/cgdsr,
-    morinlab/ggsci
+    morinlab/ggsci,
+    morinlab/GAMBLR.data
 VignetteBuilder: knitr
 Depends:
     R (>= 2.10)
