@@ -2,33 +2,29 @@
 % Please edit documentation in R/database.R
 \name{get_manta_sv_by_samples}
 \alias{get_manta_sv_by_samples}
-\title{Load the manta output for a set of samples from their bedpe files from Manta}
+\title{Load the manta output for a set of samples}
 \usage{
 get_manta_sv_by_samples(
   these_samples_metadata,
-  this_sample_id,
   min_vaf = 0.1,
   min_score = 40,
   pass = TRUE,
   with_chr_prefix = FALSE,
-  from_flatfile = TRUE,
   projection = "grch37"
 )
 }
 \arguments{
-\item{these_samples_metadata}{The only required parameter is a metadata table (data frame) that must contain a row for each sample you want the data from. The additional columns the data frame needs to contain, besides sample_id, are: unix_group, genome_build, seq_type, pairing_status}
+\item{these_samples_metadata}{A metadata table (data frame) that must contain a row for each sample you want the data from. The additional columns the data frame needs to contain, besides sample_id, are: unix_group, genome_build, seq_type, pairing_status. If not provided, will default to all samples not included in current manta sv merge.}
 
-\item{min_vaf}{The minimum tumour VAF for a SV to be returned.}
+\item{min_vaf}{The minimum tumour VAF for a SV to be returned. default is 0.1.}
 
-\item{min_score}{The lowest Manta somatic score for a SV to be returned.}
+\item{min_score}{The lowest Manta somatic score for a SV to be returned. Default value is 40.}
 
 \item{pass}{If set to TRUE, include SVs that are annotated with PASS in FILTER column. Default is TRUE.}
 
-\item{with_chr_prefix}{Prepend all chromosome names with chr (required by some downstream analyses).}
+\item{with_chr_prefix}{Add "chr" to all chromosome names (required by some downstream analysis). Default is FALSE.}
 
-\item{from_flatfile}{Set to TRUE by default.}
-
-\item{projection}{The projection genome build. Currently only grch37 is supported.}
+\item{projection}{The projection genome build. Default is grch37.}
 }
 \value{
 a data frame containing the Manta outputs from all sample_id in these_samples_metadata in a bedpe-like format with additional columns extracted from the VCF column.
@@ -37,10 +33,18 @@ a data frame containing the Manta outputs from all sample_id in these_samples_me
 This is a convenience wrapper function for get_manta_sv_by_sample. See that function for more information.
 }
 \examples{
-my_samples = c("00-20702T", "00-15201_tumorB")
 
-multi_meta = get_gambl_metadata() \%>\% dplyr::filter(sample_id \%in\% my_samples)
+#four samples, 1 available in merge, 1 not in merge but correct projection for flat-file, 
+1 not in merge and wrong projection for available flat-file, 1 sample with no SV calls
 
-my_samples_sv = get_manta_sv_by_samples(these_samples_metadata = multi_meta)
+#get metadata
+multi_meta = get_gambl_metadata() \%>\%
+               dplyr::filter(sample_id \%in\% c("BLGSP-71-06-00001-01A-11D",
+                                              "00-14595_tumorD",
+                                              "012-02-1TD",
+                                              "171116-PL02"))
+
+#run get_manta_sv_by_samples                                           
+manta_calls = get_manta_sv_by_samples(these_samples_metadata = multi_meta)
 
 }
