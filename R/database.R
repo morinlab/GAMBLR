@@ -2649,9 +2649,9 @@ get_gene_expression = function(metadata,
 #'
 #' @examples
 #'
-#' #four samples, 1 available in merge, 1 not in merge but correct projection for flat-file, 
+#' #four samples, 1 available in merge, 1 not in merge but correct projection for flat-file,
 #' 1 not in merge and wrong projection for available flat-file, 1 sample with no SV calls
-#' 
+#'
 #' #get metadata
 #' multi_meta = get_gambl_metadata() %>%
 #'                dplyr::filter(sample_id %in% c("BLGSP-71-06-00001-01A-11D",
@@ -2659,7 +2659,7 @@ get_gene_expression = function(metadata,
 #'                                               "012-02-1TD",
 #'                                               "171116-PL02"))
 #'
-#' #run get_manta_sv_by_samples                                           
+#' #run get_manta_sv_by_samples
 #' manta_calls = get_manta_sv_by_samples(these_samples_metadata = multi_meta)
 #'
 get_manta_sv_by_samples = function(these_samples_metadata,
@@ -2694,10 +2694,27 @@ get_manta_sv_by_samples = function(these_samples_metadata,
                                                                  pass = pass,
                                                                  with_chr_prefix = with_chr_prefix,
                                                                  projection = projection,
-                                                                 all_sv = all_sv)})
+                                                                 all_sv = all_sv,
+                                                                 force_lift = FALSE)})
 
   #un-nest list into long format.
   merged_bedpe = bind_rows(all_bedpe)
+  
+  #take out all calls that need to be lifted
+  to_be_lifted = merged_bedpe %>%
+    dplyr::filter(need_lift == TRUE)
+  
+  #lift to selected projection
+  lifted_calls = liftover_bedpe(bedpe_df = to_be_lifted, target_build = projection, print_head = FALSE)
+  
+  #subset calls that does not need a "lift"
+  no_lift_needed = merged_bedpe %>%
+    dplyr::filter(need_lift == FALSE)
+  
+  #combine calls (lifted and not lifted), arrange and sort accordingly, drop temporary column
+  test_bedpe_new = rbind(lifted_calls, no_lift_needed) %>%
+    arrange(CHROM_A, CHROM_B, START_A) %>%
+    dplyr::select(-need_lift)
 
   #return merged manta SVs.
   rownames(merged_bedpe) <- NULL
@@ -2709,9 +2726,9 @@ get_manta_sv_by_samples = function(these_samples_metadata,
 #'
 #' This function retrieves manta Structural Variants (SV) calls for one sample (for multiple samples, please refer to get_manta_sv_by_samples).
 #' They way this function operates is to (1) look for specified sample in the currently available manta merged results (from get_manta_sv).
-#' If unsuccessful, the function will (2) look for an individual flat file for the specified sample. If the flat-file is in the wrong projection 
-#' (based on what is specified) the function will run liftover_bedpe on thjis flat-file. Additionally, the user will always be notified that no calls 
-#' are available for the this sample id (file is missing). As a minimum requirement, this function expects a sample id specified with this_sample_id 
+#' If unsuccessful, the function will (2) look for an individual flat file for the specified sample. If the flat-file is in the wrong projection
+#' (based on what is specified) the function will run liftover_bedpe on this flat-file. Additionally, the user will always be notified that no calls
+#' are available for the this sample id (file is missing). As a minimum requirement, this function expects a sample id specified with this_sample_id
 #' parameter, or better yet, a metadata table subset to the sample id of interest.
 #'
 #' @param this_sample_id The single sample_id you want to obtain the result from (optional).
@@ -2722,6 +2739,7 @@ get_manta_sv_by_samples = function(these_samples_metadata,
 #' @param pass If set to TRUE, include SVs that are annotated with PASS in FILTER column. Default is TRUE.
 #' @param with_chr_prefix Add "chr" to all chromosome names (required by some downstream analysis). Defualt is FALSE.
 #' @param projection The projection genome build. Default is grch37.
+#' @param force_lift Set to TRUE to lift (if needed) coordinates to selected projection, default is TRUE. For multiple samples (get_manta_sv_by_samples) this parameter is forced to FALSE (liftover is done within this function on all samples at once instead). Should alwyas be TRUE if this function is running in stand-alone mode.
 #'
 #' @return a data frame containing the Manta outputs from this_sample_id in a bedpe-like format with additional columns extracted from the VCF column.
 #' @import tidyverse
@@ -2748,7 +2766,8 @@ get_manta_sv_by_sample = function(this_sample_id,
                                   min_score = 40,
                                   pass = TRUE,
                                   with_chr_prefix = FALSE,
-                                  projection = "grch37"){
+                                  projection = "grch37",
+                                  force_lift = TRUE){
 
   #check remote configuration
   remote_session = check_remote_configuration(auto_connect = TRUE)
@@ -2781,7 +2800,7 @@ get_manta_sv_by_sample = function(this_sample_id,
   if(missing(all_sv)){
     all_sv = get_manta_sv(projection = projection)
   }
-  
+
   bedpe_dat = all_sv %>%
     dplyr::filter(tumour_sample_id == this_sample_id)
 
@@ -2800,7 +2819,7 @@ get_manta_sv_by_sample = function(this_sample_id,
     }else{
       local_path_template = paste0(config::get("project_base", config = "remote"), path_template)
       bedpe_path = glue::glue(local_path_template)
-      
+
       #check if the requested file is on local machine, if not, get it!
       if(!file.exists(bedpe_path)){
         remote_path_template = paste0(config::get("project_base", config = "default"), path_template)
@@ -2813,25 +2832,34 @@ get_manta_sv_by_sample = function(this_sample_id,
     }
 
     bedpe_dat_raw = suppressMessages(read_tsv(bedpe_path, comment = "##"))
-    
+
     if(!nrow(bedpe_dat_raw==0)){
       message(paste0("WARNING! No SV calls found in flat-file for: ", this_sample_id))
       return() #if returned manta calls data frame is empty, return and potentially move over to the next sample (if get_manta_sv_by_samples is called).
     }
 
-    #Check projection on the retreived flat-file, use liftover_bedpe to get manta calls in the desired projection (if necessary).
     if(genome_build != projection){
-      message(paste0(this_sample_id, " flat-file is not avaialble in the selected projection, running liftover_bedpe..."))
-      bedpe_dat_raw = liftover_bedpe(bedpe_df = bedpe_dat_raw, target_build = projection, print_head = FALSE)
-      message(paste0(this_sample_id, " successfully lifted to ", projection))
+      bedpe_dat_raw = bedpe_dat_raw %>%
+        add_column(need_lift = TRUE)
+      if(force_lift){
+        bedpe_dat_raw = liftover_bedpe(bedpe_df = bedpe_dat_raw, target_build = projection, print_head = FALSE)
+        message(paste0(this_sample_id, " flat-file is not avaialble in the selected projection, running liftover_bedpe..."))
+        message(paste0(this_sample_id, " successfully lifted to ", projection))
+      }
+    }else{
+      bedpe_dat_raw = bedpe_dat_raw %>%
+        add_column(need_lift = FALSE)
     }
   }else{
+    bedpe_dat = bedpe_dat %>%
+      add_column(need_lift = FALSE)
     message(paste0("Reading ", this_sample_id, " from merged Manta results..."))
     }
 
   #Data wrangling.
   if(exists("bedpe_dat_raw")){
     chrom_col <- c(CHROM_A = "#CHROM_A")
+
     bedpe_dat = bedpe_dat_raw %>%
       rename(any_of(chrom_col)) %>%
       mutate(tumour_sample_id = tumour_sample_id, normal_sample_id = normal_sample_id, NAME = ".") %>%
@@ -2870,7 +2898,7 @@ get_manta_sv_by_sample = function(this_sample_id,
       dplyr::select("CHROM_A", "START_A", "END_A", "CHROM_B", "START_B", "END_B",
                     "NAME", "SOMATIC_SCORE", "STRAND_A", "STRAND_B", "TYPE", "FILTER",
                     "VAF_tumour", "VAF_normal", "DP_tumour", "DP_normal", "tumour_sample_id",
-                    "normal_sample_id", "pair_status")
+                    "normal_sample_id", "pair_status", "need_lift")
   }
 
   #Filtering:
@@ -2900,6 +2928,11 @@ get_manta_sv_by_sample = function(this_sample_id,
   bedpe_dat = bedpe_dat %>%
     mutate(across(c(CHROM_A, CHROM_B, NAME, STRAND_A, STRAND_B, TYPE, FILTER, tumour_sample_id, normal_sample_id, pair_status), as.character)) %>%
     mutate(across(c(START_A, END_A, START_B, END_B, SOMATIC_SCORE, VAF_tumour, VAF_normal, DP_tumour, DP_normal), as.numeric))
+  
+  if(force_lift){
+    bedpe_dat = bedpe_dat %>%
+      dplyr::select(-need_lift)
+  }
 
   return(bedpe_dat)
 }
