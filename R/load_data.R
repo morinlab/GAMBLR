@@ -6,7 +6,8 @@
 #' This function determines if a user is requesting the latest version
 #' of the bundled data or wants to access one of the earlier veresions.
 #'
-#' @param auto_connect Set to TRUE to ensure an ssh_session is created if absent
+#' @param mode Determines which data to handle. Defaults to somatic_hypermutation_locations. Will grow with more options as more data is version tracked.
+#' @param this_genome_build The genome build of the data if coordinate-based. Accepts grch37 (default) or hg38.
 #'
 #' @return data frame
 #' @import config dplyr readr git2r GAMBLR.data

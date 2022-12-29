@@ -10,7 +10,9 @@ determine_version(
 )
 }
 \arguments{
-\item{auto_connect}{Set to TRUE to ensure an ssh_session is created if absent}
+\item{mode}{Determines which data to handle. Defaults to somatic_hypermutation_locations. Will grow with more options as more data is version tracked.}
+
+\item{this_genome_build}{The genome build of the data if coordinate-based. Accepts grch37 (default) or hg38.}
 }
 \value{
 data frame
