@@ -2712,7 +2712,7 @@ get_manta_sv_by_samples = function(these_samples_metadata,
     dplyr::filter(need_lift == FALSE)
   
   #combine calls (lifted and not lifted), arrange and sort accordingly, drop temporary column
-  test_bedpe_new = rbind(lifted_calls, no_lift_needed) %>%
+  merged_bedpe = rbind(lifted_calls, no_lift_needed) %>%
     arrange(CHROM_A, CHROM_B, START_A) %>%
     dplyr::select(-need_lift)
 
