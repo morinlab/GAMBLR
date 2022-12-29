@@ -34,7 +34,7 @@ This is a convenience wrapper function for get_manta_sv_by_sample. See that func
 }
 \examples{
 
-#four samples, 1 available in merge, 1 not in merge but correct projection for flat-file, 
+#four samples, 1 available in merge, 1 not in merge but correct projection for flat-file,
 1 not in merge and wrong projection for available flat-file, 1 sample with no SV calls
 
 #get metadata
@@ -44,7 +44,7 @@ multi_meta = get_gambl_metadata() \%>\%
                                               "012-02-1TD",
                                               "171116-PL02"))
 
-#run get_manta_sv_by_samples                                           
+#run get_manta_sv_by_samples
 manta_calls = get_manta_sv_by_samples(these_samples_metadata = multi_meta)
 
 }

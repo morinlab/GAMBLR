@@ -12,7 +12,8 @@ get_manta_sv_by_sample(
   min_score = 40,
   pass = TRUE,
   with_chr_prefix = FALSE,
-  projection = "grch37"
+  projection = "grch37",
+  force_lift = TRUE
 )
 }
 \arguments{
@@ -31,6 +32,8 @@ get_manta_sv_by_sample(
 \item{with_chr_prefix}{Add "chr" to all chromosome names (required by some downstream analysis). Defualt is FALSE.}
 
 \item{projection}{The projection genome build. Default is grch37.}
+
+\item{force_lift}{Set to TRUE to lift (if needed) coordinates to selected projection, default is TRUE. For multiple samples (get_manta_sv_by_samples) this parameter is forced to FALSE (liftover is done within this function on all samples at once instead). Should alwyas be TRUE if this function is running in stand-alone mode.}
 }
 \value{
 a data frame containing the Manta outputs from this_sample_id in a bedpe-like format with additional columns extracted from the VCF column.
@@ -39,7 +42,7 @@ a data frame containing the Manta outputs from this_sample_id in a bedpe-like fo
 This function retrieves manta Structural Variants (SV) calls for one sample (for multiple samples, please refer to get_manta_sv_by_samples).
 They way this function operates is to (1) look for specified sample in the currently available manta merged results (from get_manta_sv).
 If unsuccessful, the function will (2) look for an individual flat file for the specified sample. If the flat-file is in the wrong projection
-(based on what is specified) the function will run liftover_bedpe on thjis flat-file. Additionally, the user will always be notified that no calls
+(based on what is specified) the function will run liftover_bedpe on this flat-file. Additionally, the user will always be notified that no calls
 are available for the this sample id (file is missing). As a minimum requirement, this function expects a sample id specified with this_sample_id
 parameter, or better yet, a metadata table subset to the sample id of interest.
 }
