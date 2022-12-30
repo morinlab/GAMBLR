@@ -40,7 +40,7 @@ get_manta_sv(
 
 \item{from_flatfile}{Set to TRUE by default.}
 
-\item{projection}{The projection genome build. Currently only grch37 is supported.}
+\item{projection}{The projection genome build.}
 
 \item{pair_status}{Use to restrict results (if desired) to matched or unmatched results (default is to return all).}
 }

@@ -2,62 +2,47 @@
 % Please edit documentation in R/database.R
 \name{get_manta_sv_by_sample}
 \alias{get_manta_sv_by_sample}
-\title{Load the manta output for 1 sample.}
+\title{Load the manta output (from individual flat file) for 1 sample.}
 \usage{
 get_manta_sv_by_sample(
   this_sample_id,
   these_samples_metadata,
-  all_sv,
+  force_lift = TRUE,
   min_vaf = 0.1,
   min_score = 40,
   pass = TRUE,
   with_chr_prefix = FALSE,
-  projection = "grch37",
-  force_lift = TRUE
+  projection = "grch37"
 )
 }
 \arguments{
-\item{this_sample_id}{The single sample_id you want to obtain the result from (optional).}
+\item{this_sample_id}{The single sample ID you want to obtain the result from.}
 
-\item{these_samples_metadata}{A metadata table containing metadata for this_sample_id, or sample of interest. If no sample ID is provided with this_sample_id, the function will extract sample ID from these_samples_metadata.}
+\item{these_samples_metadata}{A metadata table containing metadata for this_sample_id, or sample of interest. This parameeter is required.}
 
-\item{all_sv}{Data frame with merged manta results from get_manta_sv(), if not provided, this function will retrieve it.}
+\item{force_lift}{If TRUE, coordinates will be lifted (if needed) to the selected projection. WARNING! Should always be TRUE if this function is running in stand-alone mode.}
 
-\item{min_vaf}{The minimum tumour VAF for a SV to be returned. Defualt value is 0.1.}
+\item{min_vaf}{The minimum tumour VAF for a SV to be returned. Default value is 0.1.}
 
 \item{min_score}{The lowest Manta somatic score for a SV to be returned. Default value is 40.}
 
 \item{pass}{If set to TRUE, include SVs that are annotated with PASS in FILTER column. Default is TRUE.}
 
-\item{with_chr_prefix}{Add "chr" to all chromosome names (required by some downstream analysis). Defualt is FALSE.}
+\item{with_chr_prefix}{Toggle if chromosome names should be prefixed or not, default is FALSE.}
 
-\item{projection}{The projection genome build. Default is grch37.}
-
-\item{force_lift}{Set to TRUE to lift (if needed) coordinates to selected projection, default is TRUE. For multiple samples (get_manta_sv_by_samples) this parameter is forced to FALSE (liftover is done within this function on all samples at once instead). Should alwyas be TRUE if this function is running in stand-alone mode.}
+\item{projection}{The projection of returned calls. Default is grch37.}
 }
 \value{
 a data frame containing the Manta outputs from this_sample_id in a bedpe-like format with additional columns extracted from the VCF column.
 }
 \description{
-This function retrieves manta Structural Variants (SV) calls for one sample (for multiple samples, please refer to get_manta_sv_by_samples).
-They way this function operates is to (1) look for specified sample in the currently available manta merged results (from get_manta_sv).
-If unsuccessful, the function will (2) look for an individual flat file for the specified sample. If the flat-file is in the wrong projection
-(based on what is specified) the function will run liftover_bedpe on this flat-file. Additionally, the user will always be notified that no calls
-are available for the this sample id (file is missing). As a minimum requirement, this function expects a sample id specified with this_sample_id
-parameter, or better yet, a metadata table subset to the sample id of interest.
+This function is used for retrieving Manta results (structural variants) from individual flat-files (one sample).
+For multiple samples, please see get_manta_sv_by_samples (a convenience wrapper function for get_manta_by_sample).
+Additional columns are extracted from the VCF column and standard filtering options are available.
+This function also performs a lift-over to selected projection, if needed.
 }
 \examples{
-
-#sample in merge
-my_bedpe = get_manta_sv_by_sample(this_sample_id = "BLGSP-71-06-00001-01A-11D")
-
-#sample not in merge but flat-file in the desired genome projection
-my_bedpe = get_manta_sv_by_sample(this_sample_id = "00-14595_tumorD")
-
-#sample not in merge, and no individual flat-file in the selected genome projection (i.e run liftover_bedpe)
-my_bedpe = get_manta_sv_by_sample(this_sample_id = "019-19-01TD", projection = "hg38")
-
-#sample not in merge, flat-file available, but no SVs recorded for this sample (i.e flat-file is empty)
-my_bedpe = get_manta_sv_by_sample(this_sample_id = "171116-PL02", projection = "hg38")
+my_svs = get_manta_sv_by_sample(this_sample_id = "00-14595_tumorD",
+                             these_samples_metadata = get_gambl_metadata() \%>\% dplyr::filter(sample_id == "00-14595_tumorD"))
 
 }

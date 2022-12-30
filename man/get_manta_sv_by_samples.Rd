@@ -14,37 +14,27 @@ get_manta_sv_by_samples(
 )
 }
 \arguments{
-\item{these_samples_metadata}{A metadata table (data frame) that must contain a row for each sample you want the data from. The additional columns the data frame needs to contain, besides sample_id, are: unix_group, genome_build, seq_type, pairing_status. If not provided, will default to all samples not included in current manta sv merge.}
+\item{these_samples_metadata}{The only required parameter is a metadata table (data frame) that must contain a row for each sample you want the data from. The additional columns the data frame needs to contain, besides sample_id, are: unix_group, genome_build, seq_type, pairing_status.}
 
-\item{min_vaf}{The minimum tumour VAF for a SV to be returned. default is 0.1.}
+\item{min_vaf}{The minimum tumour VAF for a SV to be returned. Default value is 0.1.}
 
 \item{min_score}{The lowest Manta somatic score for a SV to be returned. Default value is 40.}
 
 \item{pass}{If set to TRUE, include SVs that are annotated with PASS in FILTER column. Default is TRUE.}
 
-\item{with_chr_prefix}{Add "chr" to all chromosome names (required by some downstream analysis). Default is FALSE.}
+\item{with_chr_prefix}{Toggle if chromosome names should be prefixed or not, default is FALSE.}
 
-\item{projection}{The projection genome build. Default is grch37.}
+\item{projection}{The projection of returned calls. Default is grch37.}
 }
 \value{
 a data frame containing the Manta outputs from all sample_id in these_samples_metadata in a bedpe-like format with additional columns extracted from the VCF column.
 }
 \description{
-This is a convenience wrapper function for get_manta_sv_by_sample. See that function for more information.
+This is a convenience wrapper function for get_manta_sv_by_sample (and called by get_manta_sv).
 }
 \examples{
-
-#four samples, 1 available in merge, 1 not in merge but correct projection for flat-file,
-1 not in merge and wrong projection for available flat-file, 1 sample with no SV calls
-
-#get metadata
-multi_meta = get_gambl_metadata() \%>\%
-               dplyr::filter(sample_id \%in\% c("BLGSP-71-06-00001-01A-11D",
-                                              "00-14595_tumorD",
-                                              "012-02-1TD",
-                                              "171116-PL02"))
-
-#run get_manta_sv_by_samples
-manta_calls = get_manta_sv_by_samples(these_samples_metadata = multi_meta)
+all_sv = get_manta_sv
+missing_samples = get_gambl_metadata() \%>\% anti_join(all_sv, by = c("sample_id" = "tumour_sample_id"))
+missing_from_merge = get_manta_sv_by_samples(these_samples_metadata = missing_samples)
 
 }
