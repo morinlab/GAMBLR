@@ -1221,7 +1221,7 @@ get_combined_sv = function(min_vaf = 0,
 #' @param region Region formatted like chrX:1234-5678 instead of specifying chromosome, start and end separately.
 #' @param with_chr_prefix Prepend all chromosome names with chr (required by some downstream analyses).
 #' @param from_flatfile Set to TRUE by default.
-#' @param projection The projection genome build. Currently only grch37 is supported.
+#' @param projection The projection genome build.
 #'
 #' @return A data frame in a bedpe-like format with additional columns that allow filtering of high-confidence SVs.
 #' @export
@@ -1248,22 +1248,17 @@ get_manta_sv = function(min_vaf = 0.1,
                         from_flatfile = TRUE,
                         projection = "grch37"){
 
-  #if(projection != "grch37"){
-  #  message("Currently, only grch37 is supported")
-  #  return()
-  #}
-
   db = config::get("database_name")
   table_name = config::get("results_tables")$sv
-    if(!missing(region)){
-      region = gsub(",", "", region)
-      #format is chr6:37060224-37151701
-      split_chunks = unlist(strsplit(region, ":"))
-      chromosome = split_chunks[1]
-      startend = unlist(strsplit(split_chunks[2], "-"))
-      qstart = startend[1]
-      qend = startend[2]
-    }
+  if(!missing(region)){
+    region = gsub(",", "", region)
+    #format is chr6:37060224-37151701
+    split_chunks = unlist(strsplit(region, ":"))
+    chromosome = split_chunks[1]
+    startend = unlist(strsplit(split_chunks[2], "-"))
+    qstart = startend[1]
+    qend = startend[2]
+  }
 
   #this table stores chromosomes with un-prefixed names. Convert to prefixed chromosome if necessary
   if(from_flatfile){
@@ -1279,6 +1274,16 @@ get_manta_sv = function(min_vaf = 0.1,
 
     all_sv = suppressMessages(read_tsv(sv_file, col_types = "cnncnncnccccnnnnccc", col_names = cnames))
 
+    #get metadata for samples currently missing from the merged results
+    missing_samples = get_gambl_metadata() %>%
+      anti_join(all_sv, by = c("sample_id" = "tumour_sample_id"))
+    
+    #call get manta_sv_by_samples on samples missing from current merge
+    missing_sv = get_manta_sv_by_samples(these_samples_metadata = missing_samples)
+    
+    #rbind current manta merged results with missing samples
+    all_sv = rbind(all_sv, missing_sv)
+    
   }else{
     con = DBI::dbConnect(RMariaDB::MariaDB(), dbname = db)
     all_sv = dplyr::tbl(con, table_name) %>%
@@ -1323,6 +1328,7 @@ get_manta_sv = function(min_vaf = 0.1,
   }
   return(all_sv)
 }
+
 
 
 #' Get a specific flavour of LymphGen from the main GAMBL outputs and tidy the composites.
@@ -2634,33 +2640,23 @@ get_gene_expression = function(metadata,
 
 #' Load the manta output for a set of samples
 #'
-#' This is a convenience wrapper function for get_manta_sv_by_sample. See that function for more information.
+#' This is a convenience wrapper function for get_manta_sv_by_sample (and called by get_manta_sv).
 #'
-#' @param these_samples_metadata A metadata table (data frame) that must contain a row for each sample you want the data from. The additional columns the data frame needs to contain, besides sample_id, are: unix_group, genome_build, seq_type, pairing_status. If not provided, will default to all samples not included in current manta sv merge.
-#' @param min_vaf The minimum tumour VAF for a SV to be returned. default is 0.1.
+#' @param these_samples_metadata The only required parameter is a metadata table (data frame) that must contain a row for each sample you want the data from. The additional columns the data frame needs to contain, besides sample_id, are: unix_group, genome_build, seq_type, pairing_status.
+#' @param min_vaf The minimum tumour VAF for a SV to be returned. Default value is 0.1.
 #' @param min_score The lowest Manta somatic score for a SV to be returned. Default value is 40.
 #' @param pass If set to TRUE, include SVs that are annotated with PASS in FILTER column. Default is TRUE.
-#' @param with_chr_prefix Add "chr" to all chromosome names (required by some downstream analysis). Default is FALSE.
-#' @param projection The projection genome build. Default is grch37.
-#'
+#' @param with_chr_prefix Toggle if chromosome names should be prefixed or not, default is FALSE.
+#' @param projection The projection of returned calls. Default is grch37.
+#' 
 #' @return a data frame containing the Manta outputs from all sample_id in these_samples_metadata in a bedpe-like format with additional columns extracted from the VCF column.
 #' @import tidyverse
 #' @export
 #'
 #' @examples
-#'
-#' #four samples, 1 available in merge, 1 not in merge but correct projection for flat-file,
-#' 1 not in merge and wrong projection for available flat-file, 1 sample with no SV calls
-#'
-#' #get metadata
-#' multi_meta = get_gambl_metadata() %>%
-#'                dplyr::filter(sample_id %in% c("BLGSP-71-06-00001-01A-11D",
-#'                                               "00-14595_tumorD",
-#'                                               "012-02-1TD",
-#'                                               "171116-PL02"))
-#'
-#' #run get_manta_sv_by_samples
-#' manta_calls = get_manta_sv_by_samples(these_samples_metadata = multi_meta)
+#' all_sv = get_manta_sv
+#' missing_samples = get_gambl_metadata() %>% anti_join(all_sv, by = c("sample_id" = "tumour_sample_id"))
+#' missing_from_merge = get_manta_sv_by_samples(these_samples_metadata = missing_samples)
 #'
 get_manta_sv_by_samples = function(these_samples_metadata,
                                    min_vaf = 0.1,
@@ -2668,35 +2664,26 @@ get_manta_sv_by_samples = function(these_samples_metadata,
                                    pass = TRUE,
                                    with_chr_prefix = FALSE,
                                    projection = "grch37"){
-
+  
   #check remote configuration
   remote_session = check_remote_configuration(auto_connect = TRUE)
 
-  #load merged files for the selected genome projection
-  all_sv = get_manta_sv(projection = projection)
-
-  #if these_samples_metadata is not provided, the function will get sv calls for all samples currently not available in the merged results.
-  if(missing(these_samples_metadata)){
-    these_samples_metadata = get_gambl_metadata() %>%
-      anti_join(all_sv, by = c("sample_id" = "tumour_sample_id"))
-  }
-
   #get sample IDs from metadata.
   samples = pull(these_samples_metadata, sample_id)
-
+  
   #create an empty list.
   all_bedpe = list()
-
+  
   #wrap get_manta_sv_by_sample.
   all_bedpe = lapply(samples, function(x){get_manta_sv_by_sample(this_sample_id = x,
+                                                                 these_samples_metadata = these_samples_metadata,
+                                                                 force_lift = FALSE,
                                                                  min_vaf = min_vaf,
                                                                  min_score = min_score,
                                                                  pass = pass,
                                                                  with_chr_prefix = with_chr_prefix,
-                                                                 projection = projection,
-                                                                 all_sv = all_sv,
-                                                                 force_lift = FALSE)})
-
+                                                                 projection = projection)})
+  
   #un-nest list into long format.
   merged_bedpe = bind_rows(all_bedpe)
   
@@ -2715,203 +2702,171 @@ get_manta_sv_by_samples = function(these_samples_metadata,
   merged_bedpe = rbind(lifted_calls, no_lift_needed) %>%
     arrange(CHROM_A, CHROM_B, START_A) %>%
     dplyr::select(-need_lift)
-
+  
   #return merged manta SVs.
   rownames(merged_bedpe) <- NULL
   return(merged_bedpe)
 }
 
 
-#' Load the manta output for 1 sample.
+#' Load the manta output (from individual flat file) for 1 sample.
 #'
-#' This function retrieves manta Structural Variants (SV) calls for one sample (for multiple samples, please refer to get_manta_sv_by_samples).
-#' They way this function operates is to (1) look for specified sample in the currently available manta merged results (from get_manta_sv).
-#' If unsuccessful, the function will (2) look for an individual flat file for the specified sample. If the flat-file is in the wrong projection
-#' (based on what is specified) the function will run liftover_bedpe on this flat-file. Additionally, the user will always be notified that no calls
-#' are available for the this sample id (file is missing). As a minimum requirement, this function expects a sample id specified with this_sample_id
-#' parameter, or better yet, a metadata table subset to the sample id of interest.
+#' This function is used for retrieving Manta results (structural variants) from individual flat-files (one sample). 
+#' For multiple samples, please see get_manta_sv_by_samples (a convenience wrapper function for get_manta_by_sample). 
+#' Additional columns are extracted from the VCF column and standard filtering options are available. 
+#' This function also performs a lift-over to selected projection, if needed.   
 #'
-#' @param this_sample_id The single sample_id you want to obtain the result from (optional).
-#' @param these_samples_metadata A metadata table containing metadata for this_sample_id, or sample of interest. If no sample ID is provided with this_sample_id, the function will extract sample ID from these_samples_metadata.
-#' @param all_sv Data frame with merged manta results from get_manta_sv(), if not provided, this function will retrieve it.
-#' @param min_vaf The minimum tumour VAF for a SV to be returned. Defualt value is 0.1.
+#' @param this_sample_id The single sample ID you want to obtain the result from.
+#' @param these_samples_metadata A metadata table containing metadata for this_sample_id, or sample of interest. This parameeter is required.
+#' @param force_lift If TRUE, coordinates will be lifted (if needed) to the selected projection. WARNING! Should always be TRUE if this function is running in stand-alone mode.
+#' @param min_vaf The minimum tumour VAF for a SV to be returned. Default value is 0.1.
 #' @param min_score The lowest Manta somatic score for a SV to be returned. Default value is 40.
 #' @param pass If set to TRUE, include SVs that are annotated with PASS in FILTER column. Default is TRUE.
-#' @param with_chr_prefix Add "chr" to all chromosome names (required by some downstream analysis). Defualt is FALSE.
-#' @param projection The projection genome build. Default is grch37.
-#' @param force_lift Set to TRUE to lift (if needed) coordinates to selected projection, default is TRUE. For multiple samples (get_manta_sv_by_samples) this parameter is forced to FALSE (liftover is done within this function on all samples at once instead). Should alwyas be TRUE if this function is running in stand-alone mode.
+#' @param with_chr_prefix Toggle if chromosome names should be prefixed or not, default is FALSE.
+#' @param projection The projection of returned calls. Default is grch37.
 #'
 #' @return a data frame containing the Manta outputs from this_sample_id in a bedpe-like format with additional columns extracted from the VCF column.
 #' @import tidyverse
 #' @export
 #'
 #' @examples
-#'
-#' #sample in merge
-#' my_bedpe = get_manta_sv_by_sample(this_sample_id = "BLGSP-71-06-00001-01A-11D")
-#'
-#' #sample not in merge but flat-file in the desired genome projection
-#' my_bedpe = get_manta_sv_by_sample(this_sample_id = "00-14595_tumorD")
-#'
-#' #sample not in merge, and no individual flat-file in the selected genome projection (i.e run liftover_bedpe)
-#' my_bedpe = get_manta_sv_by_sample(this_sample_id = "019-19-01TD", projection = "hg38")
-#'
-#' #sample not in merge, flat-file available, but no SVs recorded for this sample (i.e flat-file is empty)
-#' my_bedpe = get_manta_sv_by_sample(this_sample_id = "171116-PL02", projection = "hg38")
+#' my_svs = get_manta_sv_by_sample(this_sample_id = "00-14595_tumorD",
+#'                              these_samples_metadata = get_gambl_metadata() %>% dplyr::filter(sample_id == "00-14595_tumorD"))
 #'
 get_manta_sv_by_sample = function(this_sample_id,
                                   these_samples_metadata,
-                                  all_sv,
+                                  force_lift = TRUE,
                                   min_vaf = 0.1,
                                   min_score = 40,
                                   pass = TRUE,
                                   with_chr_prefix = FALSE,
-                                  projection = "grch37",
-                                  force_lift = TRUE){
-
+                                  projection = "grch37"){
+  
   #check remote configuration
   remote_session = check_remote_configuration(auto_connect = TRUE)
-
-  #get metadata if not provided and check existing metadata, if available.
-  if(missing(these_samples_metadata)){
-    these_samples_metadata = get_gambl_metadata() %>%
-      dplyr::filter(sample_id == this_sample_id)
-  }
-
+  
   these_samples_metadata = dplyr::filter(these_samples_metadata, sample_id == this_sample_id)
   if(!nrow(these_samples_metadata==1)){
     stop("metadata does not seem to contain your this_sample_id or you didn't provide one")
   }
-
+  
   #get wildcards
   tumour_sample_id = this_sample_id
   unix_group = pull(these_samples_metadata, unix_group)
   seq_type = pull(these_samples_metadata, seq_type)
   genome_build = pull(these_samples_metadata, genome_build)
   pairing_status = pull(these_samples_metadata, pairing_status)
-
+  
   if(pairing_status == "matched"){
     normal_sample_id = pull(these_samples_metadata, normal_sample_id)
   }else{
     normal_sample_id = config::get("unmatched_normal_ids")[[unix_group]][[seq_type]][[genome_build]]
   }
 
-  #look for the sample in the merge.
-  if(missing(all_sv)){
-    all_sv = get_manta_sv(projection = projection)
-  }
-
-  bedpe_dat = all_sv %>%
-    dplyr::filter(tumour_sample_id == this_sample_id)
-
-  #if sample ID is not int the merge (filtered bedpe_dat is empty), resort to flat file.
-  if(!nrow(bedpe_dat==0)){
-    message(paste0(this_sample_id, " is not available in merged Manta results, will read results from individual flat-file instead..."))
-    path_template = config::get("results_flatfiles")$sv_manta$template #get path template for flat files
-    if(!remote_session){
-      path_template_full = paste0(config::get("project_base"), path_template)
-      bedpe_path = glue::glue(path_template_full)
-      if(!file.exists(bedpe_path)){
-        print(paste("missing: ", bedpe_path))
-        message("Cannot find file locally. If working remotely, perhaps you forgot to load your config (see below) or sync your files?")
-        message('Sys.setenv(R_CONFIG_ACTIVE = "remote")')
-      }
-    }else{
-      local_path_template = paste0(config::get("project_base", config = "remote"), path_template)
-      bedpe_path = glue::glue(local_path_template)
-
-      #check if the requested file is on local machine, if not, get it!
-      if(!file.exists(bedpe_path)){
-        remote_path_template = paste0(config::get("project_base", config = "default"), path_template)
-        remote_bedpe_path = glue::glue(remote_path_template)
-        cat(paste0("Local file not found.\ntrying to copy requested file: ", remote_bedpe_path, "\n", "To: ", bedpe_path))
-        dirN = dirname(bedpe_path)
-        suppressMessages(suppressWarnings(dir.create(dirN, recursive = T)))
-        ssh::scp_download(ssh_session, remote_bedpe_path, dirN)
-      }
-    }
-
-    bedpe_dat_raw = suppressMessages(read_tsv(bedpe_path, comment = "##"))
-
-    if(!nrow(bedpe_dat_raw==0)){
-      message(paste0("WARNING! No SV calls found in flat-file for: ", this_sample_id))
-      return() #if returned manta calls data frame is empty, return and potentially move over to the next sample (if get_manta_sv_by_samples is called).
-    }
-
-    if(genome_build != projection){
-      bedpe_dat_raw = bedpe_dat_raw %>%
-        add_column(need_lift = TRUE)
-      if(force_lift){
-        bedpe_dat_raw = liftover_bedpe(bedpe_df = bedpe_dat_raw, target_build = projection, print_head = FALSE)
-        message(paste0(this_sample_id, " flat-file is not avaialble in the selected projection, running liftover_bedpe..."))
-        message(paste0(this_sample_id, " successfully lifted to ", projection))
-      }
-    }else{
-      bedpe_dat_raw = bedpe_dat_raw %>%
-        add_column(need_lift = FALSE)
+  #get samples from individual flat files
+  path_template = config::get("results_flatfiles")$sv_manta$template
+  
+  if(!remote_session){
+    path_template_full = paste0(config::get("project_base"), path_template)
+    bedpe_path = glue::glue(path_template_full)
+    if(!file.exists(bedpe_path)){
+      print(paste("missing: ", bedpe_path))
+      message("Cannot find file locally. If working remotely, perhaps you forgot to load your config (see below) or sync your files?")
+      message('Sys.setenv(R_CONFIG_ACTIVE = "remote")')
     }
   }else{
-    bedpe_dat = bedpe_dat %>%
-      add_column(need_lift = FALSE)
-    message(paste0("Reading ", this_sample_id, " from merged Manta results..."))
+    local_path_template = paste0(config::get("project_base", config = "remote"), path_template)
+    bedpe_path = glue::glue(local_path_template)
+      
+    #check if the requested file is on local machine, if not, get it!
+    if(!file.exists(bedpe_path)){
+      remote_path_template = paste0(config::get("project_base", config = "default"), path_template)
+      remote_bedpe_path = glue::glue(remote_path_template)
+      cat(paste0("Local file not found.\ntrying to copy requested file: ", remote_bedpe_path, "\n", "To: ", bedpe_path))
+      dirN = dirname(bedpe_path)
+      suppressMessages(suppressWarnings(dir.create(dirN, recursive = T)))
+      ssh::scp_download(ssh_session, remote_bedpe_path, dirN)
+    }
+  }
+  
+  #read sample flat-file
+  message(paste0("Reading ", this_sample_id, " from: ", bedpe_path))
+  bedpe_dat_raw = suppressMessages(read_tsv(bedpe_path, comment = "##"))
+    
+  #if returned manta calls data frame is empty, return and potentially move over to the next sample (if get_manta_sv_by_samples is called).
+  if(!nrow(bedpe_dat_raw==0)){
+    message(paste0("WARNING! No SV calls found in flat-file for: ", this_sample_id))
+    return()
+  }
+  
+  #if selected projection is different from the genome build (for a particular sample), add information that this sample needs to be lifted (by get_manta_by_samples).
+  if(genome_build != projection){
+    bedpe_dat_raw = bedpe_dat_raw %>%
+      add_column(need_lift = TRUE)
+    
+    if(force_lift){
+      bedpe_dat_raw = liftover_bedpe(bedpe_df = bedpe_dat_raw, target_build = projection, print_head = FALSE)
+      message(paste0(this_sample_id, " flat-file is not avaialble in the selected projection, running liftover_bedpe..."))
+      message(paste0(this_sample_id, " successfully lifted to ", projection))
     }
 
-  #Data wrangling.
-  if(exists("bedpe_dat_raw")){
-    chrom_col <- c(CHROM_A = "#CHROM_A")
-
-    bedpe_dat = bedpe_dat_raw %>%
-      rename(any_of(chrom_col)) %>%
-      mutate(tumour_sample_id = tumour_sample_id, normal_sample_id = normal_sample_id, NAME = ".") %>%
-      mutate(pair_status = pairing_status) %>%
-      mutate(SOMATIC_SCORE = gsub(".*SOMATICSCORE=","", as.character(INFO_A)))
-
-    #Extract some more VCF information.
-    vcf_normal = str_split_fixed(bedpe_dat[[normal_sample_id]], ":", 6) %>%
-      as.data.frame() %>%
-      rename(GT_normal = 1, PR_normal = 2, SR_normal = 3, TR_normal = 4, DP_normal = 5, VAF_normal = 6)
-
-    vcf_tumour = str_split_fixed(bedpe_dat[[tumour_sample_id]], ":", 6) %>%
-      as.data.frame() %>%
-      rename(GT_tumour = 1, PR_tumour = 2, SR_tumour = 3, TR_tumour = 4, DP_tumour = 5, VAF_tumour = 6)
-
-    bedpe_dat = cbind(bedpe_dat, vcf_normal, vcf_tumour)
-
-    #Substitute empty strings with NAs (variants specified as "imprecise" in info field, does not have all FORMAT IDs).
-    bedpe_dat[bedpe_dat == ""] <- NA
-
-    #Subset NAs (in VAF_normal) to new data frame, i.e variants stated as "imprecise" as described above.
-    NAs = subset(bedpe_dat, is.na(VAF_normal))
-
-    #Shift cells for such variants, necessary to retrieve VAF and DP from VCF fields (they are there, but shifted one cell to the left, due to the missing of "SR" FORMAT).
-    NAs$VAF_normal = NAs$DP_normal
-    NAs$DP_normal = NAs$TR_normal
-    NAs$VAF_tumour = NAs$DP_tumour
-    NAs$DP_tumour = NAs$TR_tumour
-
-    #Drop the same NAs from the original dataframe (i.e "imprecise" variants).
-    bedpe_dat_narm = bedpe_dat %>% drop_na()
-
-    #Rbind wrangled imprecise variants with all other variants, and presenting the data in expected format (sorted and column-order).
-    bedpe_dat = rbind(bedpe_dat_narm, NAs) %>%
-      arrange(CHROM_A, CHROM_B, START_A) %>%
-      dplyr::select("CHROM_A", "START_A", "END_A", "CHROM_B", "START_B", "END_B",
-                    "NAME", "SOMATIC_SCORE", "STRAND_A", "STRAND_B", "TYPE", "FILTER",
-                    "VAF_tumour", "VAF_normal", "DP_tumour", "DP_normal", "tumour_sample_id",
-                    "normal_sample_id", "pair_status", "need_lift")
+  }else{
+    bedpe_dat_raw = bedpe_dat_raw %>%
+      add_column(need_lift = FALSE)
   }
 
-  #Filtering:
+  #Data wrangling.
+  chrom_col <- c(CHROM_A = "#CHROM_A")
+  bedpe_dat = bedpe_dat_raw %>%
+    rename(any_of(chrom_col)) %>%
+    mutate(tumour_sample_id = tumour_sample_id, normal_sample_id = normal_sample_id, NAME = ".") %>%
+    mutate(pair_status = pairing_status) %>%
+    mutate(SOMATIC_SCORE = gsub(".*SOMATICSCORE=","", as.character(INFO_A)))
+    
+  #Extract some more VCF information.
+  vcf_normal = str_split_fixed(bedpe_dat[[normal_sample_id]], ":", 6) %>%
+    as.data.frame() %>%
+    rename(GT_normal = 1, PR_normal = 2, SR_normal = 3, TR_normal = 4, DP_normal = 5, VAF_normal = 6)
+    
+  vcf_tumour = str_split_fixed(bedpe_dat[[tumour_sample_id]], ":", 6) %>%
+    as.data.frame() %>%
+    rename(GT_tumour = 1, PR_tumour = 2, SR_tumour = 3, TR_tumour = 4, DP_tumour = 5, VAF_tumour = 6)
+    
+  bedpe_dat = cbind(bedpe_dat, vcf_normal, vcf_tumour)
+    
+  #Substitute empty strings with NAs (variants specified as "imprecise" in info field, does not have all FORMAT IDs).
+  bedpe_dat[bedpe_dat == ""] <- NA
+    
+  #Subset NAs (in VAF_normal) to new data frame, i.e variants stated as "imprecise" as described above.
+  NAs = subset(bedpe_dat, is.na(VAF_normal))
+    
+  #Shift cells for such variants, necessary to retrieve VAF and DP from VCF fields (they are there, but shifted one cell to the left, due to the missing of "SR" FORMAT).
+  NAs$VAF_normal = NAs$DP_normal
+  NAs$DP_normal = NAs$TR_normal
+  NAs$VAF_tumour = NAs$DP_tumour
+  NAs$DP_tumour = NAs$TR_tumour
+    
+  #Drop the same NAs from the original dataframe (i.e "imprecise" variants).
+  bedpe_dat_narm = bedpe_dat %>% drop_na()
+    
+  #Rbind wrangled imprecise variants with all other variants, and presenting the data in expected format (sorted and column-order).
+  bedpe_dat = rbind(bedpe_dat_narm, NAs) %>%
+    arrange(CHROM_A, CHROM_B, START_A) %>%
+    dplyr::select("CHROM_A", "START_A", "END_A", "CHROM_B", "START_B", "END_B",
+                  "NAME", "SOMATIC_SCORE", "STRAND_A", "STRAND_B", "TYPE", "FILTER",
+                  "VAF_tumour", "VAF_normal", "DP_tumour", "DP_normal", "tumour_sample_id",
+                  "normal_sample_id", "pair_status", "need_lift")
+  
   #VAF and somatic score filtering.
   bedpe_dat = bedpe_dat %>%
     dplyr::filter(VAF_tumour >= min_vaf & SOMATIC_SCORE >= min_score)
-
+  
   #Filter on FILTER (variant callers variant filter criteria).
   if(pass){
     bedpe_dat = bedpe_dat %>%
       dplyr::filter(FILTER == "PASS")
   }
-
+  
   #Deal with chr prefixes.
   if(with_chr_prefix){
     bedpe_dat = bedpe_dat %>%
@@ -2922,7 +2877,7 @@ get_manta_sv_by_sample = function(this_sample_id,
       dplyr::mutate(CHROM_A = gsub("chr", "", CHROM_A)) %>%
       dplyr::mutate(CHROM_B = gsub("chr", "", CHROM_B))
   }
-
+  
   #Remove row names and enforce column types.
   rownames(bedpe_dat) <- NULL
   bedpe_dat = bedpe_dat %>%
