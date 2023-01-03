@@ -9,7 +9,7 @@ prettyForestPlot(
   mutmat,
   metadata,
   genes,
-  n_mutations = 1,
+  min_mutations = 1,
   comparison_column,
   rm_na_samples = FALSE,
   comparison_values = FALSE,
@@ -27,9 +27,9 @@ prettyForestPlot(
 
 \item{metadata}{Metadata for the comparisons. Minimum required columns are Tumor_Sample_Barcode and the column assigning each case to one of two groups.}
 
-\item{genes}{An optional list of genes to restrict your plot to. If no gene-list is supplied, the function will extract all mutated genes from the incoming maf. See n_mutations parameter for more info.}
+\item{genes}{An optional list of genes to restrict your plot to. If no gene-list is supplied, the function will extract all mutated genes from the incoming maf. See min_mutations parameter for more info.}
 
-\item{n_mutations}{Optional parameter for when no gene list is provided. This parameter ensures only genes with n mutations are kept in the gene list. Default value is 1, this means all genes in the incoming maf will be plotted.}
+\item{min_mutations}{Optional parameter for when no gene list is provided. This parameter ensures only genes with n mutations are kept in the gene list. Default value is 1, this means all genes in the incoming maf will be plotted.}
 
 \item{comparison_column}{Mandatory: the name of the metadata column containing the comparison values.}
 

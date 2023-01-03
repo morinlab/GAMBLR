@@ -11,7 +11,7 @@ liftover_bedpe(
   col_names,
   col_types,
   standard_bed = FALSE,
-  print_head = TRUE
+  verbose = TRUE
 )
 }
 \arguments{

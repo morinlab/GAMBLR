@@ -14,7 +14,7 @@ gene_to_region(
 \arguments{
 \item{gene_symbol}{A vector of one or more gene symbols.}
 
-\item{ensembl_id}{A vector of one or more Ensemble IDs.}
+\item{ensembl_id}{A vector of one or more Ensembl IDs.}
 
 \item{genome_build}{Reference genome build.}
 

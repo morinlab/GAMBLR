@@ -22,7 +22,7 @@ Nothing.
 Make a UCSC-ready custom track file from SV data.
 }
 \examples{
-#custom track withj annotations
+#custom track with annotations
 all_sv = get_manta_sv()
 annotated_sv = annotate_sv(sv_data = all_sv)
 sv_to_custom_track(annotated_sv, output_file = "GAMBL_sv_custom_track_annotated.bed", is_annotated = TRUE)

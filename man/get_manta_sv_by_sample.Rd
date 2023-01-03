@@ -43,6 +43,6 @@ This function also performs a lift-over to selected projection, if needed.
 }
 \examples{
 my_svs = get_manta_sv_by_sample(this_sample_id = "00-14595_tumorD",
-                             these_samples_metadata = get_gambl_metadata() \%>\% dplyr::filter(sample_id == "00-14595_tumorD"))
+                                these_samples_metadata = get_gambl_metadata())
 
 }
