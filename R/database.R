@@ -506,45 +506,6 @@ get_ssm_by_sample = function(this_sample_id,
 }
 
 
-#' Helper function to find the production merge for a pipeline and restrict to the right file based on file permissions.
-#'
-#' @param tool_name Lowercase name of the tool (e.g. manta, slms-3).
-#' @param projection Which genome you want your results projected (lifted) to. Currently only grch37 is supported and is default.
-#' @param seq_type The seq_type you want back (currently only genome is supported/available).
-#'
-#' @return String that holds filepath, tool name, sequence type, projection and extension.
-#' @export
-#'
-#' @examples
-#' merged = get_merged_result("manta", "grch37", "genome")
-#'
-get_merged_result = function(tool_name,
-                             projection = "grch37",
-                             seq_type = "genome"){
-
-  #if(projection != "grch37"){
-  #message("Currently, only grch37 is supported")
-  #return()
-  #}
-
-  base_path = config::get("project_base")
-  gambl_only = paste0(base_path, "gambl/gamblr/02-merge/", tool_name, "/", seq_type, "/")
-  gambl_plus = paste0(base_path, "all_the_things/", tool_name, "/", seq_type, "--gambl,icgc_dart/")
-  if(tool_name == "manta"){
-    extension = ".bedpe"
-  }
-  gambl_only = paste0(gambl_only, "all_", tool_name, "_merged_", projection, extension)
-  gambl_plus = paste0(gambl_plus, "all_", tool_name, "_merged_", projection, extension)
-  permissions = file.access(gambl_plus, 4)
-  if(permissions == -1 ){
-    message("restricting to non-ICGC data")
-    return(gambl_only)
-  }else{
-    return(gambl_plus)
-  }
-}
-
-
 #' Get GAMBL metadata.
 #'
 #' @param seq_type_filter Filtering criteria (default: all genomes)
@@ -1260,19 +1221,8 @@ get_manta_sv = function(min_vaf = 0.1,
     qend = startend[2]
   }
 
-  #this table stores chromosomes with un-prefixed names. Convert to prefixed chromosome if necessary
-  if(from_flatfile){
-    sv_file = get_merged_result(tool_name = "manta", projection = projection)
-
-    #check for missingness
-    if(!file.exists(sv_file)){
-      print(paste("missing: ", sv_file))
-      message("Cannot find file locally. If working remotely, perhaps you forgot to load your config (see below) or sync your files?")
-      message('Sys.setenv(R_CONFIG_ACTIVE= "remote")')
-      check_host()
-    }
-
-    all_sv = suppressMessages(read_tsv(sv_file, col_types = "cnncnncnccccnnnnccc", col_names = cnames))
+   if(from_flatfile){
+    all_sv = get_combined_sv()
 
     #get metadata for samples currently missing from the merged results
     missing_samples = get_gambl_metadata() %>%
@@ -2692,19 +2642,18 @@ get_manta_sv_by_samples = function(these_samples_metadata,
     dplyr::filter(need_lift == TRUE)
   
   #lift to selected projection
-  lifted_calls = liftover_bedpe(bedpe_df = to_be_lifted, target_build = projection, print_head = FALSE)
+  lifted_calls = liftover_bedpe(bedpe_df = to_be_lifted, target_build = projection, verbose = FALSE)
   
   #subset calls that does not need a "lift"
   no_lift_needed = merged_bedpe %>%
     dplyr::filter(need_lift == FALSE)
   
   #combine calls (lifted and not lifted), arrange and sort accordingly, drop temporary column
-  merged_bedpe = rbind(lifted_calls, no_lift_needed) %>%
+  merged_bedpe = bind_rows(lifted_calls, no_lift_needed) %>%
     arrange(CHROM_A, CHROM_B, START_A) %>%
     dplyr::select(-need_lift)
   
   #return merged manta SVs.
-  rownames(merged_bedpe) <- NULL
   return(merged_bedpe)
 }
 
@@ -2731,7 +2680,7 @@ get_manta_sv_by_samples = function(these_samples_metadata,
 #'
 #' @examples
 #' my_svs = get_manta_sv_by_sample(this_sample_id = "00-14595_tumorD",
-#'                              these_samples_metadata = get_gambl_metadata() %>% dplyr::filter(sample_id == "00-14595_tumorD"))
+#'                                 these_samples_metadata = get_gambl_metadata())
 #'
 get_manta_sv_by_sample = function(this_sample_id,
                                   these_samples_metadata,
@@ -2793,7 +2742,7 @@ get_manta_sv_by_sample = function(this_sample_id,
   message(paste0("Reading ", this_sample_id, " from: ", bedpe_path))
   bedpe_dat_raw = suppressMessages(read_tsv(bedpe_path, comment = "##"))
     
-  #if returned manta calls data frame is empty, return and potentially move over to the next sample (if get_manta_sv_by_samples is called).
+  #return empty data frame
   if(!nrow(bedpe_dat_raw==0)){
     message(paste0("WARNING! No SV calls found in flat-file for: ", this_sample_id))
     return()
@@ -2805,7 +2754,7 @@ get_manta_sv_by_sample = function(this_sample_id,
       add_column(need_lift = TRUE)
     
     if(force_lift){
-      bedpe_dat_raw = liftover_bedpe(bedpe_df = bedpe_dat_raw, target_build = projection, print_head = FALSE)
+      bedpe_dat_raw = liftover_bedpe(bedpe_df = bedpe_dat_raw, target_build = projection, verbose = FALSE)
       message(paste0(this_sample_id, " flat-file is not avaialble in the selected projection, running liftover_bedpe..."))
       message(paste0(this_sample_id, " successfully lifted to ", projection))
     }
@@ -2849,8 +2798,8 @@ get_manta_sv_by_sample = function(this_sample_id,
   #Drop the same NAs from the original dataframe (i.e "imprecise" variants).
   bedpe_dat_narm = bedpe_dat %>% drop_na()
     
-  #Rbind wrangled imprecise variants with all other variants, and presenting the data in expected format (sorted and column-order).
-  bedpe_dat = rbind(bedpe_dat_narm, NAs) %>%
+  #bind rows for wrangled imprecise variants with all other variants, and presenting the data in expected format (sorted and column-order).
+  bedpe_dat = bind_rows(bedpe_dat_narm, NAs) %>%
     arrange(CHROM_A, CHROM_B, START_A) %>%
     dplyr::select("CHROM_A", "START_A", "END_A", "CHROM_B", "START_B", "END_B",
                   "NAME", "SOMATIC_SCORE", "STRAND_A", "STRAND_B", "TYPE", "FILTER",
@@ -2879,7 +2828,6 @@ get_manta_sv_by_sample = function(this_sample_id,
   }
   
   #Remove row names and enforce column types.
-  rownames(bedpe_dat) <- NULL
   bedpe_dat = bedpe_dat %>%
     mutate(across(c(CHROM_A, CHROM_B, NAME, STRAND_A, STRAND_B, TYPE, FILTER, tumour_sample_id, normal_sample_id, pair_status), as.character)) %>%
     mutate(across(c(START_A, END_A, START_B, END_B, SOMATIC_SCORE, VAF_tumour, VAF_normal, DP_tumour, DP_normal), as.numeric))

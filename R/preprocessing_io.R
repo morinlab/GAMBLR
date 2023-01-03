@@ -1016,7 +1016,7 @@ liftover_bedpe = function(bedpe_file,
                           col_names,
                           col_types,
                           standard_bed = FALSE,
-                          print_head = TRUE){
+                          verbose = TRUE){
 
   if(!missing(bedpe_file)){
     if(missing(col_names)){
@@ -1041,7 +1041,7 @@ liftover_bedpe = function(bedpe_file,
       dplyr::mutate(CHROM_A = ifelse(!grepl("chr", CHROM_A), paste0("chr", CHROM_A), CHROM_A),
                     CHROM_B = ifelse(!grepl("chr", CHROM_B), paste0("chr", CHROM_B), CHROM_B))
     
-    if(print_head){
+    if(verbose){
       print(head(original_bedpe))
     }
 

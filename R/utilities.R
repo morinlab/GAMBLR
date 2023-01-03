@@ -242,7 +242,7 @@ get_ssh_session = function(host="gphost01.bcgsc.ca"){
 #' Get regions from genes.
 #'
 #' @param gene_symbol A vector of one or more gene symbols.
-#' @param ensembl_id A vector of one or more Ensemble IDs.
+#' @param ensembl_id A vector of one or more Ensembl IDs.
 #' @param genome_build Reference genome build.
 #' @param return_as Specify the type of return. Default is region (chr:start-end), other acceptable arguments are "bed" and "df".
 #'
@@ -1069,7 +1069,7 @@ review_hotspots = function(annotated_maf,
 #' @export
 #'
 #' @examples
-#' #custom track withj annotations
+#' #custom track with annotations
 #' all_sv = get_manta_sv()
 #' annotated_sv = annotate_sv(sv_data = all_sv)
 #' sv_to_custom_track(annotated_sv, output_file = "GAMBL_sv_custom_track_annotated.bed", is_annotated = TRUE)

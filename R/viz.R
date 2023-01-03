@@ -2610,8 +2610,8 @@ theme_Morons = function(base_size = 14,
 #' @param maf A maf data frame. Minimum required columns are Hugo_Symbol and Tumor_Sample_Barcode.
 #' @param mutmat Optional argument for binary mutation matrix. If not supplied, function will generate this matrix from the file used in argument "maf".
 #' @param metadata Metadata for the comparisons. Minimum required columns are Tumor_Sample_Barcode and the column assigning each case to one of two groups.
-#' @param genes An optional list of genes to restrict your plot to. If no gene-list is supplied, the function will extract all mutated genes from the incoming maf. See n_mutations parameter for more info.
-#' @param n_mutations Optional parameter for when no gene list is provided. This parameter ensures only genes with n mutations are kept in the gene list. Default value is 1, this means all genes in the incoming maf will be plotted.
+#' @param genes An optional list of genes to restrict your plot to. If no gene-list is supplied, the function will extract all mutated genes from the incoming maf. See min_mutations parameter for more info.
+#' @param min_mutations Optional parameter for when no gene list is provided. This parameter ensures only genes with n mutations are kept in the gene list. Default value is 1, this means all genes in the incoming maf will be plotted.
 #' @param comparison_column Mandatory: the name of the metadata column containing the comparison values.
 #' @param rm_na_samples Set to TRUE to remove 0 mutation samples. Default is FALSE.
 #' @param comparison_values Optional: If the comparison column contains more than two values or is not a factor, specify a character vector of length two in the order you would like the factor levels to be set, reference group first.
@@ -2645,7 +2645,7 @@ prettyForestPlot = function(maf,
                             mutmat,
                             metadata,
                             genes,
-                            n_mutations = 1,
+                            min_mutations = 1,
                             comparison_column,
                             rm_na_samples = FALSE,
                             comparison_values = FALSE,
@@ -2682,7 +2682,7 @@ prettyForestPlot = function(maf,
         dplyr::select(Hugo_Symbol) %>%
         add_count(Hugo_Symbol) %>%
         distinct(Hugo_Symbol, .keep_all = TRUE) %>%
-        dplyr::filter(n >= n_mutations) %>%
+        dplyr::filter(n >= min_mutations) %>%
         pull(Hugo_Symbol)
     }
     maf = maf[maf$Hugo_Symbol %in% genes, ]
