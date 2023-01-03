@@ -9,7 +9,6 @@ get_manta_sv_by_samples(
   min_vaf = 0.1,
   min_score = 40,
   pass = TRUE,
-  with_chr_prefix = FALSE,
   projection = "grch37"
 )
 }
@@ -21,8 +20,6 @@ get_manta_sv_by_samples(
 \item{min_score}{The lowest Manta somatic score for a SV to be returned. Default value is 40.}
 
 \item{pass}{If set to TRUE, include SVs that are annotated with PASS in FILTER column. Default is TRUE.}
-
-\item{with_chr_prefix}{Toggle if chromosome names should be prefixed or not, default is FALSE.}
 
 \item{projection}{The projection of returned calls. Default is grch37.}
 }

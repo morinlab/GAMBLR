@@ -11,24 +11,21 @@ get_manta_sv_by_sample(
   min_vaf = 0.1,
   min_score = 40,
   pass = TRUE,
-  with_chr_prefix = FALSE,
   projection = "grch37"
 )
 }
 \arguments{
 \item{this_sample_id}{The single sample ID you want to obtain the result from.}
 
-\item{these_samples_metadata}{A metadata table containing metadata for this_sample_id, or sample of interest. This parameeter is required.}
+\item{these_samples_metadata}{A metadata table containing metadata for this_sample_id, or sample of interest. This parameter is required.}
 
-\item{force_lift}{If TRUE, coordinates will be lifted (if needed) to the selected projection. Default si FLASE. WARNING: please make sure that the requested sample is not already avaialble in the merged results (i.e get_combined_sv).}
+\item{force_lift}{If TRUE, coordinates will be lifted (if needed) to the selected projection. Default is FLASE. WARNING: please make sure that the requested sample is not already availble in the merged results (i.e get_combined_sv).}
 
 \item{min_vaf}{The minimum tumour VAF for a SV to be returned. Default value is 0.1.}
 
 \item{min_score}{The lowest Manta somatic score for a SV to be returned. Default value is 40.}
 
 \item{pass}{If set to TRUE, include SVs that are annotated with PASS in FILTER column. Default is TRUE.}
-
-\item{with_chr_prefix}{Toggle if chromosome names should be prefixed or not, default is FALSE.}
 
 \item{projection}{The projection of returned calls. Default is grch37.}
 }
@@ -40,6 +37,8 @@ This function is used for retrieving Manta results (structural variants) from in
 For multiple samples, please see get_manta_sv_by_samples (a convenience wrapper function for get_manta_by_sample).
 Additional columns are extracted from the VCF column and standard filtering options are available.
 This function also performs a lift-over to selected projection, if needed.
+Please note, if force_lift is set to FALSE, an extra column will be added that states if the returned variant calls needs to be lifted.
+The value for this column is returned TRUE (for all rows) if the available genome projection for the selected sample does not match the selected projection (i.e requiring the user to manually lift the calls).
 }
 \examples{
 my_svs = get_manta_sv_by_sample(this_sample_id = "00-14595_tumorD",
