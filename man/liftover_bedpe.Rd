@@ -11,7 +11,7 @@ liftover_bedpe(
   col_names,
   col_types,
   standard_bed = FALSE,
-  verbose = TRUE
+  verbose = FALSE
 )
 }
 \arguments{
@@ -21,7 +21,7 @@ liftover_bedpe(
 
 \item{target_build}{Specify which build the data should be lifted to (must be one of hg19, grch37, hg38, grch38)}
 
-\item{print_head}{Boolean parameter to toggle if the head of the original bedpe file should be printed. Default si}
+\item{verbose}{Set to TRUE for verbose output. Default is FALSE.}
 }
 \value{
 Data frame containing original bedpe data with new coordinates

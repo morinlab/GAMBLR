@@ -7,7 +7,7 @@
 get_manta_sv_by_sample(
   this_sample_id,
   these_samples_metadata,
-  force_lift = TRUE,
+  force_lift = FALSE,
   min_vaf = 0.1,
   min_score = 40,
   pass = TRUE,
@@ -20,7 +20,7 @@ get_manta_sv_by_sample(
 
 \item{these_samples_metadata}{A metadata table containing metadata for this_sample_id, or sample of interest. This parameeter is required.}
 
-\item{force_lift}{If TRUE, coordinates will be lifted (if needed) to the selected projection. WARNING! Should always be TRUE if this function is running in stand-alone mode.}
+\item{force_lift}{If TRUE, coordinates will be lifted (if needed) to the selected projection. Default si FLASE. WARNING: please make sure that the requested sample is not already avaialble in the merged results (i.e get_combined_sv).}
 
 \item{min_vaf}{The minimum tumour VAF for a SV to be returned. Default value is 0.1.}
 
