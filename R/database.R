@@ -2642,7 +2642,7 @@ get_manta_sv_by_samples = function(these_samples_metadata,
     dplyr::filter(need_lift == TRUE)
   
   #lift to selected projection
-  lifted_calls = liftover_bedpe(bedpe_df = to_be_lifted, target_build = projection, verbose = FALSE)
+  lifted_calls = liftover_bedpe(bedpe_df = to_be_lifted, target_build = projection)
   
   #subset calls that does not need a "lift"
   no_lift_needed = merged_bedpe %>%
@@ -2667,7 +2667,7 @@ get_manta_sv_by_samples = function(these_samples_metadata,
 #'
 #' @param this_sample_id The single sample ID you want to obtain the result from.
 #' @param these_samples_metadata A metadata table containing metadata for this_sample_id, or sample of interest. This parameeter is required.
-#' @param force_lift If TRUE, coordinates will be lifted (if needed) to the selected projection. WARNING! Should always be TRUE if this function is running in stand-alone mode.
+#' @param force_lift If TRUE, coordinates will be lifted (if needed) to the selected projection. Default si FLASE. WARNING: please make sure that the requested sample is not already avaialble in the merged results (i.e get_combined_sv).
 #' @param min_vaf The minimum tumour VAF for a SV to be returned. Default value is 0.1.
 #' @param min_score The lowest Manta somatic score for a SV to be returned. Default value is 40.
 #' @param pass If set to TRUE, include SVs that are annotated with PASS in FILTER column. Default is TRUE.
@@ -2684,12 +2684,16 @@ get_manta_sv_by_samples = function(these_samples_metadata,
 #'
 get_manta_sv_by_sample = function(this_sample_id,
                                   these_samples_metadata,
-                                  force_lift = TRUE,
+                                  force_lift = FALSE,
                                   min_vaf = 0.1,
                                   min_score = 40,
                                   pass = TRUE,
                                   with_chr_prefix = FALSE,
                                   projection = "grch37"){
+
+  if(force_lift){
+    message("Warning: Are you sure that the requested file isn't already available in the merged results? (try get_combined_sv)")
+  }
   
   #check remote configuration
   remote_session = check_remote_configuration(auto_connect = TRUE)
@@ -2754,7 +2758,7 @@ get_manta_sv_by_sample = function(this_sample_id,
       add_column(need_lift = TRUE)
     
     if(force_lift){
-      bedpe_dat_raw = liftover_bedpe(bedpe_df = bedpe_dat_raw, target_build = projection, verbose = FALSE)
+      bedpe_dat_raw = liftover_bedpe(bedpe_df = bedpe_dat_raw, target_build = projection)
       message(paste0(this_sample_id, " flat-file is not avaialble in the selected projection, running liftover_bedpe..."))
       message(paste0(this_sample_id, " successfully lifted to ", projection))
     }

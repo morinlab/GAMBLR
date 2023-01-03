@@ -1000,7 +1000,7 @@ assemble_file_details = function(file_details_df,
 #' @param bedpe_file Either specify the path to a bedpe file
 #' @param bedpe_df Or specify the bedpe data in a data frame
 #' @param target_build Specify which build the data should be lifted to (must be one of hg19, grch37, hg38, grch38)
-#' @param print_head Boolean parameter to toggle if the head of the original bedpe file should be printed. Default si
+#' @param verbose Set to TRUE for verbose output. Default is FALSE.
 #'
 #' @return Data frame containing original bedpe data with new coordinates
 #' @export
@@ -1016,7 +1016,7 @@ liftover_bedpe = function(bedpe_file,
                           col_names,
                           col_types,
                           standard_bed = FALSE,
-                          verbose = TRUE){
+                          verbose = FALSE){
 
   if(!missing(bedpe_file)){
     if(missing(col_names)){
