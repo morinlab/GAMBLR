@@ -38,6 +38,9 @@ get_ssm_by_patients(
 
 \item{subset_from_merge}{Instead of merging individual MAFs, the data will be subset from a pre-merged MAF of samples with the specified seq_type}
 }
+\value{
+
+}
 \description{
 This function returns variants from a set of patients avoiding duplicated mutations from multiple samples from that patient(i.e. unique superset of variants).
 This is done either by combining the contents of individual MAF files or subsetting from a merged MAF (wraps get_ssm_by_samples)
@@ -47,5 +50,5 @@ In most situations, this should never need to be run with subset_from_merge = TR
 patients = c("00-14595", "00-15201", "01-12047")
 patients_maf = get_ssm_by_patients(these_patient_ids = patients, seq_type = "genome", subset_from_merge = FALSE)
 patient_meta = get_gambl_metadata(seq_type_filter = "genome") \%>\% dplyr::filter(patient_id \%in\% patients)
-patients_maf_2 = get_ssm_by_patients(these_samples_metadata = patient_meta,subset_from_merge = FALSE) 
+patients_maf_2 = get_ssm_by_patients(these_samples_metadata = patient_meta,subset_from_merge = FALSE)
 }
