@@ -2669,7 +2669,7 @@ get_manta_sv_by_samples = function(these_samples_metadata,
 #'
 #' @param this_sample_id The single sample ID you want to obtain the result from.
 #' @param these_samples_metadata A metadata table containing metadata for this_sample_id, or sample of interest. This parameter is required.
-#' @param force_lift If TRUE, coordinates will be lifted (if needed) to the selected projection. Default is FLASE. WARNING: please make sure that the requested sample is not already availble in the merged results (i.e get_combined_sv).
+#' @param force_lift If TRUE, coordinates will be lifted (if needed) to the selected projection. Default is FLASE. WARNING: please make sure that the requested sample is not already available in the merged results (i.e get_combined_sv).
 #' @param min_vaf The minimum tumour VAF for a SV to be returned. Default value is 0.1.
 #' @param min_score The lowest Manta somatic score for a SV to be returned. Default value is 40.
 #' @param pass If set to TRUE, include SVs that are annotated with PASS in FILTER column. Default is TRUE.
