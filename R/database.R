@@ -1176,7 +1176,7 @@ get_combined_sv = function(min_vaf = 0,
 #'
 #' @param min_vaf The minimum tumour VAF for a SV to be returned.
 #' @param min_score The lowest Manta somatic score for a SV to be returned.
-#' @param pass If set to TRUE, include SVs that are annotated with PASS in FILTER column. Default is FALSE (since sv calls returned with get_combined_sv does not have this column).
+#' @param pass If set to TRUE, only return SVs that are annotated with PASS in the FILTER column. Set to FALSE to keep all variants, regardless if they PASS the filters. Default is TRUE. 
 #' @param pair_status Use to restrict results (if desired) to matched or unmatched results (default is to return all). Only applies to samples retrieved with get_manta_sv_by_sample, since variant calls from get_combined_sv, does not have this column.
 #' @param sample_id Filter on specific sample IDs in tumour_sample_id column.
 #' @param chromosome The chromosome you are restricting to.
@@ -1201,7 +1201,7 @@ get_combined_sv = function(min_vaf = 0,
 #'
 get_manta_sv = function(min_vaf = 0.1,
                         min_score = 40,
-                        pass = FALSE,
+                        pass = TRUE,
                         pairing_status,
                         sample_id,
                         chromosome,
@@ -1225,7 +1225,9 @@ get_manta_sv = function(min_vaf = 0.1,
   }
 
    if(from_flatfile){
-    all_sv = get_combined_sv(projection = projection)
+    all_sv = get_combined_sv(projection = projection) %>%
+      mutate(FILTER = "PASS") #i.e all variants returned with get_combined_sv() all have PASS in the FILTER column.
+
     all_meta = get_gambl_metadata()
 
     #add pairing status to get_combined_sv return
@@ -2605,7 +2607,7 @@ get_gene_expression = function(metadata,
 #' @param these_samples_metadata The only required parameter is a metadata table (data frame) that must contain a row for each sample you want the data from. The additional columns the data frame needs to contain, besides sample_id, are: unix_group, genome_build, seq_type, pairing_status.
 #' @param min_vaf The minimum tumour VAF for a SV to be returned. Default value is 0.1.
 #' @param min_score The lowest Manta somatic score for a SV to be returned. Default value is 40.
-#' @param pass If set to TRUE, include SVs that are annotated with PASS in the FILTER column. Default is TRUE.
+#' @param pass If set to TRUE, only return SVs that are annotated with PASS in the FILTER column. Set to FALSE to keep all variants, regardless if they PASS the filters. Default is TRUE. 
 #' @param projection The projection of returned calls. Default is grch37.
 #' 
 #' @return a data frame containing the Manta outputs from all sample_id in these_samples_metadata in a bedpe-like format with additional columns extracted from the VCF column.
@@ -2697,7 +2699,7 @@ get_manta_sv_by_samples = function(these_samples_metadata,
 #' @param force_lift If TRUE, coordinates will be lifted (if needed) to the selected projection. Default is FALSE. WARNING: if your code calls this function directly, set this parameter to TRUE to ensure that the returned calls are in respect to the requested projection.
 #' @param min_vaf The minimum tumour VAF for a SV to be returned. Default value is 0.1.
 #' @param min_score The lowest Manta somatic score for a SV to be returned. Default value is 40.
-#' @param pass If set to TRUE, include SVs that are annotated with PASS in the FILTER column. Default is TRUE.
+#' @param pass If set to TRUE, only return SVs that are annotated with PASS in the FILTER column. Set to FALSE to keep all variants, regardless if they PASS the filters. Default is TRUE. 
 #' @param projection The projection of returned calls. Default is grch37.
 #'
 #' @return a data frame containing the Manta outputs from this_sample_id in a bedpe-like format with additional columns extracted from the VCF column.
