@@ -7,7 +7,7 @@
 get_manta_sv(
   min_vaf = 0.1,
   min_score = 40,
-  pass = FALSE,
+  pass = TRUE,
   pairing_status,
   sample_id,
   chromosome,
@@ -24,7 +24,7 @@ get_manta_sv(
 
 \item{min_score}{The lowest Manta somatic score for a SV to be returned.}
 
-\item{pass}{If set to TRUE, include SVs that are annotated with PASS in FILTER column. Default is FALSE (since sv calls returned with get_combined_sv does not have this column).}
+\item{pass}{If set to TRUE, only return SVs that are annotated with PASS in the FILTER column. Set to FALSE to keep all variants, regardless if they PASS the filters. Default is TRUE.}
 
 \item{sample_id}{Filter on specific sample IDs in tumour_sample_id column.}
 
