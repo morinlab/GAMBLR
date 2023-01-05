@@ -1226,9 +1226,17 @@ get_manta_sv = function(min_vaf = 0.1,
 
    if(from_flatfile){
     all_sv = get_combined_sv(projection = projection)
+    all_meta = get_gambl_metadata()
+
+    #add pairing status to get_combined_sv return
+    sub_meta = all_meta %>%
+      dplyr::select(sample_id, pairing_status) %>%
+      rename(pair_status = pairing_status)
+      
+    all_sv = left_join(all_sv, sub_meta, by = c("tumour_sample_id" = "sample_id"))
 
     #get metadata for samples currently missing from the merged results
-    missing_samples = get_gambl_metadata() %>%
+    missing_samples = all_meta %>%
       anti_join(all_sv, by = c("sample_id" = "tumour_sample_id"))
     
     #call get manta_sv_by_samples on samples missing from current merge
@@ -2651,14 +2659,15 @@ get_manta_sv_by_samples = function(these_samples_metadata,
   merged_bedpe = bind_rows(lifted_calls, no_lift_needed) %>%
     dplyr::select(-need_lift)
 
-  #Deal with chr prefixes based on the selected projection.
+  #add chr prefix to the chromosome name for builds that expect it, but only add when necessary
+  #hg38 and hg19 (with chr prefix)
   if(projection %in% c("hg38", "hg19")){
     merged_bedpe = merged_bedpe %>%
       dplyr::mutate(CHROM_A = case_when(str_detect(CHROM_A, "chr") ~ CHROM_A, TRUE ~ paste0("chr", CHROM_A))) %>%
       dplyr::mutate(CHROM_B = case_when(str_detect(CHROM_B, "chr") ~ CHROM_B, TRUE ~ paste0("chr", CHROM_B)))
   }
 
-  #remove potential chr prefixes (based on projection)
+  #grch37 and grch38 (no chr prefix)
   if(projection %in% c("grch37", "grch38")){
     merged_bedpe = merged_bedpe %>%
       dplyr::mutate(CHROM_A = gsub("chr", "", CHROM_A)) %>%
@@ -2685,7 +2694,7 @@ get_manta_sv_by_samples = function(these_samples_metadata,
 #'
 #' @param this_sample_id The single sample ID you want to obtain the result from.
 #' @param these_samples_metadata A metadata table containing metadata for this_sample_id, or sample of interest. This parameter is required.
-#' @param force_lift If TRUE, coordinates will be lifted (if needed) to the selected projection. Default is FALSE. WARNING: if running this function in stand-alone mode, set this parameter to TRUE to ensure that the returned calls are in respect to the requested projection.
+#' @param force_lift If TRUE, coordinates will be lifted (if needed) to the selected projection. Default is FALSE. WARNING: if your code calls this function directly, set this parameter to TRUE to ensure that the returned calls are in respect to the requested projection.
 #' @param min_vaf The minimum tumour VAF for a SV to be returned. Default value is 0.1.
 #' @param min_score The lowest Manta somatic score for a SV to be returned. Default value is 40.
 #' @param pass If set to TRUE, include SVs that are annotated with PASS in the FILTER column. Default is TRUE.
