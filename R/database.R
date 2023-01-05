@@ -1225,7 +1225,7 @@ get_manta_sv = function(min_vaf = 0.1,
   }
 
    if(from_flatfile){
-    all_sv = get_combined_sv()
+    all_sv = get_combined_sv(projection = projection)
 
     #get metadata for samples currently missing from the merged results
     missing_samples = get_gambl_metadata() %>%
@@ -1234,8 +1234,8 @@ get_manta_sv = function(min_vaf = 0.1,
     #call get manta_sv_by_samples on samples missing from current merge
     missing_sv = get_manta_sv_by_samples(these_samples_metadata = missing_samples)
     
-    #rbind current manta merged results with missing samples
-    all_sv = rbind(all_sv, missing_sv)
+    #combine current manta merged results with missing samples
+    all_sv = bind_rows(all_sv, missing_sv)
     
   }else{
     con = DBI::dbConnect(RMariaDB::MariaDB(), dbname = db)
@@ -1250,10 +1250,10 @@ get_manta_sv = function(min_vaf = 0.1,
     })
     all_sv = all_sv %>%
       dplyr::filter((CHROM_A == chromosome & START_A >= qstart & START_A <= qend) | (CHROM_B == chromosome & START_B >= qstart & START_B <= qend)) %>%
-      dplyr::filter(VAF_tumour >= min_vaf & SOMATIC_SCORE >= min_score)
+      dplyr::filter(VAF_tumour >= min_vaf & SCORE >= min_score)
   }else{
     all_sv = all_sv %>%
-      dplyr::filter(VAF_tumour >= min_vaf & SOMATIC_SCORE >= min_score)
+      dplyr::filter(VAF_tumour >= min_vaf & SCORE >= min_score)
   }
   if(pass){
     all_sv = all_sv %>%
@@ -1281,7 +1281,6 @@ get_manta_sv = function(min_vaf = 0.1,
   }
   return(all_sv)
 }
-
 
 
 #' Get a specific flavour of LymphGen from the main GAMBL outputs and tidy the composites.
@@ -2652,6 +2651,20 @@ get_manta_sv_by_samples = function(these_samples_metadata,
   merged_bedpe = bind_rows(lifted_calls, no_lift_needed) %>%
     arrange(CHROM_A, CHROM_B, START_A) %>%
     dplyr::select(-need_lift)
+
+  #Deal with chr prefixes based on the selected projection.
+  if(projection %in% c("hg38", "hg19")){
+    merged_bedpe = merged_bedpe %>%
+      dplyr::mutate(CHROM_A = case_when(str_detect(CHROM_A, "chr") ~ CHROM_A, TRUE ~ paste0("chr", CHROM_A))) %>%
+      dplyr::mutate(CHROM_B = case_when(str_detect(CHROM_B, "chr") ~ CHROM_B, TRUE ~ paste0("chr", CHROM_B)))
+  }
+
+  #remove potential chr prefixes (based on projection)
+  if(projection %in% c("grch37", "grch38")){
+    merged_bedpe = merged_bedpe %>%
+      dplyr::mutate(CHROM_A = gsub("chr", "", CHROM_A)) %>%
+      dplyr::mutate(CHROM_B = gsub("chr", "", CHROM_B))
+  }
   
   #return merged manta SVs.
   return(merged_bedpe)
@@ -2792,9 +2805,8 @@ get_manta_sv_by_sample = function(this_sample_id,
   chrom_col <- c(CHROM_A = "#CHROM_A")
   bedpe_dat = bedpe_dat_raw %>%
     rename(any_of(chrom_col)) %>%
-    mutate(tumour_sample_id = tumour_sample_id, normal_sample_id = normal_sample_id, NAME = ".") %>%
-    mutate(pair_status = pairing_status) %>%
-    mutate(SOMATIC_SCORE = gsub(".*SOMATICSCORE=","", as.character(INFO_A)))
+    mutate(tumour_sample_id = tumour_sample_id, normal_sample_id = normal_sample_id, pair_status = pairing_status, NAME = ".", gridss_name = NA) %>%
+    mutate(SCORE = gsub(".*SOMATICSCORE=","", as.character(INFO_A)))
 
   #Extract some more VCF information.
   vcf_normal = str_split_fixed(bedpe_dat[[normal_sample_id]], ":", 6) %>%
@@ -2804,35 +2816,20 @@ get_manta_sv_by_sample = function(this_sample_id,
   vcf_tumour = str_split_fixed(bedpe_dat[[tumour_sample_id]], ":", 6) %>%
     as.data.frame() %>%
     rename(GT_tumour = 1, PR_tumour = 2, SR_tumour = 3, TR_tumour = 4, DP_tumour = 5, VAF_tumour = 6)
-
+  
   bedpe_dat = cbind(bedpe_dat, vcf_normal, vcf_tumour)
 
-  #Substitute empty strings with NAs (variants specified as "imprecise" in info field, does not have all FORMAT IDs).
-  bedpe_dat[bedpe_dat == ""] <- NA
-
-  #Subset NAs (in VAF_normal) to new data frame, i.e variants stated as "imprecise" as described above.
-  NAs = subset(bedpe_dat, is.na(VAF_normal))
-
-  #Shift cells for such variants, necessary to retrieve VAF and DP from VCF fields (they are there, but shifted one cell to the left, due to the missing of "SR" FORMAT).
-  NAs$VAF_normal = NAs$DP_normal
-  NAs$DP_normal = NAs$TR_normal
-  NAs$VAF_tumour = NAs$DP_tumour
-  NAs$DP_tumour = NAs$TR_tumour
-
-  #Drop the same NAs from the original dataframe (i.e "imprecise" variants).
-  bedpe_dat_narm = bedpe_dat %>% drop_na()
-
   #bind rows for wrangled imprecise variants with all other variants, and presenting the data in expected format (sorted and column-order).
-  bedpe_dat = bind_rows(bedpe_dat_narm, NAs) %>%
+  bedpe_dat = bedpe_dat %>%
     arrange(CHROM_A, CHROM_B, START_A) %>%
+    rename("DP" = "DP_tumour", "manta_name" = "ID") %>%
     dplyr::select("CHROM_A", "START_A", "END_A", "CHROM_B", "START_B", "END_B",
-                  "NAME", "SOMATIC_SCORE", "STRAND_A", "STRAND_B", "TYPE", "FILTER",
-                  "VAF_tumour", "VAF_normal", "DP_tumour", "DP_normal", "tumour_sample_id",
-                  "normal_sample_id", "pair_status", "need_lift")
+                  "manta_name", "SCORE", "STRAND_A", "STRAND_B", "tumour_sample_id",
+                  "normal_sample_id", "VAF_tumour", "DP", "gridss_name", "pair_status", "FILTER", "need_lift")
   
   #VAF and somatic score filtering.
   bedpe_dat = bedpe_dat %>%
-    dplyr::filter(VAF_tumour >= min_vaf & SOMATIC_SCORE >= min_score)
+    dplyr::filter(VAF_tumour >= min_vaf & SCORE >= min_score)
   
   #Filter on FILTER (variant callers variant filter criteria).
   if(pass){
@@ -2841,28 +2838,29 @@ get_manta_sv_by_sample = function(this_sample_id,
   }
   
   #add chr prefixes, if not already there (based on projection)
-  if(projection %in% c("hg38", "hg19")){
-    bedpe_dat = bedpe_dat %>%
-      dplyr::mutate(CHROM_A = case_when(str_detect(CHROM_A, "chr") ~ CHROM_A, TRUE ~ paste0("chr", CHROM_A))) %>%
-      dplyr::mutate(CHROM_B = case_when(str_detect(CHROM_B, "chr") ~ CHROM_B, TRUE ~ paste0("chr", CHROM_B)))
-  }
-
-  #remove potential chr prefixes (based on projection)
-  if(projection %in% c("grch37", "grch38")){
-    bedpe_dat = bedpe_dat %>%
-      dplyr::mutate(CHROM_A = gsub("chr", "", CHROM_A)) %>%
-      dplyr::mutate(CHROM_B = gsub("chr", "", CHROM_B))
-  }
-    
-  #Remove row names and enforce column types.
-  bedpe_dat = bedpe_dat %>%
-    mutate(across(c(CHROM_A, CHROM_B, NAME, STRAND_A, STRAND_B, TYPE, FILTER, tumour_sample_id, normal_sample_id, pair_status), as.character)) %>%
-    mutate(across(c(START_A, END_A, START_B, END_B, SOMATIC_SCORE, VAF_tumour, VAF_normal, DP_tumour, DP_normal), as.numeric))
-  
   if(force_lift){
+    if(projection %in% c("hg38", "hg19")){
+      bedpe_dat = bedpe_dat %>%
+        dplyr::mutate(CHROM_A = case_when(str_detect(CHROM_A, "chr") ~ CHROM_A, TRUE ~ paste0("chr", CHROM_A))) %>%
+        dplyr::mutate(CHROM_B = case_when(str_detect(CHROM_B, "chr") ~ CHROM_B, TRUE ~ paste0("chr", CHROM_B)))
+    }
+    
+    #remove potential chr prefixes (based on projection)
+    if(projection %in% c("grch37", "grch38")){
+      bedpe_dat = bedpe_dat %>%
+        dplyr::mutate(CHROM_A = gsub("chr", "", CHROM_A)) %>%
+        dplyr::mutate(CHROM_B = gsub("chr", "", CHROM_B))
+    }
+    
+    #remove additional column
     bedpe_dat = bedpe_dat %>%
       dplyr::select(-need_lift)
   }
   
+  #Remove row names and enforce column types.
+  bedpe_dat = bedpe_dat %>%
+    mutate(across(c(CHROM_A, CHROM_B, manta_name, STRAND_A, STRAND_B, tumour_sample_id, normal_sample_id, pair_status, FILTER, gridss_name), as.character)) %>%
+    mutate(across(c(START_A, END_A, START_B, END_B, SCORE, VAF_tumour, DP), as.numeric))
+
   return(bedpe_dat)
 }
