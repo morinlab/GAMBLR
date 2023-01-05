@@ -19,13 +19,13 @@ get_manta_sv_by_sample(
 
 \item{these_samples_metadata}{A metadata table containing metadata for this_sample_id, or sample of interest. This parameter is required.}
 
-\item{force_lift}{If TRUE, coordinates will be lifted (if needed) to the selected projection. Default is FLASE. WARNING: please make sure that the requested sample is not already availble in the merged results (i.e get_combined_sv).}
+\item{force_lift}{If TRUE, coordinates will be lifted (if needed) to the selected projection. Default is FALSE. WARNING: if running this function in stand-alone mode, set this parameter to TRUE to ensure that the returned calls are in respect to the requested projection.}
 
 \item{min_vaf}{The minimum tumour VAF for a SV to be returned. Default value is 0.1.}
 
 \item{min_score}{The lowest Manta somatic score for a SV to be returned. Default value is 40.}
 
-\item{pass}{If set to TRUE, include SVs that are annotated with PASS in FILTER column. Default is TRUE.}
+\item{pass}{If set to TRUE, include SVs that are annotated with PASS in the FILTER column. Default is TRUE.}
 
 \item{projection}{The projection of returned calls. Default is grch37.}
 }
@@ -37,7 +37,7 @@ This function is used for retrieving Manta results (structural variants) from in
 For multiple samples, please see get_manta_sv_by_samples (a convenience wrapper function for get_manta_by_sample).
 Additional columns are extracted from the VCF column and standard filtering options are available.
 This function also performs a lift-over to selected projection, if needed.
-Please note, if force_lift is set to FALSE, an extra column will be added that states if the returned variant calls needs to be lifted.
+Please note, if force_lift is set to FALSE, an extra column will be added that states if the returned variant calls need to be lifted.
 The value for this column is returned TRUE (for all rows) if the available genome projection for the selected sample does not match the selected projection (i.e requiring the user to manually lift the calls).
 }
 \examples{

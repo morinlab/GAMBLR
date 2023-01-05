@@ -19,7 +19,7 @@ get_manta_sv_by_samples(
 
 \item{min_score}{The lowest Manta somatic score for a SV to be returned. Default value is 40.}
 
-\item{pass}{If set to TRUE, include SVs that are annotated with PASS in FILTER column. Default is TRUE.}
+\item{pass}{If set to TRUE, include SVs that are annotated with PASS in the FILTER column. Default is TRUE.}
 
 \item{projection}{The projection of returned calls. Default is grch37.}
 }

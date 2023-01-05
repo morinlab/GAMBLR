@@ -7,7 +7,7 @@
 get_manta_sv(
   min_vaf = 0.1,
   min_score = 40,
-  pass = TRUE,
+  pass = FALSE,
   pairing_status,
   sample_id,
   chromosome,
@@ -24,7 +24,7 @@ get_manta_sv(
 
 \item{min_score}{The lowest Manta somatic score for a SV to be returned.}
 
-\item{pass}{If set to TRUE, include SVs that are annotated with PASS in FILTER column. Default is TRUE.}
+\item{pass}{If set to TRUE, include SVs that are annotated with PASS in FILTER column. Default is FALSE (since sv calls returned with get_combined_sv does not have this column).}
 
 \item{sample_id}{Filter on specific sample IDs in tumour_sample_id column.}
 
@@ -42,7 +42,7 @@ get_manta_sv(
 
 \item{projection}{The projection genome build.}
 
-\item{pair_status}{Use to restrict results (if desired) to matched or unmatched results (default is to return all).}
+\item{pair_status}{Use to restrict results (if desired) to matched or unmatched results (default is to return all). Only applies to samples retrieved with get_manta_sv_by_sample, since variant calls from get_combined_sv, does not have this column.}
 }
 \value{
 A data frame in a bedpe-like format with additional columns that allow filtering of high-confidence SVs.
