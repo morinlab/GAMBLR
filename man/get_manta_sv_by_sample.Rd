@@ -19,7 +19,7 @@ get_manta_sv_by_sample(
 
 \item{these_samples_metadata}{A metadata table containing metadata for this_sample_id, or sample of interest. This parameter is required.}
 
-\item{force_lift}{If TRUE, coordinates will be lifted (if needed) to the selected projection. Default is FALSE. WARNING: if running this function in stand-alone mode, set this parameter to TRUE to ensure that the returned calls are in respect to the requested projection.}
+\item{force_lift}{If TRUE, coordinates will be lifted (if needed) to the selected projection. Default is FALSE. WARNING: if your code calls this function directly, set this parameter to TRUE to ensure that the returned calls are in respect to the requested projection.}
 
 \item{min_vaf}{The minimum tumour VAF for a SV to be returned. Default value is 0.1.}
 
