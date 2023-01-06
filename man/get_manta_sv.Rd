@@ -14,7 +14,6 @@ get_manta_sv(
   qstart,
   qend,
   region,
-  with_chr_prefix = FALSE,
   from_flatfile = TRUE,
   projection = "grch37"
 )
@@ -35,8 +34,6 @@ get_manta_sv(
 \item{qend}{Query end coordinate of the range you are restricting to.}
 
 \item{region}{Region formatted like chrX:1234-5678 instead of specifying chromosome, start and end separately.}
-
-\item{with_chr_prefix}{Prepend all chromosome names with chr (required by some downstream analyses).}
 
 \item{from_flatfile}{Set to TRUE by default.}
 
