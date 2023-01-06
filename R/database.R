@@ -1183,7 +1183,6 @@ get_combined_sv = function(min_vaf = 0,
 #' @param qstart Query start coordinate of the range you are restricting to.
 #' @param qend Query end coordinate of the range you are restricting to.
 #' @param region Region formatted like chrX:1234-5678 instead of specifying chromosome, start and end separately.
-#' @param with_chr_prefix Prepend all chromosome names with chr (required by some downstream analyses).
 #' @param from_flatfile Set to TRUE by default.
 #' @param projection The projection genome build.
 #'
@@ -1208,7 +1207,6 @@ get_manta_sv = function(min_vaf = 0.1,
                         qstart,
                         qend,
                         region,
-                        with_chr_prefix = FALSE,
                         from_flatfile = TRUE,
                         projection = "grch37"){
 
@@ -1242,7 +1240,7 @@ get_manta_sv = function(min_vaf = 0.1,
       anti_join(all_sv, by = c("sample_id" = "tumour_sample_id"))
     
     #call get manta_sv_by_samples on samples missing from current merge
-    missing_sv = get_manta_sv_by_samples(these_samples_metadata = missing_samples)
+    missing_sv = get_manta_sv_by_samples(these_samples_metadata = missing_samples, projection = projection)
     
     #combine current manta merged results with missing samples
     all_sv = bind_rows(all_sv, missing_sv)
@@ -1278,14 +1276,7 @@ get_manta_sv = function(min_vaf = 0.1,
       dplyr::filter(tumour_sample_id == sample_id)
   }
   all_sv = as.data.frame(all_sv)
-  if(with_chr_prefix){
-    #add chr prefix only if it's missing
-    all_sv = all_sv %>%
-      dplyr::mutate(CHROM_A = case_when(str_detect(CHROM_A, "chr") ~ CHROM_A, TRUE ~ paste0("chr", CHROM_A)))
 
-    all_sv = all_sv %>%
-      dplyr::mutate(CHROM_B = case_when(str_detect(CHROM_B, "chr") ~ CHROM_B, TRUE ~ paste0("chr", CHROM_B)))
-  }
   if(!from_flatfile){
     DBI::dbDisconnect(con)
   }

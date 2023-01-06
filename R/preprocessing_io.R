@@ -1033,9 +1033,6 @@ liftover_bedpe = function(bedpe_file,
     colnames(original_bedpe)[1] = "CHROM_A"
     original_bedpe = as.data.frame(original_bedpe)
 
-    original_bedpe = original_bedpe %>%
-      mutate_if(is.numeric, as.integer)
-
     #print(head(original_bedpe))
     original_bedpe = original_bedpe %>%
       dplyr::mutate(CHROM_A = ifelse(!grepl("chr", CHROM_A), paste0("chr", CHROM_A), CHROM_A),
