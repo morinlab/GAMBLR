@@ -2733,7 +2733,7 @@ get_manta_sv_by_sample = function(this_sample_id,
   
   if(missing(this_sample_id)){
     if(!nrow(these_samples_metadata) == 1){
-      stop("There are more than one sample in the supplied metadata table. Please subset metadata to only have one sample, or considder running get_manta_sv_by_samples")
+      stop("There is more than one sample in the supplied metadata table. Either subset metadata to only have one sample, provide the this_sample_id parameter OR consider running get_manta_sv_by_samples")
     }
     this_sample_id = these_samples_metadata$sample_id
   }
