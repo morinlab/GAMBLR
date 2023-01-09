@@ -2692,7 +2692,7 @@ get_manta_sv_by_samples = function(these_samples_metadata,
 #' @param this_sample_id The single sample ID you want to obtain the result from.
 #' @param these_samples_metadata A metadata table containing metadata for this_sample_id, or sample of interest. This parameter is required.
 #' @param force_lift If TRUE, coordinates will be lifted (if needed) to the selected projection. Default is FALSE. WARNING: if your code calls this function directly, set this parameter to TRUE to ensure that the returned calls are in respect to the requested projection.
-#' @param return_anyway Set to TRUE to force variant calls to be returned, even if they're not lifted, i.e you either know what you're doing and plan to use liftover_bedpe yourself, or you plan to run liftover_bedpe for mutiple samples in on one df, (as in get_manta_sv_by_samples). Default is FALSE.
+#' @param return_anyway Set to TRUE to force variant calls to be returned, even if they're not lifted, This parameter should only ever be modified from the default setting when this function is called by another function that handles the liftOver separately.
 #' @param min_vaf The minimum tumour VAF for a SV to be returned. Default value is 0.1.
 #' @param min_score The lowest Manta somatic score for a SV to be returned. Default value is 40.
 #' @param pass If set to TRUE, only return SVs that are annotated with PASS in the FILTER column. Set to FALSE to keep all variants, regardless if they PASS the filters. Default is TRUE. 
@@ -2705,17 +2705,7 @@ get_manta_sv_by_samples = function(these_samples_metadata,
 #' @examples
 #' #example 1
 #' #get manta calls for a sample that needs to be lifted to "hg38" and let this function take care of the liftover step for you. 
-#' my_sv_hg38_lifted = get_manta_sv_by_sample(this_sample_id = "99-27783_tumorA", these_samples_metadata = metadata, projection = "hg38", force_lift = TRUE)
-#'
-#' #example 2
-#' #get manta calls for a sample and do the liftover on your own, based on the information in the extra column in the returned bedpe data frame (need_lift)
-#' my_sv = get_manta_sv_by_sample(this_sample_id = "99-27783_tumorA", these_samples_metadata = metadata, projection = "hg38", force_lift = FALSE, return_anyway = TRUE)
-#'
-#' #check if returned variant calls need to be lifted
-#' my_sv$need_lift[1]
-#'
-#' #yes, run liftover on returned variant calls
-#  my_sv_hg38 = liftover_bedpe(bedpe_df = my_sv, target_build = "hg38")
+#' my_sv = get_manta_sv_by_sample(this_sample_id = "99-27783_tumorA", these_samples_metadata = get_gambl_metadata(), projection = "hg38", force_lift = TRUE)
 #' 
 get_manta_sv_by_sample = function(this_sample_id,
                                   these_samples_metadata,
