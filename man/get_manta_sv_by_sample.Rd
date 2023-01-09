@@ -16,7 +16,7 @@ get_manta_sv_by_sample(
 )
 }
 \arguments{
-\item{this_sample_id}{The single sample ID you want to obtain the result from.}
+\item{this_sample_id}{The single sample ID you want to obtain the result from. If this parameter is not supplied, the function will retrieve sample ID from the supplied metadata table (these_samples_metadata).}
 
 \item{these_samples_metadata}{A metadata table containing metadata for this_sample_id, or sample of interest. This parameter is required.}
 
@@ -47,5 +47,10 @@ The value for this column is returned TRUE (for all rows) if the available genom
 #example 1
 #get manta calls for a sample that needs to be lifted to "hg38" and let this function take care of the liftover step for you. 
 my_sv = get_manta_sv_by_sample(this_sample_id = "99-27783_tumorA", these_samples_metadata = get_gambl_metadata(), projection = "hg38", force_lift = TRUE)
+
+#example 2
+#get manta calls based on an already filtered metadata (with one sample ID)
+my_metadata = get_gambl_metadata() \%>\% dplyr::filter(sample_id=="99-27783_tumorA")
+my_sv = get_manta_sv_by_sample(these_samples_metadata = my_metadata, projection = "hg38", force_lift = TRUE)
 
 }

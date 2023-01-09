@@ -2689,7 +2689,7 @@ get_manta_sv_by_samples = function(these_samples_metadata,
 #' Please note, if force_lift is set to FALSE, an extra column will be added that states if the returned variant calls need to be lifted. 
 #' The value for this column is returned TRUE (for all rows) if the available genome projection for the selected sample does not match the selected projection (i.e requiring the user to manually lift the calls).
 #'
-#' @param this_sample_id The single sample ID you want to obtain the result from.
+#' @param this_sample_id The single sample ID you want to obtain the result from. If this parameter is not supplied, the function will retrieve sample ID from the supplied metadata table (these_samples_metadata).
 #' @param these_samples_metadata A metadata table containing metadata for this_sample_id, or sample of interest. This parameter is required.
 #' @param force_lift If TRUE, coordinates will be lifted (if needed) to the selected projection. Default is FALSE. WARNING: if your code calls this function directly, set this parameter to TRUE to ensure that the returned calls are in respect to the requested projection.
 #' @param return_anyway Set to TRUE to force variant calls to be returned, even if they're not lifted, This parameter should only ever be modified from the default setting when this function is called by another function that handles the liftOver separately.
@@ -2706,6 +2706,11 @@ get_manta_sv_by_samples = function(these_samples_metadata,
 #' #example 1
 #' #get manta calls for a sample that needs to be lifted to "hg38" and let this function take care of the liftover step for you. 
 #' my_sv = get_manta_sv_by_sample(this_sample_id = "99-27783_tumorA", these_samples_metadata = get_gambl_metadata(), projection = "hg38", force_lift = TRUE)
+#'
+#' #example 2
+#' #get manta calls based on an already filtered metadata (with one sample ID)
+#' my_metadata = get_gambl_metadata() %>% dplyr::filter(sample_id=="99-27783_tumorA")
+#' my_sv = get_manta_sv_by_sample(these_samples_metadata = my_metadata, projection = "hg38", force_lift = TRUE)
 #' 
 get_manta_sv_by_sample = function(this_sample_id,
                                   these_samples_metadata,
@@ -2725,6 +2730,13 @@ get_manta_sv_by_sample = function(this_sample_id,
   
   #check remote configuration
   remote_session = check_remote_configuration(auto_connect = TRUE)
+  
+  if(missing(this_sample_id)){
+    if(!nrow(these_samples_metadata) == 1){
+      stop("There are more than one sample in the supplied metadata table. Please subset metadata to only have one sample, or considder running get_manta_sv_by_samples")
+    }
+    this_sample_id = these_samples_metadata$sample_id
+  }
   
   these_samples_metadata = dplyr::filter(these_samples_metadata, sample_id == this_sample_id)
   if(!nrow(these_samples_metadata==1)){
