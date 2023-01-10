@@ -14,7 +14,6 @@ get_manta_sv(
   qstart,
   qend,
   region,
-  with_chr_prefix = FALSE,
   from_flatfile = TRUE,
   projection = "grch37"
 )
@@ -24,7 +23,7 @@ get_manta_sv(
 
 \item{min_score}{The lowest Manta somatic score for a SV to be returned.}
 
-\item{pass}{If set to TRUE, include SVs that are annotated with PASS in FILTER column. Default is TRUE.}
+\item{pass}{If set to TRUE, only return SVs that are annotated with PASS in the FILTER column. Set to FALSE to keep all variants, regardless if they PASS the filters. Default is TRUE.}
 
 \item{sample_id}{Filter on specific sample IDs in tumour_sample_id column.}
 
@@ -36,13 +35,11 @@ get_manta_sv(
 
 \item{region}{Region formatted like chrX:1234-5678 instead of specifying chromosome, start and end separately.}
 
-\item{with_chr_prefix}{Prepend all chromosome names with chr (required by some downstream analyses).}
+\item{from_flatfile}{Set to TRUE by default.}
 
-\item{from_flatfile}{Set to FALSE by default.}
+\item{projection}{The projection genome build.}
 
-\item{projection}{The projection genome build. Currently only grch37 is supported.}
-
-\item{pair_status}{Use to restrict results (if desired) to matched or unmatched results (default is to return all).}
+\item{pair_status}{Use to restrict results (if desired) to matched or unmatched results (default is to return all). Only applies to samples retrieved with get_manta_sv_by_sample, since variant calls from get_combined_sv, does not have this column.}
 }
 \value{
 A data frame in a bedpe-like format with additional columns that allow filtering of high-confidence SVs.
