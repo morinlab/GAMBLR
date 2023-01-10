@@ -1243,7 +1243,11 @@ get_manta_sv = function(min_vaf = 0.1,
       anti_join(all_sv, by = c("sample_id" = "tumour_sample_id"))
     
     #call get manta_sv_by_samples on samples missing from current merge
-    missing_sv = get_manta_sv_by_samples(these_samples_metadata = missing_samples, projection = projection)
+    missing_sv = get_manta_sv_by_samples(these_samples_metadata = missing_samples,
+                                         projection = projection,
+                                         min_vaf = min_vaf,
+                                         min_score = min_score,
+                                         pass = pass)
     
     #combine current manta merged results with missing samples
     all_sv = bind_rows(all_sv, missing_sv)
@@ -2784,7 +2788,7 @@ get_manta_sv_by_sample = function(this_sample_id,
   
   #read sample flat-file
   message(paste0("Reading ", this_sample_id, " from: ", bedpe_path))
-  bedpe_dat_raw = suppressMessages(read_tsv(bedpe_path, comment = "##"))
+  bedpe_dat_raw = suppressMessages(read_tsv(bedpe_path, comment = "##", col_types = "cddcddccccccccccccccccc"))
 
   #return empty data frame
   if(!nrow(bedpe_dat_raw==0)){
@@ -2828,23 +2832,29 @@ get_manta_sv_by_sample = function(this_sample_id,
     }
   }
 
-  #Data wrangling.
-  chrom_col <- c(CHROM_A = "#CHROM_A")
-  bedpe_dat = bedpe_dat_raw %>%
-    rename(any_of(chrom_col)) %>%
-    mutate(tumour_sample_id = tumour_sample_id, normal_sample_id = normal_sample_id, pair_status = pairing_status) %>%
-    mutate(SCORE = gsub(".*SOMATICSCORE=","", as.character(INFO_A)))
+  #data wrangling
+  #get infos
+  infos = pull(bedpe_dat_raw, tumour_sample_id)
+  infos_n = pull(bedpe_dat_raw, normal_sample_id)
 
-  #Extract some more VCF information.
-  vcf_normal = str_split_fixed(bedpe_dat[[normal_sample_id]], ":", 6) %>%
-    as.data.frame() %>%
-    rename(GT_normal = 1, PR_normal = 2, SR_normal = 3, TR_normal = 4, DP_normal = 5, VAF_normal = 6)
+  #create new columns with sample IDs
+  bedpe_dat = bedpe_dat_raw %>%  
+    mutate(tumour_sample_id = tumour_sample_id, normal_sample_id = normal_sample_id, pair_status = pairing_status)
 
-  vcf_tumour = str_split_fixed(bedpe_dat[[tumour_sample_id]], ":", 6) %>%
-    as.data.frame() %>%
-    rename(GT_tumour = 1, PR_tumour = 2, SR_tumour = 3, TR_tumour = 4, DP_tumour = 5, VAF_tumour = 6)
-  
-  bedpe_dat = cbind(bedpe_dat, vcf_normal, vcf_tumour)
+  #rename columns to match the expected format
+  colnames(bedpe_dat)[c(1:6)] = c("CHROM_A", "START_A", "END_A", "CHROM_B", "START_B", "END_B")
+
+  #extract info fields from VCF
+  #tumour sample
+  bedpe_dat$VAF_tumour = sapply(infos, function(x){as.numeric(tail(unlist(strsplit(x, ":")), 1))})
+  bedpe_dat$DP_tumour = sapply(infos, function(x){as.numeric(tail(unlist(strsplit(x, ":")),2)[1])})
+
+  #normal sample
+  bedpe_dat$VAF_normal = sapply(infos_n, function(x){as.numeric(tail(unlist(strsplit(x, ":")), 1))})
+  bedpe_dat$DP_normal = sapply(infos_n, function(x){as.numeric(tail(unlist(strsplit(x, ":")), 2)[1])})
+
+  #get somatic score
+  bedpe_dat$SCORE = sapply(bedpe_dat$INFO_A, function(x){as.numeric(tail(unlist(strsplit(x, "=")), 1))})
 
   #Rename and select columns to match what is returned with get_combined_sv.
   bedpe_dat = bedpe_dat %>%
