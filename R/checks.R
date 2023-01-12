@@ -40,11 +40,7 @@ check_remote_configuration = function(auto_connect=FALSE){
   remote_gamblr = check_host(auto_connect=auto_connect)
   if(remote_gamblr){
     #code is running on a non-GSC computer. Check that the config is set up properly
-    if(exists("R_CONFIG_ACTIVE")){
-      if(!R_CONFIG_ACTIVE=="remote"){
-        warn(paste("WARNING: config set to",R_CONFIG_ACTIVE, "but you appear to be working on a remote hoste"))
-      }
-    }else{
+    if(!Sys.getenv("R_CONFIG_ACTIVE")=="remote"){
       stop('You seem to be running this on a remote computer but have not set R_CONFIG_ACTIVE properly\nTry running Sys.setenv(R_CONFIG_ACTIVE= "remote")')
     }
   }
