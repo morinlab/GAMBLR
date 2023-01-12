@@ -32,6 +32,7 @@ Imports:
     maftools,
     metaviz,
     plotly,
+    randomForest,
     RCircos,
     readr (>= 2.1),
     reshape2,
