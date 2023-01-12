@@ -2,12 +2,12 @@
 % Please edit documentation in R/utilities.R
 \name{region_to_gene}
 \alias{region_to_gene}
-\title{Return gennes residing in defined region(s)}
+\title{Return genes residing in defined region(s)}
 \usage{
 region_to_gene(region, gene_format = "hugo", genome_build = "grch37")
 }
 \arguments{
-\item{region}{Regions to intersect genes with, this can be either a data frame with regions sorted in the following columns; chromosome, start, end. Or it can be a charachter vector in "region" format, i.e chromosome:start-end.}
+\item{region}{Regions to intersect genes with, this can be either a data frame with regions sorted in the following columns; chromosome, start, end. Or it can be a character vector in "region" format, i.e chromosome:start-end.}
 
 \item{gene_format}{Parameter for specifying the format of returned genes, default is "hugo", other acceptable inputs are "ensembl".}
 
@@ -17,7 +17,7 @@ region_to_gene(region, gene_format = "hugo", genome_build = "grch37")
 
 }
 \description{
-Return gennes residing in defined region(s)
+Return genes residing in defined region(s)
 }
 \examples{
 myc_region = gene_to_region(gene_symbol = "MYC", genome_build = "grch37", return_as = "df")

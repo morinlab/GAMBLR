@@ -242,11 +242,11 @@ get_ssh_session = function(host="gphost01.bcgsc.ca"){
 #' Get regions from genes.
 #'
 #' @param gene_symbol A vector of one or more gene symbols.
-#' @param ensembl_id A vector of one or more Esemble IDs.
+#' @param ensembl_id A vector of one or more Ensembl IDs.
 #' @param genome_build Reference genome build.
 #' @param return_as Specify the type of return. Default is region (chr:start-end), other acceptable arguments are "bed" and "df".
 #'
-#' @import biomaRt
+#' @import tidyverse
 #' @return
 #' @export
 #'
@@ -261,37 +261,21 @@ gene_to_region = function(gene_symbol,
 
   #set mart based on selected genome projection
   if(genome_build == "grch37"){
-    mart = useEnsembl(biomart = "ensembl", dataset = "hsapiens_gene_ensembl", GRCh = 37)
+    gene_coordinates = grch37_gene_coordinates
     chr_select = paste0(c(c(1:22),"X","Y"))
   }else if(genome_build == "hg38"){
-    mart = useEnsembl(biomart = "ensembl", dataset = "hsapiens_gene_ensembl")
+    gene_coordinates = hg38_gene_coordinates
     chr_select = paste0("chr", c(c(1:22),"X","Y"))
-  }
-
-  #retrieve gene coordinates (biomaRt)
-  gene_coordinates = getBM(mart = mart, attributes = c("ensembl_gene_id", "chromosome_name", "start_position", "end_position", "external_gene_name", "hgnc_symbol"))
-
-  #rename columns to match downstream formats
-  colnames(gene_coordinates)[1] = "ensembl_gene_id"
-  colnames(gene_coordinates)[2] = "chromosome"
-  colnames(gene_coordinates)[3] = "start"
-  colnames(gene_coordinates)[4] = "end"
-  colnames(gene_coordinates)[5] = "gene_name"
-  colnames(gene_coordinates)[6] = "hugo_symbol"
-
-  #add "chr" prefix, if hg38 is selected
-  if(genome_build == "hg38"){
-    gene_coordinates = mutate(gene_coordinates, chromosome = paste0("chr", chromosome))
   }
 
   #filter on gene_symbol/ensembl_id
   if(!missing(gene_symbol) && missing(ensembl_id)){
     gene_coordinates = dplyr::filter(gene_coordinates, hugo_symbol %in% gene_symbol)
-    }
+  }
 
   if(missing(gene_symbol) && !missing(ensembl_id)){
     gene_coordinates = dplyr::filter(gene_coordinates, ensembl_gene_id %in% ensembl_id)
-    }
+  }
 
   region = dplyr::select(gene_coordinates, chromosome, start, end, gene_name, hugo_symbol, ensembl_gene_id) %>%
     as.data.frame() %>%
@@ -333,13 +317,13 @@ gene_to_region = function(gene_symbol,
 }
 
 
-#' Return gennes residing in defined region(s)
+#' Return genes residing in defined region(s)
 #'
-#' @param region Regions to intersect genes with, this can be either a data frame with regions sorted in the following columns; chromosome, start, end. Or it can be a charachter vector in "region" format, i.e chromosome:start-end.
+#' @param region Regions to intersect genes with, this can be either a data frame with regions sorted in the following columns; chromosome, start, end. Or it can be a character vector in "region" format, i.e chromosome:start-end.
 #' @param gene_format Parameter for specifying the format of returned genes, default is "hugo", other acceptable inputs are "ensembl".
 #' @param genome_build Reference genome build.
 #'
-#' @import data.table biomaRt
+#' @import data.table tidyverse
 #' @return
 #' @export
 #'
@@ -353,13 +337,10 @@ region_to_gene = function(region,
 
   #set mart based on selected genome projection
   if(genome_build == "grch37"){
-    mart = useEnsembl(biomart = "ensembl", dataset = "hsapiens_gene_ensembl", GRCh = 37)
+    gene_list = grch37_gene_coordinates
   }else if(genome_build == "hg38"){
-    mart = useEnsembl(biomart = "ensembl", dataset = "hsapiens_gene_ensembl")
+    gene_list = hg38_gene_coordinates
   }
-
-  #retrieve gene coordinates (biomaRt)
-  gene_list = getBM(mart = mart, attributes = c("ensembl_gene_id", "chromosome_name", "start_position", "end_position", "external_gene_name", "hgnc_symbol"))
 
   #rename columns to match downstream formats
   colnames(gene_list)[1] = "ensembl_gene_id"
@@ -368,11 +349,6 @@ region_to_gene = function(region,
   colnames(gene_list)[4] = "end"
   colnames(gene_list)[5] = "gene_name"
   colnames(gene_list)[6] = "hugo_symbol"
-
-  #add "chr" prefix, if hg38 is selected
-  if(genome_build == "hg38"){
-    gene_list = mutate(gene_list, chromosome = paste0("chr", chromosome))
-  }
 
   gene_list = as.data.frame(gene_list)
 
@@ -1093,8 +1069,13 @@ review_hotspots = function(annotated_maf,
 #' @export
 #'
 #' @examples
+#' #custom track with annotations
 #' all_sv = get_manta_sv()
-#' sv_to_custom_track(all_sv, output_file = "GAMBL_sv_custom_track.bed", is_annotated = FALSE)
+#' annotated_sv = annotate_sv(sv_data = all_sv)
+#' sv_to_custom_track(annotated_sv, output_file = "GAMBL_sv_custom_track_annotated.bed", is_annotated = TRUE)
+#'
+#' #custom track (no anotatated SVs)
+#' sv_to_custom_track(all_sv, output_file = "GAMBL_sv_custom_track_annotated.bed", is_annotated = FALSE)
 #'
 sv_to_custom_track = function(sv_bedpe,
                               output_file,
@@ -1102,48 +1083,48 @@ sv_to_custom_track = function(sv_bedpe,
                               sv_name = "all"){
 
   if(is_annotated){
-  #reduce to a bed-like format
-  sv_data1 = mutate(sv_bedpe, annotation = paste0(chrom1, ":", start1, "_", fusion)) %>%
-    dplyr::select(chrom2, start2, end2, tumour_sample_id, annotation, fusion)
+    #reduce to a bed-like format
+    sv_data1 = mutate(annotated_sv, annotation = paste0(chrom1, ":", start1, "_", fusion)) %>%
+      dplyr::select(chrom2, start2, end2, tumour_sample_id, annotation, fusion)
 
-  sv_data2 = mutate(sv_bedpe, annotation = paste0(chrom2, ":", start2, "_", fusion)) %>%
-    dplyr::select(chrom1, start1, end1, tumour_sample_id, annotation, fusion)
+    sv_data2 = mutate(annotated_sv, annotation = paste0(chrom2, ":", start2, "_", fusion)) %>%
+      dplyr::select(chrom1, start1, end1, tumour_sample_id, annotation, fusion)
 
-  print(head(sv_data1))
-  print(head(sv_data2))
-  colnames(sv_data1) = c("chrom", "start", "end", "sample_id", "annotation", "fusion")
-  colnames(sv_data2) = c("chrom", "start", "end", "sample_id", "annotation", "fusion")
-  sv_data = bind_rows(sv_data1, sv_data2)
-  sv_data = mutate(sv_data, end = end + 10)
+    print(head(sv_data1))
+    print(head(sv_data2))
+    colnames(sv_data1) = c("chrom", "start", "end", "sample_id", "annotation", "fusion")
+    colnames(sv_data2) = c("chrom", "start", "end", "sample_id", "annotation", "fusion")
+    sv_data = bind_rows(sv_data1, sv_data2)
+    sv_data = mutate(sv_data, end = end + 10)
   }else{
-    colnames(sv_data)[c(1,2,3)]=c("CHROM_A" ,  "START_A", "END_A" )
-    colnames(sv_data)[c(4,5,6)]=c("CHROM_B" ,  "START_B", "END_B" )
-
     sv_data_1 = mutate(sv_bedpe, annotation = paste0( CHROM_B, ":", START_B)) %>%
       dplyr::select(CHROM_A, START_A, END_A, tumour_sample_id, annotation)
+
     sv_data_2 = mutate(sv_bedpe, annotation = paste0( CHROM_A, ":", START_A)) %>%
       dplyr::select(CHROM_B, START_B, END_B, tumour_sample_id, annotation)
-    colnames(sv_data_1)=c("chrom", "start", "end", "sample_id", "annotation")
-    colnames(sv_data_2)=c("chrom", "start", "end", "sample_id", "annotation")
-    sv_data= bind_rows(sv_data_1,sv_data_2)
 
-   # sv_data = dplyr::select(sv_data,chrom,start,end,sample_id,annotation)
+    colnames(sv_data_1) = c("chrom", "start", "end", "sample_id", "annotation")
+    colnames(sv_data_2) = c("chrom", "start", "end", "sample_id", "annotation")
+    sv_data = bind_rows(sv_data_1, sv_data_2)
+
   }
   if(!any(grepl("chr", sv_data[,1]))){
     #add chr
     sv_data[,1] = unlist(lapply(sv_data[,1], function(x){paste0("chr", x)}))
   }
+
   coo_cols = get_gambl_colours("COO")
   path_cols = get_gambl_colours("pathology")
   all_cols = c(coo_cols, path_cols)
   colour_df = data.frame(coo = names(all_cols), colour = all_cols)
+
   rgb_df = data.frame(t(col2rgb(all_cols))) %>%
     mutate(consensus_coo_dhitsig = names(all_cols)) %>%
     unite(col = "rgb", red, green, blue, sep = ",")
 
   meta = get_gambl_metadata() %>%
     dplyr::select(sample_id, "consensus_coo_dhitsig", pathology) %>%
-      mutate(consensus_coo_dhitsig = if_else(consensus_coo_dhitsig == "NA", pathology, consensus_coo_dhitsig))
+    mutate(consensus_coo_dhitsig = if_else(consensus_coo_dhitsig == "NA", pathology, consensus_coo_dhitsig))
 
   samples_coloured = left_join(meta, rgb_df)
   sv_bed_coloured = left_join(sv_data, samples_coloured) %>%
