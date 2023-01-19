@@ -219,6 +219,32 @@ grande_maf = grande_maf[!colnames(grande_maf) %in% c("tumor_biospecimen_id","nor
 
 usethis::use_data(grande_maf, overwrite = TRUE)
 
+#download gene annotations
+#load library
+library(curl)
+
+#get data
+curl::curl_download(url = "ftp://ftp.ensembl.org/pub/release-86/gtf/homo_sapiens/Homo_sapiens.GRCh38.86.gtf.gz",
+                    destfile = "../gene_ann/Homo_sapiens.GRCh38.86.gtf.gz",
+                    quiet = FALSE)
+
+#read gtf into R
+gtf_hg38 = rtracklayer::import('../gene_ann/Homo_sapiens.GRCh38.86.gtf.gz')
+
+#tidy
+gene_annotations_hg38 = as.data.frame(gtf_hg38) %>% #convert to data frame
+  dplyr::filter(type == "gene") %>% #only keep genes
+  dplyr::select(gene_id, seqnames, start, end, gene_name) %>% #select relevant columns
+  dplyr::distinct(gene_id, .keep_all = TRUE) %>% #only keep unique elements (based on gene_id column)
+  dplyr::mutate(seqnames = paste0("chr", seqnames)) %>% #add chromosome (seqnames) prefix
+  dplyr::mutate(seqnames = as.factor(seqnames)) %>% #convert chromosome ( seqnames) variable to factor
+  dplyr::rename(ensembl_gene_id = gene_id, chromosome = seqnames) %>% #rename columns to amtch expected format
+  dplyr::mutate(hugo_symbol = gene_name) %>% #duplicate gene_name and rename it to hugo_symbol
+  dplyr::arrange(chromosome, start) #sort data frame on chromosom, then start coordinates
+
+#save gene coordinates to file (rda)
+save(gene_annotations_hg38, file = "data/hg38_gene_coordinates.rda")
+
 # Features of Chapuy classifier with cluster weights
 chapuy_features <- list()
 

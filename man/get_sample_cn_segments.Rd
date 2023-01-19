@@ -17,13 +17,17 @@ get_sample_cn_segments(
 \arguments{
 \item{this_sample_id}{Optional argument, single sample_id for the sample to retrieve segments for.}
 
-\item{multiple_samples}{Set to TRUE to return cn segments for multiple samples (list) pf samples to be specified in samples_list parameter.}
+\item{multiple_samples}{Set to TRUE to return cn segments for multiple samples (list) of samples to be specified in samples_list parameter.}
+
+\item{from_flatfile}{Set to TRUE by default.}
+
+\item{projection}{Selected genome projection for returned CN segments.}
 
 \item{with_chr_prefix}{Set to TRUE to add a chr prefix to chromosome names.}
 
 \item{streamlined}{Return a minimal output rather than full details.}
 
-\item{samples_list}{Optional vector of type character with one sample per row, rewuired if multiple_samples is set to TRUE.}
+\item{samples_list}{Optional vector of type character with one sample per row, required if multiple_samples is set to TRUE.}
 }
 \value{
 A list of segments for a specific or multiple sample ID(s)
