@@ -2478,6 +2478,7 @@ get_gambl_colours = function(classification = "all",
       "HGBL"="#294936",
       "HGBL-DH/TH"="#7A1616",
       "PBL" = "#E058C0",
+      "Plasmablastic" = "#E058C0",
       "CNS" = "#E2EF60",
       "THRLBCL" = "#A5F2B3",
       "MM"="#CC9A42",
@@ -2485,7 +2486,8 @@ get_gambl_colours = function(classification = "all",
       "UNSPECIFIED"="#cfba7c",
       "OTHER"="#cfba7c",
       "MZL"="#065A7F",
-      "SMZL"="#065A7F"
+      "SMZL"="#065A7F",
+      "Prolymphocytic" = "#7842f5"
   )
   all_colours[["coo"]] = c(
     "ABC" = "#05ACEF",
