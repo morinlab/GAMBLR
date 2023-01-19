@@ -14,11 +14,14 @@ gene_to_region(
 \arguments{
 \item{gene_symbol}{A vector of one or more gene symbols.}
 
-\item{ensembl_id}{A vector of one or more Esemble IDs.}
+\item{ensembl_id}{A vector of one or more Ensembl IDs.}
 
 \item{genome_build}{Reference genome build.}
 
 \item{return_as}{Specify the type of return. Default is region (chr:start-end), other acceptable arguments are "bed" and "df".}
+}
+\value{
+
 }
 \description{
 Get regions from genes.

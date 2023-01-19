@@ -32,6 +32,7 @@ annotate_ssm_blacklist = function(mutations_df,
                                   blacklist_file_template,
                                   drop_threshold = 4,
                                   return_blacklist = FALSE,
+                                  use_curated_blacklist = FALSE,
                                   verbose = FALSE,
                                   invert = FALSE){
   if(missing(seq_type)){
@@ -47,59 +48,73 @@ annotate_ssm_blacklist = function(mutations_df,
   if(missing(project_base)){
     project_base = config::get("project_base")
   }
-  blacklist_files = glue::glue(blacklist_template)
-  blacklist_list = list()
-  for(b in blacklist_files){
-    full_path = paste0(project_base,b) 
+  
+  if(!use_curated_blacklist){
+    blacklist_files = glue::glue(blacklist_template)
+    blacklist_list = list()
+    for(b in blacklist_files){
+      full_path = paste0(project_base,b)
 
-    #check for missingness
-    if(!file.exists(full_path)){
-      print(paste("missing: ", full_path))
-      message("Cannot find file locally. If working remotely, perhaps you forgot to load your config (see below) or sync your files?")
-      message('Sys.setenv(R_CONFIG_ACTIVE = "remote")')
+      
+      #check for missingness
+      if(!file.exists(full_path)){
+        print(paste("missing: ", full_path))
+        message("Cannot find file locally. If working remotely, perhaps you forgot to load your config (see below) or sync your files?")
+        message('Sys.setenv(R_CONFIG_ACTIVE = "remote")')
+      }
+
+      lifted_blacklist = suppressMessages(read_tsv(full_path, col_names = c("chrpos", "blacklist_count"),col_types="ci"))
+      lifted_blacklist = lifted_blacklist %>%
+        separate(chrpos, into = c("Chromosome", "Start_Position"), sep = ":") %>% mutate(Start_Position = as.numeric(Start_Position))
+  
+      blacklist_list[[b]] = lifted_blacklist
     }
-
-    lifted_blacklist = read_tsv(full_path, col_names = c("chrpos", "blacklist_count"),col_types="ci")
-    lifted_blacklist = lifted_blacklist %>%
-      separate(chrpos, into = c("Chromosome", "Start_Position"), sep = ":")
-
-    blacklist_list[[b]] = lifted_blacklist
-  }
-  combined_blacklist = do.call("rbind", blacklist_list)
-
-  # Collapse variant counts per Start_Position
-  combined_blacklist = mutate(combined_blacklist, Start_Position = as.integer(Start_Position)) %>%
-    group_by(Start_Position, Chromosome) %>%
-    summarize(blacklist_count = sum(blacklist_count)) %>%
-    ungroup()
-
-  if(return_blacklist){
-    return(combined_blacklist)
-  }
-
-  #join using chromosome and position
-  if(verbose){
-    print(head(mutations_df))
-    print(head(combined_blacklist))
-  }
-  if(str_detect(mutations_df$Chromosome, "chr")[1]){
-    combined_blacklist = mutate(combined_blacklist, Chromosome = paste0("chr", Chromosome))
-
-  }
-  mutations_df = left_join(mutations_df,combined_blacklist,by = c("Chromosome", "Start_Position")) %>%
-    mutate(blacklist_count = replace_na(blacklist_count, 0))
-
-
-  dropped = dplyr::filter(mutations_df, blacklist_count > drop_threshold)
-  if(verbose){
-    if(length(dropped) > 0 ){
-      ndrop = length(dropped$Tumor_Sample_Barcode)
-      message(paste(ndrop, "variants were dropped"))
-    } else {
-      message("0 variants were dropped")
+    combined_blacklist = do.call("rbind", blacklist_list)
+    
+    if(return_blacklist){
+      return(combined_blacklist)
     }
+  
+    #join using chromosome and position
+    if(verbose){
+      print(head(mutations_df))
+      print(head(combined_blacklist))
+    }
+    if(str_detect(mutations_df$Chromosome, "chr")[1]){
+      combined_blacklist = mutate(combined_blacklist, Chromosome = paste0("chr", Chromosome))
+    }
+    
+    mutations_df = left_join(mutations_df,combined_blacklist,by = c("Chromosome", "Start_Position")) %>%
+      mutate(blacklist_count = replace_na(blacklist_count, 0))
+    dropped = dplyr::filter(mutations_df, blacklist_count > drop_threshold)
+    if(verbose){
+      if(nrow(dropped) > 0 ){
+        ndrop = length(dropped$Tumor_Sample_Barcode)
+        message(paste(ndrop, "variants were dropped"))
+      }else{
+        message("0 variants were dropped")
+      }
+    }
+  }else{
+    repo_base = config::get("repo_base")
+    full_path = paste0(repo_base, config::get("resources")$curated_blacklist)
+    additional_blacklist = glue(full_path) %>% read_tsv()
+    additional_blacklist = additional_blacklist %>%
+      separate(chrpos, into = c("Chromosome", "Start_Position"), sep = ":") %>% mutate(Start_Position = as.numeric(Start_Position))
 
+    mutations_df = left_join(mutations_df,additional_blacklist,by = c("Chromosome", "Start_Position")) %>%
+      mutate(blacklist_count = replace_na(blacklist_count, 0))
+    dropped = dplyr::filter(mutations_df, blacklist_count > drop_threshold)
+    if(verbose){
+      if(nrow(dropped) > 0 ){
+        ndrop = length(dropped$Tumor_Sample_Barcode)
+        message(paste(ndrop, "variants were dropped"))
+      } else {
+        message("0 variants were dropped")
+      }
+    }
   }
+  
   #drop anything that exceeds our threshold but keep NA
   mutations_df = dplyr::filter(mutations_df, is.na(blacklist_count) | blacklist_count < drop_threshold)
   if(invert){
@@ -107,6 +122,7 @@ annotate_ssm_blacklist = function(mutations_df,
   }
   return(mutations_df)
 }
+
 
 
 #' Annotates recurrent CNVs.

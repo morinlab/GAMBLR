@@ -105,9 +105,9 @@ library("biomaRt")
 
 ensembl = useMart(biomart="ENSEMBL_MART_ENSEMBL", host="https://grch37.ensembl.org", path="/biomart/martservice" ,dataset="hsapiens_gene_ensembl")
 #need to get entrezgene_id, hgnc_symbol using ensembl_gene_id
-gene_detail = getBM(attributes=c( 'ensembl_gene_id','entrezgene_id','hgnc_symbol'), 
-      filters = 'ensembl_gene_id', 
-      values = lymphoma_genes$ensembl_gene_id, 
+gene_detail = getBM(attributes=c( 'ensembl_gene_id','entrezgene_id','hgnc_symbol'),
+      filters = 'ensembl_gene_id',
+      values = lymphoma_genes$ensembl_gene_id,
       mart = ensembl,useCache = FALSE)
 
 #fill in missing entrezgene_id
@@ -122,7 +122,7 @@ gene_detail[gene_detail$ensembl_gene_id =="ENSG00000172578","entrezgene_id"] = 8
 
 gene_detail[gene_detail$ensembl_gene_id =="ENSG00000205542","entrezgene_id"] = 7114
 
-lymphoma_genes = left_join(lymphoma_genes,gene_detail) 
+lymphoma_genes = left_join(lymphoma_genes,gene_detail)
 lymphoma_genes$LymphGen=FALSE
 lymphoma_genes[lymphoma_genes$entrezgene_id %in% lymphgen_anno$NCBI_Gene_ID,"LymphGen"] = TRUE
 
@@ -141,16 +141,16 @@ reddy_only = reddy_genes[which(!reddy_genes$hgnc_symbol %in% lymphoma_genes$hgnc
 
 ensembl = useMart("ensembl",dataset="hsapiens_gene_ensembl")
 
-reddy_detail = getBM(attributes=c( 'ensembl_gene_id','entrezgene_id','hgnc_symbol'), 
-                    filters = 'hgnc_symbol', 
-                    values = reddy_only$hgnc_symbol, 
+reddy_detail = getBM(attributes=c( 'ensembl_gene_id','entrezgene_id','hgnc_symbol'),
+                    filters = 'hgnc_symbol',
+                    values = reddy_only$hgnc_symbol,
                     mart = ensembl,useCache = FALSE)
 
 #update any based on mapping to Ensembl ID
 lymphoma_genes[lymphoma_genes$ensembl_gene_id %in% reddy_detail$ensembl_gene_id,"Reddy"]=TRUE
 
-#reddy_only = dplyr::filter(reddy_detail,!ensembl_gene_id %in% lymphoma_genes$ensembl_gene_id ) %>% 
-#  group_by(ensembl_gene_id,hgnc_symbol) %>% slice_head() %>% ungroup() %>% dplyr::select(-entrezgene_id) %>% dplyr::rename("Gene"="hgnc_symbol") %>% 
+#reddy_only = dplyr::filter(reddy_detail,!ensembl_gene_id %in% lymphoma_genes$ensembl_gene_id ) %>%
+#  group_by(ensembl_gene_id,hgnc_symbol) %>% slice_head() %>% ungroup() %>% dplyr::select(-entrezgene_id) %>% dplyr::rename("Gene"="hgnc_symbol") %>%
 #  mutate(Reddy=TRUE)
 #lymphoma_genes_comprehensive = bind_rows(reddy_only,lymphoma_genes) %>% dplyr::select(ensembl_gene_id,Gene,Reddy,LymphGen,Chapuy)
 
@@ -168,7 +168,7 @@ lymphoma_genes[lymphoma_genes$hgnc_symbol %in% chapuy_genes$hgnc_symbol,"Chapuy"
 
 lymphoma_genes_comprehensive = read_tsv("inst/extdata/lymphoma_genes_comprehensive.tsv")
 
-lacy = read_tsv("inst/extdata/lacy_genes.tsv") %>% dplyr::filter(`Included in statistical analysis`=='Yes',Feature!="Amplification") 
+lacy = read_tsv("inst/extdata/lacy_genes.tsv") %>% dplyr::filter(`Included in statistical analysis`=='Yes',Feature!="Amplification")
 lacy_genes = pull(lacy,Gene)
 lymphoma_genes$Lacy = FALSE
 lymphoma_genes[lymphoma_genes$hgnc_symbol %in% lacy_genes,"Lacy"]=TRUE
@@ -187,11 +187,11 @@ usethis::use_data(lymphoma_genes_comprehensive, overwrite = TRUE)
 
 #ensembl = useMart(biomart="ENSEMBL_MART_ENSEMBL", host="https://grch37.ensembl.org", path="/biomart/martservice" ,dataset="hsapiens_gene_ensembl")
 #need to get entrezgene_id, hgnc_symbol using ensembl_gene_id
-#gene_detail = getBM(attributes=c( 'ensembl_gene_id','hgnc_symbol','chromosome_name'), 
-#                    filters = 'hgnc_symbol', 
-#                    values = chapuy_only$hgnc_symbol, 
-#                    mart = ensembl,useCache = FALSE) %>% dplyr::filter(chromosome_name %in% c(c(1:22),"X","Y")) %>% 
-#  dplyr::select(-chromosome_name) %>% dplyr::rename("Gene"="hgnc_symbol") %>% 
+#gene_detail = getBM(attributes=c( 'ensembl_gene_id','hgnc_symbol','chromosome_name'),
+#                    filters = 'hgnc_symbol',
+#                    values = chapuy_only$hgnc_symbol,
+#                    mart = ensembl,useCache = FALSE) %>% dplyr::filter(chromosome_name %in% c(c(1:22),"X","Y")) %>%
+#  dplyr::select(-chromosome_name) %>% dplyr::rename("Gene"="hgnc_symbol") %>%
 #  mutate(Chapuy=TRUE) %>% dplyr:: filter(!Gene %in% lymphoma_genes_comprehensive$Gene)
 
 #lymphoma_genes_comprehensive = bind_rows(gene_detail,lymphoma_genes_comprehensive) %>%
@@ -218,3 +218,92 @@ grande_maf = system.file("extdata", "blood8871418-suppl2-ssm.csv", package = "GA
 grande_maf = grande_maf[!colnames(grande_maf) %in% c("tumor_biospecimen_id","normal_biospecimen_id")]
 
 usethis::use_data(grande_maf, overwrite = TRUE)
+
+#download gene annotations
+#load library
+library(curl)
+
+#get data
+curl::curl_download(url = "ftp://ftp.ensembl.org/pub/release-86/gtf/homo_sapiens/Homo_sapiens.GRCh38.86.gtf.gz",
+                    destfile = "../gene_ann/Homo_sapiens.GRCh38.86.gtf.gz",
+                    quiet = FALSE)
+
+#read gtf into R
+gtf_hg38 = rtracklayer::import('../gene_ann/Homo_sapiens.GRCh38.86.gtf.gz')
+
+#tidy
+gene_annotations_hg38 = as.data.frame(gtf_hg38) %>% #convert to data frame
+  dplyr::filter(type == "gene") %>% #only keep genes
+  dplyr::select(gene_id, seqnames, start, end, gene_name) %>% #select relevant columns
+  dplyr::distinct(gene_id, .keep_all = TRUE) %>% #only keep unique elements (based on gene_id column)
+  dplyr::mutate(seqnames = paste0("chr", seqnames)) %>% #add chromosome (seqnames) prefix
+  dplyr::mutate(seqnames = as.factor(seqnames)) %>% #convert chromosome ( seqnames) variable to factor
+  dplyr::rename(ensembl_gene_id = gene_id, chromosome = seqnames) %>% #rename columns to amtch expected format
+  dplyr::mutate(hugo_symbol = gene_name) %>% #duplicate gene_name and rename it to hugo_symbol
+  dplyr::arrange(chromosome, start) #sort data frame on chromosom, then start coordinates
+
+#save gene coordinates to file (rda)
+save(gene_annotations_hg38, file = "data/hg38_gene_coordinates.rda")
+
+# Features of Chapuy classifier with cluster weights
+chapuy_features <- list()
+
+chapuy_features$feature_weights <- system.file(
+  "extdata",
+  "chapuy_weights.tsv",
+  package="GAMBLR") %>%
+  read_tsv
+
+chapuy_features$ssm_features <- chapuy_features$feature_weights$Feature[
+    !str_detect(
+        chapuy_features$feature_weights$Feature,
+        "SV|AMP|DEL"
+    )
+]
+
+chapuy_features$cnv_features <- chapuy_features$feature_weights$Feature[
+    str_detect(
+        chapuy_features$feature_weights$Feature,
+        "AMP|DEL"
+    )
+]
+
+chapuy_features$cnv_features_cytoband <-
+chapuy_features$cnv_features[!grepl("p:|q:", chapuy_features$cnv_features)] %>%
+as.data.frame %>%
+separate(
+  .,
+  `.`,
+  sep = ":",
+  into = c("cytoband", "CNV")
+)
+
+chapuy_features$cnv_features_arm <-
+chapuy_features$cnv_features[grepl("p:|q:", chapuy_features$cnv_features)] %>%
+as.data.frame %>%
+separate(
+  .,
+  `.`,
+  sep = ":",
+  into = c("arm", "CNV")
+)
+
+chapuy_features$sv_features <-
+chapuy_features$feature_weights$Feature[
+    str_detect(
+        chapuy_features$feature_weights$Feature,
+        "SV"
+    )
+] %>%
+gsub(
+    "SV:",
+    "",
+    .
+) %>%
+gsub(
+    '[/][A-Z0-9]*',
+    "",
+    .
+)
+
+usethis::use_data(chapuy_features, overwrite = TRUE)

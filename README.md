@@ -136,17 +136,20 @@ git clone https://github.com/morinlab/GAMBLR
 ```
 mkdir ~/gambl_results/
 ```
-4. Copy the following files (from your recently cloned [GAMBLR](https://github.com/morinlab/GAMBLR) directory) into the folder from the previous step; `config.yml` and `get_gambl_results.smk`.
+
+4. Update paths under `remote` in your **local** [config.yml](https://github.com/morinlab/GAMBLR/blob/master/config.yml) (GAMBLR) to point to the recently cloned, local **gambl** folder (*repo_base*) and recently created **gambl_results** (*project_base*) folder. For example:
+```
+remote:
+    project_base: "~/gambl_results/"
+    repo_base: "~/git_repos/gambl-master/"
+```
+
+5. Copy the following files (from your recently cloned [GAMBLR](https://github.com/morinlab/GAMBLR) directory) into the folder from the previous step; `config.yml` and `get_gambl_results.smk`.
 ```
 cp ~/git_repos/GAMBLR-master/config.yml ~/gambl_results/
 cp ~/git_repos/GAMBLR-master/get_gambl_results.smk ~/gambl_results/
 ```
-5. Update paths under `remote` in your local [config.yml](https://github.com/morinlab/GAMBLR/blob/master/config.yml) to point to the recently cloned, local **gambl** folder (*repo_base*) and recently created **gambl_results** (*project_base*) folder. For example.
-```
-remote:
-    project_base: "~/gambl_results"
-    repo_base: "~/git_repos/gambl-master/"
-```
+
 6. Add ENVVARS bash/zsh environment variables to your bashrc/zsh or some other way that will ensure they're in your session (e.g. you can set them manually each time if you want, just make sure they are set). For example in your local terminal run the following commands (with updated values...).
 ```
 export GSC_USERNAME="your_gsc_username"
@@ -173,7 +176,7 @@ conda env create --name snakemake_gambl --file ~/git_repos/GAMBLR-master/get_gam
 ```
 conda activate snakemake_gambl
 ```
-11. Retrieve necessary files (download a local copy of all files needed to run a collection of GAMBLR functions).
+11. Retrieve necessary files (download a local copy of all files needed to run a collection of GAMBLR functions). It's strongly advised to use `--cores 1` for this, since it seems to be the more stable option. In addition, if your sync gets interrupted, you only need restart the syncing of 1 file, compared to if you run on multiple cores.
 ```
 snakemake -s get_gambl_results.smk --cores 1
 ```
