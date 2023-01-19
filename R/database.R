@@ -545,20 +545,20 @@ get_merged_result = function(tool_name,
 }
 
 
-#' Get GAMBL metadata.
+#' Get the current GAMBL metadata.
+#' 
+#' Load and assemble a metadata table using the patient and sample metadata stored in a local clone of the GAMBL repository. If run outside the GSC, this function expects the user to have a local clone of this repository and the path to that directory specified in config.yml. 
 #'
-#' @param seq_type_filter Filtering criteria (default: all genomes)
+#' @param seq_type_filter Provide a character vector of which seq_type(s) should be retained. Currently must be one of genome, capture, mrna (default: genome)
 #' @param tissue_status_filter Filtering criteria (default: only tumour genomes, can be "mrna" or "any" for the superset of cases)
-#' @param case_set optional short name for a pre-defined set of cases avoiding any
 #' @param remove_benchmarking By default the FFPE benchmarking duplicate samples will be dropped
 #' @param sample_flatfile Optionally provide the full path to a samples table to use instead of the default
 #' @param biopsy_flatfile Optionally provide the full path to a biopsy table to use instead of the default
 #' @param with_outcomes Optionally join to gambl outcome data
 #' @param only_available If TRUE, will remove samples with FALSE or NA in the bam_available column (default: TRUE)
-#' @param from_flatfile New default is to use the metadata in the flatfiles from your clone of the repo. Can be over-ridden to use the database
+#' @param from_flatfile Default is to use the metadata in the flatfiles from your clone of the repository. The user can alternatively provide sample_flatfile and biopsy_flatfile
 #' @param seq_type_priority For duplicate sample_id with different seq_type available, the metadata will prioritize this seq_type and drop the others
-#'
-#' embargoed cases (current options: 'BLGSP-study', 'FL-study', 'DLBCL-study', 'FL-DLBCL-study', 'FL-DLBCL-all', 'DLBCL-unembargoed', 'BL-DLBCL-manuscript', 'MCL','MCL-CLL')
+#' @param case_set optional short name for a pre-defined set of cases avoiding any embargoed cases (current options: 'BLGSP-study', 'FL-study', 'DLBCL-study', 'FL-DLBCL-study', 'FL-DLBCL-all', 'DLBCL-unembargoed', 'BL-DLBCL-manuscript', 'MCL','MCL-CLL')
 #'
 #' @return A data frame with metadata for each biopsy in GAMBL
 #' @export
@@ -573,13 +573,13 @@ get_merged_result = function(tool_name,
 #' only_normal_metadata = get_gambl_metadata(tissue_status_filter = c('tumour','normal'))
 #' non_duplicated_genome_and_capture = get_gambl_metadata(seq_type_filter=c('genome','capture'),seq_type_priority="genome")
 get_gambl_metadata = function(seq_type_filter = "genome",
-                              tissue_status_filter = c("tumour"),
+                              tissue_status_filter = "tumour",
                               case_set,
                               remove_benchmarking = TRUE,
                               with_outcomes = TRUE,
                               from_flatfile = TRUE,
-                              sample_flatfile = "",
-                              biopsy_flatfile = "",
+                              sample_flatfile,
+                              biopsy_flatfile,
                               only_available = TRUE,
                               seq_type_priority="genome"){
   
@@ -589,10 +589,10 @@ get_gambl_metadata = function(seq_type_filter = "genome",
 
   if(from_flatfile){
     base = config::get("repo_base")
-    if(sample_flatfile == ""){
+    if(missing(sample_flatfile)){
       sample_flatfile = paste0(base, config::get("table_flatfiles")$samples)
     }
-    if(biopsy_flatfile==""){
+    if(missing(biopsy_flatfile)){
       biopsy_flatfile = paste0(base, config::get("table_flatfiles")$biopsies)
     }
 
