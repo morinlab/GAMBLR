@@ -665,7 +665,15 @@ get_gambl_metadata = function(seq_type_filter = "genome",
         dplyr::filter(cohort != "CLL_LSARP_Trios")
     }else if(case_set == "tFL-study"){
       #update all DLBCLs in this file to indicate they're transformations
-      transformed_manual = suppressMessages(read_tsv("/projects/rmorin/projects/gambl-repos/gambl-rmorin/data/metadata/raw_metadata/gambl_tFL_manual.tsv"))
+      transformed_manual <- paste0(
+          base,
+          "data/metadata/raw_metadata/gambl_tFL_manual.tsv"
+      )
+      transformed_manual <- suppressMessages(
+          read_tsv(
+              transformed_manual
+          )
+      )
 
       all_meta = left_join(all_meta, transformed_manual)
       fl_meta_kridel = all_meta %>%
@@ -697,10 +705,19 @@ get_gambl_metadata = function(seq_type_filter = "genome",
         dplyr::filter(cohort != "FL_Kridel") %>%
         dplyr::filter((consensus_pathology %in% c("FL", "COM"))) %>% mutate(analysis_cohort = consensus_pathology)
 
-      gambl_transformations = suppressMessages(read_delim("/projects/rmorin/projects/gambl-repos/gambl-rmorin/data/metadata/raw_metadata/gambl_transformation.txt", delim = " ")) %>%
-        dplyr::filter(code_transf == 1) %>%
-        group_by(res_id) %>%
-        slice_head()
+      gambl_transformations <- paste0(
+          base,
+          "data/metadata/raw_metadata/gambl_transformation.txt"
+      )
+      gambl_transformations <- suppressMessages(
+              read_delim(
+                  gambl_transformations,
+                  delim = " "
+              )
+          ) %>%
+          dplyr::filter(code_transf == 1) %>%
+          group_by(res_id) %>%
+          slice_head()
 
       fl_transformation_meta = suppressMessages(read_tsv("/projects/rmorin/projects/gambl-repos/gambl-rmorin/shared/gambl_fl_transformed.tsv"))
       transformed_cases = pull(gambl_transformations, res_id)
@@ -717,7 +734,15 @@ get_gambl_metadata = function(seq_type_filter = "genome",
       all_meta  = bind_rows(dlbcl_meta, dlbcl_meta_kridel, fl_meta_kridel, fl_meta_other) %>%
         unique()
 
-      curated = suppressMessages(read_tsv("/projects/rmorin/projects/gambl-repos/gambl-rmorin/data/metadata/raw_metadata/clin_review_fl.tsv"))
+      curated <- paste0(
+          base,
+          "data/metadata/raw_metadata/clin_review_fl.tsv"
+      )
+      curated <- suppressMessages(
+          read_tsv(
+              curated
+          )
+      )
 
       all_meta = left_join(all_meta, curated) %>%
         mutate(analysis_cohort = ifelse(is.na(clinical_review), analysis_cohort, clinical_review))
