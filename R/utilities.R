@@ -3655,7 +3655,7 @@ adjust_ploidy = function(this_seg,
                         exclude_sex = exclude_sex)
   } else {
     # ensure the column is named "sample_id" if it came outside GAMBLR
-    if (!"sample" %in% colnames(pga)) {
+    if (!"sample_id" %in% colnames(pga)) {
       stop("Please ensure the column with sample ids in your PGA data frame is named sample_id.")
     }
   }
