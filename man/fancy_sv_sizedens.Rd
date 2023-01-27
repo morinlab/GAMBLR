@@ -5,7 +5,7 @@
 \title{Generate plot visualizing SV sizes. Subset on variant type, filter on VAF, size etc.}
 \usage{
 fancy_sv_sizedens(
-  this_sample,
+  this_sample_id,
   maf_data,
   maf_path = NULL,
   chrom_a_col = 3,
@@ -18,7 +18,7 @@ fancy_sv_sizedens(
   trim = FALSE,
   hide_legend = FALSE,
   chr_select = paste0("chr", c(1:22)),
-  plot_title = paste0(this_sample),
+  plot_title = paste0(this_sample_id),
  
     plot_subtitle = paste0("SV sizes for Manta calls. Dashed line annotates mean variant size.\\nVAF cut off: ",
     vaf_cutoff, ", SV size cut off: ", size_cutoff),
@@ -26,7 +26,7 @@ fancy_sv_sizedens(
 )
 }
 \arguments{
-\item{this_sample}{Sample to be plotted.}
+\item{this_sample_id}{Sample to be plotted.}
 
 \item{maf_data}{Optional parameter with copy number df already loaded into R.}
 
@@ -65,7 +65,7 @@ Nothing.
 Generate plot visualizing SV sizes. Subset on variant type, filter on VAF, size etc.
 }
 \examples{
-myplot = fancy_sv_sizedens(this_sample = "HTMCP-01-06-00422-01A-01D")
-myplot2 = fancy_sv_sizedens(this_sample = "HTMCP-01-06-00422-01A-01D", size_cutoff = 0, chr_select = c("chr1", "chr2"))
+myplot = fancy_sv_sizedens(this_sample_id = "HTMCP-01-06-00422-01A-01D")
+myplot2 = fancy_sv_sizedens(this_sample_id = "HTMCP-01-06-00422-01A-01D", size_cutoff = 0, chr_select = c("chr1", "chr2"))
 
 }

@@ -5,7 +5,7 @@
 \title{Visualize proportional metrics for selected samples.}
 \usage{
 fancy_proportions_plot(
-  these_samples,
+  these_sample_ids,
   metadata,
   these_samples_metadata,
   keep_cohort,
@@ -15,7 +15,7 @@ fancy_proportions_plot(
 )
 }
 \arguments{
-\item{these_samples}{Data frame with sample IDs (to be plotted) in the first column.}
+\item{these_sample_ids}{Data frame with sample IDs (to be plotted) in the first column.}
 
 \item{metadata}{Optional, user can provide a metadata df to subset sample IDs from.}
 
@@ -36,14 +36,14 @@ plot as ggplot object.
 Visualize proportional metrics for selected samples.
 }
 \examples{
-#Example 1 - using these_samples parameter
+#Example 1 - using these_sample_ids parameter
 #subset on FL cases with QC metrics available and plot
 kridel_fl = get_gambl_metadata() \%>\%
  dplyr::filter(pathology == "FL", cohort == "FL_Kridel") \%>\%#
  dplyr::select(sample_id) \%>\%
  pull(sample_id)
 
-my_plot_1 = fancy_proportions_plot(these_samples = kridel_fl, seq_type = "genome")
+my_plot_1 = fancy_proportions_plot(these_sample_ids = kridel_fl, seq_type = "genome")
 
 #Example 2 - using already filtered metadata (these_samples_metadata)
 fl_metadata = get_gambl_metadata() \%>\%

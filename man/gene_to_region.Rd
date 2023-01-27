@@ -20,9 +20,6 @@ gene_to_region(
 
 \item{return_as}{Specify the type of return. Default is region (chr:start-end), other acceptable arguments are "bed" and "df".}
 }
-\value{
-
-}
 \description{
 Get regions from genes.
 }

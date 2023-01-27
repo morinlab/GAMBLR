@@ -9,7 +9,7 @@ assemble_file_details(
   file_paths,
   tool_name,
   unix_group,
-  sample_ids,
+  these_sample_ids,
   output_type = "ploidy",
   is_production = "yes"
 )
@@ -23,7 +23,7 @@ assemble_file_details(
 
 \item{unix_group}{The unix group (should be the same for all)}
 
-\item{sample_ids}{A vector of sample_id the same length and in the same order as the file paths}
+\item{these_sample_ids}{A vector of sample_id the same length and in the same order as the file paths}
 
 \item{output_type}{The file type to distinguish different output file types from the same pipeline (e.g. seg, maf, ploidy)}
 

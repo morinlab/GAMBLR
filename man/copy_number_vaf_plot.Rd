@@ -5,7 +5,7 @@
 \title{Create a genome-wide copy number plot for one sample and (optionally) display mutation VAF.}
 \usage{
 copy_number_vaf_plot(
-  this_sample,
+  this_sample_id,
   just_segments = FALSE,
   coding_only = FALSE,
   one_chrom,
@@ -16,7 +16,7 @@ copy_number_vaf_plot(
 )
 }
 \arguments{
-\item{this_sample}{The sample_id for the sample to plot.}
+\item{this_sample_id}{The sample_id for the sample to plot.}
 
 \item{just_segments}{Specify whether only the segments will be plotted (instead of mutation VAF).}
 
@@ -39,7 +39,7 @@ Nothing
 Create a genome-wide copy number plot for one sample and (optionally) display mutation VAF.
 }
 \examples{
-cnv_vaf_plot = copy_number_vaf_plot(this_sample = "some-sample-name",
+cnv_vaf_plot = copy_number_vaf_plot(this_sample_id = "some-sample-name",
                                     just_segments = TRUE,
                                     coding_only = FALSE,
                                     one_chrom = "chr2",

@@ -11,7 +11,7 @@ finalize_study(
   project_name = "gambl_minus_icgc",
   description = "GAMBL data without ICGC",
   cancer_type = "mixed",
-  sample_ids,
+  these_sample_ids,
   overwrite = TRUE,
   out_dir
 )
@@ -27,7 +27,7 @@ finalize_study(
 
 \item{cancer_type}{Cancer types included in study, default is "mixed".}
 
-\item{sample_ids}{A vector of all the sample_id that were included in any of the data files for cbioportal.}
+\item{these_sample_ids}{A vector of all the sample_id that were included in any of the data files for cbioportal.}
 
 \item{overwrite}{Flag to specify that files should be overwritten if they exist. Default is TRUE.}
 
@@ -42,6 +42,6 @@ Nothing.
 Finish setting up a new cBioPortal instance or updating an existing portal data set.
 }
 \examples{
-finalize_study(sample_ids = c(ids, fusion_ids), out_dir = "GAMBLR/cBioPortal/instance01/")
+finalize_study(these_sample_ids = c(ids, fusion_ids), out_dir = "GAMBLR/cBioPortal/instance01/")
 
 }

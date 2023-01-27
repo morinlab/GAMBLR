@@ -22,9 +22,6 @@ count_ssm_by_region(
 
 \item{seq_type}{}
 }
-\value{
-
-}
 \description{
 Count the variants in a region with a variety of filtering options
 }

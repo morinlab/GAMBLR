@@ -8,7 +8,7 @@ estimate_purity(
   in_maf,
   maf_df,
   in_seg,
-  sample_id,
+  this_sample_id,
   seg_file_source = "battenberg",
   show_plots = FALSE,
   assume_diploid = FALSE,
@@ -23,7 +23,7 @@ estimate_purity(
 
 \item{in_seg}{Path to a local corresponding seg file for the same sample ID as the input maf.}
 
-\item{sample_id}{Specify the sample_id or any other string you want embedded in the file name.}
+\item{this_sample_id}{Specify the sample_id or any other string you want embedded in the file name.}
 
 \item{seg_file_source}{Specify what copy number calling program the input seg file is from, as it handles ichorCNA differently than WisecondorX, battenberg, etc.}
 

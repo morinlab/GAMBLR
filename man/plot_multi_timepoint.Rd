@@ -4,21 +4,24 @@
 \alias{plot_multi_timepoint}
 \title{This function doesn't do anything yet}
 \usage{
-plot_multi_timepoint(mafs, sample_id, genes, show_noncoding = FALSE, detail)
+plot_multi_timepoint(
+  mafs,
+  this_sample_id,
+  genes,
+  show_noncoding = FALSE,
+  detail
+)
 }
 \arguments{
 \item{mafs}{TODO}
 
-\item{sample_id}{TODO}
+\item{this_sample_id}{TODO}
 
 \item{genes}{TODO}
 
 \item{show_noncoding}{TODO}
 
 \item{detail}{TODO}
-}
-\value{
-
 }
 \description{
 This function doesn't do anything yet

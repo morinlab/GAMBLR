@@ -5,7 +5,7 @@
 \title{Annotate mutations with their copy number information.}
 \usage{
 assign_cn_to_ssm(
-  this_sample,
+  this_sample_id,
   coding_only = FALSE,
   from_flatfile = TRUE,
   use_augmented_maf = TRUE,
@@ -22,7 +22,7 @@ assign_cn_to_ssm(
 )
 }
 \arguments{
-\item{this_sample}{Sample ID of the sample you want to annotate.}
+\item{this_sample_id}{Sample ID of the sample you want to annotate.}
 
 \item{coding_only}{Optional. set to TRUE to rescrict to only coding variants.}
 
@@ -60,6 +60,6 @@ CN is the rounded absolute copy number estimate of the region based on log.ratio
 Annotate mutations with their copy number information.
 }
 \examples{
-cn_list = assign_cn_to_ssm(this_sample = "HTMCP-01-06-00422-01A-01D", coding_only = TRUE)
+cn_list = assign_cn_to_ssm(this_sample_id = "HTMCP-01-06-00422-01A-01D", coding_only = TRUE)
 
 }

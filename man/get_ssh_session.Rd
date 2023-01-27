@@ -9,9 +9,6 @@ get_ssh_session(host = "gphost01.bcgsc.ca")
 \arguments{
 \item{host}{(default is gphost01.bcgsc.ca)}
 }
-\value{
-
-}
 \description{
 Create an ssh session to the GSC (requires active VPN connection)
 }

@@ -2,17 +2,17 @@
 % Please edit documentation in R/viz.R
 \name{fancy_cnbar}
 \alias{fancy_cnbar}
-\title{Generate a bar plot visualizing sample-specific copy number states and affected bases for each CN segment.}
+\title{Copy Number states barplot}
 \usage{
 fancy_cnbar(
-  this_sample,
+  this_sample_id,
   seq_data,
   seq_path = NULL,
   chrom_col = 2,
   start_col = 3,
   end_col = 4,
   cn_col = 7,
-  plot_title = paste0(this_sample),
+  plot_title = paste0(this_sample_id),
  
     plot_subtitle = "n CNV Segments (barplots, left y-axis), n Affected bases for each CN state",
   chr_select = paste0("chr", c(1:22)),
@@ -21,7 +21,7 @@ fancy_cnbar(
 )
 }
 \arguments{
-\item{this_sample}{Sample to be plotted.}
+\item{this_sample_id}{Sample to be plotted.}
 
 \item{seq_data}{Optional parameter with copy number df already loaded into R.}
 
@@ -51,8 +51,25 @@ Nothing.
 \description{
 Generate a bar plot visualizing sample-specific copy number states and affected bases for each CN segment.
 }
+\details{
+\code{fancy_cnbar} visualizes copy number (CN) states on sample-level. Similarly to other fancy_x_plots this function
+accepts either a sample ID, for which the function will get copy number states with \code{get_sample_cn_states}. The function
+can also accept an already loaded seq file given to the \code{seq_data} parameter. It can also load a seq file with the \code{seq_path}
+parameter. If the user calls either \code{seq_data} or \code{seq_path}, there are a colleciton of parameters available for specifying
+the relevant columns in the given data frame (\code{chrom_col}, \code{starat_col}, \code{end_col}, \code{cn_col}). It is also possible to
+restrict the returned plot to any given chromosomes. This is done with the \code{chr_select} parameeter (default is all autosomes).
+For furhter control of the returned plot, it is also possible to set the threshold for maximun CN states to be returned (default is 15).
+With \code{include_cn2} (Boolean) the user can control if CN segments = 2 should be added to the plot, default is TRUE.
+The user can also control the annotations of the returned plot with \code{plot_title} and \code{plot_subtitle}. Lastly,
+This function also computes the number of affected bases for each compy number state and plots these values on a secondary y-axis (right),
+useful for overviewing the extent of each copy number state, in the context of the full genome.
+}
 \examples{
-chr1_cns = fancy_cnbar(this_sample = "HTMCP-01-06-00422-01A-01D", chr_select = c(1))
-cns = fancy_cnbar(this_sample = "HTMCP-01-06-00422-01A-01D")
+
+#Return a plot for one sample, with default parameters. 
+cns = fancy_cnbar(this_sample_id = "HTMCP-01-06-00422-01A-01D")
+
+#Plot all copy number states for chromosome 1.
+chr1_cns = fancy_cnbar(this_sample_id = "HTMCP-01-06-00422-01A-01D", chr_select = c(1))
 
 }

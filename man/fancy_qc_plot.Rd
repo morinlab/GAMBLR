@@ -5,7 +5,7 @@
 \title{Plot for visualizing QC metrics and allowing for grouping by different metadata columns.}
 \usage{
 fancy_qc_plot(
-  these_samples,
+  these_sample_ids,
   keep_cohort,
   keep_pathology,
   seq_type = "genome",
@@ -22,7 +22,7 @@ fancy_qc_plot(
 )
 }
 \arguments{
-\item{these_samples}{Data frame with sample IDs (to be plotted) in the first column (has to be named sample_id).}
+\item{these_sample_ids}{Data frame with sample IDs (to be plotted) in the first column (has to be named sample_id).}
 
 \item{keep_cohort}{Optional parameter to be used when these_sample is NULL. Calls get_gambl_metadata() and filters on the cohort supplied in this parameter.}
 
@@ -59,13 +59,13 @@ plot as ggplot object.
 Plot for visualizing QC metrics and allowing for grouping by different metadata columns.
 }
 \examples{
-#Example 1 - using these_samples parameter
+#Example 1 - using these_sample_ids parameter
 #subset on FL cases with QC metrics available and plot
 kridel_fl = get_gambl_metadata() \%>\%
  dplyr::filter(pathology == "FL", cohort == "FL_Kridel") \%>\%
  dplyr::select(sample_id) \%>\%
 
-my_plot_1 = fancy_qc_plot(these_samples = kridel_fl,
+my_plot_1 = fancy_qc_plot(these_sample_ids = kridel_fl,
                           seq_type = "genome",
                           interactive = FALSE,
                           plot_data = "AverageBaseQuality",
@@ -79,7 +79,7 @@ fl_metadata = get_gambl_metadata() \%>\%
 my_plot_2 = fancy_qc_plot(these_samples_metadata = fl_metadata,
                           seq_type = "genome",
                           interactive = TRUE,
-                          labels = c("cohort", "pathology")
+                          labels = c("cohort", "pathology"),
                           plot_data = "AverageBaseQuality",
                           y_axis_lab = "Average Base Quality",
                           plot_title = "Average Base Quality For FL_Kridel")

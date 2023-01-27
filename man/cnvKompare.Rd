@@ -6,7 +6,7 @@
 \usage{
 cnvKompare(
   patient_id,
-  sample_ids,
+  these_sample_ids,
   this_seg,
   seg_path,
   genes_of_interest,
@@ -22,7 +22,7 @@ cnvKompare(
 \arguments{
 \item{patient_id}{Specify patient_id to retrieve sample ids from GAMBL metadata.}
 
-\item{sample_ids}{Optionally, specify sample ids for comparison.}
+\item{these_sample_ids}{Optionally, specify sample ids for comparison.}
 
 \item{this_seg}{Optional input data frame of seg file. Must adhere to seg format.}
 

@@ -9,9 +9,6 @@ check_remote_configuration(auto_connect = FALSE)
 \arguments{
 \item{auto_connect}{Set to TRUE to ensure an ssh_session is created if absent}
 }
-\value{
-
-}
 \description{
 This function determines if a user is working in GAMBLR remotely and, if so, will
 check if their config is loaded properly and ssh_session is available.

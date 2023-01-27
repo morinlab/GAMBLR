@@ -5,7 +5,7 @@
 \title{Create a circos plots visualizing SVS and SSM with optional gene annotations.}
 \usage{
 fancy_circos_plot(
-  this_sample,
+  this_sample_id,
   gene_list,
   ssm_calls = TRUE,
   sv_calls = TRUE,
@@ -15,14 +15,14 @@ fancy_circos_plot(
   from_flatfile = TRUE,
   use_augmented_maf = TRUE,
   projection = "grch37",
-  plot_title = paste0(this_sample),
+  plot_title = paste0(this_sample_id),
   out,
   pdf = TRUE,
-  file_name = paste0(this_sample, "_circos.pdf")
+  file_name = paste0(this_sample_id, "_circos.pdf")
 )
 }
 \arguments{
-\item{this_sample}{Sample to be plotted.}
+\item{this_sample_id}{Sample to be plotted.}
 
 \item{gene_list}{Optional parameter to annotate genes on the circos plot from a list of genes (df). Is compatible with gene_to_region (return_as = "bed") output format. See examples.}
 
@@ -58,23 +58,23 @@ Create a circos plots visualizing SVS and SSM with optional gene annotations.
 }
 \examples{
 #retrieve gene names for FL genes
-fl_genes = dplyr::filter(lymphoma_genes, FL == TRUE) \%>\% 
+fl_genes = dplyr::filter(lymphoma_genes, FL == TRUE) \%>\%
  dplyr::select(Gene) \%>\%
  pull(Gene)
 
 # get regions for selected genes
 fl_genes_list = gene_to_region(gene_symbol = fl_genes, return_as = "bed")
 
-fancy_circos_plot_new(this_sample = "DOHH-2",
+fancy_circos_plot_new(this_sample_id = "DOHH-2",
                       ssm_calls = FALSE,
                       sv_calls = TRUE,
                       gene_list = fl_genes_list,
                       chr_select = c("chr8", "chr14", "chr18"),
                       coding_only = FALSE,
                       projection = "grch37",
-                      out = "../../plots/", 
+                      out = "../../plots/",
                       plot_title = "DOHH-2 (SVs) Example Plot",
-                      pdf = FALSE, 
+                      pdf = FALSE,
                       file_name = "dohh2_example.png")
 
 }

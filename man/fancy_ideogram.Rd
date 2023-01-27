@@ -2,10 +2,10 @@
 % Please edit documentation in R/viz.R
 \name{fancy_ideogram}
 \alias{fancy_ideogram}
-\title{Generate sample-level ideogram with copy number information, ssm and gene annotations, etc.}
+\title{genome-wide ideogram annotated with SSM and CN information}
 \usage{
 fancy_ideogram(
-  this_sample,
+  this_sample_id,
   gene_annotation,
   seq_data,
   seq_path = NULL,
@@ -19,7 +19,7 @@ fancy_ideogram(
   start_col_seq = 3,
   end_col_seq = 4,
   cn_col_seq = 7,
-  plot_title = paste0(this_sample),
+  plot_title = paste0(this_sample_id),
   plot_subtitle = "Genome-wide Ideogram (grch37).",
   intersect_regions,
   include_ssm = TRUE,
@@ -30,7 +30,7 @@ fancy_ideogram(
 )
 }
 \arguments{
-\item{this_sample}{Sample to be plotted (for multiple samples, see fancy_multisample_ideogram.}
+\item{this_sample_id}{Sample to be plotted (for multiple samples, see fancy_multisample_ideogram.}
 
 \item{gene_annotation}{Annotate ideogram with a set of genes. These genes can either be specified as a vector of characters or a data frame.}
 
@@ -56,6 +56,8 @@ fancy_ideogram(
 
 \item{end_col_seq}{Index of column with copy number end coordinates (to be used with either maf_data or maf_path).}
 
+\item{cn_col_seq}{Index of column holding copy number information (to be used with either maf_data or maf_path).}
+
 \item{plot_title}{Title of plot (default to sample ID).}
 
 \item{plot_subtitle}{Optional argument for plot subtitle.}
@@ -70,9 +72,7 @@ fancy_ideogram(
 
 \item{from_flatfile}{If set to true the function will use flat files instead of the database.}
 
-\item{cn_col}{Index of column holding copy number information (to be used with either maf_data or maf_path).}
-
-\item{use_augmented}{Boolean statement if to use augmented maf, default is FALSE.}
+\item{use_augmented_maf}{Boolean statement if to use augmented maf, default is FALSE.}
 }
 \value{
 Nothing.
@@ -80,33 +80,38 @@ Nothing.
 \description{
 Generate sample-level ideogram with copy number information, ssm and gene annotations, etc.
 }
+\details{
+This function generates genome-wide ideograms, visualizing SSM data as well as CN segments.
+It is also possible to superimpose the plot with gene annotations. Offering a comprehenssive overview of all SSM and CN segments of different anneuploidity.
+The plotting of SSM can be toggled with setting \code{include_ssm} to TRUE. If so, it is also possible to count the number of SSMs per chromosome with \code{ssm_count = TRUE}.
+To get data for plotting, there are a few different options avaialble; like all \code{fanncy_x_plots} a sample ID can be provided to the \code{this_sample}
+parameter. If done so, the function will retreive data (SSm and CN segments) by wrapping the appropriate functions.
+This data can also be provided with \code{seq_data}, \code{seg_path}, \code{maf_data} and \code{maf_path}.
+For more info on how to run with these paraemters, refer to the parameter descriptions.
+In order to annotate the ideogram with genes, simply give the \code{gene_annotations} parameter a set of genes as a vector of charachters or a data frame with gene names in the first column.
+Another useful parameter for restricting the plotted regions is to call the function with \code{intersect_regions}.
+This parameter takes a vector of charachters or data frame with regions that the plotted calls are restricted to.
+}
 \examples{
-#
+#get FL genes
 fl_genes = dplyr::filter(lymphoma_genes, FL == TRUE) \%>\%
   dplyr::select(Gene) \%>\%
   pull(Gene)
 
+#get FL genes on chromosome 1
 fl_genes_chr1 = gene_to_region(gene_symbol = fl_genes, return_as = "df") \%>\%
   dplyr::filter(chromosome == "1") \%>\%
   pull(hugo_symbol)
 
-ideogram_fl_chr1 = fancy_ideogram(this_sample = "HTMCP-01-06-00422-01A-01D",
-                                  gene_annotation = fl_genes_chr1, 
-                                  intersect_regions = "chr1:10000-249250621",
-                                  include_ssm = TRUE, 
-                                  ssm_count = TRUE, 
-                                  coding_only = FALSE, 
-                                  from_flatfile = FALSE, 
-                                  use_augmented = FALSE)
- 
- fl_regions = gene_to_region(gene_symbol = fl_genes, return_as = "df")
- ideogram_fl = fancy_ideogram(this_sample = "HTMCP-01-06-00422-01A-01D",
-                              gene_annotation = fl_genes, 
-                              intersect_regions = fl_regions,
-                              include_ssm = TRUE, 
-                              ssm_count = TRUE, 
-                              coding_only = FALSE, 
-                              from_flatfile = FALSE, 
-                              use_augmented = FALSE)
+#build an ideogram showing ssm and copy number states for chromosome 1, and superimpose with FL genes.
+ideogram_fl_chr1 = fancy_ideogram(this_sample_id = "HTMCP-01-06-00422-01A-01D",
+                                  gene_annotation = fl_genes_chr1,
+                                  intersect_regions = "chr1:10000-249250621")
+
+#
+fl_regions = gene_to_region(gene_symbol = fl_genes, return_as = "df")
+ideogram_fl = fancy_ideogram(this_sample_id = "HTMCP-01-06-00422-01A-01D",
+                              gene_annotation = fl_genes,
+                              intersect_regions = fl_regions)
 
 }

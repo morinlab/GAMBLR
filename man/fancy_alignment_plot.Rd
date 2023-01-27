@@ -5,7 +5,7 @@
 \title{Visualize (stacked barplot) genomic read-subsets across a selection of samples.}
 \usage{
 fancy_alignment_plot(
-  these_samples,
+  these_sample_ids,
   metadata,
   these_samples_metadata,
   comparison_group,
@@ -20,7 +20,7 @@ fancy_alignment_plot(
 )
 }
 \arguments{
-\item{these_samples}{Data frame with sample IDs (to be plotted) in the first column.}
+\item{these_sample_ids}{Data frame with sample IDs (to be plotted) in the first column.}
 
 \item{metadata}{Optional argument, used to derive sample IDs if sample_table is Null.}
 
@@ -34,9 +34,9 @@ fancy_alignment_plot(
 
 \item{add_corrected_coverage}{Set to TRUE to add corrected coverage for selected samples.}
 
-\item{keep_cohort}{If no df with sample IDs is supplied (these_samples = NULL) the function calls get_gambl_metadata and subsets on selected cohort.}
+\item{keep_cohort}{If no df with sample IDs is supplied (these_sample_ids = NULL) the function calls get_gambl_metadata and subsets on selected cohort.}
 
-\item{keep_pathology}{If no df with sample IDs is supplied (these_samples = NULL) the function calls get_gambl_metadata and subsets on selected pathology.}
+\item{keep_pathology}{If no df with sample IDs is supplied (these_sample_ids = NULL) the function calls get_gambl_metadata and subsets on selected pathology.}
 
 \item{this_color_palette}{Optional parameter that holds the selected colours for the plotted bars.}
 
@@ -49,14 +49,14 @@ plot as ggplot object.
 Visualize (stacked barplot) genomic read-subsets across a selection of samples.
 }
 \examples{
-#Example 1 - using these_samples parameter
+#Example 1 - using these_sample_ids parameter
 #subset on FL cases with QC metrics available and plot
 kridel_fl = get_gambl_metadata() \%>\%
  dplyr::filter(pathology == "FL", cohort == "FL_Kridel") \%>\%
  dplyr::select(sample_id) \%>\%
  pull(sample_id)
 
-my_plot_1 = fancy_alignment_plot(these_samples = kridel_fl, seq_type = "genome")
+my_plot_1 = fancy_alignment_plot(these_sample_ids = kridel_fl, seq_type = "genome")
 
 #Example 2 - using already filtered metadata (these_samples_metadata)
 fl_metadata = get_gambl_metadata() \%>\%
