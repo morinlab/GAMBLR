@@ -32,6 +32,7 @@ Imports:
     grid,
     maftools,
     metaviz,
+    nloptr (<= 1.2.2.3),
     parallel,
     plotly,
     randomForest,
