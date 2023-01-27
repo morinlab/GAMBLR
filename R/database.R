@@ -15,7 +15,7 @@ maf_header = c("Hugo_Symbol"=1,"Entrez_Gene_Id"=2,"Center"=3,"NCBI_Build"=4,"Chr
 #' excluded_samp = get_excluded_samples()
 #'
 get_excluded_samples = function(tool_name = "slms-3"){
-  base = config::get("repo_base")
+  base = check_config_value(config::get("repo_base"))
 
   #check for missingness
   path = paste0(base,"config/exclude.tsv")
@@ -128,7 +128,7 @@ get_ssm_by_patients = function(these_patient_ids,
 #' @param these_genes A vector of genes to subset ssm to.
 #' @param min_read_support Only returns variants with at least this many reads in t_alt_count (for cleaning up augmented MAFs)
 #' @param basic_columns Return first 45 columns of MAF rather than full details. Default is TRUE.
-#' @param maf_cols if basic_columns is set to FALSE, the suer can specify what columns to be returned within the MAF. This parameter can either be a list of indexes (integer) or a list of characters.
+#' @param maf_cols if basic_columns is set to FALSE, the user can specify what columns to be returned within the MAF. This parameter can either be a list of indexes (integer) or a list of characters.
 #' @param subset_from_merge Instead of merging individual MAFs, the data will be subset from a pre-merged MAF of samples with the specified seq_type
 #' @param engine Specify one of readr or fread_maf (default) to change how the large files are loaded prior to subsetting. You may have better performance with one or the other but for me fread_maf is faster and uses a lot less RAM.
 #'
@@ -186,9 +186,9 @@ get_ssm_by_samples = function(these_sample_ids,
 
   }else if(flavour=="clustered"){
     if(subset_from_merge && !augmented){
-      maf_template = config::get("results_flatfiles")$ssm$template$merged$deblacklisted
+      maf_template = check_config_value(config::get("results_flatfiles")$ssm$template$merged$deblacklisted)
       maf_path = glue::glue(maf_template)
-      full_maf_path =  paste0(config::get("project_base"), maf_path)
+      full_maf_path =  paste0(check_config_value(config::get("project_base")), maf_path)
       message(paste("using existing merge:", full_maf_path))
 
       #check for missingness
@@ -228,9 +228,9 @@ get_ssm_by_samples = function(these_sample_ids,
     }
 
     if(subset_from_merge && augmented){
-      maf_template = config::get("results_flatfiles")$ssm$template$merged$augmented
+      maf_template = check_config_value(config::get("results_flatfiles")$ssm$template$merged$augmented)
       maf_path = glue::glue(maf_template)
-      full_maf_path =  paste0(config::get("project_base"), maf_path)
+      full_maf_path =  paste0(check_config_value(config::get("project_base")), maf_path)
       message(paste("using existing merge:", full_maf_path))
 
       #check for missingness
@@ -389,15 +389,15 @@ get_ssm_by_sample = function(this_sample_id,
     return()
   }else if(flavour == "clustered"){
     vcf_base_name = "slms-3.final"
-    path_template = config::get("results_flatfiles",config="default")$ssm$template$clustered$deblacklisted
+    path_template = check_config_value(config::get("results_flatfiles",config="default")$ssm$template$clustered$deblacklisted)
     path_complete = unname(unlist(glue::glue(path_template)))
-    full_maf_path = paste0(config::get("project_base",config="default"), path_complete)
-    local_full_maf_path = paste0(config::get("project_base"), path_complete)
+    full_maf_path = paste0(check_config_value(config::get("project_base",config="default")), path_complete)
+    local_full_maf_path = paste0(check_config_value(config::get("project_base")), path_complete)
     if(augmented){
-      path_template = config::get("results_flatfiles",config="default")$ssm$template$clustered$augmented
+      path_template = check_config_value(config::get("results_flatfiles",config="default")$ssm$template$clustered$augmented)
       path_complete = unname(unlist(glue::glue(path_template)))
-      aug_maf_path = paste0(config::get("project_base",config="default"), path_complete)
-      local_aug_maf_path = paste0(config::get("project_base"), path_complete)
+      aug_maf_path = paste0(check_config_value(config::get("project_base",config="default")), path_complete)
+      local_aug_maf_path = paste0(check_config_value(config::get("project_base")), path_complete)
     }
   }else{
     warning("Currently the only flavour available to this function is 'clustered'")
@@ -549,12 +549,12 @@ get_gambl_metadata = function(seq_type_filter = "genome",
   outcome_table = get_gambl_outcomes(from_flatfile = from_flatfile)
 
   if(from_flatfile){
-    base = config::get("repo_base")
+    base = check_config_value(config::get("repo_base"))
     if(sample_flatfile == ""){
-      sample_flatfile = paste0(base, config::get("table_flatfiles")$samples)
+      sample_flatfile = paste0(base, check_config_value(config::get("table_flatfiles")$samples))
     }
     if(biopsy_flatfile==""){
-      biopsy_flatfile = paste0(base, config::get("table_flatfiles")$biopsies)
+      biopsy_flatfile = paste0(base, check_config_value(config::get("table_flatfiles")$biopsies))
     }
 
     #check for missingness
@@ -572,7 +572,7 @@ get_gambl_metadata = function(seq_type_filter = "genome",
     biopsy_meta = suppressMessages(read_tsv(biopsy_flatfile, guess_max = 100000))
 
   }else{
-    db = config::get("database_name")
+    db = check_config_value(config::get("database_name"))
     con = DBI::dbConnect(RMariaDB::MariaDB(), dbname = db)
     sample_meta = dplyr::tbl(con, "sample_metadata") %>%
       as.data.frame()
@@ -645,8 +645,8 @@ get_gambl_metadata = function(seq_type_filter = "genome",
   all_meta = unique(all_meta) #something in the ICGC code is causing this. Need to figure out what #should this be posted as an issue on Github?
   if(!missing(case_set)){
     # This functionality is meant to eventually replace the hard-coded case sets
-    case_set_path = config::get("sample_sets")$default
-    full_case_set_path =  paste0(config::get("repo_base"), case_set_path)
+    case_set_path = check_config_value(config::get("sample_sets")$default)
+    full_case_set_path =  paste0(check_config_value(config::get("repo_base")), case_set_path)
     if (file.exists(full_case_set_path)) {
       full_case_set = suppressMessages(read_tsv(full_case_set_path))
     } else {
@@ -956,7 +956,7 @@ add_prps_result = function(incoming_metadata){
 #' icgc_metadata = add_icgc_metadata(incoming_metadata = my_meta)
 #'
 add_icgc_metadata = function(incoming_metadata){
-  repo_base = config::get("repo_base")
+  repo_base = check_config_value(config::get("repo_base"))
   icgc_publ_file = paste0(repo_base,"data/metadata/raw_metadata/MALY_DE_tableS1.csv")
   icgc_publ = suppressMessages(suppressWarnings(read_csv(icgc_publ_file)))
   icgc_publ = icgc_publ[,c(1:20)]
@@ -1018,7 +1018,7 @@ get_gambl_outcomes = function(patient_ids,
                               from_flatfile = TRUE){
 
   if(from_flatfile){
-    outcome_flatfile = paste0(config::get("repo_base"), config::get("table_flatfiles")$outcomes)
+    outcome_flatfile = paste0(check_config_value(config::get("repo_base")), check_config_value(config::get("table_flatfiles")$outcomes))
 
     #check for missingness
     if(!file.exists(outcome_flatfile)){
@@ -1029,7 +1029,7 @@ get_gambl_outcomes = function(patient_ids,
     all_outcome = suppressMessages(read_tsv(outcome_flatfile))
 
   }else{
-    db = config::get("database_name")
+    db = check_config_value(config::get("database_name"))
     con = DBI::dbConnect(RMariaDB::MariaDB(), dbname = db)
     all_outcome = dplyr::tbl(con, "outcome_metadata") %>%
       as.data.frame()
@@ -1108,7 +1108,7 @@ get_gambl_outcomes = function(patient_ids,
 #' You can subset to events affecting certain loci using the "oncogenes" argument.
 #'
 #' @param min_vaf The minimum tumour VAF for a SV to be returned. Recommended: 0. (default: 0)
-#' @param sample_ids A character vector of tumour sample IDs you wish to retrieve SVs for.
+#' @param these_sample_ids A character vector of tumour sample IDs you wish to retrieve SVs for.
 #' @param with_chr_prefix Prepend all chromosome names with chr (required by some downstream analyses)
 #' @param projection The projection genome build.
 #' @param oncogenes A character vector of genes commonly involved in translocations. Possible values: CCND1, CIITA, SOCS1, BCL2, RFTN1, BCL6, MYC, PAX5.
@@ -1122,20 +1122,20 @@ get_gambl_outcomes = function(patient_ids,
 #' get_combined_sv(oncogenes = c("MYC", "BCL2", "BCL6"))
 #'
 get_combined_sv = function(min_vaf = 0,
-                           sample_ids,
+                           these_sample_ids,
                            with_chr_prefix = FALSE,
                            projection = "grch37",
                            oncogenes){
 
-  base_path = config::get("project_base")
-  sv_file = config::get()$results_flatfiles$sv_combined$icgc_dart
+  base_path = check_config_value(config::get("project_base"))
+  sv_file = check_config_value(config::get()$results_flatfiles$sv_combined$icgc_dart)
   if(projection == "hg38"){
     sv_file = str_replace(sv_file, "--grch37", "--hg38")
   }
   sv_file = paste0(base_path, sv_file)
   permissions = file.access(sv_file, 4)
   if(permissions == - 1){
-    sv_file = config::get()$results_flatfiles$sv_combined$gambl
+    sv_file = check_config_value(config::get()$results_flatfiles$sv_combined$gambl)
     sv_file = paste0(base_path, sv_file)
   }
 
@@ -1150,9 +1150,9 @@ get_combined_sv = function(min_vaf = 0,
     dplyr::rename(c("VAF_tumour" = "VAF")) %>%
     dplyr::filter(VAF_tumour >= min_vaf)
 
-  if(!missing(sample_ids)){
+  if(!missing(these_sample_ids)){
     all_sv = all_sv %>%
-      dplyr::filter(tumour_sample_id %in% sample_ids)
+      dplyr::filter(tumour_sample_id %in% these_sample_ids)
   }
 
   if(!missing(oncogenes)){
@@ -1176,49 +1176,76 @@ get_combined_sv = function(min_vaf = 0,
 }
 
 
-#' Retrieve Manta SVs from the database and filter.
+#' @title Get Manta SVs
 #'
-#' @param min_vaf The minimum tumour VAF for a SV to be returned.
-#' @param min_score The lowest Manta somatic score for a SV to be returned.
-#' @param pass If set to TRUE, only return SVs that are annotated with PASS in the FILTER column. Set to FALSE to keep all variants, regardless if they PASS the filters. Default is TRUE. 
-#' @param pair_status Use to restrict results (if desired) to matched or unmatched results (default is to return all). Only applies to samples retrieved with get_manta_sv_by_sample, since variant calls from get_combined_sv, does not have this column.
-#' @param sample_id Filter on specific sample IDs in tumour_sample_id column.
-#' @param chromosome The chromosome you are restricting to.
-#' @param qstart Query start coordinate of the range you are restricting to.
-#' @param qend Query end coordinate of the range you are restricting to.
-#' @param region Region formatted like chrX:1234-5678 instead of specifying chromosome, start and end separately.
-#' @param from_flatfile Set to TRUE by default.
+#' @description Retrieve Manta SVs and filter.
+#'
+#' @details Return Manta SVs with aditional VCF information to allow for filtering of high-confidence variants.
+#' To return SV calls for multiple samples, give `these_sample_ids` a vector of sample IDs, if only one sample is desired,
+#' give this parameter one sample ID, as a string (or a vector of characters). The user can also call the `these_samples_metadata`
+#' parameter to make use of an already subset metadata table. In this case, the returned calls will be restricted to the sample_ids 
+#' within that data frame. This function relies on a set of specific functions to be successful in returning SV calls for any 
+#' available sample in gambl. First, this function calls `get_combined_sv` and performs an `anit_join` with the full metadata to 
+#' identify what samples are currently missing from the return of `get_combined_sv`. This function then calls `get_manta_sv_by_samples` 
+#' (wrapper function for `get_manta_sv_by_sample`) on the subset of the missing samples. The merged calls are subject to any 
+#' filtering that is specified within this function. This function can also restrict the returned calls to any genomic regions 
+#' specified within `chromosome`, `qstart`, `qend`, or the complete region specified under `region` (in chr:start-end format). 
+#' Useful filtering parameters are also available, use `min_vaf` to set the minimum tumour VAF for a SV to be returned and `min_score` 
+#' to set the lowest Manta somatic score for a SV to be returned. `pair_status` can be used to only return variants that are 
+#' annotated with PASS in the filtering column (VCF).
+#'
+#' @param these_sample_ids A vector of multiple sample_id (or a single sample ID as a string) that you want results for.
+#' @param these_samples_metadata A metadata table to auto-subset the data to samples in that table before returning.
 #' @param projection The projection genome build.
+#' @param chromosome Optional, the chromosome you are restricting to.
+#' @param qstart Optional, query start coordinate of the range you are restricting to.
+#' @param qend Optional, query end coordinate of the range you are restricting to.
+#' @param region Optional, region formatted like chrX:1234-5678 instead of specifying chromosome, start and end separately.
+#' @param min_vaf The minimum tumour VAF for a SV to be returned. Default is 0.1.
+#' @param min_score The lowest Manta somatic score for a SV to be returned. Default is 40.
+#' @param pass If set to TRUE, only return SVs that are annotated with PASS in the FILTER column. Set to FALSE to keep all variants, regardless if they PASS the filters. Default is TRUE. 
+#' @param pair_status Use to restrict results (if desired) to matched or unmatched results (default is to return all).
+#' @param from_flatfile Set to TRUE by default, FALSE is no longer supported (database).
 #'
 #' @return A data frame in a bedpe-like format with additional columns that allow filtering of high-confidence SVs.
+#' 
+#' @import dplyr tidyr readr purrr tibble stringr forcats
+#' 
 #' @export
-#' @import DBI RMariaDB tidyverse dbplyr
 #'
 #' @examples
 #' #lazily get every SV in the table with default quality filters
 #' all_sv = get_manta_sv()
-#' #get all SVs for a single sample
-#' some_sv = get_manta_sv(sample_id="94-15772_tumorA")
-#' #get the SVs in a region around MYC
-#' myc_locus_sv = get_manta_sv(region="8:128723128-128774067").
 #'
-get_manta_sv = function(min_vaf = 0.1,
-                        min_score = 40,
-                        pass = TRUE,
-                        pairing_status,
-                        sample_id,
+#' #get all SVs for a single sample
+#' some_sv = get_manta_sv(these_sample_ids = "94-15772_tumorA")
+#'
+#' #get the SVs in a region around MYC
+#' myc_locus_sv = get_manta_sv(region = "8:128723128-128774067")
+#'
+#' #get SVs for multiple samples, using these_samples_id
+#' my_samples = get_gambl_metadata() %>% dplyr::select(sample_id) %>% head(10) %>% pull(sample_id)
+#' my_svs_2 = get_manta_sv(these_sample_ids = my_samples, projection = "hg38")
+#'
+#' #get SVs for multiple samples using a metadata table and with no VAF/score filtering
+#' my_metadata = get_gambl_metadata() %>% head(10)
+#' my_svs = get_manta_sv(these_samples_metadata = my_metadata, min_vaf = 0, min_score = 0)
+#'
+get_manta_sv = function(these_sample_ids,
+                        these_samples_metadata,
+                        projection = "grch37",
                         chromosome,
                         qstart,
                         qend,
                         region,
-                        from_flatfile = TRUE,
-                        projection = "grch37"){
-
-  db = config::get("database_name")
-  table_name = config::get("results_tables")$sv
+                        min_vaf = 0.1,
+                        min_score = 40,
+                        pass = TRUE,
+                        pairing_status,
+                        from_flatfile = TRUE){
+  
   if(!missing(region)){
     region = gsub(",", "", region)
-    #format is chr6:37060224-37151701
     split_chunks = unlist(strsplit(region, ":"))
     chromosome = split_chunks[1]
     startend = unlist(strsplit(split_chunks[2], "-"))
@@ -1226,7 +1253,7 @@ get_manta_sv = function(min_vaf = 0.1,
     qend = startend[2]
   }
 
-   if(from_flatfile){
+  if(from_flatfile){
     all_sv = get_combined_sv(projection = projection)
 
     all_meta = get_gambl_metadata()
@@ -1253,42 +1280,54 @@ get_manta_sv = function(min_vaf = 0.1,
     all_sv = bind_rows(all_sv, missing_sv)
     
   }else{
-    con = DBI::dbConnect(RMariaDB::MariaDB(), dbname = db)
-    all_sv = dplyr::tbl(con, table_name) %>%
-      as.data.frame()
+    stop("database usage is deprecated, please set from_flatfile to TRUE...")
   }
+  
   if(!missing(region) || !missing(chromosome)){
     suppressWarnings({
       if(grepl("chr",chromosome)){
         chromosome = gsub("chr", "", chromosome)
       }
     })
+    
     all_sv = all_sv %>%
-      dplyr::filter((CHROM_A == chromosome & START_A >= qstart & START_A <= qend) | (CHROM_B == chromosome & START_B >= qstart & START_B <= qend)) %>%
-      dplyr::filter(VAF_tumour >= min_vaf & SCORE >= min_score)
-  }else{
-    all_sv = all_sv %>%
-      dplyr::filter(VAF_tumour >= min_vaf & SCORE >= min_score)
+      dplyr::filter((CHROM_A == chromosome & START_A >= qstart & START_A <= qend) | (CHROM_B == chromosome & START_B >= qstart & START_B <= qend))
   }
+  
+  #VAF and somatic score filtering
+  all_sv = all_sv %>%
+    dplyr::filter(VAF_tumour >= min_vaf & SCORE >= min_score)
+  
+  #PASS filter
   if(pass){
     all_sv = all_sv %>%
       dplyr::filter(FILTER == "PASS")
   }
+  
+  #pairing status filter
   if(!missing(pairing_status)){
     all_sv = all_sv %>%
       dplyr::filter(pair_status == pairing_status)
   }
-  if(!missing(sample_id)){
+
+  #sample IDs filter
+  if(!missing(these_sample_ids) && missing(these_samples_metadata)){
     all_sv = all_sv %>%
-      dplyr::filter(tumour_sample_id == sample_id)
+      dplyr::filter(tumour_sample_id %in% these_sample_ids)
   }
+  
+  #metadata filter
+  if(!missing(these_samples_metadata) && missing(these_sample_ids)){
+    all_sv = all_sv %>%
+      dplyr::filter(tumour_sample_id %in% these_samples_metadata$sample_id)
+  }
+  
+  #as data frame
   all_sv = as.data.frame(all_sv)
 
-  if(!from_flatfile){
-    DBI::dbDisconnect(con)
-  }
   return(all_sv)
 }
+
 
 
 #' Get a specific flavour of LymphGen from the main GAMBL outputs and tidy the composites.
@@ -1323,11 +1362,11 @@ get_lymphgen = function(these_samples_metadata,
       lg_path = lymphgen_file
     }else{
       message("please provide a path to your lymphgen output file or one of the following flavours")
-      print(config::get("results_merged_wildcards")$lymphgen_template)
+      print(check_config_value(config::get("results_merged_wildcards")$lymphgen_template))
       return(NULL)
     }
   }else{
-    lg_path = paste0(config::get("project_base"),config::get("results_merged")$lymphgen_template)
+    lg_path = paste0(check_config_value(config::get("project_base")), check_config_value(config::get("results_merged")$lymphgen_template))
     lg_path = glue::glue(lg_path)
   }
 
@@ -1590,9 +1629,9 @@ get_sample_cn_segments = function(this_sample_id,
                                   streamlined = FALSE){
   if(from_flatfile){
     seq_type = "genome"
-    cnv_flatfile_template = config::get("results_flatfiles")$cnv_combined$icgc_dart
+    cnv_flatfile_template = check_config_value(config::get("results_flatfiles")$cnv_combined$icgc_dart)
     cnv_path =  glue::glue(cnv_flatfile_template)
-    full_cnv_path =  paste0(config::get("project_base",config="default"), cnv_path)
+    full_cnv_path =  paste0(check_config_value(config::get("project_base")), cnv_path)
     local_full_cnv_path =  paste0(config::get("project_base"), cnv_path)
     if(file.exists(local_full_cnv_path)){
       full_cnv_path = local_full_cnv_path
@@ -1602,9 +1641,9 @@ get_sample_cn_segments = function(this_sample_id,
     permissions = file.access(full_cnv_path, 4)
     if (permissions == -1) {
       message("restricting to non-ICGC data")
-      cnv_flatfile_template = config::get("results_flatfiles")$cnv_combined$gambl
+      cnv_flatfile_template = check_config_value(config::get("results_flatfiles")$cnv_combined$gambl)
       cnv_path =  glue::glue(cnv_flatfile_template)
-      full_cnv_path =  paste0(config::get("project_base"), cnv_path)
+      full_cnv_path =  paste0(check_config_value(config::get("project_base")), cnv_path)
     }
 
     #check for missingness
@@ -1628,9 +1667,9 @@ get_sample_cn_segments = function(this_sample_id,
         dplyr::filter(sample_id == this_sample_id) %>%
         pull(pairing_status)
 
-      db = config::get("database_name")
-      table_name = config::get("results_tables")$copy_number
-      table_name_unmatched = config::get("results_tables")$copy_number_unmatched
+      db = check_config_value(config::get("database_name"))
+      table_name = check_config_value(config::get("results_tables")$copy_number)
+      table_name_unmatched = check_config_value(config::get("results_tables")$copy_number_unmatched)
       con = DBI::dbConnect(RMariaDB::MariaDB(), dbname = db)
 
       all_segs_matched = dplyr::tbl(con, table_name) %>%
@@ -1650,9 +1689,9 @@ get_sample_cn_segments = function(this_sample_id,
         dplyr::filter(sample_id %in% sample_list) %>%
         pull(pairing_status)
 
-      db = config::get("database_name")
-      table_name = config::get("results_tables")$copy_number
-      table_name_unmatched = config::get("results_tables")$copy_number_unmatched
+      db = check_config_value(config::get("database_name"))
+      table_name = check_config_value(config::get("results_tables")$copy_number)
+      table_name_unmatched = check_config_value(config::get("results_tables")$copy_number_unmatched)
       con = DBI::dbConnect(RMariaDB::MariaDB(), dbname = db)
 
       all_segs_matched = dplyr::tbl(con, table_name) %>%
@@ -1679,7 +1718,7 @@ get_sample_cn_segments = function(this_sample_id,
     all_segs = all_segs %>%
       dplyr::mutate(chrom = gsub("chr", "", chrom))
   }else{
-    if(!grepl("chr", all_segs$chrom)){
+    if(!grepl("chr", all_segs$chrom[1])){
       all_segs$chrom = paste0("chr", all_segs$chrom)
       }
   }
@@ -1766,17 +1805,17 @@ get_cn_segments = function(region,
   qend = as.numeric(qend)
   
   if(from_flatfile){
-    cnv_flatfile_template = config::get("results_flatfiles")$cnv_combined$icgc_dart
+    cnv_flatfile_template = check_config_value(config::get("results_flatfiles")$cnv_combined$icgc_dart)
     cnv_path =  glue::glue(cnv_flatfile_template)
-    full_cnv_path =  paste0(config::get("project_base", config = "default"), cnv_path)
+    full_cnv_path =  paste0(check_config_value(config::get("project_base")), cnv_path)
     
     #check permissions to ICGC data.
     permissions = file.access(full_cnv_path, 4)
     if(permissions == -1){
       message("restricting to non-ICGC data")
-      cnv_flatfile_template = config::get("results_flatfiles")$cnv_combined$gambl
+      cnv_flatfile_template = check_config_value(config::get("results_flatfiles")$cnv_combined$gambl)
       cnv_path =  glue::glue(cnv_flatfile_template)
-      full_cnv_path =  paste0(config::get("project_base"), cnv_path)
+      full_cnv_path =  paste0(check_config_value(config::get("project_base")), cnv_path)
     }
     
     #check for missingness.
@@ -1791,9 +1830,9 @@ get_cn_segments = function(region,
       as.data.frame()
     
   }else{
-    db = config::get("database_name")
-    table_name = config::get("results_tables")$copy_number
-    table_name_unmatched = config::get("results_tables")$copy_number_unmatched
+    db = check_config_value(config::get("database_name"))
+    table_name = check_config_value(config::get("results_tables")$copy_number)
+    table_name_unmatched = check_config_value(config::get("results_tables")$copy_number_unmatched)
     con = DBI::dbConnect(RMariaDB::MariaDB(), dbname = db)
 
     all_segs_matched = dplyr::tbl(con, table_name) %>%
@@ -1820,7 +1859,7 @@ get_cn_segments = function(region,
     all_segs = all_segs %>%
       dplyr::mutate(chrom = gsub("chr", "", chrom))
   }else{
-    if(!grepl("chr", all_segs$chrom)){
+    if(!grepl("chr", all_segs$chrom[1])){
       all_segs$chrom = paste0("chr", all_segs$chrom)
       }
   }
@@ -1849,7 +1888,7 @@ get_cn_segments = function(region,
 append_to_table = function(table_name,
                            data_df){
 
-  db = config::get("database_name")
+  db = check_config_value(config::get("database_name"))
   con = DBI::dbConnect(RMariaDB::MariaDB(), dbname = db)
   dbWriteTable(con, table_name, table_data, append = TRUE)
 }
@@ -2070,23 +2109,23 @@ get_ssm_by_region = function(chromosome,
   maf_indexes = unname(maf_indexes)
   #this is to put the indexes and their names back into numerical order because cut returns columns that way
 
-  tabix_bin = config::get("dependencies")$tabix
-  table_name = config::get("results_tables")$ssm
-  db = config::get("database_name")
-  base_path = config::get("project_base")
-  base_path_remote = config::get("project_base",config="default")
+  tabix_bin = check_config_value(config::get("dependencies")$tabix)
+  table_name = check_config_value(config::get("results_tables")$ssm)
+  db = check_config_value(config::get("database_name"))
+  base_path = check_config_value(config::get("project_base"))
+  base_path_remote = check_config_value(config::get("project_base",config="default"))
 
   if(from_indexed_flatfile){
 
     #test if we have permissions for the full gambl + icgc merge
     if(mode == "slms-3"){
       if(augmented){
-        maf_partial_path = config::get("results_flatfiles")$ssm$template$merged$augmented
+        maf_partial_path = check_config_value(config::get("results_flatfiles")$ssm$template$merged$augmented)
       }else{
-        maf_partial_path = config::get("results_flatfiles")$ssm$template$merged$deblacklisted
+        maf_partial_path = check_config_value(config::get("results_flatfiles")$ssm$template$merged$deblacklisted)
         }
     }else if (mode == "strelka2"){
-      maf_partial_path = config::get("results_flatfiles")$ssm$all$strelka2
+      maf_partial_path = check_config_value(config::get("results_flatfiles")$ssm$all$strelka2)
     }else{
       stop("You requested results from indexed flatfile. The mode should be set to either slms-3 (default) or strelka2. Please specify one of these modes.")
     }
@@ -2143,7 +2182,7 @@ get_ssm_by_region = function(chromosome,
         # NOTE!
         # Retrieving mutations per region over ssh connection is only supporting the basic columns for now in an attempt to keep the transfer of unnecessary data to a minimum
 
-        remote_tabix_bin = config::get("dependencies",config="default")$tabix
+        remote_tabix_bin = check_config_value(config::get("dependencies",config="default")$tabix)
 
         full_maf_path_comp = paste0(base_path_remote, maf_path, ".bgz")
         #if(!file.exists(full_maf_path_comp)){
@@ -2308,16 +2347,16 @@ get_coding_ssm = function(limit_cohort,
 
   #get file path for non-augmented maf
   if(from_flatfile && !augmented){
-    maf_template = config::get("results_flatfiles")$ssm$template$cds$deblacklisted
+    maf_template = check_config_value(config::get("results_flatfiles")$ssm$template$cds$deblacklisted)
     maf_path = glue::glue(maf_template)
-    full_maf_path =  paste0(config::get("project_base"), maf_path)
+    full_maf_path =  paste0(check_config_value(config::get("project_base")), maf_path)
   }
 
   #get file path for augmented maf
   if(from_flatfile && augmented){
-    maf_template = config::get("results_flatfiles")$ssm$template$cds$augmented
+    maf_template = check_config_value(config::get("results_flatfiles")$ssm$template$cds$augmented)
     maf_path = glue::glue(maf_template)
-    full_maf_path =  paste0(config::get("project_base"), maf_path)
+    full_maf_path =  paste0(check_config_value(config::get("project_base")), maf_path)
   }
 
   #read file
@@ -2349,8 +2388,8 @@ get_coding_ssm = function(limit_cohort,
   }else{
     #use db if not using flatfile (mostly deprecated)
 
-    table_name = config::get("results_tables")$ssm
-    db = config::get("database_name")
+    table_name = check_config_value(config::get("results_tables")$ssm)
+    db = check_config_value(config::get("database_name"))
     con = DBI::dbConnect(RMariaDB::MariaDB(), dbname = db)
 
     muts = tbl(con, table_name) %>%
@@ -2470,7 +2509,7 @@ get_gene_expression = function(metadata,
                                expression_data,
                                from_flatfile = TRUE){
 
-  database_name = config::get("database_name")
+  database_name = check_config_value(config::get("database_name"))
   if(missing(metadata)){
     if(join_with == "mrna"){
       metadata = get_gambl_metadata(seq_type_filter = "mrna", only_available = FALSE)
@@ -2496,8 +2535,8 @@ get_gene_expression = function(metadata,
   }
   #tidy_expression_file = config::get("results_merged")$tidy_expression_file
   #use combination of base path and relative path instead of full path for flexibility accross sites
-  tidy_expression_path = config::get("results_merged")$tidy_expression_path
-  base_path = config::get("project_base")
+  tidy_expression_path = check_config_value(config::get("results_merged")$tidy_expression_path)
+  base_path = check_config_value(config::get("project_base"))
   tidy_expression_file = paste0(base_path,tidy_expression_path)
   tidy_expression_file = gsub(".gz$","",tidy_expression_file)
 
@@ -2505,7 +2544,7 @@ get_gene_expression = function(metadata,
   permissions = file.access(tidy_expression_file, 4)
   if(permissions == -1 ){
     message("restricting to non-ICGC data")
-    tidy_expression_path = config::get("results_merged")$tidy_expression_path_gambl
+    tidy_expression_path = check_config_value(config::get("results_merged")$tidy_expression_path_gambl)
     tidy_expression_file = paste0(base_path, tidy_expression_path)
   }
 
@@ -2761,10 +2800,10 @@ get_manta_sv_by_sample = function(this_sample_id,
   }
 
   #get samples from individual flat files
-  path_template = config::get("results_flatfiles")$sv_manta$template
+  path_template = check_config_value(config::get("results_flatfiles")$sv_manta$template)
   
   if(!remote_session){
-    path_template_full = paste0(config::get("project_base"), path_template)
+    path_template_full = paste0(check_config_value(config::get("project_base")), path_template)
     bedpe_path = glue::glue(path_template_full)
     if(!file.exists(bedpe_path)){
       print(paste("missing: ", bedpe_path))
@@ -2772,12 +2811,12 @@ get_manta_sv_by_sample = function(this_sample_id,
       message('Sys.setenv(R_CONFIG_ACTIVE = "remote")')
     }
   }else{
-    local_path_template = paste0(config::get("project_base", config = "remote"), path_template)
+    local_path_template = paste0(check_config_value(config::get("project_base", config = "remote")), path_template)
     bedpe_path = glue::glue(local_path_template)
 
     #check if the requested file is on your local machine, if not, get it!
     if(!file.exists(bedpe_path)){
-      remote_path_template = paste0(config::get("project_base", config = "default"), path_template)
+      remote_path_template = paste0(check_config_value(config::get("project_base", config = "default")), path_template)
       remote_bedpe_path = glue::glue(remote_path_template)
       cat(paste0("Local file not found.\ntrying to copy requested file: ", remote_bedpe_path, "\n", "To: ", bedpe_path))
       dirN = dirname(bedpe_path)

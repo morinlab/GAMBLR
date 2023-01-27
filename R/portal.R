@@ -243,7 +243,7 @@ setup_fusions = function(short_name = "GAMBL",
 #' @param project_name Unique ID for your project.
 #' @param description A verbose description of your data set.
 #' @param cancer_type Cancer types included in study, default is "mixed".
-#' @param sample_ids A vector of all the sample_id that were included in any of the data files for cbioportal.
+#' @param these_sample_ids A vector of all the sample_id that were included in any of the data files for cbioportal.
 #' @param overwrite Flag to specify that files should be overwritten if they exist. Default is TRUE.
 #' @param out_dir The full path to the base directory where the files are being created.
 #'
@@ -251,7 +251,7 @@ setup_fusions = function(short_name = "GAMBL",
 #' @export
 #'
 #' @examples
-#' finalize_study(sample_ids = c(ids, fusion_ids), out_dir = "GAMBLR/cBioPortal/instance01/")
+#' finalize_study(these_sample_ids = c(ids, fusion_ids), out_dir = "GAMBLR/cBioPortal/instance01/")
 #'
 finalize_study = function(seq_type_filter="genome",
                           short_name = "GAMBL",
@@ -259,7 +259,7 @@ finalize_study = function(seq_type_filter="genome",
                           project_name = "gambl_minus_icgc",
                           description = "GAMBL data without ICGC",
                           cancer_type = "mixed",
-                          sample_ids,
+                          these_sample_ids,
                           overwrite = TRUE,
                           out_dir){
 
@@ -267,7 +267,7 @@ finalize_study = function(seq_type_filter="genome",
   #create case list
   caselist = paste0(out_dir, "case_lists/cases_sequenced.txt")
 
-  tabseplist = paste(unique(sample_ids), collapse = "\t")
+  tabseplist = paste(unique(these_sample_ids), collapse = "\t")
 
   caselistdata = c(paste0("cancer_study_identifier: ", project_name),
                    paste0("stable_id: ", project_name, "_sequenced"), "case_list_name: Samples sequenced.", "case_list_description: This is this case list that contains all samples that are profiled for mutations.",
@@ -288,7 +288,7 @@ finalize_study = function(seq_type_filter="genome",
   #prepare and write out the relevant metadata
   clinsamp = paste0(out_dir, "data_clinical_samples.txt")
   meta_samples = get_gambl_metadata(seq_type_filter=seq_type_filter) %>%
-    dplyr::filter(sample_id %in% sample_ids) %>%
+    dplyr::filter(sample_id %in% these_sample_ids) %>%
     dplyr::select(patient_id, sample_id, pathology, EBV_status_inf, cohort, time_point, ffpe_or_frozen, myc_ba, bcl6_ba, bcl2_ba, COO_consensus, DHITsig_consensus, lymphgen)
 
   colnames(meta_samples) = toupper(colnames(meta_samples))

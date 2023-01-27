@@ -92,8 +92,8 @@ check_host = function(auto_connect=FALSE,verbose=FALSE){
 
 check_times = function(relative_paths,archive_mode=FALSE,force_backup=FALSE){
   
-  local_base = base_path=config::get("project_base")
-  remote_base = base_path=config::get("project_base",config="default")
+  local_base = base_path = check_config_value(config::get("project_base"))
+  remote_base = base_path = check_config_value(config::get("project_base",config="default"))
   if(archive_mode){
     if(local_base == remote_base){
       message("checking against local archive")
@@ -101,7 +101,7 @@ check_times = function(relative_paths,archive_mode=FALSE,force_backup=FALSE){
       message("Currently, this mode must be run on the GSC (not remotely)")
       return(NULL)
     }
-    local_base = base_path=config::get("archive")
+    local_base = base_path = check_config_value(config::get("archive"))
     
   }
   for(rel_f in relative_paths){
@@ -145,7 +145,7 @@ check_times = function(relative_paths,archive_mode=FALSE,force_backup=FALSE){
 
 check_file_details = function(relative_paths){
   not_found = c()
-  base_path=config::get("project_base")
+  base_path = check_config_value(config::get("project_base"))
   for(relative_path in relative_paths){
     full_path = paste0(base_path,relative_path)
     message(paste("Looking for:",full_path))
@@ -189,11 +189,11 @@ check_gamblr_config = function(compare_timestamps=FALSE,
   projection_expanded = tidyr::expand_grid(seq_type = get_template_wildcards("seq_types"),projection = get_template_wildcards("projections"))
   print(projection_expanded)
   #resources section of config (only needs blacklist right now)
-  blacklist_f = config::get("resources")$blacklist$template
+  blacklist_f = check_config_value(config::get("resources")$blacklist$template)
   blacklist_f = mutate(projection_expanded,output=glue::glue(blacklist_f)) %>% pull(output)
   files_to_check = c(files_to_check,blacklist_f)
   
-  merged_keys = names(config::get("results_merged"))
+  merged_keys = names(check_config_value(config::get("results_merged")))
   #skip any file starting with "/"
   for (merge in merged_keys){
     merge_path = config::get("results_merged")[merge]
@@ -346,7 +346,7 @@ get_runs_table = function(seq_type_filter="genome"){
 
 #helper function to get the unmatched normals from the main config
 get_unmatched_normals = function(seq_type_filter){
-  a=config::get("unmatched_normal_ids")
+  a = check_config_value(config::get("unmatched_normal_ids"))
   df = melt(a,value.name="normal_sample_id") %>% 
     rename(c("genome_build"="L3","seq_type"="L2","unix_group"="L1")) %>%
     dplyr::filter(seq_type == seq_type_filter)
@@ -357,8 +357,8 @@ check_expected_outputs = function(tool_name="battenberg",seq_type_filter="genome
   projection = get_template_wildcards("projections")
   #drop irrelevant rows of the metadata based on the scope of the tool etc
   if(tool_name=="battenberg"){
-    template_path = config::get("results_flatfiles")$cnv$battenberg
-    extra_wildcards = config::get("results_flatfiles")$cnv$battenberg_wildcards
+    template_path = check_config_value(config::get("results_flatfiles")$cnv$battenberg)
+    extra_wildcards = check_config_value(config::get("results_flatfiles")$cnv$battenberg_wildcards)
     #in the current setup, this drops unmatched samples (could be hard-coded but using the config is more transparent)
     relevant_metadata = dplyr::filter(all_meta,base::get(names(extra_wildcards)[1]) == unname(extra_wildcards[1])) 
     runs = dplyr::filter(relevant_metadata,seq_type == seq_type_filter) %>%
@@ -369,7 +369,7 @@ check_expected_outputs = function(tool_name="battenberg",seq_type_filter="genome
     runs = mutate(runs,vcf_base_name = vcf_base)
     #runs = mutate(runs,target_builds = projection)
     runs = expand_grid(runs,target_builds=projection)
-    template_path = config::get("results_flatfiles")$ssm$template$clustered$deblacklisted
+    template_path = check_config_value(config::get("results_flatfiles")$ssm$template$clustered$deblacklisted)
   }
   w = grob_wildcards(template_path)
   
@@ -383,3 +383,18 @@ check_expected_outputs = function(tool_name="battenberg",seq_type_filter="genome
 }
 
 
+#' INTERNAL FUNCTION for checking the existance of a config value, not meant for out-of-package usage.
+#'
+#' @param config_key key from config, prefixed with config::get()
+#' 
+#' @return A string with the path to a file specified in the config or nothing (if config key is NULL).
+#'
+#' @examples
+#'
+check_config_value = function(config_key){
+  if(is.null(config_key)){
+    stop(paste0("ATTENTION! The above described key is missing from the config, make sure your config is up to date"))
+  }else{
+    return(config_key)
+  }
+}

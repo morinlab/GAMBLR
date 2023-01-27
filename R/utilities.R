@@ -45,8 +45,8 @@ compare_coding_mutation_pattern = function(maf_df1,maf_df2,gene){
 #'
 #' @examples
 write_sample_set_hash = function(update=TRUE,new_sample_sets_df){
-  sample_sets_file = paste0(config::get("repo_base"),"data/metadata/level3_samples_subsets.tsv")
-  md5_file = paste0(config::get("repo_base"),"data/metadata/level3_samples_subsets_hashes.tsv")
+  sample_sets_file = paste0(check_config_value(config::get("repo_base")),"data/metadata/level3_samples_subsets.tsv")
+  md5_file = paste0(check_config_value(config::get("repo_base")),"data/metadata/level3_samples_subsets_hashes.tsv")
   if(update){
     # load the existing file and update it using the contents of sample_sets_df as well as checking for consistency for existing sample sets
     if(missing(new_sample_sets_df)){
@@ -112,7 +112,7 @@ get_samples_md5_hash = function(these_samples_metadata,these_samples,sample_set_
     digested = digest::digest(paste(these_samples[order(these_samples)],collapse=","),serialize=FALSE)
   }else if(!missing(sample_set_name)){
     #load the sample set table and pull the samples based on its contents and the name provided
-    sample_sets_file = paste0(config::get("repo_base"),"data/metadata/level3_samples_subsets.tsv")
+    sample_sets_file = paste0(check_config_value(config::get("repo_base")),"data/metadata/level3_samples_subsets.tsv")
     if(missing(sample_sets_df)){
       sample_sets = suppressMessages(read_tsv(sample_sets_file))
     }else{
@@ -131,7 +131,7 @@ get_samples_md5_hash = function(these_samples_metadata,these_samples,sample_set_
 cache_output = function(result_df,function_name,clobber_mode=F,get_existing = F,
                         function_params=list(region="chr3:98300000-198022430",bin_size=2000,seq_type="genome"),
                         additional_details=list(foreground="DLBCL_FL_BL",background="CLL_MM_MCL")){
-  cache_file_name = paste0(config::get("repo_base"),"cached_results/", function_name)
+  cache_file_name = paste0(check_config_value(config::get("repo_base")),"cached_results/", function_name)
   for (param in names(function_params)[order(names(function_params))]){
     cache_file_name = paste0(cache_file_name,"--",param,"-",function_params[[param]])
   }
@@ -393,7 +393,7 @@ region_to_gene = function(region,
   }
 
   #paste chr in chromosome column, if not there
-  if(!str_detect(genes$chromosome, "chr")){
+  if(!str_detect(genes$chromosome[1], "chr")){
     genes = mutate(genes, chromosome = paste0("chr", chromosome))}
 
   genes = as.data.frame(genes) %>%
@@ -898,11 +898,11 @@ annotate_hotspots = function(mutation_maf,
 
   hotspot_info = list()
   for(abase in analysis_base){
-    base_path = config::get("repo_base")
+    base_path = check_config_value(config::get("repo_base"))
 
-    clust_full_path = paste0(base_path, config::get("results_versioned")$oncodriveclustl$clusters)
+    clust_full_path = paste0(base_path, check_config_value(config::get("results_versioned")$oncodriveclustl$clusters))
     clust_full_path = glue::glue(clust_full_path)
-    all_full_path = paste0(base_path, config::get("results_versioned")$oncodriveclustl$elements)
+    all_full_path = paste0(base_path, check_config_value(config::get("results_versioned")$oncodriveclustl$elements))
     all_full_path = glue::glue(all_full_path)
     clust_hotspot = suppressMessages(readr::read_tsv(clust_full_path))
     all_hotspot = suppressMessages(readr::read_tsv(all_full_path))
@@ -1323,8 +1323,8 @@ collate_results = function(sample_table,
   }
 
   #get paths to cached results, for from_cache = TRUE and for writing new cached results.
-  output_file = config::get("results_merged")$collated
-  output_base = config::get("project_base")
+  output_file = check_config_value(config::get("results_merged")$collated)
+  output_base = check_config_value(config::get("project_base"))
   output_file = paste0(output_base, output_file)
   output_file = glue::glue(output_file)
   print(output_file)
@@ -1398,7 +1398,7 @@ collate_derived_results = function(sample_table,
   if(from_flatfile){
     message("not implemented YET")
   }else{
-    database_name = config::get("database_name")
+    database_name = check_config_value(config::get("database_name"))
     con = DBI::dbConnect(RMariaDB::MariaDB(), dbname = database_name)
     derived_tbl = dplyr::tbl(con, "derived_data") %>%
       as.data.frame()
@@ -1464,9 +1464,9 @@ collate_ssm_results = function(sample_table,
   seq_type = seq_type_filter
   #iterate over every sample and compute some summary stats from its MAF
   if(from_flatfile){
-    base_path = config::get("project_base")
+    base_path = check_config_value(config::get("project_base"))
     #test if we have permissions for the full gambl + icgc merge
-    maf_partial_path = config::get("results_flatfiles")$ssm$template$merged$deblacklisted
+    maf_partial_path = check_config_value(config::get("results_flatfiles")$ssm$template$merged$deblacklisted)
 
     maf_path = paste0(base_path, maf_partial_path)
     maf_path = glue::glue(maf_path)
@@ -1533,8 +1533,8 @@ collate_ssm_results = function(sample_table,
 #'
 collate_curated_sv_results = function(sample_table,seq_type_filter="genome"){
 
-  path_to_files = config::get("derived_and_curated")
-  project_base = config::get("project_base")
+  path_to_files = check_config_value(config::get("derived_and_curated"))
+  project_base = check_config_value(config::get("project_base"))
   manual_files = dir(paste0(project_base, path_to_files), pattern = ".tsv")
   for(f in manual_files){
     full = paste0(project_base, path_to_files, f)
@@ -1576,7 +1576,7 @@ get_sample_wildcards = function(this_sample_id,seq_type){
 
 #' Annotate mutations with their copy number information.
 #'
-#' @param this_sample Sample ID of the sample you want to annotate.
+#' @param this_sample_id Sample ID of the sample you want to annotate.
 #' @param coding_only Optional. set to TRUE to rescrict to only coding variants.
 #' @param from_flatfile Optional. Instead of the database, load the data from a local MAF and seg file.
 #' @param use_augmented_maf Boolean statement if to use augmented maf, default is FALSE.
@@ -1599,9 +1599,9 @@ get_sample_wildcards = function(this_sample_id,seq_type){
 #' @import tidyverse data.table RMariaDB DBI dbplyr
 #'
 #' @examples
-#' cn_list = assign_cn_to_ssm(this_sample = "HTMCP-01-06-00422-01A-01D", coding_only = TRUE)
+#' cn_list = assign_cn_to_ssm(this_sample_id = "HTMCP-01-06-00422-01A-01D", coding_only = TRUE)
 #'
-assign_cn_to_ssm = function(this_sample,
+assign_cn_to_ssm = function(this_sample_id,
                             coding_only = FALSE,
                             from_flatfile = TRUE,
                             use_augmented_maf = TRUE,
@@ -1619,8 +1619,8 @@ assign_cn_to_ssm = function(this_sample,
   seq_type = this_seq_type
 
   remote_session = check_remote_configuration(auto_connect = TRUE)
-  database_name = config::get("database_name")
-  project_base = config::get("project_base")
+  database_name = check_config_value(config::get("database_name"))
+  project_base = check_config_value(config::get("project_base"))
   if(!include_silent){
     coding_class = coding_class[coding_class != "Silent"]
   }
@@ -1634,21 +1634,21 @@ assign_cn_to_ssm = function(this_sample,
   }
   else if(from_flatfile){
     #get the genome_build and other wildcards for this sample
-    wildcards = get_sample_wildcards(this_sample,seq_type)
+    wildcards = get_sample_wildcards(this_sample_id,seq_type)
     genome_build = wildcards$genome_build
     unix_group = wildcards$unix_group
     seq_type = wildcards$seq_type
     tumour_sample_id = wildcards$tumour_sample_id
     normal_sample_id = wildcards$normal_sample_id
     pairing_status = wildcards$pairing_status
-    maf_sample = get_ssm_by_sample(this_sample_id = this_sample, this_seq_type = this_seq_type, augmented = use_augmented_maf)
+    maf_sample = get_ssm_by_sample(this_sample_id = this_sample_id, this_seq_type = this_seq_type, augmented = use_augmented_maf)
 
   }else{
     #get all the segments for a sample and filter the small ones then assign CN value from the segment to all SSMs in that region
     con = dbConnect(RMariaDB::MariaDB(), dbname = database_name)
-    maf_table = config::get("results_tables")$ssm
+    maf_table = check_config_value(config::get("results_tables")$ssm)
     maf_sample = dplyr::tbl(con, maf_table) %>%
-      dplyr::filter(Tumor_Sample_Barcode == this_sample) %>%
+      dplyr::filter(Tumor_Sample_Barcode == this_sample_id) %>%
       as.data.frame()
   }
   if(coding_only){
@@ -1683,10 +1683,10 @@ assign_cn_to_ssm = function(this_sample,
 
   }else if(from_flatfile){
     message(paste("trying to find output from:", tool_name))
-    project_base = config::get("project_base",config="default")
-    local_project_base = config::get("project_base")
+    project_base = check_config_value(config::get("project_base",config="default"))
+    local_project_base = check_config_value(config::get("project_base"))
 
-    results_path_template = config::get("results_flatfiles")$cnv$battenberg
+    results_path_template = check_config_value(config::get("results_flatfiles")$cnv$battenberg)
     results_path = paste0(project_base, results_path_template)
     local_results_path = paste0(local_project_base, results_path_template)
 
@@ -1725,7 +1725,7 @@ assign_cn_to_ssm = function(this_sample,
     data.table::setkey(seg_sample, Chromosome, Start_Position, End_Position)
     a = data.table::as.data.table(maf_sample)
   }else{
-    seg_sample = get_sample_cn_segments(this_sample_id = this_sample) %>%
+    seg_sample = get_sample_cn_segments(this_sample_id = this_sample_id) %>%
       dplyr::mutate(size = end - start) %>%
       dplyr::filter(size > 100) %>%
       dplyr::mutate(chrom = gsub("chr", "", chrom)) %>%
@@ -1768,7 +1768,7 @@ assign_cn_to_ssm = function(this_sample,
 #' @param in_maf Path to a local maf file.
 #' @param maf_df Optional. Instead of using the path to a maf file, use a local dataframe as the maf file.
 #' @param in_seg Path to a local corresponding seg file for the same sample ID as the input maf.
-#' @param sample_id Specify the sample_id or any other string you want embedded in the file name.
+#' @param this_sample_id Specify the sample_id or any other string you want embedded in the file name.
 #' @param seg_file_source Specify what copy number calling program the input seg file is from, as it handles ichorCNA differently than WisecondorX, battenberg, etc.
 #' @param show_plots Optional. Show two faceted plots that display the VAF and purity distributions for each copy number state in the sample.
 #' @param assume_diploid Optional. If no local seg file is provided, instead of defaulting to a GAMBL sample, this parameter annotates every mutation as copy neutral.
@@ -1789,7 +1789,7 @@ assign_cn_to_ssm = function(this_sample,
 estimate_purity = function(in_maf,
                            maf_df,
                            in_seg,
-                           sample_id,
+                           this_sample_id,
                            seg_file_source = "battenberg",
                            show_plots = FALSE,
                            assume_diploid = FALSE,
@@ -1798,13 +1798,13 @@ estimate_purity = function(in_maf,
 
   # Merge the CN info to the corresponding MAF file, uses GAMBLR function
   if(missing(in_maf) & missing(in_seg) & missing(maf_df)){
-    CN_new = assign_cn_to_ssm(this_sample = sample_id, coding_only = coding_only, assume_diploid = assume_diploid, genes = genes,seg_file_source = seg_file_source)$maf
+    CN_new = assign_cn_to_ssm(this_sample_id = this_sample_id, coding_only = coding_only, assume_diploid = assume_diploid, genes = genes,seg_file_source = seg_file_source)$maf
   }else if(!missing(in_seg)){
-    CN_new = assign_cn_to_ssm(this_sample = sample_id, maf_file = in_maf, maf_df = maf_df, seg_file = in_seg, seg_file_source = seg_file_source, coding_only = coding_only, genes = genes)$maf
+    CN_new = assign_cn_to_ssm(this_sample_id = this_sample_id, maf_file = in_maf, maf_df = maf_df, seg_file = in_seg, seg_file_source = seg_file_source, coding_only = coding_only, genes = genes)$maf
   }else{
     # If no seg file was provided, assume_diploid parameter is automatically set to true
     if(missing(in_seg)){
-      CN_new = assign_cn_to_ssm(this_sample = sample_id, maf_file = in_maf, maf_df = maf_df, assume_diploid = TRUE, coding_only = coding_only, genes = genes)$maf
+      CN_new = assign_cn_to_ssm(this_sample_id = this_sample_id, maf_file = in_maf, maf_df = maf_df, assume_diploid = TRUE, coding_only = coding_only, genes = genes)$maf
     }
   }
   # Change any homozygous deletions (CN = 0) to 1 for calculation purposes
@@ -1974,17 +1974,17 @@ referesh_metadata_tables = function(){
 #'
 sanity_check_metadata = function(){
 
-  cfg = config::get("tables")
-  database_name = config::get("database_name")
+  cfg = check_config_value(config::get("tables"))
+  database_name = check_config_value(config::get("database_name"))
   metadata_tables = tibble(key = names(cfg), table = cfg) %>%
     unnest_auto("table")
 
-  cfg = config::get("table_flatfiles")
+  cfg = check_config_value(config::get("table_flatfiles"))
   metadata_files = tibble(key = names(cfg), file = cfg) %>%
     unnest_auto("file")
 
   all_metadata_info = left_join(metadata_tables, metadata_files)
-  base_path = config::get("repo_base")
+  base_path = check_config_value(config::get("repo_base"))
   all_metadata_info = all_metadata_info %>%
     mutate(file = paste0(base_path, file))
 
@@ -2087,7 +2087,7 @@ collate_sbs_results = function(sample_table,
     return(sample_table)
   }
   if(missing(file_path)){
-    base = config::get("project_base")
+    base = check_config_value(config::get("project_base"))
 
     file_path = paste0(base,"icgc_dart/sigprofiler-1.0/02-extract/genome--hg38/BL_HGBL_DLBCL_FL_COMFL_CLL_MCL_B-ALL_PBL_DLBCL-BL-like_UNSPECIFIED_SCBC_MM_all/SBS96/Suggested_Solution/COSMIC_SBS96_Decomposed_Solution/Activities/COSMIC_SBS96_Activities_refit.txt")
   }
@@ -2542,7 +2542,7 @@ get_gambl_colours = function(classification = "all",
   }else if(as_list){
     return(all_colours)
   }else if(as_dataframe){
-    df_ugly = data.frame(name=names(unlist(all_col,use.names = T)),colour=unlist(all_col,use.names = T))
+    df_ugly = data.frame(name = names(unlist(all_colours, use.names = T)), colour = unlist(all_colours, use.names = T))
     df_tidy = separate(df_ugly,name,into=c("group","name"),sep="\\.")
     return(df_tidy)
   }else{
@@ -2631,7 +2631,7 @@ get_bams = function(sample,
 #' @param chrom Optionally specify the region by specifying the chromosome, start and end (see below).
 #' @param start Optionally specify the region by specifying the start.
 #' @param end Optionally specify the region by specifying the end.
-#' @param sample_id Specify the sample_id or any other string you want embedded in the file name.
+#' @param this_sample_id Specify the sample_id or any other string you want embedded in the file name.
 #' @param out_path Specify the output directory where the snapshot will be written.
 #' @param igv_port Specify the port IGV is listening on.
 #'
@@ -2647,7 +2647,7 @@ get_bams = function(sample,
 #' # conda activate igv; igv &
 #' # this_sv = annotated_sv %>% filter(gene=="ETV6")
 #' # tumour_bam = get_bams(sample=this_sv$tumour_sample_id)
-#' # make_igv_snapshot(chrom=this_sv$chrom2, start=this_sv$start2, end=this_sv$end2, sample_id=this_sv$tumour_sample_id,out_path="~/IGV_snapshots/")
+#' # make_igv_snapshot(chrom=this_sv$chrom2, start=this_sv$start2, end=this_sv$end2, this_sample_id=this_sv$tumour_sample_id,out_path="~/IGV_snapshots/")
 #'
 make_igv_snapshot = function(bams,
                              genome_build,
@@ -2656,7 +2656,7 @@ make_igv_snapshot = function(bams,
                              chrom,
                              start,
                              end,
-                             sample_id,
+                             this_sample_id,
                              out_path = "/tmp/",
                              igv_port = 60506){
 
@@ -2670,7 +2670,7 @@ make_igv_snapshot = function(bams,
   for(bam_file in bams){
     IGVload(sock, bam_file)
   }
-  filename = paste(sample_id, region, "snapshot.png", sep = "_")
+  filename = paste(this_sample_id, region, "snapshot.png", sep = "_")
   IGVsnapshot(sock, fname = filename, dirname = out_path)
   return(paste0(out_path, filename))
 }
@@ -3084,8 +3084,8 @@ consolidate_lymphgen = function(sample_table,
                                 verbose = TRUE){
 
   if (derived_data_path == "") {
-    path_to_files = config::get("derived_and_curated")
-    project_base = config::get("project_base")
+    path_to_files = check_config_value(config::get("derived_and_curated"))
+    project_base = check_config_value(config::get("project_base"))
     derived_data_path = paste0(project_base, path_to_files)
     if (verbose) {
       message(
@@ -3168,14 +3168,14 @@ collate_lymphgen = function(these_samples_metadata,
 
   #TODO Update the key in the config to match the version once updated, as discussed on PR.
   if(lymphgen_version == "default"){
-    lymphgen_template = config::get("results_versioned")$lymphgen_template$default
+    lymphgen_template = check_config_value(config::get("results_versioned")$lymphgen_template$default)
   }else{
     stop("Currently, only lymphgen_version default is accepted")
   }
 
   #repo base
-  repo_base = config::get("repo_base")
-  flavours = config::get("results_merged_wildcards")$lymphgen_template
+  repo_base = check_config_value(config::get("repo_base"))
+  flavours = check_config_value(config::get("results_merged_wildcards")$lymphgen_template)
   flavour = str_split(flavours, pattern = ",")
   flavour = unlist(flavour)
   lymphgen_path = paste0(repo_base, lymphgen_template)
@@ -3240,8 +3240,8 @@ collate_qc_results = function(sample_table,
   }
 
   #get paths
-  base = config::get("project_base")
-  qc_template = config::get("qc_met")
+  base = check_config_value(config::get("project_base"))
+  qc_template = check_config_value(config::get("qc_met"))
 
   #icgc_dart
   unix_group = "icgc_dart"
@@ -3754,7 +3754,7 @@ subset_cnstates = function(cn_segments,
 #' it to a panel of genes of interest.
 #'
 #' @param patient_id Specify patient_id to retrieve sample ids from GAMBL metadata.
-#' @param sample_ids Optionally, specify sample ids for comparison.
+#' @param these_sample_ids Optionally, specify sample ids for comparison.
 #' @param this_seg Optional input data frame of seg file. Must adhere to seg format.
 #' @param seg_path Optionally, specify the path to a local seg file. Must adhere to seg format.
 #' @param genes_of_interest Provide specific genes to be displayed on the time-series plot.
@@ -3775,7 +3775,7 @@ subset_cnstates = function(cn_segments,
 #' cnvKompare(patient_id = "00-14595", genes_of_interest = c("EZH2", "TP53", "MYC", "CREBBP", "GNA13"))
 #' cnvKompare(patient_id = "13-26835", genes_of_interest = c("EZH2", "TP53", "MYC", "CREBBP", "GNA13"), projection = "hg38")
 cnvKompare = function(patient_id,
-                      sample_ids,
+                      these_sample_ids,
                       this_seg,
                       seg_path,
                       genes_of_interest,
@@ -3798,13 +3798,13 @@ cnvKompare = function(patient_id,
   }
 
   # retrieve sample ids if only patient id is specified
-  if (missing(sample_ids)) {
-    sample_ids = get_gambl_metadata()
-    sample_ids = dplyr::filter(sample_ids, patient_id == {{ patient_id }})
-    sample_ids = pull(sample_ids, sample_id)
+  if (missing(these_sample_ids)) {
+    these_sample_ids = get_gambl_metadata()
+    these_sample_ids = dplyr::filter(sample_ids, patient_id == {{ patient_id }})
+    these_sample_ids = pull(sample_ids, sample_id)
     message(paste0(
       "Found ",
-      length(sample_ids),
+      length(these_sample_ids),
       " samples for patient ",
       patient_id,
       " ..."
@@ -3841,14 +3841,14 @@ cnvKompare = function(patient_id,
   } else {
     message("Retreiving the CNV data using GAMBLR ...")
     these_samples_seg = get_sample_cn_segments(multiple_samples = TRUE,
-                                               sample_list = sample_ids,
+                                               sample_list = these_sample_ids,
                                                from_flatfile = TRUE,
                                                projection = projection,
                                                with_chr_prefix = TRUE)
   }
 
   these_samples_seg = these_samples_seg  %>%
-    dplyr::filter(ID %in% sample_ids) %>% # if user-provided seg, ensure only samples of comparison are present
+    dplyr::filter(ID %in% these_sample_ids) %>% # if user-provided seg, ensure only samples of comparison are present
     relocate(ID, .after = last_col())
   if (exclude_sex) {
     these_samples_seg = dplyr::filter(these_samples_seg,!grepl("X|Y", chrom))
@@ -3996,11 +3996,11 @@ cnvKompare = function(patient_id,
   output$time_plot = time_plot
 
   # for groups with >2 samples, make pairwise comparisons
-  if (compare_pairwise & length(sample_ids) > 2) {
+  if (compare_pairwise & length(these_sample_ids) > 2) {
     message("Performing pairwise comparisons ...")
 
     # generate all possible combinations
-    possible_combinations = apply(combn(sample_ids, 2), 2, paste, collapse =
+    possible_combinations = apply(combn(these_sample_ids, 2), 2, paste, collapse =
                                     '--')
 
     for (combination in possible_combinations) {
@@ -4504,7 +4504,7 @@ classify_dlbcl_chapuy <- function(
         message("Will retreive SVs available through GAMBL.")
 
         sv_data <- get_combined_sv(
-            sample_ids = these_samples_metadata$sample_id,
+            these_sample_ids = these_samples_metadata$sample_id,
             oncogenes = chapuy_features$sv_features,
             projection = projection
         )

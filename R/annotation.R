@@ -2,24 +2,44 @@
 coding_vc = c("Frame_Shift_Del", "Frame_Shift_Ins", "In_Frame_Del", "In_Frame_Ins", "Missense_Mutation", "Nonsense_Mutation", "Nonstop_Mutation", "Splice_Region", "Splice_Site", "Targeted_Region", "Translation_Start_Site")
 
 
-#' Annotate and auto-drop a MAF data frame with existing blacklists to remove variants that would be dropped during the merge process.
+#' @title Annotate SSM with Blacklists
+#' 
+#' @description Annotate and auto-drop a MAF data frame with existing blacklists.
 #'
+#' @details Annotate and auto-drop a MAF data frame with existing blacklists to remove variants that would be dropped during the merge process. 
+#' This function returns a MAF format data frame with two new columns, indicating the number of occurrences of each variant in the two blacklists. 
+#' Note that there are a collection of parameters to this function to improve flexibility for many applications, 
+#' such as `return_blacklist` (returns the used blacklist to the vector given the function, or printed to terminal if blank). 
+#' For returning variants that would be dropped, one can specify `invert = TRUE`, please use with caution, this is most likely the opposite of what you want from this function. 
+#' Lastly, the minimum count from one of the blacklists to drop a variant is specified with `drop_threshold = 4`. 
+#' This function also, conveniently lets you know how many variants that were dropped in the annotation process.
+#' 
 #' @param mutations_df df with mutation data.
-#' @param seq_type The seq_type of your mutations if you prefer to apply only the corresponding blacklist (default is to use all available)
-#' @param unix_group The unix group (should be the same for all)
-#' @param tool_name The tool or pipeline that generated the files (should be the same for all)
-#' @param flavour Set to "clustered" if you want to use the blacklist for the new and improved SLMS-3 outputs (otherwise leave empty)
-#' @param genome_build The genome build projection for the variants you are working with (default is grch37)
-#' @param project_base Optional: A full path to the directory that your blacklist_file_pattern is relative to
-#' @param blacklist_file_pattern Optional: A string that contains the relative path to your blacklist file from after the project_base (i.e. results) with any wildcards surrounded with curly braces
-#' @param drop_threshold The minimum count from one of the blacklists to drop a variant
-#' @param verbose For debugging, print out a bunch of possibly useful information
-#' @param invert USE WITH CAUTION! This returns only the variants that would be dropped in the process (opposite of what you want, probably)
-#'
+#' @param seq_type The seq_type of your mutations if you prefer to apply only the corresponding blacklist. More than one seq_type can be specified as a vector if desired. This parameter is required.
+#' @param tool_name The tool or pipeline that generated the files (should be the same for all).
+#' @param tool_version The version of the tool specified under `tool_name`.
+#' @param annotator_name Name of annotator, default is "vcf2maf".
+#' @param annotator_version Version of annotator specified under `annotator_name`.
+#' @param genome_build The genome build projection for the variants you are working with (default is grch37).
+#' @param project_base Optional: A full path to the directory that your blacklist_file_pattern is relative to.
+#' @param blacklist_file_template Optional: A string that contains the relative path to your blacklist file from after the project_base (i.e. results) with any wildcards surrounded with curly braces.
+#' @param drop_threshold The minimum count from one of the blacklists to drop a variant.
+#' @param return_blacklist Boolean parameter for returning the blacklist. Default is FALSE.
+#' @param use_curated_blacklist Boolean parameter for using a curated blacklist, default is FALSE.
+#' @param verbose For debugging, print out a bunch of possibly useful information.
+#' @param invert USE WITH CAUTION! This returns only the variants that would be dropped in the process (opposite of what you want, probably).
+#' 
 #' @return A MAF format data frame with two new columns indicating the number of occurrences of each variant in the two blacklists.
+#' 
+#' @import dplyr glue readr tidyr
+#' 
 #' @export
 #'
-#' @examples deblacklisted_maf_df = annotate_ssm_blacklist(original_maf_df)
+#' @examples 
+#' #get SSMs
+#' original_maf_df = 
+#' #annotate MAF
+#' deblacklisted_maf_df = annotate_ssm_blacklist(original_maf_df)
 #'
 annotate_ssm_blacklist = function(mutations_df,
                                   seq_type,
@@ -35,18 +55,22 @@ annotate_ssm_blacklist = function(mutations_df,
                                   use_curated_blacklist = FALSE,
                                   verbose = FALSE,
                                   invert = FALSE){
+
   if(missing(seq_type)){
     message("User must specify seq_type of the mutations to select the right blacklist file. More than one seq_type can be specified as a vector if desired.")
     return()
   }
+
   projection = genome_build
+
   if(missing(blacklist_file_template)){
-    blacklist_template = config::get("resources")$blacklist$template
+    blacklist_template = check_config_value(config::get("resources")$blacklist$template)
   }else{
     blacklist_template = blacklist_file_template
   }
+
   if(missing(project_base)){
-    project_base = config::get("project_base")
+    project_base = check_config_value(config::get("project_base"))
   }
   
   if(!use_curated_blacklist){
@@ -55,7 +79,6 @@ annotate_ssm_blacklist = function(mutations_df,
     for(b in blacklist_files){
       full_path = paste0(project_base,b)
 
-      
       #check for missingness
       if(!file.exists(full_path)){
         print(paste("missing: ", full_path))
@@ -63,12 +86,15 @@ annotate_ssm_blacklist = function(mutations_df,
         message('Sys.setenv(R_CONFIG_ACTIVE = "remote")')
       }
 
-      lifted_blacklist = suppressMessages(read_tsv(full_path, col_names = c("chrpos", "blacklist_count"),col_types="ci"))
+      lifted_blacklist = suppressMessages(readr::read_tsv(full_path, col_names = c("chrpos", "blacklist_count"), col_types = "ci"))
+
       lifted_blacklist = lifted_blacklist %>%
-        separate(chrpos, into = c("Chromosome", "Start_Position"), sep = ":") %>% mutate(Start_Position = as.numeric(Start_Position))
+        separate(chrpos, into = c("Chromosome", "Start_Position"), sep = ":") %>% 
+        dplyr::mutate(Start_Position = as.numeric(Start_Position))
   
       blacklist_list[[b]] = lifted_blacklist
     }
+
     combined_blacklist = do.call("rbind", blacklist_list)
     
     if(return_blacklist){
@@ -80,13 +106,15 @@ annotate_ssm_blacklist = function(mutations_df,
       print(head(mutations_df))
       print(head(combined_blacklist))
     }
+
     if(str_detect(mutations_df$Chromosome, "chr")[1]){
-      combined_blacklist = mutate(combined_blacklist, Chromosome = paste0("chr", Chromosome))
+      combined_blacklist = dplyr::mutate(combined_blacklist, Chromosome = paste0("chr", Chromosome))
     }
     
-    mutations_df = left_join(mutations_df,combined_blacklist,by = c("Chromosome", "Start_Position")) %>%
-      mutate(blacklist_count = replace_na(blacklist_count, 0))
+    mutations_df = dplyr::left_join(mutations_df, combined_blacklist, by = c("Chromosome", "Start_Position")) %>%
+      dplyr::mutate(blacklist_count = tidyr::replace_na(blacklist_count, 0))
     dropped = dplyr::filter(mutations_df, blacklist_count > drop_threshold)
+
     if(verbose){
       if(nrow(dropped) > 0 ){
         ndrop = length(dropped$Tumor_Sample_Barcode)
@@ -95,16 +123,23 @@ annotate_ssm_blacklist = function(mutations_df,
         message("0 variants were dropped")
       }
     }
+  
   }else{
-    repo_base = config::get("repo_base")
-    full_path = paste0(repo_base, config::get("resources")$curated_blacklist)
-    additional_blacklist = glue(full_path) %>% read_tsv()
-    additional_blacklist = additional_blacklist %>%
-      separate(chrpos, into = c("Chromosome", "Start_Position"), sep = ":") %>% mutate(Start_Position = as.numeric(Start_Position))
+    repo_base = check_config_value(config::get("repo_base"))
+    full_path = paste0(repo_base, check_config_value(config::get("resources")$curated_blacklist))
+    
+    additional_blacklist = glue::glue(full_path) %>% 
+    readr::read_tsv()
 
-    mutations_df = left_join(mutations_df,additional_blacklist,by = c("Chromosome", "Start_Position")) %>%
-      mutate(blacklist_count = replace_na(blacklist_count, 0))
+    additional_blacklist = additional_blacklist %>%
+      separate(chrpos, into = c("Chromosome", "Start_Position"), sep = ":") %>% 
+      dplyr::mutate(Start_Position = as.numeric(Start_Position))
+
+    mutations_df = dplyr::left_join(mutations_df, additional_blacklist, by = c("Chromosome", "Start_Position")) %>%
+      dplyr::mutate(blacklist_count = tidyr::replace_na(blacklist_count, 0))
+
     dropped = dplyr::filter(mutations_df, blacklist_count > drop_threshold)
+
     if(verbose){
       if(nrow(dropped) > 0 ){
         ndrop = length(dropped$Tumor_Sample_Barcode)
@@ -122,7 +157,6 @@ annotate_ssm_blacklist = function(mutations_df,
   }
   return(mutations_df)
 }
-
 
 
 #' Annotates recurrent CNVs.
@@ -282,8 +316,7 @@ annotate_driver_ssm = function(maf_df,
 #'
 #' @return A data frame with annotated SVs (gene symbol and entrez ID)
 #' @export
-#' @import tidyverse
-#' @import data.table
+#' @import tidyverse data.table
 #'
 #' @examples
 #' # Basic usage
