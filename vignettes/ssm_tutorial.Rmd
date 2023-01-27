@@ -24,6 +24,14 @@ library(g3viz)
 library(maftools)
 ```
 
+# Remote useage
+If you are running GAMBLR locally in Rstudio (remote). Remember to un-comment this chunk before trying to knit the vignette. For more info, see main README.md for how to run GAMBLR remote.
+#```{r remote}
+#R_CONFIG_ACTIVE = "remote"
+#session = get_ssh_session()
+#remote_session = check_remote_configuration(auto_connect = TRUE)
+#```
+
 # Simple Somatic Mutations
 This vignette demonstrates how to work with Simple Somatic Mutations (SSM) results within GAMBLR, all the way from obtaining results (in various ways), linking with metadata, performing data analysis and annotations to producing publication ready figures.
 
@@ -260,9 +268,9 @@ fancy_snv_chrdistplot(maf_data = this_sample_ssm,
 ```
 
 ### Forest Plot
-The `prettyForestPlot` function is used to compare mutation frequencies for a set of genes between two groups. In this example we are first calling `get_gambl_metadata` with specific filtering criteria. First, `case_set` is defined as **tFL-study**, requiring **matched** pairing status and lastly, consensus pathology is set to **FL** and **DLBCL** (the two groups to be compared). Next, to get coding mutations for the selected samples, `get_coding_ssm` is called with `limit_samples` parameter, giving it the sample id column from the recently subset metadata. This function returns two types of plot (box plot and forest plot), the user can either view them separately or arranged on the same grob (showed in this example).
+The `prettyForestPlot` function is used to compare mutation frequencies for a set of genes between two groups. In this example, pathology is set to **FL** and **DLBCL** (the two groups to be compared). Next, to get coding mutations for the selected samples, `get_coding_ssm` is called with `limit_samples` parameter, giving it the sample id column from the recently subset metadata. This function returns two types of plot (box plot and forest plot), the user can either view them separately or arranged on the same grob (showed in this example).
 ```{r pretyyForestPlot, dpi = 150, message = FALSE, warning = FALSE}
-metadata_fl_dlbcl = get_gambl_metadata(case_set = "tFL-study") %>%
+metadata_fl_dlbcl = get_gambl_metadata() %>%
   dplyr::filter(pairing_status == "matched") %>%
   dplyr::filter(consensus_pathology %in% c("FL", "DLBCL"))
 
@@ -333,8 +341,8 @@ prettyRainfallPlot(this_sample_id = "HTMCP-01-06-00422-01A-01D",
 ### Lollipop Plot
 The function `pretty_lollipop_plot` is perfect for creating an appealing, flexible and interactive HTML-style lollipop plot from mutational data using a modified version of g3Lollipop function from g3viz package. This function only takes for parameters; `maf_df` which is the data frame containing the mutations to be ploted. `gene` this parameter controls what gene to plot mutations for. Lastly, `plot_title` lets you specify the name of the plot and with `plot_theme` you can specify the plot theme. Please note that in order for this function to run, you must first installed the forked version of [g3viz](https://github.com/morinlab/g3viz/).  
 ```{r pretty_lollipop_plot, dpi = 150, message = FALSE, warning = FALSE}
-#get metadata for tFl-study samples (Fl and DLBCL) with pairing status matched 
-metadata = get_gambl_metadata(case_set = "tFL-study") %>%
+#get metadata (Fl and DLBCL) with pairing status matched 
+metadata = get_gambl_metadata() %>%
   dplyr::filter(pairing_status == "matched") %>%
   dplyr::filter(consensus_pathology %in% c("FL", "DLBCL"))
 
