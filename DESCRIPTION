@@ -41,7 +41,6 @@ Imports:
     rtracklayer,
     S4Vectors,
     SRAdb,
-    stats,
     wordcloud,
     workflowr
 Suggests:

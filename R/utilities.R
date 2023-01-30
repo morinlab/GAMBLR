@@ -2694,7 +2694,7 @@ make_igv_snapshot = function(bams,
 #' GRAPH - forest plot visualization of distinct CNV between 2 groups.
 #' Output can be accessed by index (e.g.[3]), or by name (e.g.["GRAPH"])
 #' @export
-#' @import tidyverse stats metaviz
+#' @import tidyverse metaviz
 #'
 #' @examples
 #' # basic usage
@@ -2712,7 +2712,7 @@ FtestCNV = function(gistic_lesions,
                      blacklisted_regions = NULL){
 
   # get groups of interest for comparison
-  GROUPS.TO.COMPARE = unique(metadata[,comparison])
+  GROUPS.TO.COMPARE = unique(metadata[,comparison]) %>% unlist
 
   # quick check that only 2 groups are provided forr comparison
   if(length(GROUPS.TO.COMPARE) > 2){
@@ -2770,7 +2770,7 @@ FtestCNV = function(gistic_lesions,
     dplyr::mutate(HighConfInt = apply(., 1, function(x) {tbl = matrix(as.numeric(x[7:10]), ncol = 2, byrow = T); log(fisher.test(tbl, alternative = "two.sided")$conf.int[2])}))
 
   # adjust FDR for multiple comparisons
-  GROUP1_vs_GROUP2$FDR = stats::p.adjust(GROUP1_vs_GROUP2$pVal, method = fdr.method)
+  GROUP1_vs_GROUP2$FDR = p.adjust(GROUP1_vs_GROUP2$pVal, method = fdr.method)
 
   # filter for only those CNV that pass FDR cutoff
   GROUP1_vs_GROUP2.PASSED = GROUP1_vs_GROUP2[GROUP1_vs_GROUP2$FDR<fdr.cutoff,]
