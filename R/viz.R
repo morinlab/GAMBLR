@@ -2624,7 +2624,7 @@ theme_Morons = function(base_size = 14,
 #' @return A convenient list containing all the data frames that were created in making the plot, including the mutation matrix.
 #' @return It also produces (and returns) ggplot object with a side-by-side forest plot and bar plot showing mutation incidences across two groups.
 #' @export
-#' @import dplyr cowplot broom reshape2
+#' @import dplyr cowplot broom
 #'
 #' @examples
 #' metadata = get_gambl_metadata(case_set = "tFL-study") #%>%
@@ -2782,7 +2782,11 @@ prettyForestPlot = function(maf,
 
   bar = mutmat %>%
     dplyr::select(-Tumor_Sample_Barcode) %>%
-    reshape2::melt(., id.vars = c("comparison"), value.name = "is_mutated", variable.name = "gene") %>%
+    pivot_longer(
+		  !comparison,
+		  names_to = "gene",
+		  values_to = "is_mutated"
+	  ) %>%
     group_by(gene, comparison) %>%
     drop_na() %>%
     summarise(percent_mutated = sum(is_mutated) / n() * 100) %>%

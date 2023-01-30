@@ -37,7 +37,6 @@ Imports:
     randomForest,
     RCircos,
     readr (>= 2.1),
-    reshape2,
     RMariaDB,
     rtracklayer,
     S4Vectors,
