@@ -22,7 +22,6 @@ Imports:
     digest,
     dplyr,
     g3viz,
-    GenomeInfoDb,
     ggbeeswarm,
     ggplot2,
     ggpubr,
@@ -39,6 +38,7 @@ Imports:
     RCircos,
     readr (>= 2.1),
     reshape2,
+    RMariaDB,
     rtracklayer,
     S4Vectors,
     SRAdb,
@@ -47,7 +47,6 @@ Imports:
     workflowr
 Suggests:
     knitr,
-    RMariaDB,
     rmarkdown,
     testthat
 VignetteBuilder: 
