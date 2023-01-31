@@ -2,7 +2,7 @@
 % Please edit documentation in R/viz.R
 \name{fancy_multisamp_ideogram}
 \alias{fancy_multisamp_ideogram}
-\title{Genome-wide ideogram (CN segments) for multiple samples}
+\title{Genome-wide ideogram (CN segments) for multiple samples.}
 \usage{
 fancy_multisamp_ideogram(
   these_sample_ids,
@@ -33,7 +33,7 @@ fancy_multisamp_ideogram(
 
 \item{kompare}{Boolean statement, set to TRUE to call cnvKompare on the selected samples for plotting concordant (or discordant) cn segments across selected chromosomes.}
 
-\item{concordance}{Boolean parameter to be used when kompare = TRUE. Default is TRUE, to plot discordant segments, set parameter to FALSE.}
+\item{concordance}{Boolean parameter to be used when kompare = TRUE. Default is TRUE, to plot discordant segments, set the parameter to FALSE.}
 
 \item{coding_only}{Optional. Set to TRUE to restrict to plotting only coding mutations.}
 
@@ -42,17 +42,17 @@ fancy_multisamp_ideogram(
 \item{use_augmented_maf}{Boolean statement if to use augmented maf, default is FALSE.}
 }
 \value{
-Nothing.
+A plot as a ggplot object (grob).
 }
 \description{
-Generate ideograms for selected sample, visualizing copy number variation segments.
+Generate ideograms for selected samples, visualizing copy number variation segments.
 }
 \details{
 To create multi-sample ideograms, i.e showing CN segments across multiple samples, this function was created.
 This can be used to infer inheritance patterns, hotspots, etc. across multiple samples or the sample ID but for different timepoints.
-In addition, this plot can also allow to only plot concordant (or discordant) cn segments between two samples. i.e how two samples differ, or are a like.
+In addition, this plot can also allow to only plot concordant (or discordant) cn segments between two samples. i.e how two samples differ, or are alike.
 The function automatically detects the number of samples provided and sets the plotting parameters accordingly.
-The maximun number of samples this plot can deal with is 4 and sample IDs of interest are given to the \code{these_sample_ids}.
+The maximum number of samples this plot can deal with is 4 and sample IDs of interest are given to the \code{these_sample_ids}.
 In order to only plot segments that are concordant between the selected samples, set \code{komapre} to TRUE and \code{concordance} to TRUE.
 To instead plot discordant CN segments, set this parameter to FALSE.
 }

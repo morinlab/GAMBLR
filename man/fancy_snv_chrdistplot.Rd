@@ -48,21 +48,21 @@ fancy_snv_chrdistplot(
 \item{use_augmented_maf}{Boolean statement if to use augmented maf, default is FALSE.}
 }
 \value{
-Nothing.
+A plot as a ggplot object (grob).
 }
 \description{
 Visualizing the number of SNVs per chromosome.
 }
 \details{
-This function takes on already loaded maf-like data frame, or a path to the maf file of interest.
-In addition, the nuser can also give this function a sample ID and the function will run assign_cn_to_ssm
+This function takes on an already loaded maf-like data frame, or a path to the maf file of interest.
+In addition, the user can also give this function a sample ID and the function will run assign_cn_to_ssm
 to get data for plotting. If a maf file or data frame is used, the user has the chance to specify what column
 that holds the Variant Type information (\code{variant_type_col}), in addition the user can also specify what column
 in the incoming maf that is corresponding to the chromosome annotations. This function also includes useful subsetting
-options. For example, \code{chr_select} allwos the suer to restrict the plot to specific chromosomes. \code{include_dnp} is an optional
+options. For example, \code{chr_select} allows the user to restrict the plot to specific chromosomes. \code{include_dnp} is an optional
 argument (Boolean) for if variants of this subtype should be included or not. The plot can also be restricted to only
-counting coding mutations (\code{coding_only}). Flatfile and augmented maf options can be togggled with \code{from_flatfile}
-and \code{use_augmented_maf}. Both are TRUE by default and should rarley be set to FALSE. Lastly, this plotting function
+counting coding mutations (\code{coding_only}). Flat-file and augmented maf options can be toggled with \code{from_flatfile}
+and \code{use_augmented_maf}. Both are TRUE by default and should rarely be set to FALSE. Lastly, this plotting function
 also have convenient parameters for customizing the returned plot, e.g \code{plot_title}, \code{y_interval}, \code{hide_legend}, and\code{plot_subtitle}.
 }
 \examples{

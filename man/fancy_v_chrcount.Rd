@@ -63,19 +63,19 @@ fancy_v_chrcount(
 \item{seq_type}{Default is "genome".}
 }
 \value{
-plot as ggplot object.
+A plot as a ggplot object (grob).
 }
 \description{
 Visualizing variant (SSM or SVs) counts per chromosome.
 }
 \details{
 Takes a maf data frame (or path to a maf), counts the number of variants per chromosome.
-Selected chromosomes (\code{chr_select}) are plotted along the x-axis and the variants counts are represented on the y-axis.
+Selected chromosomes (\code{chr_select}) are plotted along the x-axis and the variant counts are represented on the y-axis.
 This function can plot both Structural Variants (SV) and Simple Shared Motifs (SSM).
 It plots SVs per default and SSM can be added with setting \code{ssm = TRUE}.
 This plot can also be restricted to only show coding mutations. To do so, set \code{coding_only} to TRUE.
-In addition, the returned plot can also be superimposed with a sample-specifc mean coverage (from collate_results).
-To do so, set \code{add_qc_metric} to TRUE. A collection of parameters for customizing the returned plot are also avaialble.
+In addition, the returned plot can also be superimposed with a sample-specific mean coverage (from collate_results).
+To do so, set \code{add_qc_metric} to TRUE. A collection of parameters for customizing the returned plot are also available.
 e.g \code{plot_title}, \code{y_interval}, \code{hide_legend}, and \code{plot_subtitle}.
 }
 \examples{

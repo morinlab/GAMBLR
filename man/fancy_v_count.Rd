@@ -48,7 +48,7 @@ fancy_v_count(
 
 \item{chr_select}{vector of chromosomes to be included in plot, defaults to autosomes.}
 
-\item{variant_select}{Subtypes of SVs to be incldued in plot, default is DEL, INS and DUP.}
+\item{variant_select}{Subtypes of SVs to be included in plot, default is DEL, INS and DUP.}
 
 \item{snp_colours}{Optional vector with colours for SNPs (DNP and TNP).}
 
@@ -63,24 +63,24 @@ fancy_v_count(
 \item{use_augmented_maf}{Boolean statement if to use augmented maf, default is TRUE.}
 }
 \value{
-plot as ggplot object.
+A plot as a ggplot object (grob).
 }
 \description{
 Generate a bar plot visualizing total variant (SSM or SVs) count for selected contigs.
 }
 \details{
 This function creates a barplot showing the total number of variants for a selected sample.
-Conveneince parameters for restrictting the returned plot are available. For example, with \code{ssm} (Boolean)
+Convenience parameters for restricting the returned plot are available. For example, with \code{ssm} (Boolean)
 you can toggle if the plot will be in respect to SSM (\code{ssm = TRUE}) or if you wish to count SVs (\code{ssm = FALSE}).
-In addition, this plot can also accept a variety of incoming data types. Either, you supplyt the function with a sample ID
-(\code{this_sample_id}) and the function will retrieve data using \code{assign_cn_to_ssm} or \code{get_combined_sv} (depending on how the \code{ssm} parameteer is used).
-This function also supports a maf or maf-like data frame directly, this is done with \code{maf_data} or \code{maf_path}. If data is supplied with either of these paraemters,
-the user can specify what column holds the varaint type information as well as chromosome information (\code{variant_type_col} and \code{chromosome_col}).
-Restricting the plot to coding mutations is done with \code{coding_only = TRUE}. Flatfile and augmented maf options can be togggled with \code{from_flatfile}
-and \code{use_augmented_maf}. Both are TRUE by default and should rarley be set to FALSE. Lastly, this plotting function also have convenient parameters for
+In addition, this plot can also accept a variety of incoming data types. Either, you supply the function with a sample ID
+(\code{this_sample_id}) and the function will retrieve data using \code{assign_cn_to_ssm} or \code{get_combined_sv} (depending on how the \code{ssm} parameter is used).
+This function also supports a maf or maf-like data frame directly, this is done with \code{maf_data} or \code{maf_path}. If data is supplied with either of these parameters,
+the user can specify what column holds the variant type information as well as chromosome information (\code{variant_type_col} and \code{chromosome_col}).
+Restricting the plot to coding mutations is done with \code{coding_only = TRUE}. Flat-file and augmented maf options can be toggled with \code{from_flatfile}
+and \code{use_augmented_maf}. Both are TRUE by default and should rarely be set to FALSE. Lastly, this plotting function also have convenient parameters for
 customizing the returned plot, e.g \code{plot_title}, \code{y_interval}, \code{hide_legend}, and\code{plot_subtitle} and \code{snp_colours}. lastly, it is also possible
 to control what variants are to be counted with \code{variant_select}. Default is deletions, insertions and duplications, c("DEL", "DUP", "INS"). Not that
-the variant types specified in this parameter myust match with whatever is present in the corresponding \code{variant_type_col}.
+the variant types specified in this parameter must match with whatever is present in the corresponding \code{variant_type_col}.
 }
 \examples{
 #count all variants for one sample (defualt parameters)

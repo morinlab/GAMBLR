@@ -2,7 +2,7 @@
 % Please edit documentation in R/viz.R
 \name{fancy_sv_sizedens}
 \alias{fancy_sv_sizedens}
-\title{Generate plot visualizing SV sizes. Subset on variant type, filter on VAF, size etc.}
+\title{Structural Variants Size Plot.}
 \usage{
 fancy_sv_sizedens(
   this_sample_id,
@@ -34,7 +34,7 @@ fancy_sv_sizedens(
 
 \item{chrom_a_col}{Index of column holding chromosome (to be used with either maf_data or maf_path).}
 
-\item{start_a_col}{Index of column holding start coordiantes (to be used with either maf_data or maf_path).}
+\item{start_a_col}{Index of column holding start coordinates (to be used with either maf_data or maf_path).}
 
 \item{end_a_col}{Index of column holding end coordinates (to be used with either maf_data or maf_path).}
 
@@ -44,7 +44,7 @@ fancy_sv_sizedens(
 
 \item{size_cutoff}{Threshold for filtering variants on size, default is 50bp.}
 
-\item{adjust_value}{A multiplicate bandwidth adjustment. This makes it possible to adjust the bandwidth while still using the a bandwidth estimator. For example, adjust = 1/2 means use half of the default bandwidth.}
+\item{adjust_value}{A multiplicate bandwidth adjustment. This makes it possible to adjust the bandwidth while still using the bandwidth estimator. For example, adjust = 1/2 means use half of the default bandwidth.}
 
 \item{trim}{If FALSE, the default, each density is computed on the full range of the data.}
 
@@ -59,10 +59,21 @@ fancy_sv_sizedens(
 \item{projection}{Genomic projection for SVs and circos plot. Accepted values are grch37 and hg38.}
 }
 \value{
-Nothing.
+A plot as a ggplot object (grob).
 }
 \description{
 Generate plot visualizing SV sizes. Subset on variant type, filter on VAF, size etc.
+}
+\details{
+Plot sample-level SV sizes across selected chromosomes. This function also has a variety of filtering parameters available.
+For example, it is possible to subset the included variants to a specific VAF threshold with \code{VAF_cutoff}. The \code{size_cutoff} is another parameter
+for filtering the variants on set variant sizes, the default for this parameter is to only include variants of at least 50bp.
+This function takes either a sample ID (\code{this_sample_id}) or an already loaded data frame (\code{maf_data} or a path to a maf-like file with \code{maf_path}).
+If \code{this_sample_id} is called, the function will run \code{GAMBLR::get_combined_sv} to retrieve SV calls.
+If either of the \code{maf} parameters are used, note that it's possible to specify the columns of interest;
+(\code{chrom_a_col}, \code{start_a_col}, \code{end_a_col} and \code{variant_type_col}), allowing this function to work with any maf-like data frames.
+This function also allows the user to customize the returned plot. For more info on how to do this, please refer to the aesthetic
+parameters; \code{hide_legend}, \code{plot_title}, \code{plot_subtitle}, \code{adjust_value} and \code{trim}.
 }
 \examples{
 myplot = fancy_sv_sizedens(this_sample_id = "HTMCP-01-06-00422-01A-01D")

@@ -50,7 +50,7 @@ fancy_ideogram(
 
 \item{end_col_maf}{Index of column with variant end coordinates (to be used with either maf_data or maf_path).}
 
-\item{chrom_col_seq}{Index of column annotating Chromosome (to be used with either maf_data or maf_path).}
+\item{chrom_col_seq}{Index of column with chromosome annotations (to be used with either maf_data or maf_path).}
 
 \item{start_col_seq}{Index of column with copy number start coordinates (to be used with either maf_data or maf_path).}
 
@@ -64,7 +64,7 @@ fancy_ideogram(
 
 \item{intersect_regions}{Optional parameter for subset variant calls to specific regions. Should be either a vector of characters (chr:start-end) or data frame with regions.}
 
-\item{include_ssm}{Set to TRUE to plot ssms (dels and ins).}
+\item{include_ssm}{Set to TRUE to plot SSMs (dels and ins).}
 
 \item{ssm_count}{Optional parameter to summarize n variants per chromosome, inlcude_ssm must be set to TRUE.}
 
@@ -75,22 +75,22 @@ fancy_ideogram(
 \item{use_augmented_maf}{Boolean statement if to use augmented maf, default is FALSE.}
 }
 \value{
-Nothing.
+A plot as a ggplot object (grob).
 }
 \description{
 Generate sample-level ideogram with copy number information, ssm and gene annotations, etc.
 }
 \details{
 This function generates genome-wide ideograms, visualizing SSM data as well as CN segments.
-It is also possible to superimpose the plot with gene annotations. Offering a comprehenssive overview of all SSM and CN segments of different anneuploidity.
+It is also possible to superimpose the plot with gene annotations. Offering a comprehensive overview of all SSM and CN segments of different aneuploidy.
 The plotting of SSM can be toggled with setting \code{include_ssm} to TRUE. If so, it is also possible to count the number of SSMs per chromosome with \code{ssm_count = TRUE}.
-To get data for plotting, there are a few different options avaialble; like all \code{fanncy_x_plots} a sample ID can be provided to the \code{this_sample}
-parameter. If done so, the function will retreive data (SSm and CN segments) by wrapping the appropriate functions.
+To get data for plotting, there are a few different options available; like all \code{fanncy_x_plots} a sample ID can be provided to the \code{this_sample}
+parameter. If done so, the function will retrieve data (SSm and CN segments) by wrapping the appropriate functions.
 This data can also be provided with \code{seq_data}, \code{seg_path}, \code{maf_data} and \code{maf_path}.
-For more info on how to run with these paraemters, refer to the parameter descriptions.
-In order to annotate the ideogram with genes, simply give the \code{gene_annotations} parameter a set of genes as a vector of charachters or a data frame with gene names in the first column.
+For more info on how to run with these parameters, refer to the parameter descriptions.
+In order to annotate the ideogram with genes, simply give the \code{gene_annotations} parameter a set of genes as a vector of characters or a data frame with gene names in the first column.
 Another useful parameter for restricting the plotted regions is to call the function with \code{intersect_regions}.
-This parameter takes a vector of charachters or data frame with regions that the plotted calls are restricted to.
+This parameter takes a vector of characters or a data frame with regions that the plotted calls are restricted to.
 }
 \examples{
 #get FL genes
