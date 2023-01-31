@@ -23,7 +23,7 @@ colour_aliases = list("COO_consensus" = "coo", "COO" = "coo", "DHITsig_consensus
 #'
 #' @return a ggplot2 plot. Print it using print() or save it using ggsave()
 #' @export
-#' @import ggplot2 dplyr ggrepel
+#' @import ggplot2 ggrepel dplyr stringr tidyr
 #'
 #' @examples
 #' prettyRainfallPlot("Raji")
@@ -3120,12 +3120,12 @@ splendidHeatmap = function(this_matrix,
 #' @description Visualizing variant (SSM or SVs) counts per chromosome.
 #'
 #' @details Takes a maf data frame (or path to a maf), counts the number of variants per chromosome.
-#' Selected chromosomes (`chr_select`) are plotted along the x-axis and the variants counts are represented on the y-axis.
+#' Selected chromosomes (`chr_select`) are plotted along the x-axis and the variant counts are represented on the y-axis.
 #' This function can plot both Structural Variants (SV) and Simple Shared Motifs (SSM).
 #' It plots SVs per default and SSM can be added with setting `ssm = TRUE`.
 #' This plot can also be restricted to only show coding mutations. To do so, set `coding_only` to TRUE.
-#' In addition, the returned plot can also be superimposed with a sample-specifc mean coverage (from collate_results).
-#' To do so, set `add_qc_metric` to TRUE. A collection of parameters for customizing the returned plot are also avaialble.
+#' In addition, the returned plot can also be superimposed with a sample-specific mean coverage (from collate_results).
+#' To do so, set `add_qc_metric` to TRUE. A collection of parameters for customizing the returned plot are also available.
 #' e.g `plot_title`, `y_interval`, `hide_legend`, and `plot_subtitle`.
 #'
 #' @param this_sample_id Sample to be plotted.
@@ -3147,10 +3147,9 @@ splendidHeatmap = function(this_matrix,
 #' @param add_qc_metric Boolean statement, if set to TRUE specified QC metric will be added (second y-axis).
 #' @param seq_type Default is "genome".
 #'
-#' @return plot as ggplot object.
+#' @return A plot as a ggplot object (grob).
 #'
-#' @import ggplot2 dplyr tidyr readr purrr tibble stringr forcats cowplot
-#'
+#' @import ggplot2 dplyr cowplot
 #' @export
 #'
 #' @examples
@@ -3291,18 +3290,18 @@ fancy_v_chrcount = function(this_sample_id,
 
 
 #' @title n SNVs per chromosome plot
-#' 
+#'
 #' @description Visualizing the number of SNVs per chromosome.
 #'
-#' @details This function takes on already loaded maf-like data frame, or a path to the maf file of interest.
-#' In addition, the nuser can also give this function a sample ID and the function will run assign_cn_to_ssm
+#' @details This function takes on an already loaded maf-like data frame, or a path to the maf file of interest.
+#' In addition, the user can also give this function a sample ID and the function will run assign_cn_to_ssm
 #' to get data for plotting. If a maf file or data frame is used, the user has the chance to specify what column
-#' that holds the Variant Type information (`variant_type_col`), in addition the user can also specify what column 
+#' that holds the Variant Type information (`variant_type_col`), in addition the user can also specify what column
 #' in the incoming maf that is corresponding to the chromosome annotations. This function also includes useful subsetting
-#' options. For example, `chr_select` allwos the suer to restrict the plot to specific chromosomes. `include_dnp` is an optional
-#' argument (Boolean) for if variants of this subtype should be included or not. The plot can also be restricted to only 
-#' counting coding mutations (`coding_only`). Flatfile and augmented maf options can be togggled with `from_flatfile` 
-#' and `use_augmented_maf`. Both are TRUE by default and should rarley be set to FALSE. Lastly, this plotting function 
+#' options. For example, `chr_select` allows the user to restrict the plot to specific chromosomes. `include_dnp` is an optional
+#' argument (Boolean) for if variants of this subtype should be included or not. The plot can also be restricted to only
+#' counting coding mutations (`coding_only`). Flat-file and augmented maf options can be toggled with `from_flatfile`
+#' and `use_augmented_maf`. Both are TRUE by default and should rarely be set to FALSE. Lastly, this plotting function
 #' also have convenient parameters for customizing the returned plot, e.g `plot_title`, `y_interval`, `hide_legend`, and`plot_subtitle`.
 #' 
 #' @param this_sample_id Sample to be plotted.
@@ -3319,10 +3318,9 @@ fancy_v_chrcount = function(this_sample_id,
 #' @param from_flatfile If set to true the function will use flat files instead of the database.
 #' @param use_augmented_maf Boolean statement if to use augmented maf, default is FALSE.
 #'
-#' @return Nothing.
+#' @return A plot as a ggplot object (grob).
 #' 
-#' @import ggplot2 dplyr tidyr readr purrr tibble stringr forcats cowplot
-#' 
+#' @import ggplot2 dplyr cowplot
 #' @export
 #'
 #' @examples
@@ -3418,21 +3416,21 @@ fancy_snv_chrdistplot = function(this_sample_id,
 
 
 #' @title Total n variants count plot.
-#' 
+#'
 #' @description Generate a bar plot visualizing total variant (SSM or SVs) count for selected contigs.
 #'
 #' @details This function creates a barplot showing the total number of variants for a selected sample.
-#' Conveneince parameters for restrictting the returned plot are available. For example, with `ssm` (Boolean)
+#' Convenience parameters for restricting the returned plot are available. For example, with `ssm` (Boolean)
 #' you can toggle if the plot will be in respect to SSM (`ssm = TRUE`) or if you wish to count SVs (`ssm = FALSE`).
-#' In addition, this plot can also accept a variety of incoming data types. Either, you supplyt the function with a sample ID
-#' (`this_sample_id`) and the function will retrieve data using `assign_cn_to_ssm` or `get_combined_sv` (depending on how the `ssm` parameteer is used).
-#' This function also supports a maf or maf-like data frame directly, this is done with `maf_data` or `maf_path`. If data is supplied with either of these paraemters,
-#' the user can specify what column holds the varaint type information as well as chromosome information (`variant_type_col` and `chromosome_col`).
-#' Restricting the plot to coding mutations is done with `coding_only = TRUE`. Flatfile and augmented maf options can be togggled with `from_flatfile` 
-#' and `use_augmented_maf`. Both are TRUE by default and should rarley be set to FALSE. Lastly, this plotting function also have convenient parameters for 
+#' In addition, this plot can also accept a variety of incoming data types. Either, you supply the function with a sample ID
+#' (`this_sample_id`) and the function will retrieve data using `assign_cn_to_ssm` or `get_combined_sv` (depending on how the `ssm` parameter is used).
+#' This function also supports a maf or maf-like data frame directly, this is done with `maf_data` or `maf_path`. If data is supplied with either of these parameters,
+#' the user can specify what column holds the variant type information as well as chromosome information (`variant_type_col` and `chromosome_col`).
+#' Restricting the plot to coding mutations is done with `coding_only = TRUE`. Flat-file and augmented maf options can be toggled with `from_flatfile`
+#' and `use_augmented_maf`. Both are TRUE by default and should rarely be set to FALSE. Lastly, this plotting function also have convenient parameters for
 #' customizing the returned plot, e.g `plot_title`, `y_interval`, `hide_legend`, and`plot_subtitle` and `snp_colours`. lastly, it is also possible
 #' to control what variants are to be counted with `variant_select`. Default is deletions, insertions and duplications, c("DEL", "DUP", "INS"). Not that
-#' the variant types specified in this parameter myust match with whatever is present in the corresponding `variant_type_col`.
+#' the variant types specified in this parameter must match with whatever is present in the corresponding `variant_type_col`.
 #' 
 #' @param this_sample_id Sample to be plotted.
 #' @param maf_data Optional parameter with maf like df already loaded into R.
@@ -3445,7 +3443,7 @@ fancy_snv_chrdistplot = function(this_sample_id,
 #' @param plot_title Title of plot (default to sample ID).
 #' @param plot_subtitle Subtitle for created plot.
 #' @param chr_select vector of chromosomes to be included in plot, defaults to autosomes.
-#' @param variant_select Subtypes of SVs to be incldued in plot, default is DEL, INS and DUP.
+#' @param variant_select Subtypes of SVs to be included in plot, default is DEL, INS and DUP.
 #' @param snp_colours Optional vector with colours for SNPs (DNP and TNP).
 #' @param hide_legend Set to True to remove legend from plot, default is FALSE.
 #' @param coding_only Optional. Set to TRUE to restrict to plotting only coding mutations.
@@ -3453,10 +3451,9 @@ fancy_snv_chrdistplot = function(this_sample_id,
 #' @param from_flatfile If set to true the function will use flat files instead of the database.
 #' @param use_augmented_maf Boolean statement if to use augmented maf, default is TRUE.
 #'
-#' @return plot as ggplot object.
+#' @return A plot as a ggplot object (grob).
 #' 
-#' @import ggplot2 dplyr tidyr readr purrr tibble stringr forcats cowplot
-#' 
+#' @import ggplot2 dplyr cowplot
 #' @export
 #'
 #' @examples
@@ -3564,25 +3561,25 @@ fancy_v_count = function(this_sample_id,
 
 
 #' @title Copy Number states barplot
-#' 
+#'
 #' @description Generate a bar plot visualizing sample-specific copy number states and affected bases for each CN segment.
 #'
 #' @details `fancy_cnbar` visualizes copy number (CN) states on sample-level. Similarly to other fancy_x_plots this function
-#' accepts either a sample ID, for which the function will get copy number states with `get_sample_cn_states`. The function 
-#' can also accept an already loaded seq file given to the `seq_data` parameter. It can also load a seq file with the `seq_path` 
-#' parameter. If the user calls either `seq_data` or `seq_path`, there are a colleciton of parameters available for specifying 
+#' accepts either a sample ID, for which the function will get copy number states with `get_sample_cn_states`. The function
+#' can also accept an already loaded seq file given to the `seq_data` parameter. It can also load a seq file with the `seq_path`
+#' parameter. If the user calls either `seq_data` or `seq_path`, there are a collection of parameters available for specifying
 #' the relevant columns in the given data frame (`chrom_col`, `starat_col`, `end_col`, `cn_col`). It is also possible to
-#' restrict the returned plot to any given chromosomes. This is done with the `chr_select` parameeter (default is all autosomes).
-#' For furhter control of the returned plot, it is also possible to set the threshold for maximun CN states to be returned (default is 15).
+#' restrict the returned plot to any given chromosome. This is done with the `chr_select` parameter (default is all autosomes).
+#' For further control of the returned plot, it is also possible to set the threshold for maximum CN states to be returned (default is 15).
 #' With `include_cn2` (Boolean) the user can control if CN segments = 2 should be added to the plot, default is TRUE.
 #' The user can also control the annotations of the returned plot with `plot_title` and `plot_subtitle`. Lastly,
-#' This function also computes the number of affected bases for each compy number state and plots these values on a secondary y-axis (right),
+#' This function also computes the number of affected bases for each copy number state and plots these values on a secondary y-axis (right),
 #' useful for overviewing the extent of each copy number state, in the context of the full genome.
 #'
 #' @param this_sample_id Sample to be plotted.
 #' @param seq_data Optional parameter with copy number df already loaded into R.
 #' @param seq_path Optional parameter with path to external cn file.
-#' @param chrom_col Index of column annotating Chromosome (to be used with either maf_data or maf_path).
+#' @param chrom_col Index of column with chromosome annotations (to be used with either maf_data or maf_path).
 #' @param start_col Index of column with copy number start coordinates (to be used with either maf_data or maf_path).
 #' @param end_col Index of column with copy number end coordinates (to be used with either maf_data or maf_path).
 #' @param cn_col Index of column holding copy number information (to be used with either maf_data or maf_path).
@@ -3592,10 +3589,9 @@ fancy_v_count = function(this_sample_id,
 #' @param cutoff Set threshold for maximum CN state to be retrieved.
 #' @param include_cn2 Optional boolean statement for including CN = 2 states in plot.
 #'
-#' @return Nothing.
+#' @return A plot as a ggplot object (grob).
 #'
-#' @import ggplot2 dplyr tidyr readr purrr tibble stringr forcats cowplot
-#' 
+#' @import ggplot2 dplyr cowplot
 #' @export
 #'
 #' @examples
@@ -3711,20 +3707,20 @@ fancy_cnbar = function(this_sample_id,
 
 #' @title Variant size distribution plot
 #'
-#' @description Generate a violine plot showing variant (SSM or SVs) size distributions for selected contigs.
+#' @description Generate a violin plot showing variant (SSM or SVs) size distributions for selected contigs.
 #'
 #' @details Function for plotting variant size distributions. This function takes either a sample ID given to the `this_sample` parameter.
-#' In addition, the function can also accept an already loaded MAF or MAF-like object given to the `maf_data` parameter. 
+#' In addition, the function can also accept an already loaded MAF or MAF-like object given to the `maf_data` parameter.
 #' As a third option, the function can also read a maf from disk (provide path to maf with `maf_path`).
-#' A collection of convenient filtering and data subsetting parameters are also avaialble for this function.
-#' For restricting you data (if plotting data retreived with `this_sample_id`), the user can chose to only plot coding mutations with setting `coding_only` to TRUE. 
-#' This plot can also deal with SVs as well as SSM data. To control this, please use the `ssm` parameter. If set to TRUE and if `this_sample` is called, 
+#' A collection of convenient filtering and data subsetting parameters are also available for this function.
+#' For restricting your data (if plotting data retrieved with `this_sample_id`), the user can choose to only plot coding mutations with setting `coding_only` to TRUE.
+#' This plot can also deal with SVs as well as SSM data. To control this, please use the `ssm` parameter. If set to TRUE and if `this_sample` is called,
 #' the function gets data with annotate_cn_by_ssm and if set to FALSE, the function calls `get_combined_sv` to get SV calls for plotting.
-#' If the user calls either `maf_data` or `maf_path`, there are a colleciton of parameters available for specifying 
+#' If the user calls either `maf_data` or `maf_path`, there are a collection of parameters available for specifying
 #' the relevant columns in the given data frame (`variant_type_col`, `chhromosome_col`, `start_col`, `end_col`). It is also possible to
-#' restrict the returned plot to any given chromosomes. This is done with the `chr_select` parameeter (default is all autosomes).
-#' In addition, plot aestethics can also be controleld with `plot_title`, `plot_subtitle`, `scale_value`, `log10`, and `trim`.
-#' For more info on how to run with these parameters, refer to the parameter descriptions. 
+#' restrict the returned plot to any given chromosome. This is done with the `chr_select` parameter (default is all autosomes).
+#' In addition, plot aesthetics can also be controlled with `plot_title`, `plot_subtitle`, `scale_value`, `log10`, and `trim`.
+#' For more info on how to run with these parameters, refer to the parameter descriptions.
 #' 
 #'
 #' @param this_sample_id Sample to be plotted.
@@ -3739,18 +3735,17 @@ fancy_cnbar = function(this_sample_id,
 #' @param end_col Index of column with variant end coordinates (to be used with either maf_data or maf_path).
 #' @param plot_title Title of plot (default to sample ID).
 #' @param plot_subtitle Subtitle for created plot.
-#' @param scale_value Scale type for violin plot, accepted values are "area", "width", and "count", defualt is "count.
-#' @param log_10 Boolean statement for yaxis, default is TRUE.
-#' @param trim Boolean statment for trimming violin plot. Default is TRUE.
+#' @param scale_value Scale type for violin plot, accepted values are "area", "width", and "count", default is "count.
+#' @param log_10 Boolean statement for y-axis, default is TRUE.
+#' @param trim Boolean statement for trimming violin plot. Default is TRUE.
 #' @param chr_select vector of chromosomes to be included in plot, defaults to autosomes.
 #' @param coding_only Optional. Set to TRUE to restrict to plotting only coding mutations.
 #' @param from_flatfile If set to true the function will use flat files instead of the database.
 #' @param use_augmented_maf Boolean statement if to use augmented maf, default is FALSE.
 #'
-#' @return plot as ggplot object.
+#' @return A plot as a ggplot object (grob).
 #'
-#' @import ggplot2 dplyr tidyr readr purrr tibble stringr forcats cowplot
-#'
+#' @import ggplot2 dplyr cowplot
 #' @export
 #'
 #' @examples
@@ -3860,19 +3855,19 @@ fancy_v_sizedis = function(this_sample_id,
 
 
 #' @title genome-wide ideogram annotated with SSM and CN information
-#' 
+#'
 #' @description Generate sample-level ideogram with copy number information, ssm and gene annotations, etc.
 #'
-#' @details This function generates genome-wide ideograms, visualizing SSM data as well as CN segments. 
-#' It is also possible to superimpose the plot with gene annotations. Offering a comprehenssive overview of all SSM and CN segments of different anneuploidity.
-#' The plotting of SSM can be toggled with setting `include_ssm` to TRUE. If so, it is also possible to count the number of SSMs per chromosome with `ssm_count = TRUE`. 
-#' To get data for plotting, there are a few different options avaialble; like all `fanncy_x_plots` a sample ID can be provided to the `this_sample`
-#' parameter. If done so, the function will retreive data (SSm and CN segments) by wrapping the appropriate functions. 
-#' This data can also be provided with `seq_data`, `seg_path`, `maf_data` and `maf_path`. 
-#' For more info on how to run with these paraemters, refer to the parameter descriptions.
-#' In order to annotate the ideogram with genes, simply give the `gene_annotations` parameter a set of genes as a vector of charachters or a data frame with gene names in the first column.
-#' Another useful parameter for restricting the plotted regions is to call the function with `intersect_regions`. 
-#' This parameter takes a vector of charachters or data frame with regions that the plotted calls are restricted to.
+#' @details This function generates genome-wide ideograms, visualizing SSM data as well as CN segments.
+#' It is also possible to superimpose the plot with gene annotations. Offering a comprehensive overview of all SSM and CN segments of different aneuploidy.
+#' The plotting of SSM can be toggled with setting `include_ssm` to TRUE. If so, it is also possible to count the number of SSMs per chromosome with `ssm_count = TRUE`.
+#' To get data for plotting, there are a few different options available; like all `fanncy_x_plots` a sample ID can be provided to the `this_sample`
+#' parameter. If done so, the function will retrieve data (SSm and CN segments) by wrapping the appropriate functions.
+#' This data can also be provided with `seq_data`, `seg_path`, `maf_data` and `maf_path`.
+#' For more info on how to run with these parameters, refer to the parameter descriptions.
+#' In order to annotate the ideogram with genes, simply give the `gene_annotations` parameter a set of genes as a vector of characters or a data frame with gene names in the first column.
+#' Another useful parameter for restricting the plotted regions is to call the function with `intersect_regions`.
+#' This parameter takes a vector of characters or a data frame with regions that the plotted calls are restricted to.
 #' 
 #' @param this_sample_id Sample to be plotted (for multiple samples, see fancy_multisample_ideogram.
 #' @param gene_annotation Annotate ideogram with a set of genes. These genes can either be specified as a vector of characters or a data frame.
@@ -3884,23 +3879,22 @@ fancy_v_sizedis = function(this_sample_id,
 #' @param chromosome_col_maf Index of column holding Chromosome (to be used with either maf_data or maf_path).
 #' @param start_col_maf Index of column with variant start coordinates (to be used with either maf_data or maf_path).
 #' @param end_col_maf Index of column with variant end coordinates (to be used with either maf_data or maf_path).
-#' @param chrom_col_seq Index of column annotating Chromosome (to be used with either maf_data or maf_path).
+#' @param chrom_col_seq Index of column with chromosome annotations (to be used with either maf_data or maf_path).
 #' @param start_col_seq Index of column with copy number start coordinates (to be used with either maf_data or maf_path).
 #' @param end_col_seq Index of column with copy number end coordinates (to be used with either maf_data or maf_path).
 #' @param cn_col_seq Index of column holding copy number information (to be used with either maf_data or maf_path).
 #' @param plot_title Title of plot (default to sample ID).
 #' @param plot_subtitle Optional argument for plot subtitle.
 #' @param intersect_regions Optional parameter for subset variant calls to specific regions. Should be either a vector of characters (chr:start-end) or data frame with regions.
-#' @param include_ssm Set to TRUE to plot ssms (dels and ins).
+#' @param include_ssm Set to TRUE to plot SSMs (dels and ins).
 #' @param ssm_count Optional parameter to summarize n variants per chromosome, inlcude_ssm must be set to TRUE.
 #' @param coding_only Optional. Set to TRUE to restrict to plotting only coding mutations.
 #' @param from_flatfile If set to true the function will use flat files instead of the database.
 #' @param use_augmented_maf Boolean statement if to use augmented maf, default is FALSE.
 #'
-#' @import ggplot2 dplyr tidyr readr purrr tibble stringr forcats cowplot data.table
-#'
-#' @return Nothing.
+#' @return A plot as a ggplot object (grob).
 #' 
+#' @import ggplot2 dplyr cowplot
 #' @export
 #'
 #' @examples
@@ -4206,17 +4200,17 @@ fancy_ideogram = function(this_sample_id,
 }
 
 
-#' @title Genome-wide ideogram (CN segments) for multiple samples
-#' 
-#' @description Generate ideograms for selected sample, visualizing copy number variation segments.
+#' @title Genome-wide ideogram (CN segments) for multiple samples.
 #'
-#' @details To create multi-sample ideograms, i.e showing CN segments across multiple samples, this function was created. 
+#' @description Generate ideograms for selected samples, visualizing copy number variation segments.
+#'
+#' @details To create multi-sample ideograms, i.e showing CN segments across multiple samples, this function was created.
 #' This can be used to infer inheritance patterns, hotspots, etc. across multiple samples or the sample ID but for different timepoints.
-#' In addition, this plot can also allow to only plot concordant (or discordant) cn segments between two samples. i.e how two samples differ, or are a like.
-#' The function automatically detects the number of samples provided and sets the plotting parameters accordingly. 
-#' The maximun number of samples this plot can deal with is 4 and sample IDs of interest are given to the `these_sample_ids`. 
+#' In addition, this plot can also allow to only plot concordant (or discordant) cn segments between two samples. i.e how two samples differ, or are alike.
+#' The function automatically detects the number of samples provided and sets the plotting parameters accordingly.
+#' The maximum number of samples this plot can deal with is 4 and sample IDs of interest are given to the `these_sample_ids`.
 #' In order to only plot segments that are concordant between the selected samples, set `komapre` to TRUE and `concordance` to TRUE.
-#' To instead plot discordant CN segments, set this parameter to FALSE. 
+#' To instead plot discordant CN segments, set this parameter to FALSE.
 #'
 #' @param these_sample_ids Sample to be plotted (accepts 2, 3 or 4 samples).
 #' @param plot_title Main title of plot.
@@ -4225,15 +4219,14 @@ fancy_ideogram = function(this_sample_id,
 #' @param chr_select Optional parameter to subset plot to specific chromosomes. Default value is chr1-22.
 #' @param include_cn2 Set to TRUE for plotting CN states == 2.
 #' @param kompare Boolean statement, set to TRUE to call cnvKompare on the selected samples for plotting concordant (or discordant) cn segments across selected chromosomes.
-#' @param concordance Boolean parameter to be used when kompare = TRUE. Default is TRUE, to plot discordant segments, set parameter to FALSE.
+#' @param concordance Boolean parameter to be used when kompare = TRUE. Default is TRUE, to plot discordant segments, set the parameter to FALSE.
 #' @param coding_only Optional. Set to TRUE to restrict to plotting only coding mutations.
 #' @param from_flatfile If set to true the function will use flat files instead of the database.
 #' @param use_augmented_maf Boolean statement if to use augmented maf, default is FALSE.
-#' 
-#' @import ggplot2 dplyr tidyr readr purrr tibble stringr forcats cowplot data.table
 #'
-#' @return Nothing.
-#' 
+#' @return A plot as a ggplot object (grob).
+#'
+#' @import ggplot2 dplyr cowplot
 #' @export
 #'
 #' @examples
@@ -4478,14 +4471,14 @@ fancy_multisamp_ideogram = function(these_sample_ids,
 
 
 #' @title sample-level SV/SSM/CN reports in PDF
-#' 
+#'
 #' @description Construct pdf with sample-level plots, using minimum of arguments
-#' 
+#'
 #' @details This function runs the complete collection of `fancy_x_plots` for a specific sample ID (`this_sample`), with default parameters.
 #' The generated plots are put together into a two-page PDF. In addition, it is also possible to export all individual plots.
-#' This can be done with setting `export_individual_plots` to TRUE. It is also possible to use an already loaded seq file instead of using the 
-#' `this_sample_id` parameter, this is done with the `seq_data` and `maf_data` parameters. Similarly, you can also point this function to a local 
-#' file on disk with the `seq_path` and `maf_path` parameter.
+#' This can be done by setting `export_individual_plots` to TRUE. It is also possible to use an already loaded seq file instead of using the
+#' `this_sample_id` parameter, this is done with the `seq_data` and `maf_data` parameters. Similarly, you can also point this function to a local
+#' file on disk with the `seq_path` and `maf_path` parameters.
 #'
 #' @param this_sample_id Sample ID to be plotted in report.
 #' @param export_individual_plots Boolean parameter, set to TRUE to export individual plots.
@@ -4495,10 +4488,9 @@ fancy_multisamp_ideogram = function(these_sample_ids,
 #' @param maf_data Optional parameter with maf like df already loaded into R.
 #' @param maf_path Optional parameter with path to external maf like file.
 #' 
-#' @import ggplot2 gridExtra dplyr tidyr readr purrr tibble stringr forcats cowplot data.table
-#'
 #' @return Nothing.
 #' 
+#' @import ggplot2 gridExtra dplyr tidyr readr purrr tibble stringr forcats cowplot data.table
 #' @export
 #'
 #' @examples
@@ -4592,7 +4584,17 @@ comp_report = function(this_sample_id,
 }
 
 
-#' Create a circos plots visualizing SVS and SSM with optional gene annotations.
+#' @title SSM and SV Circos Plot.
+#'
+#' @description Create a circos plot visualizing SVS and SSM with optional gene annotations.
+#'
+#' @details This function is using RCircos to create sample-level cirocs plots, annotating SVs and SSM with the potential of adding gene annotations.
+#' To control what variants are to be plotted, simply use the two Boolean parameters; `ssm_calls` and `sv_calls` (both TRUE by default).
+#' Provide the sample ID of interest in with the `this_sample_id` parameter. This function calls `assing_cn_to_ssm` and `get_combined_sv` to retrieve data for plotting.
+#' Since this function does not create a grob, but rather outputs a rendered PDF/PNG, the user has to provide an output path with the `out` parameter.
+#' In addition, the user can control the output format. For PDF, set `pdf` to TRUE (default) and to export the created plot as PNG, set the same parameter to FALSE.
+#' This function also has convenient filtering parameters available, see parameter descriptions for more information and how to properly use the filtering parameters.
+#' Lastly, this plot can also highlight genes of interest. To do so, provide a data frame (comparable to the return from `gene_to_region(return_as = "bed")`) to the `gene_list` parameter.
 #'
 #' @param this_sample_id Sample to be plotted.
 #' @param gene_list Optional parameter to annotate genes on the circos plot from a list of genes (df). Is compatible with gene_to_region (return_as = "bed") output format. See examples.
@@ -4610,7 +4612,8 @@ comp_report = function(this_sample_id,
 #' @param file_name Optional parameter for specifying the file name of generated circos plot, default is "{this_sample}_circos.pdf". If pdf is set to FALSE, a png will be generated, thus the .png extension needs to be attached to the file_name.
 #'
 #' @return Nothing.
-#' @import tidyverse RCircos
+#'
+#' @import dplyr RCircos
 #' @export
 #'
 #' @examples
@@ -4624,11 +4627,8 @@ comp_report = function(this_sample_id,
 #'
 #' fancy_circos_plot_new(this_sample_id = "DOHH-2",
 #'                       ssm_calls = FALSE,
-#'                       sv_calls = TRUE,
 #'                       gene_list = fl_genes_list,
 #'                       chr_select = c("chr8", "chr14", "chr18"),
-#'                       coding_only = FALSE,
-#'                       projection = "grch37",
 #'                       out = "../../plots/",
 #'                       plot_title = "DOHH-2 (SVs) Example Plot",
 #'                       pdf = FALSE,
@@ -4904,18 +4904,30 @@ fancy_circos_plot = function(this_sample_id,
 }
 
 
-#' Generate plot visualizing SV sizes. Subset on variant type, filter on VAF, size etc.
+#' @title Structural Variants Size Plot.
+#'
+#' @description Generate plot visualizing SV sizes. Subset on variant type, filter on VAF, size etc.
+#'
+#' @details Plot sample-level SV sizes across selected chromosomes. This function also has a variety of filtering parameters available.
+#' For example, it is possible to subset the included variants to a specific VAF threshold with `VAF_cutoff`. The `size_cutoff` is another parameter
+#' for filtering the variants on set variant sizes, the default for this parameter is to only include variants of at least 50bp.
+#' This function takes either a sample ID (`this_sample_id`) or an already loaded data frame (`maf_data` or a path to a maf-like file with `maf_path`).
+#' If `this_sample_id` is called, the function will run `GAMBLR::get_combined_sv` to retrieve SV calls.
+#' If either of the `maf` parameters are used, note that it's possible to specify the columns of interest;
+#' (`chrom_a_col`, `start_a_col`, `end_a_col` and `variant_type_col`), allowing this function to work with any maf-like data frames.
+#' This function also allows the user to customize the returned plot. For more info on how to do this, please refer to the aesthetic
+#' parameters; `hide_legend`, `plot_title`, `plot_subtitle`, `adjust_value` and `trim`.
 #'
 #' @param this_sample_id Sample to be plotted.
 #' @param maf_data Optional parameter with copy number df already loaded into R.
 #' @param maf_path Optional parameter with path to external cn file.
 #' @param chrom_a_col Index of column holding chromosome (to be used with either maf_data or maf_path).
-#' @param start_a_col Index of column holding start coordiantes (to be used with either maf_data or maf_path).
+#' @param start_a_col Index of column holding start coordinates (to be used with either maf_data or maf_path).
 #' @param end_a_col Index of column holding end coordinates (to be used with either maf_data or maf_path).
 #' @param variant_type_col Index of column holding variant type information (to be used with either maf_data or maf_path).
 #' @param vaf_cutoff Threshold for filtering variants on VAF (events with a VAF > cutoff will be retained).
 #' @param size_cutoff Threshold for filtering variants on size, default is 50bp.
-#' @param adjust_value A multiplicate bandwidth adjustment. This makes it possible to adjust the bandwidth while still using the a bandwidth estimator. For example, adjust = 1/2 means use half of the default bandwidth.
+#' @param adjust_value A multiplicate bandwidth adjustment. This makes it possible to adjust the bandwidth while still using the bandwidth estimator. For example, adjust = 1/2 means use half of the default bandwidth.
 #' @param trim If FALSE, the default, each density is computed on the full range of the data.
 #' @param chr_select Optional argument for subsetting on selected chromosomes, default is all autosomes.
 #' @param hide_legend Set to True to remove legend from plot, default is FALSE.
@@ -4923,8 +4935,9 @@ fancy_circos_plot = function(this_sample_id,
 #' @param plot_subtitle Subtitle for created plot.
 #' @param projection Genomic projection for SVs and circos plot. Accepted values are grch37 and hg38.
 #'
-#' @return Nothing.
-#' @import tidyverse
+#' @return A plot as a ggplot object (grob).
+#'
+#' @import dplyr ggplot2 cowplot 
 #' @export
 #'
 #' @examples
@@ -4932,21 +4945,21 @@ fancy_circos_plot = function(this_sample_id,
 #' myplot2 = fancy_sv_sizedens(this_sample_id = "HTMCP-01-06-00422-01A-01D", size_cutoff = 0, chr_select = c("chr1", "chr2"))
 #'
 fancy_sv_sizedens = function(this_sample_id,
-                            maf_data,
-                            maf_path = NULL,
-                            chrom_a_col = 3,
-                            start_a_col = 4,
-                            end_a_col = 5,
-                            variant_type_col = 9,
-                            vaf_cutoff = 0,
-                            size_cutoff = 50,
-                            adjust_value = 1,
-                            trim = FALSE,
-                            hide_legend = FALSE,
-                            chr_select = paste0("chr", c(1:22)),
-                            plot_title = paste0(this_sample_id),
-                            plot_subtitle = paste0("SV sizes for Manta calls. Dashed line annotates mean variant size.\nVAF cut off: ", vaf_cutoff,", SV size cut off: ", size_cutoff),
-                            projection = "grch37"){
+                             maf_data,
+                             maf_path = NULL,
+                             chrom_a_col = 3,
+                             start_a_col = 4,
+                             end_a_col = 5,
+                             variant_type_col = 9,
+                             vaf_cutoff = 0,
+                             size_cutoff = 50,
+                             adjust_value = 1,
+                             trim = FALSE,
+                             hide_legend = FALSE,
+                             chr_select = paste0("chr", c(1:22)),
+                             plot_title = paste0(this_sample_id),
+                             plot_subtitle = paste0("SV sizes for Manta calls. Dashed line annotates mean variant size.\nVAF cut off: ", vaf_cutoff,", SV size cut off: ", size_cutoff),
+                             projection = "grch37"){
   if(!missing(maf_data)){
     svs = maf_data
     svs = as.data.frame(svs)
@@ -5017,8 +5030,18 @@ fancy_sv_sizedens = function(this_sample_id,
 }
 
 
-#' Visualize (stacked barplot) genomic read-subsets across a selection of samples.
+#' @title Plot Alignment Metrics
 #'
+#' @description Visualize (stacked barplot) genomic read-subsets (metrics) across a selection of samples.
+#'
+#' @details This function is available for plotting relevant alignment metrics (read-subsets) for a selection of samples. Per default, this plot returns the following read-metrics;
+#' total n reads, total n uniquely mapped reads, total n duplicated reads. This plot can also be superimposed with read metrics for an additional sample list,
+#' allowing for easy comparisons between different sample populations. To run this function, simply specify the sample IDs you are interested in with `these_sample_ids`.
+#' This parameter expects a data frame with sample IDs in the first column. Optionally, the user can also provide an already subset (with the sample IDS of interest)
+#' meta data table with `these_samples_metadata`. For adding a comparison group to the returned plot, simply give another cohort/set of samples to the `comparison_group` parameter.
+#' Similarly to `these_sample_ids`, this parameter also expects a data frame with sample IDs in the first column. In addition, this plot can also add additional read-metrics such as
+#' mean values for all plotted metrics and corrected coverage. To enable these features, simply set `add_mean` and `add_corrected_coverage` to TRUE (default).
+#' 
 #' @param these_sample_ids Data frame with sample IDs (to be plotted) in the first column.
 #' @param metadata Optional argument, used to derive sample IDs if sample_table is Null.
 #' @param these_samples_metadata GAMBL metadata subset to the cases you want to process.
@@ -5026,13 +5049,14 @@ fancy_sv_sizedens = function(this_sample_id,
 #' @param seq_type Subset qc metrics to a specific seq_type, default is genome.
 #' @param add_mean Set to TRUE to superimpose mean values of plotted variables. Default is TRUE.
 #' @param add_corrected_coverage Set to TRUE to add corrected coverage for selected samples.
-#' @param keep_cohort If no df with sample IDs is supplied (these_sample_ids = NULL) the function calls get_gambl_metadata and subsets on selected cohort.
+#' @param keep_cohort If no df with sample IDs is supplied (these_sample_ids = NULL) the function calls get_gambl_metadata and subsets on selected cohorts.
 #' @param keep_pathology If no df with sample IDs is supplied (these_sample_ids = NULL) the function calls get_gambl_metadata and subsets on selected pathology.
 #' @param this_color_palette Optional parameter that holds the selected colours for the plotted bars.
-#' @param plot_sub Optional parameter, add a subtitle to alignment metric plot.
+#' @param plot_sub Optional parameter, add a subtitle to the alignment metric plot.
 #'
-#' @return plot as ggplot object.
-#' @import tidyverse cowplot
+#' @return A plot as a ggplot object (grob).
+#'
+#' @import ggplot2 cowplot dplyr data.table
 #' @export
 #'
 #' @examples
@@ -5040,19 +5064,18 @@ fancy_sv_sizedens = function(this_sample_id,
 #' #subset on FL cases with QC metrics available and plot
 #' kridel_fl = get_gambl_metadata() %>%
 #'  dplyr::filter(pathology == "FL", cohort == "FL_Kridel") %>%
-#'  dplyr::select(sample_id) %>%
-#'  pull(sample_id)
+#'  dplyr::select(sample_id)
 #'
-#' my_plot_1 = fancy_alignment_plot(these_sample_ids = kridel_fl, seq_type = "genome")
+#' my_plot_1 = fancy_alignment_plot(these_sample_ids = kridel_fl)
 #'
 #' #Example 2 - using already filtered metadata (these_samples_metadata)
 #' fl_metadata = get_gambl_metadata() %>%
 #'  dplyr::filter(pathology == "FL", cohort == "FL_Kridel")
 #'
-#' my_plot_2 = fancy_alignment_plot(these_samples_metadata = fl_metadata, seq_type = "genome")
+#' my_plot_2 = fancy_alignment_plot(these_samples_metadata = fl_metadata)
 #'
 #' #Example 3 - using in-house metadata fitlering options
-#' my_plot_3 = fancy_alignment_plot(keep_cohort = "FL_Kridel", keep_pathology = "FL", seq_type = "genome")
+#' my_plot_3 = fancy_alignment_plot(keep_cohort = "FL_Kridel", keep_pathology = "FL")
 #'
 fancy_alignment_plot = function(these_sample_ids,
                                 metadata,
@@ -5158,9 +5181,21 @@ fancy_alignment_plot = function(these_sample_ids,
 }
 
 
-
-#' Plot for visualizing QC metrics and allowing for grouping by different metadata columns.
+#' @title Plot Quality Control Metrics. 
 #'
+#' @description Plot for visualizing QC metrics and allowing for grouping by different metadata columns.
+#'
+#' @details This function is readily available for visualizing a variety of quality control metrics. To get started, the user can easily overview all the available metrics with `return_plotdata = TRUE`.
+#' When this parameter is set to TRUE, a vector of characters will be returned detailing all the, for this plot, available metrics. After deciding what metric to plot, simply give the metric of choice to the `plot_data` parameter.
+#' This function also lets the user provide a data frame with sample IDs to be included in the plot. Optionally, the user can also provide an already filtered metadata table with sample IDs of interest to the `these_samples_metadata`.
+#' If none of the two parameters are supplied, the user can easily restrict the plot to any cohort and/or pathology of their liking. This is done by calling `keep_cohort` and `keep_pathology`.
+#' If these parameters are used, the function will retrieve metadata for all available GAMBL sample IDs and then subset to the specified cohort or pathology.
+#' The layout of the returned plot can also be further customized with `sort_by`. This parameter controls the order in which samples would appear. Similarly, `fill_by` allows the user to control on what factor the plot will be filled by.
+#' In addition, the generated plot can also be returned as an interactive HTML rendering, allowing the user to easily hover over any of the points in the plot and get expanded information on each data point. To toggle this function, set the `interactive` parameter to TRUE.
+#' If an interactive plot is generated, it is also possible to dictate what information should be available in the plotted data points. Default for this parameter is sample ID and cohort.
+#' Sometimes it can also be useful to see how a subset of samples compares to another group; to do this one could call the function with a list of additional sample IDs given to the `comparison_samples` parameter (see examples for more information).
+#' lastly, the plot can also be configured with custom plot title and axis labels (`plot_title` and `y_axis_lab`). For more information, see examples and parameter descriptions.
+#' 
 #' @param these_sample_ids Data frame with sample IDs (to be plotted) in the first column (has to be named sample_id).
 #' @param keep_cohort Optional parameter to be used when these_sample is NULL. Calls get_gambl_metadata() and filters on the cohort supplied in this parameter.
 #' @param keep_pathology Optional parameter to be used when these_sample is NULL. Calls get_gambl_metadata() and filters on the pathology supplied in this parameter.
@@ -5177,8 +5212,9 @@ fancy_alignment_plot = function(these_sample_ids,
 #' @param y_axis_lab Plotting parameter, label of y-axis.
 #' @param return_plotdata Optional parameter, if set to TRUE a list of acceptable data types for plotting will be returned, and nothing else.
 #'
-#' @return plot as ggplot object.
-#' @import tidyverse cowplot ggbeeswarm plotly
+#' @return A plot as a ggplot object (grob).
+#'
+#' @import dplyr ggplot2 cowplot ggbeeswarm plotly
 #' @export
 #'
 #' @examples
@@ -5189,8 +5225,6 @@ fancy_alignment_plot = function(these_sample_ids,
 #'  dplyr::select(sample_id) %>%
 #'
 #' my_plot_1 = fancy_qc_plot(these_sample_ids = kridel_fl,
-#'                           seq_type = "genome",
-#'                           interactive = FALSE,
 #'                           plot_data = "AverageBaseQuality",
 #'                           y_axis_lab = "Average Base Quality",
 #'                           plot_title = "Average Base Quality For FL_Kridel")
@@ -5200,7 +5234,6 @@ fancy_alignment_plot = function(these_sample_ids,
 #'  dplyr::filter(pathology == "FL", cohort == "FL_Kridel")
 #'
 #' my_plot_2 = fancy_qc_plot(these_samples_metadata = fl_metadata,
-#'                           seq_type = "genome",
 #'                           interactive = TRUE,
 #'                           labels = c("cohort", "pathology"),
 #'                           plot_data = "AverageBaseQuality",
@@ -5210,7 +5243,6 @@ fancy_alignment_plot = function(these_sample_ids,
 #' #Example 3 - using in-house metadata filtering options
 #' my_plot_3 = fancy_qc_plot(keep_cohort = "FL_Kridel",
 #'                           keep_pathology = "FL",
-#'                           seq_type = "genome",
 #'                           plot_data = "AverageBaseQuality",
 #'                           y_axis_lab = "Average Base Quality",
 #'                           plot_title = "Average Base Quality For FL_Kridel")
@@ -5330,7 +5362,16 @@ fancy_qc_plot = function(these_sample_ids,
 }
 
 
-#' Visualize proportional coverage (10X and 30X) for selected samples and add comparison group (optional).
+#' @title Proportional Coverage Plot.
+#'
+#' @description Visualize proportional coverage (10X and 30X) for selected samples and add comparison group (optional).
+#'
+#' @details Create a highly customizable plot visualizing proportional alignment metrics i.e what proportions of the aligned reads that show 10x and 30x coverage.
+#' This function provides straightforward subsetting parameters allowing for a straightforward execution. Either provide a data frame with sample IDs in the first column to the `these_samples_ids` parameter.
+#' Or, call one of the optional parameters for using an already subset metadata table (subset to the sample IDs of interest).
+#' If `these_samples_ids` and `these_samples_metadata` is not provided, the user can subset al GAMBL samples on the fly with `keep_cohort` and/or `keep_pathology`.
+#' This function can also plot the same results for a comparison group of interest, i.e another table with sample IDs. This can be useful for visualising how certain cohorts/pathologies compares to each other.
+#' To do this one would call the function with `comparison_samples` parameter. For more info on how to use this function, please refer to examples, vignettes (fancy_vignette) and parameter descriptions.
 #'
 #' @param these_sample_ids Data frame with sample IDs (to be plotted) in the first column.
 #' @param metadata Optional, user can provide a metadata df to subset sample IDs from.
@@ -5341,8 +5382,9 @@ fancy_qc_plot = function(these_sample_ids,
 #' @param seq_type Selected seq type for incoming QC metrics.
 #' @param plot_subtitle Plotting parameter, subtitle of generated plot.
 #'
-#' @return plot as ggplot object.
-#' @import tidyverse cowplot
+#' @return A plot as a ggplot object (grob).
+#'
+#' @import dplyr ggplot2 cowplot
 #' @export
 #'
 #' @examples
@@ -5353,16 +5395,16 @@ fancy_qc_plot = function(these_sample_ids,
 #'  dplyr::select(sample_id) %>%
 #'  pull(sample_id)
 #'
-#' my_plot_1 = fancy_propcov_plot(these_sample_ids = kridel_fl, seq_type = "genome")
+#' my_plot_1 = fancy_propcov_plot(these_sample_ids = kridel_fl)
 #'
 #' #Example 2 - using already filtered metadata (these_samples_metadata)
 #' fl_metadata = get_gambl_metadata() %>%
 #'  dplyr::filter(pathology == "FL", cohort == "FL_Kridel")
 #'
-#' my_plot_2 = fancy_propcov_plot(these_samples_metadata = fl_metadata, seq_type = "genome")
+#' my_plot_2 = fancy_propcov_plot(these_samples_metadata = fl_metadata)
 #'
 #' #Example 3 - using in-house metadata fitlering options
-#' my_plot_3 = fancy_propcov_plot(keep_cohort = "FL_Kridel", keep_pathology = "FL", seq_type = "genome")
+#' my_plot_3 = fancy_propcov_plot(keep_cohort = "FL_Kridel", keep_pathology = "FL")
 #'
 fancy_propcov_plot = function(these_sample_ids,
                               metadata,
@@ -5450,9 +5492,18 @@ fancy_propcov_plot = function(these_sample_ids,
   return(p)
 }
 
-
-#' Visualize proportional metrics for selected samples.
+#' @title Proportional Metrics Plot.
+#' 
+#' @details Visualize proportional metrics for selected samples.
 #'
+#' @description This function takes all the available proportional quality control metrics and a list of sample IDs (plotted on the x-ais) and plots the vlaues along the y-axis.
+#' This function provides straightforward subsetting parameters allowing for a straightforward execution.
+#' Either provide a data frame with sample IDs in the first column to the `these_samples_ids` parameter.
+#' Or, call one of the optional parameters for using an already subset metadata table (subset to the sample IDs of interest).
+#' If `these_samples_ids` and `these_samples_metadata` is not provided, the user can subset al GAMBL samples on the fly with `keep_cohort` and/or `keep_pathology`.
+#' This function also provides parameters for easy customization of the plot aesthetics. For example, the subtitle of the plot can easily be controlled with the `plot_subtitle` parameter.
+#' For usage examples and more information, refer to the parameter descriptions and examples in the fancy vignette.
+#' 
 #' @param these_sample_ids Data frame with sample IDs (to be plotted) in the first column.
 #' @param metadata Optional, user can provide a metadata df to subset sample IDs from.
 #' @param these_samples_metadata GAMBL metadata subset to the cases you want to process.
@@ -5461,8 +5512,9 @@ fancy_propcov_plot = function(these_sample_ids,
 #' @param seq_type Selected seq type for incoming QC metrics.
 #' @param plot_subtitle Plotting parameter, subtitle of generated plot.
 #'
-#' @return plot as ggplot object.
-#' @import tidyverse cowplot
+#' @return A plot as a ggplot object (grob).
+#'
+#' @import dplyr ggplot2 cowplot
 #' @export
 #'
 #' @examples
@@ -5473,16 +5525,16 @@ fancy_propcov_plot = function(these_sample_ids,
 #'  dplyr::select(sample_id) %>%
 #'  pull(sample_id)
 #'
-#' my_plot_1 = fancy_proportions_plot(these_sample_ids = kridel_fl, seq_type = "genome")
+#' my_plot_1 = fancy_proportions_plot(these_sample_ids = kridel_fl)
 #'
 #' #Example 2 - using already filtered metadata (these_samples_metadata)
 #' fl_metadata = get_gambl_metadata() %>%
 #'  dplyr::filter(pathology == "FL", cohort == "FL_Kridel")
 #'
-#' my_plot_2 = fancy_proportions_plot(these_samples_metadata = fl_metadata, seq_type = "genome")
+#' my_plot_2 = fancy_proportions_plot(these_samples_metadata = fl_metadata)
 #'
 #' #Example 3 - using in-house metadata fitlering options
-#' my_plot_3 = fancy_proportions_plot(keep_cohort = "FL_Kridel", keep_pathology = "FL", seq_type = "genome")
+#' my_plot_3 = fancy_proportions_plot(keep_cohort = "FL_Kridel", keep_pathology = "FL")
 #'
 fancy_proportions_plot = function(these_sample_ids,
                                   metadata,
