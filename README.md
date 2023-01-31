@@ -1,7 +1,7 @@
 # GAMBLR - an R package with convenience functions for working with GAMBL results
 
 ## Installation
-If you have access to gphost, the easiest way to obtain and run GAMBLR is to do this via Rstudio on a gphost. If you do not have access to gphost, please refer to the [Run Remote On A Local Machine](#Run Remote On A Local Machine) section. Assuming you are running Rstudio on gphost, clone the repo to your home directory (not your gambl working directory).
+If you have access to gphost, the easiest way to obtain and run GAMBLR is to do this via Rstudio on a gphost. If you do not have access to gphost, please refer to the [Run Remote On A Local Machine](#Run Remote On A Local Machine) section. Assuming you are running Rstudio on gphost, clone the repo to your home directory (not your GAMBL working directory).
 
 ```
 git clone git@github.com:morinlab/GAMBLR.git
@@ -195,3 +195,38 @@ Error: '/projects/rmorin/projects/gambl-repos/gambl-rmorin/data/metadata/gambl_a
 
 ## Contributing
 As GAMBL users (GAMBLRs, so to speak) rely on the functionality of this package, the Master branch is protected. All commits must be submitted via pull request on a branch. Please refer to the [GAMBL](https://github.com/morinlab/gambl#contribution-guidelines) documentation for details on how to do this.
+
+### For Developers
+When designing new functions, please refer to guid-lines and best practices detailed [here](https://r-pkgs.org/). For your convenience, here is an empty function-skeleton that can be recycled when designing new GAMBLR functions. Ensure to alwyas provide the required documentation for any new functions. See [this](https://r-pkgs.org/man.html#title-description-details) section for more details on best practices for documenting R functions. Unsure what information goes where in a function documentation? Here is a brief outline for what the different sections should include. For more information, see [this](https://r-pkgs.org/man.html#title).
+
+#### Title
+The title is taken from the first sentence. It should be written in sentence case, not end in a full stop, and be followed by a blank line. The title is shown in various function indexes (e.g. help(package = "somepackage")) and is what the user will usually see when browsing multiple functions.
+
+#### Description
+The description is taken from the next paragraph. It’s shown at the top of documentation and should briefly describe the most important features of the function.
+
+#### Details
+Additional details are anything after the description. Details are optional, but can be any length so are useful if you want to dig deep into some important aspect of the function. Note that, even though the details come right after the description in the introduction, they appear much later in rendered documentation.
+
+```
+#' @title
+#'
+#' @description
+#'
+#' @details
+#'
+#' @param a_parameter 
+#' @param another_parameter 
+#'
+#' @return
+#' 
+#' @import
+#' @export
+#'
+#' @examples
+#'
+
+function_name = function(a_parameter,
+                         another_parameter){
+                         }
+```
