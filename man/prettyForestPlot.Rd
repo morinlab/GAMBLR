@@ -2,7 +2,7 @@
 % Please edit documentation in R/viz.R
 \name{prettyForestPlot}
 \alias{prettyForestPlot}
-\title{Create a forest plot comparing mutation frequencies for a set of genes between two groups.}
+\title{Forest Plot.}
 \usage{
 prettyForestPlot(
   maf,
@@ -48,12 +48,18 @@ prettyForestPlot(
 \item{max_q}{cut off for q values to be filtered in fish test}
 }
 \value{
-A convenient list containing all the data frames that were created in making the plot, including the mutation matrix.
-
-It also produces (and returns) ggplot object with a side-by-side forest plot and bar plot showing mutation incidences across two groups.
+A convenient list containing all the data frames that were created in making the plot, including the mutation matrix. It also produces (and returns) ggplot object with a side-by-side forest plot and bar plot showing mutation incidences across two groups.
 }
 \description{
 Create a forest plot comparing mutation frequencies for a set of genes between two groups.
+}
+\details{
+This function returns two types of plot (box plot and forest plot), the user can either view them separately or arranged on the same grob.
+In addition this function also lets the user control the mutation frequencies of the plotted genes.
+If no gene list is provided with \code{genes}, this function auto-defaults to all genes in the incoming maf.
+The user can then control the minimum number of mutations requirement for a gene to be included in the plot.
+This is done with the \code{min_mutations} parameter.
+For extended examples on how to use this function, refer to the example inside the function documentation or the vignettes.
 }
 \examples{
 metadata = get_gambl_metadata(case_set = "tFL-study") #\%>\%

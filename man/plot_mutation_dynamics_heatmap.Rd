@@ -2,7 +2,7 @@
 % Please edit documentation in R/viz.R
 \name{plot_mutation_dynamics_heatmap}
 \alias{plot_mutation_dynamics_heatmap}
-\title{Plot a heatmap comparing the VAF of mutations in T1/T2 pairs.}
+\title{VAF Heatmap}
 \usage{
 plot_mutation_dynamics_heatmap(
   maf1,
@@ -59,7 +59,7 @@ Nothing
 \description{
 Plot a heatmap comparing the VAF of mutations in T1/T2 pairs.
 }
-\examples{
-plot = plot_mutation_dynamics_heatmap(maf_df1, maf_df2, "patient_id", gene_orientation = "bottom", annotate_zero = TRUE, top_genes = 100, drop_inless_lowvaf = TRUE, vaf_cutoff_to_drop = 0.04, cluster_rows = TRUE)
-
+\details{
+Currently unfinished plotting function. Thus, I have removed it from export until it's in a state where it can be included in GAMBLR.
+Parameter descriptions need to be updated so that the origin of the incoming data is clear. Examples would also need to be added before this function gets exported into NAMESPACE.
 }
