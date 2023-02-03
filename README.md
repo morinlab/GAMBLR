@@ -77,7 +77,7 @@ session = GAMBLR::get_ssh_session()
 Sys.setenv(R_CONFIG_ACTIVE = "remote")
 ```
 
-#### Run GAMBLR On Your Local Machine
+#### Run GAMBLR
 9. Test if setup was successful (e.g call `get_gambl_metadata()` to retrieve meta data for all gambl samples).
 
 ```
@@ -197,7 +197,7 @@ Error: '/projects/rmorin/projects/gambl-repos/gambl-rmorin/data/metadata/gambl_a
 As GAMBL users (GAMBLRs, so to speak) rely on the functionality of this package, the Master branch is protected. All commits must be submitted via pull request on a branch. Please refer to the [GAMBL](https://github.com/morinlab/gambl#contribution-guidelines) documentation for details on how to do this.
 
 ### For Developers
-When designing new functions, please refer to guid-lines and best practices detailed [here](https://r-pkgs.org/). For your convenience, here is an empty function-skeleton that can be recycled when designing new GAMBLR functions. Ensure to alwyas provide the required documentation for any new functions. See [this](https://r-pkgs.org/man.html#title-description-details) section for more details on best practices for documenting R functions. Unsure what information goes where in a function documentation? Here is a brief outline for what the different sections should include. For more information, see [this](https://r-pkgs.org/man.html#title).
+When designing new functions, please refer to guid-lines and best practices detailed [here](https://r-pkgs.org/). For your convenience, here is an empty function-skeleton that can be recycled when designing new GAMBLR functions. Ensure to always provide the required documentation for any new functions. See [this](https://r-pkgs.org/man.html#title-description-details) section for more details on best practices for documenting R functions. Unsure what information goes where in a function documentation? Here is a brief outline for what the different sections should include. For more information, see [this](https://r-pkgs.org/man.html#title).
 
 #### Title
 The title is taken from the first sentence. It should be written in sentence case, not end in a full stop, and be followed by a blank line. The title is shown in various function indexes (e.g. help(package = "somepackage")) and is what the user will usually see when browsing multiple functions.
@@ -229,4 +229,44 @@ Additional details are anything after the description. Details are optional, but
 function_name = function(a_parameter,
                          another_parameter){
                          }
+```
+#### Example Function
+For your convenience, as an example, here is a perfectly documented GAMBLR function, following the best practices detailed above.
+
+```
+#' @title ASHM Rainbow Plot
+#'
+#' @description Make a rainbow plot of all mutations in a region, ordered and coloured by metadata.
+#'
+#' @details This function creates a rainbow plot for all mutations in a region. Region can either be specified with the `region` parameter,
+#' or the user can provide a maf that has already been subset to the region(s) of interest with `mutation_maf`.
+#' As a third alternative, the regions can also be specified as a bed file with `bed`.
+#' Lastly, this function has a variety of parameters that can be used to further customize the returned plot in many different ways.
+#' Refer to the parameter descriptions, examples as well as the vignettes for more demonstrations how this function can be called.
+#'
+#' @param mutations_maf A data frame containing mutations (MAF format) within a region of interest (i.e. use the get_ssm_by_region).
+#' @param metadata should be a data frame with sample_id as a column.
+#' @param exclude_classifications Optional argument for excluding specific classifications from a metadeta file.
+#' @param drop_unmutated Boolean argument for removing unmutated sample ids in mutated cases.
+#' @param classification_column The name of the metadata column to use for ordering and colouring samples.
+#' @param bed Optional data frame specifying the regions to annotate (required columns: start, end, name).
+#' @param region Genomic region for plotting in bed format.
+#' @param custom_colours Provide named vector (or named list of vectors) containing custom annotation colours if you do not want to use standartized pallette.
+#' @param hide_ids Boolean argument, if TRUE, ids will be removed.
+#'
+#' @return ggplot2 object
+#'
+#' @import dplyr ggplot2
+#' @export
+#'
+#' @examples
+#' #basic usage
+#' region = "chr6:90975034-91066134"
+#' metadata = get_gambl_metadata()
+#' plot = ashm_rainbow_plot(metadata = metadata, region = region)
+#'
+#' #advanced usages
+#' mybed = data.frame(start=c(128806578,128805652,128748315), end=c(128806992,128809822,128748880), name=c("TSS","enhancer","MYC-e1"))
+#' ashm_rainbow_plot(mutations_maf=my_mutations,metadata=my_metadata,bed=mybed)
+#'
 ```
