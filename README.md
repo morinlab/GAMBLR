@@ -38,13 +38,15 @@ git clone https://github.com/morinlab/gambl
 git clone https://github.com/morinlab/GAMBLR
 ```
 
-3. Update the **paths** in your local [config.yml](https://github.com/morinlab/GAMBLR/blob/master/config.yml) to point to the recently cloned, local **gambl** folder (repo_base). In your favorite text editor, edit the line shown below (under *remote*).
+3. Update the **paths** in your local [config.yml](https://github.com/morinlab/GAMBLR/blob/master/config.yml) to point to the recently cloned, local **gambl** folder (repo_base). In your favorite text editor, edit the line shown below (under *remote*). Similarly, you will also need to edit the line above it to point to where you will eventually sync the GAMBL results.
 
 ```
-repo_base: "path/to/your/local/gambl_repo/"
+remote:
+    project_base: "/path/to/your/local/gambl_results_directory/"
+    repo_base: "/path/to/your/local/gambl_repo/"
 ```
 
-4. Set the **working directory** in Rstudio. Open Rstudio on your local machine and locate the repo you cloned in the step 2.
+4. Set the **working directory** in Rstudio. Open Rstudio on your local machine and locate the repo you cloned previously.
 
 ```
 setwd("~/git_repos/GAMBLR-master")
