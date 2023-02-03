@@ -596,10 +596,11 @@ get_gambl_metadata = function(seq_type_filter = "genome",
   sample_meta = sample_meta %>%
     dplyr::filter(seq_type %in% seq_type_filter & tissue_status %in% tissue_status_filter) %>%
     dplyr::select(-sex)
+  
   #if only normals were requested, just return what we have because there is nothing else to join
-  if(tissue_status_filter == "normal"){
-    return(sample_meta)
-  }
+  #if(tissue_status_filter == "normal"){
+  #  return(sample_meta)
+  #}
 
   #if we only care about genomes, we can drop/filter anything that isn't a tumour genome
   #The key for joining this table to the mutation information is to use sample_id. Think of this as equivalent to a library_id. It will differ depending on what assay was done to the sample.
