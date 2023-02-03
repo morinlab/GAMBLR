@@ -22,15 +22,18 @@ library(knitr)
 library(grid)
 library(g3viz)
 library(maftools)
+library(ssh)
 ```
 
-# Remote useage
-If you are running GAMBLR locally in Rstudio (remote). Remember to un-comment this chunk before trying to knit the vignette. For more info, see main README.md for how to run GAMBLR remote.
-#```{r remote}
-#R_CONFIG_ACTIVE = "remote"
-#session = get_ssh_session()
-#remote_session = check_remote_configuration(auto_connect = TRUE)
-#```
+```{r remote include = FALSE, warning = FALSE, message = FALSE}
+#check if remote session
+if(check_host()){
+ R_CONFIG_ACTIVE = "remote" 
+}
+
+session = get_ssh_session()
+remote_session = check_remote_configuration(auto_connect = TRUE)
+```
 
 # Simple Somatic Mutations
 This vignette demonstrates how to work with Simple Somatic Mutations (SSM) results within GAMBLR, all the way from obtaining results (in various ways), linking with metadata, performing data analysis and annotations to producing publication ready figures.
@@ -339,7 +342,7 @@ prettyRainfallPlot(this_sample_id = "HTMCP-01-06-00422-01A-01D",
 ```
 
 ### Lollipop Plot
-The function `pretty_lollipop_plot` is perfect for creating an appealing, flexible and interactive HTML-style lollipop plot from mutational data using a modified version of g3Lollipop function from g3viz package. This function only takes for parameters; `maf_df` which is the data frame containing the mutations to be ploted. `gene` this parameter controls what gene to plot mutations for. Lastly, `plot_title` lets you specify the name of the plot and with `plot_theme` you can specify the plot theme. Please note that in order for this function to run, you must first installed the forked version of [g3viz](https://github.com/morinlab/g3viz/).  
+The function `pretty_lollipop_plot` is perfect for creating an appealing, flexible and interactive HTML-style lollipop plot from mutational data using a modified version of g3Lollipop function from g3viz package. This function only takes for parameters; `maf_df` which is the data frame containing the mutations to be plotted. `gene` this parameter controls what gene to plot mutations for. Lastly, `plot_title` lets you specify the name of the plot and with `plot_theme` you can specify the plot theme. Please note that in order for this function to run, you must first installed the forked version of [g3viz](https://github.com/morinlab/g3viz/).  
 ```{r pretty_lollipop_plot, dpi = 150, message = FALSE, warning = FALSE}
 #get metadata (Fl and DLBCL) with pairing status matched 
 metadata = get_gambl_metadata() %>%

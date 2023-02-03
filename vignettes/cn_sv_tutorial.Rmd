@@ -22,16 +22,18 @@ library(knitr)
 library(grid)
 library(g3viz)
 library(maftools)
+library(ssh)
 ```
 
-# Remote useage
-If you are running GAMBLR locally in Rstudio (remote). Remember to un-comment this chunk before trying to knit the vignette. For more info, see main README.md for how to run GAMBLR remote.
-#```{r remote}
-#R_CONFIG_ACTIVE = "remote"
-#session = get_ssh_session()
-#remote_session = check_remote_configuration(auto_connect = TRUE)
-#```
+```{r remote include = FALSE, warning = FALSE, message = FALSE}
+#check if remote session
+if(check_host()){
+ R_CONFIG_ACTIVE = "remote" 
+}
 
+session = get_ssh_session()
+remote_session = check_remote_configuration(auto_connect = TRUE)
+```
 
 # Copy Number & Structural Variants
 This vignette demonstrates how to return Copy Number (CN) and Structural Variant (SV) data in a variety of different ways. The method of choice might be different for any given application or planned downstream analysis, as well as what information you, as a researcher, have at hand. This vignette also highlights how to visualize CN data, using established GAMBLR functions. 
@@ -264,6 +266,19 @@ fancy_cnbar(this_sample_id = this_sample_id,
             plot_subtitle = "grch37",
             chr_select =  paste0("chr", c(1:22)),
             include_cn2 = TRUE)
+```
+
+## Copy Number Segments Plot
+Another way to visualize CN segments is with the `focal_cn_plot`. This function visualizes all CN segments for a defined region, colours the returned segments based on lymphgen information. In addition, this function takes either a specified region (chr:start-end format). If no region is supplied, the user can give the function a gene symbol with `gene`. If so, the function will internally retrieve the region for the specified gene.Sample IDs are specified along the y-axis and the genomic postilion iis visualized along the x-axis.
+```{r cnfocal, dpi = 150}
+#get metadata
+this_metadata = get_gambl_metadata()
+
+#get myc region
+myc_region = gene_to_region(gene_symbol = "MYC", return_as = "region")
+
+#build plot
+focal_cn_plot(these_samples_metadata = this_metadata, region = myc_region, type = "loss", crop_distance = 100000000)
 ```
 
 ## Sample-level Ideograms.
