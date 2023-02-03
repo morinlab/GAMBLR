@@ -361,11 +361,11 @@ prettyRainfallPlot = function(this_sample_id,
 
 gene_mutation_tally = function(maf_df,these_samples_metadata,these_genes,grouping_variable="cohort"){
   meta = dplyr::select(these_samples_metadata,sample_id,{{grouping_variable}})
-  maf_filt = dplyr::filter(maf_df,Hugo_Symbol %in% these_genes, Variant_Classification %in% coding_class) %>% 
+  maf_filt = dplyr::filter(maf_df,Hugo_Symbol %in% these_genes, Variant_Classification %in% coding_class) %>%
     dplyr::filter(Variant_Classification !="Silent")
-  meta_anno = left_join(maf_filt,meta,by=c("Tumor_Sample_Barcode"="sample_id")) %>% 
-    group_by(Hugo_Symbol,Tumor_Sample_Barcode) %>% 
-    slice_head() %>% 
+  meta_anno = left_join(maf_filt,meta,by=c("Tumor_Sample_Barcode"="sample_id")) %>%
+    group_by(Hugo_Symbol,Tumor_Sample_Barcode) %>%
+    slice_head() %>%
     ungroup()
   denom = meta %>% group_by(!!sym(grouping_variable)) %>% tally() %>% dplyr::rename(c("total"="n"))
   meta_anno_tally = group_by(meta_anno,Hugo_Symbol,!!sym(grouping_variable)) %>% tally()
@@ -395,22 +395,22 @@ prettyGeneCloud = function(maf_df,these_genes,other_genes,
   if(missing(these_genes)){
     these_genes = pull(lymphoma_genes,Gene)
   }
-  #drop genes not in the list then tally only coding variants (by default). 
+  #drop genes not in the list then tally only coding variants (by default).
   # TODO: eventually allow an option to collapse samples from the same patient
   if(missing(other_genes)){
     these_genes_maf = dplyr::filter(maf_df,Hugo_Symbol %in% these_genes)
   }else{
     these_genes_maf = dplyr::filter(maf_df,Hugo_Symbol %in% c(these_genes,other_genes))
   }
-  
+
   #drop non-coding
   these_genes_maf = dplyr::filter(these_genes_maf,Variant_Classification %in% coding_vc)
-  these_genes_unique = group_by(these_genes_maf,Hugo_Symbol,Tumor_Sample_Barcode) %>% 
-    slice_head() %>% ungroup() %>% group_by(Hugo_Symbol) %>% tally() 
+  these_genes_unique = group_by(these_genes_maf,Hugo_Symbol,Tumor_Sample_Barcode) %>%
+    slice_head() %>% ungroup() %>% group_by(Hugo_Symbol) %>% tally()
   print(as.data.frame(head(these_genes_unique,25)))
   if(!missing(other_genes)){
     #assign a colour to each gene list
-    these_genes_unique = these_genes_unique %>% 
+    these_genes_unique = these_genes_unique %>%
       mutate(this_col=ifelse(Hugo_Symbol %in% these_genes,these_genes_colour,other_genes_colour)) %>% arrange(desc(n))
     wordcloud::wordcloud(these_genes_unique$Hugo_Symbol,these_genes_unique$n,colors=these_genes_unique$this_col,
               ordered.colors = T,scale=c(8,0.3),random.order = F)
@@ -431,7 +431,7 @@ prettyGeneCloud = function(maf_df,these_genes,other_genes,
   these_genes_unique$Hugo_Symbol = factor(these_genes_unique$Hugo_Symbol,levels=these_genes_unique$Hugo_Symbol)
   return(these_genes_unique)
 }
-  
+
 
 #' Generate a plot of all CN segments.
 #'
@@ -2047,7 +2047,7 @@ ashm_multi_rainbow_plot = function(regions_bed,
         ggplot() +
         geom_point(aes(x = start, y = sample_id, colour = classification), alpha = 0.4, size = 0.6) +
         labs(title = "", subtitle = "", x = "", y = "Sample") +
-        theme_Morons() + 
+        theme_Morons() +
         theme(axis.text.y = element_blank(), axis.ticks.y = element_blank(), plot.margin = margin(1,1,1,1, "cm"), title = element_blank(), plot.subtitle = element_blank(), axis.title.x = element_blank()) +
         facet_wrap(~region_name, scales = "free_x") +
         guides(color = guide_legend(reverse = TRUE,
@@ -2272,9 +2272,9 @@ ashm_rainbow_plot = function(mutations_maf,
 
   p = p +
     labs(y = "Sample") +
-    theme_Morons() + 
+    theme_Morons() +
     theme(plot.margin = margin(1,1,1,1, "cm"), title = element_blank(), plot.subtitle = element_blank(), axis.title.x = element_blank())
-  
+
   if(hide_ids){
     p = p + theme(axis.text.y = element_blank(), axis.ticks.y = element_blank())
   }else{
@@ -2719,6 +2719,7 @@ prettyForestPlot = function(maf,
     message("provide a MAF or mutation matrix")
     return()
   }
+
   fish_test = mutmat %>%
     pivot_longer(-c(Tumor_Sample_Barcode, comparison), names_to = "gene", values_to = "is_mutated") %>%
     dplyr::mutate(is_mutated = factor(is_mutated, levels = c("1", "0"))) %>%
@@ -2727,9 +2728,62 @@ prettyForestPlot = function(maf,
     dplyr::mutate(test = map(table, fisher.test), tidy = map(test, broom::tidy)) %>%
     unnest(tidy) %>%
     dplyr::mutate(q.value = p.adjust(p.value, "BH")) %>%
-    dplyr::select(-c(table, test, method, alternative)) %>%
+    dplyr::select(-c(test, method, alternative)) %>%
     dplyr::filter(q.value <= max_q) %>%
     dplyr::mutate(gene = fct_reorder(gene, estimate))
+
+  flatten_table <- function(Row){
+
+    mut_n <- Row[2] %>%
+    as.data.frame %>%
+    `colnames<-`(
+      gsub(
+        "table.",
+        "",
+        colnames(.)
+      )
+    ) %>%
+    mutate(
+      is_mutated = ifelse(
+        is_mutated == 1,
+        "mutated",
+        "non-mutated"
+      ),
+      group = paste(
+        is_mutated,
+        comparison,
+        sep = "_"
+      )
+    ) %>%
+    select(group, Freq) %>%
+    pivot_wider(
+        names_from = group,
+        values_from = Freq
+    ) %>%
+    t %>%
+    as.data.frame
+
+    Row <- Row[-2] %>%
+      do.call(cbind, .) %>%
+      as.data.frame %>%
+      t %>% as.data.frame
+
+    rbind(Row, mut_n)
+
+  }
+
+
+  fish_test <- apply(
+    fish_test,
+    1,
+    flatten_table
+  ) %>%
+  do.call(cbind, .) %>%
+  t %>%
+  as.data.frame %>%
+  `rownames<-`(NULL) %>%
+  mutate_at(c(2:10), as.numeric)
+
 
   point_size = 50 / round(length(fish_test$gene))
   if(point_size < 1){
@@ -3801,28 +3855,28 @@ fancy_v_sizedis = function(this_sample,
 #' fl_genes = dplyr::filter(lymphoma_genes, FL == TRUE) %>%
 #'   dplyr::select(Gene) %>%
 #'   pull(Gene)
-#' 
+#'
 #' fl_genes_chr1 = gene_to_region(gene_symbol = fl_genes, return_as = "df") %>%
 #'   dplyr::filter(chromosome == "1") %>%
 #'   pull(hugo_symbol)
-#' 
+#'
 #' ideogram_fl_chr1 = fancy_ideogram(this_sample = "HTMCP-01-06-00422-01A-01D",
-#'                                   gene_annotation = fl_genes_chr1, 
+#'                                   gene_annotation = fl_genes_chr1,
 #'                                   intersect_regions = "chr1:10000-249250621",
-#'                                   include_ssm = TRUE, 
-#'                                   ssm_count = TRUE, 
-#'                                   coding_only = FALSE, 
-#'                                   from_flatfile = FALSE, 
+#'                                   include_ssm = TRUE,
+#'                                   ssm_count = TRUE,
+#'                                   coding_only = FALSE,
+#'                                   from_flatfile = FALSE,
 #'                                   use_augmented = FALSE)
-#'  
+#'
 #'  fl_regions = gene_to_region(gene_symbol = fl_genes, return_as = "df")
 #'  ideogram_fl = fancy_ideogram(this_sample = "HTMCP-01-06-00422-01A-01D",
-#'                               gene_annotation = fl_genes, 
+#'                               gene_annotation = fl_genes,
 #'                               intersect_regions = fl_regions,
-#'                               include_ssm = TRUE, 
-#'                               ssm_count = TRUE, 
-#'                               coding_only = FALSE, 
-#'                               from_flatfile = FALSE, 
+#'                               include_ssm = TRUE,
+#'                               ssm_count = TRUE,
+#'                               coding_only = FALSE,
+#'                               from_flatfile = FALSE,
 #'                               use_augmented = FALSE)
 #'
 fancy_ideogram = function(this_sample,
@@ -3924,12 +3978,12 @@ fancy_ideogram = function(this_sample,
       intersect_regions$start = as.numeric(intersect_regions$start)
       intersect_regions$end = as.numeric(intersect_regions$end)
     }
-    
+
     if(is.character(intersect_regions)){
       if(length(intersect_regions) > 1){
         message("Please only enter one region, only first region will be regarded. For mutiple regions, kindly provide a data frame with regions of interest")
       }
-      
+
       split_chunks = unlist(strsplit(intersect_regions, ":"))
       split_chunks = unlist(strsplit(split_chunks, "-"))
       chrom = split_chunks[1]
@@ -3937,15 +3991,15 @@ fancy_ideogram = function(this_sample,
       end = split_chunks[3]
       intersect_regions = cbind(chrom, start, end) %>%
         as.data.frame()
-      
+
       intersect_regions$start = as.numeric(intersect_regions$start)
       intersect_regions$end = as.numeric(intersect_regions$end)
-      
+
       if(!str_detect(intersect_regions$chrom, "chr")){
         intersect_regions = mutate(intersect_regions, chrom = paste0("chr", chrom))
       }
     }
-    
+
     incoming_cn = as.data.table(cn_states)
     regions_sub = as.data.table(intersect_regions)
 
@@ -4474,7 +4528,7 @@ comp_report = function(this_sample,
 }
 
 
-#' Create a circos plots visualizing SVS and SSM with optional gene annotations. 
+#' Create a circos plots visualizing SVS and SSM with optional gene annotations.
 #'
 #' @param this_sample Sample to be plotted.
 #' @param gene_list Optional parameter to annotate genes on the circos plot from a list of genes (df). Is compatible with gene_to_region (return_as = "bed") output format. See examples.
@@ -4497,7 +4551,7 @@ comp_report = function(this_sample,
 #'
 #' @examples
 #' #retrieve gene names for FL genes
-#' fl_genes = dplyr::filter(lymphoma_genes, FL == TRUE) %>% 
+#' fl_genes = dplyr::filter(lymphoma_genes, FL == TRUE) %>%
 #'  dplyr::select(Gene) %>%
 #'  pull(Gene)
 #'
@@ -4511,9 +4565,9 @@ comp_report = function(this_sample,
 #'                       chr_select = c("chr8", "chr14", "chr18"),
 #'                       coding_only = FALSE,
 #'                       projection = "grch37",
-#'                       out = "../../plots/", 
+#'                       out = "../../plots/",
 #'                       plot_title = "DOHH-2 (SVs) Example Plot",
-#'                       pdf = FALSE, 
+#'                       pdf = FALSE,
 #'                       file_name = "dohh2_example.png")
 #'
 fancy_circos_plot = function(this_sample,
@@ -4543,7 +4597,7 @@ fancy_circos_plot = function(this_sample,
     ssm_ins_track = 9
     trans_track = 10
   }
-  
+
   if(ssm_calls && sv_calls && missing(gene_list)){
     sv_del_track = 1
     sv_dup_track = 2
@@ -4613,7 +4667,7 @@ fancy_circos_plot = function(this_sample,
     #filter gene list on selected chromosomes
     gene_list = gene_list[gene_list$Chromosome %in% chr_select, ]
   }
-  
+
   #get SSM data
   if(ssm_calls){
     maf = assign_cn_to_ssm(this_sample = this_sample, coding_only = coding_only, from_flatfile = from_flatfile, use_augmented_maf = use_augmented_maf)$maf #get maf data
@@ -4689,7 +4743,7 @@ fancy_circos_plot = function(this_sample,
     data(UCSC.HG38.Human.CytoBandIdeogram)
     cytobands = UCSC.HG38.Human.CytoBandIdeogram
   }
-  
+
   #get chr excluded (reversed of chr included, since RCircos only accept this)
   chr_all = paste0("chr", c(1:22, "X", "Y"))
   chr_exclude = setdiff(chr_all, chr_select)
@@ -4702,13 +4756,13 @@ fancy_circos_plot = function(this_sample,
 
   #define plotting parameters
   out.file = paste0(out, file_name)
-  
+
   if(pdf){
-    pdf(out.file, height = 7, width = 7) 
+    pdf(out.file, height = 7, width = 7)
   }else{
-    png(out.file, height = 7, width = 7, units = "in", res = 300) 
+    png(out.file, height = 7, width = 7, units = "in", res = 300)
   }
-  
+
   RCircos.Set.Plot.Area(margins = 0);
 
   #create empty plot
@@ -4768,18 +4822,18 @@ fancy_circos_plot = function(this_sample,
   #add plot title and legends
   if(sv_calls && !ssm_calls){
     text(x = 0, y = 2.5, plot_title, font = 2, cex = 1.2)
-    legend(x = 2, y = -1.2, legend = c("Del", "Dup"), bty = "n", col = c("steelblue2", "sienna2"), pch = 19, text.col = "black", horiz = FALSE, pt.cex = 2, title = "SVs", inset = c(0.1, 0.1)) 
+    legend(x = 2, y = -1.2, legend = c("Del", "Dup"), bty = "n", col = c("steelblue2", "sienna2"), pch = 19, text.col = "black", horiz = FALSE, pt.cex = 2, title = "SVs", inset = c(0.1, 0.1))
   }
 
   if(!sv_calls && ssm_calls){
     text(x = 0, y = 2.5, plot_title, font = 2, cex = 1.2)
-    legend(x = 2, y = -1.8, legend = c("SNP", "DNP", "Del", "Ins"), bty = "n", col = c("seagreen", "tomato4", "steelblue2", "sienna2"), pch = 19, text.col = "black", horiz = FALSE, pt.cex = 2, title = "SSM", inset = c(0.1, 0.1)) 
+    legend(x = 2, y = -1.8, legend = c("SNP", "DNP", "Del", "Ins"), bty = "n", col = c("seagreen", "tomato4", "steelblue2", "sienna2"), pch = 19, text.col = "black", horiz = FALSE, pt.cex = 2, title = "SSM", inset = c(0.1, 0.1))
   }
 
   if(sv_calls && ssm_calls){
     text(x = 0, y = 2.5, plot_title, font = 2, cex = 1.2)
-    legend(x = 2, y = -1.2, legend = c("Del", "Dup"), bty = "n", col = c("steelblue2", "sienna2"), pch = 19, text.col = "black", horiz = FALSE, pt.cex = 2, title = "SVs", inset = c(0.1, 0.1)) 
-    legend(x = 2, y = -1.8, legend = c("SNP", "DNP", "Del", "Ins"), bty = "n", col = c("seagreen", "tomato4", "steelblue2", "sienna2"), pch = 19, text.col = "black", horiz = FALSE, pt.cex = 2, title = "SSM", inset = c(0.1, 0.1)) 
+    legend(x = 2, y = -1.2, legend = c("Del", "Dup"), bty = "n", col = c("steelblue2", "sienna2"), pch = 19, text.col = "black", horiz = FALSE, pt.cex = 2, title = "SVs", inset = c(0.1, 0.1))
+    legend(x = 2, y = -1.8, legend = c("SNP", "DNP", "Del", "Ins"), bty = "n", col = c("seagreen", "tomato4", "steelblue2", "sienna2"), pch = 19, text.col = "black", horiz = FALSE, pt.cex = 2, title = "SSM", inset = c(0.1, 0.1))
   }
 
   invisible(dev.off())
@@ -4962,7 +5016,7 @@ fancy_alignment_plot = function(these_samples,
       as.data.frame(strings.as.factors = FALSE) %>%
       pull(sample_id)
   }
-  
+
   #filter metadata on selected cohort/pathology
   if(missing(these_samples)){
     if(!missing(keep_cohort) && missing(keep_pathology)){
@@ -5111,7 +5165,7 @@ fancy_qc_plot = function(these_samples,
                          plot_title = "",
                          y_axis_lab = "",
                          return_plotdata = FALSE){
-  
+
   #return a list of acceptable data types for plotting
   if(return_plotdata){
     plotting_variables = c("AverageBaseQuality", "AverageInsertSize", "AverageReadLength",
@@ -5272,7 +5326,7 @@ fancy_propcov_plot = function(these_samples,
       as.data.frame(strings.as.factors = FALSE) %>%
       pull(sample_id)
   }
-  
+
   #filter metadata on selected cohort/pathology
   if(missing(these_samples) && missing(these_samples_metadata)){
     if(!missing(keep_cohort) && missing(keep_pathology)){
@@ -5396,7 +5450,7 @@ fancy_proportions_plot = function(these_samples,
       as.data.frame(strings.as.factors = FALSE) %>%
       pull(sample_id)
   }
-  
+
   #filter metadata on selected cohort/pathology
   if(missing(these_samples) && missing(these_samples_metadata)){
     if(!missing(keep_cohort) && missing(keep_pathology)){
