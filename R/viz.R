@@ -1416,19 +1416,19 @@ prettyOncoplot = function(maftools_obj,
     message(patients_dropped)
   }
   genes_kept = genes[which(genes %in% rownames(mat))]
+  genes_dropped = genes[which(!genes %in% maftools_obj@gene.summary$Hugo_Symbol)]
+  for (g in genes_dropped) {
+    maftools_obj@gene.summary = dplyr::add_row(maftools_obj@gene.summary, Hugo_Symbol = g)
+  }
+  maftools_obj@gene.summary <- maftools_obj@gene.summary %>% replace(is.na(.), 0)
   if(!missing(minMutationPercent)){
     if(! onco_matrix_path == "onco_matrix.txt"){
 
       warning("mintMutationPercent option is not available when you provide your own oncomatrix. Feel free to implement this if you need it")
       return()
     }
-    mutation_counts = maftools_obj@gene.summary %>%
-      dplyr::mutate(fake_column=1) %>%
-      tidyr::complete(., tidyr::expand(., crossing(fake_column), Hugo_Symbol = genes)) %>%
-      dplyr::select(-fake_column) %>%
-      replace(is.na(.), 0) %>%
-      dplyr::select(Hugo_Symbol, MutatedSamples) %>%
-      as.data.frame()
+    mutation_counts <- maftools_obj@gene.summary %>% 
+      select(Hugo_Symbol, MutatedSamples)
 
     numpat = length(patients)
     mutation_counts = mutate(mutation_counts, percent_mutated = 100 * MutatedSamples / numpat)
