@@ -1,4 +1,3 @@
-
 # Helper functions not for export
 
 #' Check for a version of data to load
@@ -10,7 +9,7 @@
 #' @param this_genome_build The genome build of the data if coordinate-based. Accepts grch37 (default) or hg38.
 #'
 #' @return data frame
-#' @import config dplyr readr git2r GAMBLR.data
+#' @import config dplyr readr GAMBLR.data
 #'
 #' @examples
 #' determine_version()
@@ -21,35 +20,41 @@ determine_version <- function(
     this_genome_build = "grch37"
 ){
     # Determine the latest version of the data
-    # Specify which repo
-    repo <- "https://github.com/morinlab/GAMBLR.data"
-
-    # Get all possible tags
-    all_refs <- names(
-        git2r::remote_ls(repo)
+    # Get absolute paths to bundled files in GAMBLR.data
+    all_files <- system.file(
+        "extdata",
+        package = "GAMBLR.data"
+    ) %>%
+    list.files(
+        recursive = TRUE,
+        full.names = TRUE
     )
-    tags <- all_refs[grepl("tags", all_refs)]
 
-    # Since they are mix of character and number they are
-    # not always properly ordered. Handle tag versions here
-    # to get the most recent
-    tags <- gsub(
-        "refs/tags/|\\^.*",
+    # Extract version from the path
+    all_files <- gsub(
+        ".*extdata/",
         "",
-        tags
+        all_files
     )
-    tags <- sort(
-        numeric_version(
-            gsub(
-                "v",
-                "",
-                tags)
-            )
-        )
-    latest_tag <- max(tags)
+    all_files <- all_files[grepl(mode, all_files)]
 
-    # Did the user requested latest version?
+    # Determine the highst version
+    versions <- gsub(".*[/]([^/]+)[/].*", "\\1", all_files)
+
+    versions <- sort(
+        numeric_version(
+            versions
+            )
+    )
+
+    latest_version <- max(versions)
+
+    # Which version did the user requested in config?
     requested_version <- config::get("bundled_data_versions")[[mode]]
+    # Convert to numeric value if it is a string
+    if(requested_version == "_latest"){
+        requested_version = latest_version
+    }
 
     # UCSC-ize the genome build format of GAMBLR
     if(this_genome_build == "grch37"){
@@ -57,41 +62,23 @@ determine_version <- function(
     }else{
         this_genome_build = "GRCh38"
     }
-    # Conditionally load the latest data or user-specified version
-    if(requested_version=="_latest"){
-        # Read the data from github even if user
-        # did not update package in a while
-        path <- paste0(
-            "https://raw.githubusercontent.com/morinlab/GAMBLR.data/master/inst/extdata/",
-            mode,
-            "_",
-            this_genome_build,
-            "_v",
-            latest_tag,
-            ".tsv"
-        )
-        print(path)
-        this_data <- readr::read_tsv(
-            path
-        )
-    }else{
-        this_object <- paste0(
-            mode,
-            "_",
-            this_genome_build,
-            "_v",
-            requested_version
-        )
 
-        this_data <- eval(
-            parse(
-                text = paste0(
-                    "GAMBLR.data::",
-                    this_object)
-                )
-        )
+    # Load the user-specified version of the data
+    this_object <- paste0(
+        mode,
+        "_",
+        this_genome_build,
+        "_v",
+        requested_version
+    )
 
-    }
+    this_data <- eval(
+        parse(
+            text = paste0(
+                "GAMBLR.data::",
+                this_object)
+            )
+    )
 
     return(this_data)
 
