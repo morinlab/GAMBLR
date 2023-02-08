@@ -35,16 +35,27 @@ compare_coding_mutation_pattern = function(maf_df1,maf_df2,gene){
   return(list(df=full_df,kl=unname(kl_out)))
 }
 
-#' Update or create a file to track unique identifiers for sample sets in GAMBL
+#' @title Write Sample Set Hash
+#' 
+#' @description Update or create a file to track unique identifiers for sample sets in GAMBL
 #'
+#' @details Run this function with `update = TRUE` (default) to use an existing sample table. 
+#' If this table does not exist, perhaps you need to pull from the master branch.
+#' If this function is run with the default for `update`, the user must also provide the new sample sets with the `new_sample_sets_df`.
+#' 
 #' @param update Leave as TRUE for default functionality (i.e. updating the existing table). If the table doesn't exist you probably need to pull from Master.
 #' @param new_sample_sets_df Data frame of all existing and new sample sets. Required when running in default update mode.
 #'
 #' @return
+#' 
+#' @import dplyr readr
 #' @export
 #'
 #' @examples
-write_sample_set_hash = function(update=TRUE,new_sample_sets_df){
+#' 
+write_sample_set_hash = function(update = TRUE,
+                                 new_sample_sets_df){
+
   sample_sets_file = paste0(check_config_value(config::get("repo_base")),"data/metadata/level3_samples_subsets.tsv")
   md5_file = paste0(check_config_value(config::get("repo_base")),"data/metadata/level3_samples_subsets_hashes.tsv")
   if(update){
@@ -87,21 +98,39 @@ write_sample_set_hash = function(update=TRUE,new_sample_sets_df){
     all_md5 = data.frame(sample_set = set_names,md5_digest=md5_values)
     write_tsv(all_md5,file=md5_file)
   }
-
 }
 
-#' Generate an md5 hash for a set of samples to help ensure reproducibility
+
+#' @title Generate md5 Hash For Samples
 #'
-#' @param these_samples_metadata Optionally provide a metadata table or any data frame with a column named sample_id that has been subset to the samples you're working with
-#' @param these_samples Optionally provide a vector of sample_id you are working with
-#' @param sample_set_name Optionally provide the name of a sample set in GAMBL and the function will load the samples from that set and provide the hash
-#' @param sample_sets_df Optionally provide a data frame of the sample sets instead of relying on/loading the local file from the GAMBL repo
-#' @return The md5 hash of the ordered set of sample_id
+#' @description Generate an md5 hash for a set of samples to help ensure reproducibility
+#' 
+#' @details This function can accept a wide range of formatted sample IDs to create an md5 hash.
+#' For example, if the user is working with an already subset metadata table (with sample IDs of interest),
+#' The user can give this table to the function with `these_sampels_metadata`.
+#' As an alternative, sample IDs can also be provided as a vector of characters with `these_samples` parameter.
+#' Another option is to use defined sample sets (GAMBL) with `sample_set_name`.
+#' As a final option, the user can also provide a data frame with samples IDs instead of loading them from the GAMBL repo,
+#' This is achieved with calling the `sample_sets_df` parameter. 
+#' 
+#'
+#' @param these_samples_metadata Optionally provide a metadata table or any data frame with a column named sample_id that has been subset to the samples you're working with.
+#' @param these_samples Optionally provide a vector of sample_id you are working with.
+#' @param sample_set_name Optionally provide the name of a sample set in GAMBL and the function will load the samples from that set and provide the hash.
+#' @param sample_sets_df Optionally provide a data frame of the sample sets instead of relying on/loading the local file from the GAMBL repo.
+#' 
+#' @return The md5 hash of the ordered set of sample_id.
+#' 
+#' @import digest dplyr readr
 #' @export
-#' @import digest
 #'
 #' @examples
-get_samples_md5_hash = function(these_samples_metadata,these_samples,sample_set_name,sample_sets_df){
+#' 
+get_samples_md5_hash = function(these_samples_metadata,
+                                these_samples,
+                                sample_set_name,
+                                sample_sets_df){
+
   if(!missing(these_samples_metadata)){
     collapsed = dplyr::select(these_samples_metadata,sample_id) %>%
       arrange() %>%
@@ -128,9 +157,13 @@ get_samples_md5_hash = function(these_samples_metadata,these_samples,sample_set_
 }
 
 
-cache_output = function(result_df,function_name,clobber_mode=F,get_existing = F,
-                        function_params=list(region="chr3:98300000-198022430",bin_size=2000,seq_type="genome"),
-                        additional_details=list(foreground="DLBCL_FL_BL",background="CLL_MM_MCL")){
+cache_output = function(result_df, 
+                        function_name,
+                        clobber_mode = F,
+                        get_existing = F,
+                        function_params = list(region = "chr3:98300000-198022430", bin_size=2000, seq_type="genome"),
+                        additional_details = list(foreground = "DLBCL_FL_BL", background = "CLL_MM_MCL")){
+
   cache_file_name = paste0(check_config_value(config::get("repo_base")),"cached_results/", function_name)
   for (param in names(function_params)[order(names(function_params))]){
     cache_file_name = paste0(cache_file_name,"--",param,"-",function_params[[param]])
@@ -158,24 +191,40 @@ cache_output = function(result_df,function_name,clobber_mode=F,get_existing = F,
   write_tsv(result_df,file=cache_file_name)
 }
 
-#' Count the variants in a region with a variety of filtering options
+#' @title Count SSM In A Region
+#' 
+#' @description Count the variants in a region with a variety of filtering options.
 #'
-#' @param region
-#' @param chromosome
-#' @param start
-#' @param end
-#' @param these_samples_metadata
-#' @param all_mutations_in_these_regions If you are calling this function many times (e.g. bins spanning a larger region), to save a ton of time you are strongly encouraged to provide the output of get_ssm_by_region on the entire region of interest and passing it to this function
+#' @details This function internally calls `get_ssm_by_region` thus, the parameters available to this function are arguments that are being passed to the internal call.
+#' For more details on how these parameters can be used, refer to `get_ssm_by_region`.
+#' 
+#' @param region Region formatted like chrX:1234-5678 instead of specifying chromosome, start and end separately.
+#' @param chromosome The chromosome you are restricting to (with or without a chr prefix).
+#' @param start Query start coordinate of the range you are restricting to.
+#' @param end Query end coordinate of the range you are restricting to.
+#' @param these_samples_metadata A metadata table subset to the sample IDs of interest. If not provided, the function will call `get_gambl_metadata` and regions will be returned for all samples in the metadata.
+#' @param all_mutations_in_these_regions If you are calling this function many times (e.g. bins spanning a larger region), to save a ton of time you are strongly encouraged to provide the output of `get_ssm_by_region` on the entire region of interest and passing it to this function
 #' @param count_by Defaults to counting all variants. Specify 'sample_id' if you want to collapse and count only one per sample
-#' @param seq_type
+#' @param seq_type The seq_type you want back, default is genome.
 #'
 #' @return
+#' 
+#' @import dplyr
 #' @export
 #'
 #' @examples
-count_ssm_by_region = function(region,chromosome,start,end,all_mutations_in_these_regions,these_samples_metadata,count_by,seq_type="genome"){
+#' 
+count_ssm_by_region = function(region,
+                               chromosome,
+                               start,
+                               end,
+                               all_mutations_in_these_regions,
+                               these_samples_metadata,
+                               count_by,
+                               seq_type = "genome"){
+
   if(missing(these_samples_metadata)){
-    these_samples_metadata = get_gambl_metadata(seq_type_filter=seq_type)
+    these_samples_metadata = get_gambl_metadata(seq_type_filter = seq_type)
   }
   if(!missing(all_mutations_in_these_regions)){
     # function was provided the mutations already so we just need to subset it to the region of interest
@@ -197,37 +246,70 @@ count_ssm_by_region = function(region,chromosome,start,end,all_mutations_in_thes
   }
 }
 
-#' Split a contiguous genomic region on a chromosome into non-overlapping bins
+#' @title Region To Bins.
 #'
-#' @param chromosome
-#' @param start
-#' @param end
-#' @param bin_size
+#' @description Split a contiguous genomic region on a chromosome into non-overlapping bins
 #'
-#' @return Data frame describing the bins various ways
+#' @details This function takes genomic coordinates with the `chromosome`, `start`, and `end` parameters.
+#' Lastly, the user can also specify the bin size with `bin_size`. Default is 20000
+#'
+#' @param chromosome The chromosome you are restricting to (with or without a chr prefix).
+#' @param start Query start coordinate of the range you are restricting to.
+#' @param end Query end coordinate of the range you are restricting to.
+#' @param bin_size The size of the bins, default is 2000.
+#'
+#' @return Data frame describing the bins various ways.
+#'
+#' @import dplyr
 #' @export
 #'
 #' @examples
-#' chr8q_bins = region_to_bins(chromosome="8",start=48100000,end=146364022,bin_size = 20000)
-region_to_bins = function(chromosome="chr1",start=10000,end=121500000,bin_size=2000){
-  bin_df = data.frame(bin_chr = chromosome,bin_start=seq(start,end,bin_size))
+#' chr8q_bins = region_to_bins(chromosome = "8", start = 48100000, end = 146364022, bin_size = 20000)
+#' 
+region_to_bins = function(chromosome,
+                 start,
+                 end,
+                 bin_size = 2000){
+
+  if(missing(chromosome)){
+    stop("Please provide a chromosome...")
+  }
+  
+  if(missing(start)){
+    stop("Please provide the start coordinates...")
+  }
+  
+  if(missing(end)){
+    stop("Please provide the end coordinates...")
+  }
+
+  bin_df = data.frame(bin_chr = chromosome, bin_start = seq(start, end, bin_size))
   bin_df = mutate(bin_df,bin_end = bin_start+ bin_size) %>%
     dplyr::filter(bin_end<=end) %>%
     mutate(region = paste0(bin_chr,":",bin_start,"-",bin_end))
 
   return(bin_df)
-
 }
 
-#' Create an ssh session to the GSC (requires active VPN connection)
+
+#' @title Get SSH Session. 
 #'
-#' @param host (default is gphost01.bcgsc.ca)
+#' @description Create an ssh session to the GSC (requires active VPN connection)
 #'
-#' @return
+#' @details Using the ssh R package to create an ssh session.
+#'
+#' @param host Default is "gphost01.bcgsc.ca".
+#'
+#' @return An external pointer of class 'ssh_session'
+#'
+#' @import ssh
 #' @export
 #'
 #' @examples
-get_ssh_session = function(host="gphost01.bcgsc.ca"){
+#' my_session = get_ssh_session()
+#'
+get_ssh_session = function(host = "gphost01.bcgsc.ca"){
+
   if (!requireNamespace("ssh", quietly = TRUE)) {
     warning("The ssh package must be installed to use this functionality")
     #Either exit or do something that does not require ssh
@@ -239,15 +321,23 @@ get_ssh_session = function(host="gphost01.bcgsc.ca"){
 }
 
 
-#' Get regions from genes.
+#' @title Gene To Region. 
+#'
+#' @description Return coordinates for a given gene or a set of genes.
+#'
+#' @details This function takes one or multiple gene names, either as hugo symbols or Ensembl IDs
+#' and returns the coordinates for the selected genes in multiple formats (`return_as`).
+#' The possible return formats are; bed, data frame and in "region" format (chr:start-end).
+#' For returning genes residing in specific regions, see `regions_to_genes`.
 #'
 #' @param gene_symbol A vector of one or more gene symbols.
 #' @param ensembl_id A vector of one or more Ensembl IDs.
-#' @param genome_build Reference genome build.
+#' @param genome_build Reference genome build, default is grch37.
 #' @param return_as Specify the type of return. Default is region (chr:start-end), other acceptable arguments are "bed" and "df".
 #'
-#' @import tidyverse
 #' @return
+#'
+#' @import dplyr
 #' @export
 #'
 #' @examples
@@ -317,14 +407,20 @@ gene_to_region = function(gene_symbol,
 }
 
 
-#' Return genes residing in defined region(s)
+#' @title Region To Gene. 
+#'
+#' @description Return genes residing in defined region(s).
+#'
+#' @details This function takes a region as a vector of characters, or a list of regions in a data frame
+#' and returns the genes residing withing the specified region. For the other way around (i.e gene to regions, refer to `gene_to_regions`).
 #'
 #' @param region Regions to intersect genes with, this can be either a data frame with regions sorted in the following columns; chromosome, start, end. Or it can be a character vector in "region" format, i.e chromosome:start-end.
 #' @param gene_format Parameter for specifying the format of returned genes, default is "hugo", other acceptable inputs are "ensembl".
 #' @param genome_build Reference genome build.
 #'
-#' @import data.table tidyverse
 #' @return
+#'
+#' @import data.table dplyr
 #' @export
 #'
 #' @examples
@@ -406,13 +502,19 @@ region_to_gene = function(region,
 }
 
 
-#' Get a MAF that is just the variants unique to one of two flavours of variant calls available.
+#' @title Compare Mutation Flavour. 
+#' 
+#' @description Get a MAF that is just the variants unique to one of two flavours of variant calls available.
+#'
+#' @details Subset a MAF to only have variants that are unique to one flavour (specified with `flavour1`).
 #'
 #' @param these_sample_ids sample IDs to be included.
 #' @param flavour1 First flavour of variant calls, to be returned as unique if not present in flavour2. Default is "clustered".
 #' @param flavour2 Second flavour of variant calls.
 #'
 #' @return a list with MAFs that are only present in flavour1.
+#'
+#' @import data.table
 #' @export
 #'
 #' @examples
@@ -435,13 +537,19 @@ compare_mutation_flavour = function(these_sample_ids,
 }
 
 
-#' Perform set operations on two MAFs.
+#' @title Intersect MAF.
+#'
+#' @description Perform set operations on two MAFs.
+#'
+#' @details Perform set operations on two MAFs.
 #'
 #' @param maf1 First list of MAFs.
 #' @param maf2 Second list of MAFs.
 #' @param set_returned List of MAFs that doesn't share the same start positions as the other list of MAFs. Accepted commands are; "maf1_only" and "maf2_only", default is "maf1_only".
 #'
 #' @return Set of MAFs with start positions that don't match the start positions in the other supplied MAF file.
+#'
+#' @import dplyr
 #' @export
 #'
 #' @examples
@@ -461,10 +569,18 @@ intersect_maf = function(maf1,
 }
 
 
-#' Tabulate mutation status for non-silent SSMs for a set of genes.
+#' @title Get Coding SSM Status.
+#'
+#' @description Tabulate mutation status (SSM) for a set of genes.
+#'
+#' @details This function takes a list of gene symbols and subsets the incoming MAF to specified genes. If no gene list is provided, the function will default to all lymphoma genes.
+#' The function can accept a wide range of incoming MAFs. For example, the user can call this function with `these_samples_metadata` (preferably a metadata table that has been subset to the sample IDs of interest).
+#' If this parameter is not called, the function will default to all samples available with `get_gambl_metadata`. The user can also provide a path to a MAF, or MAF-like file with `maf_path`, 
+#' or an already loaded MAF can be used with the `maf_data` parameter. If both `maf_path` and `maf_data` is missing, the function will default to run `get_coding_ssm`.
+#' This function also has a lot of filtering and convenience parameters giving the user full control of the return. For more information, refer to the parameter descriptions and examples.
 #'
 #' @param gene_symbols List of gene symbols for which the mutation status will be tabulated. If not provided, lymphoma genes will be returned by default.
-#' @param these_samples_metadata The matedata for samples of interest to be included in the returned matrix. Only the column "sample_id" is required. If not provided, the matrix is tabulated for all available samples as default.
+#' @param these_samples_metadata The metadata for samples of interest to be included in the returned matrix. Only the column "sample_id" is required. If not provided, the matrix is tabulated for all available samples as default.
 #' @param from_flatfile Optional argument whether to use database or flat file to retrieve mutations. Default is TRUE.
 #' @param augmented default: TRUE. Set to FALSE if you instead want the original MAF from each sample for multi-sample patients instead of the augmented MAF.
 #' @param min_read_support Only returns variants with at least this many reads in t_alt_count (for cleaning up augmented MAFs).
@@ -472,12 +588,16 @@ intersect_maf = function(maf1,
 #' @param maf_data Either a maf loaded from disk or from the database using a get_ssm function.
 #' @param include_hotspots Logical parameter indicating whether hotspots object should also be tabulated. Default is TRUE.
 #' @param recurrence_min Integer value indicating minimal recurrence level.
+#' @param seq_type The seq_type you want back, default is genome.
+#' @param projection Specify projection (grch37 or hg38) of mutations. Default is grch37.
 #' @param review_hotspots Logical parameter indicating whether hotspots object should be reviewed to include functionally relevant mutations or rare lymphoma-related genes. Default is TRUE.
 #' @param genes_of_interest List of genes for hotspot review. Currently only FOXO1, MYD88, and CREBBP are supported.
 #' @param genome_build Reference genome build for the coordinates in the MAF file. The default is hg19 genome build.
-#' @param include_silent Logical parameter indicating whether to include siment mutations into coding mutations. Default is TRUE.
+#' @param include_silent Logical parameter indicating whether to include silent mutations into coding mutations. Default is TRUE.
 #'
-#' @return Data frame.
+#' @return A data frame with tabulated mutation status.
+#'
+#' @import dplyr tidyr 
 #' @export
 #'
 #' @examples
@@ -588,9 +708,12 @@ get_coding_ssm_status = function(gene_symbols,
 }
 
 
-#' INTERNAL FUNCTION called by prettyOncoplot, not meant for out-of-package usage.
-#' Unsure what this function actually does, old helper function that is outdated?
+#' @title Trim Scale Expressions. 
+#' 
+#' @description INTERNAL FUNCTION called by prettyOncoplot, not meant for out-of-package usage.
 #'
+#' @details INTERNAL FUNCTION called by prettyOncoplot, not meant for out-of-package usage.
+#' 
 #' @param x
 #'
 #' @return Numeric value.
@@ -608,13 +731,22 @@ trim_scale_expression = function(x){
 
 
 
-#' Count the number of mutations in a sliding window across a region for all samples. Unlikely to be used directly in most cases. See get_mutation_frequency_bin_matrix instead.
+#' @title Calculate Mutation Frequency By Sliding Window.
+#'
+#' @description Count the number of mutations in a sliding window across a region for all samples. 
+#'
+#' @details This function is called to return the mutation frequency for a given region, for all GAMBL samples. Regions are specified with the `this_region`parameter.
+#' Alternatively, the region of interest can also be specified by calling the function with `chromosome`, `start_pos`, and `end_pos` parameters.
+#' It is also possible to return a plot of the created bins. This is done with setting `plot_type = TRUE`. 
+#' There are a collection of parameters available for further customizing the return, for more information, refer to the parameter descriptions and examples.
+#' `calc_mutation_frequency_sliding_window` is unlikely to be used directly in most cases. See `get_mutation_frequency_bin_matrix` instead.
 #'
 #' @param this_region Genomic region in bed format.
 #' @param chromosome Chromosome name in region.
 #' @param start_pos Start coordinate of region.
 #' @param end_pos End coordinate of region.
 #' @param metadata Data frame containing sample ids and column with annotated data for the 2 groups of interest. All other columns are ignored. Currently, function exits if asked to compare more than 2 groups.
+#' @param seq_type The seq_type you want back, default is genome.
 #' @param slide_by Slide size for sliding window, default is 100.
 #' @param window_size Size of sliding window, default is 1000.
 #' @param plot_type Set to TRUE for a plot of your bins. By default no plots are made.
@@ -622,14 +754,14 @@ trim_scale_expression = function(x){
 #' @param return_format Return format of mutations. Accepted inputs are "long" and "long-simple". Default is "long-simple".
 #' @param min_count_per_bin Minimum counts per bin, default is 3.
 #' @param return_count Boolean statement to return count. Default is FALSE.
-#' @param drop_unmutated This may not currently work properly. Default is FALSE. Not a very good parameter desciption?
+#' @param drop_unmutated This may not currently work properly. Default is FALSE.
 #' @param classification_column Only used for plotting, default is "lymphgen"
-#' @param from_indexed_flatfile Set to TRUE to avoid using the database and instead rely on flatfiles (only works for streamlined data, not full MAF details). Default is FALSE.
-#' @param mode Only works with indexed flatfiles. Accepts 2 options of "slms-3" and "strelka2" to indicate which variant caller to use. Default is "slms-3".
+#' @param from_indexed_flatfile Set to TRUE to avoid using the database and instead rely on flat-files (only works for streamlined data, not full MAF details). Default is FALSE.
+#' @param mode Only works with indexed flat-files. Accepts 2 options of "slms-3" and "strelka2" to indicate which variant caller to use. Default is "slms-3".
 #'
 #' @return Count matrix.
 #' @export
-#' @import dplyr data.table ggplot2 cowplot
+#' @import dplyr tidyr cowplot data.table ggplot2 
 #'
 #' @examples
 #' chr11_mutation_freq = calc_mutation_frequency_sliding_windows(this_region = "chr11:69455000-69459900", metadata = meta_df, slide_by = 10, window_size = 10000)
@@ -768,20 +900,32 @@ calc_mutation_frequency_sliding_windows = function(this_region,
 }
 
 
-#' Write bedpe format data frame to a file that will work with IGV.
+#' @title SV To BED File.
+#'
+#' @description Write bedpe format data frame to a file that will work with IGV and UCSC genome browser.
+#'
+#' @details This function takes four parameters; a data frame with SVs, formatted as bedpe with `sv_df`. 
+#' The `path` parameter lets the user control the output folder. default is "/projects/rmorin/projects/gambl-repos/gambl-rmorin/results/icgc_dart/misc/".
+#' `file_name` for spoecifying the output file name. Results will be written to `results/icgc_dart/misc/`.
+#' Lastly, the `add_chr_prefix` let's the uder control if chromosomes should be prefixed with "chr" or not. 
+#' The default is TRUE.
 #'
 #' @param sv_df data frame of bedpe formatted SV data.
-#' @param filename File name (will be written to results/icgc_dart/misc/FILENAME). Default is "something.bedpe". Maybe not a very good default name?
+#' @param path The path to the output folder. Default is "/projects/rmorin/projects/gambl-repos/gambl-rmorin/results/icgc_dart/misc/".
+#' @param filename File name (will be written to results/icgc_dart/misc/FILENAME).
 #' @param add_chr_prefix Whether to force chr to be added to chromosome names. Default is TRUE.
 #'
 #' @return bedpe data frame that is compatible with IGN browser.
+#' 
+#' @import dplyr utils
 #' @export
 #'
 #' @examples
 #' SVs_bedpe = sv_to_bedpe_file(sv_dataframe, "SVs.bedpe", TRUE)
 #'
 sv_to_bedpe_file = function(sv_df,
-                            filename = "something.bedpe",
+                            path = "/projects/rmorin/projects/gambl-repos/gambl-rmorin/results/icgc_dart/misc/",
+                            filename = "my_svs.bedpe",
                             add_chr_prefix = TRUE){
 
   #add chr prefix if missing
@@ -791,12 +935,15 @@ sv_to_bedpe_file = function(sv_df,
         mutate(CHROM_B = paste0("chr", CHROM_B))
     }
   }
-  bed_file = paste0("/projects/rmorin/projects/gambl-repos/gambl-rmorin/results/icgc_dart/misc/", filename)
+  bed_file = paste0(path, filename)
   write.table(sv_df, file = bed_file, sep = "\t", quote = F, row.names = F, col.names = F)
 }
 
-#' INTERNAL FUNCTION called by calc_mutation_frequency_sliding_windows, not meant for out-of-package usage.
-#' Parse a region string into chomosome, start and end.
+#' @title Region To Chunks.
+#' 
+#' @description Parse a region string into; chomosome, start and end.
+#'
+#' @details INTERNAL FUNCTION called by calc_mutation_frequency_sliding_windows, not meant for out-of-package usage.
 #'
 #' @param region A region string e.g. "chrX:12345-678910".
 #'
@@ -819,11 +966,11 @@ region_to_chunks = function(region){
 }
 
 
-#' Convert mutation data to a shareable format.
+#' @title Convert mutation data to a shareable format.
 #'
-#' `sanitize_maf_data` returns oncomatrix of patient/gene data indicating only data needed to produce oncoplot.
+#' @description `sanitize_maf_data` returns oncomatrix of patient/gene data indicating only data needed to produce oncoplot.
 #'
-#' Write an oncomatrix from a MAF File for further plotting. This is meant to be run by individuals who have access to data sets to
+#' @details Write an oncomatrix from a MAF File for further plotting. This is meant to be run by individuals who have access to data sets to
 #' "sanitize" a subset of data for subsequent use by them or others who don't have permission to access the raw data.
 #' Example: User J has full permissions for ICGC data and has read permissions on a MAF file. User B needs to make some oncoplots
 #' and/or perform some statistical analysis on the frequency and assortment of mutations in that data set but doesn't need all the details.
@@ -836,6 +983,8 @@ region_to_chunks = function(region){
 #' @param genes_drop Optionally specify which genes to drop (this doesn't mean all other genes will remain. Maftools decides that part).
 #'
 #' @return The full path to the oncomatrix file (a matrix with Variant_Classification or Multi_Hit indicating coding mutation status per patient).
+#' 
+#' @import maftools dplyr
 #' @export
 #'
 #' @examples
@@ -848,6 +997,7 @@ sanitize_maf_data = function(mutation_maf_path,
                              output_oncomatrix,
                              genes_keep,
                              genes_drop = c()){
+
   if(missing(mutation_maf_path) & missing(mutation_maf_data)){
 
     warning("Provide either a path to a MAF file or a data frame of mutations")
@@ -876,7 +1026,14 @@ sanitize_maf_data = function(mutation_maf_path,
 }
 
 
-#' Annotate MAF-like data frome with a hot_spot column indicating recurrent mutations.
+#' @title Annotate Hotspots.
+#'
+#' @description Annotate MAF-like data frome with a hot_spot column indicating recurrent mutations.
+#'
+#' @details This function takes ana lready loaded MAF data frame with the `mutation_maf` parameter.
+#' The suer can then control the minimum number of recurrances for mutations to be included with `recurrance_min`,
+#' the default is 5. `analysis_base` controls the base name go hot spot output directory.
+#' Lastly, `p_thresh` sets the p value threshold, default is 0.05.
 #'
 #' @param mutation_maf A data frame in MAF format.
 #' @param recurrence_min minimum number of recurrences for mutation to be included, default is 5.
@@ -884,6 +1041,8 @@ sanitize_maf_data = function(mutation_maf_path,
 #' @param p_thresh P value threshold, default is 0.05.
 #'
 #' @return The same data frame with one additional column "hot_spot".
+#'
+#' @import dplyr tidyr readr glue
 #' @export
 #'
 #' @examples
@@ -963,21 +1122,30 @@ annotate_hotspots = function(mutation_maf,
 }
 
 
-#' Annotate MAF-like data frome with a hot_spot column indicating recurrent mutations.
+#' @title Review Hotspots.
 #'
+#' @description Annotate MAF-like data frome with a hot_spot column indicating recurrent mutations.
+#'
+#' @details This function takes an annotated MAF (with `annotate_hotspots`) and adds a new column, "hot_spot", to the same data frame.
+#' Genes for hotspot review are supplied with the `genes_of_interest` parameter. 
+#' Currently only a few set of genes are supported, see parameter description for more information and limitations.
+#' The desired genome build can be specifed with `genome_build` parameter. Should be the same as the incoming MAF.
+#' 
 #' @param annotated_maf A data frame in MAF format that has hotspots annotated using function annotate_hotspots().
-#' @param genes_of_interest List of genes for hotspot review. Currently only FOXO1, MYD88, and CREBBP are supported.
-#' @param genome_build Reference genome build for the coordinates in the MAF file. The default is hg19 genome build.
+#' @param genes_of_interest List of genes for hotspot review. Currently only FOXO1, MYD88, CREBBP, NOTCH1, NOTCH2, CD79B and EZH2 are supported.
+#' @param genome_build Reference genome build for the coordinates in the MAF file. The default is grch37 genome build.
 #'
-#' @return The same data frame with reviewed column "hot_spot".
-#' @export
+#' @return The same data frame (as given to the `annotated_maf` parameter) with reviewed column "hot_spot".
+#'
 #' @import dplyr
+#' @export
 #'
 #' @examples
 #' hot_ssms = review_hotspots(annotate_hotspots(get_coding_ssm()), genes_of_interest = c("CREBBP"))
+#'
 review_hotspots = function(annotated_maf,
-                          genes_of_interest = c("FOXO1", "MYD88", "CREBBP", "NOTCH1", "NOTCH2", "CD79B", "EZH2"),
-                          genome_build = "hg19"){
+                           genes_of_interest = c("FOXO1", "MYD88", "CREBBP", "NOTCH1", "NOTCH2", "CD79B", "EZH2"),
+                           genome_build = "grch37"){
 
   # define the list of genes currently supported for review
   supported_genes = c("FOXO1", "MYD88", "CREBBP", "NOTCH1", "NOTCH2", "CD79B", "EZH2")
@@ -1058,14 +1226,23 @@ review_hotspots = function(annotated_maf,
 }
 
 
-#' Make a UCSC-ready custom track file from SV data.
-#
+#' @title SV To Custom Track.
+#'
+#' @description Make a UCSC-ready custom track file from SV data.
+#'
+#' @details This function takes an incoming SV data frame and outputs a bed file, ready for visualization on the UCSC Genome Browser.
+#' Specify the output file with `output_file`, indicate if the incoming SVs are annotated with `is_annotated` (default is TRUE).
+#' Lastly, the user can also specify if the incoming SV data frame should be subset to specific mutaiton types (e.g deletions, duplications, insertions, etc.).
+#' This si specified with the `sv_name` parameter. Default is to include all SV subtypes.
+#'
 #' @param sv_bedpe A bedpe formatted data frame of SVs.
 #' @param output_file A bed file with UCSC custom header.
 #' @param is_annotated Set to TRUE if input SV bedpe is annotated, default is TRUE.
 #' @param sv_name SV name. Default is set to "all" = include all subtypes of SVs.
 #'
 #' @return Nothing.
+#'
+#' @import dplyr utils tidyr 
 #' @export
 #'
 #' @examples
@@ -1146,13 +1323,28 @@ sv_to_custom_track = function(sv_bedpe,
   write_bed(sv_bed_coloured, sv_name = sv_name)
 }
 
-
-#' Convert a maf-formatted data frame into a bed custom track file for UCSC.
+#' @title Maf To Custom Track.
+#'
+#' @description Convert a maf-formatted data frame into a bed custom track file for UCSC.
+#'
+#' @details This funciton takes an incoming MAF and converts it to a UCSC Genome Browser ready BED (or bigbed/biglolly) file. 
+#' Optional parameters avaialble for furhter customization of the returned file. For more information, refer to the parameter descriptions and function examples.
 #'
 #' @param maf_data Either a maf loaded from disk or from the database using a get_ssm function.
+#' @param these_samples_metadata Optional argument, a metadata table subset to the samples of interest. If not provided, the function will run `get_gambl_metadata` for all avaialble samples.
+#' @param seq_type The seq type you want back, default is "genome".
 #' @param output_file Name for your new bed file that can be uploaded as a custom track to UCSC.
+#' @param as_bigbed Boolean parameter controling the format of the returned file. Default is FALSE.
+#' @param colour_column Set the colouring properties of the returned bed file. Per default, this funciton will assign colour based on "lymphgen".
+#' @param as_biglolly Boolean parameter controling the format of the returned file. Default is FALSE (i.e a BED file will be returned).
+#' @param track_name Track name. Default is "GAMBL mutations"
+#' @param track_description Track description. Default is "mutations from GAMBL"
+#' @param verbose Default is FALSE.
+#' @param padding_size Optional parameter specifying the padding size in the returned file, default is 0.
 #'
 #' @return Nothing.
+#'
+#' @import tidyr dplyr utils glue
 #' @export
 #'
 #' @examples
@@ -1160,15 +1352,15 @@ sv_to_custom_track = function(sv_bedpe,
 #'
 maf_to_custom_track = function(maf_data,
                                these_samples_metadata,
-                               seq_type="genome",
+                               seq_type = "genome",
                                output_file,
-                               as_bigbed=FALSE,
+                               as_bigbed = FALSE,
                                colour_column = "lymphgen",
-                               as_biglolly=FALSE,
-                               track_name="GAMBL mutations",
+                               as_biglolly = FALSE,
+                               track_name = "GAMBL mutations",
                                track_description = "mutations from GAMBL",
-                               verbose=FALSE,
-                               padding_size=0){
+                               verbose = FALSE,
+                               padding_size = 0){
 
   #reduce to a bed-like format
   maf_data = dplyr::select(maf_data, Chromosome, Start_Position, End_Position, Tumor_Sample_Barcode)
@@ -1269,7 +1461,19 @@ test_glue = function(placeholder="INSERTED"){
   print(ss)
 }
 
-#' Bring together all derived sample-level results from many GAMBL pipelines.
+
+#' @title Collate Results
+#'
+#' @description Bring together all derived sample-level results from many GAMBL pipelines.
+#'
+#' @details This function takes a data frame with sample IDs (in the first column) with the `sample_table` parameter and adds sample-level resutls from many of the availalble GAMBL pipelines.
+#' Optional aprameters are `these_samples_metadata` and `join_with_full_metadata`. If `join_with_full_metadata` is set to TRUE, the function can either work with an already subset metadata
+#' table (`these_sampels_metadata`), or, if not provided, the function will default to all metadata reutrned with `get_gambl_metadata`, allowing the user to extend the avaialble information in a metadata table.
+#' This function has also been designed so that it can get cahced results, meaning that not all individual collate helper funcitons would have to be run to get results back.
+#' To do so, run this function with `from_cache = TRUE` (default). In addition, it's also possible to regenerate the cached results, this is done by setting `write_to_file = TRUE`,
+#' This operation auto defaults `from_cache = FALSE`. `case_set` is an optional parameter available for subsetting the return to an already defined set of cases.
+#' Lastly, `seq_type_filter` let's the user control what seq type results will ben returned for. Default is "genome". For more infomration on how to get the most out of this function,
+#' refer to funciton examples, vignettes and parameter descriptions. 
 #'
 #' @param sample_table A data frame with sample_id as the first column.
 #' @param write_to_file Boolean statement that outputs tsv file (/projects/nhl_meta_analysis_scratch/gambl/results_local/shared/gambl_{seq_type_filter}_results.tsv) if TRUE, default is FALSE.
@@ -1281,8 +1485,9 @@ test_glue = function(placeholder="INSERTED"){
 #' @param from_cache Boolean variable for using cached results (/projects/nhl_meta_analysis_scratch/gambl/results_local/shared/gambl_{seq_type_filter}_results.tsv), default is TRUE. If write_to_file is TRUE, this parameter auto-defaults to FALSE.
 #'
 #' @return A table keyed on biopsy_id that contains a bunch of per-sample results from GAMBL
+#'
+#' @import dplyr readr glue config
 #' @export
-#' @import tidyverse config
 #'
 #' @examples
 #' #generate new cached results for all genome samples in gambl (Warning, is this what you really want to do?)
@@ -1379,20 +1584,26 @@ collate_results = function(sample_table,
   return(sample_table)
 }
 
-#' INTERNAL FUNCTION called by collate_results, not meant for out-of-package usage.
-#' Extract derived results stored in the database (these are usually slower to derive on the fly).
+
+#' @title Collate Derived Results.
+#'
+#' @description Extract derived results stored in the database (these are usually slower to derive on the fly).
+#'
+#' @details INTERNAL FUNCTION called by collate_results, not meant for out-of-package usage.
 #'
 #' @param sample_table A data frame with sample_id as the first column.
+#' @param seq_type_filter Filtering criteria, default is genomes.
 #' @param from_flatfile Optional argument whether to use database or flat file to retrieve mutations. Default is FALSE, TRUE is not yet implemented.
 #'
 #' @return Data frame with one row per sample. Contains the contents of the derived_data table in the database.
-#' @import tidyverse DBI RMariaDB dbplyr
+#'
+#' @import dplyr DBI RMariaDB
 #'
 #' @examples
 #' gambl_results_derived = collate_derived_results(samples_df)
 #'
 collate_derived_results = function(sample_table,
-                                   seq_type_filter="genome",
+                                   seq_type_filter = "genome",
                                    from_flatfile = FALSE){
 
   if(from_flatfile){
@@ -1414,13 +1625,17 @@ collate_derived_results = function(sample_table,
 }
 
 
-#' INTERNAL FUNCTION called by collate_results, not meant for out-of-package usage.
-#' Collate a few CSR annotations, including MiXCR.
+#' @title Collate CSR Results
+#'
+#' @description Collate a few CSR annotations, including MiXCR.
+#'
+#' @details INTERNAL FUNCTION called by collate_results, not meant for out-of-package usage.
 #'
 #' @param sample_table A data frame with sample_id as the first column.
 #'
 #' @return The sample table with additional columns.
-#' @import tidyverse
+#'
+#' @import readr dplyr
 #'
 #' @examples
 #' gambl_results_derived = collate_csr_results(gambl_results_derived)
@@ -1439,15 +1654,21 @@ collate_csr_results = function(sample_table,seq_type_filter = "genome"){
   return(complete_join)
 }
 
-
-#' INTERNAL FUNCTION called by collate_results, not meant for out-of-package usage.
-#' Compute some summary statistics based on SSM calls.
+#' @title Collate SSM Results.
+#'
+#' @description Compute summary statistics based on SSM calls.
+#'
+#' @details INTERNAL FUNCTION called by collate_results, not meant for out-of-package usage.
 #'
 #' @param sample_table A data frame with sample_id as the first column.
+#' @param seq_type_filter Filtering criteria, default is genomes.
+#' @param projeciton Specifies the projection, default is "grch37".
 #' @param from_flatfile Optional argument whether to use database or flat file to retrieve mutations, default is TRUE.
 #' @param include_silent Logical parameter indicating whether to include siment mutations into coding mutations. Default is FALSE.
 #'
-#' @return Sample table.
+#' @return The sample table with additional columns.
+#'
+#' @import dplyr glue
 #'
 #' @examples
 #' ssm_results = colalte_ssm_results(samples, TRUE, TRUE)
@@ -1520,18 +1741,24 @@ collate_ssm_results = function(sample_table,
 }
 
 
-#' INTERNAL FUNCTION called by collate_results, not meant for out-of-package usage.
-#' Collate all SV calls from the genome data and summarize for main oncogenes of interest per sample.
+#' @title Collate Curated SV Results.
+#'
+#' @description Collate all SV calls from the genome data and summarize for main oncogenes of interest per sample.
+#'
+#' @details INTERNAL FUNCTION called by collate_results, not meant for out-of-package usage.
 #'
 #' @param sample_table A data frame with sample_id as the first column.
+#' @param seq_type_filter Filtering criteria, default is genomes.
 #'
 #' @return The sample table with additional columns.
-#' @import tidyverse
+#'
+#' @import readr dplyr
 #'
 #' @examples
 #' gambl_results_derived = collate_curated_sv_results(gambl_results_derived)
 #'
-collate_curated_sv_results = function(sample_table,seq_type_filter="genome"){
+collate_curated_sv_results = function(sample_table,
+                                      seq_type_filter = "genome"){
 
   path_to_files = check_config_value(config::get("derived_and_curated"))
   project_base = check_config_value(config::get("project_base"))
@@ -1545,16 +1772,27 @@ collate_curated_sv_results = function(sample_table,seq_type_filter="genome"){
   return(sample_table)
 }
 
-#' Get wildcards for a sample_id/seq_type combination.
+
+#' @title Get Sample Wildcards
 #'
-#' @param this_sample_id
-#' @param seq_type
+#' @description Get wildcards for a sample_id/seq_type combination.
 #'
-#' @return
+#' @details Return sample wildcards, useful for getting wildcard information necessary for retreiving sample-level flat-files with glue.
+#'
+#' @param this_sample_id The sample ID of interest.
+#' @param seq_type The desired seq type, e.g genome/capture.
+#'
+#' @return Nothing.
+#'
+#' @import dplyr
 #' @export
 #'
 #' @examples
-get_sample_wildcards = function(this_sample_id,seq_type){
+#' get_sample_wildcards(this_sample_id = "00-15201_tumorA", seq_type = "genome")
+#'
+get_sample_wildcards = function(this_sample_id,
+                                seq_type){
+
   sample_meta = get_gambl_metadata(seq_type_filter = seq_type) %>%
     dplyr::filter(sample_id==this_sample_id)
   this_patient_id = sample_meta$patient_id
@@ -1574,7 +1812,15 @@ get_sample_wildcards = function(this_sample_id,seq_type){
   }
 }
 
-#' Annotate mutations with their copy number information.
+#' @title Assign CN to SSM.
+#'
+#' @description Annotate mutations with their copy number information.
+#'
+#' @details This function takes a sample ID with the `this_sample_id` parameter and annotates mutations with copy number information.
+#' A veriety of parameters are at hand for a customized worklfow. For example, the user can specify if only coding mutations are of interest.
+#' To do so, set `coding_only = TRUE`. It is also possible to point the function to already loadded maf/seq files, or a path to these files. 
+#' See parameters; `maf_file`, `maf_path`, `seq_file` and `seg_path` for more infomation on how to use these parameters. 
+#' This function can also take a list with genes of interest (`genes`) that the returned data frame will be restricted to.
 #'
 #' @param this_sample_id Sample ID of the sample you want to annotate.
 #' @param coding_only Optional. set to TRUE to rescrict to only coding variants.
@@ -1595,8 +1841,9 @@ get_sample_wildcards = function(this_sample_id,seq_type){
 #' log.ratio is the log ratio from the seg file (NA when no overlap was found)
 #' as well as the segmented copy number data with the same copy number information
 #' CN is the rounded absolute copy number estimate of the region based on log.ratio (NA when no overlap was found)
+#'
+#' @import dplyr data.table readr RMariaDB DBI 
 #' @export
-#' @import tidyverse data.table RMariaDB DBI dbplyr
 #'
 #' @examples
 #' cn_list = assign_cn_to_ssm(this_sample_id = "HTMCP-01-06-00422-01A-01D", coding_only = TRUE)
@@ -1763,24 +2010,32 @@ assign_cn_to_ssm = function(this_sample_id,
 }
 
 
-#' Estimate purity.
+#' @title Estimate Purity.
+#' 
+#' @description Annotate a MAF with segmented absolute copy number data and added additional columns (VAF, Ploidy and Final_purity).
+#' 
+#' @details This function takes a sample ID with the `this_sample_id` parameter and calls `assign_cn_to_ssm` to get CN information.
+#' The user can also use an already loaded maf file with `maf_df`. In addition, a path to the maf/seq file of interest can also be passed to this function with
+#' `in_maf` and `in_seg`. To visualizee VAF and purity distributions, set the `show_plots` to TRUE (default si FALSE).
+#' For more infomation on how to run this function with the parameters at hand, refer to the parameter descriptions and function examples.
 #'
 #' @param in_maf Path to a local maf file.
 #' @param maf_df Optional. Instead of using the path to a maf file, use a local dataframe as the maf file.
 #' @param in_seg Path to a local corresponding seg file for the same sample ID as the input maf.
 #' @param this_sample_id Specify the sample_id or any other string you want embedded in the file name.
 #' @param seg_file_source Specify what copy number calling program the input seg file is from, as it handles ichorCNA differently than WisecondorX, battenberg, etc.
-#' @param show_plots Optional. Show two faceted plots that display the VAF and purity distributions for each copy number state in the sample.
-#' @param assume_diploid Optional. If no local seg file is provided, instead of defaulting to a GAMBL sample, this parameter annotates every mutation as copy neutral.
-#' @param coding_only Optional. set to TRUE to rescrict to only coding variants.
+#' @param show_plots Optional. Show two faceted plots that display the VAF and purity distributions for each copy number state in the sample. Default is FALSE.
+#' @param assume_diploid Optional. If no local seg file is provided, instead of defaulting to a GAMBL sample, this parameter annotates every mutation as copy neutral. Default is FALSE.
+#' @param coding_only Optional. set to TRUE to rescrict to only coding variants. Default is FALSE.
 #' @param genes Genes of interest.
 #'
 #' @return A list containing a data frame (MAF-like format) with the segmented absolute copy number data and three extra columns:
 #' VAF is the variant allele frequency calculated from the t_ref_count and t_alt_count
 #' Ploidy is the number of copies of an allele in the tumour cell
-#' Final_purity is the finalized purity estimation per mutation after considering different copy number states and LOH events
+#' Final_purity is the finalized purity estimation per mutation after considering different copy number states and LOH events.
+#' 
+#' @import dplyr ggplot2
 #' @export
-#' @import tidyverse
 #'
 #' @examples
 #' tumour_purity = estimate_purity(in_maf = "path/to/file.maf", in_seg = "path/to/file.seg", seg_file_source = "ichorCNA", show_plots = TRUE)
@@ -1798,7 +2053,7 @@ estimate_purity = function(in_maf,
 
   # Merge the CN info to the corresponding MAF file, uses GAMBLR function
   if(missing(in_maf) & missing(in_seg) & missing(maf_df)){
-    CN_new = assign_cn_to_ssm(this_sample_id = this_sample_id, coding_only = coding_only, assume_diploid = assume_diploid, genes = genes,seg_file_source = seg_file_source)$maf
+    CN_new = assign_cn_to_ssm(this_sample_id = this_sample_id, coding_only = coding_only, assume_diploid = assume_diploid, genes = genes, seg_file_source = seg_file_source)$maf
   }else if(!missing(in_seg)){
     CN_new = assign_cn_to_ssm(this_sample_id = this_sample_id, maf_file = in_maf, maf_df = maf_df, seg_file = in_seg, seg_file_source = seg_file_source, coding_only = coding_only, genes = genes)$maf
   }else{
@@ -1922,15 +2177,20 @@ estimate_purity = function(in_maf,
 }
 
 
-#' INTERNAL FUNCTION called by referesh_metadata_tables, not meant for out-of-package usage.
-#' Refresh the contents of a database table.
+#' @title Refresh Full Table
+#' 
+#' @description Refresh the contents of a database table.
 #'
+#' @details INTERNAL FUNCTION called by referesh_metadata_tables, not meant for out-of-package usage.
+#' 
 #' @param table_name Name of table to refresh.
 #' @param connection Database connection object.
 #' @param file_path Path to the table contents to populate.
 #'
-#' @return Table.
-#'
+#' @return A table.
+#' 
+#' @import DBI RMariaDB readr
+#' 
 #' @examples
 #' refresh_full_table(table_x, con,file_x)
 #'
@@ -1944,11 +2204,16 @@ refresh_full_table = function(table_name,
 }
 
 
-#' INTERNAL FUNCTION, not meant for out-of-package usage.
-#' Refresh the contents of meta data table.
-#'
+#' @title Refresh Metadata Tables
+#' 
+#' @description Refresh the contents of meta data table.
+#' 
+#' @details INTERNAL FUNCTION, not meant for out-of-package usage.
+#' 
 #' @return Table.
 #'
+#' @import RMariaDB DBI dplyr
+#' 
 #' @examples
 #' ref_meta = referesh_metadata_tables()
 #'
@@ -1964,9 +2229,15 @@ referesh_metadata_tables = function(){
 }
 
 
-#' Function that performes sanity checks on meta data.
+#' @title Sanity Check Metadata.
+#' 
+#' @description Function that performes sanity checks on meta data.
+#' 
+#' @details Helper function for sanity checking GAMBL metadata.
 #'
-#' @return Table.
+#' @return A table.
+#' 
+#' @import tibble readr dplyr
 #' @export
 #'
 #' @examples
@@ -2015,13 +2286,20 @@ sanity_check_metadata = function(){
 }
 
 
-#' INTERNAL FUNCTION called by collate_results, not meant for out-of-package usage.
+#' @title Collate Ancestry.
+#' 
+#' @description Gather ancestry infomration and expand the incoming sample table (or metadata).
+#' 
+#' @details INTERNAL FUNCTION called by `collate_results`, not meant for out-of-package usage.
 #'
 #' @param sample_table A data frame with sample_id as the first column.
+#' @param seq_type_filter Filtering criteria, default is genomes.
 #' @param somalier_output Somalier ancestery.tsv
 #'
-#' @return Table.
-#'
+#' @return A table.
+#' 
+#' @import stringr readr dplyr
+#' 
 #' @examples
 #' table = collate_ancestry(sample_table = "my_sample_table.txt")
 #'
@@ -2044,12 +2322,18 @@ collate_ancestry = function(sample_table,
 }
 
 
-#' INTERNAL FUNCTION called by collate_results, not meant for out-of-package usage.
+#' @title Collate Extra Metadata.
+#' 
+#' @description Gather additional metadata infomration and expand the incoming sample table (or metadata).
+#' 
+#' @details INTERNAL FUNCTION called by `collate_results`, not meant for out-of-package usage.
 #'
 #' @param sample_table A data frame with sample_id as the first column.
 #' @param file_path Path to extra emtadata.
 #'
-#' @return Table.
+#' @return A table.
+#' 
+#' @import readr dplyr
 #'
 #' @examples
 #' table = collate_extra_metadata(sample_table = "my_sample_table.txt")
@@ -2063,22 +2347,27 @@ collate_extra_metadata = function(sample_table,
 }
 
 
-#' INTERNAL FUNCTION called by collate_results, not meant for out-of-package usage.
-#' Bring in the results from mutational signature analysis.
+#' @title Collate SBS Results.
+#' 
+#' @description Bring in the results from mutational signature analysis.
+#' 
+#' @details INTERNAL FUNCTION called by `collate_results`, not meant for out-of-package usage.
 #'
 #' @param sample_table A data frame with sample_id as the first column.
+#' @param seq_type_filter Filtering criteria, default is genomes.
 #' @param file_path Optional path to SBS file.
 #' @param scale_vals Parameter not used?
 #' @param sbs_manipulation Optional variable for transforming sbs values (e.g log, scale).
 #'
 #' @return A data frame with new columns added.
-#' @import tidyverse
+#' 
+#' @import dplyr tibble utils 
 #'
 #' @examples
 #' collated = collate_sbs_results(sample_table=sample_table,sbs_manipulation=sbs_manipulation)
 #'
 collate_sbs_results = function(sample_table,
-                               seq_type_filter="genome",
+                               seq_type_filter = "genome",
                                file_path,
                                scale_vals = FALSE,
                                sbs_manipulation = ""){
@@ -2147,19 +2436,25 @@ collate_sbs_results = function(sample_table,
   return(sample_table)
 }
 
-
-#' INTERNAL FUNCTION called by collate_results, not meant for out-of-package usage.
-#' Determine which cases have NFKBIZ UTR mutations.
+#' @title Collate NFKBIZ Results.
+#' 
+#' @description Determine which cases have NFKBIZ UTR mutations.
+#' 
+#' @details INTERNAL FUNCTION called by `collate_results`, not meant for out-of-package usage.
 #'
 #' @param sample_table A data frame with sample_id as the first column.
+#' @param seq_type_filter Filtering criteria, default is genomes.
 #'
 #' @return Samples table.
-#' @import tidyverse
+#' 
+#' @import dplyr
 #'
 #' @examples
 #' sample_table = collate_nfkbiz_results(sample_table=sample_table)
 #'
-collate_nfkbiz_results = function(sample_table,seq_type_filter="genome"){
+collate_nfkbiz_results = function(sample_table,
+                                  seq_type_filter = "genome"){
+
   #TO DO: Update to work with hg38 projection
   if(missing(sample_table)){
     sample_table = get_gambl_metadata(seq_type_filter=seq_type_filter) %>%
@@ -2185,23 +2480,27 @@ collate_nfkbiz_results = function(sample_table,seq_type_filter="genome"){
   return(sample_table)
 }
 
-
-#' INTERNAL FUNCTION called by collate_results, not meant for out-of-package usage.
-#' Determine the hypermutation status of a few genes.
+#' @title Collate ASHM Results.
+#' 
+#' @description Determine the hypermutation status of a few genes.
+#' 
+#' @details INTERNAL FUNCTION called by `collate_results`, not meant for out-of-package usage.
 #'
 #' @param sample_table A data frame with sample_id as the first column.
+#' @param seq_type_filter Filtering criteria, default is genomes.
 #'
 #' @return Samples table.
-#' @import tidyverse
+#' 
+#' @import dplyr tidyr tibble
 #'
 #' @examples
-#' sample_table = collate_ashm_results(sample_table=sample_table)
+#' sample_table = collate_ashm_results(sample_table = sample_table)
 #'
 collate_ashm_results = function(sample_table,
-                                seq_type_filter="genome"){
+                                seq_type_filter = "genome"){
 
   if(missing(sample_table)){
-    sample_table = get_gambl_metadata(seq_type_filter=seq_type_filter) %>%
+    sample_table = get_gambl_metadata(seq_type_filter = seq_type_filter) %>%
       dplyr::select(sample_id, patient_id, biopsy_id)
   }
   #just annotate BCL2, MYC and CCND1 hypermutation
@@ -2224,22 +2523,27 @@ collate_ashm_results = function(sample_table,
 }
 
 
-#' INTERNAL FUNCTION called by collate_results, not meant for out-of-package usage.
-#' Determine and summarize which cases have specific oncogene SVs.
+#' @title Collate SV Results.
+#' 
+#' @description Determine and summarize which cases have specific oncogene SVs.
+#' 
+#' @details INTERNAL FUNCTION called by `collate_results`, not meant for out-of-package usage.
 #'
 #' @param sample_table A data frame with sample_id as the first column.
 #' @param tool Name of tool (optional, default is manta).
+#' @param seq_type_filter Filtering criteria, default is genomes.
 #' @param oncogenes Which oncogenes to collate SVs from.
 #'
 #' @return Data frame with additional columns ({tool}_{oncogene} and {tool}_{oncogene}_{partner}).
-#' @import tidyverse
+#' 
+#' @import dplyr
 #'
 #' @examples
 #' results = collate_samples_sv_results(samples, "manta", c("MYC", "BCL2"))
 #'
 collate_sv_results = function(sample_table,
                               tool = "manta",
-                              seq_type_filter="genome",
+                              seq_type_filter = "genome",
                               oncogenes = c("MYC", "BCL2", "BCL6", "CCND1", "IRF4")){
   if(seq_type_filter!="genome"){
     message("skipping sv for this seq_type")
@@ -2282,26 +2586,40 @@ collate_sv_results = function(sample_table,
 }
 
 
-#' Get some colour schemes for annotating figures.
+#' @title Get GAMBL Colours.
+#' 
+#' @description Get GAMBL colour schemes for annotating figures.
 #'
-#' @param classification (optionally request only colours for pathology, lymphgen, mutation or copy_number).
-#' @param alpha alpha of plotted colours.
+#' @details This function was designed to retreive specified GAMBL colour palettes.
+#' By default, this function returns all the colours currently avaialble. 
+#' The user can easily specify for what classification to return colurs for with the `classificaion` parameter.
+#' It is also possible to return any given colours in different formats.
+#' To do so, refer to the Boolean arguments; `as_list` and `as_dataframe`.
+#' For more information regarding the avaialble colours, refer to the utillities vignette.
+#' 
+#' @param classification Optionally request only colours for pathology, lymphgen, mutation or copy_number.
+#' @param alpha Alpha of plotted colours.
+#' @param as_list Boolean parameter controling the format of the return. Default is FALSE.
+#' @param as_dataframe Boolean parameter controling the format of the return. Default is FALSE.
+#' @param return_available Set to TRUE for returning all avaialble colours. Default is FALSE.
+#' @param verbose Default is FALSE
 #'
-#' @return A named vector of colour codes for lymphgen classes and pathology
+#' @return A named vector of colour codes for lymphgen classes and pathology.
+#' 
+#' @import dplyr ggsci stringr tidyr
 #' @export
-#' @import tidyverse
 #'
 #' @examples
 #' lymphgen_cols = get_gambl_colours("lymphgen")
-#' # be sure to install ggsci from https://github.com/morinlab/ggsci
-#' # install_github("morinlab/ggsci")
+#' #be sure to install ggsci from https://github.com/morinlab/ggsci
+#' #install_github("morinlab/ggsci")
 #'
 get_gambl_colours = function(classification = "all",
                              alpha = 1,
-                             as_list=FALSE,
-                             as_dataframe=FALSE,
-                             return_available=FALSE,
-                             verbose=FALSE){
+                             as_list = FALSE,
+                             as_dataframe = FALSE,
+                             return_available = FALSE,
+                             verbose = FALSE){
 
   all_colours = list()
   everything = c()
@@ -2551,26 +2869,30 @@ get_gambl_colours = function(classification = "all",
 }
 
 
-#' Get full paths for bam files for a sample or patient.
+#' @title Get BAMs.
+#' 
+#' @description Get full paths for bam files for a sample or patient.
+#' 
+#' @details Returns a list with BAM paths for tumour, normal and mrna data.
+#' This function expects a sample ID (`sample`) or a patient ID (`patient`).
 #'
 #' @param sample Either provide sample_id or patient_id.
 #' @param patient Either provide sample_id or patient_id.
 #'
 #' @return A list that contains the genome_build and an igv-friendly build (igv_build), a list of bam file paths for tumour, normal and mrna data.
+#' 
+#' @import dplyr utils
 #' @export
-#' @import tidyverse
 #'
 #' @examples
-#'
-#' this_sv = filter(annotate_sv(get_manta_sv()),partner=="HIST1H2BK")
+#' this_sv = filter(annotate_sv(get_manta_sv()), partner == "HIST1H2BK")
 #' #arbitrarily grab one SV
-#' bam_details = get_bams(sample=this_sv[1,"tumour_sample_id"])
+#' bam_details = get_bams(sample = this_sv[1,"tumour_sample_id"])
 #'
 get_bams = function(sample,
-                    patient
-                    ){
+                    patient){
 
-  meta = get_gambl_metadata(tissue_status_filter = c("tumour", "normal"),seq_type_filter="genome")
+  meta = get_gambl_metadata(tissue_status_filter = c("tumour", "normal"), seq_type_filter = "genome")
   meta_mrna = get_gambl_metadata(seq_type_filter = "mrna")
   #get all samples for this patient
   if(missing(patient)){
@@ -2622,8 +2944,15 @@ get_bams = function(sample,
 }
 
 
-#' Load bams and generate an IGV screenshot for one or more regions.
+#' @title Make IGV Snapshot
+#' 
+#' @description Load bams and generate an IGV screenshot for one or more regions.
 #'
+#' @details Specify the path to one or more bam files as a charachter of vector to the `bams` parameter.
+#' The user can also specify regions of interest with either the `region` parameter (chr:start-end),
+#' or the user can directly supply the chromosome, start and end coordinates with the `chrom`, `start`, and `end` parameters.
+#' For more information and examples, refer to the function examples and poarameter descriptions.
+#' 
 #' @param bams Character vector containing the full path to one or more bam files.
 #' @param genome_build String specifying the genome build for the bam files provided.
 #' @param region Optionally specify the region as a single string (e.g. "chr1:1234-1235").
@@ -2635,9 +2964,10 @@ get_bams = function(sample,
 #' @param out_path Specify the output directory where the snapshot will be written.
 #' @param igv_port Specify the port IGV is listening on.
 #'
-#' @return Path to file (.png)
+#' @return Path to file (.png).
+#' 
+#' @import SRAdb
 #' @export
-#' @import tidyverse SRAdb
 #'
 #' @examples
 #' #IMPORTANT: you must be running IGV on the host that is running R and you need to have it listening on a port
@@ -2676,8 +3006,15 @@ make_igv_snapshot = function(bams,
 }
 
 
-#' Using GISTIC2.0 outputs, perform Fisher's exact test to compare CNV frequencies between 2 groups.
+#' @title Fishers Exact Test (CNV).
+#' 
+#' @description Using GISTIC2.0 outputs, perform Fisher's exact test to compare CNV frequencies between 2 groups.
 #'
+#' @details This function was developed to compare (Fisher's exact test) CNV frequencies between two groups. 
+#' To do so, set the path to the GISTIC2.0 all_lesions file with `gistic_lesions`, together with a metadata table with thhe sample IDs of interest (`metadata`).
+#' The last reamaining required parameter is `comparison`, this parameter takes the name of the column annotating the groups of interest, e.g pathology, cohort, etc.
+#' For more infomation on how to run this funciton, refer to the function examples and parameter descriptions.
+#' 
 #' @param gistic_lesions Path to the GISTIC2.0 all_lesions output file.
 #' @param metadata Data frame containing sample ids and column with annotated data for the 2 groups of interest. All other columns are ignored. Currently, function exits if asked to compare more than 2 groups.
 #' @param comparison Specify column annotating groups of interest.
@@ -2691,12 +3028,14 @@ make_igv_snapshot = function(bams,
 #' CNV.EVENTS - conveniently reformatted set of events in both groups that can be used for downstream analyses; and
 #' GRAPH - forest plot visualization of distinct CNV between 2 groups.
 #' Output can be accessed by index (e.g.[3]), or by name (e.g.["GRAPH"])
+#' 
+#' @import dplyr utils metaviz readr stats tidyr
 #' @export
-#' @import tidyverse stats metaviz
 #'
 #' @examples
 #' # basic usage
 #' FtestCNV(gistic_lesions = "path_to_GISTIC2.0_output/all_lesions.conf_{confidence_level}.txt", metadata = derived_data, comparison = "pathology")
+#' 
 #' # advanced usage
 #' FtestCNV(gistic_lesions = "path_to_GISTIC2.0_output/all_lesions.conf_{confidence_level}.txt", metadata = derived_data,
 #' comparison = "pathology", fdr.method = "bonferroni", fdr.cutoff = 0.05, blacklisted_regions = c("3p12.3", "12p13.2"))
@@ -2872,8 +3211,15 @@ FtestCNV = function(gistic_lesions,
 }
 
 
-#' If some samples are missing from the matrix, add them with filled in 0 as value and normalize their ordering for consistency.
+#' @title Complete Missing From Matrix.
+#' 
+#' @description If some samples are missing from the matrix, add them with filled in 0 as value and normalize their ordering for consistency.
 #'
+#' @details This function takes an incoming matrix with sample IDs (and other infomation) with the `incoming_matrix` parameter,
+#' and adds samples from the `list_of_samples` if they are missing from the incoming matrix. 
+#' The fucntion also orders the returned data frame based on a couple of criteria `normalize_order` and `samples_in_rows`.
+#' For more information, refer to the parmeter descriptions and examples.
+#' 
 #' @param incoming_matrix A matrix or data frame that should be filled. Required parameter.
 #' @param list_of_samples Vector specifying all desired samples to be present in the resulting matrix. Required parameter.
 #' @param fill_in_values Value that will be used to fill in the matrix.
@@ -2881,6 +3227,8 @@ FtestCNV = function(gistic_lesions,
 #' @param samples_in_rows Logical argument indicating whether samples are in rows or columns. Default assumes samples are in rows and columns are features.
 #'
 #' @return A data frame with maintained orientation (rows and columns) where samples from the supplied list are present and reordered according to the specified order.
+#' 
+#' @import dplyr
 #' @export
 #'
 #' @examples
@@ -2929,8 +3277,15 @@ complete_missing_from_matrix = function(incoming_matrix,
 }
 
 
-#' Subset maf file to only features that would be available in the WEX data.
+#' @title Genome To Exome.
+#' 
+#' @description Subset maf file to only features that would be available in the WEX data.
 #'
+#' @details To subset an incoming MAF data frame to only show features that would be avaialble in WEX data this function was developed. 
+#' Pass the incoming MAF (genome) to the `maf` parameter as the only required parameter to run this function. Other aprameters such as `custom_bed`, 
+#' `genome_build`, `padding`, and `chr_prefixed` are also available for greater control of how this function operates. 
+#' Refer to parameter descriptions for more information on how to use the available parameters.
+#' 
 #' @param maf Incoming maf object. Can be maf-like data frame or maftools maf object. Required parameter. Minimum columns that should be present are Chromosome, Start_Position, and End_Position.
 #' @param custom_bed Optional argument specifying a path to custom bed file for covered regions. Must be bed-like and contain chrom, start, and end position information in first 3 columns. Other columns are disregarded if provided.
 #' @param genome_build String indicating genome build of the maf file. Default is grch37, but can accept modifications of both grch37- and hg38-based duilds.
@@ -2939,7 +3294,7 @@ complete_missing_from_matrix = function(incoming_matrix,
 #'
 #' @return Aa data frame of maf-like object with same columns as in input, but where rows are only kept for features that would be present as if the sample is WEX.
 #' @export
-#' @import tidyverse data.table
+#' @import stringr dplyr data.table
 #'
 #' @examples
 #' myc_ashm_maf = get_ssm_by_region(region="8:128748352-128749427") # get all ssm in the MYC aSHM region
@@ -3010,7 +3365,15 @@ genome_to_exome = function(maf,
 }
 
 
-#' Consolidate a column of LymphGen data in the original Subtype.Prediction output format to the GAMBLR tidy format
+#' @title Tidy Lymphgen.
+#' 
+#' @description Consolidate a column of LymphGen data in the original Subtype.Prediction output format to the GAMBLR tidy format.
+#' 
+#' @details This function takes an incoming data frame (`df`) and consolidates a column of LymphGen data.
+#' Specify the column with the lymphgen data to be processed with `lymphgen_column_in` and
+#' what column to write the tydied data to with `lymphgen_column_out`.
+#' In addition, the user can also run this function with `relevel = TRUE` (default is FALSE), 
+#' to return the ouptput column as a factor with plot friendly levels.
 #'
 #' @param df Input data frame.
 #' @param lymphgen_column_in The name of the column with lymphgen data to be processed.
@@ -3018,8 +3381,9 @@ genome_to_exome = function(maf,
 #' @param relevel If TRUE, will return the output column as a factor with plot-friendly levels.
 #'
 #' @return A data frame with a tidied lymphGen column
+#' 
+#' @import dplyr purrr readr stringr
 #' @export
-#' @import tidyverse
 #'
 #' @examples
 #' metadata <- get_gambl_metadata()
@@ -3029,6 +3393,7 @@ tidy_lymphgen = function(df,
                          lymphgen_column_in = "Subtype.Prediction",
                          lymphgen_column_out = "Subtype.Prediction",
                          relevel = FALSE){
+
   df = mutate(df, {{ lymphgen_column_out }} := case_when(
     !str_detect(.data[[lymphgen_column_in]],"/")~.data[[lymphgen_column_in]],
     str_detect(.data[[lymphgen_column_in]],"EZB")~"EZB-COMP",
@@ -3064,19 +3429,25 @@ tidy_lymphgen = function(df,
   return(df)
 }
 
-#' Supplement the "lymphgen" column of the metadata with classification for additional samples.
+
+#' @title Consolidate Lymphgen.
+#' 
+#' @description Replace the lymphgen column in the incoming metadata with classification for additional samples.
+#' 
+#' @details Supplement the "lymphgen" column of the metadata with classification for additional samples.
 #' Expects at least to have columns "patient_id" to bind on, and "lymphgen" to supplement the data on.
 #'
-#'
 #' @param sample_table Input data frame with metadata.
-#' @param derived_data_path Optional argument specifying the path to a folder with files following the pattern *lymphgen.txt
+#' @param derived_data_path Optional argument specifying the path to a folder with files following the pattern *lymphgen.txt.
+#' @param verbose Default is TRUE.
 #'
-#' @return A data frame with a supplemented lymphGen column
+#' @return A data frame with a supplemented lymphGen column.
+#' 
+#' @import dplyr purrr readr
 #' @export
-#' @import tidyverse
 #'
 #' @examples
-#' metadata <- get_gambl_metadata()
+#' metadata = get_gambl_metadata()
 #' GAMBLR::consolidate_lymphgen(metadata)
 #'
 consolidate_lymphgen = function(sample_table,
@@ -3148,15 +3519,23 @@ consolidate_lymphgen = function(sample_table,
 }
 
 
-#' Expand a sample_table (meta data) horizontally with different flavours of lymphgen data.
+#' @title Collate Lymphgen.
+#' 
+#' @description Expand a sample_table (meta data) horizontally with different flavours of lymphgen data.
+#' 
+#' @details This function takes a sample table (metadata) and adds different flavours of lymphgen data.
+#' It is possible to call this function with an alreeady subuset metdata table (with samplee IDs of interest) with `these_samples_metadata`.
+#' If this done, the fucntion will join the lymphgen data with this tablee. Currently, the only supported `lymphgen_version` is "default".
+#' For more information refer to the function examples.
 #'
-#' @param these_samples_metadata Optional parameter with  meta data filtered for sample_ids of interest. If provided, this function will join lymphgen with this meta data, regardless of tidy_lymphgen TRUE/FALSE.
+#' @param these_samples_metadata Optional parameter with meta data filtered for sample_ids of interest. If provided, this function will join lymphgen with this meta data, regardless of tidy TRUE/FALSE.
 #' @param lymphgen_version Version of selected lymphgen, default is "default".
-#' @param tidy Boolean parameter, set to TRUE for tidy format (i.e long format with no columns dropped). Default is FALSE, which returns the data in a wide format, keeps both the original Subtype.Prediction and tidied LymphGen values and puts the values from each "flavour" in its own column.
+#' @param tidy Boolean parameter, set to TRUE for tidy format (i.e long format with no columns dropped). Default is FALSE, which returns the data in a wide format, keeps both the original Subtype. Prediction and tidied LymphGen values and puts the values from each "flavour" in its own column.
 #'
-#' @return a df with lymphgen information.
+#' @return A df with lymphgen information.
+#' 
+#' @import dplyr tidyr readr stringr
 #' @export
-#' @import tidyverse
 #'
 #' @examples
 #' this_meta = get_gambl_metadata() %>% dplyr::filter(pathology == "DLBCL")
@@ -3170,7 +3549,7 @@ collate_lymphgen = function(these_samples_metadata,
   if(lymphgen_version == "default"){
     lymphgen_template = check_config_value(config::get("results_versioned")$lymphgen_template$default)
   }else{
-    stop("Currently, only lymphgen_version default is accepted")
+    stop("Currently, only lymphgen_version = default is accepted")
   }
 
   #repo base
@@ -3219,21 +3598,24 @@ collate_lymphgen = function(these_samples_metadata,
 }
 
 
-
-#' INTERNAL FUNCTION called by collate_results, not meant for out-of-package usage.
-#' Collate qc metrics.
+#' @title Collate Quality Control Results.
+#' 
+#' @description Expand a metadata table horizontally with quality control metrics.
+#' 
+#' @details INTERNAL FUNCTION called by `collate_results`, not meant for out-of-package usage.
 #'
 #' @param sample_table df with sample ids in the first column.
 #' @param seq_type_filter default is genome, capture is also available for unix_group icgc_dart.
 #'
 #' @return The sample table with additional columns.
-#' @import tidyverse
+#' 
+#' @import dplyr readr
 #'
 #' @examples
 #' qc_metrics = collate_qc_results(sample_table = sample_table)
 #'
 collate_qc_results = function(sample_table,
-                              seq_type_filter){
+                              seq_type_filter = "genome"){
 
   if(! seq_type_filter %in% c("genome", "capture")){
     stop("Please provide a valid seq_type (\"genome\" or \"capture\").")
@@ -3284,8 +3666,11 @@ collate_qc_results = function(sample_table,
   return(sample_table)
 }
 
-
-#' Will prepare the data frame of binary matrix to be used as NMF input. This means that for the features with SSM and CNV,
+#' @title Message Matrix For Clustering
+#' 
+#' @description Prepare a data frame of binary matrix to be used as NMF input.
+#' 
+#' @details Will prepare the data frame of binary matrix to be used as NMF input. This means that for the features with SSM and CNV,
 #' they will be squished together as one feature named GeneName-MUTorAMP or GeneName-MUTorLOSS, so the CNV features in the input data frame are expected
 #' to be named GeneName_AMP or GeneName_LOSS. Next, for the genes with hotspot mutations labelled in the input data as
 #' GeneNameHOTSPOT, the feature for hotspot mutation will be given preference and SSM with/without CNV will be set to 0 for that sample.
@@ -3294,23 +3679,21 @@ collate_qc_results = function(sample_table,
 #' frequency will be removed, as well as any samples with 0 features.
 #' Consistent with NMF input, in the input data frame each row is a feature, and each column is a sample. The input is expected to be numeric 1/0 with row and column names.
 #'
-#'
 #' @param incoming_data Input data frame or matrix to prepare for NMF.
 #' @param blacklisted_cnv_regex Regular expression to match in feature names when considering SSM/CNV overlap.
 #' @param drop_these_features Optional argument with features to drop from resulting matrix.
 #' @param min_feature_percent Minimum frequency for the feature to be returned in the resulting matrix. By default, features present in less than 0.5% of samples will be discarded.
 #'
 #' @return A matrix compatible with NMF input.
+#' 
 #' @export
-#' @import tidyverse
 #'
 #' @examples
 #' data = system.file("extdata", "sample_matrix.tsv", package = "GAMBLR") %>% read_tsv() %>% column_to_rownames("Feature")
 #' NMF_input = massage_matrix_for_clustering(data)
 #'
-
 massage_matrix_for_clustering = function(incoming_data,
-                                         blacklisted_cnv_regex="3UTR|SV|HOTSPOT|TP53BP1|intronic",
+                                         blacklisted_cnv_regex = "3UTR|SV|HOTSPOT|TP53BP1|intronic",
                                          drop_these_features,
                                          min_feature_percent = 0.005){
 
@@ -3392,27 +3775,23 @@ massage_matrix_for_clustering = function(incoming_data,
     message("All samples in your matrix are having at least one feature. Proceeding without dropping any samples ...")
   }
 
-
-
-
-
   # convert to matrix explicitly to make it NMF-input compatible
   output_data = as.matrix(output_data)
-
   return(output_data)
-
 }
 
 
-#' Standartize the chr prefix in a vector of chromosome names based on projection.
-#' Internal helper function not meant for out-of-package use.
-#'
+#' @title Standardize Chromosome Prefix.
+#' 
+#' @description Standartize the chr prefix in a vector of chromosome names based on projection.
+#' 
+#' @details INTERNAL FUNCTION, not meant for out-of-package use.
 #'
 #' @param incoming_vector Input vector of any length with chromosome names.
 #' @param projection Projection to which chr prefix should be standardized.
 #'
 #' @return A vector of chromosome names with prefix standardized to projection
-#'
+#' 
 #' @examples
 #' these_chrs = c(8, "13", "chr4", "chrY")
 #' standardize_chr_prefix(these_chrs, projection = "hg38")
@@ -3427,17 +3806,15 @@ standardize_chr_prefix = function(incoming_vector,
     output_vector = gsub("chr", "", incoming_vector) # if there is a mix of prefixed and non-prefixed options
     output_vector = paste0("chr", output_vector)
   }
-
   return(output_vector)
-
 }
 
 
-#' Calculate proportion of genome altered by CNV.
+#' @title Calculate proportion of genome altered by CNV.
 #'
-#' `calculate_pga` returns a data.frame with estimated proportion of genome altered for each sample.
+#' @description `calculate_pga` returns a data.frame with estimated proportion of genome altered for each sample.
 #'
-#' This function calculates the percent of genome altered (PGA) by CNV. It takes into account the total length of
+#' @details This function calculates the percent of genome altered (PGA) by CNV. It takes into account the total length of
 #' sample's CNV and relates it to the total genome length to return the proportion affected by CNV. The input is expected to be seg file.
 #' The path to a local SEG file can be provided instead. If The custom seg file is provided, the minimum required columns are
 #' sample, chrom, start, end, and log.ratio. The function can work with either individual or multi-sample seg file. The telomeres are always
@@ -3451,8 +3828,9 @@ standardize_chr_prefix = function(incoming_vector,
 #' @param exclude_centromeres Boolean argument specifyng whether to exclude centromeres from calculation. Default is TRUE.
 #'
 #' @return A data frame of sample_id and a float in the range [0..1] indicating the fraction of genome altered by CNV.
+#' 
+#' @import dplyr data.table readr tidyr
 #' @export
-#' @import data.table tidyverse
 #'
 #' @examples
 #' sample_seg = get_sample_cn_segments(this_sample_id = "14-36022T") %>% rename("sample"="ID")
@@ -3464,7 +3842,6 @@ standardize_chr_prefix = function(incoming_vector,
 #'                          rename("sample"="ID")
 #' GAMBLR::calculate_pga(this_seg = multi_sample_seg)
 #'
-
 calculate_pga = function(this_seg,
                          seg_path,
                          projection = "grch37",
@@ -3579,11 +3956,11 @@ calculate_pga = function(this_seg,
 
 }
 
-#' Adjust ploidy for samples with CNV data.
+#' @title Adjust ploidy for samples with CNV data.
 #'
-#' `adjust_ploidy` returns a seg file with log.ratios adjusted to the overall sample ploidy.
+#' @description `adjust_ploidy` returns a seg file with log.ratios adjusted to the overall sample ploidy.
 #'
-#' This function adjusts ploidy of the sample using the percent of genome altered (PGA). The PGA is calculated internally, but can also be optionally provided as data frame
+#' @details This function adjusts ploidy of the sample using the percent of genome altered (PGA). The PGA is calculated internally, but can also be optionally provided as data frame
 #' if calculated from other sources. Only the samples above the threshold-provided PGA will have ploidy adjusted. The function can work with either individual or
 #' multi-sample seg file. The telomeres are always excluded from calculation, and sex chromosomes can be optionally included or excluded. The supported projections are grch37 and hg38.
 #' The chromosome prefix is handled internally per projection and does not need to be consistent.
@@ -3597,8 +3974,9 @@ calculate_pga = function(this_seg,
 #' @param return_seg Boolean argument specifying whether to return a data frame in seg-consistent format, or a raw data frame with all step-by-step transformations. Default is TRUE.
 #'
 #' @return A data frame in seg-consistent format with ploidy-adjusted log ratios.
+#' 
+#' @import dplyr tidyr data.table readr 
 #' @export
-#' @import tidyverse
 #'
 #' @examples
 #' sample_seg = get_sample_cn_segments(this_sample_id = "14-36022T") %>% rename("sample"="ID")
@@ -3705,10 +4083,14 @@ adjust_ploidy = function(this_seg,
 }
 
 
-#' Helper function called by fancy_multisample_ideo, for sub-setting copy number information based on segments avaialble in cn data
+#' @title Subset CN States.
+#' 
+#' @description List the avaialble CN states in the incoming data frame.
+#' 
+#' @details INTERNAL FUNCTION called by fancy_multisample_ideo, for sub-setting copy number information based on segments avaialble in cn data
 #'
 #' @param cn_segments DF with copy number segments, usually retrieved from get_sample_cn_segments.
-#' @param include_2 Optional parameter for including or ommit CN state == 2.
+#' @param include_2 Optional parameter for including or ommit CN state == 2. Default is FALSE.
 #' @param samplen Numeric value that annotates the sample order.
 #'
 #' @return Nothing.
@@ -3741,11 +4123,11 @@ subset_cnstates = function(cn_segments,
 }
 
 
-#' Compare segmented data for multiple samples.
+#' @title Compare segmented data for multiple samples.
 #'
-#' `cnvKompare` returns a list in variable data formats allowing to evaluate concordance of CNV data between multiple samples.
+#' @description `cnvKompare` returns a list in variable data formats allowing to evaluate concordance of CNV data between multiple samples.
 #'
-#' This function will compare CNV data between samples with multiple time points. It can also handle same-sample comparison
+#' @details This function will compare CNV data between samples with multiple time points. It can also handle same-sample comparison
 #' between different CNV callers if sample ID is specified in unique fashion. For groups with more than 2 samples,
 #' optionally the pairwise comparisons can be performed. The comparison is made based on the internally calculated score,
 #' which reflects percentage of each cytoband covered by CNV (rounded to the nearest 5%) and its absolute CN. Optionally,
@@ -3762,18 +4144,19 @@ subset_cnstates = function(cn_segments,
 #' @param ignore_cytoband_labels Cytobands to be ignored. By default, "acen", "gvar", "stalk" are excluded.
 #' @param max_overlap For time-series plot, how many maximum overlapping points are allowed?
 #' @param min_concordance Integer value from 0 to 100 to indicate the minimum required similarity between cytobands to be considered concordant. The dafult is 90 (90%).
-#' @param pga_cutoff Minimum PGA for the sample to adjust ploidy. Default is 0.05 (5%).
 #' @param exclude_sex Boolean argument specifying whether to exclude sex chromosomes from calculation. Default is FALSE.
 #' @param return_heatmap Boolean argument specifying whether to return a heatmap of cnvKompare scores. Default is TRUE.
 #' @param compare_pairwise Boolean argument specifying whether to perform pairwise comparisons is there are more than 2 time points in the group. Default is TRUE.
 #'
 #' @return A list of overall and pairwise percent concordance, concordant and discordant cytobands, comparison heatmap of cnvKompare socres, and time series ggplot object.
+#' 
+#' @import dplyr tidyr circlize ComplexHeatmap data.table ggplot2 ggrepel readr tibble utils
 #' @export
-#' @import tidyverse data.table circlize ComplexHeatmap ggrepel
 #'
 #' @examples
 #' cnvKompare(patient_id = "00-14595", genes_of_interest = c("EZH2", "TP53", "MYC", "CREBBP", "GNA13"))
 #' cnvKompare(patient_id = "13-26835", genes_of_interest = c("EZH2", "TP53", "MYC", "CREBBP", "GNA13"), projection = "hg38")
+#' 
 cnvKompare = function(patient_id,
                       these_sample_ids,
                       this_seg,
@@ -4049,20 +4432,24 @@ cnvKompare = function(patient_id,
 
     }
   }
-
   message("DONE!")
   return(output)
-
 }
 
 
-#' Transform input maf columns to allow for usage of dplyr verbs
+#' @title Cleanup MAF.
+#'  
+#' @description Transform input maf columns to allow for usage of dplyr verbs.
+#' 
+#' @details Transform input maf columns to allow for usage of dplyr verbs.
+#' Allowing for a stright-forward plotting workflowas well as downstream data aggregation and manipualtion.
 #'
 #' @param maf_df input MAF data frame.
 #'
 #' @return maf_df with transofmred columns
+#' 
+#' @import dplyr
 #' @export
-#' @import tidyverse
 #'
 #' @examples
 #' ssm_sample = get_ssm_by_sample(this_sample_id = "HTMCP-01-06-00485-01A-01D", tool_name = "slims-3", projection = "grch37")
@@ -4085,12 +4472,18 @@ cleanup_maf = function(maf_df){
   return(maf_df)
 }
 
-#' Complement maf with missing samples.
+#' @title Supplement MAF.
+#' 
+#' @description Complement maf with missing samples.
 #'
+#' @details Specify the initial MAF with `incoming_maf` (to be supplemented with missing samples) and
+#' give the function a filtered metadata table (with the sample IDs of interest) to the `these_samples_metadata`.
+#' 
 #' @param incoming_maf The initial MAF data frame to be supplemented with missing samples.
 #' @param these_samples_metadata The metadata data frame that contains Tumor_Sample_Barcode column with ids to be present in the complemented MAF.
 #'
-#' @return maf_df with complemented Tumor_Sample_Barcode and other columns ready to be used downstream
+#' @return maf_df with complemented Tumor_Sample_Barcode and other columns ready to be used downstream.
+#' 
 #' @export
 #'
 #' @examples
@@ -4100,29 +4493,29 @@ cleanup_maf = function(maf_df){
 #'
 supplement_maf <- function(incoming_maf,
                            these_samples_metadata){
+
   missing_sample_ids = setdiff(these_samples_metadata$Tumor_Sample_Barcode,
                                incoming_maf$Tumor_Sample_Barcode)
+
   missing_sample_maf = incoming_maf %>%
     dplyr::filter(Tumor_Sample_Barcode == "Imaginary Sample ID") %>%
     add_row(Tumor_Sample_Barcode = missing_sample_ids,
            Hugo_Symbol = "GARBAGE",
-           Chromosome = ifelse(stringr::str_detect(incoming_maf$Chromosome[1],
-                                                   "chr"),
-                               "chr1",
-                               "1"),
+           Chromosome = ifelse(stringr::str_detect(incoming_maf$Chromosome[1], "chr"), "chr1", "1"),
            Start_Position = 1,
            End_Position = 1,
-           Variant_Classification = "Missense_Mutation"
-           )
-  full_maf = rbind(incoming_maf,
-                   missing_sample_maf)
+           Variant_Classification = "Missense_Mutation")
+
+  full_maf = rbind(incoming_maf, missing_sample_maf)
   return(full_maf)
 }
 
 
-#' Classify FL samples into cFL/dFL subgroups.
+#' @title Classify FL.
+#' 
+#' @description Classify FL samples into cFL/dFL subgroups.
 #'
-#' Use the random forest prediction model to assemble the binary matrix and use it to classify FL tummors into cFL/dFL
+#' @details Use the random forest prediction model to assemble the binary matrix and use it to classify FL tummors into cFL/dFL.
 #'
 #' @param these_samples_metadata The metadata data frame that contains sample_id column with ids for the samples to be classified.
 #' @param maf_data The MAF data frame to be used for matrix assembling. At least must contain the first 45 columns of standard MAF format.
@@ -4130,22 +4523,21 @@ supplement_maf <- function(incoming_maf,
 #' @param this_seq_type The seq_type of the samples. Only really used to retrerive mutations when maf data is not provided and to be retreived through GAMBLR. Defaults to genome.
 #' @param output The output to be returned after prediction is done. Can be one of predictoins, matrix, or both. Defaults to predictions.
 #'
-#' @return data frame with classification, binary matrix used in classification, or both
+#' @return data frame with classification, binary matrix used in classification, or both.
+#' 
+#' @import dplyr tibble stats randomForest
 #' @export
-#' @import tidyverse randomForest
 #'
 #' @examples
 #' test_meta <- get_gambl_metadata(case_set="tFL-study")
 #' predictions = classify_fl(these_samples_metadata = test_meta)
 #' predictions = classify_fl(these_samples_metadata = test_meta, output = "both")
 #'
-classify_fl <- function(
-    these_samples_metadata,
-    maf_data,
-    model = RFmodel_FL,
-    this_seq_type = "genome",
-    output = "predictions"
-) {
+classify_fl <- function(these_samples_metadata,
+                        maf_data,
+                        model = RFmodel_FL,
+                        this_seq_type = "genome",
+                        output = "predictions"){
 
     # Establish minimum required set of genes
     req_features <- rownames(
@@ -4383,13 +4775,14 @@ classify_fl <- function(
     }else{
         stop("Invalid output type. Please specify predictions, matrix, or both.")
     }
-
-
 }
 
-#' Classify DLBCLs according to genetic subgroups of Chapuy et al.
+
+#' @title Classify DLBCL Chapuy.
+#' 
+#' @description Classify DLBCLs according to genetic subgroups of Chapuy et al.
 #'
-#' Use the feature weights from NMF model to assemble the binary matrix and classify DLBCL tumors based on C0-C5 system of Chapuy et al
+#' @details Use the feature weights from NMF model to assemble the binary matrix and classify DLBCL tumors based on C0-C5 system of Chapuy et al.
 #'
 #' @param these_samples_metadata The metadata data frame that contains sample_id column with ids for the samples to be classified.
 #' @param maf_data The MAF data frame to be used for matrix assembling. At least must contain the first 45 columns of standard MAF format.
@@ -4400,25 +4793,25 @@ classify_fl <- function(
 #' @param output The output to be returned after prediction is done. Can be one of predictoins, matrix, or both. Defaults to predictions.
 #' @param adjust_ploidy Whether to perform ploidy adjustment for the CNV data. Defaults to TRUE (recommended).
 #'
-#' @return data frame with classification, binary matrix used in classification, or both
+#' @return data frame with classification, binary matrix used in classification, or both.
+#' 
+#' @import data.table circlize dplyr tibble stats
 #' @export
-#' @import data.table circlize tidyverse
 #'
 #' @examples
 #' test_meta <- get_gambl_metadata(case_set = "DLBCL-unembargoed")
 #' predictions <- classify_dlbcl_chapuy(these_samples_metadata = test_meta)
 #' matrix_and_predictions <- classify_dlbcl_chapuy(these_samples_metadata = test_meta, output = "both")
 #'
-classify_dlbcl_chapuy <- function(
-    these_samples_metadata,
-    maf_data,
-    seg_data,
-    sv_data,
-    this_seq_type = "genome",
-    projection = "grch37",
-    output = "predictions",
-    adjust_ploidy = TRUE
-){
+classify_dlbcl_chapuy <- function(these_samples_metadata,
+                                  maf_data,
+                                  seg_data,
+                                  sv_data,
+                                  this_seq_type = "genome",
+                                  projection = "grch37",
+                                  output = "predictions",
+                                  adjust_ploidy = TRUE){
+
     # If no metadata is provided, just get all DLBCLs
     if(missing(these_samples_metadata)){
         message("No metadata is provided.")
