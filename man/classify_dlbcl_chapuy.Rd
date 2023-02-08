@@ -2,7 +2,7 @@
 % Please edit documentation in R/utilities.R
 \name{classify_dlbcl_chapuy}
 \alias{classify_dlbcl_chapuy}
-\title{Classify DLBCLs according to genetic subgroups of Chapuy et al.}
+\title{Classify DLBCL Chapuy.}
 \usage{
 classify_dlbcl_chapuy(
   these_samples_metadata,
@@ -33,10 +33,13 @@ classify_dlbcl_chapuy(
 \item{adjust_ploidy}{Whether to perform ploidy adjustment for the CNV data. Defaults to TRUE (recommended).}
 }
 \value{
-data frame with classification, binary matrix used in classification, or both
+data frame with classification, binary matrix used in classification, or both.
 }
 \description{
-Use the feature weights from NMF model to assemble the binary matrix and classify DLBCL tumors based on C0-C5 system of Chapuy et al
+Classify DLBCLs according to genetic subgroups of Chapuy et al.
+}
+\details{
+Use the feature weights from NMF model to assemble the binary matrix and classify DLBCL tumors based on C0-C5 system of Chapuy et al.
 }
 \examples{
 test_meta <- get_gambl_metadata(case_set = "DLBCL-unembargoed")

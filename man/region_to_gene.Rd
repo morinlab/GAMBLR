@@ -2,7 +2,7 @@
 % Please edit documentation in R/utilities.R
 \name{region_to_gene}
 \alias{region_to_gene}
-\title{Return genes residing in defined region(s)}
+\title{Region To Gene.}
 \usage{
 region_to_gene(region, gene_format = "hugo", genome_build = "grch37")
 }
@@ -14,7 +14,11 @@ region_to_gene(region, gene_format = "hugo", genome_build = "grch37")
 \item{genome_build}{Reference genome build.}
 }
 \description{
-Return genes residing in defined region(s)
+Return genes residing in defined region(s).
+}
+\details{
+This function takes a region as a vector of characters, or a list of regions in a data frame
+and returns the genes residing withing the specified region. For the other way around (i.e gene to regions, refer to \code{gene_to_regions}).
 }
 \examples{
 myc_region = gene_to_region(gene_symbol = "MYC", genome_build = "grch37", return_as = "df")

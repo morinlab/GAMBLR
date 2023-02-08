@@ -2,7 +2,7 @@
 % Please edit documentation in R/utilities.R
 \name{FtestCNV}
 \alias{FtestCNV}
-\title{Using GISTIC2.0 outputs, perform Fisher's exact test to compare CNV frequencies between 2 groups.}
+\title{Fishers Exact Test (CNV).}
 \usage{
 FtestCNV(
   gistic_lesions,
@@ -39,9 +39,16 @@ Output can be accessed by index (e.g.\link{3}), or by name (e.g.\link{"GRAPH"})
 \description{
 Using GISTIC2.0 outputs, perform Fisher's exact test to compare CNV frequencies between 2 groups.
 }
+\details{
+This function was developed to compare (Fisher's exact test) CNV frequencies between two groups.
+To do so, set the path to the GISTIC2.0 all_lesions file with \code{gistic_lesions}, together with a metadata table with thhe sample IDs of interest (\code{metadata}).
+The last reamaining required parameter is \code{comparison}, this parameter takes the name of the column annotating the groups of interest, e.g pathology, cohort, etc.
+For more infomation on how to run this funciton, refer to the function examples and parameter descriptions.
+}
 \examples{
 # basic usage
 FtestCNV(gistic_lesions = "path_to_GISTIC2.0_output/all_lesions.conf_{confidence_level}.txt", metadata = derived_data, comparison = "pathology")
+
 # advanced usage
 FtestCNV(gistic_lesions = "path_to_GISTIC2.0_output/all_lesions.conf_{confidence_level}.txt", metadata = derived_data,
 comparison = "pathology", fdr.method = "bonferroni", fdr.cutoff = 0.05, blacklisted_regions = c("3p12.3", "12p13.2"))

@@ -2,7 +2,7 @@
 % Please edit documentation in R/utilities.R
 \name{write_sample_set_hash}
 \alias{write_sample_set_hash}
-\title{Update or create a file to track unique identifiers for sample sets in GAMBL}
+\title{Write Sample Set Hash}
 \usage{
 write_sample_set_hash(update = TRUE, new_sample_sets_df)
 }
@@ -13,4 +13,9 @@ write_sample_set_hash(update = TRUE, new_sample_sets_df)
 }
 \description{
 Update or create a file to track unique identifiers for sample sets in GAMBL
+}
+\details{
+Run this function with \code{update = TRUE} (default) to use an existing sample table.
+If this table does not exist, perhaps you need to pull from the master branch.
+If this function is run with the default for \code{update}, the user must also provide the new sample sets with the \code{new_sample_sets_df}.
 }

@@ -2,8 +2,7 @@
 % Please edit documentation in R/utilities.R
 \name{collate_csr_results}
 \alias{collate_csr_results}
-\title{INTERNAL FUNCTION called by collate_results, not meant for out-of-package usage.
-Collate a few CSR annotations, including MiXCR.}
+\title{Collate CSR Results}
 \usage{
 collate_csr_results(sample_table, seq_type_filter = "genome")
 }
@@ -14,8 +13,10 @@ collate_csr_results(sample_table, seq_type_filter = "genome")
 The sample table with additional columns.
 }
 \description{
-INTERNAL FUNCTION called by collate_results, not meant for out-of-package usage.
 Collate a few CSR annotations, including MiXCR.
+}
+\details{
+INTERNAL FUNCTION called by collate_results, not meant for out-of-package usage.
 }
 \examples{
 gambl_results_derived = collate_csr_results(gambl_results_derived)

@@ -2,7 +2,7 @@
 % Please edit documentation in R/utilities.R
 \name{genome_to_exome}
 \alias{genome_to_exome}
-\title{Subset maf file to only features that would be available in the WEX data.}
+\title{Genome To Exome.}
 \usage{
 genome_to_exome(
   maf,
@@ -28,6 +28,12 @@ Aa data frame of maf-like object with same columns as in input, but where rows a
 }
 \description{
 Subset maf file to only features that would be available in the WEX data.
+}
+\details{
+To subset an incoming MAF data frame to only show features that would be avaialble in WEX data this function was developed.
+Pass the incoming MAF (genome) to the \code{maf} parameter as the only required parameter to run this function. Other aprameters such as \code{custom_bed},
+\code{genome_build}, \code{padding}, and \code{chr_prefixed} are also available for greater control of how this function operates.
+Refer to parameter descriptions for more information on how to use the available parameters.
 }
 \examples{
 myc_ashm_maf = get_ssm_by_region(region="8:128748352-128749427") # get all ssm in the MYC aSHM region

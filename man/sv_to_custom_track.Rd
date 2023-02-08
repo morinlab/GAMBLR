@@ -2,7 +2,7 @@
 % Please edit documentation in R/utilities.R
 \name{sv_to_custom_track}
 \alias{sv_to_custom_track}
-\title{Make a UCSC-ready custom track file from SV data.}
+\title{SV To Custom Track.}
 \usage{
 sv_to_custom_track(sv_bedpe, output_file, is_annotated = TRUE, sv_name = "all")
 }
@@ -20,6 +20,12 @@ Nothing.
 }
 \description{
 Make a UCSC-ready custom track file from SV data.
+}
+\details{
+This function takes an incoming SV data frame and outputs a bed file, ready for visualization on the UCSC Genome Browser.
+Specify the output file with \code{output_file}, indicate if the incoming SVs are annotated with \code{is_annotated} (default is TRUE).
+Lastly, the user can also specify if the incoming SV data frame should be subset to specific mutaiton types (e.g deletions, duplications, insertions, etc.).
+This si specified with the \code{sv_name} parameter. Default is to include all SV subtypes.
 }
 \examples{
 #custom track with annotations

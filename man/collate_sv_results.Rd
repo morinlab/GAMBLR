@@ -2,8 +2,7 @@
 % Please edit documentation in R/utilities.R
 \name{collate_sv_results}
 \alias{collate_sv_results}
-\title{INTERNAL FUNCTION called by collate_results, not meant for out-of-package usage.
-Determine and summarize which cases have specific oncogene SVs.}
+\title{Collate SV Results.}
 \usage{
 collate_sv_results(
   sample_table,
@@ -17,14 +16,18 @@ collate_sv_results(
 
 \item{tool}{Name of tool (optional, default is manta).}
 
+\item{seq_type_filter}{Filtering criteria, default is genomes.}
+
 \item{oncogenes}{Which oncogenes to collate SVs from.}
 }
 \value{
 Data frame with additional columns ({tool}\emph{{oncogene} and {tool}}{oncogene}_{partner}).
 }
 \description{
-INTERNAL FUNCTION called by collate_results, not meant for out-of-package usage.
 Determine and summarize which cases have specific oncogene SVs.
+}
+\details{
+INTERNAL FUNCTION called by \code{collate_results}, not meant for out-of-package usage.
 }
 \examples{
 results = collate_samples_sv_results(samples, "manta", c("MYC", "BCL2"))

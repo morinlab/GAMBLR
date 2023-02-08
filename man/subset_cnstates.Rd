@@ -2,14 +2,14 @@
 % Please edit documentation in R/utilities.R
 \name{subset_cnstates}
 \alias{subset_cnstates}
-\title{Helper function called by fancy_multisample_ideo, for sub-setting copy number information based on segments avaialble in cn data}
+\title{Subset CN States.}
 \usage{
 subset_cnstates(cn_segments, include_2 = FALSE, samplen)
 }
 \arguments{
 \item{cn_segments}{DF with copy number segments, usually retrieved from get_sample_cn_segments.}
 
-\item{include_2}{Optional parameter for including or ommit CN state == 2.}
+\item{include_2}{Optional parameter for including or ommit CN state == 2. Default is FALSE.}
 
 \item{samplen}{Numeric value that annotates the sample order.}
 }
@@ -17,7 +17,10 @@ subset_cnstates(cn_segments, include_2 = FALSE, samplen)
 Nothing.
 }
 \description{
-Helper function called by fancy_multisample_ideo, for sub-setting copy number information based on segments avaialble in cn data
+List the avaialble CN states in the incoming data frame.
+}
+\details{
+INTERNAL FUNCTION called by fancy_multisample_ideo, for sub-setting copy number information based on segments avaialble in cn data
 }
 \examples{
 cn_states = get_sample_cn_segments(multiple_samples = TRUE, sample_list = c("00-15201_tumorA", "HTMCP-01-06-00422-01A-01D"), streamlined = FALSE)

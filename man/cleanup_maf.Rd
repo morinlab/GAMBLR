@@ -2,7 +2,7 @@
 % Please edit documentation in R/utilities.R
 \name{cleanup_maf}
 \alias{cleanup_maf}
-\title{Transform input maf columns to allow for usage of dplyr verbs}
+\title{Cleanup MAF.}
 \usage{
 cleanup_maf(maf_df)
 }
@@ -13,7 +13,11 @@ cleanup_maf(maf_df)
 maf_df with transofmred columns
 }
 \description{
-Transform input maf columns to allow for usage of dplyr verbs
+Transform input maf columns to allow for usage of dplyr verbs.
+}
+\details{
+Transform input maf columns to allow for usage of dplyr verbs.
+Allowing for a stright-forward plotting workflowas well as downstream data aggregation and manipualtion.
 }
 \examples{
 ssm_sample = get_ssm_by_sample(this_sample_id = "HTMCP-01-06-00485-01A-01D", tool_name = "slims-3", projection = "grch37")

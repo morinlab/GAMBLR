@@ -2,7 +2,7 @@
 % Please edit documentation in R/utilities.R
 \name{complete_missing_from_matrix}
 \alias{complete_missing_from_matrix}
-\title{If some samples are missing from the matrix, add them with filled in 0 as value and normalize their ordering for consistency.}
+\title{Complete Missing From Matrix.}
 \usage{
 complete_missing_from_matrix(
   incoming_matrix,
@@ -28,6 +28,12 @@ A data frame with maintained orientation (rows and columns) where samples from t
 }
 \description{
 If some samples are missing from the matrix, add them with filled in 0 as value and normalize their ordering for consistency.
+}
+\details{
+This function takes an incoming matrix with sample IDs (and other infomation) with the \code{incoming_matrix} parameter,
+and adds samples from the \code{list_of_samples} if they are missing from the incoming matrix.
+The fucntion also orders the returned data frame based on a couple of criteria \code{normalize_order} and \code{samples_in_rows}.
+For more information, refer to the parmeter descriptions and examples.
 }
 \examples{
 partial_matrix = get_coding_ssm_status(these_samples_metadata = (get_gambl_metadata(case_set = "BL--DLBCL") \%>\% filter(pairing_status == "unmatched")), include_hotspots = FALSE)

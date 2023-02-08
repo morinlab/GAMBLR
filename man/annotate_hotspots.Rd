@@ -2,7 +2,7 @@
 % Please edit documentation in R/utilities.R
 \name{annotate_hotspots}
 \alias{annotate_hotspots}
-\title{Annotate MAF-like data frome with a hot_spot column indicating recurrent mutations.}
+\title{Annotate Hotspots.}
 \usage{
 annotate_hotspots(
   mutation_maf,
@@ -25,6 +25,12 @@ The same data frame with one additional column "hot_spot".
 }
 \description{
 Annotate MAF-like data frome with a hot_spot column indicating recurrent mutations.
+}
+\details{
+This function takes ana lready loaded MAF data frame with the \code{mutation_maf} parameter.
+The suer can then control the minimum number of recurrances for mutations to be included with \code{recurrance_min},
+the default is 5. \code{analysis_base} controls the base name go hot spot output directory.
+Lastly, \code{p_thresh} sets the p value threshold, default is 0.05.
 }
 \examples{
 hot_ssms = annotate_hotspots(all_ssm)

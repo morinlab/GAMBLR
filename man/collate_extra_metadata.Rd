@@ -2,7 +2,7 @@
 % Please edit documentation in R/utilities.R
 \name{collate_extra_metadata}
 \alias{collate_extra_metadata}
-\title{INTERNAL FUNCTION called by collate_results, not meant for out-of-package usage.}
+\title{Collate Extra Metadata.}
 \usage{
 collate_extra_metadata(sample_table, file_path)
 }
@@ -12,10 +12,13 @@ collate_extra_metadata(sample_table, file_path)
 \item{file_path}{Path to extra emtadata.}
 }
 \value{
-Table.
+A table.
 }
 \description{
-INTERNAL FUNCTION called by collate_results, not meant for out-of-package usage.
+Gather additional metadata infomration and expand the incoming sample table (or metadata).
+}
+\details{
+INTERNAL FUNCTION called by \code{collate_results}, not meant for out-of-package usage.
 }
 \examples{
 table = collate_extra_metadata(sample_table = "my_sample_table.txt")

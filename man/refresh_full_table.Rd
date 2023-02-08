@@ -2,8 +2,7 @@
 % Please edit documentation in R/utilities.R
 \name{refresh_full_table}
 \alias{refresh_full_table}
-\title{INTERNAL FUNCTION called by referesh_metadata_tables, not meant for out-of-package usage.
-Refresh the contents of a database table.}
+\title{Refresh Full Table}
 \usage{
 refresh_full_table(table_name, connection, file_path)
 }
@@ -15,11 +14,13 @@ refresh_full_table(table_name, connection, file_path)
 \item{file_path}{Path to the table contents to populate.}
 }
 \value{
-Table.
+A table.
 }
 \description{
-INTERNAL FUNCTION called by referesh_metadata_tables, not meant for out-of-package usage.
 Refresh the contents of a database table.
+}
+\details{
+INTERNAL FUNCTION called by referesh_metadata_tables, not meant for out-of-package usage.
 }
 \examples{
 refresh_full_table(table_x, con,file_x)

@@ -2,15 +2,18 @@
 % Please edit documentation in R/utilities.R
 \name{sanity_check_metadata}
 \alias{sanity_check_metadata}
-\title{Function that performes sanity checks on meta data.}
+\title{Sanity Check Metadata.}
 \usage{
 sanity_check_metadata()
 }
 \value{
-Table.
+A table.
 }
 \description{
 Function that performes sanity checks on meta data.
+}
+\details{
+Helper function for sanity checking GAMBL metadata.
 }
 \examples{
 sane_meta_data = sanity_check_metadata()

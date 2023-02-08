@@ -2,8 +2,7 @@
 % Please edit documentation in R/utilities.R
 \name{collate_ssm_results}
 \alias{collate_ssm_results}
-\title{INTERNAL FUNCTION called by collate_results, not meant for out-of-package usage.
-Compute some summary statistics based on SSM calls.}
+\title{Collate SSM Results.}
 \usage{
 collate_ssm_results(
   sample_table,
@@ -16,16 +15,22 @@ collate_ssm_results(
 \arguments{
 \item{sample_table}{A data frame with sample_id as the first column.}
 
+\item{seq_type_filter}{Filtering criteria, default is genomes.}
+
 \item{from_flatfile}{Optional argument whether to use database or flat file to retrieve mutations, default is TRUE.}
 
 \item{include_silent}{Logical parameter indicating whether to include siment mutations into coding mutations. Default is FALSE.}
+
+\item{projeciton}{Specifies the projection, default is "grch37".}
 }
 \value{
-Sample table.
+The sample table with additional columns.
 }
 \description{
+Compute summary statistics based on SSM calls.
+}
+\details{
 INTERNAL FUNCTION called by collate_results, not meant for out-of-package usage.
-Compute some summary statistics based on SSM calls.
 }
 \examples{
 ssm_results = colalte_ssm_results(samples, TRUE, TRUE)

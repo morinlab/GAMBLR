@@ -2,28 +2,35 @@
 % Please edit documentation in R/utilities.R
 \name{review_hotspots}
 \alias{review_hotspots}
-\title{Annotate MAF-like data frome with a hot_spot column indicating recurrent mutations.}
+\title{Review Hotspots.}
 \usage{
 review_hotspots(
   annotated_maf,
   genes_of_interest = c("FOXO1", "MYD88", "CREBBP", "NOTCH1", "NOTCH2", "CD79B",
     "EZH2"),
-  genome_build = "hg19"
+  genome_build = "grch37"
 )
 }
 \arguments{
 \item{annotated_maf}{A data frame in MAF format that has hotspots annotated using function annotate_hotspots().}
 
-\item{genes_of_interest}{List of genes for hotspot review. Currently only FOXO1, MYD88, and CREBBP are supported.}
+\item{genes_of_interest}{List of genes for hotspot review. Currently only FOXO1, MYD88, CREBBP, NOTCH1, NOTCH2, CD79B and EZH2 are supported.}
 
-\item{genome_build}{Reference genome build for the coordinates in the MAF file. The default is hg19 genome build.}
+\item{genome_build}{Reference genome build for the coordinates in the MAF file. The default is grch37 genome build.}
 }
 \value{
-The same data frame with reviewed column "hot_spot".
+The same data frame (as given to the \code{annotated_maf} parameter) with reviewed column "hot_spot".
 }
 \description{
 Annotate MAF-like data frome with a hot_spot column indicating recurrent mutations.
 }
+\details{
+This function takes an annotated MAF (with \code{annotate_hotspots}) and adds a new column, "hot_spot", to the same data frame.
+Genes for hotspot review are supplied with the \code{genes_of_interest} parameter.
+Currently only a few set of genes are supported, see parameter description for more information and limitations.
+The desired genome build can be specifed with \code{genome_build} parameter. Should be the same as the incoming MAF.
+}
 \examples{
 hot_ssms = review_hotspots(annotate_hotspots(get_coding_ssm()), genes_of_interest = c("CREBBP"))
+
 }

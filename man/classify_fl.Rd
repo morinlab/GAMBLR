@@ -2,7 +2,7 @@
 % Please edit documentation in R/utilities.R
 \name{classify_fl}
 \alias{classify_fl}
-\title{Classify FL samples into cFL/dFL subgroups.}
+\title{Classify FL.}
 \usage{
 classify_fl(
   these_samples_metadata,
@@ -24,10 +24,13 @@ classify_fl(
 \item{output}{The output to be returned after prediction is done. Can be one of predictoins, matrix, or both. Defaults to predictions.}
 }
 \value{
-data frame with classification, binary matrix used in classification, or both
+data frame with classification, binary matrix used in classification, or both.
 }
 \description{
-Use the random forest prediction model to assemble the binary matrix and use it to classify FL tummors into cFL/dFL
+Classify FL samples into cFL/dFL subgroups.
+}
+\details{
+Use the random forest prediction model to assemble the binary matrix and use it to classify FL tummors into cFL/dFL.
 }
 \examples{
 test_meta <- get_gambl_metadata(case_set="tFL-study")

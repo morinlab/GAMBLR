@@ -2,7 +2,7 @@
 % Please edit documentation in R/utilities.R
 \name{make_igv_snapshot}
 \alias{make_igv_snapshot}
-\title{Load bams and generate an IGV screenshot for one or more regions.}
+\title{Make IGV Snapshot}
 \usage{
 make_igv_snapshot(
   bams,
@@ -39,10 +39,16 @@ make_igv_snapshot(
 \item{igv_port}{Specify the port IGV is listening on.}
 }
 \value{
-Path to file (.png)
+Path to file (.png).
 }
 \description{
 Load bams and generate an IGV screenshot for one or more regions.
+}
+\details{
+Specify the path to one or more bam files as a charachter of vector to the \code{bams} parameter.
+The user can also specify regions of interest with either the \code{region} parameter (chr:start-end),
+or the user can directly supply the chromosome, start and end coordinates with the \code{chrom}, \code{start}, and \code{end} parameters.
+For more information and examples, refer to the function examples and poarameter descriptions.
 }
 \examples{
 #IMPORTANT: you must be running IGV on the host that is running R and you need to have it listening on a port

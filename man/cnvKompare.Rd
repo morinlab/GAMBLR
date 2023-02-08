@@ -43,8 +43,6 @@ cnvKompare(
 \item{return_heatmap}{Boolean argument specifying whether to return a heatmap of cnvKompare scores. Default is TRUE.}
 
 \item{compare_pairwise}{Boolean argument specifying whether to perform pairwise comparisons is there are more than 2 time points in the group. Default is TRUE.}
-
-\item{pga_cutoff}{Minimum PGA for the sample to adjust ploidy. Default is 0.05 (5\%).}
 }
 \value{
 A list of overall and pairwise percent concordance, concordant and discordant cytobands, comparison heatmap of cnvKompare socres, and time series ggplot object.
@@ -64,4 +62,5 @@ it to a panel of genes of interest.
 \examples{
 cnvKompare(patient_id = "00-14595", genes_of_interest = c("EZH2", "TP53", "MYC", "CREBBP", "GNA13"))
 cnvKompare(patient_id = "13-26835", genes_of_interest = c("EZH2", "TP53", "MYC", "CREBBP", "GNA13"), projection = "hg38")
+
 }
