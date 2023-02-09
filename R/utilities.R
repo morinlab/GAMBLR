@@ -2683,7 +2683,7 @@ make_igv_snapshot = function(bams,
 #' @param gistic_lesions Path to the GISTIC2.0 all_lesions output file.
 #' @param metadata Data frame containing sample ids and column with annotated data for the 2 groups of interest. All other columns are ignored. Currently, function exits if asked to compare more than 2 groups.
 #' @param comparison Specify column annotating groups of interest.
-#' @param fdr.method FDR method to adjust p values. Uses stats::p.adjust function, and therefore accepts its method for FDR ("holm", "hochberg", "hommel", "bonferroni", "BH", "BY", "fdr", "none"). By default, this function uses "fdr".
+#' @param fdr.method FDR method to adjust p values. Uses p.adjust function, and therefore accepts its method for FDR ("holm", "hochberg", "hommel", "bonferroni", "BH", "BY", "fdr", "none"). By default, this function uses "fdr".
 #' @param fdr.cutoff Specify FDR significance cut-off. By default, this function uses 0.1.
 #' @param text_size Size of the text on the forest plot of differentially enriched CNV. Default text-size is 7.
 #' @param blacklisted_regions Optionally, specify any descriptors (value from column `Descriptor` of GISTIC2.0 all_lesions output file) to filter out before amy comparisons are done. It is possible to specify list of multiple descriptors, for example, c("3p12.3", "12p13.2"). Default is NULL.
