@@ -58,7 +58,7 @@ Create a circos plots visualizing SVS and SSM with optional gene annotations.
 }
 \examples{
 #retrieve gene names for FL genes
-fl_genes = dplyr::filter(lymphoma_genes, FL == TRUE) \%>\% 
+fl_genes = dplyr::filter(lymphoma_genes, FL == TRUE) \%>\%
  dplyr::select(Gene) \%>\%
  pull(Gene)
 
@@ -72,9 +72,9 @@ fancy_circos_plot_new(this_sample = "DOHH-2",
                       chr_select = c("chr8", "chr14", "chr18"),
                       coding_only = FALSE,
                       projection = "grch37",
-                      out = "../../plots/", 
+                      out = "../../plots/",
                       plot_title = "DOHH-2 (SVs) Example Plot",
-                      pdf = FALSE, 
+                      pdf = FALSE,
                       file_name = "dohh2_example.png")
 
 }

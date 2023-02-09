@@ -91,22 +91,22 @@ fl_genes_chr1 = gene_to_region(gene_symbol = fl_genes, return_as = "df") \%>\%
   pull(hugo_symbol)
 
 ideogram_fl_chr1 = fancy_ideogram(this_sample = "HTMCP-01-06-00422-01A-01D",
-                                  gene_annotation = fl_genes_chr1, 
+                                  gene_annotation = fl_genes_chr1,
                                   intersect_regions = "chr1:10000-249250621",
-                                  include_ssm = TRUE, 
-                                  ssm_count = TRUE, 
-                                  coding_only = FALSE, 
-                                  from_flatfile = FALSE, 
+                                  include_ssm = TRUE,
+                                  ssm_count = TRUE,
+                                  coding_only = FALSE,
+                                  from_flatfile = FALSE,
                                   use_augmented = FALSE)
- 
+
  fl_regions = gene_to_region(gene_symbol = fl_genes, return_as = "df")
  ideogram_fl = fancy_ideogram(this_sample = "HTMCP-01-06-00422-01A-01D",
-                              gene_annotation = fl_genes, 
+                              gene_annotation = fl_genes,
                               intersect_regions = fl_regions,
-                              include_ssm = TRUE, 
-                              ssm_count = TRUE, 
-                              coding_only = FALSE, 
-                              from_flatfile = FALSE, 
+                              include_ssm = TRUE,
+                              ssm_count = TRUE,
+                              coding_only = FALSE,
+                              from_flatfile = FALSE,
                               use_augmented = FALSE)
 
 }
