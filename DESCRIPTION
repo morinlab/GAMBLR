@@ -34,7 +34,6 @@ Imports:
     nloptr (<= 1.2.2.3),
     parallel,
     plotly,
-    randomForest,
     RCircos,
     readr (>= 2.1),
     RMariaDB,
@@ -47,7 +46,7 @@ Suggests:
     knitr,
     rmarkdown,
     testthat
-VignetteBuilder: 
+VignetteBuilder:
     knitr
 Remotes:
     cBioPortal/cgdsr,
