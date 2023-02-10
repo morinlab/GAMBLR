@@ -7,7 +7,11 @@ grob_wildcards = function(wildcarded_string){
   wildcards = stringr::str_remove_all(wildcards,"\\{") %>%  stringr::str_remove_all(.,"\\}")
   return(wildcards)
 }
-get_template_wildcards = function(parent_key,template_key){
+
+
+get_template_wildcards = function(parent_key,
+                                  template_key){
+
   if(missing(template_key)){
     wildcard_string = config::get(parent_key)
   }else{
@@ -17,7 +21,11 @@ get_template_wildcards = function(parent_key,template_key){
   return(unlist(wildcards))
 }
 
-copy_no_clobber = function(from_file,to_file,force=FALSE){
+
+copy_no_clobber = function(from_file,
+                           to_file,
+                           force = FALSE){
+
   to_dir = dirname(to_file)
   suppressMessages(suppressWarnings(dir.create(to_dir,recursive = T)))
   print(paste("COPYING",from_file,"TO",to_file))
@@ -25,18 +33,26 @@ copy_no_clobber = function(from_file,to_file,force=FALSE){
     file.copy(from_file,to_file)
   }
 }
-#' Check for a remote session and automagically confirm setup will work properly
+
+
+#' @title Check Remote Configuration.
 #' 
-#' This function determines if a user is working in GAMBLR remotely and, if so, will
+#' @description Check for a remote session and automagically confirm setup will work properly.
+#' 
+#' @details This function determines if a user is working in GAMBLR remotely and, if so, will
 #' check if their config is loaded properly and ssh_session is available. 
 #'
 #' @param auto_connect Set to TRUE to ensure an ssh_session is created if absent
 #'
 #' @return
+#' 
 #' @export
 #'
 #' @examples
-check_remote_configuration = function(auto_connect=FALSE){
+#' check_remote_configuration()
+#' 
+check_remote_configuration = function(auto_connect = FALSE){
+
   remote_gamblr = check_host(auto_connect=auto_connect)
   if(remote_gamblr){
     #code is running on a non-GSC computer. Check that the config is set up properly
@@ -51,19 +67,25 @@ check_remote_configuration = function(auto_connect=FALSE){
   return(remote_gamblr)
 }
 
-#' Check if code is running remotely and react accordingly.
+#' @title Check Host.
 #' 
-#' The function will (optionally) attempt a connection if necessary, and stores it in a global variable (ssh_session) 
+#' @description Check if code is running remotely and react accordingly.
 #' 
-#' @param auto_connect Set to TRUE if you want the function to create an ssh session (if necessary)
-#' @param verbose Set this to TRUE for verbose messages from the function
+#' @details The function will (optionally) attempt a connection if necessary, and stores it in a global variable (ssh_session). 
+#' 
+#' @param auto_connect Set to TRUE if you want the function to create an ssh session (if necessary).
+#' @param verbose Set this to TRUE for verbose messages from the function.
 #' 
 #' @return TRUE if a remote session is detected, FALSE otherwise.
 #' 
 #' @export
 #'
-#' @examples check_host(auto_connect=TRUE)
-check_host = function(auto_connect=FALSE,verbose=FALSE){
+#' @examples 
+#' check_host(auto_connect=TRUE)
+#' 
+check_host = function(auto_connect = FALSE,
+                      verbose = FALSE){
+
   hostname = Sys.info()["nodename"]
   if(grepl("bcgsc.ca",hostname)){
     #we are on the GSC network
@@ -90,7 +112,10 @@ check_host = function(auto_connect=FALSE,verbose=FALSE){
   return(TRUE)
 }
 
-check_times = function(relative_paths,archive_mode=FALSE,force_backup=FALSE){
+
+check_times = function(relative_paths,
+                       archive_mode = FALSE,
+                       force_backup = FALSE){
   
   local_base = base_path = check_config_value(config::get("project_base"))
   remote_base = base_path = check_config_value(config::get("project_base",config="default"))
@@ -143,6 +168,7 @@ check_times = function(relative_paths,archive_mode=FALSE,force_backup=FALSE){
   }
 }
 
+
 check_file_details = function(relative_paths){
   not_found = c()
   base_path = check_config_value(config::get("project_base"))
@@ -161,19 +187,26 @@ check_file_details = function(relative_paths){
   return(not_found)
 }
 
-#' Check that the GAMBLR config you have loaded will work in your setup
+
+#' @title Check GAMBLR Config.
 #' 
-#' This function is mostly for remote GAMBLRs to ensure they keep their local mirror of the GAMBL data up-to-date. It 
+#' @description Check that the GAMBLR config you have loaded will work in your setup.
+#' 
+#' @details This function is mostly for remote GAMBLRs to ensure they keep their local mirror of the GAMBL data up-to-date.
 #'
 #' @param compare_timestamps Whether the function will compare timestamps on your local files to the remote copy. Only relevant if you are working remotely.
 #' @param ssh_session The ssh_session object see get_ssh_session() for more information. Only relevant if you are working remotely.
 #' @param archive_mode This is not currently working but the idea here is to keep a GSC archive of GAMBL in sync with the actively updated outputs
-#' @param force_backup 
+#' @param force_backup Boolean parameter set to FALSE per default.
 #'
 #' @return
+#' 
+#' @import dplyr tidyr
 #' @export
 #'
 #' @examples
+#' check_gamblr_config()
+#' 
 check_gamblr_config = function(compare_timestamps=FALSE,
                                ssh_session,
                                archive_mode=FALSE,
@@ -249,19 +282,31 @@ check_gamblr_config = function(compare_timestamps=FALSE,
   print("DONE!")
 }
 
-#' Check GAMBL or other metadata for compatability with various features
+#' @title Check GAMBL Metadata.
+#' 
+#' @description Check GAMBL or other metadata for compatibility with various features.
 #'
-#' @param metadata_df Data frame output by get_gambl_metadata or some other source of metadata you plan to use
-#' @param to_check Specify one of "uniqueness", "colours" or "completeness" or leave empty to check all
-#' @param fix After identifying an issue, rerun this function with fix=TRUE to address errors (when possible). Currently this doesn't do anything. That's how I roll
-#' @param show_details Set to TRUE if you want the gory details about issues that are identified
+#' @details Give this function a metadata output, preferably from `get_gambl_metadata()`, or any other source.
+#' The function then checks for duplicate sample IDs, colours for all values in all columns that map to a colour with `map_metadata_to_colours` and missing columns.
+#' 
+#' @param metadata_df Data frame output by `get_gambl_metadata` or some other source of metadata you plan to use.
+#' @param to_check Specify one of "uniqueness", "colours" or "completeness" or leave empty to check all.
+#' @param fix After identifying an issue, rerun this function with fix=TRUE to address errors (when possible). Currently this doesn't do anything. That's how I roll.
+#' @param show_details Set to TRUE if you want the gory details about issues that are identified.
 #'
 #' @return
-#' @export
+#' 
 #' @import dplyr
+#' @export
 #'
 #' @examples
-check_gambl_metadata = function(metadata_df,to_check="all",show_details=FALSE,fix=FALSE){
+#' this_metadata = get_gambl_metadata()
+#' check_gambl_metadata(metadata_df = this_metadata)
+#' 
+check_gambl_metadata = function(metadata_df,
+                                to_check = "all",
+                                show_details = FALSE,
+                                fix = FALSE){
   
   if(to_check == "all"){
     to_check = c("uniqueness","colours","completeness")
@@ -372,9 +417,7 @@ check_expected_outputs = function(tool_name="battenberg",seq_type_filter="genome
     template_path = check_config_value(config::get("results_flatfiles")$ssm$template$clustered$deblacklisted)
   }
   w = grob_wildcards(template_path)
-  
-  
-  
+
   #use the unix group and seq_type from the actual metadata and all available projections
   seq_type = seq_type_filter
   
@@ -383,13 +426,19 @@ check_expected_outputs = function(tool_name="battenberg",seq_type_filter="genome
 }
 
 
-#' INTERNAL FUNCTION for checking the existance of a config value, not meant for out-of-package usage.
+#' @title Check Config Value.
+#' 
+#' @description Check the existence of a specific config key. 
+#' The function will notify the user if no such key exists.
+#' 
+#' @details INTERNAL FUNCTION for checking the existence of a config value, not meant for out-of-package usage.
 #'
 #' @param config_key key from config, prefixed with config::get()
 #' 
 #' @return A string with the path to a file specified in the config or nothing (if config key is NULL).
 #'
 #' @examples
+#' check_config_value(config::get("resources")$blacklist$template)
 #'
 check_config_value = function(config_key){
   if(is.null(config_key)){

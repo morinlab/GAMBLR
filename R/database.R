@@ -4,11 +4,17 @@ cnames = c("CHROM_A", "START_A", "END_A", "CHROM_B", "START_B", "END_B", "NAME",
 maf_header = c("Hugo_Symbol"=1,"Entrez_Gene_Id"=2,"Center"=3,"NCBI_Build"=4,"Chromosome"=5,"Start_Position"=6,"End_Position"=7,"Strand"=8,"Variant_Classification"=9,"Variant_Type"=10,"Reference_Allele"=11,"Tumor_Seq_Allele1"=12,"Tumor_Seq_Allele2"=13,"dbSNP_RS"=14,"dbSNP_Val_Status"=15,"Tumor_Sample_Barcode"=16,"Matched_Norm_Sample_Barcode"=17,"Match_Norm_Seq_Allele1"=18,"Match_Norm_Seq_Allele2"=19,"Tumor_Validation_Allele1"=20,"Tumor_Validation_Allele2"=21,"Match_Norm_Validation_Allele1"=22,"Match_Norm_Validation_Allele2"=23,"Verification_Status"=24,"Validation_Status"=25,"Mutation_Status"=26,"Sequencing_Phase"=27,"Sequence_Source"=28,"Validation_Method"=29,"Score"=30,"BAM_File"=31,"Sequencer"=32,"Tumor_Sample_UUID"=33,"Matched_Norm_Sample_UUID"=34,"HGVSc"=35,"HGVSp"=36,"HGVSp_Short"=37,"Transcript_ID"=38,"Exon_Number"=39,"t_depth"=40,"t_ref_count"=41,"t_alt_count"=42,"n_depth"=43,"n_ref_count"=44,"n_alt_count"=45,"all_effects"=46,"Allele"=47,"Gene"=48,"Feature"=49,"Feature_type"=50,"Consequence"=51,"cDNA_position"=52,"CDS_position"=53,"Protein_position"=54,"Amino_acids"=55,"Codons"=56,"Existing_variation"=57,"ALLELE_NUM"=58,"DISTANCE"=59,"STRAND_VEP"=60,"SYMBOL"=61,"SYMBOL_SOURCE"=62,"HGNC_ID"=63,"BIOTYPE"=64,"CANONICAL"=65,"CCDS"=66,"ENSP"=67,"SWISSPROT"=68,"TREMBL"=69,"UNIPARC"=70,"RefSeq"=71,"SIFT"=72,"PolyPhen"=73,"EXON"=74,"INTRON"=75,"DOMAINS"=76,"AF"=77,"AFR_AF"=78,"AMR_AF"=79,"ASN_AF"=80,"EAS_AF"=81,"EUR_AF"=82,"SAS_AF"=83,"AA_AF"=84,"EA_AF"=85,"CLIN_SIG"=86,"SOMATIC"=87,"PUBMED"=88,"MOTIF_NAME"=89,"MOTIF_POS"=90,"HIGH_INF_POS"=91,"MOTIF_SCORE_CHANGE"=92,"IMPACT"=93,"PICK"=94,"VARIANT_CLASS"=95,"TSL"=96,"HGVS_OFFSET"=97,"PHENO"=98,"MINIMISED"=99,"GENE_PHENO"=100,"FILTER"=101,"flanking_bps"=102,"vcf_id"=103,"vcf_qual"=104,"gnomAD_AF"=105,"gnomAD_AFR_AF"=106,"gnomAD_AMR_AF"=107,"gnomAD_ASJ_AF"=108,"gnomAD_EAS_AF"=109,"gnomAD_FIN_AF"=110,"gnomAD_NFE_AF"=111,"gnomAD_OTH_AF"=112,"gnomAD_SAS_AF"=113,"vcf_pos"=114,"gnomADg_AF"=115,"blacklist_count"=116)
 
 
-#' Exclude samples that have been excluded from certain analyses and drop from merges
+#' @title Get Excluded Samples. 
 #'
-#' @param tool_name The tool or pipeline that generated the files (should be the same for all).
+#' @description Exclude samples that have been excluded from certain analyses and drop from merges.
 #'
-#' @return
+#' @details Specify the tool or pipeline responsible for generating the files with `tool_name` and this function will return a list of excluded sample IDs.
+#'
+#' @param tool_name The tool or pipeline that generated the files (should be the same for all). Default is "slms-3".
+#'
+#' @return A list of sample IDs.
+#'
+#' @import readr dplyr
 #' @export
 #'
 #' @examples
@@ -32,23 +38,30 @@ get_excluded_samples = function(tool_name = "slms-3"){
 }
 
 
-#' Get MAF-format data frame for more than one patient
+#' @title Get SSM By Patients.
 #'
-#' This function returns variants from a set of patients avoiding duplicated mutations from multiple samples from that patient(i.e. unique superset of variants).
-#' This is done either by combining the contents of individual MAF files or subsetting from a merged MAF (wraps get_ssm_by_samples)
-#' In most situations, this should never need to be run with subset_from_merge = TRUE. Instead use one of get_coding_ssm or get_ssm_by_region
+#' @description Get MAF-format data frame for more than one patient.
+#'
+#' @details This function returns variants from a set of patients avoiding duplicated mutations from multiple samples from that patient (i.e. unique superset of variants).
+#' This is done either by combining the contents of individual MAF files or subset from a merged MAF (wraps get_ssm_by_samples).
+#' In most situations, this should never need to be run with `subset_from_merge = TRUE`. Instead use one of `get_coding_ssm` or `get_ssm_by_region`
 #'
 #' @param these_patient_ids A vector of sample_id that you want results for. This is the only required argument.
-#' @param these_samples_metadata Optional metadata table
-#' @param tool_name Only supports slms-3 currently
-#' @param projection Obtain variants projected to this reference (one of grch37 or hg38)
-#' @param flavour Currently this function only supports one flavour option but this feature is meant for eventual compatibility with additional variant calling parameters/versions
-#' @param min_read_support Only returns variants with at least this many reads in t_alt_count (for cleaning up augmented MAFs)
+#' @param these_samples_metadata Optional metadata table.
+#' @param tool_name Only supports slms-3 currently.
+#' @param projection Obtain variants projected to this reference (one of grch37 or hg38).
+#' @param seq_type The seq type you want results for. Default is "genome".
+#' @param flavour Currently this function only supports one flavour option but this feature is meant for eventual compatibility with additional variant calling parameters/versions.
+#' @param min_read_support Only returns variants with at least this many reads in t_alt_count (for cleaning up augmented MAFs).
 #' @param basic_columns Return first 43 columns of MAF rather than full details. Default is TRUE.
 #' @param maf_cols if basic_columns is set to FALSE, the user can specify what columns to be returned within the MAF. This parameter can either be a list of indexes (integer) or a list of characters (matching columns in MAF).
-#' @param subset_from_merge Instead of merging individual MAFs, the data will be subset from a pre-merged MAF of samples with the specified seq_type
+#' @param subset_from_merge Instead of merging individual MAFs, the data will be subset from a pre-merged MAF of samples with the specified `seq_type`.
+#' @param augmented default: TRUE. Set to FALSE if you instead want the original MAF from each sample for multi-sample patients instead.
+#' @param engine Specify one of readr or fread_maf (default) to change how the large files are loaded prior to subsetting. You may have better performance with one or the other but for me fread_maf is faster and uses a lot less RAM.
 #'
-#' @return
+#' @return A data frame with SSM calls for the selected patients in MAF format.
+#'
+#' @import dplyr
 #' @export
 #'
 #' @examples
@@ -56,6 +69,7 @@ get_excluded_samples = function(tool_name = "slms-3"){
 #' patients_maf = get_ssm_by_patients(these_patient_ids = patients, seq_type = "genome", subset_from_merge = FALSE)
 #' patient_meta = get_gambl_metadata(seq_type_filter = "genome") %>% dplyr::filter(patient_id %in% patients)
 #' patients_maf_2 = get_ssm_by_patients(these_samples_metadata = patient_meta,subset_from_merge = FALSE)
+#'
 get_ssm_by_patients = function(these_patient_ids,
                                these_samples_metadata,
                                tool_name = "slms-3",
@@ -67,8 +81,8 @@ get_ssm_by_patients = function(these_patient_ids,
                                maf_cols = NULL,
                                subset_from_merge = FALSE,
                                augmented = TRUE,
-                               engine='fread_maf'
-                               ){
+                               engine='fread_maf'){
+
   check_remote_configuration(auto_connect = TRUE)
   if(!subset_from_merge){
     message("WARNING: on-the-fly merges can be extremely slow and consume a lot of memory. Use at your own risk. ")
@@ -112,36 +126,40 @@ get_ssm_by_patients = function(these_patient_ids,
                             engine=engine))
 }
 
-
-#' Get MAF-format data frame for more than one sample and combine together
+#' @title Get SSM By Samples.
 #'
-#' This function internally runs get_ssm_by_sample.
-#' In most situations, this should never need to be run with subset_from_merge = TRUE. Instead use one of get_coding_ssm or get_ssm_by_region
-#' See get_ssm_by_sample for more information
+#' @description Get MAF-format data frame for more than one sample and combine them together.
+#'
+#' @details This function internally runs `get_ssm_by_sample`.
+#' In most situations, this should never need to be run with subset_from_merge = TRUE. 
+#' Instead use one of `get_coding_ssm` or `get_ssm_by_region`.
+#' See `get_ssm_by_sample` for more information.
 #'
 #' @param these_sample_ids A vector of sample_id that you want results for.
-#' @param these_samples_metadata Optional metadata table
-#' @param tool_name Only supports slms-3 currently
-#' @param augmented default: TRUE. Set to FALSE if you instead want the original MAF from each sample for multi-sample patients instead
-#' @param projection Obtain variants projected to this reference (one of grch37 or hg38)
-#' @param flavour Currently this function only supports one flavour option but this feature is meant for eventual compatability with additional variant calling parameters/versions
+#' @param these_samples_metadata Optional metadata table.
+#' @param tool_name Only supports slms-3 currently.
+#' @param augmented default: TRUE. Set to FALSE if you instead want the original MAF from each sample for multi-sample patients instead.
+#' @param projection Obtain variants projected to this reference (one of grch37 or hg38).
+#' @param seq_type  The seq type you want results for. Default is "genome".
+#' @param flavour Currently this function only supports one flavour option but this feature is meant for eventual compatibility with additional variant calling parameters/versions.
 #' @param these_genes A vector of genes to subset ssm to.
-#' @param min_read_support Only returns variants with at least this many reads in t_alt_count (for cleaning up augmented MAFs)
+#' @param min_read_support Only returns variants with at least this many reads in t_alt_count (for cleaning up augmented MAFs).
 #' @param basic_columns Return first 45 columns of MAF rather than full details. Default is TRUE.
 #' @param maf_cols if basic_columns is set to FALSE, the user can specify what columns to be returned within the MAF. This parameter can either be a list of indexes (integer) or a list of characters.
-#' @param subset_from_merge Instead of merging individual MAFs, the data will be subset from a pre-merged MAF of samples with the specified seq_type
+#' @param subset_from_merge Instead of merging individual MAFs, the data will be subset from a pre-merged MAF of samples with the specified seq_type.
 #' @param engine Specify one of readr or fread_maf (default) to change how the large files are loaded prior to subsetting. You may have better performance with one or the other but for me fread_maf is faster and uses a lot less RAM.
 #'
 #' @return data frame in MAF format.
-#' @export
 #'
-#' @import dplyr parallel
+#' @import dplyr readr tidyr parallel
+#' @export
 #'
 #' @examples
 #' sample_ssms = get_ssm_by_samples(these_sample_ids=c("HTMCP-01-06-00485-01A-01D","14-35472_tumorA","14-35472_tumorB"))
 #' hg38_ssms = get_ssm_by_samples(these_sample_ids=c("HTMCP-01-06-00485-01A-01D","14-35472_tumorA","14-35472_tumorB"),projection="hg38")
 #' readr_sample_ssms = get_ssm_by_samples(these_sample_ids=c("HTMCP-01-06-00485-01A-01D","14-35472_tumorA","14-35472_tumorB"),subset_from_merge=TRUE,engine="readr")
 #' slow_sample_ssms = get_ssm_by_samples(these_sample_ids=c("HTMCP-01-06-00485-01A-01D","14-35472_tumorA","14-35472_tumorB"),subset_from_merge=TRUE)
+#'
 get_ssm_by_samples = function(these_sample_ids,
                               these_samples_metadata,
                               tool_name = "slms-3",
@@ -154,7 +172,8 @@ get_ssm_by_samples = function(these_sample_ids,
                               maf_cols = NULL,
                               subset_from_merge = FALSE,
                               augmented = TRUE,
-                              engine='fread_maf'){
+                              engine = 'fread_maf'){
+
   remote_session = check_remote_configuration(auto_connect = TRUE)
   if(!subset_from_merge){
     message("WARNING: on-the-fly merges can be extremely and consume a lot of memory if many samples are involved. Use at your own risk. ")
@@ -301,30 +320,30 @@ get_ssm_by_samples = function(these_sample_ids,
 }
 
 
-
-#' Get the ssms (i.e. load MAF) for a single sample.
+#' @title Get SSM By Sample.
 #'
-#' This was implemented to allow flexibility because
-#' there are some samples that we may want to use a different set of variants than those in the main GAMBL merge.
-#' The current use case is to allow a force_unmatched output to be used to replace the SSMs from the merge for samples
-#' with known contamination in the normal. This will also be useful to apply a blacklist to individual MAFs when coupled with
-#' annotate_ssm_blacklist.
+#' @description Get the SSMs (i.e. load MAF) for a single sample.
+#'
+#' @details This was implemented to allow flexibility because there are some samples that we may want to use a different set of variants than those in the main GAMBL merge.
+#' The current use case is to allow a force_unmatched output to be used to replace the SSMs from the merge for samples with known contamination in the normal.
+#' This will also be useful to apply a blacklist to individual MAFs when coupled with annotate_ssm_blacklist.
 #'
 #' @param this_sample_id Required. The sample_id you want the data from.
 #' @param this_seq_type Required if not specifying these_samples_metadata. The seq_type of the sample you want data from.
-#' @param these_samples_metadata Required if not specifying both this_sample_id and this_seq_type a single row or entire metadata table containing your sample_id
-#' @param tool_name The name of the variant calling pipeline (currently only slms-3 is supported)
+#' @param these_samples_metadata Required if not specifying both this_sample_id and this_seq_type a single row or entire metadata table containing your sample_id.
+#' @param tool_name The name of the variant calling pipeline (currently only slms-3 is supported).
 #' @param projection The projection genome build. Supports hg38 and grch37.
 #' @param these_genes A vector of genes to subset ssm to.
-#' @param augmented default: TRUE. Set to FALSE if you instead want the original MAF from each sample for multi-sample patients instead of the augmented MAF
-#' @param flavour Currently this function only supports one flavour option but this feature is meant for eventual compatability with additional variant calling parameters/versions
-#' @param min_read_support Only returns variants with at least this many reads in t_alt_count (for cleaning up augmented MAFs)
+#' @param augmented default: TRUE. Set to FALSE if you instead want the original MAF from each sample for multi-sample patients instead of the augmented MAF.
+#' @param flavour Currently this function only supports one flavour option but this feature is meant for eventual compatibility with additional variant calling parameters/versions.
+#' @param min_read_support Only returns variants with at least this many reads in t_alt_count (for cleaning up augmented MAFs).
 #' @param basic_columns Return first 43 columns of MAF rather than full details. Default is TRUE.
-#' @param maf_cols if basic_columns is set to FALSE, the suer can specify what columns to be returned within the MAF. This parameter can either be a list of indexes (integer) or a list of characters.
-#' @param verbose Enable for debugging/noisier output
-#' If specified, the function will assume the user is not on the network and will temporarily copy the file locally.
+#' @param maf_cols if basic_columns is set to FALSE, the user can specify what columns to be returned within the MAF. This parameter can either be a list of indexes (integer) or a list of characters.
+#' @param verbose Enable for debugging/noisier output.
 #'
 #' @return data frame in MAF format.
+#'
+#' @import dplyr tidyr
 #' @export
 #'
 #' @examples
@@ -506,33 +525,42 @@ get_ssm_by_sample = function(this_sample_id,
 }
 
 
-#' Get GAMBL metadata.
+#' @title Get GAMBL metadata.
 #'
-#' @param seq_type_filter Filtering criteria (default: all genomes)
-#' @param tissue_status_filter Filtering criteria (default: only tumour genomes, can be "mrna" or "any" for the superset of cases)
-#' @param case_set optional short name for a pre-defined set of cases avoiding any
-#' @param remove_benchmarking By default the FFPE benchmarking duplicate samples will be dropped
-#' @param sample_flatfile Optionally provide the full path to a samples table to use instead of the default
-#' @param biopsy_flatfile Optionally provide the full path to a biopsy table to use instead of the default
-#' @param with_outcomes Optionally join to gambl outcome data
-#' @param only_available If TRUE, will remove samples with FALSE or NA in the bam_available column (default: TRUE)
-#' @param from_flatfile New default is to use the metadata in the flatfiles from your clone of the repo. Can be over-ridden to use the database
-#' @param seq_type_priority For duplicate sample_id with different seq_type available, the metadata will prioritize this seq_type and drop the others
+#' @description Return metadata for a selection of samples.
 #'
-#' embargoed cases (current options: 'BLGSP-study', 'FL-study', 'DLBCL-study', 'FL-DLBCL-study', 'FL-DLBCL-all', 'DLBCL-unembargoed', 'BL-DLBCL-manuscript', 'MCL','MCL-CLL')
+#' @details This function returns metadata for GAMBL samples. Options for subset and filter the returned data are available.
+#' For more information on how to use this function with different filtering criteria, refer to the parameter descriptions,
+#' examples and vignettes. Embargoed cases (current options: 'BLGSP-study', 'FL-study', 'DLBCL-study', 'FL-DLBCL-study', 'FL-DLBCL-all', 'DLBCL-unembargoed', 'BL-DLBCL-manuscript', 'MCL','MCL-CLL')
+#' 
+#' @param seq_type_filter Filtering criteria (default: all genomes).
+#' @param tissue_status_filter Filtering criteria (default: only tumour genomes, can be "mrna" or "any" for the superset of cases).
+#' @param case_set Optional short name for a predefined set of cases avoiding any.
+#' @param remove_benchmarking By default the FFPE benchmarking duplicate samples will be dropped.
+#' @param sample_flatfile Optionally provide the full path to a sample table to use instead of the default.
+#' @param biopsy_flatfile Optionally provide the full path to a biopsy table to use instead of the default.
+#' @param with_outcomes Optionally join to gambl outcome data.
+#' @param only_available If TRUE, will remove samples with FALSE or NA in the bam_available column (default: TRUE).
+#' @param from_flatfile New default is to use the metadata in the flat-files from your clone of the repo. Can be overridden to use the database.
+#' @param seq_type_priority For duplicate sample_id with different seq_type available, the metadata will prioritize this seq_type and drop the others.
 #'
 #' @return A data frame with metadata for each biopsy in GAMBL
+#'
+#' @import config dplyr tidyr readr RMariaDB DBI
 #' @export
-#' @import tidyverse DBI RMariaDB dbplyr data.table
 #'
 #' @examples
-#' basic usage
+#' #basic usage 
 #' my_metadata = get_gambl_metadata()
-#' use pre-defined custom sample sets
+#'
+#' #use pre-defined custom sample sets
 #' only_blgsp_metadata = get_gambl_metadata(case_set="BLGSP-study")
-#' override default filters and request metadata for samples other than tumour genomes, e.g. also get the normals
+#'
+#' #override default filters and request metadata for samples other than tumour genomes, e.g. also get the normals
 #' only_normal_metadata = get_gambl_metadata(tissue_status_filter = c('tumour','normal'))
+#'
 #' non_duplicated_genome_and_capture = get_gambl_metadata(seq_type_filter=c('genome','capture'),seq_type_priority="genome")
+#'
 get_gambl_metadata = function(seq_type_filter = "genome",
                               tissue_status_filter = c("tumour"),
                               case_set,
@@ -542,7 +570,7 @@ get_gambl_metadata = function(seq_type_filter = "genome",
                               sample_flatfile = "",
                               biopsy_flatfile = "",
                               only_available = TRUE,
-                              seq_type_priority="genome"){
+                              seq_type_priority = "genome"){
 
   check_remote_configuration()
   #this needs to be in any function that reads files from the bundled GAMBL outputs synced by Snakemake
@@ -945,13 +973,17 @@ add_prps_result = function(incoming_metadata){
   patient_meta = bind_rows(patient_meta_g, patient_meta_r)
 }
 
-
-#' INTERNAL FUNCTION called by get_gambl_metadata, not meant for out-of-package usage.
-#' Layer on ICGC metadata from a supplemental table to fill in missing COO.
+#' @title Add ICGC metadata.
 #'
-#' @param incoming_metadata A metadata table (probably output from get_gambl_metadata).
+#' @description Layer on ICGC metadata from a supplemental table to fill in missing COO.
+#'
+#' @details INTERNAL FUNCTION called by `get_gambl_metadata`, not meant for out-of-package usage.
+#'
+#' @param incoming_metadata A metadata table (probably output from `get_gambl_metadata`).
 #'
 #' @return Meta data with layered information (ICGC).
+#'
+#' @import dplyr readr stringr
 #'
 #' @examples
 #' icgc_metadata = add_icgc_metadata(incoming_metadata = my_meta)
@@ -997,17 +1029,21 @@ add_icgc_metadata = function(incoming_metadata){
 }
 
 
-#' INTERNAL FUNCTION called by get_gambl_metadata, not meant for out-of-package usage.
-#' Get the patient-centric clinical metadata.
+#' @title Get GAMBL Outcomes.
+#'
+#' @description Get the patient-centric clinical metadata.
+#'
+#' @details INTERNAL FUNCTION called by `get_gambl_metadata`, not meant for out-of-package usage.
 #'
 #' @param patient_ids Vector of patient IDs.
-#' @param time_unit Return follow-up times in one of three time units: year, month or day.
-#' @param censor_cbioportal Optionally request the censoring to be encoded in the specific style required by cBioPortal.
-#' @param complete_missing Optionally fill in any gaps to ensure we have values for every patient (censor at 0 if missing).
-#' @param from_flatfile Optionally set to FALSE to use the database to get the survival data.
+#' @param time_unit Return follow-up times in one of three time units: year, month or day. Default is "year".
+#' @param censor_cbioportal Optionally request the censoring to be encoded in the specific style required by cBioPortal. Default is FALSE.
+#' @param complete_missing Optionally fill in any gaps to ensure we have values for every patient (censor at 0 if missing). Default is FALSE.
+#' @param from_flatfile Optionally set to FALSE to use the database to get the survival data. Default is TRUE.
 #'
 #' @return Data frame with one row for each patient_id.
-#' @import tidyverse RMariaDB DBI dbplyr
+#'
+#' @import tidyr dplyr readr RMariaDB DBI
 #'
 #' @examples
 #' outcome_df = get_gambl_outcomes()
@@ -1100,9 +1136,11 @@ get_gambl_outcomes = function(patient_ids,
 }
 
 
-#' Retrieve Combined Manta and GRIDSS-derived SVs from a flatfile and filter.
+#' @title Get Combined SV.
 #'
-#' The bedpe files used as input to this function were pre-filtered for a minimum VAF of 0.05, and SVs affecting.
+#' @description Retrieve Combined Manta and GRIDSS-derived SVs from a flatfile and filter.
+#'
+#' @details The bedpe files used as input to this function were pre-filtered for a minimum VAF of 0.05, and SVs affecting.
 #' common translocation regions (BCL2, BCL6, MYC, CCND1) were whitelisted (e.g. no VAF filter applied).
 #' Therefore if you wish to post-filter the SVs we recommend doing so carefully after loading this data frame.
 #' Further, the input bedpe file is annotated with oncogenes and superenhancers from naive and germinal centre B-cells.
@@ -1110,14 +1148,14 @@ get_gambl_outcomes = function(patient_ids,
 #'
 #' @param min_vaf The minimum tumour VAF for a SV to be returned. Recommended: 0. (default: 0)
 #' @param these_sample_ids A character vector of tumour sample IDs you wish to retrieve SVs for.
-#' @param with_chr_prefix Prepend all chromosome names with chr (required by some downstream analyses)
-#' @param projection The projection genome build.
+#' @param with_chr_prefix Prepend all chromosome names with chr (required by some downstream analyses). Default is FALSE.
+#' @param projection The projection genome build. Default is "grch37".
 #' @param oncogenes A character vector of genes commonly involved in translocations. Possible values: CCND1, CIITA, SOCS1, BCL2, RFTN1, BCL6, MYC, PAX5.
 #'
-#'
 #' @return A data frame in a bedpe-like format with additional columns that allow filtering of high-confidence SVs.
+#'
+#' @import config dplyr readr stringr
 #' @export
-#' @import DBI RMariaDB tidyverse dbplyr
 #'
 #' @examples
 #' get_combined_sv(oncogenes = c("MYC", "BCL2", "BCL6"))
@@ -1210,8 +1248,7 @@ get_combined_sv = function(min_vaf = 0,
 #'
 #' @return A data frame in a bedpe-like format with additional columns that allow filtering of high-confidence SVs.
 #' 
-#' @import dplyr tidyr readr purrr tibble stringr forcats
-#' 
+#' @import dplyr
 #' @export
 #'
 #' @examples
@@ -1330,32 +1367,40 @@ get_manta_sv = function(these_sample_ids,
 }
 
 
-
-#' Get a specific flavour of LymphGen from the main GAMBL outputs and tidy the composites.
+#' @title Get Lymphgen.
+#'
+#' @description Get a specific flavour of LymphGen from the main GAMBL outputs.
+#'
+#' @details Get a specific flavour of LymphGen from the main GAMBL outputs and tidy the composites.
 #' Optionally return a matrix of features instead
 #'
-#' @param flavour
-#' @param these_samples_metadata
-#' @param return_feature_matrix
-#' @param return_feature_annotation
-#' @param lymphgen_file
-#' @param keep_all_rows
-#' @param keep_original_columns
+#' @param flavour Lymphgen flavour.
+#' @param these_samples_metadata A metadata table to auto-subset the data to samples in that table before returning.
+#' @param return_feature_matrix Boolean parameter, default is FALSE.
+#' @param return_feature_annotation Boolean parameter, default is FALSE.
+#' @param lymphgen_file Path to lymphgen file.
+#' @param keep_all_rows Boolean parameter, default is FALSE.
+#' @param keep_original_columns Boolean parameter, default is FALSE.
 #'
-#' @return
+#' @return A data frame.
+#' 
+#' @import config dplyr tidyr readr stringr tibble 
 #' @export
 #'
 #' @examples
+#' lymphgens = get_lymphgen(flavour = "no_cnvs.no_sv.with_A53")
+#'
 get_lymphgen = function(these_samples_metadata,
                         flavour,
-                        return_feature_matrix=FALSE,
-                        return_feature_annotation=FALSE,
+                        return_feature_matrix = FALSE,
+                        return_feature_annotation = FALSE,
                         lymphgen_file,
-                        keep_all_rows=FALSE,
-                        keep_original_columns=FALSE){
+                        keep_all_rows = FALSE,
+                        keep_original_columns = FALSE){
+
   if(missing(these_samples_metadata)){
     if(!keep_all_rows){
-      these_samples_metadata = get_gambl_metadata(seq_type_filter="genome")
+      these_samples_metadata = get_gambl_metadata(seq_type_filter = "genome")
     }
   }
   if(missing(flavour)){
@@ -1505,16 +1550,25 @@ get_lymphgen = function(these_samples_metadata,
   }
 }
 
-#' Get a copy number matrix for all samples based on segmented data in database.
+
+#' @title Get CN States.
+#'
+#' @description Get a copy number matrix for all samples based on segmented data in the database.
+#'
+#' @details This function returns CN states for the specified regions.
+#' For how to specify regions, refer to the parameter descriptions and function examples.
 #'
 #' @param regions_list A list of regions in the format chrom:start-end.
 #' @param regions_bed A bed file with one row for each region you want to determine the CN state from.
 #' @param region_names Subset CN states on specific regions (gene symbols e.g FCGR2B).
+#' @param these_samples_metadata A metadata table to auto-subset the data to samples in that table before returning.
 #' @param all_cytobands Include all cytobands, default is set to FALSE. Currently only supports hg19.
-#' @param use_cytoband_name Use cytoband names instad of region name, e.g p36.33.
+#' @param use_cytoband_name Use cytoband names instead of region names, e.g p36.33.
 #'
 #' @return Copy number matrix.
-#' @import tidyverse circlize
+
+
+#' @import dplyr circlize tibble stringr tidyr
 #' @export
 #'
 #' @examples
@@ -1528,6 +1582,7 @@ get_cn_states = function(regions_list,
                          these_samples_metadata,
                          all_cytobands = FALSE,
                          use_cytoband_name = FALSE){
+
   this_seq_type="genome" #this only supports genomes currently
   if(missing(these_samples_metadata)){
     these_samples_metadata = get_gambl_metadata(seq_type_filter=this_seq_type)
@@ -1597,17 +1652,25 @@ get_cn_states = function(regions_list,
 }
 
 
-#' Get all segments for a single (or multiple) sample_id(s).
+#' @title GetSample CN Segments.
+#'
+#' @description Get all segments for a single (or multiple) sample_id(s).
+#'
+#' @details This function returns CN segments for samples. This works for single sample or multiple samples.
+#' For multiple samples, remember to set the Boolean parameter `multiple_samples = TRUE` and give the `sample_lsit` a vector of characters with one sample ID per row.
+#' For more information on how this function can be run in different ways, refer to the parameter descriptions, examples and vignettes.
 #'
 #' @param this_sample_id Optional argument, single sample_id for the sample to retrieve segments for.
-#' @param multiple_samples Set to TRUE to return cn segments for multiple samples (list) of samples to be specified in samples_list parameter.
-#' @param samples_list Optional vector of type character with one sample per row, required if multiple_samples is set to TRUE.
+#' @param multiple_samples Set to TRUE to return cn segments for multiple samples (list) of samples to be specified in samples_list parameter. Default is FALSE.
+#' @param sample_list Optional vector of type character with one sample per row, required if multiple_samples is set to TRUE.
 #' @param from_flatfile Set to TRUE by default.
-#' @param projection Selected genome projection for returned CN segments.
-#' @param with_chr_prefix Set to TRUE to add a chr prefix to chromosome names.
-#' @param streamlined Return a minimal output rather than full details.
+#' @param projection Selected genome projection for returned CN segments. Default is "grch37".
+#' @param with_chr_prefix Set to TRUE to add a chr prefix to chromosome names. Default is FALSE.
+#' @param streamlined Return a minimal output rather than full details. Default is FALSE.
 #'
-#' @return A list of segments for a specific or multiple sample ID(s)
+#' @return A list of segments for a specific or multiple sample ID(s).
+#'
+#' @import dplyr readr RMariaDB DBI
 #' @export
 #'
 #' @examples
@@ -1730,34 +1793,41 @@ get_sample_cn_segments = function(this_sample_id,
 }
 
 
-#' Retrieve all copy number segments from the GAMBL database that overlap with a single genomic coordinate range.
+#' @title Get CN Segments.
+#'
+#' @description Retrieve all copy number segments from the GAMBL database that overlap with a single genomic coordinate range.
+#'
+#' @details This function returns CN segments for s specified region.
+#' There are multiple ways a region can be specified.
+#' For example, the user can provide the full region in a "region" format (chr:start-end) to the `region` parameter.
+#' Or, the user can provide chromosome, start and end coordinates individually with `chr`, `start`, and `end` parameters.
+#' For more usage examples, refer to the parameter descriptions and examples in the vignettes.
 #'
 #' @param region Region formatted like chrX:1234-5678 or X:1234-56789.
 #' @param chromosome The chromosome you are restricting to. Required parameter if region is not specified.
 #' @param qstart Start coordinate of the range you are restricting to. Required parameter if region is not specified.
 #' @param qend End coordinate of the range you are restricting to. Required parameter if region is not specified.
-#' @param projection Selected genome projection for returned Cn segments.
-#' @param this_seq_type Seq type for returned Cn segments. Currently, only genome is supported. Capture samples will be added once processed through CNV protocols.
-#' @param with_chr_prefix Boolean parameter for toggling if chr prefixes should be present in the return, default is FLASE. 
-#' @param streamlined Return a basic rather than full MAF format.
+#' @param projection Selected genome projection for returned CN segments. Default is "grch37".
+#' @param this_seq_type Seq type for returned CN segments. Currently, only genome is supported. Capture samples will be added once processed through CNV protocols.
+#' @param with_chr_prefix Boolean parameter for toggling if chr prefixes should be present in the return, default is FALSE.
+#' @param streamlined Return a basic rather than full MAF format. Default is FALSE.
 #' @param from_flatfile Set to TRUE by default.
 #'
 #' @return A data frame with CN segments for the specified region.
+#'
+#' @import dplyr readr RMariaDB DBI
 #' @export
-#' @import DBI RMariaDB
-#' @depend tidyverse
 #'
 #' @examples
 #' #Example using chromosome, qstart and qend parameters:
 #' segments_region_grch37 = get_cn_segments(chromosome = "chr8",
 #'                                          qstart = 128723128,
-#'                                          qend = 128774067) 
-#'                                     
+#'                                          qend = 128774067)
+#'                                    
 #' #Example using the regions parameter:
 #' segments_region_hg38 = get_cn_segments(region = "chr8:128,723,128-128,774,067",
-#'                                        projection = "hg38", 
-#'                                        with_chr_prefix = TRUE) 
-#'
+#'                                        projection = "hg38",
+#'                                        with_chr_prefix = TRUE)
 #'
 get_cn_segments = function(region,
                            chromosome,
@@ -1875,13 +1945,18 @@ get_cn_segments = function(region,
 }
 
 
-#' INTERNAL FUNCTION, not meant for out-of-package usage.
-#' Housekeeping function to add results to a table.
+#' @title Append To Table.
+#'
+#' @description Housekeeping function to add results to a table.
+#'
+#' @details INTERNAL FUNCTION, not meant for out-of-package usage.
 #'
 #' @param table_name The name of the database table to update/populate.
 #' @param data_df A dataframe of values to load into the table.
 #'
-#' @return Table
+#' @return A table.
+#'
+#' @import RMariaDB DBI
 #'
 #' @examples
 #' table_up = append_to_table("my_table", "my_df")
@@ -1895,17 +1970,21 @@ append_to_table = function(table_name,
 }
 
 
-#' Prepare a matrix with one row per sample and one column per region using a set of hypermutated regions.
-#' Values are the number of mutations in that patient in the region.
+#' @title Get ASHM Count Matrix.
+#'
+#' @description Prepare a matrix with one row per sample and one column per region using a set of hypermutated regions.
+#'
+#' @details Values are the number of mutations in that patient in the region.
 #'
 #' @param regions_bed A bed file with one row for each region.
 #' @param maf_data Optionally provide a data frame in the MAF format, otherwise the database will be used.
-#' @param sample_metadata This is used to complete your matrix. All GAMBL samples will be used by default. Provide a data frame with at least sample_id for all samples if you are using non-GAMBL data.
-#' @param use_name_column Set this to true to force the function to use the value in column "name" to name each feature in the output.
-#' @param from_indexed_flatfile Set to TRUE to avoid using the database and instead rely on flatfiles (only works for streamlined data, not full MAF details).
-#' @param allow_clustered Set to TRUE to utilize the latest SLMS-3 variant calls that allow clustered variants.
+#' @param these_samples_metadata This is used to complete your matrix. All GAMBL samples will be used by default. Provide a data frame with at least sample_id for all samples if you are using non-GAMBL data.
+#' @param seq_type The seq type to return results for.
+#' @param from_indexed_flatfile Boolean parameter set to TRUE per default.
 #'
-#' @return Matrix
+#' @return A matrix.
+#'
+#' @import dplyr utils tibble
 #' @export
 #'
 #' @examples
@@ -1957,11 +2036,17 @@ get_ashm_count_matrix = function(regions_bed,
 }
 
 
-#' Efficiently retrieve all mutations across a range of genomic regions.
+#' @title Get SSM By Regions.
+#'
+#' @description Efficiently retrieve all mutations across a range of genomic regions.
+#'
+#' @details This function internally calls `get_ssm_by_region` to retrieve SSM calls for the specified regions.
+#' See parameter descriptions for `get_ssm_by_region` for more information on how the different parameters can be called.
 #'
 #' @param regions_list Either provide a vector of regions in the chr:start-end format OR.
 #' @param regions_bed Better yet, provide a bed file with the coordinates you want to retrieve.
-#' @param streamlined Return a basic rather than full MAF format, default is FALSE.
+#' @param streamlined Return a basic rather than full MAF format, default is TRUE.
+#' @param maf_data Use an already loaded MAF data frame.
 #' @param use_name_column If your bed-format data frame has a name column (must be named "name") these can be used to name your regions.
 #' @param from_indexed_flatfile Set to TRUE to avoid using the database and instead rely on flatfiles (only works for streamlined data, not full MAF details).
 #' @param mode Only works with indexed flatfiles. Accepts 2 options of "slms-3" and "strelka2" to indicate which variant caller to use. Default is "slms-3".
@@ -1969,8 +2054,11 @@ get_ashm_count_matrix = function(regions_bed,
 #' @param seq_type The seq_type you want back, default is genome.
 #' @param projection Obtain variants projected to this reference (one of grch37 or hg38).
 #' @param min_read_support Only returns variants with at least this many reads in t_alt_count (for cleaning up augmented MAFs).
+#' @param basic_columns Boolean parameter set to FALSE per default. Set to TRUE to return fewer columns.
 #'
 #' @return Returns a data frame of variants in MAF-like format.
+#'
+#' @import tibble dplyr tidyr
 #' @export
 #'
 #' @examples
@@ -1978,6 +2066,7 @@ get_ashm_count_matrix = function(regions_bed,
 #' regions_bed = grch37_ashm_regions %>% mutate(name = paste(gene, region, sep = "_"))
 #' ashm_basic_details = get_ssm_by_regions(regions_bed = regions_bed)
 #' full_details_maf = get_ssm_by_regions(regions_bed = regions_bed,basic_columns=T)
+#'
 get_ssm_by_regions = function(regions_list,
                               regions_bed,
                               streamlined = TRUE,
@@ -1989,7 +2078,7 @@ get_ssm_by_regions = function(regions_list,
                               seq_type = "genome",
                               projection = "grch37",
                               min_read_support = 4,
-                              basic_columns=F){
+                              basic_columns = FALSE){
 
 
   bed2region = function(x){
@@ -2048,7 +2137,14 @@ get_ssm_by_regions = function(regions_list,
 }
 
 
-#' Retrieve all SSMs from the GAMBL database within a single genomic coordinate range.
+#' @title Get SSM By Region.
+#'
+#' @description Retrieve all SSMs from the GAMBL database within a single genomic coordinate range.
+#'
+#' @details This function lets the user specify a region of interest for returning SSM calls within that region.
+#' There are multiple ways a region can be specified. For example, the user can provide the full region in a "region" format (chr:start-end) to the `region` parameter.
+#' Or, the user can provide chromosome, start and end coordinates individually with `chr`, `start`, and `end` parameters.
+#' For more usage examples, refer to the parameter descriptions and examples in the vignettes.
 #'
 #' @param chromosome The chromosome you are restricting to (with or without a chr prefix).
 #' @param qstart Query start coordinate of the range you are restricting to.
@@ -2063,10 +2159,14 @@ get_ssm_by_regions = function(regions_list,
 #' @param augmented default: TRUE. Set to FALSE if you instead want the original MAF from each sample for multi-sample patients instead of the augmented MAF .
 #' @param min_read_support Only returns variants with at least this many reads in t_alt_count (for cleaning up augmented MAFs).
 #' @param mode Only works with indexed flatfiles. Accepts 2 options of "slms-3" and "strelka2" to indicate which variant caller to use. Default is "slms-3".
+#' @param maf_columns Specify what MAF columns you want back. `basic_columns` needs to be set to TRUE.
+#' @param maf_column_types The column types of specified MAF columns `maf_columns`.
+#' @param verbose Boolean parameter set to FALSE per default.
 #'
 #' @return A data frame containing all the MAF data columns (one row per mutation).
+#'
+#' @import dplyr RMariaDB DBI stringr utils vroom
 #' @export
-#' @import tidyverse DBI RMariaDB dbplyr
 #'
 #' @examples
 #' #basic usage
@@ -2090,7 +2190,7 @@ get_ssm_by_region = function(chromosome,
                              mode = "slms-3",
                              maf_columns = c("Chromosome", "Start_Position", "End_Position", "Tumor_Sample_Barcode", "t_alt_count"),
                              maf_column_types = "ciici",
-                             verbose=FALSE){
+                             verbose = FALSE){
   remote_session = check_remote_configuration(auto_connect = TRUE)
   if(basic_columns){
     #this means we ignore/clobber the contents of maf_columns so the first 45 are used instead
@@ -2256,7 +2356,12 @@ get_ssm_by_region = function(chromosome,
 }
 
 
-#' Retrieve all coding SSMs from the GAMBL database in MAF-like format.
+#' @title Get Coding SSM.
+#'
+#' @description Retrieve all coding SSMs from the GAMBL database in MAF-like format.
+#'
+#' @details Effectively retrieve coding SSM calls. Multiple filtering parameters are available for this function.
+#' For more information on how to implement the filtering parameters, refer to the parameter descriptions as well as examples in the vignettes.
 #'
 #' @param limit_cohort Supply this to restrict mutations to one or more cohorts in a list.
 #' @param exclude_cohort  Supply this to exclude mutations from one or more cohorts in a list.
@@ -2273,10 +2378,12 @@ get_ssm_by_region = function(chromosome,
 #' @param min_read_support Only returns variants with at least this many reads in t_alt_count (for cleaning up augmented MAFs)
 #' @param groups Unix groups for the samples to be included. Default is both gambl and icgc_dart samples.
 #' @param include_silent Logical parameter indicating whether to include silent mutations into coding mutations. Default is TRUE.
+#' @param engine Specify one of readr or fread_maf (default) to change how the large files are loaded prior to subsetting. You may have better performance with one or the other but for me fread_maf is faster and uses a lot less RAM.
 #'
 #' @return A data frame containing all the MAF data columns (one row per mutation).
+#'
+#' @import dplyr tidyr RMariaDB DBI
 #' @export
-#' @import tidyverse DBI RMariaDB dbplyr
 #'
 #' @examples
 #' #basic usage
@@ -2298,7 +2405,8 @@ get_coding_ssm = function(limit_cohort,
                           min_read_support = 3,
                           groups = c("gambl", "icgc_dart"),
                           include_silent = TRUE,
-                          engine='fread_maf'){
+                          engine = "fread_maf"){
+
   remote_session = check_remote_configuration()
   if(!include_silent){
     coding_class = coding_class[coding_class != "Silent"]
@@ -2431,18 +2539,23 @@ get_coding_ssm = function(limit_cohort,
     fu_muts = get_ssm_by_samples(these_sample_ids = force_unmatched_samples)
     muts = bind_rows(muts, fu_muts)
   }
-
   return(muts)
 }
 
 
-#' Get the copy number and expression for a single gene.
+#' @title Get Gene CN and Expression.
+#' 
+#' @description Get the copy number and expression for a single gene.
+#'
+#' @details This function works well with both Hugo Symbols and Ensembl Gene IDs. 
+#' It's also possible to specify more than one gene.
 #'
 #' @param hugo_symbol One or more gene symbols. Should match the values in a maf file.
 #' @param ensembl_gene_id One or more ensembl gene IDs. Only one of hugo_symbols or ensembl_gene_ids may be used.
 #'
 #' @return A list.
-#' @import tidyverse
+
+#' @import dplyr tibble
 #' @export
 #'
 #' @examples
@@ -2482,26 +2595,35 @@ get_gene_cn_and_expression = function(gene_symbol,
 }
 
 
-#' Get the expression for one or more genes for all GAMBL samples
+#' @title Get Gene Expression.
+#'
+#' @description Get the expression for one or more genes for all GAMBL samples.
+#'
+#' @details Effectively get gene expression for one or multiple genes for al GAMBL samples.
+#' This function can also take an already loaded expression matrix (`expression_data`)
+#' to prevent the user from having to load the full expression matrix if this function needs to be run in an interactive session.
+#' For examples and more info, refer to the parameter descriptions as wella s vignette examples.
 #'
 #' @param metadata GAMBL metadata.
 #' @param hugo_symbols One or more gene symbols. Should match the values in a maf file.
 #' @param ensembl_gene_ids One or more ensembl gene IDs. Only one of hugo_symbols or ensembl_gene_ids may be used.
-#' @param join_with How to restrict cases for the join. Can be one of genome, mrna or "any"
-#' @param all_genes Set to TRUE to return full expression data frame without any subsetting. Avoid this if you don't want to use tons of RAM.
-#' @param expression_data Optional argument to use an already loaded expression data frame (prevent function to re-load full df from flat file or database)
+#' @param join_with How to restrict cases for the join. Can be one of genome, mrna or "any".
+#' @param all_genes Set to TRUE to return the full expression data frame without any subsetting. Avoid this if you don't want to use tons of RAM.
+#' @param expression_data Optional argument to use an already loaded expression data frame (prevent function to re-load full df from flat file or database).
 #' @param from_flatfile Deprecated but left here for backwards compatibility.
 #'
 #' @return A list.
+#'
+#' @import dplyr data.table readr tidyr
 #' @export
 #'
 #' @examples
 #' MYC_expr = get_gene_expression(hugo_symbols = c("MYC"), join_with = "mrna")
 #' Read full expression values df (no subsetting on genes)
 #' full_expression_df = get_gene_expression_new(all_genes = TRUE, join_with = "genome")
-#' Use loaded df (in previous step) to get expression values for IRF4 and MYC.
+#' Use loaded df (in the previous step) to get expression values for IRF4 and MYC.
 #' irf4_myc_expressions = get_gene_expression_new(hugo_symbols = c("IRF4", "MYC"), all_genes = FALSE, join_with = "genome", from_flatfile = FALSE, expression_data = full_expression_df)
-
+#'
 get_gene_expression = function(metadata,
                                hugo_symbols,
                                ensembl_gene_ids,
@@ -2638,9 +2760,11 @@ get_gene_expression = function(metadata,
 }
 
 
-#' Load the manta output for a set of samples
+#' @title Get Manta SV By Samples.
 #'
-#' This is a convenience wrapper function for get_manta_sv_by_sample (and called by get_manta_sv).
+#' @description Load the manta output for a set of samples.
+#'
+#' @details This is a convenience wrapper function for get_manta_sv_by_sample (and called by get_manta_sv).
 #'
 #' @param these_samples_metadata The only required parameter is a metadata table (data frame) that must contain a row for each sample you want the data from. The additional columns the data frame needs to contain, besides sample_id, are: unix_group, genome_build, seq_type, pairing_status.
 #' @param min_vaf The minimum tumour VAF for a SV to be returned. Default value is 0.1.
@@ -2648,8 +2772,9 @@ get_gene_expression = function(metadata,
 #' @param pass If set to TRUE, only return SVs that are annotated with PASS in the FILTER column. Set to FALSE to keep all variants, regardless if they PASS the filters. Default is TRUE. 
 #' @param projection The projection of returned calls. Default is grch37.
 #' 
-#' @return a data frame containing the Manta outputs from all sample_id in these_samples_metadata in a bedpe-like format with additional columns extracted from the VCF column.
-#' @import tidyverse
+#' @return A data frame containing the Manta outputs from all sample_id in these_samples_metadata in a bedpe-like format with additional columns extracted from the VCF column.
+#'
+#' @import dplyr stringr
 #' @export
 #'
 #' @examples
@@ -2724,13 +2849,15 @@ get_manta_sv_by_samples = function(these_samples_metadata,
 }
 
 
-#' Load the manta output (from individual flat file) for 1 sample.
+#' @title Get Manta SV By Sample.
 #'
-#' This function is used for retrieving Manta results (structural variants) from individual flat-files (one sample). 
-#' For multiple samples, please see get_manta_sv_by_samples (a convenience wrapper function for get_manta_by_sample). 
+#' @description Load the manta output (from individual flat file) for 1 sample.
+#'
+#' @details This function is used for retrieving Manta results (structural variants) from individual flat-files (one sample). 
+#' For multiple samples, please see `get_manta_sv_by_samples` (a convenience wrapper function for `get_manta_by_sample`). 
 #' Additional columns are extracted from the VCF column and standard filtering options are available. 
 #' This function also performs a lift-over to selected projection, if needed. 
-#' Please note, if force_lift is set to FALSE, an extra column will be added that states if the returned variant calls need to be lifted. 
+#' Please note, if `force_lift` is set to FALSE, an extra column will be added that states if the returned variant calls need to be lifted. 
 #' The value for this column is returned TRUE (for all rows) if the available genome projection for the selected sample does not match the selected projection (i.e requiring the user to manually lift the calls).
 #'
 #' @param this_sample_id The single sample ID you want to obtain the result from. If this parameter is not supplied, the function will retrieve sample ID from the supplied metadata table (these_samples_metadata).
@@ -2743,7 +2870,8 @@ get_manta_sv_by_samples = function(these_samples_metadata,
 #' @param projection The projection of returned calls. Default is grch37.
 #'
 #' @return a data frame containing the Manta outputs from this_sample_id in a bedpe-like format with additional columns extracted from the VCF column.
-#' @import tidyverse
+#'
+#' @import config dplyr readr utils stringr tibble
 #' @export
 #'
 #' @examples

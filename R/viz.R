@@ -2281,7 +2281,7 @@ copy_number_vaf_plot = function(this_sample_id,
 #'
 #' @description Make a rainbow plot of all mutations in a region, ordered and coloured by metadata.
 #'
-#' @details This function creates a rainbow plot for all mutations in a region. Region can either be specified with the `region` parameter.,
+#' @details This function creates a rainbow plot for all mutations in a region. Region can either be specified with the `region` parameter,
 #' or the user can provide a maf that has already been subset to the region(s) of interest with `mutation_maf`.
 #' As a third alternative, the regions can also be specified as a bed file with `bed`.
 #' Lastly, this function has a variety of parameters that can be used to further customize the returned plot in many different ways.
