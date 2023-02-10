@@ -2,14 +2,14 @@
 % Please edit documentation in R/annotation.R
 \name{annotate_sv}
 \alias{annotate_sv}
-\title{Annotate a data frame of SV breakpoints represented in an extended BEDPE format.}
+\title{Annotate SVs.}
 \usage{
 annotate_sv(
   sv_data,
   partner_bed,
   with_chr_prefix = FALSE,
   collapse_redundant = FALSE,
-  return_as = "bedpe_entrez",
+  return_as = "bedpe",
   blacklist = c(60565248, 30303126, 187728894, 101357565, 101359747, 161734970,
     69400840, 65217851, 187728889, 187728888, 187728892, 187728893, 188305164),
   genome_build = "grch37"
@@ -24,21 +24,24 @@ CHROM_A  START_A    END_A CHROM_B  START_B    END_B NAME SOMATIC_SCORE STRAND_A 
 
 \item{partner_bed}{Optional bed-format data frame to use for annotating oncogene partners (e.g. enhancers). required columns are: chrom,start,end,gene}
 
-\item{with_chr_prefix}{Optionally request that chromosome names are returned with a chr prefix.}
+\item{with_chr_prefix}{Optionally request that chromosome names are returned with a chr prefix. Default is FALSE.}
 
-\item{collapse_redundant}{Remove reciprocal events and only return one per event.}
+\item{collapse_redundant}{Remove reciprocal events and only return one per event. Default is FALSE.}
 
-\item{return_as}{Stated format for returned output, default is bedpe. Other accepted output format is bed and bedpe_entrez (to keep entrez_ids for compatabillity with portal.R and cBioPortal).}
+\item{return_as}{Stated format for returned output, default is "bedpe". Other accepted output formats are "bed" and "bedpe_entrez" (to keep entrez_ids for compatibility with portal.R and cBioPortal).}
 
 \item{blacklist}{A list of regions to be removed from annotations. Default coordinates are in respect to hg19.}
 
-\item{genome_build}{Reference genome build parameter, default is grch37 (hg38 is also accepted).}
+\item{genome_build}{Reference genome build parameter, default is grch37.}
 }
 \value{
-A data frame with annotated SVs (gene symbol and entrez ID)
+A data frame with annotated SVs (gene symbol and entrez ID).
 }
 \description{
 Annotate a data frame of SV breakpoints represented in an extended BEDPE format.
+}
+\details{
+Specify a data frame with SVs (preferably the output from \code{get_manta_sv}) to the \code{sv_df} parameter and get back the same data frame with SV annotations.
 }
 \examples{
 # Basic usage

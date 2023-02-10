@@ -2,7 +2,7 @@
 % Please edit documentation in R/database.R
 \name{get_gene_cn_and_expression}
 \alias{get_gene_cn_and_expression}
-\title{Get the copy number and expression for a single gene.}
+\title{Get Gene CN and Expression.}
 \usage{
 get_gene_cn_and_expression(gene_symbol, ensembl_id)
 }
@@ -16,6 +16,10 @@ A list.
 }
 \description{
 Get the copy number and expression for a single gene.
+}
+\details{
+This function works well with both Hugo Symbols and Ensembl Gene IDs.
+It's also possible to specify more than one gene.
 }
 \examples{
 MYC_cn_expression = get_gene_cn_and_expression("MYC")

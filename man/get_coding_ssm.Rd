@@ -2,7 +2,7 @@
 % Please edit documentation in R/database.R
 \name{get_coding_ssm}
 \alias{get_coding_ssm}
-\title{Retrieve all coding SSMs from the GAMBL database in MAF-like format.}
+\title{Get Coding SSM.}
 \usage{
 get_coding_ssm(
   limit_cohort,
@@ -53,12 +53,18 @@ get_coding_ssm(
 \item{groups}{Unix groups for the samples to be included. Default is both gambl and icgc_dart samples.}
 
 \item{include_silent}{Logical parameter indicating whether to include silent mutations into coding mutations. Default is TRUE.}
+
+\item{engine}{Specify one of readr or fread_maf (default) to change how the large files are loaded prior to subsetting. You may have better performance with one or the other but for me fread_maf is faster and uses a lot less RAM.}
 }
 \value{
 A data frame containing all the MAF data columns (one row per mutation).
 }
 \description{
 Retrieve all coding SSMs from the GAMBL database in MAF-like format.
+}
+\details{
+Effectively retrieve coding SSM calls. Multiple filtering parameters are available for this function.
+For more information on how to implement the filtering parameters, refer to the parameter descriptions as well as examples in the vignettes.
 }
 \examples{
 #basic usage

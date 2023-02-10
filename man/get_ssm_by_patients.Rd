@@ -2,7 +2,7 @@
 % Please edit documentation in R/database.R
 \name{get_ssm_by_patients}
 \alias{get_ssm_by_patients}
-\title{Get MAF-format data frame for more than one patient}
+\title{Get SSM By Patients.}
 \usage{
 get_ssm_by_patients(
   these_patient_ids,
@@ -22,30 +22,43 @@ get_ssm_by_patients(
 \arguments{
 \item{these_patient_ids}{A vector of sample_id that you want results for. This is the only required argument.}
 
-\item{these_samples_metadata}{Optional metadata table}
+\item{these_samples_metadata}{Optional metadata table.}
 
-\item{tool_name}{Only supports slms-3 currently}
+\item{tool_name}{Only supports slms-3 currently.}
 
-\item{projection}{Obtain variants projected to this reference (one of grch37 or hg38)}
+\item{projection}{Obtain variants projected to this reference (one of grch37 or hg38).}
 
-\item{flavour}{Currently this function only supports one flavour option but this feature is meant for eventual compatibility with additional variant calling parameters/versions}
+\item{seq_type}{The seq type you want results for. Default is "genome".}
 
-\item{min_read_support}{Only returns variants with at least this many reads in t_alt_count (for cleaning up augmented MAFs)}
+\item{flavour}{Currently this function only supports one flavour option but this feature is meant for eventual compatibility with additional variant calling parameters/versions.}
+
+\item{min_read_support}{Only returns variants with at least this many reads in t_alt_count (for cleaning up augmented MAFs).}
 
 \item{basic_columns}{Return first 43 columns of MAF rather than full details. Default is TRUE.}
 
 \item{maf_cols}{if basic_columns is set to FALSE, the user can specify what columns to be returned within the MAF. This parameter can either be a list of indexes (integer) or a list of characters (matching columns in MAF).}
 
-\item{subset_from_merge}{Instead of merging individual MAFs, the data will be subset from a pre-merged MAF of samples with the specified seq_type}
+\item{subset_from_merge}{Instead of merging individual MAFs, the data will be subset from a pre-merged MAF of samples with the specified \code{seq_type}.}
+
+\item{augmented}{default: TRUE. Set to FALSE if you instead want the original MAF from each sample for multi-sample patients instead.}
+
+\item{engine}{Specify one of readr or fread_maf (default) to change how the large files are loaded prior to subsetting. You may have better performance with one or the other but for me fread_maf is faster and uses a lot less RAM.}
+}
+\value{
+A data frame with SSM calls for the selected patients in MAF format.
 }
 \description{
-This function returns variants from a set of patients avoiding duplicated mutations from multiple samples from that patient(i.e. unique superset of variants).
-This is done either by combining the contents of individual MAF files or subsetting from a merged MAF (wraps get_ssm_by_samples)
-In most situations, this should never need to be run with subset_from_merge = TRUE. Instead use one of get_coding_ssm or get_ssm_by_region
+Get MAF-format data frame for more than one patient.
+}
+\details{
+This function returns variants from a set of patients avoiding duplicated mutations from multiple samples from that patient (i.e. unique superset of variants).
+This is done either by combining the contents of individual MAF files or subset from a merged MAF (wraps get_ssm_by_samples).
+In most situations, this should never need to be run with \code{subset_from_merge = TRUE}. Instead use one of \code{get_coding_ssm} or \code{get_ssm_by_region}
 }
 \examples{
 patients = c("00-14595", "00-15201", "01-12047")
 patients_maf = get_ssm_by_patients(these_patient_ids = patients, seq_type = "genome", subset_from_merge = FALSE)
 patient_meta = get_gambl_metadata(seq_type_filter = "genome") \%>\% dplyr::filter(patient_id \%in\% patients)
 patients_maf_2 = get_ssm_by_patients(these_samples_metadata = patient_meta,subset_from_merge = FALSE)
+
 }

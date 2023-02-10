@@ -17,7 +17,7 @@ FtestCNV(
 \arguments{
 \item{gistic_lesions}{Path to the GISTIC2.0 all_lesions output file.}
 
-\item{metadata}{Data frame containing sample ids and column with annotated data for the 2 groups of interest. All other columns are ignored. Currently, function exits if asked to compare more than 2 groups.}
+\item{metadata}{Data frame containing sample ids and column with annotated data for the 2 groups of interest. All other columns are ignored. Currently, function exists if asked to compare more than 2 groups.}
 
 \item{comparison}{Specify column annotating groups of interest.}
 
@@ -27,7 +27,7 @@ FtestCNV(
 
 \item{text_size}{Size of the text on the forest plot of differentially enriched CNV. Default text-size is 7.}
 
-\item{blacklisted_regions}{Optionally, specify any descriptors (value from column \code{Descriptor} of GISTIC2.0 all_lesions output file) to filter out before amy comparisons are done. It is possible to specify list of multiple descriptors, for example, c("3p12.3", "12p13.2"). Default is NULL.}
+\item{blacklisted_regions}{Optionally, specify any descriptors (value from column \code{Descriptor} of GISTIC2.0 all_lesions output file) to filter out before any comparisons are done. It is possible to specify a list of multiple descriptors, for example, c("3p12.3", "12p13.2"). Default is NULL.}
 }
 \value{
 list of 3 objects:
@@ -41,9 +41,9 @@ Using GISTIC2.0 outputs, perform Fisher's exact test to compare CNV frequencies 
 }
 \details{
 This function was developed to compare (Fisher's exact test) CNV frequencies between two groups.
-To do so, set the path to the GISTIC2.0 all_lesions file with \code{gistic_lesions}, together with a metadata table with thhe sample IDs of interest (\code{metadata}).
-The last reamaining required parameter is \code{comparison}, this parameter takes the name of the column annotating the groups of interest, e.g pathology, cohort, etc.
-For more infomation on how to run this funciton, refer to the function examples and parameter descriptions.
+To do so, set the path to the GISTIC2.0 all_lesions file with \code{gistic_lesions}, together with a metadata table with the sample IDs of interest (\code{metadata}).
+The last remaining required parameter is \code{comparison}, this parameter takes the name of the column annotating the groups of interest, e.g pathology, cohort, etc.
+For more information on how to run this function, refer to the function examples and parameter descriptions.
 }
 \examples{
 # basic usage

@@ -10,7 +10,7 @@ referesh_metadata_tables()
 Table.
 }
 \description{
-Refresh the contents of meta data table.
+Refresh the contents of a metadata table.
 }
 \details{
 INTERNAL FUNCTION, not meant for out-of-package usage.

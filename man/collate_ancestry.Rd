@@ -17,7 +17,7 @@ collate_ancestry(sample_table, seq_type_filter = "genome", somalier_output)
 A table.
 }
 \description{
-Gather ancestry infomration and expand the incoming sample table (or metadata).
+Gather ancestry information and expand the incoming sample table (or metadata).
 }
 \details{
 INTERNAL FUNCTION called by \code{collate_results}, not meant for out-of-package usage.

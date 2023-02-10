@@ -9,13 +9,13 @@ collate_extra_metadata(sample_table, file_path)
 \arguments{
 \item{sample_table}{A data frame with sample_id as the first column.}
 
-\item{file_path}{Path to extra emtadata.}
+\item{file_path}{Path to extra metadata.}
 }
 \value{
 A table.
 }
 \description{
-Gather additional metadata infomration and expand the incoming sample table (or metadata).
+Gather additional metadata information and expand the incoming sample table (or metadata).
 }
 \details{
 INTERNAL FUNCTION called by \code{collate_results}, not meant for out-of-package usage.

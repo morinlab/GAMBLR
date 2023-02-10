@@ -29,9 +29,9 @@ Consolidate a column of LymphGen data in the original Subtype.Prediction output 
 \details{
 This function takes an incoming data frame (\code{df}) and consolidates a column of LymphGen data.
 Specify the column with the lymphgen data to be processed with \code{lymphgen_column_in} and
-what column to write the tydied data to with \code{lymphgen_column_out}.
+what column to write the tidied data to with \code{lymphgen_column_out}.
 In addition, the user can also run this function with \code{relevel = TRUE} (default is FALSE),
-to return the ouptput column as a factor with plot friendly levels.
+to return the output column as a factor with plot friendly levels.
 }
 \examples{
 metadata <- get_gambl_metadata()

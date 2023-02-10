@@ -15,7 +15,7 @@ standardize_chr_prefix(incoming_vector, projection)
 A vector of chromosome names with prefix standardized to projection
 }
 \description{
-Standartize the chr prefix in a vector of chromosome names based on projection.
+Standardize the chr prefix in a vector of chromosome names based on projection.
 }
 \details{
 INTERNAL FUNCTION, not meant for out-of-package use.

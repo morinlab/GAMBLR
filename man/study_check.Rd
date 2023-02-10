@@ -2,7 +2,7 @@
 % Please edit documentation in R/portal.R
 \name{study_check}
 \alias{study_check}
-\title{Helper function for checking integrity of study files.}
+\title{Study Check (cBioPortal).}
 \usage{
 study_check(
   data_clinical_samples_path = "data_clinical_samples.txt",
@@ -15,25 +15,31 @@ study_check(
 )
 }
 \arguments{
+\item{data_clinical_samples_path}{Path to clinical file.}
+
+\item{data_fusions_path}{Path to data_fusion file from setup_fusions.}
+
+\item{cases_fusions_path}{Path to cases_fusion from setup_fusions.}
+
+\item{cases_all_path}{Path to cases_all from setup_study.}
+
+\item{cases_sequenced_path}{Path to cases_sequenced from setup_study.}
+
 \item{project_name}{Project name, should match what is specified under setup_study/setup_fusions.}
 
-\item{out_dir}{Directory with all study related files, the only argument that needs to be specified, given that path to all generated study files are not changed from default.}
-
-\item{data_clinical_samples}{Path to clinical file.}
-
-\item{data_fusions}{Path to data_fusion file from setup_fusions.}
-
-\item{cases_fusions}{Path to cases_fusion from setup_fusions.}
-
-\item{cases_all}{Path to cases_all from setup_study.}
-
-\item{cases_sequenced}{Path to cases_sequenced from setup_study.}
+\item{out_dir}{Directory with all study related files, the only argument that needs to be specified, given that paths to all generated study files are not changed from default.}
 }
 \value{
 Nothing.
 }
 \description{
 Helper function for checking integrity of study files.
+}
+\details{
+This function was designed to ensure that all the sample IDs described in the maf are actually present in the clinical files.
+If this is not the case, the function will notify the user what samples are found in the case list that are not described in the clinical file.
+The function then sub-sets the case list to only include samples from the clinical file.
+Note that the \code{project_name} has to match what is specified for the previously run functions (i.e \code{setup_study}, \code{setup_fusions} and \code{finalize_study}).
 }
 \examples{
 samples_not_in_clinical = study_check(out_dir = "GAMBLR/cBioPortal/instance01/")

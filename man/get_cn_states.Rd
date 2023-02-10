@@ -2,7 +2,7 @@
 % Please edit documentation in R/database.R
 \name{get_cn_states}
 \alias{get_cn_states}
-\title{Get a copy number matrix for all samples based on segmented data in database.}
+\title{Get CN States.}
 \usage{
 get_cn_states(
   regions_list,
@@ -20,15 +20,21 @@ get_cn_states(
 
 \item{region_names}{Subset CN states on specific regions (gene symbols e.g FCGR2B).}
 
+\item{these_samples_metadata}{A metadata table to auto-subset the data to samples in that table before returning.}
+
 \item{all_cytobands}{Include all cytobands, default is set to FALSE. Currently only supports hg19.}
 
-\item{use_cytoband_name}{Use cytoband names instad of region name, e.g p36.33.}
+\item{use_cytoband_name}{Use cytoband names instead of region names, e.g p36.33.}
 }
 \value{
 Copy number matrix.
 }
 \description{
-Get a copy number matrix for all samples based on segmented data in database.
+Get a copy number matrix for all samples based on segmented data in the database.
+}
+\details{
+This function returns CN states for the specified regions.
+For how to specify regions, refer to the parameter descriptions and function examples.
 }
 \examples{
 #basic usage, generic lymphoma gene list

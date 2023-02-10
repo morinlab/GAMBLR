@@ -18,11 +18,11 @@ get_gambl_colours(
 
 \item{alpha}{Alpha of plotted colours.}
 
-\item{as_list}{Boolean parameter controling the format of the return. Default is FALSE.}
+\item{as_list}{Boolean parameter controlling the format of the return. Default is FALSE.}
 
-\item{as_dataframe}{Boolean parameter controling the format of the return. Default is FALSE.}
+\item{as_dataframe}{Boolean parameter controlling the format of the return. Default is FALSE.}
 
-\item{return_available}{Set to TRUE for returning all avaialble colours. Default is FALSE.}
+\item{return_available}{Set to TRUE for returning all available colours. Default is FALSE.}
 
 \item{verbose}{Default is FALSE}
 }
@@ -33,12 +33,12 @@ A named vector of colour codes for lymphgen classes and pathology.
 Get GAMBL colour schemes for annotating figures.
 }
 \details{
-This function was designed to retreive specified GAMBL colour palettes.
-By default, this function returns all the colours currently avaialble.
-The user can easily specify for what classification to return colurs for with the \code{classificaion} parameter.
-It is also possible to return any given colours in different formats.
+This function was designed to retrieve specified GAMBL colour palettes.
+By default, this function returns all the colours currently available.
+The user can easily specify what classification to return colors for with the \code{classification} parameter.
+It is also possible to return any given colour in different formats.
 To do so, refer to the Boolean arguments; \code{as_list} and \code{as_dataframe}.
-For more information regarding the avaialble colours, refer to the utillities vignette.
+For more information regarding the available colours, refer to the utilities vignette.
 }
 \examples{
 lymphgen_cols = get_gambl_colours("lymphgen")

@@ -2,7 +2,7 @@
 % Please edit documentation in R/checks.R
 \name{check_remote_configuration}
 \alias{check_remote_configuration}
-\title{Check for a remote session and automagically confirm setup will work properly}
+\title{Check Remote Configuration.}
 \usage{
 check_remote_configuration(auto_connect = FALSE)
 }
@@ -10,6 +10,13 @@ check_remote_configuration(auto_connect = FALSE)
 \item{auto_connect}{Set to TRUE to ensure an ssh_session is created if absent}
 }
 \description{
+Check for a remote session and automagically confirm setup will work properly.
+}
+\details{
 This function determines if a user is working in GAMBLR remotely and, if so, will
 check if their config is loaded properly and ssh_session is available.
+}
+\examples{
+check_remote_configuration()
+
 }

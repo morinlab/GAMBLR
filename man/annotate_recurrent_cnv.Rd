@@ -2,7 +2,7 @@
 % Please edit documentation in R/annotation.R
 \name{annotate_recurrent_cnv}
 \alias{annotate_recurrent_cnv}
-\title{Annotates recurrent CNVs.}
+\title{Annotate Recurrent CNVs.}
 \usage{
 annotate_recurrent_cnv(seg_df, seg_file)
 }
@@ -12,10 +12,13 @@ annotate_recurrent_cnv(seg_df, seg_file)
 \item{seq_file}{Optional argument to read sequences from file (currently not used in function).}
 }
 \value{
-Nothing
+Nothing.
 }
 \description{
-Annotates recurrent CNVs.
+Annotates recurrent CNVs from a data frame with CNV data.
+}
+\details{
+This function takes a data frame with CNVs (\code{seq_df}) and annotates recurrent CNVs.
 }
 \examples{
 annotated = annotate_recurrent_cnv(my_seq_df)

@@ -31,7 +31,7 @@ estimate_purity(
 
 \item{assume_diploid}{Optional. If no local seg file is provided, instead of defaulting to a GAMBL sample, this parameter annotates every mutation as copy neutral. Default is FALSE.}
 
-\item{coding_only}{Optional. set to TRUE to rescrict to only coding variants. Default is FALSE.}
+\item{coding_only}{Optional. set to TRUE to restrict to only coding variants. Default is FALSE.}
 
 \item{genes}{Genes of interest.}
 }
@@ -47,8 +47,8 @@ Annotate a MAF with segmented absolute copy number data and added additional col
 \details{
 This function takes a sample ID with the \code{this_sample_id} parameter and calls \code{assign_cn_to_ssm} to get CN information.
 The user can also use an already loaded maf file with \code{maf_df}. In addition, a path to the maf/seq file of interest can also be passed to this function with
-\code{in_maf} and \code{in_seg}. To visualizee VAF and purity distributions, set the \code{show_plots} to TRUE (default si FALSE).
-For more infomation on how to run this function with the parameters at hand, refer to the parameter descriptions and function examples.
+\code{in_maf} and \code{in_seg}. To visualize VAF and purity distributions, set the \code{show_plots} to TRUE (default is FALSE).
+For more information on how to run this function with the parameters at hand, refer to the parameter descriptions and function examples.
 }
 \examples{
 tumour_purity = estimate_purity(in_maf = "path/to/file.maf", in_seg = "path/to/file.seg", seg_file_source = "ichorCNA", show_plots = TRUE)

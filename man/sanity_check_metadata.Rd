@@ -10,7 +10,7 @@ sanity_check_metadata()
 A table.
 }
 \description{
-Function that performes sanity checks on meta data.
+Function that performs sanity checks on metadata.
 }
 \details{
 Helper function for sanity checking GAMBL metadata.

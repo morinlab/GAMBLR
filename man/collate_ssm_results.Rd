@@ -17,11 +17,11 @@ collate_ssm_results(
 
 \item{seq_type_filter}{Filtering criteria, default is genomes.}
 
+\item{projection}{Specifies the projection, default is "grch37".}
+
 \item{from_flatfile}{Optional argument whether to use database or flat file to retrieve mutations, default is TRUE.}
 
-\item{include_silent}{Logical parameter indicating whether to include siment mutations into coding mutations. Default is FALSE.}
-
-\item{projeciton}{Specifies the projection, default is "grch37".}
+\item{include_silent}{Logical parameter indicating whether to include silent mutations into coding mutations. Default is FALSE.}
 }
 \value{
 The sample table with additional columns.

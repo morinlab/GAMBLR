@@ -13,7 +13,7 @@ region_to_chunks(region)
 A named list.
 }
 \description{
-Parse a region string into; chomosome, start and end.
+Parse a region string into; chromosome, start and end.
 }
 \details{
 INTERNAL FUNCTION called by calc_mutation_frequency_sliding_windows, not meant for out-of-package usage.

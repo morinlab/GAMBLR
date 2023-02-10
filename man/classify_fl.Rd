@@ -13,15 +13,15 @@ classify_fl(
 )
 }
 \arguments{
-\item{these_samples_metadata}{The metadata data frame that contains sample_id column with ids for the samples to be classified.}
+\item{these_samples_metadata}{The metadata data frame that contains a sample_id column with ids for the samples to be classified.}
 
 \item{maf_data}{The MAF data frame to be used for matrix assembling. At least must contain the first 45 columns of standard MAF format.}
 
 \item{model}{The RF model. Classifier from the paper describing cFL is used. It is not recommended to change the value of this parameter.}
 
-\item{this_seq_type}{The seq_type of the samples. Only really used to retrerive mutations when maf data is not provided and to be retreived through GAMBLR. Defaults to genome.}
+\item{this_seq_type}{The seq_type of the samples. Only really used to retrieve mutations when maf data is not provided and to be retrieved through GAMBLR. Defaults to genome.}
 
-\item{output}{The output to be returned after prediction is done. Can be one of predictoins, matrix, or both. Defaults to predictions.}
+\item{output}{The output to be returned after prediction is done. Can be one of predictions, matrix, or both. Defaults to predictions.}
 }
 \value{
 data frame with classification, binary matrix used in classification, or both.
@@ -30,7 +30,7 @@ data frame with classification, binary matrix used in classification, or both.
 Classify FL samples into cFL/dFL subgroups.
 }
 \details{
-Use the random forest prediction model to assemble the binary matrix and use it to classify FL tummors into cFL/dFL.
+Use the random forest prediction model to assemble the binary matrix and use it to classify FL tumors into cFL/dFL.
 }
 \examples{
 test_meta <- get_gambl_metadata(case_set="tFL-study")

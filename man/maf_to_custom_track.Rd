@@ -21,17 +21,17 @@ maf_to_custom_track(
 \arguments{
 \item{maf_data}{Either a maf loaded from disk or from the database using a get_ssm function.}
 
-\item{these_samples_metadata}{Optional argument, a metadata table subset to the samples of interest. If not provided, the function will run \code{get_gambl_metadata} for all avaialble samples.}
+\item{these_samples_metadata}{Optional argument, a metadata table subset to the samples of interest. If not provided, the function will run \code{get_gambl_metadata} for all available samples.}
 
 \item{seq_type}{The seq type you want back, default is "genome".}
 
 \item{output_file}{Name for your new bed file that can be uploaded as a custom track to UCSC.}
 
-\item{as_bigbed}{Boolean parameter controling the format of the returned file. Default is FALSE.}
+\item{as_bigbed}{Boolean parameter controlling the format of the returned file. Default is FALSE.}
 
-\item{colour_column}{Set the colouring properties of the returned bed file. Per default, this funciton will assign colour based on "lymphgen".}
+\item{colour_column}{Set the colouring properties of the returned bed file. Per default, this function will assign colour based on "lymphgen".}
 
-\item{as_biglolly}{Boolean parameter controling the format of the returned file. Default is FALSE (i.e a BED file will be returned).}
+\item{as_biglolly}{Boolean parameter controlling the format of the returned file. Default is FALSE (i.e a BED file will be returned).}
 
 \item{track_name}{Track name. Default is "GAMBL mutations"}
 
@@ -48,8 +48,8 @@ Nothing.
 Convert a maf-formatted data frame into a bed custom track file for UCSC.
 }
 \details{
-This funciton takes an incoming MAF and converts it to a UCSC Genome Browser ready BED (or bigbed/biglolly) file.
-Optional parameters avaialble for furhter customization of the returned file. For more information, refer to the parameter descriptions and function examples.
+This function takes an incoming MAF and converts it to a UCSC Genome Browser ready BED (or bigbed/biglolly) file.
+Optional parameters available for further customization of the returned file. For more information, refer to the parameter descriptions and function examples.
 }
 \examples{
 maf_to_custom_track(my_maf_data, "/home/rmorin/private/some_mutations.bed")

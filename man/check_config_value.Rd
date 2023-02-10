@@ -2,7 +2,7 @@
 % Please edit documentation in R/checks.R
 \name{check_config_value}
 \alias{check_config_value}
-\title{INTERNAL FUNCTION for checking the existance of a config value, not meant for out-of-package usage.}
+\title{Check Config Value.}
 \usage{
 check_config_value(config_key)
 }
@@ -13,5 +13,13 @@ check_config_value(config_key)
 A string with the path to a file specified in the config or nothing (if config key is NULL).
 }
 \description{
-INTERNAL FUNCTION for checking the existance of a config value, not meant for out-of-package usage.
+Check the existence of a specific config key.
+The function will notify the user if no such key exists.
+}
+\details{
+INTERNAL FUNCTION for checking the existence of a config value, not meant for out-of-package usage.
+}
+\examples{
+check_config_value(config::get("resources")$blacklist$template)
+
 }

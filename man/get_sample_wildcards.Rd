@@ -18,7 +18,7 @@ Nothing.
 Get wildcards for a sample_id/seq_type combination.
 }
 \details{
-Return sample wildcards, useful for getting wildcard information necessary for retreiving sample-level flat-files with glue.
+Return sample wildcards, useful for getting wildcard information necessary for retrieving sample-level flat-files with glue.
 }
 \examples{
 get_sample_wildcards(this_sample_id = "00-15201_tumorA", seq_type = "genome")

@@ -60,14 +60,15 @@ Annotate and auto-drop a MAF data frame with existing blacklists.
 Annotate and auto-drop a MAF data frame with existing blacklists to remove variants that would be dropped during the merge process.
 This function returns a MAF format data frame with two new columns, indicating the number of occurrences of each variant in the two blacklists.
 Note that there are a collection of parameters to this function to improve flexibility for many applications,
-such as \code{return_blacklist} (returns the used blacklist to the vector given the function, or printed to terminal if blank).
+such as \code{return_blacklist} (returns the used blacklist to the vector given the function, or printed to the terminal if blank).
 For returning variants that would be dropped, one can specify \code{invert = TRUE}, please use with caution, this is most likely the opposite of what you want from this function.
 Lastly, the minimum count from one of the blacklists to drop a variant is specified with \code{drop_threshold = 4}.
-This function also, conveniently lets you know how many variants that were dropped in the annotation process.
+This function also conveniently lets you know how many variants that were dropped in the annotation process.
 }
 \examples{
 #get SSMs
-original_maf_df = 
+original_maf_df = get_coding_ssm()
+
 #annotate MAF
 deblacklisted_maf_df = annotate_ssm_blacklist(original_maf_df)
 

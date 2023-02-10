@@ -2,20 +2,21 @@
 % Please edit documentation in R/database.R
 \name{add_icgc_metadata}
 \alias{add_icgc_metadata}
-\title{INTERNAL FUNCTION called by get_gambl_metadata, not meant for out-of-package usage.
-Layer on ICGC metadata from a supplemental table to fill in missing COO.}
+\title{Add ICGC metadata.}
 \usage{
 add_icgc_metadata(incoming_metadata)
 }
 \arguments{
-\item{incoming_metadata}{A metadata table (probably output from get_gambl_metadata).}
+\item{incoming_metadata}{A metadata table (probably output from \code{get_gambl_metadata}).}
 }
 \value{
 Meta data with layered information (ICGC).
 }
 \description{
-INTERNAL FUNCTION called by get_gambl_metadata, not meant for out-of-package usage.
 Layer on ICGC metadata from a supplemental table to fill in missing COO.
+}
+\details{
+INTERNAL FUNCTION called by \code{get_gambl_metadata}, not meant for out-of-package usage.
 }
 \examples{
 icgc_metadata = add_icgc_metadata(incoming_metadata = my_meta)

@@ -27,9 +27,9 @@ The same data frame with one additional column "hot_spot".
 Annotate MAF-like data frome with a hot_spot column indicating recurrent mutations.
 }
 \details{
-This function takes ana lready loaded MAF data frame with the \code{mutation_maf} parameter.
-The suer can then control the minimum number of recurrances for mutations to be included with \code{recurrance_min},
-the default is 5. \code{analysis_base} controls the base name go hot spot output directory.
+This function takes an already loaded MAF data frame with the \code{mutation_maf} parameter.
+The user can then control the minimum number of recurrences for mutations to be included with \code{recurrance_min},
+The default is 5. \code{analysis_base} controls the base name go hotspot output directory.
 Lastly, \code{p_thresh} sets the p value threshold, default is 0.05.
 }
 \examples{

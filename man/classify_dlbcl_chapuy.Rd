@@ -16,7 +16,7 @@ classify_dlbcl_chapuy(
 )
 }
 \arguments{
-\item{these_samples_metadata}{The metadata data frame that contains sample_id column with ids for the samples to be classified.}
+\item{these_samples_metadata}{The metadata data frame that contains a sample_id column with ids for the samples to be classified.}
 
 \item{maf_data}{The MAF data frame to be used for matrix assembling. At least must contain the first 45 columns of standard MAF format.}
 
@@ -24,11 +24,11 @@ classify_dlbcl_chapuy(
 
 \item{sv_data}{The SV data frame to be used for matrix assembling. Must be of standard BEDPE formatting, for example, as returned by get_combined_sv.}
 
-\item{this_seq_type}{The seq_type of the samples. Only used to retrerive data through GAMBLR when it is not provided. Defaults to genome.}
+\item{this_seq_type}{The seq_type of the samples. Only used to retrieve data through GAMBLR when it is not provided. Defaults to genome.}
 
-\item{projection}{The projection of the samples. Only used to retrerive data through GAMBLR when it is not provided. Defaults to grch37.}
+\item{projection}{The projection of the samples. Only used to retrieve data through GAMBLR when it is not provided. Defaults to grch37.}
 
-\item{output}{The output to be returned after prediction is done. Can be one of predictoins, matrix, or both. Defaults to predictions.}
+\item{output}{The output to be returned after prediction is done. Can be one of predictions, matrix, or both. Defaults to predictions.}
 
 \item{adjust_ploidy}{Whether to perform ploidy adjustment for the CNV data. Defaults to TRUE (recommended).}
 }
