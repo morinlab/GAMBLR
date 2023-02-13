@@ -68,6 +68,7 @@ Lastly, this plot can also highlight genes of interest. To do so, provide a data
 \examples{
 #retrieve gene names for FL genes
 fl_genes = dplyr::filter(lymphoma_genes, FL == TRUE) \%>\%
+fl_genes = dplyr::filter(lymphoma_genes, FL == TRUE) \%>\%
  dplyr::select(Gene) \%>\%
  pull(Gene)
 

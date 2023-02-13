@@ -21,7 +21,7 @@ FtestCNV(
 
 \item{comparison}{Specify column annotating groups of interest.}
 
-\item{fdr.method}{FDR method to adjust p values. Uses stats::p.adjust function, and therefore accepts its method for FDR ("holm", "hochberg", "hommel", "bonferroni", "BH", "BY", "fdr", "none"). By default, this function uses "fdr".}
+\item{fdr.method}{FDR method to adjust p values. Uses p.adjust function, and therefore accepts its method for FDR ("holm", "hochberg", "hommel", "bonferroni", "BH", "BY", "fdr", "none"). By default, this function uses "fdr".}
 
 \item{fdr.cutoff}{Specify FDR significance cut-off. By default, this function uses 0.1.}
 

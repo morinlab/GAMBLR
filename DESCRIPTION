@@ -19,9 +19,9 @@ Imports:
     data.table,
     DBI,
     dbplyr,
+    digest,
     dplyr,
     g3viz,
-    GenomeInfoDb,
     ggbeeswarm,
     ggplot2,
     ggpubr,
@@ -31,22 +31,22 @@ Imports:
     grid,
     maftools,
     metaviz,
+    nloptr (<= 1.2.2.3),
+    parallel,
     plotly,
     RCircos,
     readr (>= 2.1),
-    reshape2,
     RMariaDB,
     rtracklayer,
     S4Vectors,
     SRAdb,
-    stats,
     wordcloud,
     workflowr
 Suggests:
     knitr,
     rmarkdown,
     testthat
-VignetteBuilder: 
+VignetteBuilder:
     knitr
 Remotes:
     cBioPortal/cgdsr,
