@@ -3,12 +3,12 @@ title: "SSM Tutorial - GAMBLR"
 author: "Adam Mattsson"
 date: "November 10, 2022"
 output:
-  pdf_document:
-    toc: yes
   html_document:
     toc: yes
     toc_float: yes
     number_sections: yes
+  pdf_document:
+    toc: yes
 ---
 ```{r setup, include = FALSE}
 knitr::opts_chunk$set(warning = FALSE, message = FALSE)
@@ -25,7 +25,7 @@ library(maftools)
 library(ssh)
 ```
 
-```{r remote include = FALSE, warning = FALSE, message = FALSE}
+```{r remote, include = FALSE, warning = FALSE, message = FALSE}
 #check if remote session
 if(check_host()){
  R_CONFIG_ACTIVE = "remote" 

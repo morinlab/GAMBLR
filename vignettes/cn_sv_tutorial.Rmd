@@ -25,7 +25,7 @@ library(maftools)
 library(ssh)
 ```
 
-```{r remote include = FALSE, warning = FALSE, message = FALSE}
+```{r remote, include = FALSE, warning = FALSE, message = FALSE}
 #check if remote session
 if(check_host()){
  R_CONFIG_ACTIVE = "remote" 

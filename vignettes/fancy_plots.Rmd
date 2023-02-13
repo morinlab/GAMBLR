@@ -3,12 +3,12 @@ title: "GAMBLR: Fancy Plotting Functions"
 author: "Adam Mattsson"
 date: "July 07, 2022"
 output:
-  pdf_document:
-    toc: yes
   html_document:
     toc: yes
     toc_float: yes
     number_sections: yes
+  pdf_document:
+    toc: yes
 ---
 ```{r setup, include = FALSE}
 knitr::opts_chunk$set(warning = FALSE, message = FALSE)
@@ -16,16 +16,24 @@ knitr::opts_chunk$set(warning = FALSE, message = FALSE)
 # Plotting Parameters, Global Variables and Packages.
 Define global plotting parameters, load packages etc.
 ```{r load_packages, message = FALSE, warning = FALSE}
+library(GAMBLR)
+library(tidyverse)
+library(rmarkdown)
 library(knitr)
-library(magick)
 library(grid)
-library(ggplotify)
-library(RCircos)
-library(readr)
-library(stringr)
-library(purrr)
-library(tidyr)
-library(dplyr)
+library(g3viz)
+library(maftools)
+library(ssh)
+```
+
+```{r remote, include = FALSE, warning = FALSE, message = FALSE}
+#check if remote session
+if(check_host()){
+ R_CONFIG_ACTIVE = "remote" 
+}
+
+session = get_ssh_session()
+remote_session = check_remote_configuration(auto_connect = TRUE)
 ```
 
 ```{r plot_parameters}
@@ -182,7 +190,8 @@ It's also possible to plot multiple samples (2, 3 or 4) in a similar manner. Thi
 two_samples = c("00-15201_tumorA", "00-15201_tumorB")
 
 #build plot
-fancy_multisamp_ideogram(these_sample_ids = two_samples,
+fancy_multisamp_ideogram(these_sample_ids = two_samples, 
+                         include_cn2 = TRUE,
                          plot_title = "Multi-sample Ideograms Example",
                          plot_sub = "grch37",
                          chr_anno_dist = 2.5,
