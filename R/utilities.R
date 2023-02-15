@@ -213,7 +213,16 @@ cache_output = function(result_df,
 #' @export
 #'
 #' @examples
-#' 
+#' #define a region.
+#' my_region = gene_to_region(gene_symbol = "MYC", return_as = "region")
+#'
+#' #subset metadata.
+#' my_metadata = get_gambl_metadata() %>%
+#'  dplyr::filter(pathology == "FL")
+#'
+#' #count SSMs for the selected sample subset and defined region.
+#'fl_ssm_counts_myc = count_ssm_by_region(region = my_region, these_samples_metadata = my_metadata)
+#'
 count_ssm_by_region = function(region,
                                chromosome,
                                start,
@@ -4003,15 +4012,15 @@ cnvKompare = function(patient_id,
   min_concordance = min_concordance/100
 
   # check that sample identifiers are provided
-  if (missing(patient_id) & missing(sample_ids)) {
+  if (missing(patient_id) & missing(these_sample_ids)) {
     stop("Please provide patient id or sample ids for comparison.")
   }
 
   # retrieve sample ids if only patient id is specified
   if (missing(these_sample_ids)) {
     these_sample_ids = get_gambl_metadata()
-    these_sample_ids = dplyr::filter(sample_ids, patient_id == {{ patient_id }})
-    these_sample_ids = pull(sample_ids, sample_id)
+    these_sample_ids = dplyr::filter(these_sample_ids, patient_id == {{ patient_id }})
+    these_sample_ids = pull(these_sample_ids, sample_id)
     message(paste0(
       "Found ",
       length(these_sample_ids),
