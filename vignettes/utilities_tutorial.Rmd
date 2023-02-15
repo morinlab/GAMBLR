@@ -39,7 +39,7 @@ remote_session = check_remote_configuration(auto_connect = TRUE)
 # Utilities
 In this vignette we are exploring functions that fall under the category, utilities. This is a collection of functions that can be used for a variety of applications, such as retrieving gene coordinates from regions (and the other way around), cleaning and sanitizing data, creating custom tracks for the UCSC Genome Browser, getting collated results, accessing the GAMBLR colour paletter, etc.
 
-## Genes & Regions
+## Genes, Regions and Statistical Computing
 This section demonstrates how to return information related to genes and other specified genomic regions
 
 ### Gene To Region
@@ -94,6 +94,67 @@ chr8q_bins = region_to_bins(chromosome = "8", start = 48100000, end = 146364022,
 head(chr8q_bins, 5)
 ```
 
+### Count SSM by Region
+Sometimes it can be helpful to tally all mutations (SSM) in a region for a set number of samples. To do so, one can call `count_ssm_by_region`. This function takes genomic coordinates either specified in region format (chr:start-end) with the `region` parameter, or the chromosome, start and end can be specified individually with the `chr`, `start`, and `end` parameters. In this example we are first creating a metadata subset, only including samples with FL as the pathology. Next, we are defining a region for MYC with help from `gene_to_region` with he return format specified as "region". The return is the sum of all SSMs overlapping with MYC for all FL samples.
+```{r count_ssm_by_region, message = FALSE, warning = FALSE}
+#define a region.
+my_region = gene_to_region(gene_symbol = "MYC", return_as = "region")
+
+#subset metadata.
+my_metadata = get_gambl_metadata() %>%
+  dplyr::filter(pathology == "FL")
+
+#count SSMs for the selected sample subset and defined region.
+fl_ssm_counts_myc = count_ssm_by_region(region = my_region, these_samples_metadata = my_metadata)
+
+#print number of SSMs in the defined region for the selected samples
+print(fl_ssm_counts_myc)
+```
+
+### Coding SSM Status
+Another way to summarize SSM across samples for coding regions is with `get_coding_ssm_status`. This function takes a list of gene symbols and subsets the incoming MAF to specified genes. If no gene list is provided, the function will default to all lymphoma genes. The function can accept a wide range of incoming MAFs. For example, the user can call this function with `these_samples_metadata` (preferably a metadata table that has been subset to the sample IDs of interest). If this parameter is not called, the function will default to all samples available with `get_gambl_metadata`. The user can also provide a path to a MAF, or MAF-like file with `maf_path`, or an already loaded MAF can be used with the `maf_data` parameter. If both `maf_path` and `maf_data` is missing, the function will default to run `get_coding_ssm`. In this example, we are returning the mutation status for FL samples (using the already subset metadata table from the previous example) in respect to MYC.
+```{r get_coding_ssm_status, message = FALSE, warning = FALSE}
+#tabulate coding SSMs for FL samples.
+coding_tabulated_df = get_coding_ssm_status(these_samples_metadata = my_metadata, review_hotspots = FALSE, include_hotspots = FALSE, gene_symbols = "MYC")
+```
+
+### Calculate Proportion of Genome Altered by CNV
+Interested to see the percentage of a genome altered by CNVs for specific sample, or sample subsets? For this purpose `calcualte_pga` was developed. This function takes into account the total length of sample's CNV and relates it to the total genome length to return the proportion affected by CNV. The function can work with either individual or multi-sample seg files. The telomeres are always excluded from calculation, and centromeres/sex chromosomes can be optionally included or excluded.
+```{r calcualte_pga, warning = FALSE, message = FALSE}
+#get CN segments for a specific sample.
+sample_seg = get_sample_cn_segments(this_sample_id = "14-36022T") %>% 
+  dplyr::rename("sample" = "ID")
+
+#calculate PGA for the same sample.
+calculate_pga(this_seg = sample_seg)
+```
+
+### Adjust Ploidy
+The `adjust_ploidy` function returns a seg file with log.ratios adjusted to the overall sample ploidy. This function adjusts the ploidy of the sample using the percent of genome altered (PGA). The PGA is calculated internally, but can also be optionally provided as data frame if calculated from other sources. Only the samples above the threshold-provided PGA (`pga_cutoff`) will have ploidy adjusted. The function can work with either individual or multi-sample seg file.
+```{r adjust_ploidy, warning = FALSE, message = FALSE}
+#ajdust ploidy
+adjust_ploidy(this_seg = sample_seg)
+```
+
+### Compare CNVs For Multiple Samples
+`cnvKompare` will compare CNV data between samples with multiple time points. It can also handle same-sample comparison between different CNV callers if the sample ID is specified in unique fashion. For groups with more than 2 samples, optionally pairwise comparisons can be performed. The comparison is made based on the internally calculated score, which reflects the percentage of each cytoband covered by CNV (rounded to the nearest 5%) and its absolute CN. Optionally, the heatmap of `cnvKompare` scores can be returned. In addition, the function will return all concordant and discordant cytobands. Finally, the time series plot of CNV log ratios will be returned for all lymphoma genes, with further functionality to subset it to a panel of genes of interest.
+```{r cnvKompare, message = FALSE, warning = FALSE}
+#get CNV comparison data.
+kompare_out = cnvKompare(patient_id = "13-26835", 
+                         projection = "hg38",
+                         genes_of_interest = c("EZH2",
+                                               "TP53",
+                                               "MYC",
+                                               "CREBBP",
+                                               "GNA13"))
+# concordance as percent
+kompare_out$overall_concordance_pct
+
+#visualizations
+kompare_out$Heatmap
+kompare_out$time_plot
+```
+
 ### Genome to Exome
 If you are interested to subset a maf to only features that would be available in Whole Genome Exome (WEX) data, `genome_to_exome` is available for this purpose. This function takes the following parameters; `maf`, the incoming maf object. Can be maf-like data frame or maftools maf object. Minimum columns that should be present are Chromosome, Start_Position, and End_Position. `custom_bed`, optional argument specifying a path to custom bed file for covered regions. Must be bed-like and contain chrom, start, and end position information in first 3 columns. Other columns are disregarded if provided. `genome_build`, string indicating genome build of the maf file. Default is grch37, but can accept modifications of both grch37- and hg38-based builds. `padding`, numeric value that will be used to pad probes in WEX data from both ends. Default is 100. After padding, overlapping features are squished together. let's have a look at an example using this function.
 ```{r genome_to_exome, message = FALSE, warning = FALSE}
@@ -131,22 +192,32 @@ head(fl_collated, 5)
 ## Data Exports
 ### SV To bedpe
 This function takes an input SV data frame and writes it to a bedpe formatted file, that is compatible with the IGV genome browser. This function is rather straight forward, it expects a data frame with variant calls, it also takes a parameter called `file` which is the path to the to-be exported file. In addition, we also have `add_chr_prefix` that controls if the contigs should be prefixed with "chr", default is TRUE.
-```{r sv_to_bedpe_file, message = FALSE, warning = FALSE}
+```{r sv_to_bedpe_file, message = FALSE, warning = FALSE, eval = FALSE}
 #get some SVs
 my_svs = get_manta_sv_by_sample(this_sample_id = "191621-PL01", these_samples_metadata = get_gambl_metadata(), force_lift = TRUE, projection = "hg38")
 
 #write to bedpe file
-#my_bedpe = sv_to_bedpe_file(sv_df = my_svs, add_chr_prefix = FALSE)
+my_bedpe = sv_to_bedpe_file(sv_df = my_svs, add_chr_prefix = FALSE)
 ```
 
+### SV To Custom Track
+Similarly, SVs can also be output as custom track for visualization on the UCSC genome Browser with `sv_to_custom_track`. This function takes an incoming SV data frame and outputs a bed file, ready for visualization on the UCSC Genome Browser. First, specify the output file with `output_file`. Next, indicate if the incoming SVs are annotated with `is_annotated` (default is TRUE). Lastly, the user can also specify if the incoming SV data frame should be subset to specific mutation types (e.g deletions, duplications, insertions, etc.) with the `sv_name` parameter. Default is to include all SV sub types.
+```{r sv_to_custom_track, warning = FALSE, message = FALSE, eval = FALSE}
+#get SVs
+all_sv = get_combined_sv()
+
+#create a custom track with selected SVs
+sv_to_custom_track(annotated_sv, output_file = "GAMBL_sv_custom_track_annotated.bed", is_annotated = FALSE)
+```
+ 
 ### MAF To Custom Track
 In addition, we also have convenience functions available for generating custom tracks compatible with UCSC Genome Browser. This function offers a lot of flexibility in regards to the parameters at hand. For example, there are Boolean parameters dictating if output should be *bigbed* or *biglolly*. Parameters for specifying the custom fields of the output file are also available. Here is a straightforward example for output a maf data frame into a bed file for visualization on the Genome Browser.
-```{r maf_to_custom_track, message = FALSE, warning = FALSE}
+```{r maf_to_custom_track, message = FALSE, warning = FALSE, eval = FALSE}
 #get some mutations
 my_mutations = get_ssm_by_region(region = "chr8:128723128-128774067")
 
 #output mutation matrix to a bedfile
-#my_bed = maf_to_custom_track(maf_data = my_mutations, colour_column = "Tumor_Sample_Barcode", output_file = "my_mutations.bed", track_name = "My Mutations", track_description = "MYC mutations")
+my_bed = maf_to_custom_track(maf_data = my_mutations, colour_column = "Tumor_Sample_Barcode", output_file = "my_mutations.bed", track_name = "My Mutations", track_description = "MYC mutations")
 ```
 
 ## Visualizations
@@ -204,16 +275,3 @@ maf_genes = dplyr::filter(maf, Hugo_Symbol != "Unknown") %>%
 #build wordcloud
 prettyGeneCloud(maf_df = maf, these_genes = maf_genes)
 ```
-
-
-
-
-
-
-
-
-
-
-
-
-
