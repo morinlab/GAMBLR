@@ -344,7 +344,7 @@ get_ssh_session = function(host = "gphost01.bcgsc.ca"){
 #' @param genome_build Reference genome build, default is grch37.
 #' @param return_as Specify the type of return. Default is region (chr:start-end), other acceptable arguments are "bed" and "df".
 #'
-#' @return
+#' @return A data frame, or a string with region(s) for the provided gene(s).
 #'
 #' @import dplyr
 #' @export
@@ -420,14 +420,14 @@ gene_to_region = function(gene_symbol,
 #'
 #' @description Return genes residing in defined region(s).
 #'
-#' @details This function takes a region as a vector of characters, or a list of regions in a data frame
+#' @details This function takes a region as a vector of characters, or a data frame with of regions (e.g output from `gene_to_region(return_as="df")`).
 #' and returns the genes residing withing the specified region. For the other way around (i.e gene to regions, refer to `gene_to_regions`).
 #'
 #' @param region Regions to intersect genes with, this can be either a data frame with regions sorted in the following columns; chromosome, start, end. Or it can be a character vector in "region" format, i.e chromosome:start-end.
 #' @param gene_format Parameter for specifying the format of returned genes, default is "hugo", other acceptable inputs are "ensembl".
 #' @param genome_build Reference genome build.
 #'
-#' @return
+#' @return A data frame with gene(s) that are residing in the specified region(s).
 #'
 #' @import data.table dplyr
 #' @export
@@ -582,13 +582,13 @@ intersect_maf = function(maf1,
 #'
 #' @description Tabulate mutation status (SSM) for a set of genes.
 #'
-#' @details This function takes a list of gene symbols and subsets the incoming MAF to specified genes. If no gene list is provided, the function will default to all lymphoma genes.
+#' @details This function takes a vector of gene symbols and subsets the incoming MAF to specified genes. If no genes are provided, the function will default to all lymphoma genes.
 #' The function can accept a wide range of incoming MAFs. For example, the user can call this function with `these_samples_metadata` (preferably a metadata table that has been subset to the sample IDs of interest).
 #' If this parameter is not called, the function will default to all samples available with `get_gambl_metadata`. The user can also provide a path to a MAF, or MAF-like file with `maf_path`, 
 #' or an already loaded MAF can be used with the `maf_data` parameter. If both `maf_path` and `maf_data` is missing, the function will default to run `get_coding_ssm`.
 #' This function also has a lot of filtering and convenience parameters giving the user full control of the return. For more information, refer to the parameter descriptions and examples.
 #'
-#' @param gene_symbols List of gene symbols for which the mutation status will be tabulated. If not provided, lymphoma genes will be returned by default.
+#' @param gene_symbols A vector of gene symbols for which the mutation status will be tabulated. If not provided, lymphoma genes will be returned by default.
 #' @param these_samples_metadata The metadata for samples of interest to be included in the returned matrix. Only the column "sample_id" is required. If not provided, the matrix is tabulated for all available samples as default.
 #' @param from_flatfile Optional argument whether to use database or flat file to retrieve mutations. Default is TRUE.
 #' @param augmented default: TRUE. Set to FALSE if you instead want the original MAF from each sample for multi-sample patients instead of the augmented MAF.
@@ -600,7 +600,7 @@ intersect_maf = function(maf1,
 #' @param seq_type The seq_type you want back, default is genome.
 #' @param projection Specify projection (grch37 or hg38) of mutations. Default is grch37.
 #' @param review_hotspots Logical parameter indicating whether hotspots object should be reviewed to include functionally relevant mutations or rare lymphoma-related genes. Default is TRUE.
-#' @param genes_of_interest List of genes for hotspot review. Currently only FOXO1, MYD88, and CREBBP are supported.
+#' @param genes_of_interest A vector of genes for hotspot review. Currently only FOXO1, MYD88, and CREBBP are supported.
 #' @param genome_build Reference genome build for the coordinates in the MAF file. The default is hg19 genome build.
 #' @param include_silent Logical parameter indicating whether to include silent mutations into coding mutations. Default is TRUE.
 #'
@@ -1142,7 +1142,7 @@ annotate_hotspots = function(mutation_maf,
 #' The desired genome build can be specified with `genome_build` parameter. Should be the same as the incoming MAF.
 #' 
 #' @param annotated_maf A data frame in MAF format that has hotspots annotated using the function annotate_hotspots().
-#' @param genes_of_interest List of genes for hotspot review. Currently only FOXO1, MYD88, CREBBP, NOTCH1, NOTCH2, CD79B and EZH2 are supported.
+#' @param genes_of_interest A vector of genes for hotspot review. Currently only FOXO1, MYD88, CREBBP, NOTCH1, NOTCH2, CD79B and EZH2 are supported.
 #' @param genome_build Reference genome build for the coordinates in the MAF file. The default is grch37 genome build.
 #'
 #' @return The same data frame (as given to the `annotated_maf` parameter) with the reviewed column "hot_spot".
@@ -1488,7 +1488,7 @@ test_glue = function(placeholder="INSERTED"){
 #'
 #' @param sample_table A data frame with sample_id as the first column.
 #' @param write_to_file Boolean statement that outputs tsv file (/projects/nhl_meta_analysis_scratch/gambl/results_local/shared/gambl_{seq_type_filter}_results.tsv) if TRUE, default is FALSE.
-#' @param join_with_full_metadata Join with all columns of meta data, default is FALSE.
+#' @param join_with_full_metadata Join with all columns of metadata, default is FALSE.
 #' @param these_samples_metadata Optional argument to use a user specified metadata df, overwrites get_gambl_metadata in join_with_full_metadata.
 #' @param case_set Optional short name for a pre-defined set of cases.
 #' @param sbs_manipulation Optional variable for transforming sbs values (e.g log, scale).
@@ -1833,7 +1833,7 @@ get_sample_wildcards = function(this_sample_id,
 #' A variety of parameters are at hand for a customized workflow. For example, the user can specify if only coding mutations are of interest.
 #' To do so, set `coding_only = TRUE`. It is also possible to point the function to already loaded maf/seq files, or a path to these files.
 #' See parameters; `maf_file`, `maf_path`, `seq_file` and `seg_path` for more information on how to use these parameters.
-#' This function can also take a list with genes of interest (`genes`) that the returned data frame will be restricted to.
+#' This function can also take a vector with genes of interest (`genes`) that the returned data frame will be restricted to.
 #'
 #' @param this_sample_id Sample ID of the sample you want to annotate.
 #' @param coding_only Optional. set to TRUE to restrict to only coding variants.
@@ -3471,14 +3471,14 @@ consolidate_lymphgen = function(sample_table,
 
 #' @title Collate Lymphgen.
 #' 
-#' @description Expand a sample_table (meta data) horizontally with different flavours of lymphgen data.
+#' @description Expand a sample_table (metadata) horizontally with different flavours of lymphgen data.
 #' 
 #' @details This function takes a sample table (metadata) and adds different flavours of lymphgen data.
 #' It is possible to call this function with an already subset metadata table (with sample IDs of interest) with `these_samples_metadata`.
 #' If this is done, the function will join the lymphgen data with this table. Currently, the only supported `lymphgen_version` is "default".
 #' For more information refer to the function examples.
 #'
-#' @param these_samples_metadata Optional parameter with meta data filtered for sample_ids of interest. If provided, this function will join lymphgen with this metadata, regardless of tidy TRUE/FALSE.
+#' @param these_samples_metadata Optional parameter with metadata filtered for sample_ids of interest. If provided, this function will join lymphgen with this metadata, regardless of tidy TRUE/FALSE.
 #' @param lymphgen_version Version of selected lymphgen, default is "default".
 #' @param tidy Boolean parameter, set to TRUE for tidy format (i.e long format with no columns dropped). Default is FALSE, which returns the data in a wide format, keeping both the original Subtype. Prediction and tidied LymphGen values and puts the values from each "flavour" in its own column.
 #'
@@ -3921,7 +3921,7 @@ adjust_ploidy = function(this_seg,
 
 #' @title Subset CN States.
 #' 
-#' @description List the available CN states in the incoming data frame.
+#' @description Get the available CN states in the incoming data frame.
 #' 
 #' @details INTERNAL FUNCTION called by fancy_multisample_ideo, for sub-setting copy number information based on segments available in cn data
 #'

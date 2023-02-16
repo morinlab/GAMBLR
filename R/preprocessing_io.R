@@ -141,14 +141,14 @@ populate_tool_results = function(){
 #' @description Convenience function for returning results from a specified tool.
 #'
 #' @details This function takes a tool name `tool` as well as other parameters for specifying the requested result.
-#' Other parameters include `genome_build`, this can be just one parameter or a list with different genome builds to return results for.
-#' Similarly, `unix_group` can take either one value or a list with all the different unix groups to return results for.
+#' Other parameters include `genome_build`, this can be just one parameter or a vector with different genome builds to return results for.
+#' Similarly, `unix_group` can take either one value or a vector with all the different unix groups to return results for.
 #' Lastly, the user can subset the returned results to only silent mutations.
 #' This is done with setting `include_silent = TRUE` (default is FALSE).
 #'
 #' @param tool Name of tool to get results from.
-#' @param genome_build A list of all genome builds to process.
-#' @param unix_group A list of all unix groups to process.
+#' @param genome_build A single genome build or a vector of all genome builds to process.
+#' @param unix_group A single unix group or a vector of all unix groups to process.
 #' @param include_silent Logical parameter indicating whether to include silent mutations into coding mutations. Default is FALSE.
 #'
 #' @return Nothing.

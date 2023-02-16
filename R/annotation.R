@@ -14,7 +14,7 @@ coding_vc = c("Frame_Shift_Del", "Frame_Shift_Ins", "In_Frame_Del", "In_Frame_In
 #' Lastly, the minimum count from one of the blacklists to drop a variant is specified with `drop_threshold = 4`.
 #' This function also conveniently lets you know how many variants that were dropped in the annotation process.
 #'
-#' @param mutations_df df with mutation data.
+#' @param mutations_df A data frame with mutation data.
 #' @param seq_type The seq_type of your mutations if you prefer to apply only the corresponding blacklist. More than one seq_type can be specified as a vector if desired. This parameter is required.
 #' @param tool_name The tool or pipeline that generated the files (should be the same for all).
 #' @param tool_version The version of the tool specified under `tool_name`.
@@ -37,10 +37,10 @@ coding_vc = c("Frame_Shift_Del", "Frame_Shift_Ins", "In_Frame_Del", "In_Frame_In
 #'
 #' @examples 
 #' #get SSMs
-#' original_maf_df = get_coding_ssm()
+#' original_maf_df = get_ssm_by_sample(this_sample_id = "HTMCP-01-06-00422-01A-01D", this_seq_type = "genome", )
 #'
 #' #annotate MAF
-#' deblacklisted_maf_df = annotate_ssm_blacklist(original_maf_df)
+#' deblacklisted_maf_df = annotate_ssm_blacklist(original_maf_df, seq_type = "genome")
 #'
 annotate_ssm_blacklist = function(mutations_df,
                                   seq_type,
@@ -91,7 +91,7 @@ annotate_ssm_blacklist = function(mutations_df,
 
       lifted_blacklist = lifted_blacklist %>%
         separate(chrpos, into = c("Chromosome", "Start_Position"), sep = ":") %>% 
-        dplyr::mutate(Start_Position = as.numeric(Start_Position))
+        mutate(Start_Position = as.numeric(Start_Position))
   
       blacklist_list[[b]] = lifted_blacklist
     }
@@ -109,11 +109,11 @@ annotate_ssm_blacklist = function(mutations_df,
     }
 
     if(str_detect(mutations_df$Chromosome, "chr")[1]){
-      combined_blacklist = dplyr::mutate(combined_blacklist, Chromosome = paste0("chr", Chromosome))
+      combined_blacklist = mutate(combined_blacklist, Chromosome = paste0("chr", Chromosome))
     }
     
-    mutations_df = dplyr::left_join(mutations_df, combined_blacklist, by = c("Chromosome", "Start_Position")) %>%
-      dplyr::mutate(blacklist_count = tidyr::replace_na(blacklist_count, 0))
+    mutations_df = left_join(mutations_df, combined_blacklist, by = c("Chromosome", "Start_Position")) %>%
+      mutate(blacklist_count = replace_na(blacklist_count, 0))
     dropped = dplyr::filter(mutations_df, blacklist_count > drop_threshold)
 
     if(verbose){
@@ -134,10 +134,10 @@ annotate_ssm_blacklist = function(mutations_df,
 
     additional_blacklist = additional_blacklist %>%
       separate(chrpos, into = c("Chromosome", "Start_Position"), sep = ":") %>% 
-      dplyr::mutate(Start_Position = as.numeric(Start_Position))
+      mutate(Start_Position = as.numeric(Start_Position))
 
-    mutations_df = dplyr::left_join(mutations_df, additional_blacklist, by = c("Chromosome", "Start_Position")) %>%
-      dplyr::mutate(blacklist_count = tidyr::replace_na(blacklist_count, 0))
+    mutations_df = left_join(mutations_df, additional_blacklist, by = c("Chromosome", "Start_Position")) %>%
+      mutate(blacklist_count = tidyr::replace_na(blacklist_count, 0))
 
     dropped = dplyr::filter(mutations_df, blacklist_count > drop_threshold)
 
@@ -272,7 +272,7 @@ annotate_igh_breakpoints = function(annotated_df,
 #' @param driver_genes Optional vector of Hugo_Symbol of genes for coding mutations.
 #' @param noncoding_regions Optional named vector of regions to use to further restrict noncoding mutations per gene.
 #'
-#' @return Driver ssm kept from maf.
+#' @return Incoming MAF, subset to putative driver mutations.
 #'
 #' @import dplyr
 #' @export
@@ -335,7 +335,7 @@ annotate_driver_ssm = function(maf_df,
 #' @param with_chr_prefix Optionally request that chromosome names are returned with a chr prefix. Default is FALSE.
 #' @param collapse_redundant Remove reciprocal events and only return one per event. Default is FALSE.
 #' @param return_as Stated format for returned output, default is "bedpe". Other accepted output formats are "bed" and "bedpe_entrez" (to keep entrez_ids for compatibility with portal.R and cBioPortal).
-#' @param blacklist A list of regions to be removed from annotations. Default coordinates are in respect to hg19.
+#' @param blacklist A vector of regions to be removed from annotations. Default coordinates are in respect to hg19.
 #' @param genome_build Reference genome build parameter, default is grch37.
 #'
 #' @return A data frame with annotated SVs (gene symbol and entrez ID).

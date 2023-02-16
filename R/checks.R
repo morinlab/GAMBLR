@@ -44,7 +44,7 @@ copy_no_clobber = function(from_file,
 #'
 #' @param auto_connect Set to TRUE to ensure an ssh_session is created if absent
 #'
-#' @return
+#' @return TRUE if a remote session is detected, FALSE otherwise.
 #' 
 #' @export
 #'
@@ -428,8 +428,8 @@ check_expected_outputs = function(tool_name="battenberg",seq_type_filter="genome
 
 #' @title Check Config Value.
 #' 
-#' @description Check the existence of a specific config key. 
-#' The function will notify the user if no such key exists.
+#' @description Check the existence of a specific config key.
+#' The function will notify the user and end the program if no such key exists.
 #' 
 #' @details INTERNAL FUNCTION for checking the existence of a config value, not meant for out-of-package usage.
 #'

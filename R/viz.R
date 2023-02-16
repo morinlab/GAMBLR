@@ -78,7 +78,7 @@ prettyRainfallPlot = function(this_sample_id,
         dplyr::mutate(Chromosome = str_remove(Chromosome, pattern = "chr"))
     } else if (projection == "hg38") {
       ashm_regions = hg38_ashm_regions %>%
-        dplyr::rename("start" = "hg38_start",
+        rename("start" = "hg38_start",
                "end" = "hg38_end",
                "Chromosome" = "chr_name")
     } else {
@@ -228,7 +228,7 @@ prettyRainfallPlot = function(this_sample_id,
     these_sv = get_combined_sv(these_sample_ids  = this_sample_id)
     if ("SCORE" %in% colnames(these_sv)) {
       these_sv = these_sv %>%
-        dplyr::rename("SOMATIC_SCORE" = "SCORE")
+        rename("SOMATIC_SCORE" = "SCORE")
     }
     # annotate SV
     these_sv = annotate_sv(these_sv)
@@ -424,7 +424,6 @@ prettyGeneCloud = function(maf_df,
   if(missing(these_genes)){
     these_genes = pull(lymphoma_genes, Gene)
   }
-  #drop genes not in the list then tally only coding variants (by default).
   #drop genes not in the list then tally only coding variants (by default).
   # TODO: eventually allow an option to collapse samples from the same patient
   if(missing(other_genes)){
@@ -839,7 +838,7 @@ get_mutation_frequency_bin_matrix = function(regions,
 #' @param metadata_columns A vector containing the categorical column names you want to plot below.
 #' @param gene_orientation Where genes would be plotted. Default is "bottom".
 #' @param annotate_zero Indicate a variant that had VAF = 0 in one of the two time points. Default is FALSE.
-#' @param genes An optional list of genes to restrict your plot to.
+#' @param genes An optional vector of genes to restrict your plot to.
 #' @param top_n_genes How many genes to be added to the plot.
 #' @param drop_unless_lowvaf Will drop some genes where VAF is low, default is FALSE.
 #' @param vaf_cutoff_to_drop Which VAF cut-off value to use when dropping variants before plotting.
@@ -1149,8 +1148,8 @@ map_metadata_to_colours = function(metadataColumns,
 #' @param include_sv Default TRUE. (does not do anything yet).
 #' @param include_cnv Default TRUE. (does not do anything yet).
 #' @param include_ssm Defaul FALSE. (does not do anything yet).
-#' @param legend_metadata_columns Column names from meta data
-#' @param legend_metadata_names List of meta data names to be plotted.
+#' @param legend_metadata_columns Column names from metadata
+#' @param legend_metadata_names List of metadata names to be plotted.
 #' @param chrom_list List of chromosomes to be plotted. If not stated, chr1-22+X will bes used.
 #' @param label_genes Gene labels (df, list or what type?)
 #' @param auto_label_sv Default is FALSE
@@ -1308,7 +1307,7 @@ plot_sample_circos = function(this_sample_id,
 #'
 #' @param maftools_obj A maftools object containing the mutations you want to plot.
 #' @param onco_matrix_path Provide a path to an onco_matrix file instead of a MAF object if the former is unavailable (this limits functionality a bit).
-#' @param genes An optional list of genes to restrict your plot to.
+#' @param genes An optional vector of genes to restrict your plot to.
 #' @param include_noncoding List of non-coding regions to be included, default is NULL. Specify like this: include_noncoding=list("NFKBIZ" = c("3'UTR"), "HNRNPH1" = "Splice_Region")
 #' @param keepGeneOrder Set to TRUE if you want to preserve the gene order specified.
 #' @param keepSampleOrder Set to TRUE if you want to preserve the sample order specified.
@@ -2185,13 +2184,13 @@ ashm_multi_rainbow_plot = function(regions_bed,
 #' @details This function takes a sample ID and internally calls `assign_cn_to_ssm` to get copy number segments for plotting.
 #' This plot is visualizing mutation VAFs per default, this can be turned off with setting `just_segments` to TRUE.
 #' This only plots the segments. The user can also restrict the plotted segments to coding regions. To do so, set `coding_only= TRUE`,
-#' and then specify the genes of interest (coding regions) with the `genes_to_label` (list of genes).
+#' and then specify the genes of interest (coding regions) with the `genes_to_label` (vector of genes).
 #'
 #' @param this_sample_id The sample_id for the sample to plot.
 #' @param just_segments Specify whether only the segments will be plotted (instead of mutation VAF). Default is FALSE.
 #' @param coding_only Optional. Set to TRUE to restrict to plotting only coding mutations.
 #' @param one_chrom Subset plot to one chromosome.
-#' @param genes_to_label Optional. Provide a list of genes to label (if mutated). Can only be used with coding_only (see above).
+#' @param genes_to_label Optional. Provide a vector of genes to label (if mutated). Can only be used with coding_only (see above).
 #' @param from_flatfile If set to true the function will use flatfiles instead of the database.
 #' @param use_augmented_maf Boolean statement if to use augmented maf, default is TRUE.
 #' @param add_chr_prefix If TRUE, "chr" prefix will be added to chr column. Default is FALSE.
@@ -2422,8 +2421,6 @@ ashm_rainbow_plot = function(mutations_maf,
 #' @param detail TODO
 #'
 #' @return
-#'
-#' @import tidyverse
 #'
 plot_multi_timepoint = function(mafs,
                                 this_sample_id,
@@ -2754,7 +2751,7 @@ theme_Morons = function(base_size = 14,
 #'
 #' @details This function returns two types of plot (box plot and forest plot), the user can either view them separately or arranged on the same grob.
 #' In addition this function also lets the user control the mutation frequencies of the plotted genes.
-#' If no gene list is provided with `genes`, this function auto-defaults to all genes in the incoming maf.
+#' If no `genes` is provided, this function auto-defaults to all genes in the incoming maf.
 #' The user can then control the minimum number of mutations requirement for a gene to be included in the plot.
 #' This is done with the `min_mutations` parameter.
 #' For extended examples on how to use this function, refer to the example inside the function documentation or the vignettes.
@@ -2762,8 +2759,8 @@ theme_Morons = function(base_size = 14,
 #' @param maf A maf data frame. Minimum required columns are Hugo_Symbol and Tumor_Sample_Barcode.
 #' @param mutmat Optional argument for binary mutation matrix. If not supplied, function will generate this matrix from the file used in argument "maf".
 #' @param metadata Metadata for the comparisons. Minimum required columns are Tumor_Sample_Barcode and the column assigning each case to one of two groups.
-#' @param genes An optional list of genes to restrict your plot to. If no gene-list is supplied, the function will extract all mutated genes from the incoming maf. See min_mutations parameter for more info.
-#' @param min_mutations Optional parameter for when no gene list is provided. This parameter ensures only genes with n mutations are kept in the gene list. Default value is 1, this means all genes in the incoming maf will be plotted.
+#' @param genes An optional vector of genes to restrict your plot to. If no gene-list is supplied, the function will extract all mutated genes from the incoming maf. See min_mutations parameter for more info.
+#' @param min_mutations Optional parameter for when no `genes` is provided. This parameter ensures only genes with n mutations are kept in `genes`. Default value is 1, this means all genes in the incoming maf will be plotted.
 #' @param comparison_column Mandatory: the name of the metadata column containing the comparison values.
 #' @param rm_na_samples Set to TRUE to remove 0 mutation samples. Default is FALSE.
 #' @param comparison_values Optional: If the comparison column contains more than two values or is not a factor, specify a character vector of length two in the order you would like the factor levels to be set, reference group first.
@@ -2775,9 +2772,8 @@ theme_Morons = function(base_size = 14,
 #'
 #' @return A convenient list containing all the data frames that were created in making the plot, including the mutation matrix. It also produces (and returns) ggplot object with a side-by-side forest plot and bar plot showing mutation incidences across two groups.
 #'
-#' @import ggpubr data.table dplyr cowplot forcats ggplot2 purrr stats tidyr reshape2
+#' @import ggpubr data.table dplyr cowplot forcats ggplot2 purrr stats tidyr reshape2 broom
 #' @export
-#' @import dplyr cowplot broom reshape2
 #'
 #' @examples
 #' metadata = get_gambl_metadata(case_set = "tFL-study") #%>%
@@ -4813,7 +4809,7 @@ comp_report = function(this_sample_id,
 #' Lastly, this plot can also highlight genes of interest. To do so, provide a data frame (comparable to the return from `gene_to_region(return_as = "bed")`) to the `gene_list` parameter.
 #'
 #' @param this_sample_id Sample to be plotted.
-#' @param gene_list Optional parameter to annotate genes on the circos plot from a list of genes (df). Is compatible with gene_to_region (return_as = "bed") output format. See examples.
+#' @param gene_list Optional parameter to annotate genes on the circos plot from a data frame of genes. Is compatible with gene_to_region (return_as = "bed") output format. See examples.
 #' @param ssm_calls Boolean parameter for plotting ssm. Default is TRUE.
 #' @param sv_calls Boolean parameter for plotting SVs, default is TRUE.
 #' @param chr_select Optional argument for subset on selected chromosomes, default is all autosomes.
@@ -5262,17 +5258,17 @@ fancy_sv_sizedens = function(this_sample_id,
 #' @description Visualize (stacked barplot) genomic read-subsets (metrics) across a selection of samples.
 #'
 #' @details This function is available for plotting relevant alignment metrics (read-subsets) for a selection of samples. Per default, this plot returns the following read-metrics;
-#' total n reads, total n uniquely mapped reads, total n duplicated reads. This plot can also be superimposed with read metrics for an additional sample list,
+#' total n reads, total n uniquely mapped reads, total n duplicated reads. This plot can also be superimposed with read metrics from additional samples,
 #' allowing for easy comparisons between different sample populations. To run this function, simply specify the sample IDs you are interested in with `these_sample_ids`.
 #' This parameter expects a data frame with sample IDs in the first column. Optionally, the user can also provide an already subset (with the sample IDS of interest)
-#' meta data table with `these_samples_metadata`. For adding a comparison group to the returned plot, simply give another cohort/set of samples to the `comparison_group` parameter.
+#' metadata table with `these_samples_metadata`. For adding a comparison group to the returned plot, simply give another cohort/set of samples to the `comparison_group` parameter.
 #' Similarly to `these_sample_ids`, this parameter also expects a data frame with sample IDs in the first column. In addition, this plot can also add additional read-metrics such as
 #' mean values for all plotted metrics and corrected coverage. To enable these features, simply set `add_mean` and `add_corrected_coverage` to TRUE (default).
 #' 
 #' @param these_sample_ids Data frame with sample IDs (to be plotted) in the first column.
 #' @param metadata Optional argument, used to derive sample IDs if sample_table is Null.
 #' @param these_samples_metadata GAMBL metadata subset to the cases you want to process.
-#' @param comparison_group Optional argument for plotting mean alignment metrics. Default is plotting the mean for samples provided. This parameter takes a list of sample IDs.
+#' @param comparison_group Optional argument for plotting mean alignment metrics. Default is plotting the mean for samples provided. This parameter takes a vector of sample IDs.
 #' @param seq_type Subset qc metrics to a specific seq_type, default is genome.
 #' @param add_mean Set to TRUE to superimpose mean values of plotted variables. Default is TRUE.
 #' @param add_corrected_coverage Set to TRUE to add corrected coverage for selected samples.
@@ -5421,7 +5417,7 @@ fancy_alignment_plot = function(these_sample_ids,
 #' The layout of the returned plot can also be further customized with `sort_by`. This parameter controls the order in which samples would appear. Similarly, `fill_by` allows the user to control on what factor the plot will be filled by.
 #' In addition, the generated plot can also be returned as an interactive HTML rendering, allowing the user to easily hover over any of the points in the plot and get expanded information on each data point. To toggle this function, set the `interactive` parameter to TRUE.
 #' If an interactive plot is generated, it is also possible to dictate what information should be available in the plotted data points. Default for this parameter is sample ID and cohort.
-#' Sometimes it can also be useful to see how a subset of samples compares to another group; to do this one could call the function with a list of additional sample IDs given to the `comparison_samples` parameter (see examples for more information).
+#' Sometimes it can also be useful to see how a subset of samples compares to another group; to do this one could call the function with a vector of additional sample IDs given to the `comparison_samples` parameter (see examples for more information).
 #' lastly, the plot can also be configured with custom plot title and axis labels (`plot_title` and `y_axis_lab`). For more information, see examples and parameter descriptions.
 #' 
 #' @param these_sample_ids Data frame with sample IDs (to be plotted) in the first column (has to be named sample_id).
@@ -5435,10 +5431,10 @@ fancy_alignment_plot = function(these_sample_ids,
 #' @param fill_by Parameter for specifying fill variable for grouped bar plot. Can be any factor from incoming metadata, e.g pathology, cohort, etc.
 #' @param labels If HTML plot version is rendered, you can specify what labels should be visible when hovering over the dots. Default is sample id and cohort. This parameter expects a vector of charachters.
 #' @param interactive Boolean parameter for generating interactive plot (HTML). Default is FALSE.
-#' @param comparison_samples Optional parameter, give the function a list of sample IDs to be compared against the main plotting group. Pathology is default.
+#' @param comparison_samples Optional parameter, give the function a vector of sample IDs to be compared against the main plotting group. Pathology is default.
 #' @param plot_title Plotting parameter, plot title.
 #' @param y_axis_lab Plotting parameter, label of y-axis.
-#' @param return_plotdata Optional parameter, if set to TRUE a list of acceptable data types for plotting will be returned, and nothing else.
+#' @param return_plotdata Optional parameter, if set to TRUE a vector of acceptable data types for plotting will be returned, and nothing else.
 #'
 #' @return A plot as a ggplot object (grob).
 #'
@@ -5606,7 +5602,7 @@ fancy_qc_plot = function(these_sample_ids,
 #' @param these_samples_metadata GAMBL metadata subset to the cases you want to process.
 #' @param keep_cohort Optional parameter to be used when these_sample is NULL. Calls get_gambl_metadata() and filters on the cohort supplied in this parameter.
 #' @param keep_pathology Optional parameter to be used when these_sample is NULL. Calls get_gambl_metadata() and filters on the pathology supplied in this parameter.
-#' @param comparison_samples Optional parameter, give the function a list of sample IDs to be compared against the main plotting group.
+#' @param comparison_samples Optional parameter, give the function a vector of sample IDs to be compared against the main plotting group.
 #' @param seq_type Selected seq type for incoming QC metrics.
 #' @param plot_subtitle Plotting parameter, subtitle of generated plot.
 #'
@@ -5725,7 +5721,7 @@ fancy_propcov_plot = function(these_sample_ids,
 #' 
 #' @details Visualize proportional metrics for selected samples.
 #'
-#' @description This function takes all the available proportional quality control metrics and a list of sample IDs (plotted on the x-ais) and plots the vlaues along the y-axis.
+#' @description This function takes all the available proportional quality control metrics and a vector of sample IDs (plotted on the x-ais) and plots the vlaues along the y-axis.
 #' This function provides straightforward subsetting parameters allowing for a straightforward execution.
 #' Either provide a data frame with sample IDs in the first column to the `these_samples_ids` parameter.
 #' Or, call one of the optional parameters for using an already subset metadata table (subset to the sample IDs of interest).
