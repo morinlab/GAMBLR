@@ -24,7 +24,7 @@ fancy_circos_plot(
 \arguments{
 \item{this_sample_id}{Sample to be plotted.}
 
-\item{gene_list}{Optional parameter to annotate genes on the circos plot from a list of genes (df). Is compatible with gene_to_region (return_as = "bed") output format. See examples.}
+\item{gene_list}{Optional parameter to annotate genes on the circos plot from a data frame of genes. Is compatible with gene_to_region (return_as = "bed") output format. See examples.}
 
 \item{ssm_calls}{Boolean parameter for plotting ssm. Default is TRUE.}
 
@@ -81,6 +81,7 @@ fancy_circos_plot_new(this_sample_id = "DOHH-2",
                       chr_select = c("chr8", "chr14", "chr18"),
                       out = "../../plots/",
                       plot_title = "DOHH-2 (SVs) Example Plot",
+                      pdf = FALSE,
                       pdf = FALSE,
                       file_name = "dohh2_example.png")
 

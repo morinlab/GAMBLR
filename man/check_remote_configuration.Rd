@@ -9,6 +9,9 @@ check_remote_configuration(auto_connect = FALSE)
 \arguments{
 \item{auto_connect}{Set to TRUE to ensure an ssh_session is created if absent}
 }
+\value{
+TRUE if a remote session is detected, FALSE otherwise.
+}
 \description{
 Check for a remote session and automagically confirm setup will work properly.
 }

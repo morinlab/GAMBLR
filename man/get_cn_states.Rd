@@ -14,7 +14,7 @@ get_cn_states(
 )
 }
 \arguments{
-\item{regions_list}{A list of regions in the format chrom:start-end.}
+\item{regions_list}{A vector of regions in the format chrom:start-end.}
 
 \item{regions_bed}{A bed file with one row for each region you want to determine the CN state from.}
 

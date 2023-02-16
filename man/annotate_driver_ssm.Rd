@@ -22,7 +22,7 @@ annotate_driver_ssm(
 \item{noncoding_regions}{Optional named vector of regions to use to further restrict noncoding mutations per gene.}
 }
 \value{
-Driver ssm kept from maf.
+Incoming MAF, subset to putative driver mutations.
 }
 \description{
 Retrieve data or use the supplied data frame of genes to get/annotate MAF data indicating which rows are putative driver mutations.

@@ -32,9 +32,9 @@ plot_sample_circos(
 
 \item{include_ssm}{Defaul FALSE. (does not do anything yet).}
 
-\item{legend_metadata_columns}{Column names from meta data}
+\item{legend_metadata_columns}{Column names from metadata}
 
-\item{legend_metadata_names}{List of meta data names to be plotted.}
+\item{legend_metadata_names}{List of metadata names to be plotted.}
 
 \item{include_cnv}{Default TRUE. (does not do anything yet).}
 

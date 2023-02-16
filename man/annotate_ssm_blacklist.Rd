@@ -22,7 +22,7 @@ annotate_ssm_blacklist(
 )
 }
 \arguments{
-\item{mutations_df}{df with mutation data.}
+\item{mutations_df}{A data frame with mutation data.}
 
 \item{seq_type}{The seq_type of your mutations if you prefer to apply only the corresponding blacklist. More than one seq_type can be specified as a vector if desired. This parameter is required.}
 
@@ -67,9 +67,9 @@ This function also conveniently lets you know how many variants that were droppe
 }
 \examples{
 #get SSMs
-original_maf_df = get_coding_ssm()
+original_maf_df = get_ssm_by_sample(this_sample_id = "HTMCP-01-06-00422-01A-01D", this_seq_type = "genome", )
 
 #annotate MAF
-deblacklisted_maf_df = annotate_ssm_blacklist(original_maf_df)
+deblacklisted_maf_df = annotate_ssm_blacklist(original_maf_df, seq_type = "genome")
 
 }

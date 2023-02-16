@@ -26,7 +26,7 @@ fancy_propcov_plot(
 
 \item{keep_pathology}{Optional parameter to be used when these_sample is NULL. Calls get_gambl_metadata() and filters on the pathology supplied in this parameter.}
 
-\item{comparison_samples}{Optional parameter, give the function a list of sample IDs to be compared against the main plotting group.}
+\item{comparison_samples}{Optional parameter, give the function a vector of sample IDs to be compared against the main plotting group.}
 
 \item{seq_type}{Selected seq type for incoming QC metrics.}
 

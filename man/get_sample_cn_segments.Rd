@@ -17,7 +17,7 @@ get_sample_cn_segments(
 \arguments{
 \item{this_sample_id}{Optional argument, single sample_id for the sample to retrieve segments for.}
 
-\item{multiple_samples}{Set to TRUE to return cn segments for multiple samples (list) of samples to be specified in samples_list parameter. Default is FALSE.}
+\item{multiple_samples}{Set to TRUE to return cn segments for multiple samples specified in \code{samples_list} parameter. Default is FALSE.}
 
 \item{sample_list}{Optional vector of type character with one sample per row, required if multiple_samples is set to TRUE.}
 
@@ -30,7 +30,7 @@ get_sample_cn_segments(
 \item{streamlined}{Return a minimal output rather than full details. Default is FALSE.}
 }
 \value{
-A list of segments for a specific or multiple sample ID(s).
+A data frame of segments for a specific or multiple sample ID(s).
 }
 \description{
 Get all segments for a single (or multiple) sample_id(s).
@@ -44,7 +44,7 @@ For more information on how this function can be run in different ways, refer to
 Return cn segments for one sample:
 sample_cn_seg = get_sample_cn_segments(this_sample_id = "some-sample-id", multiple_samples = FALSE)
 
-Return cn segments for multiple samples (provided as list):
+Return cn segments for multiple samples (provided as vector of sample IDs):
 samples = get_sample_cn_segments(multiple_samples = TRUE, sample_list = c("some_sample", "another_sample"))
 
 Return cn segments for multiple samples (read csv with one sample per line):

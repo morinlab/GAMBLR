@@ -17,7 +17,7 @@ subset_cnstates(cn_segments, include_2 = FALSE, samplen)
 Nothing.
 }
 \description{
-List the available CN states in the incoming data frame.
+Get the available CN states in the incoming data frame.
 }
 \details{
 INTERNAL FUNCTION called by fancy_multisample_ideo, for sub-setting copy number information based on segments available in cn data

@@ -39,3 +39,15 @@ Count the variants in a region with a variety of filtering options.
 This function internally calls \code{get_ssm_by_region} thus, the parameters available to this function are arguments that are being passed to the internal call.
 For more details on how these parameters can be used, refer to \code{get_ssm_by_region}.
 }
+\examples{
+#define a region.
+my_region = gene_to_region(gene_symbol = "MYC", return_as = "region")
+
+#subset metadata.
+my_metadata = get_gambl_metadata() \%>\%
+ dplyr::filter(pathology == "FL")
+
+#count SSMs for the selected sample subset and defined region.
+fl_ssm_counts_myc = count_ssm_by_region(region = my_region, these_samples_metadata = my_metadata)
+
+}

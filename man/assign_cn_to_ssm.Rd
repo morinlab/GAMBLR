@@ -64,7 +64,7 @@ This function takes a sample ID with the \code{this_sample_id} parameter and ann
 A variety of parameters are at hand for a customized workflow. For example, the user can specify if only coding mutations are of interest.
 To do so, set \code{coding_only = TRUE}. It is also possible to point the function to already loaded maf/seq files, or a path to these files.
 See parameters; \code{maf_file}, \code{maf_path}, \code{seq_file} and \code{seg_path} for more information on how to use these parameters.
-This function can also take a list with genes of interest (\code{genes}) that the returned data frame will be restricted to.
+This function can also take a vector with genes of interest (\code{genes}) that the returned data frame will be restricted to.
 }
 \examples{
 cn_list = assign_cn_to_ssm(this_sample_id = "HTMCP-01-06-00422-01A-01D", coding_only = TRUE)

@@ -56,7 +56,7 @@ prettyOncoplot(
 
 \item{onco_matrix_path}{Provide a path to an onco_matrix file instead of a MAF object if the former is unavailable (this limits functionality a bit).}
 
-\item{genes}{An optional list of genes to restrict your plot to.}
+\item{genes}{An optional vector of genes to restrict your plot to.}
 
 \item{include_noncoding}{List of non-coding regions to be included, default is NULL. Specify like this: include_noncoding=list("NFKBIZ" = c("3'UTR"), "HNRNPH1" = "Splice_Region")}
 

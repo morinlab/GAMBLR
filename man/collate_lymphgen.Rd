@@ -11,7 +11,7 @@ collate_lymphgen(
 )
 }
 \arguments{
-\item{these_samples_metadata}{Optional parameter with meta data filtered for sample_ids of interest. If provided, this function will join lymphgen with this metadata, regardless of tidy TRUE/FALSE.}
+\item{these_samples_metadata}{Optional parameter with metadata filtered for sample_ids of interest. If provided, this function will join lymphgen with this metadata, regardless of tidy TRUE/FALSE.}
 
 \item{lymphgen_version}{Version of selected lymphgen, default is "default".}
 
@@ -21,7 +21,7 @@ collate_lymphgen(
 A df with lymphgen information.
 }
 \description{
-Expand a sample_table (meta data) horizontally with different flavours of lymphgen data.
+Expand a sample_table (metadata) horizontally with different flavours of lymphgen data.
 }
 \details{
 This function takes a sample table (metadata) and adds different flavours of lymphgen data.

@@ -24,9 +24,9 @@ get_coding_ssm(
 )
 }
 \arguments{
-\item{limit_cohort}{Supply this to restrict mutations to one or more cohorts in a list.}
+\item{limit_cohort}{Supply this to restrict mutations to one or more cohorts in a vector.}
 
-\item{exclude_cohort}{Supply this to exclude mutations from one or more cohorts in a list.}
+\item{exclude_cohort}{Supply this to exclude mutations from one or more cohorts in a vector.}
 
 \item{limit_pathology}{Supply this to restrict mutations to one pathology.}
 
@@ -42,7 +42,7 @@ get_coding_ssm(
 
 \item{basic_columns}{Set to FALSE to override the default behavior of returning only the first 45 columns of MAF data.}
 
-\item{maf_cols}{if basic_columns is set to FALSE, the user can specify what columns to be returned within the MAF. This parameter can either be a list of indexes (integer) or a list of characters (matching columns in MAF).}
+\item{maf_cols}{if basic_columns is set to FALSE, the user can specify what columns to be returned within the MAF. This parameter can either be a vector of indexes (integer) or a vector of characters (matching columns in MAF).}
 
 \item{from_flatfile}{Set to TRUE to obtain mutations from a local flatfile instead of the database. This can be more efficient and is currently the only option for users who do not have ICGC data access.}
 

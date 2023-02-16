@@ -42,13 +42,13 @@ fancy_qc_plot(
 
 \item{interactive}{Boolean parameter for generating interactive plot (HTML). Default is FALSE.}
 
-\item{comparison_samples}{Optional parameter, give the function a list of sample IDs to be compared against the main plotting group. Pathology is default.}
+\item{comparison_samples}{Optional parameter, give the function a vector of sample IDs to be compared against the main plotting group. Pathology is default.}
 
 \item{plot_title}{Plotting parameter, plot title.}
 
 \item{y_axis_lab}{Plotting parameter, label of y-axis.}
 
-\item{return_plotdata}{Optional parameter, if set to TRUE a list of acceptable data types for plotting will be returned, and nothing else.}
+\item{return_plotdata}{Optional parameter, if set to TRUE a vector of acceptable data types for plotting will be returned, and nothing else.}
 
 \item{sort_by}{Plotting parameter, set sorting column for bar plots.}
 }
@@ -67,7 +67,7 @@ If these parameters are used, the function will retrieve metadata for all availa
 The layout of the returned plot can also be further customized with \code{sort_by}. This parameter controls the order in which samples would appear. Similarly, \code{fill_by} allows the user to control on what factor the plot will be filled by.
 In addition, the generated plot can also be returned as an interactive HTML rendering, allowing the user to easily hover over any of the points in the plot and get expanded information on each data point. To toggle this function, set the \code{interactive} parameter to TRUE.
 If an interactive plot is generated, it is also possible to dictate what information should be available in the plotted data points. Default for this parameter is sample ID and cohort.
-Sometimes it can also be useful to see how a subset of samples compares to another group; to do this one could call the function with a list of additional sample IDs given to the \code{comparison_samples} parameter (see examples for more information).
+Sometimes it can also be useful to see how a subset of samples compares to another group; to do this one could call the function with a vector of additional sample IDs given to the \code{comparison_samples} parameter (see examples for more information).
 lastly, the plot can also be configured with custom plot title and axis labels (\code{plot_title} and \code{y_axis_lab}). For more information, see examples and parameter descriptions.
 }
 \examples{

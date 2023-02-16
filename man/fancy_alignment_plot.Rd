@@ -26,7 +26,7 @@ fancy_alignment_plot(
 
 \item{these_samples_metadata}{GAMBL metadata subset to the cases you want to process.}
 
-\item{comparison_group}{Optional argument for plotting mean alignment metrics. Default is plotting the mean for samples provided. This parameter takes a list of sample IDs.}
+\item{comparison_group}{Optional argument for plotting mean alignment metrics. Default is plotting the mean for samples provided. This parameter takes a vector of sample IDs.}
 
 \item{seq_type}{Subset qc metrics to a specific seq_type, default is genome.}
 
@@ -50,10 +50,10 @@ Visualize (stacked barplot) genomic read-subsets (metrics) across a selection of
 }
 \details{
 This function is available for plotting relevant alignment metrics (read-subsets) for a selection of samples. Per default, this plot returns the following read-metrics;
-total n reads, total n uniquely mapped reads, total n duplicated reads. This plot can also be superimposed with read metrics for an additional sample list,
+total n reads, total n uniquely mapped reads, total n duplicated reads. This plot can also be superimposed with read metrics from additional samples,
 allowing for easy comparisons between different sample populations. To run this function, simply specify the sample IDs you are interested in with \code{these_sample_ids}.
 This parameter expects a data frame with sample IDs in the first column. Optionally, the user can also provide an already subset (with the sample IDS of interest)
-meta data table with \code{these_samples_metadata}. For adding a comparison group to the returned plot, simply give another cohort/set of samples to the \code{comparison_group} parameter.
+metadata table with \code{these_samples_metadata}. For adding a comparison group to the returned plot, simply give another cohort/set of samples to the \code{comparison_group} parameter.
 Similarly to \code{these_sample_ids}, this parameter also expects a data frame with sample IDs in the first column. In addition, this plot can also add additional read-metrics such as
 mean values for all plotted metrics and corrected coverage. To enable these features, simply set \code{add_mean} and \code{add_corrected_coverage} to TRUE (default).
 }

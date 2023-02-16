@@ -20,7 +20,7 @@ collate_results(
 
 \item{write_to_file}{Boolean statement that outputs tsv file (/projects/nhl_meta_analysis_scratch/gambl/results_local/shared/gambl_{seq_type_filter}_results.tsv) if TRUE, default is FALSE.}
 
-\item{join_with_full_metadata}{Join with all columns of meta data, default is FALSE.}
+\item{join_with_full_metadata}{Join with all columns of metadata, default is FALSE.}
 
 \item{these_samples_metadata}{Optional argument to use a user specified metadata df, overwrites get_gambl_metadata in join_with_full_metadata.}
 

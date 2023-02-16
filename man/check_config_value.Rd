@@ -14,7 +14,7 @@ A string with the path to a file specified in the config or nothing (if config k
 }
 \description{
 Check the existence of a specific config key.
-The function will notify the user if no such key exists.
+The function will notify the user and end the program if no such key exists.
 }
 \details{
 INTERNAL FUNCTION for checking the existence of a config value, not meant for out-of-package usage.

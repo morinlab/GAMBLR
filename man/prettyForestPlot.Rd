@@ -27,9 +27,9 @@ prettyForestPlot(
 
 \item{metadata}{Metadata for the comparisons. Minimum required columns are Tumor_Sample_Barcode and the column assigning each case to one of two groups.}
 
-\item{genes}{An optional list of genes to restrict your plot to. If no gene-list is supplied, the function will extract all mutated genes from the incoming maf. See min_mutations parameter for more info.}
+\item{genes}{An optional vector of genes to restrict your plot to. If no gene-list is supplied, the function will extract all mutated genes from the incoming maf. See min_mutations parameter for more info.}
 
-\item{min_mutations}{Optional parameter for when no gene list is provided. This parameter ensures only genes with n mutations are kept in the gene list. Default value is 1, this means all genes in the incoming maf will be plotted.}
+\item{min_mutations}{Optional parameter for when no \code{genes} is provided. This parameter ensures only genes with n mutations are kept in \code{genes}. Default value is 1, this means all genes in the incoming maf will be plotted.}
 
 \item{comparison_column}{Mandatory: the name of the metadata column containing the comparison values.}
 
@@ -56,7 +56,7 @@ Create a forest plot comparing mutation frequencies for a set of genes between t
 \details{
 This function returns two types of plot (box plot and forest plot), the user can either view them separately or arranged on the same grob.
 In addition this function also lets the user control the mutation frequencies of the plotted genes.
-If no gene list is provided with \code{genes}, this function auto-defaults to all genes in the incoming maf.
+If no \code{genes} is provided, this function auto-defaults to all genes in the incoming maf.
 The user can then control the minimum number of mutations requirement for a gene to be included in the plot.
 This is done with the \code{min_mutations} parameter.
 For extended examples on how to use this function, refer to the example inside the function documentation or the vignettes.

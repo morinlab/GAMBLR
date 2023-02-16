@@ -24,7 +24,7 @@ copy_number_vaf_plot(
 
 \item{one_chrom}{Subset plot to one chromosome.}
 
-\item{genes_to_label}{Optional. Provide a list of genes to label (if mutated). Can only be used with coding_only (see above).}
+\item{genes_to_label}{Optional. Provide a vector of genes to label (if mutated). Can only be used with coding_only (see above).}
 
 \item{from_flatfile}{If set to true the function will use flatfiles instead of the database.}
 
@@ -42,7 +42,7 @@ Create a genome-wide copy number plot for one sample and (optionally) display mu
 This function takes a sample ID and internally calls \code{assign_cn_to_ssm} to get copy number segments for plotting.
 This plot is visualizing mutation VAFs per default, this can be turned off with setting \code{just_segments} to TRUE.
 This only plots the segments. The user can also restrict the plotted segments to coding regions. To do so, set \code{coding_only= TRUE},
-and then specify the genes of interest (coding regions) with the \code{genes_to_label} (list of genes).
+and then specify the genes of interest (coding regions) with the \code{genes_to_label} (vector of genes).
 }
 \examples{
 cnv_vaf_plot = copy_number_vaf_plot(this_sample_id = "some-sample-name",

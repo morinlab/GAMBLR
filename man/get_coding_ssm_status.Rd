@@ -23,7 +23,7 @@ get_coding_ssm_status(
 )
 }
 \arguments{
-\item{gene_symbols}{List of gene symbols for which the mutation status will be tabulated. If not provided, lymphoma genes will be returned by default.}
+\item{gene_symbols}{A vector of gene symbols for which the mutation status will be tabulated. If not provided, lymphoma genes will be returned by default.}
 
 \item{these_samples_metadata}{The metadata for samples of interest to be included in the returned matrix. Only the column "sample_id" is required. If not provided, the matrix is tabulated for all available samples as default.}
 
@@ -47,7 +47,7 @@ get_coding_ssm_status(
 
 \item{review_hotspots}{Logical parameter indicating whether hotspots object should be reviewed to include functionally relevant mutations or rare lymphoma-related genes. Default is TRUE.}
 
-\item{genes_of_interest}{List of genes for hotspot review. Currently only FOXO1, MYD88, and CREBBP are supported.}
+\item{genes_of_interest}{A vector of genes for hotspot review. Currently only FOXO1, MYD88, and CREBBP are supported.}
 
 \item{genome_build}{Reference genome build for the coordinates in the MAF file. The default is hg19 genome build.}
 
@@ -60,7 +60,7 @@ A data frame with tabulated mutation status.
 Tabulate mutation status (SSM) for a set of genes.
 }
 \details{
-This function takes a list of gene symbols and subsets the incoming MAF to specified genes. If no gene list is provided, the function will default to all lymphoma genes.
+This function takes a vector of gene symbols and subsets the incoming MAF to specified genes. If no genes are provided, the function will default to all lymphoma genes.
 The function can accept a wide range of incoming MAFs. For example, the user can call this function with \code{these_samples_metadata} (preferably a metadata table that has been subset to the sample IDs of interest).
 If this parameter is not called, the function will default to all samples available with \code{get_gambl_metadata}. The user can also provide a path to a MAF, or MAF-like file with \code{maf_path},
 or an already loaded MAF can be used with the \code{maf_data} parameter. If both \code{maf_path} and \code{maf_data} is missing, the function will default to run \code{get_coding_ssm}.

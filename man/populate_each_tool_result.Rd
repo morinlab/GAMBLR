@@ -16,9 +16,9 @@ populate_each_tool_result(
 
 \item{include_silent}{Logical parameter indicating whether to include silent mutations into coding mutations. Default is FALSE.}
 
-\item{genome_build}{A list of all genome builds to process.}
+\item{genome_build}{A single genome build or a vector of all genome builds to process.}
 
-\item{unix_group}{A list of all unix groups to process.}
+\item{unix_group}{A single unix group or a vector of all unix groups to process.}
 }
 \value{
 Nothing.
@@ -28,8 +28,8 @@ Convenience function for returning results from a specified tool.
 }
 \details{
 This function takes a tool name \code{tool} as well as other parameters for specifying the requested result.
-Other parameters include \code{genome_build}, this can be just one parameter or a list with different genome builds to return results for.
-Similarly, \code{unix_group} can take either one value or a list with all the different unix groups to return results for.
+Other parameters include \code{genome_build}, this can be just one parameter or a vector with different genome builds to return results for.
+Similarly, \code{unix_group} can take either one value or a vector with all the different unix groups to return results for.
 Lastly, the user can subset the returned results to only silent mutations.
 This is done with setting \code{include_silent = TRUE} (default is FALSE).
 }

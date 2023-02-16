@@ -30,7 +30,7 @@ CHROM_A  START_A    END_A CHROM_B  START_B    END_B NAME SOMATIC_SCORE STRAND_A 
 
 \item{return_as}{Stated format for returned output, default is "bedpe". Other accepted output formats are "bed" and "bedpe_entrez" (to keep entrez_ids for compatibility with portal.R and cBioPortal).}
 
-\item{blacklist}{A list of regions to be removed from annotations. Default coordinates are in respect to hg19.}
+\item{blacklist}{A vector of regions to be removed from annotations. Default coordinates are in respect to hg19.}
 
 \item{genome_build}{Reference genome build parameter, default is grch37.}
 }

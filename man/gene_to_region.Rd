@@ -20,6 +20,9 @@ gene_to_region(
 
 \item{return_as}{Specify the type of return. Default is region (chr:start-end), other acceptable arguments are "bed" and "df".}
 }
+\value{
+A data frame, or a string with region(s) for the provided gene(s).
+}
 \description{
 Return coordinates for a given gene or a set of genes.
 }

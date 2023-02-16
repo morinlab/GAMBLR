@@ -10,7 +10,7 @@ add_icgc_metadata(incoming_metadata)
 \item{incoming_metadata}{A metadata table (probably output from \code{get_gambl_metadata}).}
 }
 \value{
-Meta data with layered information (ICGC).
+Metadata with layered information (ICGC).
 }
 \description{
 Layer on ICGC metadata from a supplemental table to fill in missing COO.

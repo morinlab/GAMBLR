@@ -33,7 +33,7 @@ fancy_proportions_plot(
 A plot as a ggplot object (grob).
 }
 \description{
-This function takes all the available proportional quality control metrics and a list of sample IDs (plotted on the x-ais) and plots the vlaues along the y-axis.
+This function takes all the available proportional quality control metrics and a vector of sample IDs (plotted on the x-ais) and plots the vlaues along the y-axis.
 This function provides straightforward subsetting parameters allowing for a straightforward execution.
 Either provide a data frame with sample IDs in the first column to the \code{these_samples_ids} parameter.
 Or, call one of the optional parameters for using an already subset metadata table (subset to the sample IDs of interest).

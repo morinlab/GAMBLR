@@ -41,7 +41,7 @@ plot_mutation_dynamics_heatmap(
 
 \item{annotate_zero}{Indicate a variant that had VAF = 0 in one of the two time points. Default is FALSE.}
 
-\item{genes}{An optional list of genes to restrict your plot to.}
+\item{genes}{An optional vector of genes to restrict your plot to.}
 
 \item{top_n_genes}{How many genes to be added to the plot.}
 

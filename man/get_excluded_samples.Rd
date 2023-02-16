@@ -10,13 +10,13 @@ get_excluded_samples(tool_name = "slms-3")
 \item{tool_name}{The tool or pipeline that generated the files (should be the same for all). Default is "slms-3".}
 }
 \value{
-A list of sample IDs.
+A vector of sample IDs.
 }
 \description{
 Exclude samples that have been excluded from certain analyses and drop from merges.
 }
 \details{
-Specify the tool or pipeline responsible for generating the files with \code{tool_name} and this function will return a list of excluded sample IDs.
+Specify the tool or pipeline responsible for generating the files with \code{tool_name} and this function will return a vector of excluded sample IDs.
 }
 \examples{
 excluded_samp = get_excluded_samples()

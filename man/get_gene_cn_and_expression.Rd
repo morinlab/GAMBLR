@@ -12,7 +12,7 @@ get_gene_cn_and_expression(gene_symbol, ensembl_id)
 \item{ensembl_gene_id}{One or more ensembl gene IDs. Only one of hugo_symbols or ensembl_gene_ids may be used.}
 }
 \value{
-A list.
+A data frame with copy number information and gene expressions.
 }
 \description{
 Get the copy number and expression for a single gene.

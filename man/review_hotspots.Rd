@@ -14,7 +14,7 @@ review_hotspots(
 \arguments{
 \item{annotated_maf}{A data frame in MAF format that has hotspots annotated using the function annotate_hotspots().}
 
-\item{genes_of_interest}{List of genes for hotspot review. Currently only FOXO1, MYD88, CREBBP, NOTCH1, NOTCH2, CD79B and EZH2 are supported.}
+\item{genes_of_interest}{A vector of genes for hotspot review. Currently only FOXO1, MYD88, CREBBP, NOTCH1, NOTCH2, CD79B and EZH2 are supported.}
 
 \item{genome_build}{Reference genome build for the coordinates in the MAF file. The default is grch37 genome build.}
 }

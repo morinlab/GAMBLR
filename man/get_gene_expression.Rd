@@ -30,7 +30,7 @@ get_gene_expression(
 \item{from_flatfile}{Deprecated but left here for backwards compatibility.}
 }
 \value{
-A list.
+A data frame with gene expression.
 }
 \description{
 Get the expression for one or more genes for all GAMBL samples.
