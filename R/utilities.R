@@ -228,6 +228,9 @@ region_to_bins = function(chromosome="chr1",start=10000,end=121500000,bin_size=2
 #'
 #' @examples
 get_ssh_session = function(host="gphost01.bcgsc.ca"){
+  if(!is.null(config::get("host"))){
+    host = config::get("host")
+  }
   if (!requireNamespace("ssh", quietly = TRUE)) {
     warning("The ssh package must be installed to use this functionality")
     #Either exit or do something that does not require ssh
@@ -2478,6 +2481,7 @@ get_gambl_colours = function(classification = "all",
       "HGBL"="#294936",
       "HGBL-DH/TH"="#7A1616",
       "PBL" = "#E058C0",
+      "Plasmablastic" = "#E058C0",
       "CNS" = "#E2EF60",
       "THRLBCL" = "#A5F2B3",
       "MM"="#CC9A42",
@@ -2485,7 +2489,8 @@ get_gambl_colours = function(classification = "all",
       "UNSPECIFIED"="#cfba7c",
       "OTHER"="#cfba7c",
       "MZL"="#065A7F",
-      "SMZL"="#065A7F"
+      "SMZL"="#065A7F",
+      "Prolymphocytic" = "#7842f5"
   )
   all_colours[["coo"]] = c(
     "ABC" = "#05ACEF",
