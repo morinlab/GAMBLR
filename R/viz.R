@@ -4702,7 +4702,7 @@ fancy_multisamp_ideogram = function(these_sample_ids,
 #' 
 #' @return Nothing.
 #' 
-#' @import ggplot2 gridExtra dplyr tidyr readr purrr tibble stringr forcats cowplot data.table
+#' @import ggplot2 gridExtra dplyr
 #' @export
 #'
 #' @examples

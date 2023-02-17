@@ -311,7 +311,6 @@ region_to_bins = function(chromosome,
 #'
 #' @return An external pointer of class 'ssh_session'
 #'
-#' @import ssh
 #' @export
 #'
 #' @examples
