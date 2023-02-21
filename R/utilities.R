@@ -56,8 +56,9 @@ compare_coding_mutation_pattern = function(maf_df1,maf_df2,gene){
 write_sample_set_hash = function(update = TRUE,
                                  new_sample_sets_df){
 
-  sample_sets_file = paste0(check_config_value(config::get("repo_base")),"data/metadata/level3_samples_subsets.tsv")
-  md5_file = paste0(check_config_value(config::get("repo_base")),"data/metadata/level3_samples_subsets_hashes.tsv")
+  sample_sets_file = paste0(check_config_value(config::get("repo_base")), check_config_value(config::get("sample_sets")$default))
+  md5_file = paste0(check_config_value(config::get("repo_base")), check_config_value(config::get("sample_sets")$hashes))
+
   if(update){
     # load the existing file and update it using the contents of sample_sets_df as well as checking for consistency for existing sample sets
     if(missing(new_sample_sets_df)){
@@ -141,7 +142,7 @@ get_samples_md5_hash = function(these_samples_metadata,
     digested = digest::digest(paste(these_samples[order(these_samples)],collapse=","),serialize=FALSE)
   }else if(!missing(sample_set_name)){
     #load the sample set table and pull the samples based on its contents and the name provided
-    sample_sets_file = paste0(check_config_value(config::get("repo_base")),"data/metadata/level3_samples_subsets.tsv")
+    sample_sets_file = paste0(check_config_value(config::get("repo_base")), check_config_value(config::get("sample_sets")$default))
     if(missing(sample_sets_df)){
       sample_sets = suppressMessages(read_tsv(sample_sets_file))
     }else{
@@ -925,7 +926,7 @@ calc_mutation_frequency_sliding_windows = function(this_region,
 #'
 #' @return bedpe data frame that is compatible with IGN browser.
 #' 
-#' @import dplyr utils
+#' @import dplyr
 #' @export
 #'
 #' @examples
@@ -1251,7 +1252,7 @@ review_hotspots = function(annotated_maf,
 #'
 #' @return Nothing.
 #'
-#' @import dplyr utils tidyr 
+#' @import dplyr tidyr 
 #' @export
 #'
 #' @examples
@@ -1354,7 +1355,7 @@ sv_to_custom_track = function(sv_bedpe,
 #'
 #' @return Nothing.
 #'
-#' @import tidyr dplyr utils glue
+#' @import tidyr dplyr glue
 #' @export
 #'
 #' @examples
@@ -2373,7 +2374,7 @@ collate_extra_metadata = function(sample_table,
 #'
 #' @return A data frame with new columns added.
 #' 
-#' @import dplyr tibble utils 
+#' @import dplyr tibble
 #'
 #' @examples
 #' collated = collate_sbs_results(sample_table=sample_table,sbs_manipulation=sbs_manipulation)
@@ -2897,7 +2898,7 @@ get_gambl_colours = function(classification = "all",
 #'
 #' @return A list that contains the genome_build and an igv-friendly build (igv_build), a list of bam file paths for tumour, normal and mrna data.
 #' 
-#' @import dplyr utils
+#' @import dplyr
 #' @export
 #'
 #' @examples
@@ -3045,7 +3046,7 @@ make_igv_snapshot = function(bams,
 #' GRAPH - forest plot visualization of distinct CNV between 2 groups.
 #' Output can be accessed by index (e.g.[3]), or by name (e.g.["GRAPH"])
 #' 
-#' @import dplyr utils metaviz readr stats tidyr
+#' @import dplyr metaviz readr tidyr
 #' @export
 #'
 #' @examples
@@ -3985,7 +3986,7 @@ subset_cnstates = function(cn_segments,
 #'
 #' @return A list of overall and pairwise percent concordance, concordant and discordant cytobands, comparison heatmap of cnvKompare scores, and time series ggplot object.
 #' 
-#' @import dplyr tidyr circlize ComplexHeatmap data.table ggplot2 ggrepel readr tibble utils
+#' @import dplyr tidyr circlize ComplexHeatmap data.table ggplot2 ggrepel readr tibble
 #' @export
 #'
 #' @examples

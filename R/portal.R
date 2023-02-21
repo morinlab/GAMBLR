@@ -268,7 +268,7 @@ setup_fusions = function(short_name = "GAMBL",
 #'
 #' @return Nothing.
 #' 
-#' @import dplyr utils
+#' @import dplyr
 #' @export
 #'
 #' @examples

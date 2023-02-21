@@ -157,7 +157,7 @@ get_ssm_by_patients = function(these_patient_ids,
 #'
 #' @return A data frame in MAF format.
 #'
-#' @import dplyr readr tidyr parallel
+#' @import dplyr readr tidyr
 #' @export
 #'
 #' @examples
@@ -1965,12 +1965,15 @@ get_cn_segments = function(region,
 
   #deal with chr prefixes
   if(!with_chr_prefix){
-    all_segs = all_segs %>%
-      dplyr::mutate(chrom = gsub("chr", "", chrom))
+    if(all(str_detect(all_segs$chrom, "chr"))){
+      all_segs = all_segs %>%
+        dplyr::mutate(chrom = gsub("chr", "", chrom))
+    }
   }else{
-    if(!grepl("chr", all_segs$chrom[1])){
-      all_segs$chrom = paste0("chr", all_segs$chrom)
-      }
+    if(all(!str_detect(all_segs$chrom, "chr"))){
+      all_segs = all_segs %>%
+        dplyr::mutate(chrom = paste0("chr", chrom))
+    }
   }
   
   #subset to only a few columns with streamlined = TRUE.
@@ -2022,7 +2025,7 @@ append_to_table = function(table_name,
 #'
 #' @return A matrix.
 #'
-#' @import dplyr utils tibble
+#' @import dplyr tibble
 #' @export
 #'
 #' @examples
@@ -2203,7 +2206,7 @@ get_ssm_by_regions = function(regions_list,
 #'
 #' @return A data frame containing all the MAF data columns (one row per mutation).
 #'
-#' @import dplyr RMariaDB DBI stringr utils vroom
+#' @import dplyr RMariaDB DBI stringr vroom
 #' @export
 #'
 #' @examples
@@ -2909,7 +2912,7 @@ get_manta_sv_by_samples = function(these_samples_metadata,
 #'
 #' @return a data frame containing the Manta outputs from this_sample_id in a bedpe-like format with additional columns extracted from the VCF column.
 #'
-#' @import config dplyr readr utils stringr tibble
+#' @import config dplyr readr stringr tibble
 #' @export
 #'
 #' @examples

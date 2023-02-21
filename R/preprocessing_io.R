@@ -153,7 +153,7 @@ populate_tool_results = function(){
 #'
 #' @return Nothing.
 #'
-#' @import purrr dplyr RMariaDB DBI utils tidyr
+#' @import purrr dplyr RMariaDB DBI tidyr
 #' @export
 #'
 #' @examples
@@ -419,7 +419,7 @@ populate_each_tool_result = function(tool,
 #'
 #' @return
 #'
-#' @import dplyr readr utils
+#' @import dplyr readr
 #'
 #' @examples
 #' manta_bedpe = read_merge_manta_with_liftover(bedpe_paths = "some_path.bedpe", out_dir = "../")
@@ -501,7 +501,7 @@ read_merge_manta_with_liftover = function(bedpe_paths = c(),
 #'
 #' @return
 #'
-#' @import dplyr readr utils
+#' @import dplyr readr
 #'
 #' @examples
 #'
@@ -642,7 +642,7 @@ process_all_manta_bedpe = function(file_df,
 #'
 #' @return A data frame with one row per file and sample IDs parsed from the file name along with other GAMBL wildcards.
 #'
-#' @import dplyr tibble utils tidyr
+#' @import dplyr tibble tidyr
 #' @export
 #'
 #' @examples

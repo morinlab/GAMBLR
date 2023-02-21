@@ -368,7 +368,6 @@ prettyRainfallPlot = function(this_sample_id,
 gene_mutation_tally = function(maf_df,these_samples_metadata,these_genes,grouping_variable="cohort"){
   meta = dplyr::select(these_samples_metadata,sample_id,{{grouping_variable}})
   maf_filt = dplyr::filter(maf_df,Hugo_Symbol %in% these_genes, Variant_Classification %in% coding_class) %>%
-  maf_filt = dplyr::filter(maf_df,Hugo_Symbol %in% these_genes, Variant_Classification %in% coding_class) %>%
     dplyr::filter(Variant_Classification !="Silent")
   meta_anno = left_join(maf_filt,meta,by=c("Tumor_Sample_Barcode"="sample_id")) %>%
     group_by(Hugo_Symbol,Tumor_Sample_Barcode) %>%
@@ -400,7 +399,7 @@ gene_mutation_tally = function(maf_df,these_samples_metadata,these_genes,groupin
 #'
 #' @return data frame with counts for each gene
 #' 
-#' @import wordcloud RColorBrewer dplyr utils
+#' @import wordcloud RColorBrewer dplyr
 #' @export
 #'
 #' @examples
@@ -635,7 +634,7 @@ pretty_lollipop_plot = function(maf_df,
 #'
 #' @return Nothing
 #' 
-#' @import dplyr tidyr circlize ComplexHeatmap data.table grid tibble 
+#' @import dplyr tidyr circlize ComplexHeatmap data.table tibble 
 #' @export
 #'
 #' @examples
@@ -847,7 +846,7 @@ get_mutation_frequency_bin_matrix = function(regions,
 #'
 #' @return Nothing
 #' 
-#' @import dplyr tidyr circlize ComplexHeatmap data.table grid tibble
+#' @import dplyr tidyr circlize ComplexHeatmap data.table tibble
 #'
 #' @examples
 #'
@@ -1156,7 +1155,7 @@ map_metadata_to_colours = function(metadataColumns,
 #'
 #' @return Nothing
 #' 
-#' @import dplyr circlize ComplexHeatmap ggplot2 grid 
+#' @import dplyr circlize ComplexHeatmap ggplot2
 #' @export
 #'
 #' @examples
@@ -1349,7 +1348,7 @@ plot_sample_circos = function(this_sample_id,
 #'
 #' @return Nothing
 #' 
-#' @import tidyr dplyr circlize ComplexHeatmap ggsci ggplot2 grid maftools stats tibble utils
+#' @import tidyr dplyr circlize ComplexHeatmap ggsci ggplot2 maftools tibble
 #' @export
 #'
 #' @examples
@@ -1929,7 +1928,7 @@ prettyOncoplot = function(maftools_obj,
 #'
 #' @return A ggplot object with 2 oncoplots side-by-side.
 #' 
-#' @import ComplexHeatmap dplyr grid maftools ggpubr
+#' @import ComplexHeatmap dplyr maftools ggpubr
 #' @export
 #'
 #' @examples
@@ -2197,7 +2196,7 @@ ashm_multi_rainbow_plot = function(regions_bed,
 #'
 #' @return Nothing
 #'
-#' @import dplyr ggplot2 utils
+#' @import dplyr ggplot2
 #' @export
 #'
 #' @examples
@@ -2588,7 +2587,7 @@ plot_multi_timepoint = function(mafs,
 #'
 #' @return Nothing
 #'
-#' @import dplyr data.table ggplot2 ggrepel grid 
+#' @import dplyr data.table ggplot2 ggrepel
 #' @export
 #'
 #' @examples
@@ -2772,7 +2771,7 @@ theme_Morons = function(base_size = 14,
 #'
 #' @return A convenient list containing all the data frames that were created in making the plot, including the mutation matrix. It also produces (and returns) ggplot object with a side-by-side forest plot and bar plot showing mutation incidences across two groups.
 #'
-#' @import ggpubr data.table dplyr cowplot forcats ggplot2 purrr stats tidyr reshape2 broom
+#' @import ggpubr data.table dplyr cowplot forcats ggplot2 purrr tidyr broom
 #' @export
 #'
 #' @examples
@@ -3045,7 +3044,7 @@ prettyForestPlot = function(maf,
 #'
 #' @return Nothing
 #'
-#' @import dplyr circlize ComplexHeatmap ggplot2 grid utils stringr tibble 
+#' @import dplyr circlize ComplexHeatmap ggplot2 stringr tibble 
 #' @export
 #'
 #' @examples
