@@ -189,7 +189,7 @@ get_ssm_by_samples = function(these_sample_ids,
 
   remote_session = check_remote_configuration(auto_connect = TRUE)
   if(!subset_from_merge){
-    message("WARNING: on-the-fly merges can be extremely and consume a lot of memory if many samples are involved. Use at your own risk. ")
+    message("WARNING: on-the-fly merges can be extremely slow and consume a lot of memory if many samples are involved. Use at your own risk. ")
   }
   to_exclude = get_excluded_samples(tool_name)
 
@@ -2206,7 +2206,8 @@ get_ssm_by_regions = function(regions_list,
 #'
 #' @return A data frame containing all the MAF data columns (one row per mutation).
 #'
-#' @import dplyr RMariaDB DBI stringr vroom
+#' @rawNamespace import(vroom, except = c("col_skip", "fwf_positions", "default_locale", "date_names_lang", "cols_only", "output_column", "col_character", "col_guess", "spec", "as.col_spec", "fwf_cols", "cols", "col_date", "col_datetime", "locale", "col_time", "cols_condense", "col_logical", "col_number", "col_integer", "col_factor", "fwf_widths", "date_names_langs", "problems", "date_names", "col_double", "fwf_empty"))
+#' @import dplyr RMariaDB DBI stringr
 #' @export
 #'
 #' @examples
@@ -2655,7 +2656,8 @@ get_gene_cn_and_expression = function(gene_symbol,
 #'
 #' @return A data frame with gene expression.
 #'
-#' @import dplyr data.table readr tidyr
+#' @rawNamespace import(data.table, except = c("last", "first", "between", "transpose"))
+#' @import dplyr readr tidyr
 #' @export
 #'
 #' @examples

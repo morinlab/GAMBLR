@@ -27,7 +27,8 @@ colour_aliases = list("COO_consensus" = "coo", "COO" = "coo", "DHITsig_consensus
 #'
 #' @return a ggplot2 plot. Print it using print() or save it using ggsave()
 #' 
-#' @import ggplot2 dplyr readr stringr tidyr data.table
+#' @rawNamespace import(data.table, except = c("last", "first", "between", "transpose"))
+#' @import ggplot2 dplyr readr stringr tidyr
 #' @export
 #'
 #' @examples
@@ -634,7 +635,8 @@ pretty_lollipop_plot = function(maf_df,
 #'
 #' @return Nothing
 #' 
-#' @import dplyr tidyr circlize ComplexHeatmap data.table tibble 
+#' @rawNamespace import(data.table, except = c("last", "first", "between", "transpose"))
+#' @import dplyr tidyr circlize ComplexHeatmap tibble 
 #' @export
 #'
 #' @examples
@@ -846,7 +848,8 @@ get_mutation_frequency_bin_matrix = function(regions,
 #'
 #' @return Nothing
 #' 
-#' @import dplyr tidyr circlize ComplexHeatmap data.table tibble
+#' @rawNamespace import(data.table, except = c("last", "first", "between", "transpose"))
+#' @import dplyr tidyr circlize ComplexHeatmap tibble
 #'
 #' @examples
 #'
@@ -1928,7 +1931,8 @@ prettyOncoplot = function(maftools_obj,
 #'
 #' @return A ggplot object with 2 oncoplots side-by-side.
 #' 
-#' @import ComplexHeatmap dplyr maftools ggpubr
+#' @rawNamespace import(ggpubr, except = "get_legend")
+#' @import ComplexHeatmap dplyr maftools
 #' @export
 #'
 #' @examples
@@ -2587,7 +2591,8 @@ plot_multi_timepoint = function(mafs,
 #'
 #' @return Nothing
 #'
-#' @import dplyr data.table ggplot2 ggrepel
+#' @rawNamespace import(data.table, except = c("last", "first", "between", "transpose"))
+#' @import dplyr ggplot2 ggrepel
 #' @export
 #'
 #' @examples
@@ -2706,7 +2711,8 @@ prettyChromoplot = function(scores,
 #'
 #' @return Nothing.
 #'
-#' @import ggplot2 ggthemes
+#' @rawNamespace import(ggthemes, except = "theme_map")
+#' @import ggplot2
 #' @export
 #'
 #' @examples
@@ -2771,7 +2777,9 @@ theme_Morons = function(base_size = 14,
 #'
 #' @return A convenient list containing all the data frames that were created in making the plot, including the mutation matrix. It also produces (and returns) ggplot object with a side-by-side forest plot and bar plot showing mutation incidences across two groups.
 #'
-#' @import ggpubr data.table dplyr cowplot forcats ggplot2 purrr tidyr broom
+#' @rawNamespace import(data.table, except = c("last", "first", "between", "transpose"))
+#' @rawNamespace import(ggpubr, except = "get_legend")
+#' @import dplyr cowplot forcats ggplot2 purrr tidyr broom
 #' @export
 #'
 #' @examples
@@ -4701,7 +4709,8 @@ fancy_multisamp_ideogram = function(these_sample_ids,
 #' 
 #' @return Nothing.
 #' 
-#' @import ggplot2 gridExtra dplyr
+#' @rawNamespace import(gridExtra, except = "combine")
+#' @import ggplot2 dplyr
 #' @export
 #'
 #' @examples
@@ -5278,7 +5287,8 @@ fancy_sv_sizedens = function(this_sample_id,
 #'
 #' @return A plot as a ggplot object (grob).
 #'
-#' @import ggplot2 cowplot dplyr data.table
+#' @rawNamespace import(data.table, except = c("last", "first", "between", "transpose"))
+#' @import ggplot2 cowplot dplyr
 #' @export
 #'
 #' @examples
@@ -5437,7 +5447,8 @@ fancy_alignment_plot = function(these_sample_ids,
 #'
 #' @return A plot as a ggplot object (grob).
 #'
-#' @import dplyr ggplot2 cowplot ggbeeswarm plotly
+#' @rawNamespace import(plotly, except = c("last_plot", "add_heatmap", "export"))
+#' @import dplyr ggplot2 cowplot ggbeeswarm
 #' @export
 #'
 #' @examples

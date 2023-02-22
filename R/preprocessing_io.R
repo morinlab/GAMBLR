@@ -794,7 +794,7 @@ find_files_extract_wildcards = function(tool_results_path,
 #'
 #' @return A data table containing MAF data from a MAF file.
 #'
-#' @import data.table
+#' @rawNamespace import(data.table, except = c("last", "first", "between", "transpose"))
 #' @export
 #'
 #' @examples
@@ -1107,7 +1107,8 @@ assemble_file_details = function(file_details_df,
 #'
 #' @return Data frame containing original bedpe data with new coordinates.
 #'
-#' @import dplyr tidyr readr rtracklayer S4Vectors
+#' @rawNamespace import(S4Vectors, except = c("merge", "second", "first", "union", "intersect", "setdiff", "setequal", "rename", "expand"))
+#' @import dplyr tidyr readr rtracklayer
 #' @export
 #'
 #' @examples

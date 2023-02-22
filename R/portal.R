@@ -19,7 +19,8 @@
 #'
 #' @return A vector of sample_id for the patients that have been included.
 #'
-#' @import data.table dplyr readr
+#' @rawNamespace import(data.table, except = c("last", "first", "between", "transpose"))
+#' @import dplyr readr
 #' @export
 #'
 #' @examples
@@ -363,7 +364,8 @@ finalize_study = function(seq_type_filter="genome",
 #'
 #' @return Nothing.
 #' 
-#' @import data.table dplyr readr
+#' @rawNamespace import(data.table, except = c("last", "first", "between", "transpose"))
+#' @import dplyr readr
 #' @export
 #'
 #' @examples

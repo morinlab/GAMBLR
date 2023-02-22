@@ -429,7 +429,8 @@ gene_to_region = function(gene_symbol,
 #'
 #' @return A data frame with gene(s) that are residing in the specified region(s).
 #'
-#' @import data.table dplyr
+#' @rawNamespace import(data.table, except = c("last", "first", "between", "transpose"))
+#' @import dplyr
 #' @export
 #'
 #' @examples
@@ -523,7 +524,7 @@ region_to_gene = function(region,
 #'
 #' @return a list with MAFs that are only present in flavour1.
 #'
-#' @import data.table
+#' @rawNamespace import(data.table, except = c("last", "first", "between", "transpose"))
 #' @export
 #'
 #' @examples
@@ -769,8 +770,10 @@ trim_scale_expression = function(x){
 #' @param mode Only works with indexed flat-files. Accepts 2 options of "slms-3" and "strelka2" to indicate which variant caller to use. Default is "slms-3".
 #'
 #' @return Count matrix.
+#'
+#' @rawNamespace import(data.table, except = c("last", "first", "between", "transpose"))
+#' @import dplyr tidyr cowplot ggplot2 
 #' @export
-#' @import dplyr tidyr cowplot data.table ggplot2 
 #'
 #' @examples
 #' chr11_mutation_freq = calc_mutation_frequency_sliding_windows(this_region = "chr11:69455000-69459900", metadata = meta_df, slide_by = 10, window_size = 10000)
@@ -1855,7 +1858,8 @@ get_sample_wildcards = function(this_sample_id,
 #' as well as the segmented copy number data with the same copy number information
 #' CN is the rounded absolute copy number estimate of the region based on log.ratio (NA when no overlap was found)
 #'
-#' @import dplyr data.table readr RMariaDB DBI 
+#' @rawNamespace import(data.table, except = c("last", "first", "between", "transpose"))
+#' @import dplyr readr RMariaDB DBI 
 #' @export
 #'
 #' @examples
@@ -3243,8 +3247,10 @@ FtestCNV = function(gistic_lesions,
 #' @param chr_prefixed Is the data chr-prefixed or not? Default is FALSE.
 #'
 #' @return A data frame of a maf-like object with the same columns as in input, but where rows are only kept for features that would be present as if the sample is WEX.
+#'
+#' @rawNamespace import(data.table, except = c("last", "first", "between", "transpose"))
+#' @import stringr dplyr 
 #' @export
-#' @import stringr dplyr data.table
 #'
 #' @examples
 #' myc_ashm_maf = get_ssm_by_region(region="8:128748352-128749427") # get all ssm in the MYC aSHM region
@@ -3664,7 +3670,8 @@ standardize_chr_prefix = function(incoming_vector,
 #'
 #' @return A data frame of sample_id and a float in the range [0..1] indicating the fraction of genome altered by CNV.
 #' 
-#' @import dplyr data.table readr tidyr
+#' @rawNamespace import(data.table, except = c("last", "first", "between", "transpose"))
+#' @import dplyr readr tidyr
 #' @export
 #'
 #' @examples
@@ -3811,7 +3818,8 @@ calculate_pga = function(this_seg,
 #'
 #' @return A data frame in seg-consistent format with ploidy-adjusted log ratios.
 #' 
-#' @import dplyr tidyr data.table readr 
+#' @rawNamespace import(data.table, except = c("last", "first", "between", "transpose"))
+#' @import dplyr tidyr readr 
 #' @export
 #'
 #' @examples
@@ -3986,7 +3994,8 @@ subset_cnstates = function(cn_segments,
 #'
 #' @return A list of overall and pairwise percent concordance, concordant and discordant cytobands, comparison heatmap of cnvKompare scores, and time series ggplot object.
 #' 
-#' @import dplyr tidyr circlize ComplexHeatmap data.table ggplot2 ggrepel readr tibble
+#' @rawNamespace import(data.table, except = c("last", "first", "between", "transpose"))
+#' @import dplyr tidyr circlize ComplexHeatmap ggplot2 ggrepel readr tibble
 #' @export
 #'
 #' @examples

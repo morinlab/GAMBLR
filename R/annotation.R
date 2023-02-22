@@ -206,7 +206,8 @@ annotate_recurrent_cnv = function(seg_df,
 #'
 #' @return A slightly modified bedpe with added columns.
 #'
-#' @import data.table dplyr
+#' @rawNamespace import(data.table, except = c("last", "first", "between", "transpose"))
+#' @import dplyr
 #' @export
 #'
 #' @examples
@@ -340,7 +341,8 @@ annotate_driver_ssm = function(maf_df,
 #'
 #' @return A data frame with annotated SVs (gene symbol and entrez ID).
 #' 
-#' @import data.table tidyr dplyr stringr
+#' @rawNamespace import(data.table, except = c("last", "first", "between", "transpose"))
+#' @import tidyr dplyr stringr
 #' @export
 #'
 #' @examples
