@@ -590,12 +590,12 @@ get_gambl_metadata = function(seq_type_filter = "genome",
   outcome_table = get_gambl_outcomes(from_flatfile = from_flatfile)
 
   if(from_flatfile){
-    base = check_config_value(config::get("repo_base"))
-    if(sample_flatfile == ""){
-      sample_flatfile = paste0(base, check_config_value(config::get("table_flatfiles")$samples))
+    base = config::get("repo_base")
+    if(missing(sample_flatfile)){
+      sample_flatfile = paste0(base, config::get("table_flatfiles")$samples)
     }
-    if(biopsy_flatfile==""){
-      biopsy_flatfile = paste0(base, check_config_value(config::get("table_flatfiles")$biopsies))
+    if(missing(biopsy_flatfile)){
+      biopsy_flatfile = paste0(base, config::get("table_flatfiles")$biopsies)
     }
 
     #check for missingness
