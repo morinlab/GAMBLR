@@ -548,7 +548,7 @@ get_ssm_by_sample = function(this_sample_id,
 #' 
 #' @param seq_type_filter Filtering criteria (default: all genomes).
 #' @param tissue_status_filter Filtering criteria (default: only tumour genomes, can be "mrna" or "any" for the superset of cases).
-#' @param case_set Optional short name for a predefined set of cases avoiding any.
+#' @param case_set Optional short name for a pre-defined set of cases avoiding any embargoed cases (current options: 'BLGSP-study', 'FL-study', 'DLBCL-study', 'FL-DLBCL-study', 'FL-DLBCL-all', 'DLBCL-unembargoed', 'BL-DLBCL-manuscript', 'MCL','MCL-CLL').
 #' @param remove_benchmarking By default the FFPE benchmarking duplicate samples will be dropped.
 #' @param sample_flatfile Optionally provide the full path to a sample table to use instead of the default.
 #' @param biopsy_flatfile Optionally provide the full path to a biopsy table to use instead of the default.
@@ -575,13 +575,13 @@ get_ssm_by_sample = function(this_sample_id,
 #' non_duplicated_genome_and_capture = get_gambl_metadata(seq_type_filter=c('genome','capture'),seq_type_priority="genome")
 #'
 get_gambl_metadata = function(seq_type_filter = "genome",
-                              tissue_status_filter = c("tumour"),
+                              tissue_status_filter = "tumour",
                               case_set,
                               remove_benchmarking = TRUE,
                               with_outcomes = TRUE,
                               from_flatfile = TRUE,
-                              sample_flatfile = "",
-                              biopsy_flatfile = "",
+                              sample_flatfile,
+                              biopsy_flatfile,
                               only_available = TRUE,
                               seq_type_priority = "genome"){
 
