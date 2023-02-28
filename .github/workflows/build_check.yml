@@ -20,9 +20,9 @@ jobs:
         python-version: 3.8
 
     - name: Create conda environment
+      shell: bash -el {0}
       run: |
         conda create --name dependencies
-        conda init bash
         conda activate dependencies
         conda env update --file etc/dependencies.yml
 
