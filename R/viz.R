@@ -1427,7 +1427,7 @@ prettyOncoplot = function(maftools_obj,
       warning("mintMutationPercent option is not available when you provide your own oncomatrix. Feel free to implement this if you need it")
       return()
     }
-    mutation_counts <- maftools_obj@gene.summary %>% 
+    mutation_counts <- maftools_obj@gene.summary %>%
       select(Hugo_Symbol, MutatedSamples)
 
     numpat = length(patients)
@@ -2782,7 +2782,8 @@ prettyForestPlot = function(maf,
   t %>%
   as.data.frame %>%
   `rownames<-`(NULL) %>%
-  mutate_at(c(2:10), as.numeric)
+  mutate_at(c(2:10), as.numeric) %>%
+  arrange(estimate)
 
 
   point_size = 50 / round(length(fish_test$gene))
@@ -2797,6 +2798,7 @@ prettyForestPlot = function(maf,
   }
   message(paste("FONT:", font_size, "POINT:", point_size, length(fish_test$gene)))
   forest = fish_test %>%
+    dplyr::mutate(gene = factor(gene, levels = fish_test$gene)) %>%
     ggplot(aes(x = gene, y = log(estimate))) +
     geom_point(size = point_size, shape = "square") +
     geom_hline(yintercept = 0, lty = 2) +
@@ -2845,7 +2847,7 @@ prettyForestPlot = function(maf,
     drop_na() %>%
     summarise(percent_mutated = sum(is_mutated) / n() * 100) %>%
     dplyr::filter(gene %in% fish_test$gene) %>%
-    dplyr::mutate(gene = factor(gene, levels = levels(fish_test$gene))) %>%
+    dplyr::mutate(gene = factor(gene, levels = fish_test$gene)) %>%
     ggplot(aes(x = gene, y = percent_mutated, fill = comparison)) +
     geom_col(position = "dodge", width = 0.5) +
     xlab("") + ylab("% Mutated") +
