@@ -9,6 +9,9 @@ on:
 jobs:
   build:
     runs-on: ubuntu-latest
+    defaults:
+      run:
+        shell: bash -el {0}
 
     steps:
     - name: Checkout code
@@ -20,7 +23,6 @@ jobs:
         python-version: 3.8
 
     - name: Create conda environment
-      shell: bash -el {0}
       run: |
         conda create --name dependencies
         conda activate dependencies
