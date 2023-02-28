@@ -15,9 +15,7 @@ jobs:
 
     steps:
     - name: Checkout code
-      uses: actions/checkout@v2
-      with:
-        set-safe-directory: false
+      uses: actions/checkout@v3
 
     - name: Setup Conda
       uses: actions/setup-python@v2
