@@ -3,6 +3,8 @@ name: GAMBLR build check
 on:
   pull_request:
     branches: [master]
+  push:
+    brnches: [kdreval-dev]
 
 jobs:
   build:
