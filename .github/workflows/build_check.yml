@@ -26,7 +26,7 @@ jobs:
       uses: conda-incubator/setup-miniconda@v2
       with:
         activate-environment: dependencies
-        environment-file: etc/dependencies.yml
+        environment-file: /home/runner/work/GAMBLR/etc/dependencies.yml
         python-version: 3.8
         auto-activate-base: false
 
