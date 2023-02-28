@@ -22,6 +22,11 @@ jobs:
       with:
         python-version: 3.8
 
+    - name: wtf
+      run: |
+        pwd
+        ls
+
     - name: Create conda environment
       uses: conda-incubator/setup-miniconda@v2
       with:
