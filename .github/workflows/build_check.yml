@@ -23,10 +23,12 @@ jobs:
         python-version: 3.8
 
     - name: Create conda environment
-      run: |
-        conda create --name dependencies
-        conda activate dependencies
-        conda env update --file etc/dependencies.yml
+      uses: conda-incubator/setup-miniconda@v2
+      with:
+        activate-environment: dependencies
+        environment-file: etc/dependencies.yml
+        python-version: 3.8
+        auto-activate-base: false
 
     - name: Build and check package
       run: Rscript -e "devtools::check()"
