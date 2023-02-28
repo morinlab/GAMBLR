@@ -22,6 +22,7 @@ jobs:
     - name: Create conda environment
       run: |
         conda create --name dependencies
+        conda init bash
         conda activate dependencies
         conda env update --file etc/dependencies.yml
 
