@@ -1,3 +1,5 @@
+![Build GAMBLR](https://github.com/morinlab/GAMBLR/actions/workflows/build_check/badge.svg?branch=kdreval-dev)
+
 # GAMBLR - an R package with convenience functions for working with GAMBL results
 
 ## Getting Started
