@@ -33,7 +33,6 @@ jobs:
 
     - name: Build and check package
       run:
-        pwd
         Rscript -e "devtools::install()"
 
     - name: Upload check results
