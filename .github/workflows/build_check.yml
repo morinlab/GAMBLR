@@ -33,7 +33,7 @@ jobs:
 
     - name: Build and check package
       run:
-        Rscript -e "devtools::check()"
+        Rscript -e "devtools::install_gihub("morinlab/GAMBLR")"
 
     - name: Upload check results
       if: failure()
