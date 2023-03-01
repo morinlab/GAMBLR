@@ -32,7 +32,9 @@ jobs:
         environment-file: envs/dependencies.yaml
 
     - name: Build and check package
-      run: Rscript -e "devtools::install()"
+      run:
+        pwd
+        Rscript -e "devtools::install()"
 
     - name: Upload check results
       if: failure()
