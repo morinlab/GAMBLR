@@ -31,7 +31,7 @@ coding_vc = c("Frame_Shift_Del", "Frame_Shift_Ins", "In_Frame_Del", "In_Frame_In
 #' 
 #' @return A MAF format data frame with two new columns indicating the number of occurrences of each variant in the two blacklists.
 #' 
-#' @import dplyr glue readr tidyr
+#' @import dplyr readr tidyr
 #' 
 #' @export
 #'

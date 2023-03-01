@@ -1059,7 +1059,7 @@ sanitize_maf_data = function(mutation_maf_path,
 #'
 #' @return The same data frame with one additional column "hot_spot".
 #'
-#' @import dplyr tidyr readr glue
+#' @import dplyr tidyr readr
 #' @export
 #'
 #' @examples
@@ -1362,7 +1362,7 @@ sv_to_custom_track = function(sv_bedpe,
 #'
 #' @return Nothing.
 #'
-#' @import tidyr dplyr glue
+#' @import tidyr dplyr
 #' @export
 #'
 #' @examples
@@ -1504,7 +1504,7 @@ test_glue = function(placeholder="INSERTED"){
 #'
 #' @return A table keyed on biopsy_id that contains a bunch of per-sample results from GAMBL
 #'
-#' @import dplyr readr glue config
+#' @import dplyr readr config
 #' @export
 #'
 #' @examples
@@ -1687,7 +1687,7 @@ collate_csr_results = function(sample_table,seq_type_filter = "genome"){
 #'
 #' @return The sample table with additional columns.
 #'
-#' @import dplyr glue
+#' @import dplyr
 #'
 #' @examples
 #' ssm_results = colalte_ssm_results(samples, TRUE, TRUE)

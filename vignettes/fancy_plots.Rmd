@@ -2,13 +2,11 @@
 title: "GAMBLR: Fancy Plotting Functions"
 author: "Adam Mattsson"
 date: "July 07, 2022"
-output:
-  html_document:
-    toc: yes
-    toc_float: yes
-    number_sections: yes
-  pdf_document:
-    toc: yes
+output: rmarkdown::html_vignette
+vignette: >
+  %\VignetteIndexEntry{04: Fancy Plots}
+  %\VignetteEngine{knitr::rmarkdown}
+  %\VignetteEncoding{UTF-8}
 ---
 ```{r setup, include = FALSE}
 knitr::opts_chunk$set(warning = FALSE, message = FALSE)
