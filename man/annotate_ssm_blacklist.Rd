@@ -66,10 +66,10 @@ Lastly, the minimum count from one of the blacklists to drop a variant is specif
 This function also conveniently lets you know how many variants that were dropped in the annotation process.
 }
 \examples{
-#get SSMs
-original_maf_df = get_ssm_by_sample(this_sample_id = "HTMCP-01-06-00422-01A-01D", this_seq_type = "genome", )
 
 #annotate MAF
-deblacklisted_maf_df = annotate_ssm_blacklist(original_maf_df, seq_type = "genome")
+deblacklisted_maf = annotate_ssm_blacklist(grande_maf,
+                                          seq_type = "genome",
+                                          genome_build = "hg38")
 
 }

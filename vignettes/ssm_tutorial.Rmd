@@ -21,6 +21,7 @@ library(grid)
 library(g3viz)
 library(maftools)
 library(ssh)
+library(parallel)
 ```
 
 ```{r remote, include = FALSE, warning = FALSE, message = FALSE}

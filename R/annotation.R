@@ -36,11 +36,11 @@ coding_vc = c("Frame_Shift_Del", "Frame_Shift_Ins", "In_Frame_Del", "In_Frame_In
 #' @export
 #'
 #' @examples 
-#' #get SSMs
-#' original_maf_df = get_ssm_by_sample(this_sample_id = "HTMCP-01-06-00422-01A-01D", this_seq_type = "genome", )
 #'
 #' #annotate MAF
-#' deblacklisted_maf_df = annotate_ssm_blacklist(original_maf_df, seq_type = "genome")
+#' deblacklisted_maf = annotate_ssm_blacklist(grande_maf,
+#'                                           seq_type = "genome",
+#'                                           genome_build = "hg38")
 #'
 annotate_ssm_blacklist = function(mutations_df,
                                   seq_type,
@@ -170,8 +170,6 @@ annotate_ssm_blacklist = function(mutations_df,
 #' @param seq_file Optional argument to read sequences from file (currently not used in function).
 #'
 #' @return Nothing.
-#'
-#' @export
 #'
 #' @examples
 #' annotated = annotate_recurrent_cnv(my_seq_df)
