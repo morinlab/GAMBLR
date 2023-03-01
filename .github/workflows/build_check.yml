@@ -33,7 +33,7 @@ jobs:
 
     - name: Build and check package
       run:
-        Rscript -e "devtools::install()"
+        Rscript -e "devtools::check()"
 
     - name: Upload check results
       if: failure()
