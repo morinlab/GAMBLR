@@ -2,7 +2,7 @@
 % Please edit documentation in R/checks.R
 \name{check_gamblr_config}
 \alias{check_gamblr_config}
-\title{Check that the GAMBLR config you have loaded will work in your setup}
+\title{Check GAMBLR Config.}
 \usage{
 check_gamblr_config(
   compare_timestamps = FALSE,
@@ -18,11 +18,15 @@ check_gamblr_config(
 
 \item{archive_mode}{This is not currently working but the idea here is to keep a GSC archive of GAMBL in sync with the actively updated outputs}
 
-\item{force_backup}{}
-}
-\value{
-
+\item{force_backup}{Boolean parameter set to FALSE per default.}
 }
 \description{
-This function is mostly for remote GAMBLRs to ensure they keep their local mirror of the GAMBL data up-to-date. It
+Check that the GAMBLR config you have loaded will work in your setup.
+}
+\details{
+This function is mostly for remote GAMBLRs to ensure they keep their local mirror of the GAMBL data up-to-date.
+}
+\examples{
+check_gamblr_config()
+
 }

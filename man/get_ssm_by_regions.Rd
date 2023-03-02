@@ -2,7 +2,7 @@
 % Please edit documentation in R/database.R
 \name{get_ssm_by_regions}
 \alias{get_ssm_by_regions}
-\title{Efficiently retrieve all mutations across a range of genomic regions.}
+\title{Get SSM By Regions.}
 \usage{
 get_ssm_by_regions(
   regions_list,
@@ -16,7 +16,7 @@ get_ssm_by_regions(
   seq_type = "genome",
   projection = "grch37",
   min_read_support = 4,
-  basic_columns = F
+  basic_columns = FALSE
 )
 }
 \arguments{
@@ -24,7 +24,9 @@ get_ssm_by_regions(
 
 \item{regions_bed}{Better yet, provide a bed file with the coordinates you want to retrieve.}
 
-\item{streamlined}{Return a basic rather than full MAF format, default is FALSE.}
+\item{streamlined}{Return a basic rather than full MAF format, default is TRUE.}
+
+\item{maf_data}{Use an already loaded MAF data frame.}
 
 \item{use_name_column}{If your bed-format data frame has a name column (must be named "name") these can be used to name your regions.}
 
@@ -39,6 +41,8 @@ get_ssm_by_regions(
 \item{projection}{Obtain variants projected to this reference (one of grch37 or hg38).}
 
 \item{min_read_support}{Only returns variants with at least this many reads in t_alt_count (for cleaning up augmented MAFs).}
+
+\item{basic_columns}{Boolean parameter set to FALSE per default. Set to TRUE to return fewer columns.}
 }
 \value{
 Returns a data frame of variants in MAF-like format.
@@ -46,9 +50,14 @@ Returns a data frame of variants in MAF-like format.
 \description{
 Efficiently retrieve all mutations across a range of genomic regions.
 }
+\details{
+This function internally calls \code{get_ssm_by_region} to retrieve SSM calls for the specified regions.
+See parameter descriptions for \code{get_ssm_by_region} for more information on how the different parameters can be called.
+}
 \examples{
 #basic usage, adding custom names from bundled ashm data frame
 regions_bed = grch37_ashm_regions \%>\% mutate(name = paste(gene, region, sep = "_"))
 ashm_basic_details = get_ssm_by_regions(regions_bed = regions_bed)
 full_details_maf = get_ssm_by_regions(regions_bed = regions_bed,basic_columns=T)
+
 }

@@ -2,7 +2,7 @@
 % Please edit documentation in R/viz.R
 \name{prettyCoOncoplot}
 \alias{prettyCoOncoplot}
-\title{Display 2 prettyOncoplots side-by-side.}
+\title{Side-by-side Oncoplots}
 \usage{
 prettyCoOncoplot(
   maf,

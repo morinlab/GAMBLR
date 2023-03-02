@@ -2,15 +2,15 @@
 % Please edit documentation in R/viz.R
 \name{fancy_snv_chrdistplot}
 \alias{fancy_snv_chrdistplot}
-\title{Generate a plot with SNV distribution per chromosome.}
+\title{n SNVs per chromosome plot}
 \usage{
 fancy_snv_chrdistplot(
-  this_sample,
+  this_sample_id,
   maf_data,
   maf_path = NULL,
   variant_type_col = 10,
   chromosome_col = 5,
-  plot_title = paste0(this_sample),
+  plot_title = paste0(this_sample_id),
   plot_subtitle = "SNV Distribution Per Chromosome",
   chr_select = paste0("chr", c(1:22)),
   include_dnp = FALSE,
@@ -21,7 +21,7 @@ fancy_snv_chrdistplot(
 )
 }
 \arguments{
-\item{this_sample}{Sample to be plotted.}
+\item{this_sample_id}{Sample to be plotted.}
 
 \item{maf_data}{Optional parameter with maf like df already loaded into R.}
 
@@ -45,16 +45,31 @@ fancy_snv_chrdistplot(
 
 \item{from_flatfile}{If set to true the function will use flat files instead of the database.}
 
-\item{use_augmented}{Boolean statement if to use augmented maf, default is FALSE.}
+\item{use_augmented_maf}{Boolean statement if to use augmented maf, default is FALSE.}
 }
 \value{
-Nothing.
+A plot as a ggplot object (grob).
 }
 \description{
-Generate a plot with SNV distribution per chromosome.
+Visualizing the number of SNVs per chromosome.
+}
+\details{
+This function takes on an already loaded maf-like data frame, or a path to the maf file of interest.
+In addition, the user can also give this function a sample ID and the function will run assign_cn_to_ssm
+to get data for plotting. If a maf file or data frame is used, the user has the chance to specify what column
+that holds the Variant Type information (\code{variant_type_col}), in addition the user can also specify what column
+in the incoming maf that is corresponding to the chromosome annotations. This function also includes useful subsetting
+options. For example, \code{chr_select} allows the user to restrict the plot to specific chromosomes. \code{include_dnp} is an optional
+argument (Boolean) for if variants of this subtype should be included or not. The plot can also be restricted to only
+counting coding mutations (\code{coding_only}). Flat-file and augmented maf options can be toggled with \code{from_flatfile}
+and \code{use_augmented_maf}. Both are TRUE by default and should rarely be set to FALSE. Lastly, this plotting function
+also have convenient parameters for customizing the returned plot, e.g \code{plot_title}, \code{y_interval}, \code{hide_legend}, and\code{plot_subtitle}.
 }
 \examples{
-snv_plot = fancy_snv_chrdistplot(this_sample = "HTMCP-01-06-00422-01A-01D")
-snv_dnp_plot = fancy_snv_chrdistplot(this_sample = "HTMCP-01-06-00422-01A-01D", include_dnp = TRUE, plot_subtitle = "SNV + DNP Distribution Per Chromosome")
+#plot SNVs
+snv_plot = fancy_snv_chrdistplot(this_sample_id = "HTMCP-01-06-00422-01A-01D")
+
+#plot SNVs and DNPs
+snv_dnp_plot = fancy_snv_chrdistplot(this_sample_id = "HTMCP-01-06-00422-01A-01D", include_dnp = TRUE, plot_subtitle = "SNV + DNP Distribution Per Chromosome")
 
 }

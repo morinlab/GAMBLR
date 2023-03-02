@@ -2,10 +2,10 @@
 % Please edit documentation in R/utilities.R
 \name{assign_cn_to_ssm}
 \alias{assign_cn_to_ssm}
-\title{Annotate mutations with their copy number information.}
+\title{Assign CN to SSM.}
 \usage{
 assign_cn_to_ssm(
-  this_sample,
+  this_sample_id,
   coding_only = FALSE,
   from_flatfile = TRUE,
   use_augmented_maf = TRUE,
@@ -22,15 +22,15 @@ assign_cn_to_ssm(
 )
 }
 \arguments{
-\item{this_sample}{Sample ID of the sample you want to annotate.}
+\item{this_sample_id}{Sample ID of the sample you want to annotate.}
 
-\item{coding_only}{Optional. set to TRUE to rescrict to only coding variants.}
+\item{coding_only}{Optional. set to TRUE to restrict to only coding variants.}
 
 \item{from_flatfile}{Optional. Instead of the database, load the data from a local MAF and seg file.}
 
 \item{use_augmented_maf}{Boolean statement if to use augmented maf, default is FALSE.}
 
-\item{tool_name}{name of tool to be sued, default is "battenberg".}
+\item{tool_name}{name of tool to be used, default is "battenberg".}
 
 \item{maf_file}{Path to maf file.}
 
@@ -44,7 +44,7 @@ assign_cn_to_ssm(
 
 \item{genes}{Genes of interest.}
 
-\item{include_silent}{Logical parameter indicating whether to include siment mutations into coding mutations. Default is FALSE}
+\item{include_silent}{Logical parameter indicating whether to include silent mutations into coding mutations. Default is FALSE}
 
 \item{this_seq_type}{Specified seq type for returned data.}
 
@@ -59,7 +59,14 @@ CN is the rounded absolute copy number estimate of the region based on log.ratio
 \description{
 Annotate mutations with their copy number information.
 }
+\details{
+This function takes a sample ID with the \code{this_sample_id} parameter and annotates mutations with copy number information.
+A variety of parameters are at hand for a customized workflow. For example, the user can specify if only coding mutations are of interest.
+To do so, set \code{coding_only = TRUE}. It is also possible to point the function to already loaded maf/seq files, or a path to these files.
+See parameters; \code{maf_file}, \code{maf_path}, \code{seq_file} and \code{seg_path} for more information on how to use these parameters.
+This function can also take a vector with genes of interest (\code{genes}) that the returned data frame will be restricted to.
+}
 \examples{
-cn_list = assign_cn_to_ssm(this_sample = "HTMCP-01-06-00422-01A-01D", coding_only = TRUE)
+cn_list = assign_cn_to_ssm(this_sample_id = "HTMCP-01-06-00422-01A-01D", coding_only = TRUE)
 
 }

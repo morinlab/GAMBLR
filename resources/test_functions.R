@@ -131,7 +131,7 @@ oncogenes_sv = get_combined_sv(oncogenes = c("MYC", "BCL2", "BCL6"))
 all_sv = get_manta_sv()
 
 #get manta sv, get all SVs for a single sample
-some_sv = get_manta_sv(sample_id = "94-15772_tumorA")
+some_sv = get_manta_sv(these_sample_ids = "94-15772_tumorA")
 
 #get the SVs in a region around MYC
 myc_locus_sv = get_manta_sv(region = "8:128723128-128774067")
@@ -161,7 +161,7 @@ sample_cn_segments = get_sample_cn_segments(this_sample_id = "HTMCP-01-06-00422-
 samples_cn_segments = get_sample_cn_segments(multiple_samples = TRUE, sample_list = c("00-15201_tumorA", "00-15201_tumorB"), from_flatfile = TRUE, projection = "hg38", with_chr_prefix = FALSE, streamlined = FALSE)
 
 #assign cn to ssm, annotate mutations with copy number information
-cn_list = assign_cn_to_ssm(this_sample = "HTMCP-01-06-00422-01A-01D", this_seq_type = "genome", coding_only = TRUE)
+cn_list = assign_cn_to_ssm(this_sample_id = "HTMCP-01-06-00422-01A-01D", this_seq_type = "genome", coding_only = TRUE)
 
 #get gene cn and expression, get copy number and expression for a single gene
 MYC_cn_expression = get_gene_cn_and_expression(gene_symbol = "MYC")

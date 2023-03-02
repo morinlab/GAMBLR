@@ -2,13 +2,11 @@
 title: "CN & SV Tutorial - GAMBLR"
 author: "Adam Mattsson"
 date: "December 8, 2022"
-output:
-  html_document:
-    toc: yes
-    toc_float: yes
-    number_sections: yes
-  pdf_document:
-    toc: yes
+output: rmarkdown::html_vignette
+vignette: >
+  %\VignetteIndexEntry{01: CN and SV Tutorial}
+  %\VignetteEngine{knitr::rmarkdown}
+  %\VignetteEncoding{UTF-8}
 ---
 ```{r setup, include = FALSE}
 knitr::opts_chunk$set(warning = FALSE, message = FALSE)
@@ -22,6 +20,17 @@ library(knitr)
 library(grid)
 library(g3viz)
 library(maftools)
+library(ssh)
+```
+
+```{r remote, include = FALSE, warning = FALSE, message = FALSE}
+#check if remote session
+if(check_host()){
+ R_CONFIG_ACTIVE = "remote" 
+}
+
+session = get_ssh_session()
+remote_session = check_remote_configuration(auto_connect = TRUE)
 ```
 
 # Copy Number & Structural Variants
@@ -140,7 +149,7 @@ head(multiple_samples_cn_seqs, 5)
 For annotating mutations with CN information, we have `assign_cn_to_ssm` available. This function provides great flexibility for annotating mutations from a variety of sources. For example, the user can either provide an already loaded MAF with mutations to be annotated with the parameter `maf_df` or a path to a local MAF file with `maf_file`. If neither of these parameters are used, the function will run `get_ssm_by_sample` with a sample ID specified in `this_sample` to return sample-specific SSMs.Similarly, one can also use a local file path for associated CN segments. This is achieved with calling the function with the `seg_file` parameter. This function also has a variety of convenience parameters for improved flexibility. For example, the return can be subset to specific genes with `genes` parameter. We can also restrict the return to only show coding mutations (`coding_only = TRUE`). In addition, include silent mutations can also be toggled with the parameter `include_silent` (Boolean). The returned data frame shares the same columns as your standard MAF but with two extra columns (**CN** and **log.ratio**). In this example we will call this function with a selection of different parameters to thoroughly demonstrate each different scenario (parameter combinations).
 ```{r assign_cn_to_ssm, message = FALSE, warning = FALSE}
 #annotate a MAF wigh compy number information.
-annotated_ssm = assign_cn_to_ssm(this_sample = this_sample_id)
+annotated_ssm = assign_cn_to_ssm(this_sample_id = this_sample_id)
 
 #preview returned table
 head(annotated_ssm$maf, 5)
@@ -149,14 +158,14 @@ head(annotated_ssm$maf, 5)
 lymph_genes = lymphoma_genes %>%
   pull(Gene)
 
-annotated_ssm_lymphgenes = assign_cn_to_ssm(this_sample = this_sample_id,
+annotated_ssm_lymphgenes = assign_cn_to_ssm(this_sample_id = this_sample_id,
                                           genes = lymph_genes)
 
 #preview returned table
 head(annotated_ssm_lymphgenes$maf, 5)
 
 #additional example, using more parameters!
-annotated_ssm_extended = assign_cn_to_ssm(this_sample = this_sample_id, coding_only = TRUE, include_silent = TRUE)
+annotated_ssm_extended = assign_cn_to_ssm(this_sample_id = this_sample_id, coding_only = TRUE, include_silent = TRUE)
 
 #preview returned table
 head(annotated_ssm_extended$maf, 5)
@@ -164,23 +173,23 @@ head(annotated_ssm_extended$maf, 5)
 
 ## SV
 ### Combined SVs
-IF you want to retrieve combined SV calls (manta and GRIDSS-derived) for one or more samples, you should look into `get_combined_sv`. This function does exactly this. Similarly to other GAMBLR function, we have a collection of familiar parameters available. The required parameters are `sample_ids`, a character vector of tumour sample IDs you wish to retrieve SVs for. You also have the option to prefix your chromosomes in the returned dta frame (`with_chr_prefix`). Another useful way to subset your returned SVs based on VAF score is with the `min_vaf` parameter, this parameter hgolds the minimum tumour VAF for a SV to be returned. Recommended: 0. (default: 0). The bedpe files used as input to this function were pre-filtered for a minimum VAF of 0.05, and SVs affecting common translocation regions (BCL2, BCL6, MYC, CCND1) were whitelisted (e.g. no VAF filter applied). Therefore if you wish to post-filter the SVs we recommend doing so carefully after loading this data frame. Further, the input bedpe file is annotated with oncogenes and superenhancers from naive and germinal centre B-cells. You can subset to events affecting certain loci using the `oncogenes` argument.
+IF you want to retrieve combined SV calls (manta and GRIDSS-derived) for one or more samples, you should look into `get_combined_sv`. This function does exactly this. Similarly to other GAMBLR function, we have a collection of familiar parameters available. The required parameters are `sample_ids`, a character vector of tumour sample IDs you wish to retrieve SVs for. Another useful way to subset your returned SVs based on VAF score is with the `min_vaf` parameter, this parameter hgolds the minimum tumour VAF for a SV to be returned. Recommended: 0. (default: 0). The bedpe files used as input to this function were pre-filtered for a minimum VAF of 0.05, and SVs affecting common translocation regions (BCL2, BCL6, MYC, CCND1) were whitelisted (e.g. no VAF filter applied). Therefore if you wish to post-filter the SVs we recommend doing so carefully after loading this data frame. Further, the input bedpe file is annotated with oncogenes and superenhancers from naive and germinal centre B-cells. You can subset to events affecting certain loci using the `oncogenes` argument.
 ```{r get_combined_sv, message = FALSE, warning = FALSE}
 #example with minimal parameter usage.
-combined_svs = get_combined_sv(sample_ids = this_sample_id)
+combined_svs = get_combined_sv(these_sample_ids = this_sample_id)
 
 #preview returned table
 head(combined_svs, 5)
 
 #extended example, using additional parameters that are available. 
-combined_sv_extended = get_combined_sv(sample_ids = these_sample_list, with_chr_prefix = TRUE, projection = "hg38", oncogenes = c("MYC", "BCL2", "BCL6"))
+combined_sv_extended = get_combined_sv(these_sample_ids = these_sample_list, projection = "hg38", oncogenes = c("MYC", "BCL2", "BCL6"))
 
 #preview returned table
 head(combined_sv_extended, 5)
 ```
 
 ### Manta SVs
-If you are interested in just retrieving manta SV call this is of course also possible. With `get_manta_sv` you can retrieve SVs from this specific call-set and filter with available function parameters. To call this function with the minimum parameters, no parameters are required. If the function is called in this way, all SVs are returned with default filtering parameters. If you have a sample ID you are interested in, you simply call this function with the `sample_id` parameter. Let's go over the filtering options available for this function. Similarly to `get_combined_sv`, the following parameters are also available for this function; `min_vaf`, `with_chr_prefix`, and `from_flatfile`. In addition, we also have; `min_score` describing the lowest Manta somatic score for a SV to be returned. `pass`, If set to TRUE, include SVs that are annotated with PASS in FILTER column. `pair_status` To restrict results (if desired) to matched or unmatched results (default is to return all). `chromosome` The chromosome you are restricting to. `qstart` Query start coordinate of the range you are restricting to. `qend` Query end coordinate of the range you are restricting to. `region` Formatted like chrX:1234-5678 instead of specifying chromosome, start and end separately. In the following example, we will look at a few different examples exploring some of the different parameters. 
+If you are interested in just retrieving manta SV call this is of course also possible. With `get_manta_sv` you can retrieve SVs from this specific call-set and filter with available function parameters. To call this function with the minimum parameters, no parameters are required. If the function is called in this way, all SVs are returned with default filtering parameters. If you have a sample ID you are interested in, you simply call this function with the `sample_id` parameter. Let's go over the filtering options available for this function. Similarly to `get_combined_sv`, the following parameters are also available for this function; `min_vaf`, and `from_flatfile`. In addition, we also have; `min_score` describing the lowest Manta somatic score for a SV to be returned. `pass`, If set to TRUE, include SVs that are annotated with PASS in FILTER column. `pair_status` To restrict results (if desired) to matched or unmatched results (default is to return all). `chromosome` The chromosome you are restricting to. `qstart` Query start coordinate of the range you are restricting to. `qend` Query end coordinate of the range you are restricting to. `region` Formatted like chrX:1234-5678 instead of specifying chromosome, start and end separately. In the following example, we will look at a few different examples exploring some of the different parameters. 
 ```{r get_manta_sv, message = FALSE, warning = FALSE}
 #get all SVs.
 all_svs = get_manta_sv()
@@ -188,18 +197,11 @@ all_svs = get_manta_sv()
 #peek dimensions of returned SV calls
 dim(all_svs)
 
-#return manta SV calls for one sample.
-this_sample_svs = get_manta_sv(sample_id = this_sample_id)
-
-#preview returned table
-head(this_sample_svs, 5)
-
 #extended example, return all SVs with a minimum vaf score of 0.1, minimum manta somatic score of 40, for MYC region, with chromosome prefixes. 
 manta_svs = get_manta_sv(min_vaf = 0.1, 
                          min_score = 40, 
                          pass = TRUE, 
-                         region = "8:128723128-128774067", 
-                         with_chr_prefix = FALSE)
+                         region = "8:128723128-128774067")
 
 #preview returned table
 head(manta_svs, 5)
@@ -217,7 +219,7 @@ If you want to convert your SV calls into a UCSC-ready custom track, for interro
 Interested in how many variants are present in a given sample? A quick way to overview such information would be to call `fancy_svbar` on a given sample ID. This function returns a bar plot visualizing SVs or SSMs. A variety of sub-setting options are also available. Such as chromosome selection and variant types to be included in plot.
 ```{r svbar, dpi = 150}
 #build plot
-fancy_v_count(this_sample = this_sample_id,
+fancy_v_count(this_sample_id = this_sample_id,
               ssm = FALSE,
               plot_title = "SV Count Example",
               chr_select = paste0("chr", c(1:22)),
@@ -228,7 +230,7 @@ fancy_v_count(this_sample = this_sample_id,
 Sometimes it can be useful to overview variant distributions across the complete genomic landscape. To do so, one could call `fancy_v_chrcount` with sample ID. Optional arguments for sub-setting your data are available (see parameter descriptions for more information). In the following example we are plotting SV (ssm = FALSE) counts for autosomes. One can also call `add_qc_metric` to add a second y-axis annotating mean corrected coverage for the selected sample.
 ```{r svdist, dpi = 150}
 #build plot
-fancy_v_chrcount(this_sample = "HTMCP-01-06-00422-01A-01D",
+fancy_v_chrcount(this_sample_id = "HTMCP-01-06-00422-01A-01D",
                  plot_subtitle =  "grch37",
                  plot_title = "SV Genomic Distribution Example",
                  ssm = FALSE,
@@ -241,10 +243,10 @@ fancy_v_chrcount(this_sample = "HTMCP-01-06-00422-01A-01D",
 ```
 
 ### Variant Size Densities.
-Another useful plotting function for visualizing SV size distributions is with `fancy_sv_sizedens`. In this example, we arere showing SVs (larger 50bp and with a with minimum vaf of 0) size distributions for a specific sample and selected chromosomes.
+Another useful plotting function for visualizing SV size distributions is with `fancy_sv_sizedens`. In this example, we are showing SVs (larger 50bp and with a with minimum vaf of 0) size distributions for a specific sample and selected chromosomes.
 ```{r sv_size, dpi = 150}
 #build plot
-fancy_sv_sizedens(this_sample = this_sample_id,
+fancy_sv_sizedens(this_sample_id = this_sample_id,
                 vaf_cutoff = 0,
                 size_cutoff = 50,
                 chr_select = paste0("chr", c(1:22)),
@@ -257,17 +259,30 @@ fancy_sv_sizedens(this_sample = this_sample_id,
 Another way to visualize copy number information is with the the `fancy_cnvbar`. This function takes one required parameter (sample ID), calls `get_cn_segments` and `assign_cn_ssm` to retrieve data for plotting. The plot highlights the number of CN states for any given sample (left y-axis), together with n bases included in each given CN state (right y-axis).
 ```{r cnbar, dpi = 150}
 #build plot
-fancy_cnbar(this_sample = this_sample_id,
+fancy_cnbar(this_sample_id = this_sample_id,
             plot_title = "CNV Barplot Example",
             plot_subtitle = "grch37",
             chr_select =  paste0("chr", c(1:22)),
             include_cn2 = TRUE)
 ```
 
+## Copy Number Segments Plot
+Another way to visualize CN segments is with the `focal_cn_plot`. This function visualizes all CN segments for a defined region, colours the returned segments based on lymphgen information. In addition, this function takes either a specified region (chr:start-end format). If no region is supplied, the user can give the function a gene symbol with `gene`. If so, the function will internally retrieve the region for the specified gene.Sample IDs are specified along the y-axis and the genomic postilion iis visualized along the x-axis.
+```{r cnfocal, dpi = 150}
+#get metadata
+this_metadata = get_gambl_metadata()
+
+#get myc region
+myc_region = gene_to_region(gene_symbol = "MYC", return_as = "region")
+
+#build plot
+focal_cn_plot(these_samples_metadata = this_metadata, region = myc_region, type = "loss", crop_distance = 100000000)
+```
+
 ## Sample-level Ideograms.
 A great way to overview SVs and Copy Number Segments on sample-level is to call `fancy_ideogram`. This function creates an ideogram based on the chromosomes defined in the `chr_select` parameter. Copy Number states are plotted along the x-axis (selected contigs plotted vertically on the y-axis). The plot annotates Copy Number States from 0 to 6+. It is also possible to highlight genomic regions fo interest, such as genes, hotspots, difficult to map regions, etc. For convenience, one can specify a list of genes under the `gene_annotation` parameter. The function will then implement `gene_to_region` function to convert gene names to bed-style coordinates.
 ```{r fancy_ideogram, dpi = 150, fig.height = 14, fig.width = 14}
-fancy_ideogram(this_sample = this_sample_id, 
+fancy_ideogram(this_sample_id = this_sample_id, 
                include_ssm = FALSE, 
                ssm_count = FALSE,
                gene_annotation = "MYC",

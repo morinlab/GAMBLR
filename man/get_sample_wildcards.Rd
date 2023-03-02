@@ -2,16 +2,25 @@
 % Please edit documentation in R/utilities.R
 \name{get_sample_wildcards}
 \alias{get_sample_wildcards}
-\title{Get wildcards for a sample_id/seq_type combination.}
+\title{Get Sample Wildcards}
 \usage{
 get_sample_wildcards(this_sample_id, seq_type)
 }
 \arguments{
-\item{seq_type}{}
+\item{this_sample_id}{The sample ID of interest.}
+
+\item{seq_type}{The desired seq type, e.g genome/capture.}
 }
 \value{
-
+Nothing.
 }
 \description{
 Get wildcards for a sample_id/seq_type combination.
+}
+\details{
+Return sample wildcards, useful for getting wildcard information necessary for retrieving sample-level flat-files with glue.
+}
+\examples{
+get_sample_wildcards(this_sample_id = "00-15201_tumorA", seq_type = "genome")
+
 }

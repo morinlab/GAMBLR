@@ -2,7 +2,7 @@
 % Please edit documentation in R/utilities.R
 \name{collate_lymphgen}
 \alias{collate_lymphgen}
-\title{Expand a sample_table (meta data) horizontally with different flavours of lymphgen data.}
+\title{Collate Lymphgen.}
 \usage{
 collate_lymphgen(
   these_samples_metadata,
@@ -11,17 +11,23 @@ collate_lymphgen(
 )
 }
 \arguments{
-\item{these_samples_metadata}{Optional parameter with  meta data filtered for sample_ids of interest. If provided, this function will join lymphgen with this meta data, regardless of tidy_lymphgen TRUE/FALSE.}
+\item{these_samples_metadata}{Optional parameter with metadata filtered for sample_ids of interest. If provided, this function will join lymphgen with this metadata, regardless of tidy TRUE/FALSE.}
 
 \item{lymphgen_version}{Version of selected lymphgen, default is "default".}
 
-\item{tidy}{Boolean parameter, set to TRUE for tidy format (i.e long format with no columns dropped). Default is FALSE, which returns the data in a wide format, keeps both the original Subtype.Prediction and tidied LymphGen values and puts the values from each "flavour" in its own column.}
+\item{tidy}{Boolean parameter, set to TRUE for tidy format (i.e long format with no columns dropped). Default is FALSE, which returns the data in a wide format, keeping both the original Subtype. Prediction and tidied LymphGen values and puts the values from each "flavour" in its own column.}
 }
 \value{
-a df with lymphgen information.
+A df with lymphgen information.
 }
 \description{
-Expand a sample_table (meta data) horizontally with different flavours of lymphgen data.
+Expand a sample_table (metadata) horizontally with different flavours of lymphgen data.
+}
+\details{
+This function takes a sample table (metadata) and adds different flavours of lymphgen data.
+It is possible to call this function with an already subset metadata table (with sample IDs of interest) with \code{these_samples_metadata}.
+If this is done, the function will join the lymphgen data with this table. Currently, the only supported \code{lymphgen_version} is "default".
+For more information refer to the function examples.
 }
 \examples{
 this_meta = get_gambl_metadata() \%>\% dplyr::filter(pathology == "DLBCL")

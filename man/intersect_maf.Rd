@@ -2,7 +2,7 @@
 % Please edit documentation in R/utilities.R
 \name{intersect_maf}
 \alias{intersect_maf}
-\title{Perform set operations on two MAFs.}
+\title{Intersect MAF.}
 \usage{
 intersect_maf(maf1, maf2, set_returned = "maf1_only")
 }
@@ -17,6 +17,9 @@ intersect_maf(maf1, maf2, set_returned = "maf1_only")
 Set of MAFs with start positions that don't match the start positions in the other supplied MAF file.
 }
 \description{
+Perform set operations on two MAFs.
+}
+\details{
 Perform set operations on two MAFs.
 }
 \examples{

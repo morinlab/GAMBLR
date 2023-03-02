@@ -2,7 +2,7 @@
 % Please edit documentation in R/preprocessing_io.R
 \name{fetch_output_files}
 \alias{fetch_output_files}
-\title{Title}
+\title{Fetch Output Files.}
 \usage{
 fetch_output_files(
   tool,
@@ -15,21 +15,30 @@ fetch_output_files(
 )
 }
 \arguments{
-\item{base_path}{Either the full or relative path to where all the results directories are for the tool e.g. "gambl/sequenza_current"}
+\item{tool}{Name of tool.}
 
-\item{results_dir}{directory with results}
+\item{base_path}{Either the full or relative path to where all the results directories are for the tool e.g. "gambl/sequenza_current".}
 
-\item{seq_type}{either genome or capture}
+\item{results_dir}{Directory with results.}
 
-\item{search_pattern}{file-extensions search pattern}
+\item{seq_type}{Either genome or capture.}
 
-\item{tool_name}{name of tool}
+\item{search_pattern}{File-extensions search pattern.}
 
-\item{genome_build}{default is hg38}
+\item{genome_build}{Default is hg38.}
 }
 \value{
-A data frame with one row per file and sample IDs parsed from the file name along with other GAMBL wildcards
+A data frame with one row per file and sample IDs parsed from the file name along with other GAMBL wildcards.
 }
 \description{
-Title
+Get output files from a set of conditions.
+}
+\details{
+This function lets the user specify multiple conditions for returning result subsets.
+First, specify the name of the tool with \code{tool}, then set the seq type (\code{seq_type}) to either genome or capture,
+together with the genome build (\code{genome_build}). A data frame will be returned with one row per file and sample IDs together with GAMBL wildcards.
+}
+\examples{
+fetch_output_files(tool = "manta", unix_group = "genome")
+
 }
