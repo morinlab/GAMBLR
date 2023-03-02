@@ -2,14 +2,20 @@
 % Please edit documentation in R/viz.R
 \name{plot_multi_timepoint}
 \alias{plot_multi_timepoint}
-\title{This function doesn't do anything yet}
+\title{This function doesn't do anything yet, thus, I ahve removed it from being exported to NAMESPACE (for now).}
 \usage{
-plot_multi_timepoint(mafs, sample_id, genes, show_noncoding = FALSE, detail)
+plot_multi_timepoint(
+  mafs,
+  this_sample_id,
+  genes,
+  show_noncoding = FALSE,
+  detail
+)
 }
 \arguments{
 \item{mafs}{TODO}
 
-\item{sample_id}{TODO}
+\item{this_sample_id}{TODO}
 
 \item{genes}{TODO}
 
@@ -17,9 +23,6 @@ plot_multi_timepoint(mafs, sample_id, genes, show_noncoding = FALSE, detail)
 
 \item{detail}{TODO}
 }
-\value{
-
-}
 \description{
-This function doesn't do anything yet
+This function doesn't do anything yet, thus, I ahve removed it from being exported to NAMESPACE (for now).
 }

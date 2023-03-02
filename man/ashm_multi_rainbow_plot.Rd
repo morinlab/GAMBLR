@@ -2,7 +2,7 @@
 % Please edit documentation in R/viz.R
 \name{ashm_multi_rainbow_plot}
 \alias{ashm_multi_rainbow_plot}
-\title{Generate a colourful multi-panel overview of hypermutation in regions of interest across many samples.}
+\title{ASHM Multi-panel Rainbow Plot}
 \usage{
 ashm_multi_rainbow_plot(
   regions_bed,
@@ -24,17 +24,27 @@ ashm_multi_rainbow_plot(
 
 \item{metadata}{A metadata file already subsetted and arranged on the order you want the samples vertically displayed.}
 
+\item{seq_type}{the seqtype you want results back for if \code{maf_data} is not provided.}
+
 \item{custom_colours}{Provide named vector (or named list of vectors) containing custom annotation colours if you do not want to use standartized pallette.}
 
 \item{classification_column}{Optional. Override default column for assigning the labels used for colouring in the figure.}
 
-\item{maf_data}{Either a maf loaded from disk or from the database using a get_ssm function.}
+\item{maf_data}{An already loaded maf, if no provided, this function will call \code{get_ssm_by_region}, using the regions supplied into \code{regions_bed}.}
 }
 \value{
 Nothing
 }
 \description{
-Generate a colourful multi-panel overview of hypermutation in regions of interest across many samples.
+Generates a colourful multi-panel overview of hypermutation in regions of interest across many samples.
+}
+\details{
+The input for this function is a bed-file with the following columns; chr, start, end, name.
+Note that for this function to work, the column names must be exactly this.
+The user also needs to specify a vector of names (\code{regions_to_display}) to further control what regions are to be displayed on the returned plot.
+It is also possible to exclude specific classifications from the metadata file. This is achieved with \code{exclude_classifications}.
+In addition the user can also use the \code{metadata} parameter to use an already subset and arranged metadata table.
+This function will call \code{get_ssm_by_region} if \code{maf_data} is not called. For more info, refer to the parameter descriptions of this function.
 }
 \examples{
 my_plot = ashm_multi_rainbow_plot(regions_bed = "my_bed.bed",

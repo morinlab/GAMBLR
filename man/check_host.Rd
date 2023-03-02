@@ -2,21 +2,25 @@
 % Please edit documentation in R/checks.R
 \name{check_host}
 \alias{check_host}
-\title{Check if code is running remotely and react accordingly.}
+\title{Check Host.}
 \usage{
 check_host(auto_connect = FALSE, verbose = FALSE)
 }
 \arguments{
-\item{auto_connect}{Set to TRUE if you want the function to create an ssh session (if necessary)}
+\item{auto_connect}{Set to TRUE if you want the function to create an ssh session (if necessary).}
 
-\item{verbose}{Set this to TRUE for verbose messages from the function}
+\item{verbose}{Set this to TRUE for verbose messages from the function.}
 }
 \value{
 TRUE if a remote session is detected, FALSE otherwise.
 }
 \description{
-The function will (optionally) attempt a connection if necessary, and stores it in a global variable (ssh_session)
+Check if code is running remotely and react accordingly.
+}
+\details{
+The function will (optionally) attempt a connection if necessary, and stores it in a global variable (ssh_session).
 }
 \examples{
 check_host(auto_connect=TRUE)
+
 }

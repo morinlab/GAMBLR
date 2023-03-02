@@ -2,7 +2,7 @@
 % Please edit documentation in R/portal.R
 \name{finalize_study}
 \alias{finalize_study}
-\title{Finish setting up a new cBioPortal instance or updating an existing portal data set.}
+\title{Finalize Study (cBioPortal).}
 \usage{
 finalize_study(
   seq_type_filter = "genome",
@@ -11,7 +11,7 @@ finalize_study(
   project_name = "gambl_minus_icgc",
   description = "GAMBL data without ICGC",
   cancer_type = "mixed",
-  sample_ids,
+  these_sample_ids,
   overwrite = TRUE,
   out_dir
 )
@@ -27,13 +27,11 @@ finalize_study(
 
 \item{cancer_type}{Cancer types included in study, default is "mixed".}
 
-\item{sample_ids}{A vector of all the sample_id that were included in any of the data files for cbioportal.}
+\item{these_sample_ids}{A vector of all the sample_id that were included in any of the data files for cBioPortal.}
 
 \item{overwrite}{Flag to specify that files should be overwritten if they exist. Default is TRUE.}
 
 \item{out_dir}{The full path to the base directory where the files are being created.}
-
-\item{include_icgc_data}{Whether or not you want ICGC and other external data included.}
 }
 \value{
 Nothing.
@@ -41,7 +39,13 @@ Nothing.
 \description{
 Finish setting up a new cBioPortal instance or updating an existing portal data set.
 }
+\details{
+This function should be run as the last (or third step) in setting up a new cBioPortal instance.
+The functions that should be run prior to these functions are; \code{setup_study} and \code{setup_fusions}.
+\code{finalize_study} creates all the necessary tables and metadata files that are required to import a new study into cBioPortal.
+Note, that all parameter arguments used in this function have to match the same parameter arguments for the previously run functions (\code{setup_study} and \code{setup_fusions}).
+}
 \examples{
-finalize_study(sample_ids = c(ids, fusion_ids), out_dir = "GAMBLR/cBioPortal/instance01/")
+finalize_study(these_sample_ids = c(ids, fusion_ids), out_dir = "GAMBLR/cBioPortal/instance01/")
 
 }

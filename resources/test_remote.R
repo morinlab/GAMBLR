@@ -117,12 +117,12 @@ cn_seg = get_sample_cn_segments("14-24534_tumorB",from_flatfile = T)
 cn_ssm = assign_cn_to_ssm("14-24534_tumorB",seg_file_source = "battenberg",ssh_session = session)
 
 
-pursteenah = estimate_purity(sample_id = "14-24534_tumorB",seg_file_source = "battenberg",ssh_session=session)
+pursteenah = estimate_purity(this_sample_id = "14-24534_tumorB",seg_file_source = "battenberg",ssh_session=session)
 
 pursteenah$sample_purity_estimation
 
 
-#pure=estimate_purity(sample_id="12-17272_tumorB",seg_file_source = "battenberg")
+#pure=estimate_purity(this_sample_id="12-17272_tumorB",seg_file_source = "battenberg")
 #fetching: slms-3                                                                                                                                   
 #using flatfile: /projects/nhl_meta_analysis_scratch/gambl/results_local/gambl/battenberg_current/99-outputs/seg/genome--grch37/12-17272_tumorB--12-17272_normal_subclones.igv.seg
 #Rows: 45 Columns: 6                                                                                                                                

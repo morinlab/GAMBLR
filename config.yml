@@ -133,6 +133,7 @@ default:
 
     sample_sets:
         default: "data/metadata/level3_samples_subsets.tsv"
+        hashes: "data/metadata/level3_samples_subsets_hashes.tsv"
 
     unmatched_normal_ids:
         gambl:

@@ -2,7 +2,7 @@
 % Please edit documentation in R/preprocessing_io.R
 \name{find_files_extract_wildcards}
 \alias{find_files_extract_wildcards}
-\title{Title}
+\title{Find Files Extract Wildcards}
 \usage{
 find_files_extract_wildcards(
   tool_results_path,
@@ -14,21 +14,26 @@ find_files_extract_wildcards(
 )
 }
 \arguments{
-\item{tool_results_path}{path to results}
+\item{tool_results_path}{Optional parameter, path to results.}
 
-\item{search_pattern}{search pattern}
+\item{search_pattern}{Search pattern.}
 
-\item{genome_build}{genome projection to be sued}
+\item{genome_build}{Genome projection to be used.}
 
-\item{seq_type}{default si geneome}
+\item{seq_type}{Default is genome.}
 
-\item{unix_group}{default value is gambl}
+\item{unix_group}{Default value is gambl.}
+
+\item{tool_name}{Name of the tool.}
 }
 \value{
-
+A tibble with wildcards.
 }
 \description{
-Title
+Get wildcards for a set of samples.
+}
+\details{
+Specify the file extension with \code{search_pattern} and the seq type, unix group, and genome build and the function will return a tibble with sample wildcards.
 }
 \examples{
 file_details_manta = find_files_extract_wildcards(tool_name = "manta", genome_build = c("hg38", "grch37"), search_pattern = ".bed")

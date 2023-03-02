@@ -2,7 +2,7 @@
 % Please edit documentation in R/database.R
 \name{get_coding_ssm}
 \alias{get_coding_ssm}
-\title{Retrieve all coding SSMs from the GAMBL database in MAF-like format.}
+\title{Get Coding SSM.}
 \usage{
 get_coding_ssm(
   limit_cohort,
@@ -24,9 +24,9 @@ get_coding_ssm(
 )
 }
 \arguments{
-\item{limit_cohort}{Supply this to restrict mutations to one or more cohorts in a list.}
+\item{limit_cohort}{Supply this to restrict mutations to one or more cohorts in a vector.}
 
-\item{exclude_cohort}{Supply this to exclude mutations from one or more cohorts in a list.}
+\item{exclude_cohort}{Supply this to exclude mutations from one or more cohorts in a vector.}
 
 \item{limit_pathology}{Supply this to restrict mutations to one pathology.}
 
@@ -42,7 +42,7 @@ get_coding_ssm(
 
 \item{basic_columns}{Set to FALSE to override the default behavior of returning only the first 45 columns of MAF data.}
 
-\item{maf_cols}{if basic_columns is set to FALSE, the user can specify what columns to be returned within the MAF. This parameter can either be a list of indexes (integer) or a list of characters (matching columns in MAF).}
+\item{maf_cols}{if basic_columns is set to FALSE, the user can specify what columns to be returned within the MAF. This parameter can either be a vector of indexes (integer) or a vector of characters (matching columns in MAF).}
 
 \item{from_flatfile}{Set to TRUE to obtain mutations from a local flatfile instead of the database. This can be more efficient and is currently the only option for users who do not have ICGC data access.}
 
@@ -53,12 +53,18 @@ get_coding_ssm(
 \item{groups}{Unix groups for the samples to be included. Default is both gambl and icgc_dart samples.}
 
 \item{include_silent}{Logical parameter indicating whether to include silent mutations into coding mutations. Default is TRUE.}
+
+\item{engine}{Specify one of readr or fread_maf (default) to change how the large files are loaded prior to subsetting. You may have better performance with one or the other but for me fread_maf is faster and uses a lot less RAM.}
 }
 \value{
 A data frame containing all the MAF data columns (one row per mutation).
 }
 \description{
 Retrieve all coding SSMs from the GAMBL database in MAF-like format.
+}
+\details{
+Effectively retrieve coding SSM calls. Multiple filtering parameters are available for this function.
+For more information on how to implement the filtering parameters, refer to the parameter descriptions as well as examples in the vignettes.
 }
 \examples{
 #basic usage

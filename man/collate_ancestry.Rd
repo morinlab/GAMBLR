@@ -2,20 +2,25 @@
 % Please edit documentation in R/utilities.R
 \name{collate_ancestry}
 \alias{collate_ancestry}
-\title{INTERNAL FUNCTION called by collate_results, not meant for out-of-package usage.}
+\title{Collate Ancestry.}
 \usage{
 collate_ancestry(sample_table, seq_type_filter = "genome", somalier_output)
 }
 \arguments{
 \item{sample_table}{A data frame with sample_id as the first column.}
 
+\item{seq_type_filter}{Filtering criteria, default is genomes.}
+
 \item{somalier_output}{Somalier ancestery.tsv}
 }
 \value{
-Table.
+A table.
 }
 \description{
-INTERNAL FUNCTION called by collate_results, not meant for out-of-package usage.
+Gather ancestry information and expand the incoming sample table (or metadata).
+}
+\details{
+INTERNAL FUNCTION called by \code{collate_results}, not meant for out-of-package usage.
 }
 \examples{
 table = collate_ancestry(sample_table = "my_sample_table.txt")

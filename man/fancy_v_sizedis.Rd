@@ -2,10 +2,10 @@
 % Please edit documentation in R/viz.R
 \name{fancy_v_sizedis}
 \alias{fancy_v_sizedis}
-\title{Generate a violine plot showing variant (SSM or SVs) size distributions for selected contigs.}
+\title{Variant size distribution plot}
 \usage{
 fancy_v_sizedis(
-  this_sample,
+  this_sample_id,
   maf_data,
   maf_path = NULL,
   ssm = TRUE,
@@ -15,7 +15,7 @@ fancy_v_sizedis(
   chromosome_col = 5,
   start_col = 6,
   end_col = 7,
-  plot_title = paste0(this_sample),
+  plot_title = paste0(this_sample_id),
   plot_subtitle = "Variant Size Distribution",
   scale_value = "width",
   log_10 = TRUE,
@@ -27,7 +27,7 @@ fancy_v_sizedis(
 )
 }
 \arguments{
-\item{this_sample}{Sample to be plotted.}
+\item{this_sample_id}{Sample to be plotted.}
 
 \item{maf_data}{Optional parameter with maf like df already loaded into R.}
 
@@ -51,9 +51,9 @@ fancy_v_sizedis(
 
 \item{plot_subtitle}{Subtitle for created plot.}
 
-\item{scale_value}{Scale type for violin plot, accepted values are "area", "width", and "count", defualt is "count.}
+\item{scale_value}{Scale type for violin plot, accepted values are "area", "width", and "count", default is "count.}
 
-\item{log_10}{Boolean statement for yaxis, default is TRUE.}
+\item{log_10}{Boolean statement for y-axis, default is TRUE.}
 
 \item{chr_select}{vector of chromosomes to be included in plot, defaults to autosomes.}
 
@@ -61,17 +61,32 @@ fancy_v_sizedis(
 
 \item{from_flatfile}{If set to true the function will use flat files instead of the database.}
 
-\item{trim}{Boolean statment for trimming violin plot. Default is TRUE.}
+\item{use_augmented_maf}{Boolean statement if to use augmented maf, default is FALSE.}
 
-\item{use_augmented}{Boolean statement if to use augmented maf, default is FALSE.}
+\item{trim}{Boolean statement for trimming violin plot. Default is TRUE.}
 }
 \value{
-plot as ggplot object.
+A plot as a ggplot object (grob).
 }
 \description{
-Generate a violine plot showing variant (SSM or SVs) size distributions for selected contigs.
+Generate a violin plot showing variant (SSM or SVs) size distributions for selected contigs.
+}
+\details{
+Function for plotting variant size distributions. This function takes either a sample ID given to the \code{this_sample} parameter.
+In addition, the function can also accept an already loaded MAF or MAF-like object given to the \code{maf_data} parameter.
+As a third option, the function can also read a maf from disk (provide path to maf with \code{maf_path}).
+A collection of convenient filtering and data subsetting parameters are also available for this function.
+For restricting your data (if plotting data retrieved with \code{this_sample_id}), the user can choose to only plot coding mutations with setting \code{coding_only} to TRUE.
+This plot can also deal with SVs as well as SSM data. To control this, please use the \code{ssm} parameter. If set to TRUE and if \code{this_sample} is called,
+the function gets data with annotate_cn_by_ssm and if set to FALSE, the function calls \code{get_combined_sv} to get SV calls for plotting.
+If the user calls either \code{maf_data} or \code{maf_path}, there are a collection of parameters available for specifying
+the relevant columns in the given data frame (\code{variant_type_col}, \code{chhromosome_col}, \code{start_col}, \code{end_col}). It is also possible to
+restrict the returned plot to any given chromosome. This is done with the \code{chr_select} parameter (default is all autosomes).
+In addition, plot aesthetics can also be controlled with \code{plot_title}, \code{plot_subtitle}, \code{scale_value}, \code{log10}, and \code{trim}.
+For more info on how to run with these parameters, refer to the parameter descriptions.
 }
 \examples{
-plot = fancy_v_sizedis(this_sample = "HTMCP-01-06-00422-01A-01D")
+#plot SSM size distributions:
+plot = fancy_v_sizedis(this_sample_id = "HTMCP-01-06-00422-01A-01D")
 
 }

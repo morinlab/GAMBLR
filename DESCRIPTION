@@ -10,7 +10,6 @@ License: `use_mit_license()`
 Depends:
     R (>= 2.10)
 Imports:
-    biomaRt,
     broom,
     circlize,
     ComplexHeatmap,
@@ -21,6 +20,7 @@ Imports:
     dbplyr,
     digest,
     dplyr,
+    forcats,
     g3viz,
     ggbeeswarm,
     ggplot2,
@@ -28,18 +28,23 @@ Imports:
     ggrepel,
     ggsci,
     ggthemes,
-    grid,
+    gridExtra,
     maftools,
     metaviz,
     nloptr (<= 1.2.2.3),
-    parallel,
     plotly,
+    purrr,
     RCircos,
+    RColorBrewer,
     readr (>= 2.1),
     RMariaDB,
     rtracklayer,
     S4Vectors,
     SRAdb,
+    stringr,
+    tibble,
+    tidyr,
+    vroom,
     wordcloud,
     workflowr
 Suggests:

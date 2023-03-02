@@ -2,20 +2,23 @@
 % Please edit documentation in R/utilities.R
 \name{collate_nfkbiz_results}
 \alias{collate_nfkbiz_results}
-\title{INTERNAL FUNCTION called by collate_results, not meant for out-of-package usage.
-Determine which cases have NFKBIZ UTR mutations.}
+\title{Collate NFKBIZ Results.}
 \usage{
 collate_nfkbiz_results(sample_table, seq_type_filter = "genome")
 }
 \arguments{
 \item{sample_table}{A data frame with sample_id as the first column.}
+
+\item{seq_type_filter}{Filtering criteria, default is genomes.}
 }
 \value{
 Samples table.
 }
 \description{
-INTERNAL FUNCTION called by collate_results, not meant for out-of-package usage.
 Determine which cases have NFKBIZ UTR mutations.
+}
+\details{
+INTERNAL FUNCTION called by \code{collate_results}, not meant for out-of-package usage.
 }
 \examples{
 sample_table = collate_nfkbiz_results(sample_table=sample_table)

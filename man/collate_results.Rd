@@ -2,7 +2,7 @@
 % Please edit documentation in R/utilities.R
 \name{collate_results}
 \alias{collate_results}
-\title{Bring together all derived sample-level results from many GAMBL pipelines.}
+\title{Collate Results}
 \usage{
 collate_results(
   sample_table,
@@ -20,7 +20,7 @@ collate_results(
 
 \item{write_to_file}{Boolean statement that outputs tsv file (/projects/nhl_meta_analysis_scratch/gambl/results_local/shared/gambl_{seq_type_filter}_results.tsv) if TRUE, default is FALSE.}
 
-\item{join_with_full_metadata}{Join with all columns of meta data, default is FALSE.}
+\item{join_with_full_metadata}{Join with all columns of metadata, default is FALSE.}
 
 \item{these_samples_metadata}{Optional argument to use a user specified metadata df, overwrites get_gambl_metadata in join_with_full_metadata.}
 
@@ -37,6 +37,16 @@ A table keyed on biopsy_id that contains a bunch of per-sample results from GAMB
 }
 \description{
 Bring together all derived sample-level results from many GAMBL pipelines.
+}
+\details{
+This function takes a data frame with sample IDs (in the first column) with the \code{sample_table} parameter and adds sample-level results from many of the available GAMBL pipelines.
+Optional parameters are \code{these_samples_metadata} and \code{join_with_full_metadata}. If \code{join_with_full_metadata} is set to TRUE, the function can either work with an already subset metadata
+table (\code{these_sampels_metadata}), or, if not provided, the function will default to all metadata returned with \code{get_gambl_metadata}, allowing the user to extend the available information in a metadata table.
+This function has also been designed so that it can get cached results, meaning that not all individual collate helper functions would have to be run to get results back.
+To do so, run this function with \code{from_cache = TRUE} (default). In addition, it's also possible to regenerate the cached results, this is done by setting \code{write_to_file = TRUE},
+This operation auto defaults \code{from_cache = FALSE}. \code{case_set} is an optional parameter available for subsetting the return to an already defined set of cases.
+Lastly, \code{seq_type_filter} lets the user control what seq type results will be returned for. Default is "genome". For more information on how to get the most out of this function,
+refer to function examples, vignettes and parameter descriptions.
 }
 \examples{
 #generate new cached results for all genome samples in gambl (Warning, is this what you really want to do?)

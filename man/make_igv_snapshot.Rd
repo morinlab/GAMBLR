@@ -2,7 +2,7 @@
 % Please edit documentation in R/utilities.R
 \name{make_igv_snapshot}
 \alias{make_igv_snapshot}
-\title{Load bams and generate an IGV screenshot for one or more regions.}
+\title{Make IGV Snapshot}
 \usage{
 make_igv_snapshot(
   bams,
@@ -12,7 +12,7 @@ make_igv_snapshot(
   chrom,
   start,
   end,
-  sample_id,
+  this_sample_id,
   out_path = "/tmp/",
   igv_port = 60506
 )
@@ -32,17 +32,23 @@ make_igv_snapshot(
 
 \item{end}{Optionally specify the region by specifying the end.}
 
-\item{sample_id}{Specify the sample_id or any other string you want embedded in the file name.}
+\item{this_sample_id}{Specify the sample_id or any other string you want embedded in the file name.}
 
 \item{out_path}{Specify the output directory where the snapshot will be written.}
 
 \item{igv_port}{Specify the port IGV is listening on.}
 }
 \value{
-Path to file (.png)
+Path to file (.png).
 }
 \description{
 Load bams and generate an IGV screenshot for one or more regions.
+}
+\details{
+Specify the path to one or more bam files as a character vector to the \code{bams} parameter.
+The user can also specify regions of interest with either the \code{region} parameter (chr:start-end),
+or the user can directly supply the chromosome, start and end coordinates with the \code{chrom}, \code{start}, and \code{end} parameters.
+For more information and examples, refer to the function examples and parameter descriptions.
 }
 \examples{
 #IMPORTANT: you must be running IGV on the host that is running R and you need to have it listening on a port
@@ -52,6 +58,6 @@ Load bams and generate an IGV screenshot for one or more regions.
 # conda activate igv; igv &
 # this_sv = annotated_sv \%>\% filter(gene=="ETV6")
 # tumour_bam = get_bams(sample=this_sv$tumour_sample_id)
-# make_igv_snapshot(chrom=this_sv$chrom2, start=this_sv$start2, end=this_sv$end2, sample_id=this_sv$tumour_sample_id,out_path="~/IGV_snapshots/")
+# make_igv_snapshot(chrom=this_sv$chrom2, start=this_sv$start2, end=this_sv$end2, this_sample_id=this_sv$tumour_sample_id,out_path="~/IGV_snapshots/")
 
 }

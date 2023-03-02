@@ -2,7 +2,7 @@
 % Please edit documentation in R/database.R
 \name{get_gene_expression}
 \alias{get_gene_expression}
-\title{Get the expression for one or more genes for all GAMBL samples}
+\title{Get Gene Expression.}
 \usage{
 get_gene_expression(
   metadata,
@@ -21,24 +21,31 @@ get_gene_expression(
 
 \item{ensembl_gene_ids}{One or more ensembl gene IDs. Only one of hugo_symbols or ensembl_gene_ids may be used.}
 
-\item{join_with}{How to restrict cases for the join. Can be one of genome, mrna or "any"}
+\item{join_with}{How to restrict cases for the join. Can be one of genome, mrna or "any".}
 
-\item{all_genes}{Set to TRUE to return full expression data frame without any subsetting. Avoid this if you don't want to use tons of RAM.}
+\item{all_genes}{Set to TRUE to return the full expression data frame without any subsetting. Avoid this if you don't want to use tons of RAM.}
 
-\item{expression_data}{Optional argument to use an already loaded expression data frame (prevent function to re-load full df from flat file or database)}
+\item{expression_data}{Optional argument to use an already loaded expression data frame (prevent function to re-load full df from flat file or database).}
 
 \item{from_flatfile}{Deprecated but left here for backwards compatibility.}
 }
 \value{
-A list.
+A data frame with gene expression.
 }
 \description{
-Get the expression for one or more genes for all GAMBL samples
+Get the expression for one or more genes for all GAMBL samples.
+}
+\details{
+Effectively get gene expression for one or multiple genes for al GAMBL samples.
+This function can also take an already loaded expression matrix (\code{expression_data})
+to prevent the user from having to load the full expression matrix if this function needs to be run in an interactive session.
+For examples and more info, refer to the parameter descriptions as wella s vignette examples.
 }
 \examples{
 MYC_expr = get_gene_expression(hugo_symbols = c("MYC"), join_with = "mrna")
 Read full expression values df (no subsetting on genes)
 full_expression_df = get_gene_expression_new(all_genes = TRUE, join_with = "genome")
-Use loaded df (in previous step) to get expression values for IRF4 and MYC.
+Use loaded df (in the previous step) to get expression values for IRF4 and MYC.
 irf4_myc_expressions = get_gene_expression_new(hugo_symbols = c("IRF4", "MYC"), all_genes = FALSE, join_with = "genome", from_flatfile = FALSE, expression_data = full_expression_df)
+
 }

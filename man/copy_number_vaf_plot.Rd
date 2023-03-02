@@ -2,33 +2,33 @@
 % Please edit documentation in R/viz.R
 \name{copy_number_vaf_plot}
 \alias{copy_number_vaf_plot}
-\title{Create a genome-wide copy number plot for one sample and (optionally) display mutation VAF.}
+\title{CN VAF Plot}
 \usage{
 copy_number_vaf_plot(
-  this_sample,
+  this_sample_id,
   just_segments = FALSE,
   coding_only = FALSE,
   one_chrom,
   genes_to_label,
-  from_flatfile = FALSE,
-  use_augmented_maf = FALSE,
+  from_flatfile = TRUE,
+  use_augmented_maf = TRUE,
   add_chr_prefix = FALSE
 )
 }
 \arguments{
-\item{this_sample}{The sample_id for the sample to plot.}
+\item{this_sample_id}{The sample_id for the sample to plot.}
 
-\item{just_segments}{Specify whether only the segments will be plotted (instead of mutation VAF).}
+\item{just_segments}{Specify whether only the segments will be plotted (instead of mutation VAF). Default is FALSE.}
 
 \item{coding_only}{Optional. Set to TRUE to restrict to plotting only coding mutations.}
 
 \item{one_chrom}{Subset plot to one chromosome.}
 
-\item{genes_to_label}{Optional. Provide a list of genes to label (if mutated). Can only be used with coding_only (see above).}
+\item{genes_to_label}{Optional. Provide a vector of genes to label (if mutated). Can only be used with coding_only (see above).}
 
 \item{from_flatfile}{If set to true the function will use flatfiles instead of the database.}
 
-\item{use_augmented_maf}{Boolean statement if to use augmented maf, default is FALSE.}
+\item{use_augmented_maf}{Boolean statement if to use augmented maf, default is TRUE.}
 
 \item{add_chr_prefix}{If TRUE, "chr" prefix will be added to chr column. Default is FALSE.}
 }
@@ -38,9 +38,15 @@ Nothing
 \description{
 Create a genome-wide copy number plot for one sample and (optionally) display mutation VAF.
 }
+\details{
+This function takes a sample ID and internally calls \code{assign_cn_to_ssm} to get copy number segments for plotting.
+This plot is visualizing mutation VAFs per default, this can be turned off with setting \code{just_segments} to TRUE.
+This only plots the segments. The user can also restrict the plotted segments to coding regions. To do so, set \code{coding_only= TRUE},
+and then specify the genes of interest (coding regions) with the \code{genes_to_label} (vector of genes).
+}
 \examples{
-cnv_vaf_plot = copy_number_vaf_plot(this_sample = "some-sample-name",
-                                    just_segments = TRUE,
+cnv_vaf_plot = copy_number_vaf_plot(this_sample_id = "some-sample-name",
+                                    just_segments = FALSE,
                                     coding_only = FALSE,
                                     one_chrom = "chr2",
                                     genes_to_label = "MYC",

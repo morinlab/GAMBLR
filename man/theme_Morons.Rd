@@ -2,7 +2,7 @@
 % Please edit documentation in R/viz.R
 \name{theme_Morons}
 \alias{theme_Morons}
-\title{Define function for consistent plot theme.}
+\title{Morons Theme}
 \usage{
 theme_Morons(
   base_size = 14,
@@ -25,6 +25,9 @@ Nothing.
 }
 \description{
 Define function for consistent plot theme.
+
+This function was set up to have a standardized ggplot theme for creating consistent-styled plots.
+The parameters in this function lets the user control theme parameters such as; font size, font style and legend positions.
 }
 \examples{
 ggplot(mpg, aes(displ, hwy, colour = class)) +

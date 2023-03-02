@@ -2,7 +2,7 @@
 % Please edit documentation in R/utilities.R
 \name{get_gambl_colours}
 \alias{get_gambl_colours}
-\title{Get some colour schemes for annotating figures.}
+\title{Get GAMBL Colours.}
 \usage{
 get_gambl_colours(
   classification = "all",
@@ -14,19 +14,35 @@ get_gambl_colours(
 )
 }
 \arguments{
-\item{classification}{(optionally request only colours for pathology, lymphgen, mutation or copy_number).}
+\item{classification}{Optionally request only colours for pathology, lymphgen, mutation or copy_number.}
 
-\item{alpha}{alpha of plotted colours.}
+\item{alpha}{Alpha of plotted colours.}
+
+\item{as_list}{Boolean parameter controlling the format of the return. Default is FALSE.}
+
+\item{as_dataframe}{Boolean parameter controlling the format of the return. Default is FALSE.}
+
+\item{return_available}{Set to TRUE for returning all available colours. Default is FALSE.}
+
+\item{verbose}{Default is FALSE}
 }
 \value{
-A named vector of colour codes for lymphgen classes and pathology
+A named vector of colour codes for lymphgen classes and pathology.
 }
 \description{
-Get some colour schemes for annotating figures.
+Get GAMBL colour schemes for annotating figures.
+}
+\details{
+This function was designed to retrieve specified GAMBL colour palettes.
+By default, this function returns all the colours currently available.
+The user can easily specify what classification to return colors for with the \code{classification} parameter.
+It is also possible to return any given colour in different formats.
+To do so, refer to the Boolean arguments; \code{as_list} and \code{as_dataframe}.
+For more information regarding the available colours, refer to the utilities vignette.
 }
 \examples{
 lymphgen_cols = get_gambl_colours("lymphgen")
-# be sure to install ggsci from https://github.com/morinlab/ggsci
-# install_github("morinlab/ggsci")
+#be sure to install ggsci from https://github.com/morinlab/ggsci
+#install_github("morinlab/ggsci")
 
 }

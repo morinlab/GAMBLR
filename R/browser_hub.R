@@ -26,7 +26,7 @@ deblacklist_regions = function(regions_bed,projection="grch37"){
 load_combine_cached_bins = function(function_params=list(bin_size=15000),
   additional_details=list(foreground="DLBCL_FL",background="CLL_MM")){
 
-      cache_file_name = paste0(config::get("repo_base"),"cached_results/get_ssm_by_region")
+      cache_file_name = paste0(check_config_value(config::get("repo_base")),"cached_results/get_ssm_by_region")
       for (param in names(function_params)[order(names(function_params))]){
         cache_file_name = paste0(cache_file_name,"--",param,"-",function_params[[param]])
       }

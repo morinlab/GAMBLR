@@ -20,11 +20,11 @@ calculate_pga(
 
 \item{projection}{Argument specifying the projection of seg file, which will determine chr prefix, chromosome coordinates, and genome size. Default is grch37, but hg38 is also accepted.}
 
-\item{cutoff}{The minimum log.ratio for the segment to be considered as CNV. Default is 0.56, which is 1 copy. This value is expected to be positive float of log.ratio for both deletions and amplifications.}
+\item{cutoff}{The minimum log.ratio for the segment to be considered as CNV. Default is 0.56, which is 1 copy. This value is expected to be a positive float of log.ratio for both deletions and amplifications.}
 
 \item{exclude_sex}{Boolean argument specifying whether to exclude sex chromosomes from calculation. Default is TRUE.}
 
-\item{exclude_centromeres}{Boolean argument specifyng whether to exclude centromeres from calculation. Default is TRUE.}
+\item{exclude_centromeres}{Boolean argument specifying whether to exclude centromeres from calculation. Default is TRUE.}
 }
 \value{
 A data frame of sample_id and a float in the range \link{0..1} indicating the fraction of genome altered by CNV.
@@ -34,9 +34,9 @@ A data frame of sample_id and a float in the range \link{0..1} indicating the fr
 }
 \details{
 This function calculates the percent of genome altered (PGA) by CNV. It takes into account the total length of
-sample's CNV and relates it to the total genome length to return the proportion affected by CNV. The input is expected to be seg file.
+sample's CNV and relates it to the total genome length to return the proportion affected by CNV. The input is expected to be a seg file.
 The path to a local SEG file can be provided instead. If The custom seg file is provided, the minimum required columns are
-sample, chrom, start, end, and log.ratio. The function can work with either individual or multi-sample seg file. The telomeres are always
+sample, chrom, start, end, and log.ratio. The function can work with either individual or multi-sample seg files. The telomeres are always
 excluded from calculation, and centromeres/sex chromosomes can be optionally included or excluded.
 }
 \examples{
