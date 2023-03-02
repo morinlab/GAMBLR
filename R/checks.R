@@ -197,7 +197,7 @@ check_file_details = function(relative_paths){
 #'
 #' @return
 #' 
-#' @import dplyr tidyr
+#' @import dplyr tidyr stringi
 #' @export
 #'
 #' @examples

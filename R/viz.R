@@ -1352,6 +1352,7 @@ plot_sample_circos = function(this_sample_id,
 #' @return Nothing
 #' 
 #' @import tidyr dplyr circlize ComplexHeatmap ggsci ggplot2 maftools tibble
+#' @importFrom utils getFromNamespace
 #' @export
 #'
 #' @examples
@@ -1411,6 +1412,9 @@ prettyOncoplot = function(maftools_obj,
                           annotation_col = 1,
                           verbose = FALSE){
 
+  # Use non-exported function from maftools
+  createOncoMatrix <- getFromNamespace("createOncoMatrix", "maftools")
+
   patients = pull(these_samples_metadata, sample_id)
   #ensure patients not in metadata get dropped up-front to ensure mutation frequencies are accurate
   if(!recycleOncomatrix & missing(onco_matrix_path)){
@@ -1433,9 +1437,9 @@ prettyOncoplot = function(maftools_obj,
       genes = genes[fractMutated * 100 >= minMutationPercent, Hugo_Symbol]
       lg = length(genes)
       message(paste("creating oncomatrix with", lg, "genes"))
-      om = maftools:::createOncoMatrix(m = maftools_obj, g = genes, add_missing = TRUE)
+      om = createOncoMatrix(m = maftools_obj, g = genes, add_missing = TRUE)
       mat_origin = om$oncoMatrix
-      tsbs = levels(maftools:::getSampleSummary(x = maftools_obj)[,Tumor_Sample_Barcode])
+      tsbs = levels(maftools::getSampleSummary(x = maftools_obj)[,Tumor_Sample_Barcode])
       print(paste("numcases:", length(tsbs)))
 
       if(!removeNonMutated){
@@ -1449,9 +1453,9 @@ prettyOncoplot = function(maftools_obj,
       if(any(duplicated(genes))){
         stop("There are duplicated elements in the provided gene list (@param genes). Please ensure only unique entries are present in this list.")
       }
-      om = maftools:::createOncoMatrix(m = maftools_obj, g = genes, add_missing = TRUE)
+      om = createOncoMatrix(m = maftools_obj, g = genes, add_missing = TRUE)
       mat_origin = om$oncoMatrix
-      tsbs = levels(maftools:::getSampleSummary(x = maftools_obj)[,Tumor_Sample_Barcode])
+      tsbs = levels(maftools::getSampleSummary(x = maftools_obj)[,Tumor_Sample_Barcode])
       print(paste("numcases:",length(tsbs)))
       print(paste("numgenes:",length(mat_origin[,1])))
       if(!removeNonMutated){
@@ -2580,7 +2584,7 @@ plot_multi_timepoint = function(mafs,
 #'
 #' @param scores Output file scores.gistic from the run of GISTIC2.0
 #' @param genes_to_label Optional. Provide a data frame of genes to label (if mutated). The first 3 columns must contain chromosome, start, and end coordinates. Another required column must contain gene names and be named `gene`. All other columns are ignored. If no data frame provided, oncogenes from GAMBLR packages are used by default to annotate on the plot.
-#' @param cutoff Optional. Used to determine which regions to color as aberrant. Must be float in the range [0-1]. The higher the number, the less regions will be considered as aberrant. The default is 0.5.
+#' @param cutoff Optional. Used to determine which regions to color as aberrant. Must be float in the range between 0 and 1. The higher the number, the less regions will be considered as aberrant. The default is 0.5.
 #' @param adjust_amps Optional. The value of G-score for highest amplification peak will be multiplied by this value to determine how far up the gene label will be displayed. Default 0.5.
 #' @param adjust_dels Optional. The value of G-score for highest deletion peak will be multiplied by this value to determine how far down the gene label will be displayed. Default 2.75.
 #' @param label_size Optional. The font size for the gene label to be displayed. Default 3.
@@ -2589,7 +2593,7 @@ plot_multi_timepoint = function(mafs,
 #' @param segment.ncp Optional. Indicates number of control points to make a smoother curve. Higher value allows for more flexibility for the curve. Default 4.
 #' @param segment.angle Optional. Numeric value in the range 0-180, where less than 90 skews control points of the arrow from label to data point toward the start point. Default 25.
 #'
-#' @return Nothing
+#' @return plot
 #'
 #' @rawNamespace import(data.table, except = c("last", "first", "between", "transpose"))
 #' @import dplyr ggplot2 ggrepel
@@ -2601,7 +2605,7 @@ plot_multi_timepoint = function(mafs,
 #'
 #' #advanced usages
 #' prettyChromoplot("path_to_gistic_results/scores.gistic", genes_to_label="path_to_gene_coordinates_table.tsv", cutoff=0.75) +
-#' ...(any ggplot options to customize plot appearance)
+#' # ...(any ggplot options to customize plot appearance)
 #'
 prettyChromoplot = function(scores,
                             genes_to_label,
@@ -2711,8 +2715,8 @@ prettyChromoplot = function(scores,
 #'
 #' @return Nothing.
 #'
-#' @rawNamespace import(ggthemes, except = "theme_map")
 #' @import ggplot2
+#' @importFrom ggthemes theme_foundation
 #' @export
 #'
 #' @examples
@@ -2725,8 +2729,7 @@ theme_Morons = function(base_size = 14,
                         my_legend_position = "bottom",
                         my_legend_direction = "horizontal"){
 
-  library(ggthemes)
-  (theme_foundation(base_size = base_size, base_family = base_family) +
+  (ggthemes::theme_foundation(base_size = base_size, base_family = base_family) +
    theme(plot.title = element_text(face = "bold", size = rel(1.2), hjust = 0.5),
          text = element_text(colour = "black"),
          panel.background = element_rect(colour = NA),

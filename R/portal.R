@@ -24,7 +24,7 @@
 #' @export
 #'
 #' @examples
-#' Setup study and save included ids as a vector of characters:
+#' # Setup study and save included ids as a vector of characters:
 #' ids = setup_study(out_dir = "GAMBLR/cBioPortal/instance01/")
 #'
 setup_study = function(seq_type_filter = c("capture"),

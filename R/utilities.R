@@ -312,6 +312,7 @@ region_to_bins = function(chromosome,
 #'
 #' @return An external pointer of class 'ssh_session'
 #'
+#' @import ssh
 #' @export
 #'
 #' @examples
@@ -728,7 +729,7 @@ get_coding_ssm_status = function(gene_symbols,
 #'
 #' @details INTERNAL FUNCTION called by prettyOncoplot, not meant for out-of-package usage.
 #'
-#' @param x
+#' @param x Numeric value (of expression) to be trimmed.
 #'
 #' @return Numeric value.
 #'
@@ -1863,7 +1864,7 @@ get_sample_wildcards = function(this_sample_id,
 #' CN is the rounded absolute copy number estimate of the region based on log.ratio (NA when no overlap was found)
 #'
 #' @rawNamespace import(data.table, except = c("last", "first", "between", "transpose"))
-#' @import dplyr readr RMariaDB DBI
+#' @import dplyr readr RMariaDB DBI ssh
 #' @export
 #'
 #' @examples
