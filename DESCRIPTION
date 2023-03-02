@@ -6,7 +6,7 @@ Authors@R:
     person("Ryan", "Morin", , "rdmorin@sfu.ca", role = c("aut", "cre"),
            comment = c(ORCID = "YOUR-ORCID-ID"))
 Description: What the package does (one paragraph).
-License: `use_mit_license()`
+License: MIT + file LICENSE
 Depends:
     R (>= 3.5.0)
 Imports:
@@ -60,5 +60,6 @@ Remotes:
 biocViews:
 Encoding: UTF-8
 LazyData: true
+LazyDataCompression: xz
 Roxygen: list(markdown = TRUE)
 RoxygenNote: 7.2.1
