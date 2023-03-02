@@ -171,7 +171,7 @@ dependencies:
   - r-modelr=0.1.10
   - r-munsell=0.5.0
   - r-nlme=3.1_162
-  - r-nloptr=2.0.3
+  - r-nloptr=1.2.2.3
   - r-openssl=2.0.5
   - r-pillar=1.8.1
   - r-pkgbuild=1.4.0
