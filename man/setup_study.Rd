@@ -41,7 +41,7 @@ Optionally the user can also run \code{study_check} to ensure all samples descri
 Also, note that the parameters chosen for this function have to match the same parameters called for any subsequent study function calls.
 }
 \examples{
-Setup study and save included ids as a vector of characters:
+# Setup study and save included ids as a vector of characters:
 ids = setup_study(out_dir = "GAMBLR/cBioPortal/instance01/")
 
 }

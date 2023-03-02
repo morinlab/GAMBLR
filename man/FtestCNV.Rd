@@ -30,11 +30,7 @@ FtestCNV(
 \item{blacklisted_regions}{Optionally, specify any descriptors (value from column \code{Descriptor} of GISTIC2.0 all_lesions output file) to filter out before any comparisons are done. It is possible to specify a list of multiple descriptors, for example, c("3p12.3", "12p13.2"). Default is NULL.}
 }
 \value{
-list of 3 objects:
-DISTINCT - set of CNV identified as significantly different between 2 groups;
-CNV.EVENTS - conveniently reformatted set of events in both groups that can be used for downstream analyses; and
-GRAPH - forest plot visualization of distinct CNV between 2 groups.
-Output can be accessed by index (e.g.\link{3}), or by name (e.g.\link{"GRAPH"})
+list
 }
 \description{
 Using GISTIC2.0 outputs, perform Fisher's exact test to compare CNV frequencies between 2 groups.
