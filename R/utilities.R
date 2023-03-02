@@ -1034,7 +1034,7 @@ sanitize_maf_data = function(mutation_maf_path,
   maftools::oncoplot(maf_o, genes = genes_keep, writeMatrix = T, removeNonMutated = F)  #writes to working directory
   if(!missing(output_oncomatrix)){
     #rename it
-    file.dplyr::rename("onco_matrix.txt", output_oncomatrix)
+    file.rename("onco_matrix.txt", output_oncomatrix)
   }else{
     output_oncomatrix = paste0(getwd(), "/onco_matrix.tsv")
   }
@@ -3050,11 +3050,7 @@ make_igv_snapshot = function(bams,
 #' @param text_size Size of the text on the forest plot of differentially enriched CNV. Default text-size is 7.
 #' @param blacklisted_regions Optionally, specify any descriptors (value from column `Descriptor` of GISTIC2.0 all_lesions output file) to filter out before any comparisons are done. It is possible to specify a list of multiple descriptors, for example, c("3p12.3", "12p13.2"). Default is NULL.
 #'
-#' @return list of 3 objects:
-#' DISTINCT - set of CNV identified as significantly different between 2 groups;
-#' CNV.EVENTS - conveniently reformatted set of events in both groups that can be used for downstream analyses; and
-#' GRAPH - forest plot visualization of distinct CNV between 2 groups.
-#' Output can be accessed by index (e.g.[3]), or by name (e.g.["GRAPH"])
+#' @return list
 #'
 #' @import dplyr metaviz readr tidyr
 #' @export
@@ -3675,7 +3671,7 @@ standardize_chr_prefix = function(incoming_vector,
 #' @param exclude_sex Boolean argument specifying whether to exclude sex chromosomes from calculation. Default is TRUE.
 #' @param exclude_centromeres Boolean argument specifying whether to exclude centromeres from calculation. Default is TRUE.
 #'
-#' @return A data frame of sample_id and a float in the range [0..1] indicating the fraction of genome altered by CNV.
+#' @return data frame
 #'
 #' @rawNamespace import(data.table, except = c("last", "first", "between", "transpose"))
 #' @import dplyr readr tidyr
