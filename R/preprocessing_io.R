@@ -1094,7 +1094,7 @@ assemble_file_details = function(file_details_df,
 
 #' @title Liftover Bedpe.
 #'
-#' @descriptions Use liftOver to convert a bedpe file between the two main genome builds (grch37/hg38).
+#' @description Use liftOver to convert a bedpe file between the two main genome builds (grch37/hg38).
 #'
 #' @details The user can specify a path to the bedpe file that needs to be lifted with `bedpe_file`,
 #' or, the suer can specify the bedpe data in a data frame with `bedpe_df`.

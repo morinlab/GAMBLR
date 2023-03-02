@@ -1300,7 +1300,7 @@ plot_sample_circos = function(this_sample_id,
 
 #' @title Oncooplot
 #' 
-#' @deescription Create a highly customizable oncoplot.
+#' @description Create a highly customizable oncoplot.
 #' 
 #' @details Make an oncoplot that is pretty using ComplexHeatmap. The metadata is expected to follow the structure and column naming used in GAMBL.
 #' If you provide your own non-GAMBL samples and metadata, you must include at least the following columns with these names.
@@ -2071,7 +2071,7 @@ prettyCoOncoplot = function(maf,
 #'                                   regions_to_display = "chr3",
 #'                                   exclude_classification = "some-classification",
 #'                                   metadata = "my_metadata",
-#'                                   custom_colours = c("#onecolour, "#anothercolour", "athirdcolour"),
+#'                                   custom_colours = c("onecolour", "anothercolour", "athirdcolour"),
 #'                                   classification_column = "lymphgen",
 #'                                   maf_data = my_maf)
 #'

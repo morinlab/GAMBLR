@@ -138,7 +138,7 @@ prettyOncoplot(
 Nothing
 }
 \description{
-Oncooplot
+Create a highly customizable oncoplot.
 }
 \details{
 Make an oncoplot that is pretty using ComplexHeatmap. The metadata is expected to follow the structure and column naming used in GAMBL.

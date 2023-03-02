@@ -27,7 +27,7 @@ liftover_bedpe(
 Data frame containing original bedpe data with new coordinates.
 }
 \description{
-Liftover Bedpe.
+Use liftOver to convert a bedpe file between the two main genome builds (grch37/hg38).
 }
 \details{
 The user can specify a path to the bedpe file that needs to be lifted with \code{bedpe_file},
