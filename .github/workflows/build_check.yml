@@ -38,6 +38,9 @@ jobs:
       run:
         Rscript -e "devtools::install_github('morinlab/GAMBLR')"
 
+    - name: Build and check package
+      run: Rscript -e "devtools::check(vignettes = FALSE, args = "--no-examples")"
+
     - name: Upload check results
       if: failure()
       uses: actions/upload-artifact@main
