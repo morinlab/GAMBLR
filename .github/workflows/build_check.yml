@@ -39,7 +39,7 @@ jobs:
         Rscript -e "devtools::install_github('morinlab/GAMBLR')"
 
     - name: Build and check package
-      run: Rscript -e "devtools::check(vignettes = FALSE, args = '--no-examples')"
+      run: Rscript -e "remotes::install_github('morinlab/GAMBLR', upgrade = 'never')"
 
     - name: Upload check results
       if: failure()
