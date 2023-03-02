@@ -20,6 +20,9 @@ check_gambl_metadata(
 
 \item{fix}{After identifying an issue, rerun this function with fix=TRUE to address errors (when possible). Currently this doesn't do anything. That's how I roll.}
 }
+\value{
+
+}
 \description{
 Check GAMBL or other metadata for compatibility with various features.
 }

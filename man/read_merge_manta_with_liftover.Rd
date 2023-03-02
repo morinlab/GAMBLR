@@ -17,6 +17,9 @@ read_merge_manta_with_liftover(
 
 \item{out_dir}{output directory}
 }
+\value{
+
+}
 \description{
 Takes a path to bedpe and runs liftover (\code{liftover_bedpe}) based on the original genome build of the bedpe.
 }

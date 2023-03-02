@@ -63,3 +63,6 @@ Plot a heatmap comparing the VAF of mutations in T1/T2 pairs.
 Currently unfinished plotting function. Thus, I have removed it from export until it's in a state where it can be included in GAMBLR.
 Parameter descriptions need to be updated so that the origin of the incoming data is clear. Examples would also need to be added before this function gets exported into NAMESPACE.
 }
+\examples{
+
+}

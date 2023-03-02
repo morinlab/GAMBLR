@@ -35,3 +35,6 @@ Another option is to use defined sample sets (GAMBL) with \code{sample_set_name}
 As a final option, the user can also provide a data frame with samples IDs instead of loading them from the GAMBL repo,
 This is achieved with calling the \code{sample_sets_df} parameter.
 }
+\examples{
+
+}

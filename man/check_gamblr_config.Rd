@@ -20,6 +20,9 @@ check_gamblr_config(
 
 \item{force_backup}{Boolean parameter set to FALSE per default.}
 }
+\value{
+
+}
 \description{
 Check that the GAMBLR config you have loaded will work in your setup.
 }

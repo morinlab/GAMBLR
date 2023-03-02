@@ -32,6 +32,9 @@ count_ssm_by_region(
 
 \item{seq_type}{The seq_type you want back, default is genome.}
 }
+\value{
+
+}
 \description{
 Count the variants in a region with a variety of filtering options.
 }

@@ -21,9 +21,15 @@ process_all_manta_bedpe(
 
 \item{projection_build}{The genome we want all results to be relative to (lifted if necessary).}
 }
+\value{
+
+}
 \description{
 This function is in draft mode.
 }
 \details{
 This is a helper function that is not meant to be used routinely.
+}
+\examples{
+
 }
