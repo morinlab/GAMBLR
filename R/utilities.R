@@ -4000,6 +4000,7 @@ subset_cnstates = function(cn_segments,
 #'
 #' @rawNamespace import(data.table, except = c("last", "first", "between", "transpose"))
 #' @import dplyr tidyr circlize ComplexHeatmap ggplot2 ggrepel readr tibble
+#' @importFrom plyr round_any
 #' @export
 #'
 #' @examples

@@ -141,4 +141,5 @@ import(vroom, except = c("col_skip", "fwf_positions", "default_locale", "date_na
 import(wordcloud)
 import(workflowr)
 importFrom(ggthemes,theme_foundation)
+importFrom(plyr,round_any)
 importFrom(utils,getFromNamespace)
