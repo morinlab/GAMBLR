@@ -61,6 +61,7 @@ dependencies:
   - libpng=1.6.39
   - libsanitizer=12.2.0
   - libsqlite=3.40.0
+  - libssh=0.10.4
   - libssh2=1.10.0
   - libstdcxx-devel_linux-64=12.2.0
   - libstdcxx-ng=12.2.0
