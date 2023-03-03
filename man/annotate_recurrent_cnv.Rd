@@ -7,9 +7,9 @@
 annotate_recurrent_cnv(seg_df, seg_file)
 }
 \arguments{
-\item{seq_df}{Data frame of sequences with start and end coordinates.}
+\item{seg_df}{Data frame of sequences with start and end coordinates.}
 
-\item{seq_file}{Optional argument to read sequences from file (currently not used in function).}
+\item{seg_file}{Optional argument to read sequences from file (currently not used in function).}
 }
 \value{
 Nothing.

@@ -10,8 +10,7 @@ prettyCoOncoplot(
   comparison_column,
   comparison_values,
   label1,
-  label2,
-  ...
+  label2
 )
 }
 \arguments{

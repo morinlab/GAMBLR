@@ -10,7 +10,7 @@ study_check(
   cases_fusions_path = "case_lists/cases_fusion.txt",
   cases_all_path = "case_lists/cases_all.txt",
   cases_sequenced_path = "case_lists/cases_sequenced.txt",
-  project_name = "gambl_minus_icgc",
+  project_name = "gambl_all",
   out_dir
 )
 }
