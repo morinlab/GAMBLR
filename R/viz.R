@@ -851,8 +851,6 @@ get_mutation_frequency_bin_matrix = function(regions,
 #' @rawNamespace import(data.table, except = c("last", "first", "between", "transpose"))
 #' @import dplyr tidyr circlize ComplexHeatmap tibble
 #'
-#' @examples
-#'
 plot_mutation_dynamics_heatmap = function(maf1,
                                           maf2,
                                           vafcolname,
@@ -1320,6 +1318,7 @@ plot_sample_circos = function(this_sample_id,
 #' @param expressionColumns Optional variable for retreiving expression values for a specific gene(s).
 #' @param numericMetadataMax A numeric vector of cutoffs to apply to numeric columns above.
 #' @param sortByColumns A vector containing the column names you want to sort columns (patients) on.
+#' @param arrange_descending A Boolean parameter. Set to TRUE to sort metadata in descending fashion. Default is FALSE.
 #' @param removeNonMutated Set to TRUE to drop unmutated cases.
 #' @param minMutationPercent Only genes mutated in more than minMutationPercent % patients will be included.
 #' @param fontSizeGene Font size for gene labels (default 6).
@@ -1330,6 +1329,8 @@ plot_sample_circos = function(this_sample_id,
 #' @param metadataBarHeight Optional argument to adjust the height of bar with annotations. The default is 1.5.
 #' @param metadataBarFontsize Optional argument to control for the font size of metadata annotations. The default is 5.
 #' @param hideTopBarplot Optional argument for removing top bar plot. Default value is TRUE.
+#' @param tally_all_mutations Optional argument. Set to TRUE to tally all mutations. Default is FALSE.
+#' @param tally_all_mutations_max Optional argument. Default is 1000.
 #' @param hideSideBarplot Optional argument for removing side bar plot. Default value is FALSE.
 #' @param splitColumnName Optional argument to indicate which metadata column to split on. Default is set to pathology.
 #' @param splitGeneGroups Split genes into groups for better seperation (between different gene-groups) in prettyOncoplot.
@@ -1958,8 +1959,8 @@ prettyCoOncoplot = function(maf,
                             comparison_column,
                             comparison_values,
                             label1,
-                            label2,
-                            ...){
+                            label2){
+
     # check for required arguments
     required = c("maf", "metadata", "comparison_column")
 
@@ -3956,7 +3957,7 @@ fancy_cnbar = function(this_sample_id,
 #' @param plot_subtitle Subtitle for created plot.
 #' @param scale_value Scale type for violin plot, accepted values are "area", "width", and "count", default is "count.
 #' @param log_10 Boolean statement for y-axis, default is TRUE.
-#' @param trim Boolean statement for trimming violin plot. Default is TRUE.
+#' @param plot_trim If TRUE, trim the tails of the violins to the range of the data. If FALSE (default), don't trim the tails. 
 #' @param chr_select vector of chromosomes to be included in plot, defaults to autosomes.
 #' @param coding_only Optional. Set to TRUE to restrict to plotting only coding mutations.
 #' @param from_flatfile If set to true the function will use flat files instead of the database.
@@ -5435,7 +5436,6 @@ fancy_alignment_plot = function(these_sample_ids,
 #' @param seq_type Selected seq type for incoming QC metrics.
 #' @param metadata Optional, user can provide a metadata df to subset sample IDs from.
 #' @param these_samples_metadata GAMBL metadata subset to the cases you want to process.
-#' @param sort_by Plotting parameter, set sorting column for bar plots.
 #' @param plot_data Plotting parameter, define the data type to be plotted.
 #' @param fill_by Parameter for specifying fill variable for grouped bar plot. Can be any factor from incoming metadata, e.g pathology, cohort, etc.
 #' @param labels If HTML plot version is rendered, you can specify what labels should be visible when hovering over the dots. Default is sample id and cohort. This parameter expects a vector of charachters.
