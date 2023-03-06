@@ -7,8 +7,8 @@
 setup_fusions(
   short_name = "GAMBL",
   human_friendly_name = "GAMBL data",
-  project_name = "gambl_all",
-  description = "GAMBL data from genome",
+  project_name = "gambl_minus_icgc",
+  description = "GAMBL data without ICGC",
   gambl_maf = "maf_slms3_hg19",
   gambl_icgc_maf = "maf_slms3_hg19_icgc",
   out_dir

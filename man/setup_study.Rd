@@ -5,11 +5,11 @@
 \title{Setup Study (cBioPortal).}
 \usage{
 setup_study(
-  seq_type_filter = "genome",
+  seq_type_filter = c("capture"),
   short_name = "GAMBL",
   human_friendly_name = "GAMBL data",
   project_name = "gambl_all",
-  description = "GAMBL data from genome",
+  description = "GAMBL data from exomes",
   overwrite = TRUE,
   out_dir
 )

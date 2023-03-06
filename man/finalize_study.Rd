@@ -8,12 +8,11 @@ finalize_study(
   seq_type_filter = "genome",
   short_name = "GAMBL",
   human_friendly_name = "GAMBL data",
-  project_name = "gambl_all",
-  description = "GAMBL data from genome",
+  project_name = "gambl_minus_icgc",
+  description = "GAMBL data without ICGC",
   cancer_type = "mixed",
   these_sample_ids,
   overwrite = TRUE,
-  meta_columns,
   out_dir
 )
 }
@@ -30,11 +29,9 @@ finalize_study(
 
 \item{cancer_type}{Cancer types included in study, default is "mixed".}
 
-\item{these_sample_ids}{A vector of all the sample_id that were included in any of the data files for cBioPortal (i.e the output from \code{setup_study} and \code{setup_fusions}).}
+\item{these_sample_ids}{A vector of all the sample_id that were included in any of the data files for cBioPortal.}
 
 \item{overwrite}{Flag to specify that files should be overwritten if they exist. Default is TRUE.}
-
-\item{meta_columns}{Optional parameter for specifying metadata fields in the study. If not provided, the function will resort to using default metadata columns.}
 
 \item{out_dir}{The full path to the base directory where the files are being created.}
 }
@@ -47,7 +44,7 @@ Finish setting up a new cBioPortal instance or updating an existing portal data 
 \details{
 This function should be run as the last (or third step) in setting up a new cBioPortal instance.
 The functions that should be run prior to these functions are; \code{setup_study} and \code{setup_fusions}.
-\code{finalize_study} creates all the necessary tables and metadata files (case lists) that are required to import a new study into cBioPortal.
+\code{finalize_study} creates all the necessary tables and metadata files that are required to import a new study into cBioPortal.
 Note, that all parameter arguments used in this function have to match the same parameter arguments for the previously run functions (\code{setup_study} and \code{setup_fusions}).
 }
 \examples{

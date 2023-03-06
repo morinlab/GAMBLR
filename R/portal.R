@@ -20,6 +20,7 @@
 #'
 #' @return A vector of sample_id for the patients that have been included.
 #'
+#' @rawNamespace import(data.table, except = c("last", "first", "between", "transpose"))
 #' @import dplyr readr
 #' @export
 #'
@@ -27,11 +28,11 @@
 #' Setup study and save included ids as a vector of characters:
 #' ids = setup_study(out_dir = "GAMBLR/cBioPortal/instance01/")
 #'
-setup_study = function(seq_type_filter = "genome",
+setup_study = function(seq_type_filter = c("capture"),
                        short_name = "GAMBL",
                        human_friendly_name = "GAMBL data",
                        project_name = "gambl_all",
-                       description = "GAMBL data from genome",
+                       description = "GAMBL data from exomes",
                        overwrite = TRUE,
                        out_dir){
  cancer_type="mixed"
@@ -147,8 +148,8 @@ setup_study = function(seq_type_filter = "genome",
 #'
 setup_fusions = function(short_name = "GAMBL",
                          human_friendly_name = "GAMBL data",
-                         project_name = "gambl_all",
-                         description = "GAMBL data from genome",
+                         project_name = "gambl_minus_icgc",
+                         description = "GAMBL data without ICGC",
                          gambl_maf = "maf_slms3_hg19",
                          gambl_icgc_maf = "maf_slms3_hg19_icgc",
                          out_dir){
@@ -181,6 +182,7 @@ setup_fusions = function(short_name = "GAMBL",
 
   #deal with any cases not in metadata
   fusions_df =  data.frame(Hugo_Symbol = annotated_sv$gene,
+                           Entrez_Gene_Id = annotated_sv$entrez,
                            Center = "BCGSC",
                            Tumor_Sample_Barcode = annotated_sv$tumour_sample_id,
                            Fusion = c(pull(unite(annotated_sv, fusion, partner, gene, sep = "-"), fusion)),
@@ -254,7 +256,7 @@ setup_fusions = function(short_name = "GAMBL",
 #'
 #' @details This function should be run as the last (or third step) in setting up a new cBioPortal instance.
 #' The functions that should be run prior to these functions are; `setup_study` and `setup_fusions`.
-#' `finalize_study` creates all the necessary tables and metadata files (case lists) that are required to import a new study into cBioPortal.
+#' `finalize_study` creates all the necessary tables and metadata files that are required to import a new study into cBioPortal.
 #' Note, that all parameter arguments used in this function have to match the same parameter arguments for the previously run functions (`setup_study` and `setup_fusions`).
 #'
 #' @param seq_type_filter the seq type you are setting up a study for, default is "genome".
@@ -263,9 +265,8 @@ setup_fusions = function(short_name = "GAMBL",
 #' @param project_name Unique ID for your project.
 #' @param description A verbose description of your data set.
 #' @param cancer_type Cancer types included in study, default is "mixed".
-#' @param these_sample_ids A vector of all the sample_id that were included in any of the data files for cBioPortal (i.e the output from `setup_study` and `setup_fusions`).
+#' @param these_sample_ids A vector of all the sample_id that were included in any of the data files for cBioPortal.
 #' @param overwrite Flag to specify that files should be overwritten if they exist. Default is TRUE.
-#' @param meta_columns Optional parameter for specifying metadata fields in the study. If not provided, the function will resort to using default metadata columns. 
 #' @param out_dir The full path to the base directory where the files are being created.
 #'
 #' @return Nothing.
@@ -276,196 +277,43 @@ setup_fusions = function(short_name = "GAMBL",
 #' @examples
 #' finalize_study(these_sample_ids = c(ids, fusion_ids), out_dir = "GAMBLR/cBioPortal/instance01/")
 #'
-finalize_study = function(seq_type_filter = "genome",
+finalize_study = function(seq_type_filter="genome",
                           short_name = "GAMBL",
                           human_friendly_name = "GAMBL data",
-                          project_name = "gambl_all",
-                          description = "GAMBL data from genome",
+                          project_name = "gambl_minus_icgc",
+                          description = "GAMBL data without ICGC",
                           cancer_type = "mixed",
                           these_sample_ids,
                           overwrite = TRUE,
-                          meta_columns,
                           out_dir){
 
-  #resort to "default" metadata columns, if not specified
-  if(missing(meta_columns)){
-    meta_columns = c("patient_id", "sample_id", "pathology",
-                     "EBV_status_inf", "cohort", "time_point",
-                     "ffpe_or_frozen", "myc_ba", "bcl6_ba",
-                     "bcl2_ba", "COO_consensus", "DHITsig_consensus", "lymphgen") 
-  }
-
   #create necessary files
-  #CASE LIST: Sequenced
+  #create case list
   caselist = paste0(out_dir, "case_lists/cases_sequenced.txt")
 
   tabseplist = paste(unique(these_sample_ids), collapse = "\t")
 
   caselistdata = c(paste0("cancer_study_identifier: ", project_name),
-                   paste0("stable_id: ", project_name, "_sequenced"), "case_list_name: Samples sequenced", "case_list_description: This is this case list that contains all samples that are profiled for mutations.",
+                   paste0("stable_id: ", project_name, "_sequenced"), "case_list_name: Samples sequenced.", "case_list_description: This is this case list that contains all samples that are profiled for mutations.",
                    paste0(c("case_list_ids:", tabseplist),collapse = " "))
 
   cat(caselistdata, sep = "\n", file = caselist)
 
-  #CASE LIST: All
+  #create case list all
   caselist_all = paste0(out_dir, "case_lists/cases_all.txt")
 
   caselistdata = c(paste0("cancer_study_identifier: ", project_name),
-                   paste0("stable_id: ",project_name, "_allcases"), "case_list_name: Samples sequenced", "case_list_description: This is this case list that contains all samples that are profiled for mutations.",
+                   paste0("stable_id: ",project_name, "_allcases"), "case_list_name: Samples sequenced.", "case_list_description: This is this case list that contains all samples that are profiled for mutations.",
                    paste0(c("case_list_ids:", tabseplist), collapse = " "))
 
   cat(caselistdata, sep = "\n", file = caselist_all)
-
-  #CASE LIST: BLGSP-study
-  caselist = paste0(out_dir, "case_lists/BLGSP-study.txt")
-
-  #get sample ID subset belonging to the defined case list
-  blgsp_study = get_gambl_metadata(case_set = "BLGSP-study", seq_type_filter = seq_type_filter) %>%
-    pull(Tumor_Sample_Barcode) %>%
-    intersect(these_sample_ids)
-
-  tabseplist = paste(unique(blgsp_study), collapse = "\t")
-
-  caselistdata = c(paste0("cancer_study_identifier: ", project_name),
-                   paste0("stable_id: ", project_name, "_blgsp_study"), "case_list_name: BLGSP-study", "case_list_description: For information on how this case list, refer to the documentation of GAMBLR::get_gambl_metadata.",
-                   paste0(c("case_list_ids:", tabseplist), collapse = " "))
-
-  cat(caselistdata, sep = "\n", file = caselist)
-
-  #CASE LIST: FL-study
-  caselist = paste0(out_dir, "case_lists/FL-study.txt")
-
-  #get sample ID subset belonging to the defined case list
-  fl_study = get_gambl_metadata(case_set = "FL-study", seq_type_filter = seq_type_filter) %>%
-    pull(Tumor_Sample_Barcode) %>%
-    intersect(these_sample_ids)
-
-  tabseplist = paste(unique(fl_study), collapse = "\t")
-
-  caselistdata = c(paste0("cancer_study_identifier: ", project_name),
-                  paste0("stable_id: ", project_name, "_fl_study"), "case_list_name: FL-study", "case_list_description: For information on how this case list, refer to the documentation of GAMBLR::get_gambl_metadata.",
-                  paste0(c("case_list_ids:", tabseplist), collapse = " "))
-
-  cat(caselistdata, sep = "\n", file = caselist)
-
-  #CASE LIST: DLBCL-study
-  caselist = paste0(out_dir, "case_lists/DLBCL-study.txt")
-
-  #get sample ID subset belonging to the defined case list
-  dlbcl_study = get_gambl_metadata(case_set = "DLBCL-study", seq_type_filter = seq_type_filter) %>%
-    pull(Tumor_Sample_Barcode) %>%
-    intersect(these_sample_ids)
-
-  tabseplist = paste(unique(dlbcl_study), collapse = "\t")
-
-  caselistdata = c(paste0("cancer_study_identifier: ", project_name),
-                  paste0("stable_id: ", project_name, "_dlbcl_study"), "case_list_name: DLBCL-study", "case_list_description: For information on how this case list, refer to the documentation of GAMBLR::get_gambl_metadata.",
-                  paste0(c("case_list_ids:", tabseplist), collapse = " "))
-
-  cat(caselistdata, sep = "\n", file = caselist)
-
-  #CASE LIST: FL-DLBCL-study
-  caselist = paste0(out_dir, "case_lists/FL-DLBCL-study.txt")
-
-  #get sample ID subset belonging to the defined case list
-  fl_dlbcl_study = get_gambl_metadata(case_set = "FL-DLBCL-study", seq_type_filter = seq_type_filter) %>%
-    pull(Tumor_Sample_Barcode) %>%
-    intersect(these_sample_ids)
-
-  tabseplist = paste(unique(fl_dlbcl_study), collapse = "\t")
-
-  caselistdata = c(paste0("cancer_study_identifier: ", project_name),
-                  paste0("stable_id: ", project_name, "_fl_dlbcl_study"), "case_list_name: FL-DLBCL-study", "case_list_description: For information on how this case list, refer to the documentation of GAMBLR::get_gambl_metadata.",
-                  paste0(c("case_list_ids:", tabseplist), collapse = " "))
-
-  cat(caselistdata, sep = "\n", file = caselist)
-
-  #CASE LIST: FL-DLBCL-all
-  caselist = paste0(out_dir, "case_lists/FL-DLBCL-all.txt")
-
-  #get sample ID subset belonging to the defined case list
-  fl_dlbcl_all = get_gambl_metadata(case_set = "FL-DLBCL-all", seq_type_filter = seq_type_filter) %>%
-    pull(Tumor_Sample_Barcode) %>%
-    intersect(these_sample_ids)
-
-  tabseplist = paste(unique(fl_dlbcl_all), collapse = "\t")
-
-  caselistdata = c(paste0("cancer_study_identifier: ", project_name),
-                  paste0("stable_id: ", project_name, "_fl_dlbcl_all"), "case_list_name: FL-DLBCL-all", "case_list_description: For information on how this case list, refer to the documentation of GAMBLR::get_gambl_metadata.",
-                  paste0(c("case_list_ids:", tabseplist), collapse = " "))
-
-  cat(caselistdata, sep = "\n", file = caselist)
-
-  #CASE LIST: DLBCL-unembargoed
-  caselist = paste0(out_dir, "case_lists/DLBCL-unembargoed.txt")
-
-  #get sample ID subset belonging to the defined case list
-  dlbcl_unembargoed = get_gambl_metadata(case_set = "DLBCL-unembargoed", seq_type_filter = seq_type_filter) %>%
-    pull(Tumor_Sample_Barcode) %>%
-    intersect(these_sample_ids)
-
-  tabseplist = paste(unique(dlbcl_unembargoed), collapse = "\t")
-
-  caselistdata = c(paste0("cancer_study_identifier: ", project_name),
-                  paste0("stable_id: ", project_name, "_dlbcl_unembargoed"), "case_list_name: DLBCL-unembargoed", "case_list_description: For information on how this case list, refer to the documentation of GAMBLR::get_gambl_metadata.",
-                  paste0(c("case_list_ids:", tabseplist), collapse = " "))
-
-  cat(caselistdata, sep = "\n", file = caselist)
-
-  #CASE LIST: BL-DLBCL-manuscript
-  caselist = paste0(out_dir, "case_lists/BL-DLBCL-manuscript.txt")
-
-  #get sample ID subset belonging to the defined case list
-  bl_dlbcl_manuscript = get_gambl_metadata(case_set = "BL-DLBCL-manuscript", seq_type_filter = seq_type_filter) %>%
-    pull(Tumor_Sample_Barcode) %>%
-    intersect(these_sample_ids)
-
-  tabseplist = paste(unique(bl_dlbcl_manuscript), collapse = "\t")
-
-  caselistdata = c(paste0("cancer_study_identifier: ", project_name),
-                  paste0("stable_id: ", project_name, "_bl_dlbcl_manuscript"), "case_list_name: BL-DLBCL-manuscript", "case_list_description: For information on how this case list, refer to the documentation of GAMBLR::get_gambl_metadata.",
-                  paste0(c("case_list_ids:", tabseplist), collapse = " "))
-
-  cat(caselistdata, sep = "\n", file = caselist)
-
-  #CASE LIST: MCL
-  caselist = paste0(out_dir, "case_lists/MCL.txt")
-
-  #get sample ID subset belonging to the defined case list
-  mcl = get_gambl_metadata(case_set = "MCL", seq_type_filter = seq_type_filter) %>%
-    pull(Tumor_Sample_Barcode) %>%
-    intersect(these_sample_ids)
-
-  tabseplist = paste(unique(mcl), collapse = "\t")
-
-  caselistdata = c(paste0("cancer_study_identifier: ", project_name),
-                  paste0("stable_id: ", project_name, "_mcl"), "case_list_name: MCL", "case_list_description: For information on how this case list, refer to the documentation of GAMBLR::get_gambl_metadata.",
-                  paste0(c("case_list_ids:", tabseplist), collapse = " "))
-
-  cat(caselistdata, sep = "\n", file = caselist)
-
-  #CASE LIST: MCL-CLL
-  caselist = paste0(out_dir, "case_lists/MCL-CLL.txt")
-
-  #get sample ID subset belonging to the defined case list
-  mcl_cll = get_gambl_metadata(case_set = "MCL-CLL", seq_type_filter = seq_type_filter) %>%
-    pull(Tumor_Sample_Barcode) %>%
-    intersect(these_sample_ids)
-
-  tabseplist = paste(unique(mcl_cll), collapse = "\t")
-
-  caselistdata = c(paste0("cancer_study_identifier: ", project_name),
-                  paste0("stable_id: ", project_name, "_mcl_cll"), "case_list_name: MCL-CLL", "case_list_description: For information on how this case list, refer to the documentation of GAMBLR::get_gambl_metadata.",
-                  paste0(c("case_list_ids:", tabseplist), collapse = " "))
-
-  cat(caselistdata, sep = "\n", file = caselist)
 
   #meta samples
   #prepare and write out the relevant metadata
   clinsamp = paste0(out_dir, "data_clinical_samples.txt")
   meta_samples = get_gambl_metadata(seq_type_filter=seq_type_filter) %>%
     dplyr::filter(sample_id %in% these_sample_ids) %>%
-    dplyr::select(all_of(meta_columns))
+    dplyr::select(patient_id, sample_id, pathology, EBV_status_inf, cohort, time_point, ffpe_or_frozen, myc_ba, bcl6_ba, bcl2_ba, COO_consensus, DHITsig_consensus, lymphgen)
 
   colnames(meta_samples) = toupper(colnames(meta_samples))
 
@@ -518,6 +366,7 @@ finalize_study = function(seq_type_filter = "genome",
 #'
 #' @return Nothing.
 #' 
+#' @rawNamespace import(data.table, except = c("last", "first", "between", "transpose"))
 #' @import dplyr readr
 #' @export
 #'
@@ -529,7 +378,7 @@ study_check = function(data_clinical_samples_path = "data_clinical_samples.txt",
                        cases_fusions_path = "case_lists/cases_fusion.txt",
                        cases_all_path = "case_lists/cases_all.txt",
                        cases_sequenced_path = "case_lists/cases_sequenced.txt",
-                       project_name = "gambl_all",
+                       project_name = "gambl_minus_icgc",
                        out_dir){
 
   #read clinical file (skip header)
@@ -621,236 +470,4 @@ study_check = function(data_clinical_samples_path = "data_clinical_samples.txt",
   }else{
     message("No additional samples were found in case lists that are not described in the clinical file (data_clinical_samples.txt)")
   }
-}
-
-#' @title Custom cBioPortal case list.
-#'
-#' @description Create and a custom case list for easy data subset in cBioPortal.
-#'
-#' @details Convenience function for specifying custom case lists that can be browsed on cBioPortal.
-#' This function takes a set of sample IDs `these_sample_ids` and intersect the IDs with what's available in the study-specific clinical file.
-#' This function also extracts the project name for the specified study, i.e the project name that is defined withing the folder specified under the `dir` parameter.
-#'
-#' @param these_sample_ids A vector of sample IDs to be subset into a case list. Required parameter.
-#' @param caselist_name Name of the generated case list (name does not include the file format, this will be added automagically). This parameter is required.
-#' @param caselist_description A verbose description of the created case list. Required.
-#' @param return_missing_samples Boolean parameter. Set to TRUE to return all sample IDs that are in the desired case list, but not represented in the study specific clinical file. Default is FALSE.
-#' @param dir The directory where all study specific files live.
-#'
-#' @return
-#'
-#' @import dplyr
-#'
-#' @examples
-#' #get some sample IDs
-#' my_samples = get_gambl_metadata() %>%
-#'  dplyr::filter(pathology == "FL") %>%
-#'  dplyr::filter(cohort == "FL_GenomeCanada") %>%
-#'  pull(sample_id)
-#'
-#' #create case list with selected sample IDs
-#' custom_caselist(these_sample_ids = my_samples,
-#'                 caselist_name = "FL_Canada",
-#'                 caselist_description = "Follicular Lymphoma from the Genome Canada Study",
-#'                 dir = "../path/to/study_directory/")
-#'
-custom_caselist = function(these_sample_ids,
-                           caselist_name,
-                           caselist_description,
-                           return_missing_samples = FALSE,
-                           dir){
-
-  #get path to the clinical file holding all sample IDs
-  clinical_file = data.table::fread(file = paste0(dir, "data_clinical_samples.txt"), sep = "\t", header = FALSE, skip = 5)
-
-  #get project name
-  meta_study = data.table::fread(file = paste0(dir, "meta_study.txt"), fill = TRUE)
-  project_name = pull(meta_study[2,2])
-
-  #pull sample IDs
-  clinical_ids = clinical_file %>%
-    pull(V2)
-
-  #intersect sample IDs from the clinical file with specified sample IDs (these_sample_ids) to ensure no IDs are described in the new case list, that are not represented in the clinical file.
-  ids = intersect(clinical_ids, these_sample_ids)
-
-  #print how many sample, if any, were removed in the process.
-  not_in_clin = setdiff(these_sample_ids, clinical_ids)
-  if(!return_missing_samples){
-    print(paste0(length(not_in_clin), " Samples not described in the clinical file (data.clinical_samples.txt) for the selected study. To see what samples are not represented, set return_missing_samples = TRUE."))
-  }else{
-    print(paste0(length(not_in_clin), " Samples not described in the clinical file (data.clinical_samples.txt) for the selected study. The missing samples are: "))
-    print(not_in_clin)
-  }
-
-  #create new case list file
-  new_caselist = paste0(dir, "case_lists/", caselist_name, ".txt")
-
-  #get sample ID subset belonging to the defined case list
-  tabseplist = paste(unique(ids), collapse = "\t")
-
-  caselistdata = c(paste0("cancer_study_identifier: ", project_name),
-                   paste0("stable_id: ", project_name, caselist_name),
-                   paste0("case_list_name: ", caselist_name),
-                   paste0("case_list_description: ", caselist_description),
-                   paste0(c("case_list_ids:", tabseplist), collapse = " "))
-
-  cat(caselistdata, sep = "\n", file = new_caselist)
-}
-
-#' @title Get Study Info.
-#'
-#' @description Function for retrieving study specific identifiers.
-#'
-#' @details This function takes one required parameter (`dir`).
-#' This is the relative path to the main directory for the study of interest.
-#' The function reads in the meta_study.txt file and extracts unique study identifiers.
-#' This returns a list that holds all the identifiers.
-#' The user can also return the study identifiers to the global environment.
-#' To do so, set the `list_to_global = TRUE`.
-#'
-#' @param dir The relative path to the study directory (expects to find meta_study.txt in this folder).
-#' @param list_to_global Boolean parameter, if set to TRUE all study identifiers will be returned to the global environment. Default is FALSE.
-#'
-#' @return A list with study specific identifiers, or nothing (i.e list_to_global = TRUE).
-#'
-#' @examples
-#' #return study identifiers as  list:
-#' my_study_info= get_study_info(dir = "path/to/study/")
-#'
-#' #return all identifiers to the global environment:
-#' get_study_info(dir = "path/to/study/", list_to_global = TRUE)
-#'
-get_study_info = function(dir,
-                          list_to_global = FALSE){
-
-  #check if meta data file exists in the selected directory
-  if(file.exists(paste0(dir, "meta_study.txt"))){
-    study_meta =  data.table::fread(file = paste0(dir, "meta_study.txt"), sep = "\t", header = FALSE)
-  }else{
-    stop("Unable to find meta_study.txt in the specified folder (dir)...")
-  }
-
-  #tidy the data frame
-  meta_info = gsub(".*: ","", study_meta$V1)
-
-  #create a list with study identifiers
-  meta_list = list(cancer_type = meta_info[1],
-                   project_name = meta_info[2],
-                   human_friendly_name = meta_info[3],
-                   short_name = meta_info[4],
-                   description = meta_info[5])
-
-  #add vectors to global environment
-  if(list_to_global){
-    list2env(meta_list, envir = .GlobalEnv)
-  }else{
-    return(meta_list)
-  }
-}
-
-#' @title Create cBioPortal Study.
-#'
-#' @description Wrapper function for creating a import-ready cBioPortal study.
-#'
-#' @details This function internally calls `setup_study`, `setup_fusions`, `finalize_study` and `study_check` to generate all necessary files for importing a study into cBioPortal.
-#' This function was developed to streamline this step and at the same time ensure that the study information and selected data type is consistent throughout the individual steps of generating a study.
-#' In addition, the user can also control if the generated study should be checked for sample IDs in case lists that are not described in the clinical file.
-#' This potentially will prevent an annoying error that prevents the study to be imported into the active cBioPortal instance, default is TRUE.
-#' Fusions are also handled based on the selected seq type (`this_seqtype`).
-#'
-#' @param this_seqtype The seq type you want to generate a study for. Default is "genome".
-#' @param short_name A concise name for your portal project. Default is "GAMBL".
-#' @param human_friendly_name A slightly more verbose name for your project. Default is "GAMBL data".
-#' @param project_name Unique ID for your project. Default is "gambl_all".
-#' @param description A verbose description of your data set. This is what the study will be named when accessing it through cBioPortal. Default is "GAMBL data from genome".
-#' @param gambl_maf MAF origin.
-#' @param gambl_icgc_maf ICGC MAF origin.
-#' @param cancer_type Cancer types included in study, default is "mixed".
-#' @param overwrite Flag to specify that files should be overwritten if they exist. Default is TRUE.
-#' @param check_study Boolean parameter that controls if the generated study should be checked for sample IDs in case lists, that are not described in the clinical file. Default is TRUE.
-#' @param out_dir The full path to the base directory where the files are being created.
-#'
-#' @return Nothing. Rather, this function generates all files necessary for successfully importing a study into an active cBioPortal instance.
-#'
-#'
-#' @examples
-#' #generate cBioPortal study for all GAMBL genome samples:
-#' cbioportal_create()
-#'
-#'
-#' #generate a cBioPortal study for all GAMVL capture samples:
-#' cbioportal_create(this_seqtype = "capture", description = "GAMBL data from exomes")
-#'
-cbioportal_create = function(this_seqtype = "genome",
-                             short_name = "GAMBL",
-                             human_friendly_name = "GAMBL data",
-                             project_name = "gambl_all",
-                             description = "GAMBL data from genome",
-                             gambl_maf = "maf_slms3_hg19",
-                             gambl_icgc_maf = "maf_slms3_hg19_icgc",
-                             cancer_type = "mixed",
-                             overwrite = TRUE,
-                             check_study = TRUE,
-                             out_dir){
-
-  #setup study
-  ids = setup_study(seq_type_filter = this_seqtype,
-                    short_name = short_name,
-                    human_friendly_name = human_friendly_name,
-                    project_name = project_name,
-                    description = description,
-                    overwrite = overwrite,
-                    out_dir = out_dir)
-
-  #setup fusions
-  if(this_seqtype == "genome"){
-    fusion_ids = setup_fusions(short_name = short_name,
-                               human_friendly_name = human_friendly_name,
-                               project_name = project_name,
-                               description = description,
-                               gambl_maf = gambl_maf,
-                               gambl_icgc_maf = gambl_icgc_maf,
-                               out_dir = out_dir)
-
-  }else if(this_seqtype == "capture"){
-    message("The selected seq type is capture, no fusions will be generated...")
-
-  }else{
-    stop("Please enter a valid seq_type (i.e genome or capture)...")
-  }
-
-  #finalize study
-  if(this_seqtype == "genome"){
-    finalize_study(seq_type_filter = this_seqtype,
-                   short_name = short_name,
-                   human_friendly_name = human_friendly_name,
-                   project_name = project_name,
-                   description = description,
-                   cancer_type = cancer_type,
-                   these_sample_ids = c(ids, fusion_ids),
-                   overwrite = overwrite, out_dir = out_dir)
-
-  }else if(this_seqtype == "capture"){
-    finalize_study(seq_type_filter = this_seqtype,
-                   short_name = short_name,
-                   human_friendly_name = human_friendly_name,
-                   project_name = project_name,
-                   description = description,
-                   cancer_type = cancer_type,
-                   these_sample_ids = ids,
-                   overwrite = overwrite, out_dir = out_dir)
-
-  }else{
-    stop("Please enter a valid seq_type (i.e genome or capture)...")
-  }
-
-  #check study
-  study_check(data_clinical_samples_path = "data_clinical_samples.txt",
-              data_fusions_path = "data_fusions.txt",
-              cases_fusions_path = "case_lists/cases_fusion.txt",
-              cases_all_path = "case_lists/cases_all.txt",
-              cases_sequenced_path = "case_lists/cases_sequenced.txt",
-              project_name = project_name,
-              out_dir = out_dir)
 }

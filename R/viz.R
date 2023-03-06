@@ -1929,6 +1929,7 @@ prettyOncoplot = function(maftools_obj,
 #' @param comparison_column Required: the name of the metadata column containing the comparison values.
 #' @param label1 Optional argument. Label to be shown as a title for the oncoplot #1.
 #' @param label2 Optional argument. Label to be shown as a title for the oncoplot #2.
+#' @param ... `prettyOncoplot` arguments, see that function for more info on avaialble parameters. 
 #'
 #' @return A ggplot object with 2 oncoplots side-by-side.
 #' 
@@ -1959,7 +1960,8 @@ prettyCoOncoplot = function(maf,
                             comparison_column,
                             comparison_values,
                             label1,
-                            label2){
+                            label2,
+                            ...){
 
     # check for required arguments
     required = c("maf", "metadata", "comparison_column")

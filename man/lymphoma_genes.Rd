@@ -10,11 +10,11 @@
 A data frame with 196 rows and 12 columns.
 \describe{
 \item{Gene}{Gene symbol}
-\item{DLBCL}{Boolean flag annotating id the described genes are significant for the pathology (DLBCL)}
-\item{FL}{Boolean flag annotating id the described genes are significant for the pathology (FL)}
-\item{BL}{Boolean flag annotating id the described genes are significant for the pathology (BL)}
-\item{MCL}{Boolean flag annotating id the described genes are significant for the pathology (MCL)}
-\item{CLL}{Boolean flag annotating id the described genes are significant for the pathology (CLL)}
+\item{DLBCL}{Boolean flag annotating if the described genes are significant for the pathology (DLBCL)}
+\item{FL}{Boolean flag annotating if the described genes are significant for the pathology (FL)}
+\item{BL}{Boolean flag annotating if the described genes are significant for the pathology (BL)}
+\item{MCL}{Boolean flag annotating if the described genes are significant for the pathology (MCL)}
+\item{CLL}{Boolean flag annotating if the described genes are significant for the pathology (CLL)}
 \item{ensembl_gene_id}{Ensembl gene ID}
 \item{hgnc_symbol}{Gene symbol (Hugo)}
 \item{LymphGen}{Boolean flag, TRUE if lymphGen}
