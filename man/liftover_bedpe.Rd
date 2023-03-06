@@ -21,6 +21,12 @@ liftover_bedpe(
 
 \item{target_build}{Specify which build the data should be lifted to (must be one of hg19, grch37, hg38, grch38).}
 
+\item{col_names}{If not provided, the column names will be imposed.}
+
+\item{col_types}{Specify column types if column names are also defined with \code{col_names}.}
+
+\item{standard_bed}{Boolean parameter for defining the type of bed file that is provided with \code{bedpe_file}. Deafult is FALSE.}
+
 \item{verbose}{Set to TRUE for verbose output. Default is FALSE.}
 }
 \value{

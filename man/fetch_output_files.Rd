@@ -6,7 +6,6 @@
 \usage{
 fetch_output_files(
   tool,
-  unix_group,
   base_path,
   results_dir = "99-outputs",
   seq_type = "genome",
@@ -23,9 +22,9 @@ fetch_output_files(
 
 \item{seq_type}{Either genome or capture.}
 
-\item{search_pattern}{File-extensions search pattern.}
+\item{build}{Default is hg38.}
 
-\item{genome_build}{Default is hg38.}
+\item{search_pattern}{File-extensions search pattern.}
 }
 \value{
 A data frame with one row per file and sample IDs parsed from the file name along with other GAMBL wildcards.

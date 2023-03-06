@@ -7,9 +7,9 @@
 get_gene_cn_and_expression(gene_symbol, ensembl_id)
 }
 \arguments{
-\item{hugo_symbol}{One or more gene symbols. Should match the values in a maf file.}
+\item{gene_symbol}{One or more gene symbols. Should match the values in a maf file.}
 
-\item{ensembl_gene_id}{One or more ensembl gene IDs. Only one of hugo_symbols or ensembl_gene_ids may be used.}
+\item{ensembl_id}{One or more ensembl gene IDs. Only one of hugo_symbols or ensembl_gene_ids may be used.}
 }
 \value{
 A data frame with copy number information and gene expressions.

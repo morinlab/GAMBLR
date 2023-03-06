@@ -49,8 +49,6 @@ fancy_qc_plot(
 \item{y_axis_lab}{Plotting parameter, label of y-axis.}
 
 \item{return_plotdata}{Optional parameter, if set to TRUE a vector of acceptable data types for plotting will be returned, and nothing else.}
-
-\item{sort_by}{Plotting parameter, set sorting column for bar plots.}
 }
 \value{
 A plot as a ggplot object (grob).

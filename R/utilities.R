@@ -51,8 +51,6 @@ compare_coding_mutation_pattern = function(maf_df1,maf_df2,gene){
 #' @import dplyr readr
 #' @export
 #'
-#' @examples
-#'
 write_sample_set_hash = function(update = TRUE,
                                  new_sample_sets_df){
 
@@ -124,9 +122,13 @@ write_sample_set_hash = function(update = TRUE,
 #'
 #' @import digest dplyr readr
 #' @export
+<<<<<<< HEAD
 #'
 #' @examples
 #'
+=======
+#'
+>>>>>>> master
 get_samples_md5_hash = function(these_samples_metadata,
                                 these_samples,
                                 sample_set_name,
@@ -1651,6 +1653,7 @@ collate_derived_results = function(sample_table,
 #' @details INTERNAL FUNCTION called by collate_results, not meant for out-of-package usage.
 #'
 #' @param sample_table A data frame with sample_id as the first column.
+#' @param seq_type_filter Filtering criteria, default is genomes.
 #'
 #' @return The sample table with additional columns.
 #'
@@ -1659,7 +1662,9 @@ collate_derived_results = function(sample_table,
 #' @examples
 #' gambl_results_derived = collate_csr_results(gambl_results_derived)
 #'
-collate_csr_results = function(sample_table,seq_type_filter = "genome"){
+collate_csr_results = function(sample_table,
+                               seq_type_filter = "genome"){
+
    if(seq_type_filter=="capture"){
      return(sample_table) #result doesn't exist or make sense for this seq_type
    }

@@ -78,6 +78,8 @@ prettyOncoplot(
 
 \item{sortByColumns}{A vector containing the column names you want to sort columns (patients) on.}
 
+\item{arrange_descending}{A Boolean parameter. Set to TRUE to sort metadata in descending fashion. Default is FALSE.}
+
 \item{removeNonMutated}{Set to TRUE to drop unmutated cases.}
 
 \item{minMutationPercent}{Only genes mutated in more than minMutationPercent \% patients will be included.}
@@ -103,6 +105,10 @@ prettyOncoplot(
 \item{custom_colours}{Provide named vector (or named list of vectors) containing custom annotation colours if you do not want to use standartized pallette.}
 
 \item{hideTopBarplot}{Optional argument for removing top bar plot. Default value is TRUE.}
+
+\item{tally_all_mutations}{Optional argument. Set to TRUE to tally all mutations. Default is FALSE.}
+
+\item{tally_all_mutations_max}{Optional argument. Default is 1000.}
 
 \item{hideSideBarplot}{Optional argument for removing side bar plot. Default value is FALSE.}
 

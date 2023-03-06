@@ -17,6 +17,8 @@ process_all_manta_bedpe(
 
 \item{out_dir}{output directory.}
 
+\item{group}{The unix group.}
+
 \item{genome_build}{Genome build.}
 
 \item{projection_build}{The genome we want all results to be relative to (lifted if necessary).}

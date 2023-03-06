@@ -8,6 +8,8 @@ collate_csr_results(sample_table, seq_type_filter = "genome")
 }
 \arguments{
 \item{sample_table}{A data frame with sample_id as the first column.}
+
+\item{seq_type_filter}{Filtering criteria, default is genomes.}
 }
 \value{
 The sample table with additional columns.

@@ -1281,7 +1281,7 @@ get_combined_sv = function(min_vaf = 0,
 #' @param min_vaf The minimum tumour VAF for a SV to be returned. Default is 0.1.
 #' @param min_score The lowest Manta somatic score for a SV to be returned. Default is 40.
 #' @param pass If set to TRUE, only return SVs that are annotated with PASS in the FILTER column. Set to FALSE to keep all variants, regardless if they PASS the filters. Default is TRUE. 
-#' @param pair_status Use to restrict results (if desired) to matched or unmatched results (default is to return all).
+#' @param pairing_status Use to restrict results (if desired) to matched or unmatched results (default is to return all).
 #' @param from_flatfile Set to TRUE by default, FALSE is no longer supported (database).
 #'
 #' @return A data frame in a bedpe-like format with additional columns that allow filtering of high-confidence SVs.
@@ -2592,8 +2592,8 @@ get_coding_ssm = function(limit_cohort,
 #' @details This function works well with both Hugo Symbols and Ensembl Gene IDs. 
 #' It's also possible to specify more than one gene.
 #'
-#' @param hugo_symbol One or more gene symbols. Should match the values in a maf file.
-#' @param ensembl_gene_id One or more ensembl gene IDs. Only one of hugo_symbols or ensembl_gene_ids may be used.
+#' @param gene_symbol One or more gene symbols. Should match the values in a maf file.
+#' @param ensembl_id One or more ensembl gene IDs. Only one of hugo_symbols or ensembl_gene_ids may be used.
 #'
 #' @return A data frame with copy number information and gene expressions.
 
