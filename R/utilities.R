@@ -122,13 +122,7 @@ write_sample_set_hash = function(update = TRUE,
 #'
 #' @import digest dplyr readr
 #' @export
-<<<<<<< HEAD
 #'
-#' @examples
-#'
-=======
-#'
->>>>>>> master
 get_samples_md5_hash = function(these_samples_metadata,
                                 these_samples,
                                 sample_set_name,

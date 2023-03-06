@@ -32,6 +32,3 @@ This function is in draft mode.
 \details{
 This is a helper function that is not meant to be used routinely.
 }
-\examples{
-
-}

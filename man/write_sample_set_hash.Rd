@@ -22,6 +22,3 @@ Run this function with \code{update = TRUE} (default) to use an existing sample 
 If this table does not exist, perhaps you need to pull from the master branch.
 If this function is run with the default for \code{update}, the user must also provide the new sample sets with the \code{new_sample_sets_df}.
 }
-\examples{
-
-}
