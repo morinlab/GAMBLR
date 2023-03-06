@@ -11,9 +11,6 @@ write_sample_set_hash(update = TRUE, new_sample_sets_df)
 
 \item{new_sample_sets_df}{Data frame of all existing and new sample sets. Required when running in default update mode.}
 }
-\value{
-
-}
 \description{
 Update or create a file to track unique identifiers for sample sets in GAMBL
 }

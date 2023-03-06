@@ -8,7 +8,7 @@
 #'   \item{chromosome}{Chromosomes without chr-prefix, 1:22, X and Y.}
 #'   \item{start}{Start coordinates for the specified chromosome arm.}
 #'   \item{end}{End coordinates for the specified chromosome arm.}
-#'   \item{arm{Chromosome arm, either p or q.}
+#'   \item{arm}{Chromosome arm, either p or q.}
 #' }
 "chromosome_arms_grch37"
 
@@ -23,7 +23,7 @@
 #'   \item{chromosome}{Chromosomes with chr-prefix, 1:22, X and Y.}
 #'   \item{start}{Start coordinates for the specified chromosome arm.}
 #'   \item{end}{End coordinates for the specified chromosome arm.}
-#'   \item{arm{Chromosome arm, either p or q.}
+#'   \item{arm}{Chromosome arm, either p or q.}
 #' }
 "chromosome_arms_hg38"
 
@@ -367,7 +367,7 @@
 
 #' Lymphoma Genes Comprehensive.
 #'
-#' A detailed data frame with lymphoma genes, annotated with evidence from literature and aSHM. 
+#' A detailed data frame with lymphoma genes, annotated with evidence from literature and aSHM.
 #'
 #' @format ## `lymphoma_genes_comprehensive`
 #' A data frame with 127 rows and 9 columns.

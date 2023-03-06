@@ -46,8 +46,6 @@ compare_coding_mutation_pattern = function(maf_df1,maf_df2,gene){
 #' @param update Leave as TRUE for default functionality (i.e. updating the existing table). If the table doesn't exist you probably need to pull from Master.
 #' @param new_sample_sets_df Data frame of all existing and new sample sets. Required when running in default update mode.
 #'
-#' @return
-#'
 #' @import dplyr readr
 #' @export
 #'
@@ -203,8 +201,6 @@ cache_output = function(result_df,
 #' @param all_mutations_in_these_regions If you are calling this function many times (e.g. bins spanning a larger region), to save a ton of time you are strongly encouraged to provide the output of `get_ssm_by_region` on the entire region of interest and passing it to this function
 #' @param count_by Defaults to counting all variants. Specify 'sample_id' if you want to collapse and count only one per sample
 #' @param seq_type The seq_type you want back, default is genome.
-#'
-#' @return
 #'
 #' @import dplyr
 #' @export

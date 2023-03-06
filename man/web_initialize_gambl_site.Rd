@@ -20,9 +20,6 @@ web_initialize_gambl_site(
 
 \item{my_gitlab_email}{The email used for gitlab.}
 }
-\value{
-
-}
 \description{
 Set up a fresh instance of a website to host on gitlab.
 }

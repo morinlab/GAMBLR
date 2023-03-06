@@ -9,9 +9,6 @@ tidy_gene_expression(return_df = FALSE)
 \arguments{
 \item{return_df}{Boolean parameter to return the dataframe, default is FALSE (i.e writing results to file).}
 }
-\value{
-
-}
 \description{
 Read a full expression matrix.
 }

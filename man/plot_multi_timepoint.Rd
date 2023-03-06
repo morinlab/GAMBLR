@@ -23,9 +23,6 @@ plot_multi_timepoint(
 
 \item{detail}{TODO}
 }
-\value{
-
-}
 \description{
 This function doesn't do anything yet, thus, I ahve removed it from being exported to NAMESPACE (for now).
 }

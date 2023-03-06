@@ -9,15 +9,13 @@ coding_class = c("Frame_Shift_Del", "Frame_Shift_Ins", "In_Frame_Del", "In_Frame
 #' @details This function takes a tool or pipeline with `tool_name` and the unix group with `unix_group` and returns information such as paths to individual files.
 #' Optionally, the user can provide an already loaded data frame with all the file details (`targ_df`).
 #' for more information and examples, refer to the parameter descriptions as well as function examples.
-#' 
+#'
 #' @param targ_df Optionally provide a data frame with all file details.
 #' @param tool_name The tool or pipeline that generated the files (should be the same for all).
 #' @param unix_group The unix group (should be the same for all).
 #' @param filename_end_pattern Optionally specify a pattern to search for the files among a longer set of files in the outputs.
 #' @param update_db Set to TRUE to overwrite any existing rows in the table for this tool/unix_group combination.
 #' @param target_path Path to targets.
-#'
-#' @return
 #'
 #' @import dplyr readr RMariaDB stringr DBI tidyr
 #' @export
@@ -110,7 +108,7 @@ find_expected_outputs = function(targ_df,
 #'
 #' @description Populate the database with the per-sample summarized results of various tools.
 #'
-#' @details this function is still in draft mode, export to NAMESPACE has been removed for now. 
+#' @details this function is still in draft mode, export to NAMESPACE has been removed for now.
 #'
 #' @param tool_name Name of the tool to get the results for.
 #'
@@ -410,14 +408,12 @@ populate_each_tool_result = function(tool,
 #' @title Read Merge Manta With Liftover.
 #'
 #' @description Takes a path to bedpe and runs liftover (`liftover_bedpe`) based on the original genome build of the bedpe.
-#' 
+#'
 #' @details This is a helper function that is not meant to be used routinely.
 #'
 #' @param bedpe_paths path to bedpe
 #' @param pattern pattern
 #' @param out_dir output directory
-#'
-#' @return
 #'
 #' @import dplyr readr
 #'
@@ -490,7 +486,7 @@ read_merge_manta_with_liftover = function(bedpe_paths = c(),
 
 #' @title Process All Manta Bedpe.
 #'
-#' @description This function is in draft mode. 
+#' @description This function is in draft mode.
 #'
 #' @details This is a helper function that is not meant to be used routinely.
 #'
@@ -499,8 +495,6 @@ read_merge_manta_with_liftover = function(bedpe_paths = c(),
 #' @param group The unix group.
 #' @param genome_build Genome build.
 #' @param projection_build The genome we want all results to be relative to (lifted if necessary).
-#'
-#' @return
 #'
 #' @import dplyr readr
 #'
@@ -660,7 +654,7 @@ fetch_output_files = function(tool,
     #project_base = "/projects/nhl_meta_analysis_scratch/gambl/results_local/"
     local_base_path = paste0(local_project_base, base_path)
     base_path = paste0(project_base, base_path)
-    
+
   }
   if(tool == "battenberg"){
     results_path = paste0(base_path, "/", results_dir, "/seg/", seq_type, "--projection/")
@@ -669,7 +663,7 @@ fetch_output_files = function(tool,
     results_path = paste0(base_path, "/", results_dir, "/", seq_type, "--projection/")
     local_results_path = paste0(local_base_path, "/", results_dir, "/", seq_type, "--projection/")
   }
- 
+
   #This still fails when a matching file isn't found. No clue why this doesn't work
   if(tool == "sequenza"){
 
@@ -951,7 +945,7 @@ fread_maf = function(maf_file_path,
     colClasses = colClasses,
     select=select_cols
     )
-  
+
   return(maf_dt)
 }
 
@@ -964,8 +958,6 @@ fread_maf = function(maf_file_path,
 #' The user can also specify if they want the data frame returned into their R session, or if the data frame should be written to file (default).
 #'
 #' @param return_df Boolean parameter to return the dataframe, default is FALSE (i.e writing results to file).
-#'
-#' @return
 #'
 #' @import dplyr readr stringr tidyr
 #' @export
@@ -1143,7 +1135,7 @@ liftover_bedpe = function(bedpe_file,
     original_bedpe = original_bedpe %>%
       dplyr::mutate(CHROM_A = ifelse(!grepl("chr", CHROM_A), paste0("chr", CHROM_A), CHROM_A),
                     CHROM_B = ifelse(!grepl("chr", CHROM_B), paste0("chr", CHROM_B), CHROM_B))
-    
+
     if(verbose){
       print(head(original_bedpe))
     }
