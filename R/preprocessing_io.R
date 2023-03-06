@@ -627,6 +627,7 @@ process_all_manta_bedpe = function(file_df,
 #' together with the genome build (`genome_build`). A data frame will be returned with one row per file and sample IDs together with GAMBL wildcards.
 #'
 #' @param tool Name of tool.
+#' @param unix_group The unix group of the sample set.
 #' @param base_path Either the full or relative path to where all the results directories are for the tool e.g. "gambl/sequenza_current".
 #' @param results_dir Directory with results.
 #' @param seq_type Either genome or capture.
@@ -642,6 +643,7 @@ process_all_manta_bedpe = function(file_df,
 #' fetch_output_files(tool = "manta", unix_group = "genome")
 #'
 fetch_output_files = function(tool,
+                              unix_group,
                               base_path,
                               results_dir = "99-outputs",
                               seq_type = "genome",
@@ -685,7 +687,8 @@ fetch_output_files = function(tool,
   }else if(tool == "battenberg"){
     results_path = paste0(base_path, "/", results_dir, "/seg/", seq_type, "--", build,"/")
     all_files = dir(results_path, pattern = search_pattern)
-
+    print(results_path)
+    print(search_pattern)
     #extract tumour and normal ID
     all_tumours = unlist(lapply(all_files, function(x){tumour = unlist(strsplit(x, "--"))[1]}))
     all_normals = unlist(lapply(all_files, function(x){tumour = unlist(strsplit(x, "--"))[2]}))
