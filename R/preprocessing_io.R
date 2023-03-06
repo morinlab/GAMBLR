@@ -112,14 +112,14 @@ find_expected_outputs = function(targ_df,
 #'
 #' @details this function is still in draft mode, export to NAMESPACE has been removed for now. 
 #'
-#' @param tool Name of the tool to get the results for.
+#' @param tool_name Name of the tool to get the results for.
 #'
 #' @return Nothing.
 #'
 #' @examples
-#' results = populate_tool_results("slims_3")
+#' results = populate_tool_results(tool_name = "slims_3")
 #'
-populate_tool_results = function(){
+populate_tool_results = function(tool_name){
 
   #IMPORTANT TODO: This function should only ever work with samples that exist in the metadata
   # Perhaps it should report any excluded outputs in case they need to be deleted from the main output directories
@@ -147,8 +147,8 @@ populate_tool_results = function(){
 #' This is done with setting `include_silent = TRUE` (default is FALSE).
 #'
 #' @param tool Name of tool to get results from.
-#' @param genome_build A single genome build or a vector of all genome builds to process.
-#' @param unix_group A single unix group or a vector of all unix groups to process.
+#' @param genome_builds A single genome build or a vector of all genome builds to process.
+#' @param unix_groups A single unix group or a vector of all unix groups to process.
 #' @param include_silent Logical parameter indicating whether to include silent mutations into coding mutations. Default is FALSE.
 #'
 #' @return Nothing.
@@ -496,14 +496,13 @@ read_merge_manta_with_liftover = function(bedpe_paths = c(),
 #'
 #' @param file_df Paths to bedpe.
 #' @param out_dir output directory.
+#' @param group The unix group.
 #' @param genome_build Genome build.
 #' @param projection_build The genome we want all results to be relative to (lifted if necessary).
 #'
 #' @return
 #'
 #' @import dplyr readr
-#'
-#' @examples
 #'
 process_all_manta_bedpe = function(file_df,
                                    out_dir,
@@ -637,7 +636,7 @@ process_all_manta_bedpe = function(file_df,
 #' @param base_path Either the full or relative path to where all the results directories are for the tool e.g. "gambl/sequenza_current".
 #' @param results_dir Directory with results.
 #' @param seq_type Either genome or capture.
-#' @param genome_build Default is hg38.
+#' @param build Default is hg38.
 #' @param search_pattern File-extensions search pattern.
 #'
 #' @return A data frame with one row per file and sample IDs parsed from the file name along with other GAMBL wildcards.
@@ -649,7 +648,6 @@ process_all_manta_bedpe = function(file_df,
 #' fetch_output_files(tool = "manta", unix_group = "genome")
 #'
 fetch_output_files = function(tool,
-                              unix_group,
                               base_path,
                               results_dir = "99-outputs",
                               seq_type = "genome",
@@ -1103,6 +1101,9 @@ assemble_file_details = function(file_details_df,
 #' @param bedpe_file Either specify the path to a bedpe file.
 #' @param bedpe_df Or specify the bedpe data in a data frame.
 #' @param target_build Specify which build the data should be lifted to (must be one of hg19, grch37, hg38, grch38).
+#' @param col_names If not provided, the column names will be imposed.
+#' @param col_types Specify column types if column names are also defined with `col_names`.
+#' @param standard_bed Boolean parameter for defining the type of bed file that is provided with `bedpe_file`. Deafult is FALSE.
 #' @param verbose Set to TRUE for verbose output. Default is FALSE.
 #'
 #' @return Data frame containing original bedpe data with new coordinates.

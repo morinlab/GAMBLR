@@ -166,8 +166,8 @@ annotate_ssm_blacklist = function(mutations_df,
 #'
 #' @details This function takes a data frame with CNVs (`seq_df`) and annotates recurrent CNVs.
 #'
-#' @param seq_df Data frame of sequences with start and end coordinates.
-#' @param seq_file Optional argument to read sequences from file (currently not used in function).
+#' @param seg_df Data frame of sequences with start and end coordinates.
+#' @param seg_file Optional argument to read sequences from file (currently not used in function).
 #'
 #' @return Nothing.
 #'

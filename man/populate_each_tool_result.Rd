@@ -14,11 +14,11 @@ populate_each_tool_result(
 \arguments{
 \item{tool}{Name of tool to get results from.}
 
+\item{genome_builds}{A single genome build or a vector of all genome builds to process.}
+
+\item{unix_groups}{A single unix group or a vector of all unix groups to process.}
+
 \item{include_silent}{Logical parameter indicating whether to include silent mutations into coding mutations. Default is FALSE.}
-
-\item{genome_build}{A single genome build or a vector of all genome builds to process.}
-
-\item{unix_group}{A single unix group or a vector of all unix groups to process.}
 }
 \value{
 Nothing.

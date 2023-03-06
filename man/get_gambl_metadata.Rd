@@ -2,7 +2,7 @@
 % Please edit documentation in R/database.R
 \name{get_gambl_metadata}
 \alias{get_gambl_metadata}
-\title{Get the current GAMBL metadata.}
+\title{Get GAMBL metadata.}
 \usage{
 get_gambl_metadata(
   seq_type_filter = "genome",
@@ -18,18 +18,17 @@ get_gambl_metadata(
 )
 }
 \arguments{
-
 \item{seq_type_filter}{Filtering criteria (default: all genomes).}
 
 \item{tissue_status_filter}{Filtering criteria (default: only tumour genomes, can be "mrna" or "any" for the superset of cases).}
 
-\item{case_set}{optional short name for a pre-defined set of cases avoiding any embargoed cases (current options: 'BLGSP-study', 'FL-study', 'DLBCL-study', 'FL-DLBCL-study', 'FL-DLBCL-all', 'DLBCL-unembargoed', 'BL-DLBCL-manuscript', 'MCL','MCL-CLL')}
+\item{case_set}{Optional short name for a pre-defined set of cases avoiding any embargoed cases (current options: 'BLGSP-study', 'FL-study', 'DLBCL-study', 'FL-DLBCL-study', 'FL-DLBCL-all', 'DLBCL-unembargoed', 'BL-DLBCL-manuscript', 'MCL','MCL-CLL').}
 
 \item{remove_benchmarking}{By default the FFPE benchmarking duplicate samples will be dropped.}
 
 \item{with_outcomes}{Optionally join to gambl outcome data.}
 
-\item{from_flatfile}{Default is to use the metadata in the flatfiles from your clone of the repository. The user can alternatively provide sample_flatfile and biopsy_flatfile}
+\item{from_flatfile}{New default is to use the metadata in the flat-files from your clone of the repo. Can be overridden to use the database.}
 
 \item{sample_flatfile}{Optionally provide the full path to a sample table to use instead of the default.}
 
@@ -38,22 +37,17 @@ get_gambl_metadata(
 \item{only_available}{If TRUE, will remove samples with FALSE or NA in the bam_available column (default: TRUE).}
 
 \item{seq_type_priority}{For duplicate sample_id with different seq_type available, the metadata will prioritize this seq_type and drop the others.}
-
 }
 \value{
 A data frame with metadata for each biopsy in GAMBL
 }
 \description{
-
 Return metadata for a selection of samples.
 }
 \details{
 This function returns metadata for GAMBL samples. Options for subset and filter the returned data are available.
 For more information on how to use this function with different filtering criteria, refer to the parameter descriptions,
 examples and vignettes. Embargoed cases (current options: 'BLGSP-study', 'FL-study', 'DLBCL-study', 'FL-DLBCL-study', 'FL-DLBCL-all', 'DLBCL-unembargoed', 'BL-DLBCL-manuscript', 'MCL','MCL-CLL')
-Load and assemble a metadata table using the patient and sample metadata stored in a local clone of the GAMBL repository. 
-If run outside the GSC, this function expects the user to have a local clone of this repository and the path to that directory specified in config.yml.
-
 }
 \examples{
 #basic usage 

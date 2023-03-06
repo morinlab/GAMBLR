@@ -55,6 +55,8 @@ fancy_v_sizedis(
 
 \item{log_10}{Boolean statement for y-axis, default is TRUE.}
 
+\item{plot_trim}{If TRUE, trim the tails of the violins to the range of the data. If FALSE (default), don't trim the tails.}
+
 \item{chr_select}{vector of chromosomes to be included in plot, defaults to autosomes.}
 
 \item{coding_only}{Optional. Set to TRUE to restrict to plotting only coding mutations.}
@@ -62,8 +64,6 @@ fancy_v_sizedis(
 \item{from_flatfile}{If set to true the function will use flat files instead of the database.}
 
 \item{use_augmented_maf}{Boolean statement if to use augmented maf, default is FALSE.}
-
-\item{trim}{Boolean statement for trimming violin plot. Default is TRUE.}
 }
 \value{
 A plot as a ggplot object (grob).

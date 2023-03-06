@@ -15,6 +15,8 @@ setup_study(
 )
 }
 \arguments{
+\item{seq_type_filter}{the seq type you are setting up a study for, default is "genome".}
+
 \item{short_name}{A concise name for your portal project.}
 
 \item{human_friendly_name}{A slightly more verbose name for your project.}

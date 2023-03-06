@@ -10,6 +10,7 @@
 #' Optionally the user can also run `study_check` to ensure all samples described by the "clinical" file are included in the study.
 #' Also, note that the parameters chosen for this function have to match the same parameters called for any subsequent study function calls.
 #'
+#' @param seq_type_filter the seq type you are setting up a study for, default is "genome".
 #' @param short_name A concise name for your portal project.
 #' @param human_friendly_name A slightly more verbose name for your project.
 #' @param project_name Unique ID for your project.
@@ -258,6 +259,7 @@ setup_fusions = function(short_name = "GAMBL",
 #' `finalize_study` creates all the necessary tables and metadata files that are required to import a new study into cBioPortal.
 #' Note, that all parameter arguments used in this function have to match the same parameter arguments for the previously run functions (`setup_study` and `setup_fusions`).
 #'
+#' @param seq_type_filter the seq type you are setting up a study for, default is "genome".
 #' @param short_name A concise name for your portal project.
 #' @param human_friendly_name A slightly more verbose name for your project.
 #' @param project_name Unique ID for your project.

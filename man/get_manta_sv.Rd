@@ -40,9 +40,9 @@ get_manta_sv(
 
 \item{pass}{If set to TRUE, only return SVs that are annotated with PASS in the FILTER column. Set to FALSE to keep all variants, regardless if they PASS the filters. Default is TRUE.}
 
-\item{from_flatfile}{Set to TRUE by default, FALSE is no longer supported (database).}
+\item{pairing_status}{Use to restrict results (if desired) to matched or unmatched results (default is to return all).}
 
-\item{pair_status}{Use to restrict results (if desired) to matched or unmatched results (default is to return all).}
+\item{from_flatfile}{Set to TRUE by default, FALSE is no longer supported (database).}
 }
 \value{
 A data frame in a bedpe-like format with additional columns that allow filtering of high-confidence SVs.
