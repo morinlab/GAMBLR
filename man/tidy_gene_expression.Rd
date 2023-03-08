@@ -2,13 +2,22 @@
 % Please edit documentation in R/preprocessing_io.R
 \name{tidy_gene_expression}
 \alias{tidy_gene_expression}
-\title{Read a full expression matrix and subset to samples in GAMBL that have metadata (remove duplicates with consistent preferences)}
+\title{Tidy gene Expression.}
 \usage{
 tidy_gene_expression(return_df = FALSE)
 }
-\value{
-
+\arguments{
+\item{return_df}{Boolean parameter to return the dataframe, default is FALSE (i.e writing results to file).}
 }
 \description{
-Read a full expression matrix and subset to samples in GAMBL that have metadata (remove duplicates with consistent preferences)
+Read a full expression matrix.
+}
+\details{
+Read a full expression matrix and subset to samples in GAMBL that have metadata (remove duplicates with consistent preferences).
+The user can also specify if they want the data frame returned into their R session, or if the data frame should be written to file (default).
+}
+\examples{
+#return data frame with gene expression to R
+gene_expression = tidy_gene_expression(return_df = TRUE)
+
 }

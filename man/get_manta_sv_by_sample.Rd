@@ -2,7 +2,7 @@
 % Please edit documentation in R/database.R
 \name{get_manta_sv_by_sample}
 \alias{get_manta_sv_by_sample}
-\title{Load the manta output (from individual flat file) for 1 sample.}
+\title{Get Manta SV By Sample.}
 \usage{
 get_manta_sv_by_sample(
   this_sample_id,
@@ -36,11 +36,14 @@ get_manta_sv_by_sample(
 a data frame containing the Manta outputs from this_sample_id in a bedpe-like format with additional columns extracted from the VCF column.
 }
 \description{
+Load the manta output (from individual flat file) for 1 sample.
+}
+\details{
 This function is used for retrieving Manta results (structural variants) from individual flat-files (one sample).
-For multiple samples, please see get_manta_sv_by_samples (a convenience wrapper function for get_manta_by_sample).
+For multiple samples, please see \code{get_manta_sv_by_samples} (a convenience wrapper function for \code{get_manta_by_sample}).
 Additional columns are extracted from the VCF column and standard filtering options are available.
 This function also performs a lift-over to selected projection, if needed.
-Please note, if force_lift is set to FALSE, an extra column will be added that states if the returned variant calls need to be lifted.
+Please note, if \code{force_lift} is set to FALSE, an extra column will be added that states if the returned variant calls need to be lifted.
 The value for this column is returned TRUE (for all rows) if the available genome projection for the selected sample does not match the selected projection (i.e requiring the user to manually lift the calls).
 }
 \examples{

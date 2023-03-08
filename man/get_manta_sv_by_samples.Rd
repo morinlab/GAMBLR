@@ -2,7 +2,7 @@
 % Please edit documentation in R/database.R
 \name{get_manta_sv_by_samples}
 \alias{get_manta_sv_by_samples}
-\title{Load the manta output for a set of samples}
+\title{Get Manta SV By Samples.}
 \usage{
 get_manta_sv_by_samples(
   these_samples_metadata,
@@ -24,9 +24,12 @@ get_manta_sv_by_samples(
 \item{projection}{The projection of returned calls. Default is grch37.}
 }
 \value{
-a data frame containing the Manta outputs from all sample_id in these_samples_metadata in a bedpe-like format with additional columns extracted from the VCF column.
+A data frame containing the Manta outputs from all sample_id in these_samples_metadata in a bedpe-like format with additional columns extracted from the VCF column.
 }
 \description{
+Load the manta output for a set of samples.
+}
+\details{
 This is a convenience wrapper function for get_manta_sv_by_sample (and called by get_manta_sv).
 }
 \examples{

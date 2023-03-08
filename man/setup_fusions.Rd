@@ -2,7 +2,7 @@
 % Please edit documentation in R/portal.R
 \name{setup_fusions}
 \alias{setup_fusions}
-\title{Annotate SVs and create the input for fusions to be displayed in cBioPortal instance.}
+\title{Setup Fusions (cBioPortal).}
 \usage{
 setup_fusions(
   short_name = "GAMBL",
@@ -25,17 +25,21 @@ setup_fusions(
 
 \item{gambl_maf}{maf origin.}
 
-\item{gambl_icgc_maf}{Icgc maf origin.}
+\item{gambl_icgc_maf}{ICGC maf origin.}
 
 \item{out_dir}{The full path to the base directory where the files are being created.}
-
-\item{include_icgc_data}{Whether or not you want ICGC and other external data included.}
 }
 \value{
 A vector of sample_id for the patients that have been included.
 }
 \description{
 Annotate SVs and create the input for fusions to be displayed in cBioPortal instance.
+}
+\details{
+This function calls \code{get_combined_sv} and runs \code{annotate_sv} on the returned data frame.
+Should be run as the next step after running \code{setup_study}. Note that the parameters called with this function
+has to match the parameter arguments of \code{setup_study}, i.e if \code{short_name} is for \code{setup_study} is "GAMBL",
+then the \code{short_name} in \code{setup_fusions} also has to be "GAMBL", etc.
 }
 \examples{
 fusion_ids = setup_fusions(out_dir = "GAMBLR/cBioPortal/instance01/")

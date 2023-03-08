@@ -2,7 +2,7 @@
 % Please edit documentation in R/annotation.R
 \name{annotate_ssm_blacklist}
 \alias{annotate_ssm_blacklist}
-\title{Annotate and auto-drop a MAF data frame with existing blacklists to remove variants that would be dropped during the merge process.}
+\title{Annotate SSM with Blacklists}
 \usage{
 annotate_ssm_blacklist(
   mutations_df,
@@ -22,35 +22,54 @@ annotate_ssm_blacklist(
 )
 }
 \arguments{
-\item{mutations_df}{df with mutation data.}
+\item{mutations_df}{A data frame with mutation data.}
 
-\item{seq_type}{The seq_type of your mutations if you prefer to apply only the corresponding blacklist (default is to use all available)}
+\item{seq_type}{The seq_type of your mutations if you prefer to apply only the corresponding blacklist. More than one seq_type can be specified as a vector if desired. This parameter is required.}
 
-\item{tool_name}{The tool or pipeline that generated the files (should be the same for all)}
+\item{tool_name}{The tool or pipeline that generated the files (should be the same for all).}
 
-\item{genome_build}{The genome build projection for the variants you are working with (default is grch37)}
+\item{tool_version}{The version of the tool specified under \code{tool_name}.}
 
-\item{project_base}{Optional: A full path to the directory that your blacklist_file_pattern is relative to}
+\item{annotator_name}{Name of annotator, default is "vcf2maf".}
 
-\item{drop_threshold}{The minimum count from one of the blacklists to drop a variant}
+\item{annotator_version}{Version of annotator specified under \code{annotator_name}.}
 
-\item{verbose}{For debugging, print out a bunch of possibly useful information}
+\item{genome_build}{The genome build projection for the variants you are working with (default is grch37).}
 
-\item{invert}{USE WITH CAUTION! This returns only the variants that would be dropped in the process (opposite of what you want, probably)}
+\item{project_base}{Optional: A full path to the directory that your blacklist_file_pattern is relative to.}
 
-\item{unix_group}{The unix group (should be the same for all)}
+\item{blacklist_file_template}{Optional: A string that contains the relative path to your blacklist file from after the project_base (i.e. results) with any wildcards surrounded with curly braces.}
 
-\item{flavour}{Set to "clustered" if you want to use the blacklist for the new and improved SLMS-3 outputs (otherwise leave empty)}
+\item{drop_threshold}{The minimum count from one of the blacklists to drop a variant.}
 
-\item{blacklist_file_pattern}{Optional: A string that contains the relative path to your blacklist file from after the project_base (i.e. results) with any wildcards surrounded with curly braces}
+\item{return_blacklist}{Boolean parameter for returning the blacklist. Default is FALSE.}
+
+\item{use_curated_blacklist}{Boolean parameter for using a curated blacklist, default is FALSE.}
+
+\item{verbose}{For debugging, print out a bunch of possibly useful information.}
+
+\item{invert}{USE WITH CAUTION! This returns only the variants that would be dropped in the process (opposite of what you want, probably).}
 }
 \value{
 A MAF format data frame with two new columns indicating the number of occurrences of each variant in the two blacklists.
 }
 \description{
+Annotate and auto-drop a MAF data frame with existing blacklists.
+}
+\details{
 Annotate and auto-drop a MAF data frame with existing blacklists to remove variants that would be dropped during the merge process.
+This function returns a MAF format data frame with two new columns, indicating the number of occurrences of each variant in the two blacklists.
+Note that there are a collection of parameters to this function to improve flexibility for many applications,
+such as \code{return_blacklist} (returns the used blacklist to the vector given the function, or printed to the terminal if blank).
+For returning variants that would be dropped, one can specify \code{invert = TRUE}, please use with caution, this is most likely the opposite of what you want from this function.
+Lastly, the minimum count from one of the blacklists to drop a variant is specified with \code{drop_threshold = 4}.
+This function also conveniently lets you know how many variants that were dropped in the annotation process.
 }
 \examples{
-deblacklisted_maf_df = annotate_ssm_blacklist(original_maf_df)
+
+#annotate MAF
+deblacklisted_maf = annotate_ssm_blacklist(grande_maf,
+                                          seq_type = "genome",
+                                          genome_build = "hg38")
 
 }

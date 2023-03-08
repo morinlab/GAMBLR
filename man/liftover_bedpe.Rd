@@ -2,7 +2,7 @@
 % Please edit documentation in R/preprocessing_io.R
 \name{liftover_bedpe}
 \alias{liftover_bedpe}
-\title{Use liftOver to convert a bedpe file between the two main genome builds (grch37/hg38)}
+\title{Liftover Bedpe.}
 \usage{
 liftover_bedpe(
   bedpe_file,
@@ -15,19 +15,30 @@ liftover_bedpe(
 )
 }
 \arguments{
-\item{bedpe_file}{Either specify the path to a bedpe file}
+\item{bedpe_file}{Either specify the path to a bedpe file.}
 
-\item{bedpe_df}{Or specify the bedpe data in a data frame}
+\item{bedpe_df}{Or specify the bedpe data in a data frame.}
 
-\item{target_build}{Specify which build the data should be lifted to (must be one of hg19, grch37, hg38, grch38)}
+\item{target_build}{Specify which build the data should be lifted to (must be one of hg19, grch37, hg38, grch38).}
+
+\item{col_names}{If not provided, the column names will be imposed.}
+
+\item{col_types}{Specify column types if column names are also defined with \code{col_names}.}
+
+\item{standard_bed}{Boolean parameter for defining the type of bed file that is provided with \code{bedpe_file}. Deafult is FALSE.}
 
 \item{verbose}{Set to TRUE for verbose output. Default is FALSE.}
 }
 \value{
-Data frame containing original bedpe data with new coordinates
+Data frame containing original bedpe data with new coordinates.
 }
 \description{
-Use liftOver to convert a bedpe file between the two main genome builds (grch37/hg38)
+Liftover Bedpe.
+}
+\details{
+The user can specify a path to the bedpe file that needs to be lifted with \code{bedpe_file},
+or, the suer can specify the bedpe data in a data frame with \code{bedpe_df}.
+The other required parameter is \code{target_build}, this parameter decides the final projection of the lifted bedpe file.
 }
 \examples{
 hg19_sv = get_manta_sv() \%>\% head(100)

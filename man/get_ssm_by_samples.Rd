@@ -2,7 +2,7 @@
 % Please edit documentation in R/database.R
 \name{get_ssm_by_samples}
 \alias{get_ssm_by_samples}
-\title{Get MAF-format data frame for more than one sample and combine together}
+\title{Get SSM By Samples.}
 \usage{
 get_ssm_by_samples(
   these_sample_ids,
@@ -23,39 +23,55 @@ get_ssm_by_samples(
 \arguments{
 \item{these_sample_ids}{A vector of sample_id that you want results for.}
 
-\item{these_samples_metadata}{Optional metadata table}
+\item{these_samples_metadata}{Optional metadata table. If provided, the function will return SSM calls for the sample IDs in the provided metadata table.}
 
-\item{tool_name}{Only supports slms-3 currently}
+\item{tool_name}{Only supports slms-3 currently.}
 
-\item{projection}{Obtain variants projected to this reference (one of grch37 or hg38)}
+\item{projection}{Obtain variants projected to this reference (one of grch37 or hg38).}
 
-\item{flavour}{Currently this function only supports one flavour option but this feature is meant for eventual compatability with additional variant calling parameters/versions}
+\item{seq_type}{The seq type you want results for. Default is "genome".}
+
+\item{flavour}{Currently this function only supports one flavour option but this feature is meant for eventual compatibility with additional variant calling parameters/versions.}
 
 \item{these_genes}{A vector of genes to subset ssm to.}
 
-\item{min_read_support}{Only returns variants with at least this many reads in t_alt_count (for cleaning up augmented MAFs)}
+\item{min_read_support}{Only returns variants with at least this many reads in t_alt_count (for cleaning up augmented MAFs).}
 
 \item{basic_columns}{Return first 45 columns of MAF rather than full details. Default is TRUE.}
 
-\item{maf_cols}{if basic_columns is set to FALSE, the suer can specify what columns to be returned within the MAF. This parameter can either be a list of indexes (integer) or a list of characters.}
+\item{maf_cols}{if basic_columns is set to FALSE, the user can specify what columns to be returned within the MAF. This parameter can either be a vector of indexes (integer) or a vector of characters.}
 
-\item{subset_from_merge}{Instead of merging individual MAFs, the data will be subset from a pre-merged MAF of samples with the specified seq_type}
+\item{subset_from_merge}{Instead of merging individual MAFs, the data will be subset from a pre-merged MAF of samples with the specified seq_type.}
 
-\item{augmented}{default: TRUE. Set to FALSE if you instead want the original MAF from each sample for multi-sample patients instead}
+\item{augmented}{default: TRUE. Set to FALSE if you instead want the original MAF from each sample for multi-sample patients instead.}
 
 \item{engine}{Specify one of readr or fread_maf (default) to change how the large files are loaded prior to subsetting. You may have better performance with one or the other but for me fread_maf is faster and uses a lot less RAM.}
 }
 \value{
-data frame in MAF format.
+A data frame in MAF format.
 }
 \description{
-This function internally runs get_ssm_by_sample.
-In most situations, this should never need to be run with subset_from_merge = TRUE. Instead use one of get_coding_ssm or get_ssm_by_region
-See get_ssm_by_sample for more information
+Get MAF-format data frame for more than one sample and combine them together.
+}
+\details{
+This function internally runs \code{get_ssm_by_sample}.
+The user can either give the function a vector of sample IDs of interest with \code{these_sample_ids},
+or use a metadata table (\code{these_samples_metadata}), already subset to the sample IDs of interest.
+In most situations, this should never need to be run with subset_from_merge = TRUE.
+Instead use one of \code{get_coding_ssm} or \code{get_ssm_by_region}.
+See \code{get_ssm_by_sample} for more information.
 }
 \examples{
+#examples using the these_sample_ids parameter.
 sample_ssms = get_ssm_by_samples(these_sample_ids=c("HTMCP-01-06-00485-01A-01D","14-35472_tumorA","14-35472_tumorB"))
 hg38_ssms = get_ssm_by_samples(these_sample_ids=c("HTMCP-01-06-00485-01A-01D","14-35472_tumorA","14-35472_tumorB"),projection="hg38")
 readr_sample_ssms = get_ssm_by_samples(these_sample_ids=c("HTMCP-01-06-00485-01A-01D","14-35472_tumorA","14-35472_tumorB"),subset_from_merge=TRUE,engine="readr")
 slow_sample_ssms = get_ssm_by_samples(these_sample_ids=c("HTMCP-01-06-00485-01A-01D","14-35472_tumorA","14-35472_tumorB"),subset_from_merge=TRUE)
+
+#example using a metadata table subset to sample IDs of interest.
+my_metadata = get_gambl_metadata(seq_type_filter = "genome") \%>\%
+ dplyr::filter(pathology == "FL")
+
+sample_ssms = get_ssm_by_samples(these_samples_metadata = my_metadata)
+
 }

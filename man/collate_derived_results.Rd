@@ -2,8 +2,7 @@
 % Please edit documentation in R/utilities.R
 \name{collate_derived_results}
 \alias{collate_derived_results}
-\title{INTERNAL FUNCTION called by collate_results, not meant for out-of-package usage.
-Extract derived results stored in the database (these are usually slower to derive on the fly).}
+\title{Collate Derived Results.}
 \usage{
 collate_derived_results(
   sample_table,
@@ -14,14 +13,18 @@ collate_derived_results(
 \arguments{
 \item{sample_table}{A data frame with sample_id as the first column.}
 
+\item{seq_type_filter}{Filtering criteria, default is genomes.}
+
 \item{from_flatfile}{Optional argument whether to use database or flat file to retrieve mutations. Default is FALSE, TRUE is not yet implemented.}
 }
 \value{
 Data frame with one row per sample. Contains the contents of the derived_data table in the database.
 }
 \description{
-INTERNAL FUNCTION called by collate_results, not meant for out-of-package usage.
 Extract derived results stored in the database (these are usually slower to derive on the fly).
+}
+\details{
+INTERNAL FUNCTION called by collate_results, not meant for out-of-package usage.
 }
 \examples{
 gambl_results_derived = collate_derived_results(samples_df)

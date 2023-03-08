@@ -2,7 +2,7 @@
 % Please edit documentation in R/annotation.R
 \name{annotate_igh_breakpoints}
 \alias{annotate_igh_breakpoints}
-\title{Add annotation to IGH breakpoints to infer mechanism based on location within IGH.}
+\title{Annotate IGH Breakpoints.}
 \usage{
 annotate_igh_breakpoints(annotated_df, genome_build = "grch37")
 }
@@ -12,10 +12,14 @@ annotate_igh_breakpoints(annotated_df, genome_build = "grch37")
 \item{genome_build}{Version of reference build to be used, only grch37 currently accepted.}
 }
 \value{
-A slightly modified bedpe with some added columns. The most useful columns that are added are mechanism (one of CSR, AID, VDJ) and label (NA if unmatched, otherwise one of Emu, Smu, one of the J segments or switch regions)
+A slightly modified bedpe with added columns.
 }
 \description{
 Add annotation to IGH breakpoints to infer mechanism based on location within IGH.
+}
+\details{
+Returns a modified bedpe with additional columns.
+The most useful columns that are added are mechanism (one of CSR, AID, VDJ) and label (NA if unmatched, otherwise one of Emu, Smu, one of the J segments or switch regions).
 }
 \examples{
 all_annotated = get_manta_sv() \%>\% annotate_sv()

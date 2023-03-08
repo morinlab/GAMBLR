@@ -2,7 +2,7 @@
 % Please edit documentation in R/portal.R
 \name{setup_study}
 \alias{setup_study}
-\title{Initialize a new cBioPortal instance or update existing portal data set, can also be used to retrieve sample ids included in study.}
+\title{Setup Study (cBioPortal).}
 \usage{
 setup_study(
   seq_type_filter = c("capture"),
@@ -15,6 +15,8 @@ setup_study(
 )
 }
 \arguments{
+\item{seq_type_filter}{the seq type you are setting up a study for, default is "genome".}
+
 \item{short_name}{A concise name for your portal project.}
 
 \item{human_friendly_name}{A slightly more verbose name for your project.}
@@ -26,20 +28,19 @@ setup_study(
 \item{overwrite}{Flag to specify that files should be overwritten if they exist. Default is TRUE.}
 
 \item{out_dir}{The full path to the base directory where the files are being created.}
-
-\item{include_icgc_data}{Whether or not you want ICGC and other external data included.}
-
-\item{exclude_cohorts}{Cohorts to be excluded.}
-
-\item{gambl_maf}{maf origin.}
-
-\item{gambl_icgc_maf}{Icgc maf origin.}
 }
 \value{
 A vector of sample_id for the patients that have been included.
 }
 \description{
 Initialize a new cBioPortal instance or update existing portal data set, can also be used to retrieve sample ids included in study.
+}
+\details{
+This function internally calls \code{get_coding_ssm} to retrieve coding mutations to be included in the study (if \code{overwrite = TRUE}).
+In addition, this function also creates and sets up the proper folder hierarchy and writes the files necessary to import a new cBioPortal study.
+Before a study is ready to be imported to cBioPortal, the user also needs to run \code{setup_fusions} and \code{finalize_study}.
+Optionally the user can also run \code{study_check} to ensure all samples described by the "clinical" file are included in the study.
+Also, note that the parameters chosen for this function have to match the same parameters called for any subsequent study function calls.
 }
 \examples{
 Setup study and save included ids as a vector of characters:

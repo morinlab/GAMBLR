@@ -2,7 +2,7 @@
 % Please edit documentation in R/viz.R
 \name{prettyChromoplot}
 \alias{prettyChromoplot}
-\title{Use GISTIC2.0 scores output to reproduce maftools::chromoplot with more flexibility.}
+\title{Chromosome Plot}
 \usage{
 prettyChromoplot(
   scores,
@@ -18,25 +18,25 @@ prettyChromoplot(
 )
 }
 \arguments{
-\item{scores}{output file scores.gistic from the run of GISTIC2.0}
+\item{scores}{Output file scores.gistic from the run of GISTIC2.0}
 
-\item{genes_to_label}{optional. Provide a data frame of genes to label (if mutated). The first 3 columns must contain chromosome, start, and end coordinates. Another required column must contain gene names and be named \code{gene}. All other columns are ignored. If no data frame provided, oncogenes from GAMBLR packages are used by default to annotate on the plot.}
+\item{genes_to_label}{Optional. Provide a data frame of genes to label (if mutated). The first 3 columns must contain chromosome, start, and end coordinates. Another required column must contain gene names and be named \code{gene}. All other columns are ignored. If no data frame provided, oncogenes from GAMBLR packages are used by default to annotate on the plot.}
 
-\item{cutoff}{optional. Used to determine which regions to color as aberrant. Must be float in the range \link{0-1}. The higher the number, the less regions will be considered as aberrant. The default is 0.5.}
+\item{cutoff}{Optional. Used to determine which regions to color as aberrant. Must be float in the range \link{0-1}. The higher the number, the less regions will be considered as aberrant. The default is 0.5.}
 
-\item{adjust_amps}{optional. The value of G-score for highest amplification peak will be multiplied by this value to determine how far up the gene label will be displayed. Default 0.5.}
+\item{adjust_amps}{Optional. The value of G-score for highest amplification peak will be multiplied by this value to determine how far up the gene label will be displayed. Default 0.5.}
 
-\item{adjust_dels}{optional. The value of G-score for highest deletion peak will be multiplied by this value to determine how far down the gene label will be displayed. Default 2.75.}
+\item{adjust_dels}{Optional. The value of G-score for highest deletion peak will be multiplied by this value to determine how far down the gene label will be displayed. Default 2.75.}
 
-\item{label_size}{optional. The font size for the gene label to be displayed. Default 3.}
+\item{label_size}{Optional. The font size for the gene label to be displayed. Default 3.}
 
-\item{force_pull}{optional. How strong the gene name label will be pulled towards a data point. Default 0 (no pulling).}
+\item{force_pull}{Optional. How strong the gene name label will be pulled towards a data point. Default 0 (no pulling).}
 
-\item{segment.curvature}{optional. Indicates whether arrow to the data point should be curved. Accepts numeric value, where negative is for left-hand and positive for right-hand curves, and 0 for straight lines. Default 0.25}
+\item{segment.curvature}{Optional. Indicates whether arrow to the data point should be curved. Accepts numeric value, where negative is for left-hand and positive for right-hand curves, and 0 for straight lines. Default 0.25.}
 
-\item{segment.ncp}{optional. Indicates number of control points to make a smoother curve. Higher value allows for more flexibility for the curve. Default 4}
+\item{segment.ncp}{Optional. Indicates number of control points to make a smoother curve. Higher value allows for more flexibility for the curve. Default 4.}
 
-\item{segment.angle}{optional. Numeric value in the range 0-180, where less than 90 skews control points of the arrow from label to data point toward the start point. Default 25}
+\item{segment.angle}{Optional. Numeric value in the range 0-180, where less than 90 skews control points of the arrow from label to data point toward the start point. Default 25.}
 }
 \value{
 Nothing
@@ -44,9 +44,15 @@ Nothing
 \description{
 Use GISTIC2.0 scores output to reproduce maftools::chromoplot with more flexibility.
 }
+\details{
+This function uses GISTIC2.0 scores to create a chromosome plot, based on a similar plotting function from \code{maftools}.
+The only required parameter for this function is \code{scores}, which is the path to a file with GISTIC2.0 scores.
+Other parameters are all optional. For a detailed explanation of how to use these, refer to the parameter descriptions.
+}
 \examples{
 #basic usage
 prettyChromoplot("path_to_gistic_results/scores.gistic")
+
 #advanced usages
 prettyChromoplot("path_to_gistic_results/scores.gistic", genes_to_label="path_to_gene_coordinates_table.tsv", cutoff=0.75) +
 ...(any ggplot options to customize plot appearance)
