@@ -1769,7 +1769,7 @@ get_cn_segments = function(region,
   if(from_flatfile){
     cnv_flatfile_template = config::get("results_flatfiles")$cnv_combined$icgc_dart
     cnv_path =  glue::glue(cnv_flatfile_template)
-    full_cnv_path =  paste0(config::get("project_base", config = "default"), cnv_path)
+    full_cnv_path =  paste0(config::get("project_base"), cnv_path)
     
     #check permissions to ICGC data.
     permissions = file.access(full_cnv_path, 4)
