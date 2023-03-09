@@ -34,7 +34,7 @@ jobs:
 
     - name: Build package
       run:
-        Rscript -e "remotes::install_github('morinlab/GAMBLR@kdreval-dev', upgrade = 'never')"
+        Rscript -e "devtools::install_github('morinlab/GAMBLR@kdreval-dev')"
 
     - name: Check package
       run:
