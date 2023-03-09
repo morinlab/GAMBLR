@@ -34,7 +34,7 @@ jobs:
 
     - name: Build package
       run:
-        Rscript -e "devtools::install_github('morinlab/GAMBLR@kdreval-dev')"
+        Rscript -e "devtools::install()"
 
     - name: Check package
       run:
