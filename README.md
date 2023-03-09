@@ -18,20 +18,20 @@ setwd("~/GAMBLR")
 Install the package in R by running the following command (requires the devtools package)
 
 ```
-devtools::install_github("morinlab/GAMBLR")
+devtools::install()
 ```
 
-## Contributing
+## Run Remote On A Local Machine
+If you don't have access to gphost on GSC, no worries, you can still execute GAMBLR functions in another way. Remote support was developed for this purpose. This section explains how to run GAMBLR remote on a *local machine*. There are two different approaches to get this to work, both with its own advantages and limitations. We will be going over both in this next section.
 
-As GAMBL users (GAMBLRs, so to speak) rely on the functionality of this package, the Master branch is protected. All commits must be submitted via pull request on a branch. Please refer to the [GAMBL](https://github.com/morinlab/gambl#contribution-guidelines) documentation for details on how to do this.
-
+### Approach 1 - Quick Start (SSH)
+This section details how to deploy GAMBLR with limited functionality, using ssh_session parameter. This approach requires either a working GSC VPN connection (or is directly accessible if connected to the GSC network).
 
 #### Setup VPN Connection
-
 1. You need a working GSC VPN connection to use this approach. For setting up a VPN connection see [this](https://www.bcgsc.ca/wiki/pages/viewpage.action?spaceKey=SysHelp&title=Learn+how+to+use+VPN) guide. Keep in mind that a **VPN connection is not needed** if your already connected to the GSC network.
 
 #### Clone Repos, Update Paths, Install and Load R Packages
-
+2. Clone [GAMBL](https://github.com/morinlab/gambl) and [GAMBLR](https://github.com/morinlab/GAMBLR) to your local computer. From your terminal run the following commands (folder structures can be whatever you want...)
 
 ```
 mkdir ~/git_repos
@@ -93,11 +93,8 @@ get_gambl_metadata() %>%
 This section details how to obtain GAMBLR with **full** functionality, using a dedicated snake file to retrieve all necessary files and dependencies.
 
 #### Before You Get Started
-
 1. Make sure you have a working SSH key **setup with a pass phrase**. If not, follow instructions at [GSC Wiki](https://www.bcgsc.ca/wiki/login.action?os_destination=%2Fpages%2Fviewpage.action%3FspaceKey%3DSysHelp%26title%3DSetup%2BPassword-less%2BSSH&permissionViolation=true). Warning, this will **not** work with a pass phrase-less SSH connection.
-
 #### Clone Repos and Set Up Environment
-
 2. Clone [GAMBL](https://github.com/morinlab/gambl) and [GAMBLR](https://github.com/morinlab/GAMBLR).
 
 ```
@@ -137,7 +134,6 @@ export GSC_PASSPHRASE="passpharase_from_step_1"
 ```
 
 #### Install GAMBLR In Local Rstudio
-
 7. Open **Rstudio** (locally) and set the working directory to the folder you downloaded in step 2 (in the Rstudio console) and install GAMBLR.
 
 ```
@@ -151,7 +147,6 @@ devtools::install()
 ```
 
 #### Create and Setup Snakemake Environment
-
 9. In the terminal on your local machine, create a new snakemake environment from the [get_gambl_results.yml](https://github.com/morinlab/GAMBLR/blob/master/get_gambl_results.yml) file. Note that you can name this new environment whatever you would like. In this example, the new environment is called **snakemake_gambl**.
 
 ```
@@ -172,7 +167,6 @@ snakemake -s get_gambl_results.smk --cores 1
 ```
 
 #### Use GAMBLR Functions Locally
-
 12. In Rstudio (local), open [test_remote.R](https://github.com/morinlab/GAMBLR/blob/master/test_remote.R) in GAMBLR master folder.
 13. Execute the following in Rstudio console to make use of the updated paths in the [config.yml](https://github.com/morinlab/GAMBLR/blob/master/config.yml) from step 5 (line 5 in [test_remote.r](https://github.com/morinlab/GAMBLR/blob/master/test_remote.R))
 
@@ -225,11 +219,11 @@ Additional details are anything after the description. Details are optional, but
 #'
 #' @details
 #'
-#' @param a_parameter
-#' @param another_parameter
+#' @param a_parameter 
+#' @param another_parameter 
 #'
 #' @return
-#'
+#' 
 #' @import
 #' @export
 #'
