@@ -33,7 +33,7 @@ Imports:
     lubridate,
     maftools,
     metaviz,
-    nloptr (<= 1.2.2.3),
+    nloptr,
     plotly,
     plyr,
     purrr,
