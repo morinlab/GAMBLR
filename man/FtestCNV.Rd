@@ -30,11 +30,7 @@ FtestCNV(
 \item{blacklisted_regions}{Optionally, specify any descriptors (value from column \code{Descriptor} of GISTIC2.0 all_lesions output file) to filter out before any comparisons are done. It is possible to specify a list of multiple descriptors, for example, c("3p12.3", "12p13.2"). Default is NULL.}
 }
 \value{
-list of 3 objects:
-DISTINCT - set of CNV identified as significantly different between 2 groups;
-CNV.EVENTS - conveniently reformatted set of events in both groups that can be used for downstream analyses; and
-GRAPH - forest plot visualization of distinct CNV between 2 groups.
-Output can be accessed by index (e.g.\link{3}), or by name (e.g.\link{"GRAPH"})
+list
 }
 \description{
 Using GISTIC2.0 outputs, perform Fisher's exact test to compare CNV frequencies between 2 groups.
@@ -46,11 +42,12 @@ The last remaining required parameter is \code{comparison}, this parameter takes
 For more information on how to run this function, refer to the function examples and parameter descriptions.
 }
 \examples{
+meta <- get_gambl_metadata()
 # basic usage
-FtestCNV(gistic_lesions = "path_to_GISTIC2.0_output/all_lesions.conf_{confidence_level}.txt", metadata = derived_data, comparison = "pathology")
+FtestCNV(gistic_lesions = "path_to_GISTIC2.0_output/all_lesions.conf_{confidence_level}.txt", metadata = meta, comparison = "pathology")
 
 # advanced usage
-FtestCNV(gistic_lesions = "path_to_GISTIC2.0_output/all_lesions.conf_{confidence_level}.txt", metadata = derived_data,
+FtestCNV(gistic_lesions = "path_to_GISTIC2.0_output/all_lesions.conf_{confidence_level}.txt", metadata = meta,
 comparison = "pathology", fdr.method = "bonferroni", fdr.cutoff = 0.05, blacklisted_regions = c("3p12.3", "12p13.2"))
 
 }

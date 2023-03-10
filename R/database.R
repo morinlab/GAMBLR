@@ -1712,13 +1712,13 @@ get_cn_states = function(regions_list,
 #' @export
 #'
 #' @examples
-#' Return cn segments for one sample:
+#' # Return cn segments for one sample:
 #' sample_cn_seg = get_sample_cn_segments(this_sample_id = "some-sample-id", multiple_samples = FALSE)
 #'
-#' Return cn segments for multiple samples (provided as vector of sample IDs):
+#' # Return cn segments for multiple samples (provided as vector of sample IDs):
 #' samples = get_sample_cn_segments(multiple_samples = TRUE, sample_list = c("some_sample", "another_sample"))
 #'
-#' Return cn segments for multiple samples (read csv with one sample per line):
+#' # Return cn segments for multiple samples (read csv with one sample per line):
 #' sample_list = readLines("../samples-test.csv")
 #' multiple_samples = get_sample_cn_segments(multiple_samples = TRUE, sample_list = sample_list)
 #'
@@ -2662,9 +2662,9 @@ get_gene_cn_and_expression = function(gene_symbol,
 #'
 #' @examples
 #' MYC_expr = get_gene_expression(hugo_symbols = c("MYC"), join_with = "mrna")
-#' Read full expression values df (no subsetting on genes)
+#' # Read full expression values df (no subsetting on genes)
 #' full_expression_df = get_gene_expression_new(all_genes = TRUE, join_with = "genome")
-#' Use loaded df (in the previous step) to get expression values for IRF4 and MYC.
+#' # Use loaded df (in the previous step) to get expression values for IRF4 and MYC.
 #' irf4_myc_expressions = get_gene_expression_new(hugo_symbols = c("IRF4", "MYC"), all_genes = FALSE, join_with = "genome", from_flatfile = FALSE, expression_data = full_expression_df)
 #'
 get_gene_expression = function(metadata,
