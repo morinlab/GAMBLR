@@ -273,7 +273,7 @@ For your convenience, as an example, here is a perfectly documented GAMBLR funct
 #' @param custom_colours Provide named vector (or named list of vectors) containing custom annotation colours if you do not want to use standartized pallette.
 #' @param hide_ids Boolean argument, if TRUE, ids will be removed.
 #'
-#' @return ggplot2 object
+#' @return ggplot2 object.
 #'
 #' @import dplyr ggplot2
 #' @export
@@ -285,7 +285,18 @@ For your convenience, as an example, here is a perfectly documented GAMBLR funct
 #' plot = ashm_rainbow_plot(metadata = metadata, region = region)
 #'
 #' #advanced usages
-#' mybed = data.frame(start=c(128806578,128805652,128748315), end=c(128806992,128809822,128748880), name=c("TSS","enhancer","MYC-e1"))
-#' ashm_rainbow_plot(mutations_maf=my_mutations,metadata=my_metadata,bed=mybed)
+#' mybed = data.frame(start = c(128806578,
+#'                              128805652,
+#'                              128748315),
+#'                    end = c(128806992,
+#'                            128809822,
+#'                            128748880),
+#'                    name = c("TSS",
+#'                             "enhancer",
+#'                             "MYC-e1"))
+#'
+#' ashm_rainbow_plot(mutations_maf = my_mutations,
+#'                   metadata = my_metadata,
+#'                   bed = mybed)
 #'
 ```
