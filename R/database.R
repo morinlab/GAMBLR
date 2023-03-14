@@ -68,11 +68,16 @@ get_excluded_samples = function(tool_name = "slms-3"){
 #' @examples
 #' #example 1, using a vector of patient IDs.
 #' patients = c("00-14595", "00-15201", "01-12047")
-#' patients_maf = get_ssm_by_patients(these_patient_ids = patients, seq_type = "genome", subset_from_merge = FALSE)
+#' patients_maf = get_ssm_by_patients(these_patient_ids = patients,
+#'                                    seq_type = "genome",
+#'                                    subset_from_merge = FALSE)
 #'
 #' #example 2, using a metadata table, subset to the patient IDs of interest.
-#' patient_meta = get_gambl_metadata(seq_type_filter = "genome") %>% dplyr::filter(patient_id %in% patients)
-#' patients_maf_2 = get_ssm_by_patients(these_samples_metadata = patient_meta,subset_from_merge = FALSE)
+#' patient_meta = get_gambl_metadata(seq_type_filter = "genome") %>% 
+#'  dplyr::filter(patient_id %in% patients)
+#' 
+#' patients_maf_2 = get_ssm_by_patients(these_samples_metadata = patient_meta,
+#'                                      subset_from_merge = FALSE)
 #'
 get_ssm_by_patients = function(these_patient_ids,
                                these_samples_metadata,
@@ -162,10 +167,25 @@ get_ssm_by_patients = function(these_patient_ids,
 #'
 #' @examples
 #' #examples using the these_sample_ids parameter.
-#' sample_ssms = get_ssm_by_samples(these_sample_ids=c("HTMCP-01-06-00485-01A-01D","14-35472_tumorA","14-35472_tumorB"))
-#' hg38_ssms = get_ssm_by_samples(these_sample_ids=c("HTMCP-01-06-00485-01A-01D","14-35472_tumorA","14-35472_tumorB"),projection="hg38")
-#' readr_sample_ssms = get_ssm_by_samples(these_sample_ids=c("HTMCP-01-06-00485-01A-01D","14-35472_tumorA","14-35472_tumorB"),subset_from_merge=TRUE,engine="readr")
-#' slow_sample_ssms = get_ssm_by_samples(these_sample_ids=c("HTMCP-01-06-00485-01A-01D","14-35472_tumorA","14-35472_tumorB"),subset_from_merge=TRUE)
+#' sample_ssms = get_ssm_by_samples(these_sample_ids = c("HTMCP-01-06-00485-01A-01D",
+#'                                                       "14-35472_tumorA",
+#'                                                       "14-35472_tumorB"))
+#' 
+#' hg38_ssms = get_ssm_by_samples(projection="hg38",
+#'                                these_sample_ids = c("HTMCP-01-06-00485-01A-01D",
+#'                                                     "14-35472_tumorA",
+#'                                                     "14-35472_tumorB"))
+#' 
+#' readr_sample_ssms = get_ssm_by_samples(subset_from_merge = TRUE,
+#'                                        engine = "readr",
+#'                                        these_sample_ids = c("HTMCP-01-06-00485-01A-01D",
+#'                                                             "14-35472_tumorA",
+#'                                                             "14-35472_tumorB"))
+#' 
+#' slow_sample_ssms = get_ssm_by_samples(subset_from_merge = TRUE,
+#'                                       these_sample_ids = c("HTMCP-01-06-00485-01A-01D",
+#'                                                            "14-35472_tumorA",
+#'                                                            "14-35472_tumorB"))
 #'
 #' #example using a metadata table subset to sample IDs of interest.
 #' my_metadata = get_gambl_metadata(seq_type_filter = "genome") %>%
@@ -360,9 +380,17 @@ get_ssm_by_samples = function(these_sample_ids,
 #' @export
 #'
 #' @examples
-#' this_sample_df = get_ssm_by_sample(this_sample_id = "HTMCP-01-06-00485-01A-01D", this_seq_type = "genome",tool_name = "slims-3", projection = "grch37")
+#' this_sample_df = get_ssm_by_sample(this_sample_id = "HTMCP-01-06-00485-01A-01D", 
+#'                                    this_seq_type = "genome",
+#'                                    tool_name = "slims-3", 
+#'                                    projection = "grch37")
+#' 
 #' capture_meta = get_gambl_metadata(seq_type_filter = "capture")
-#' ssm_sample = get_ssm_by_sample(this_sample_id = "CASA0002_2015-03-10", projection = "grch37",augmented = T,these_samples_metadata = capture_meta)
+#' 
+#' ssm_sample = get_ssm_by_sample(this_sample_id = "CASA0002_2015-03-10",
+#'                                projection = "grch37",
+#'                                augmented = T,
+#'                                these_samples_metadata = capture_meta)
 #'
 get_ssm_by_sample = function(this_sample_id,
                              this_seq_type,
@@ -567,12 +595,14 @@ get_ssm_by_sample = function(this_sample_id,
 #' my_metadata = get_gambl_metadata()
 #'
 #' #use pre-defined custom sample sets
-#' only_blgsp_metadata = get_gambl_metadata(case_set="BLGSP-study")
+#' only_blgsp_metadata = get_gambl_metadata(case_set = "BLGSP-study")
 #'
-#' #override default filters and request metadata for samples other than tumour genomes, e.g. also get the normals
+#' #override default filters and request metadata for samples other than tumour genomes,
+#' #e.g. also get the normals
 #' only_normal_metadata = get_gambl_metadata(tissue_status_filter = c('tumour','normal'))
 #'
-#' non_duplicated_genome_and_capture = get_gambl_metadata(seq_type_filter=c('genome','capture'),seq_type_priority="genome")
+#' non_duplicated_genome_and_capture = get_gambl_metadata(seq_type_filter = c('genome', 'capture'),
+#'                                                        seq_type_priority = "genome")
 #'
 get_gambl_metadata = function(seq_type_filter = "genome",
                               tissue_status_filter = "tumour",
@@ -1300,12 +1330,20 @@ get_combined_sv = function(min_vaf = 0,
 #' myc_locus_sv = get_manta_sv(region = "8:128723128-128774067")
 #'
 #' #get SVs for multiple samples, using these_samples_id
-#' my_samples = get_gambl_metadata() %>% dplyr::select(sample_id) %>% head(10) %>% pull(sample_id)
-#' my_svs_2 = get_manta_sv(these_sample_ids = my_samples, projection = "hg38")
+#' my_samples = get_gambl_metadata() %>% 
+#'  dplyr::select(sample_id) %>% 
+#'  head(10) %>% 
+#'  pull(sample_id)
+#' 
+#' my_svs_2 = get_manta_sv(these_sample_ids = my_samples,
+#'                         projection = "hg38")
 #'
 #' #get SVs for multiple samples using a metadata table and with no VAF/score filtering
-#' my_metadata = get_gambl_metadata() %>% head(10)
-#' my_svs = get_manta_sv(these_samples_metadata = my_metadata, min_vaf = 0, min_score = 0)
+#' my_metadata = get_gambl_metadata() %>% 
+#'  head(10)
+#' my_svs = get_manta_sv(these_samples_metadata = my_metadata,
+#'                       min_vaf = 0,
+#'                       min_score = 0)
 #'
 get_manta_sv = function(these_sample_ids,
                         these_samples_metadata,
@@ -1604,15 +1642,15 @@ get_lymphgen = function(these_samples_metadata,
 #' @param use_cytoband_name Use cytoband names instead of region names, e.g p36.33.
 #'
 #' @return Copy number matrix.
-
-
+#' 
 #' @import dplyr circlize tibble stringr tidyr
 #' @export
 #'
 #' @examples
 #' #basic usage, generic lymphoma gene list
 #' cn_matrix = get_cn_states(regions_bed=grch37_lymphoma_genes_bed)
-#' single_gene_cn = get_cn_states(regions_list=c(this_region), region_names = c("FCGR2B"))
+#' single_gene_cn = get_cn_states(regions_list=c(this_region),
+#'                                region_names = c("FCGR2B"))
 #'
 get_cn_states = function(regions_list,
                          regions_bed,
@@ -1712,15 +1750,19 @@ get_cn_states = function(regions_list,
 #' @export
 #'
 #' @examples
-#' Return cn segments for one sample:
-#' sample_cn_seg = get_sample_cn_segments(this_sample_id = "some-sample-id", multiple_samples = FALSE)
+#' #Return cn segments for one sample:
+#' sample_cn_seg = get_sample_cn_segments(this_sample_id = "some-sample-id",
+#'                                        multiple_samples = FALSE)
 #'
-#' Return cn segments for multiple samples (provided as vector of sample IDs):
-#' samples = get_sample_cn_segments(multiple_samples = TRUE, sample_list = c("some_sample", "another_sample"))
+#' #Return cn segments for multiple samples (provided as vector of sample IDs):
+#' samples = get_sample_cn_segments(multiple_samples = TRUE, 
+#'                                  sample_list = c("some_sample",
+#'                                                  "another_sample"))
 #'
-#' Return cn segments for multiple samples (read csv with one sample per line):
+#' #Return cn segments for multiple samples (read csv with one sample per line):
 #' sample_list = readLines("../samples-test.csv")
-#' multiple_samples = get_sample_cn_segments(multiple_samples = TRUE, sample_list = sample_list)
+#' multiple_samples = get_sample_cn_segments(multiple_samples = TRUE,
+#'                                           sample_list = sample_list)
 #'
 get_sample_cn_segments = function(this_sample_id,
                                   multiple_samples = FALSE,
@@ -2029,8 +2071,11 @@ append_to_table = function(table_name,
 #' @export
 #'
 #' @examples
-#' regions_bed = grch37_ashm_regions %>% mutate(name = paste(gene, region, sep = "_"))
-#' matrix = get_ashm_count_matrix(regions_bed = regions_bed, seq_type="genome")
+#' regions_bed = grch37_ashm_regions %>%
+#'  mutate(name = paste(gene, region, sep = "_"))
+#' 
+#' matrix = get_ashm_count_matrix(regions_bed = regions_bed,
+#'                                seq_type="genome")
 #'
 get_ashm_count_matrix = function(regions_bed,
                                  maf_data,
@@ -2104,9 +2149,13 @@ get_ashm_count_matrix = function(regions_bed,
 #'
 #' @examples
 #' #basic usage, adding custom names from bundled ashm data frame
-#' regions_bed = grch37_ashm_regions %>% mutate(name = paste(gene, region, sep = "_"))
+#' regions_bed = grch37_ashm_regions %>% 
+#'  mutate(name = paste(gene, region, sep = "_"))
+#' 
 #' ashm_basic_details = get_ssm_by_regions(regions_bed = regions_bed)
-#' full_details_maf = get_ssm_by_regions(regions_bed = regions_bed,basic_columns=T)
+#' 
+#' full_details_maf = get_ssm_by_regions(regions_bed = regions_bed,
+#'                                       basic_columns=T)
 #'
 get_ssm_by_regions = function(regions_list,
                               regions_bed,
@@ -2213,9 +2262,14 @@ get_ssm_by_regions = function(regions_list,
 #' @examples
 #' #basic usage
 #' my_mutations = get_ssm_by_region(region = "chr8:128,723,128-128,774,067")
+#' 
 #' #specifying chromosome, start and end individually
-#' my_mutations = get_ssm_by_region(chromosome = "8", qstart = 128723128, qend = 128774067)
-#' bcl2_all_details = get_ssm_by_region(region="chr18:60796500-60988073",basic_columns=T)
+#' my_mutations = get_ssm_by_region(chromosome = "8",
+#'                                  qstart = 128723128,
+#'                                  qend = 128774067)
+#' 
+#' bcl2_all_details = get_ssm_by_region(region = "chr18:60796500-60988073",
+#'                                      basic_columns = T)
 #'
 get_ssm_by_region = function(chromosome,
                              qstart,
@@ -2662,10 +2716,17 @@ get_gene_cn_and_expression = function(gene_symbol,
 #'
 #' @examples
 #' MYC_expr = get_gene_expression(hugo_symbols = c("MYC"), join_with = "mrna")
-#' Read full expression values df (no subsetting on genes)
-#' full_expression_df = get_gene_expression_new(all_genes = TRUE, join_with = "genome")
-#' Use loaded df (in the previous step) to get expression values for IRF4 and MYC.
-#' irf4_myc_expressions = get_gene_expression_new(hugo_symbols = c("IRF4", "MYC"), all_genes = FALSE, join_with = "genome", from_flatfile = FALSE, expression_data = full_expression_df)
+#' 
+#' #Read full expression values df (no subsetting on genes)
+#' full_expression_df = get_gene_expression_new(all_genes = TRUE,
+#'                                              join_with = "genome")
+#' 
+#' #Use loaded df (in the previous step) to get expression values for IRF4 and MYC.
+#' irf4_myc_expressions = get_gene_expression_new(hugo_symbols = c("IRF4", "MYC"),
+#'                                                all_genes = FALSE, 
+#'                                                join_with = "genome",
+#'                                                from_flatfile = FALSE,
+#'                                                expression_data = full_expression_df)
 #'
 get_gene_expression = function(metadata,
                                hugo_symbols,
@@ -2822,7 +2883,9 @@ get_gene_expression = function(metadata,
 #'
 #' @examples
 #' all_sv = get_manta_sv
-#' missing_samples = get_gambl_metadata() %>% anti_join(all_sv, by = c("sample_id" = "tumour_sample_id"))
+#' missing_samples = get_gambl_metadata() %>%
+#'  anti_join(all_sv, by = c("sample_id" = "tumour_sample_id"))
+#' 
 #' missing_from_merge = get_manta_sv_by_samples(these_samples_metadata = missing_samples)
 #'
 get_manta_sv_by_samples = function(these_samples_metadata,
@@ -2919,13 +2982,21 @@ get_manta_sv_by_samples = function(these_samples_metadata,
 #'
 #' @examples
 #' #example 1
-#' #get manta calls for a sample that needs to be lifted to "hg38" and let this function take care of the liftover step for you. 
-#' my_sv = get_manta_sv_by_sample(this_sample_id = "99-27783_tumorA", these_samples_metadata = get_gambl_metadata(), projection = "hg38", force_lift = TRUE)
+#' #get manta calls for a sample that needs to be lifted to "hg38" and let this function
+#' #take care of the liftover step for you. 
+#' my_sv = get_manta_sv_by_sample(this_sample_id = "99-27783_tumorA",
+#'                                these_samples_metadata = get_gambl_metadata(),
+#'                                projection = "hg38",
+#'                                force_lift = TRUE)
 #'
 #' #example 2
 #' #get manta calls based on an already filtered metadata (with one sample ID)
-#' my_metadata = get_gambl_metadata() %>% dplyr::filter(sample_id=="99-27783_tumorA")
-#' my_sv = get_manta_sv_by_sample(these_samples_metadata = my_metadata, projection = "hg38", force_lift = TRUE)
+#' my_metadata = get_gambl_metadata() %>%
+#'  dplyr::filter(sample_id=="99-27783_tumorA")
+#' 
+#' my_sv = get_manta_sv_by_sample(these_samples_metadata = my_metadata,
+#'                                projection = "hg38",
+#'                                force_lift = TRUE)
 #' 
 get_manta_sv_by_sample = function(this_sample_id,
                                   these_samples_metadata,

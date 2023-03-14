@@ -211,14 +211,16 @@ cache_output = function(result_df,
 #'
 #' @examples
 #' #define a region.
-#' my_region = gene_to_region(gene_symbol = "MYC", return_as = "region")
+#' my_region = gene_to_region(gene_symbol = "MYC", 
+#'                            return_as = "region")
 #'
 #' #subset metadata.
 #' my_metadata = get_gambl_metadata() %>%
 #'  dplyr::filter(pathology == "FL")
 #'
 #' #count SSMs for the selected sample subset and defined region.
-#'fl_ssm_counts_myc = count_ssm_by_region(region = my_region, these_samples_metadata = my_metadata)
+#' fl_ssm_counts_myc = count_ssm_by_region(region = my_region,
+#'                                        these_samples_metadata = my_metadata)
 #'
 count_ssm_by_region = function(region,
                                chromosome,
@@ -270,7 +272,10 @@ count_ssm_by_region = function(region,
 #' @export
 #'
 #' @examples
-#' chr8q_bins = region_to_bins(chromosome = "8", start = 48100000, end = 146364022, bin_size = 20000)
+#' chr8q_bins = region_to_bins(chromosome = "8",
+#'                             start = 48100000,
+#'                             end = 146364022,
+#'                             bin_size = 20000)
 #' 
 region_to_bins = function(chromosome,
                  start,
@@ -350,8 +355,11 @@ get_ssh_session = function(host="gphost01.bcgsc.ca"){
 #' @export
 #'
 #' @examples
-#' bcl2_region = gene_to_region(gene_symbol = "BCL2", genome_build = "grch37")
-#' bcl2_region = gene_to_region(ensembl_id = "ENSG00000171791", genome_build = "grch37")
+#' bcl2_region = gene_to_region(gene_symbol = "BCL2",
+#'                              genome_build = "grch37")
+#' 
+#' bcl2_region = gene_to_region(ensembl_id = "ENSG00000171791",
+#'                              genome_build = "grch37")
 #'
 gene_to_region = function(gene_symbol,
                           ensembl_id,
@@ -434,8 +442,13 @@ gene_to_region = function(gene_symbol,
 #' @export
 #'
 #' @examples
-#' myc_region = gene_to_region(gene_symbol = "MYC", genome_build = "grch37", return_as = "df")
-#' region = region_to_gene(region = myc_region, gene_format = "hugo", genome_build = "grch37")
+#' myc_region = gene_to_region(gene_symbol = "MYC",
+#'                             genome_build = "grch37",
+#'                             return_as = "df")
+#' 
+#' region = region_to_gene(region = myc_region,
+#'                         gene_format = "hugo",
+#'                         genome_build = "grch37")
 #'
 region_to_gene = function(region,
                           gene_format = "hugo",
@@ -611,9 +624,12 @@ intersect_maf = function(maf1,
 #' @export
 #'
 #' @examples
-#' coding_tabulated_df = get_coding_ssm_status(maf_data = "maf", gene_symbols=c("MYC","KMT2D"))
-#' coding_tabulated_df = get_coding_ssm_status() #all lymphoma genes from bundled NHL gene list
-#'
+#' coding_tabulated_df = get_coding_ssm_status(maf_data = "maf",
+#'                                             gene_symbols = c("MYC","KMT2D"))
+#' 
+#' #all lymphoma genes from bundled NHL gene list
+#' coding_tabulated_df = get_coding_ssm_status()
+#' 
 get_coding_ssm_status = function(gene_symbols,
                                  these_samples_metadata,
                                  from_flatfile = TRUE,
@@ -776,7 +792,10 @@ trim_scale_expression = function(x){
 #' @export
 #'
 #' @examples
-#' chr11_mutation_freq = calc_mutation_frequency_sliding_windows(this_region = "chr11:69455000-69459900", metadata = meta_df, slide_by = 10, window_size = 10000)
+#' chr11_mut_freq = calc_mutation_frequency_sliding_windows(this_region = "chr11:69455000-69459900",
+#'                                                          metadata = meta_df,
+#'                                                          slide_by = 10,
+#'                                                          window_size = 10000)
 #'
 calc_mutation_frequency_sliding_windows = function(this_region,
                                                    chromosome,
@@ -933,7 +952,9 @@ calc_mutation_frequency_sliding_windows = function(this_region,
 #' @export
 #'
 #' @examples
-#' SVs_bedpe = sv_to_bedpe_file(sv_dataframe, "SVs.bedpe", TRUE)
+#' SVs_bedpe = sv_to_bedpe_file(sv_df = sv_dataframe, 
+#'                              filename = "SVs.bedpe",
+#'                              add_chr_prefix = TRUE)
 #'
 sv_to_bedpe_file = function(sv_df,
                             path = "/projects/rmorin/projects/gambl-repos/gambl-rmorin/results/icgc_dart/misc/",
@@ -1001,9 +1022,13 @@ region_to_chunks = function(region){
 #' @export
 #'
 #' @examples
-#' lymph_genes = lymphoma_genes$Gene #note, this will be used by default if the user wants to be lazy
-#' secure_maf = "/projects/rmorin/projects/gambl-repos/gambl-rmorin/results/icgc_dart/slms-3_vcf2maf_current/level_3/final_merged_grch37.CDS.maf"
-#' safe_oncomatrix_path = sanitize_maf_data(mutation_maf_path = secure_maf, genes_keep = lymph_genes)
+#' #note, this will be used by default if the user wants to be lazy
+#' lymph_genes = lymphoma_genes$Gene
+#' 
+#' secure_maf = "/projects/rmorin/projects/gambl-repos/gambl-rmorin/results/icgc_dart/
+#' slms-3_vcf2maf_current/level_3/final_merged_grch37.CDS.maf"
+#' safe_oncomatrix_path = sanitize_maf_data(mutation_maf_path = secure_maf,
+#'                                          genes_keep = lymph_genes)
 #'
 sanitize_maf_data = function(mutation_maf_path,
                              mutation_maf_data,
@@ -1060,8 +1085,11 @@ sanitize_maf_data = function(mutation_maf_path,
 #'
 #' @examples
 #' hot_ssms = annotate_hotspots(all_ssm)
+#' 
 #' hot_maf = read.maf(hot_ssms)
-#' oncoplot(hot_maf,genes=c("MEF2B","TP53","MYD88"),additionalFeature = c("hot_spot",TRUE))
+#' oncoplot(hot_maf,
+#'          genes = c("MEF2B", "TP53", "MYD88"),
+#'          additionalFeature = c("hot_spot", TRUE))
 #'
 annotate_hotspots = function(mutation_maf,
                              recurrence_min = 5,
@@ -1154,7 +1182,8 @@ annotate_hotspots = function(mutation_maf,
 #' @export
 #'
 #' @examples
-#' hot_ssms = review_hotspots(annotate_hotspots(get_coding_ssm()), genes_of_interest = c("CREBBP"))
+#' hot_ssms = review_hotspots(annotate_hotspots(get_coding_ssm()),
+#'                            genes_of_interest = c("CREBBP"))
 #'
 review_hotspots = function(annotated_maf,
                            genes_of_interest = c("FOXO1", "MYD88", "CREBBP", "NOTCH1", "NOTCH2", "CD79B", "EZH2"),
@@ -1262,10 +1291,14 @@ review_hotspots = function(annotated_maf,
 #' #custom track with annotations
 #' all_sv = get_manta_sv()
 #' annotated_sv = annotate_sv(sv_data = all_sv)
-#' sv_to_custom_track(annotated_sv, output_file = "GAMBL_sv_custom_track_annotated.bed", is_annotated = TRUE)
+#' sv_to_custom_track(annotated_sv,
+#'                    output_file = "GAMBL_sv_custom_track_annotated.bed",
+#'                    is_annotated = TRUE)
 #'
 #' #custom track (no anotatated SVs)
-#' sv_to_custom_track(all_sv, output_file = "GAMBL_sv_custom_track_annotated.bed", is_annotated = FALSE)
+#' sv_to_custom_track(all_sv,
+#'                    output_file = "GAMBL_sv_custom_track_annotated.bed",
+#'                    is_annotated = FALSE)
 #'
 sv_to_custom_track = function(sv_bedpe,
                               output_file,
@@ -1504,23 +1537,40 @@ test_glue = function(placeholder="INSERTED"){
 #' @export
 #'
 #' @examples
-#' #generate new cached results for all genome samples in gambl (Warning, is this what you really want to do?)
-#' genome_collated = collate_results(seq_type_filter = "genome", from_cache = FALSE, write_to_file = TRUE)
+#' #generate new cached results for all genome samples in gambl 
+#' #(Warning, is this what you really want to do?)
+#' genome_collated = collate_results(seq_type_filter = "genome",
+#'                                   from_cache = FALSE,
+#'                                   write_to_file = TRUE)
 #'
 #' #get collated results for all capture samples, using cached results
-#' capture_collated_everything = collate_results( seq_type_filter = "capture", from_cache = TRUE, write_to_file = FALSE)
+#' capture_collated_everything = collate_results(seq_type_filter = "capture",
+#'                                               from_cache = TRUE,
+#'                                               write_to_file = FALSE)
 #'
 #' #use an already subset metadata table for getting collated results (cached)
-#' metadata = get_gambl_metadata(seq_type_filter = "genome") %>% dplyr::filter(pathology == "FL")
-#' fl_collated = collate_results(seq_type_filter = "genome", join_with_full_metadata = TRUE, these_samples_metadata = metadata, write_to_file = FALSE, from_cache = TRUE)
+#' metadata = get_gambl_metadata(seq_type_filter = "genome") %>%
+#'  dplyr::filter(pathology == "FL")
+#' 
+#' fl_collated = collate_results(seq_type_filter = "genome",
+#'                               join_with_full_metadata = TRUE,
+#'                               these_samples_metadata = metadata,
+#'                               write_to_file = FALSE,
+#'                               from_cache = TRUE)
 #'
 #' #get collated results for all genome samples and join with full metadata
-#' everything_collated = collate_results(seq_type_filter = "genome", from_cache = TRUE, join_with_full_metadata = TRUE)
+#' everything_collated = collate_results(seq_type_filter = "genome",
+#'                                       from_cache = TRUE,
+#'                                       join_with_full_metadata = TRUE)
 #'
 #' #another example demonstrating correct usage of the sample_table parameter.
-#' fl_samples = get_gambl_metadata(seq_type_filter = "genome") %>% dplyr::filter(pathology == "FL") %>% dplyr::select(sample_id, patient_id, biopsy_id)
-#' fl_collated = collate_results(sample_table = fl_samples, seq_type_filter = "genome", from_cache = TRUE)
-#'
+#' fl_samples = get_gambl_metadata(seq_type_filter = "genome") %>%
+#'  dplyr::filter(pathology == "FL") %>%
+#'  dplyr::select(sample_id, patient_id, biopsy_id)
+#' 
+#' fl_collated = collate_results(sample_table = fl_samples,
+#'                               seq_type_filter = "genome",
+#'                               from_cache = TRUE)
 #'
 collate_results = function(sample_table,
                            write_to_file = FALSE,
@@ -1689,7 +1739,8 @@ collate_csr_results = function(sample_table,
 #' @import dplyr
 #'
 #' @examples
-#' ssm_results = colalte_ssm_results(samples, TRUE, TRUE)
+#' ssm_results = colalte_ssm_results(sample_table = samples,
+#'                                   include_silent = TRUE)
 #'
 collate_ssm_results = function(sample_table,
                                seq_type_filter = "genome",
@@ -1806,7 +1857,8 @@ collate_curated_sv_results = function(sample_table,
 #' @export
 #'
 #' @examples
-#' get_sample_wildcards(this_sample_id = "00-15201_tumorA", seq_type = "genome")
+#' get_sample_wildcards(this_sample_id = "00-15201_tumorA",
+#'                      seq_type = "genome")
 #'
 get_sample_wildcards = function(this_sample_id,
                                 seq_type){
@@ -1866,7 +1918,8 @@ get_sample_wildcards = function(this_sample_id,
 #' @export
 #'
 #' @examples
-#' cn_list = assign_cn_to_ssm(this_sample_id = "HTMCP-01-06-00422-01A-01D", coding_only = TRUE)
+#' cn_list = assign_cn_to_ssm(this_sample_id = "HTMCP-01-06-00422-01A-01D",
+#'                            coding_only = TRUE)
 #'
 assign_cn_to_ssm = function(this_sample_id,
                             coding_only = FALSE,
@@ -2058,8 +2111,13 @@ assign_cn_to_ssm = function(this_sample_id,
 #' @export
 #'
 #' @examples
-#' tumour_purity = estimate_purity(in_maf = "path/to/file.maf", in_seg = "path/to/file.seg", seg_file_source = "ichorCNA", show_plots = TRUE)
-#' tumour_purity = estimate_purity(in_maf="path/to/file.maf", assume_diploid = TRUE)
+#' tumour_purity = estimate_purity(in_maf = "path/to/file.maf",
+#'                                 in_seg = "path/to/file.seg",
+#'                                 seg_file_source = "ichorCNA",
+#'                                 show_plots = TRUE)
+#' 
+#' tumour_purity = estimate_purity(in_maf = "path/to/file.maf",
+#'                                 assume_diploid = TRUE)
 #'
 estimate_purity = function(in_maf,
                            maf_df,
@@ -2384,7 +2442,8 @@ collate_extra_metadata = function(sample_table,
 #' @import dplyr tibble
 #'
 #' @examples
-#' collated = collate_sbs_results(sample_table=sample_table,sbs_manipulation=sbs_manipulation)
+#' collated = collate_sbs_results(sample_table = sample_table,
+#'                                sbs_manipulation = sbs_manipulation)
 #'
 collate_sbs_results = function(sample_table,
                                seq_type_filter = "genome",
@@ -2471,7 +2530,7 @@ collate_sbs_results = function(sample_table,
 #' @import dplyr
 #'
 #' @examples
-#' sample_table = collate_nfkbiz_results(sample_table=sample_table)
+#' sample_table = collate_nfkbiz_results(sample_table = sample_table)
 #'
 collate_nfkbiz_results = function(sample_table,
                                   seq_type_filter = "genome"){
@@ -2561,7 +2620,9 @@ collate_ashm_results = function(sample_table,
 #' @import dplyr
 #'
 #' @examples
-#' results = collate_samples_sv_results(samples, "manta", c("MYC", "BCL2"))
+#' results = collate_samples_sv_results(sample_table = samples,
+#'                                      tool = "manta",
+#'                                      oncogenes = c("MYC", "BCL2"))
 #'
 collate_sv_results = function(sample_table,
                               tool = "manta",
@@ -2633,6 +2694,7 @@ collate_sv_results = function(sample_table,
 #'
 #' @examples
 #' lymphgen_cols = get_gambl_colours("lymphgen")
+#' 
 #' #be sure to install ggsci from https://github.com/morinlab/ggsci
 #' #install_github("morinlab/ggsci")
 #'
@@ -2912,6 +2974,7 @@ get_gambl_colours = function(classification = "all",
 #'
 #' @examples
 #' this_sv = filter(annotate_sv(get_manta_sv()), partner == "HIST1H2BK")
+#' 
 #' #arbitrarily grab one SV
 #' bam_details = get_bams(sample = this_sv[1,"tumour_sample_id"])
 #'
@@ -2996,14 +3059,24 @@ get_bams = function(sample,
 #' @export
 #'
 #' @examples
-#' #IMPORTANT: you must be running IGV on the host that is running R and you need to have it listening on a port
-#' # The simplest scenario is to run this command on a terminal (if using a Mac), assuming you are using R on gphost10 and you have a ssh config that routes gp10 to that host
-#' # ssh -X gp10
-#' # then launch IGV (e.e. from a conda installation):
-#' # conda activate igv; igv &
-#' # this_sv = annotated_sv %>% filter(gene=="ETV6")
-#' # tumour_bam = get_bams(sample=this_sv$tumour_sample_id)
-#' # make_igv_snapshot(chrom=this_sv$chrom2, start=this_sv$start2, end=this_sv$end2, this_sample_id=this_sv$tumour_sample_id,out_path="~/IGV_snapshots/")
+#' #IMPORTANT: you must be running IGV on the host that is running R and you need to have it
+#' #listening on a port. The simplest scenario is to run this command on a terminal (if using a Mac),
+#' #assuming you are using R on gphost10 and you have a ssh config that routes gp10 to that host
+#' 
+#' ssh -X gp10
+#' 
+#' #then launch IGV (e.e. from a conda installation):
+#' #conda activate igv; igv &
+#' this_sv = annotated_sv %>% 
+#'  filter(gene=="ETV6")
+#' 
+#' tumour_bam = get_bams(sample = this_sv$tumour_sample_id)
+#' 
+#' make_igv_snapshot(chrom = this_sv$chrom2,
+#'                   start = this_sv$start2,
+#'                   end = this_sv$end2,
+#'                   this_sample_id = this_sv$tumour_sample_id,
+#'                   out_path = "~/IGV_snapshots/")
 #'
 make_igv_snapshot = function(bams,
                              genome_build,
@@ -3060,11 +3133,17 @@ make_igv_snapshot = function(bams,
 #'
 #' @examples
 #' # basic usage
-#' FtestCNV(gistic_lesions = "path_to_GISTIC2.0_output/all_lesions.conf_{confidence_level}.txt", metadata = derived_data, comparison = "pathology")
+#' FtestCNV(gistic_lesions = "path_to_GISTIC2.0_output/all_lesions.conf_{confidence_level}.txt",
+#'          metadata = derived_data,
+#'          comparison = "pathology")
 #' 
 #' # advanced usage
-#' FtestCNV(gistic_lesions = "path_to_GISTIC2.0_output/all_lesions.conf_{confidence_level}.txt", metadata = derived_data,
-#' comparison = "pathology", fdr.method = "bonferroni", fdr.cutoff = 0.05, blacklisted_regions = c("3p12.3", "12p13.2"))
+#' FtestCNV(gistic_lesions = "path_to_GISTIC2.0_output/all_lesions.conf_{confidence_level}.txt",
+#'          metadata = derived_data,
+#'          comparison = "pathology",
+#'          fdr.method = "bonferroni",
+#'          fdr.cutoff = 0.05,
+#'          blacklisted_regions = c("3p12.3", "12p13.2"))
 #'
 FtestCNV = function(gistic_lesions,
                      metadata,
@@ -3258,10 +3337,16 @@ FtestCNV = function(gistic_lesions,
 #' @export
 #'
 #' @examples
-#' myc_ashm_maf = get_ssm_by_region(region="8:128748352-128749427") # get all ssm in the MYC aSHM region
-#' GAMBLR::genome_to_exome(maf = myc_ashm_maf) # get mutations with 100 bp padding (default)
-#' GAMBLR::genome_to_exome(maf = myc_ashm_maf, padding = 0) # get mutations covered in WEX with no padding
-#'
+#' #get all ssm in the MYC aSHM region
+#' myc_ashm_maf = get_ssm_by_region(region = "8:128748352-128749427")
+#' 
+#' #get mutations with 100 bp padding (default)
+#' genome_to_exome(maf = myc_ashm_maf)
+#' 
+#' #get mutations covered in WEX with no padding
+#' genome_to_exome(maf = myc_ashm_maf, 
+#'                 padding = 0) 
+#' 
 genome_to_exome = function(maf,
                            custom_bed,
                            genome_build = "grch37",
@@ -3347,8 +3432,11 @@ genome_to_exome = function(maf,
 #' @export
 #'
 #' @examples
-#' metadata <- get_gambl_metadata()
-#' GAMBLR::tidy_lymphgen(metadata,  "lymphgen_with_cnv", "lymphgen_with_cnv_tidy", relevel = TRUE)
+#' metadata = get_gambl_metadata()
+#' tidy_lymphgen(df = metadata,
+#'               lymphgen_column_in = "lymphgen_with_cnv",
+#'               lymphgen_column_out = "lymphgen_with_cnv_tidy",
+#'               relevel = TRUE)
 #'
 tidy_lymphgen = function(df,
                          lymphgen_column_in = "Subtype.Prediction",
@@ -3409,7 +3497,7 @@ tidy_lymphgen = function(df,
 #'
 #' @examples
 #' metadata = get_gambl_metadata()
-#' GAMBLR::consolidate_lymphgen(metadata)
+#' consolidate_lymphgen(sample_table = metadata)
 #'
 consolidate_lymphgen = function(sample_table,
                                 derived_data_path = "",
@@ -3499,8 +3587,12 @@ consolidate_lymphgen = function(sample_table,
 #' @export
 #'
 #' @examples
-#' this_meta = get_gambl_metadata() %>% dplyr::filter(pathology == "DLBCL")
-#' wide_lymphgen = collate_lymphgen(these_samples_metadata = this_meta, lymphgen_version = "default", tidy = FALSE)
+#' this_meta = get_gambl_metadata() %>%
+#'  dplyr::filter(pathology == "DLBCL")
+#' 
+#' wide_lymphgen = collate_lymphgen(these_samples_metadata = this_meta,
+#'                                  lymphgen_version = "default",
+#'                                  tidy = FALSE)
 #'
 collate_lymphgen = function(these_samples_metadata,
                             lymphgen_version = "default",
@@ -3641,7 +3733,9 @@ collate_qc_results = function(sample_table,
 #' 
 #' @examples
 #' these_chrs = c(8, "13", "chr4", "chrY")
-#' standardize_chr_prefix(these_chrs, projection = "hg38")
+#' 
+#' standardize_chr_prefix(incoming_vector = these_chrs,
+#'                        projection = "hg38")
 #'
 standardize_chr_prefix = function(incoming_vector,
                                   projection){
@@ -3680,14 +3774,19 @@ standardize_chr_prefix = function(incoming_vector,
 #' @export
 #'
 #' @examples
-#' sample_seg = get_sample_cn_segments(this_sample_id = "14-36022T") %>% rename("sample"="ID")
+#' sample_seg = get_sample_cn_segments(this_sample_id = "14-36022T") %>%
+#'  rename("sample"="ID")
+#' 
 #' calculate_pga(this_seg = sample_seg)
-#' calculate_pga(this_seg = sample_seg, exclude_sex = FALSE)
+#' 
+#' calculate_pga(this_seg = sample_seg,
+#'               exclude_sex = FALSE)
 #'
 #' multi_sample_seg = rbind(get_sample_cn_segments(this_sample_id = "14-36022T"),
 #'                          get_sample_cn_segments(this_sample_id = "BLGSP-71-21-00243-01A-11E")) %>%
 #'                          rename("sample"="ID")
-#' GAMBLR::calculate_pga(this_seg = multi_sample_seg)
+#' 
+#' calculate_pga(this_seg = multi_sample_seg)
 #'
 calculate_pga = function(this_seg,
                          seg_path,
@@ -3828,13 +3927,16 @@ calculate_pga = function(this_seg,
 #' @export
 #'
 #' @examples
-#' sample_seg = get_sample_cn_segments(this_sample_id = "14-36022T") %>% rename("sample"="ID")
+#' sample_seg = get_sample_cn_segments(this_sample_id = "14-36022T") %>%
+#'  rename("sample"="ID")
+#' 
 #' adjust_ploidy(this_seg = sample_seg)
 #'
 #' multi_sample_seg = rbind(get_sample_cn_segments(this_sample_id = "14-36022T"),
 #'                          get_sample_cn_segments(this_sample_id = "BLGSP-71-21-00243-01A-11E")) %>%
-#'                          rename("sample"="ID")
-#' adjust_ploidy(this_seg=multi_sample_seg)
+#'                          rename("sample" = "ID")
+#' 
+#' adjust_ploidy(this_seg = multi_sample_seg)
 #'
 adjust_ploidy = function(this_seg,
                          seg_path,
@@ -3945,8 +4047,13 @@ adjust_ploidy = function(this_seg,
 #' @return Nothing.
 #'
 #' @examples
-#' cn_states = get_sample_cn_segments(multiple_samples = TRUE, sample_list = c("00-15201_tumorA", "HTMCP-01-06-00422-01A-01D"), streamlined = FALSE)
-#' subset_cnstates(cn_segments = cn_states, samplen = 1)
+#' cn_states = get_sample_cn_segments(multiple_samples = TRUE,
+#'                                    sample_list = c("00-15201_tumorA",
+#'                                                    "HTMCP-01-06-00422-01A-01D"),
+#'                                    streamlined = FALSE)
+#' 
+#' subset_cnstates(cn_segments = cn_states,
+#'                 samplen = 1)
 #'
 subset_cnstates = function(cn_segments,
                            include_2 = FALSE,
@@ -4004,8 +4111,20 @@ subset_cnstates = function(cn_segments,
 #' @export
 #'
 #' @examples
-#' cnvKompare(patient_id = "00-14595", genes_of_interest = c("EZH2", "TP53", "MYC", "CREBBP", "GNA13"))
-#' cnvKompare(patient_id = "13-26835", genes_of_interest = c("EZH2", "TP53", "MYC", "CREBBP", "GNA13"), projection = "hg38")
+#' cnvKompare(patient_id = "00-14595",
+#'            genes_of_interest = c("EZH2",
+#'                                  "TP53",
+#'                                  "MYC", 
+#'                                  "CREBBP",
+#'                                  "GNA13"))
+#' 
+#' cnvKompare(patient_id = "13-26835",
+#'            genes_of_interest = c("EZH2",
+#'                                  "TP53",
+#'                                  "MYC",
+#'                                  "CREBBP",
+#'                                  "GNA13"),
+#'            projection = "hg38")
 #' 
 cnvKompare = function(patient_id,
                       these_sample_ids,
@@ -4302,7 +4421,10 @@ cnvKompare = function(patient_id,
 #' @export
 #'
 #' @examples
-#' ssm_sample = get_ssm_by_sample(this_sample_id = "HTMCP-01-06-00485-01A-01D", tool_name = "slims-3", projection = "grch37")
+#' ssm_sample = get_ssm_by_sample(this_sample_id = "HTMCP-01-06-00485-01A-01D",
+#'                                tool_name = "slims-3",
+#'                                projection = "grch37")
+#' 
 #' clean_maf = cleanup_maf(maf_df = ssm_sample)
 #'
 cleanup_maf = function(maf_df){
@@ -4338,9 +4460,15 @@ cleanup_maf = function(maf_df){
 #' @export
 #'
 #' @examples
-#' small_maf = get_coding_ssm(limit_cohort = "dlbcl_reddy", seq_type = "capture") %>% dplyr::filter(Hugo_Symbol=="MYC")
-#' reddy_meta = get_gambl_metadata(seq_type_filter = "capture") %>% dplyr::filter(cohort=="dlbcl_reddy")
-#' complete_maf = supplement_maf(incoming_maf = small_maf, these_samples_metadata = reddy_meta)
+#' small_maf = get_coding_ssm(limit_cohort = "dlbcl_reddy",
+#'                            seq_type = "capture") %>% 
+#'  dplyr::filter(Hugo_Symbol=="MYC")
+#' 
+#' reddy_meta = get_gambl_metadata(seq_type_filter = "capture") %>% 
+#'  dplyr::filter(cohort=="dlbcl_reddy")
+#' 
+#' complete_maf = supplement_maf(incoming_maf = small_maf,
+#'                               these_samples_metadata = reddy_meta)
 #'
 supplement_maf <- function(incoming_maf,
                            these_samples_metadata){

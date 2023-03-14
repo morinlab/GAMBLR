@@ -33,11 +33,25 @@ colour_aliases = list("COO_consensus" = "coo", "COO" = "coo", "DHITsig_consensus
 #'
 #' @examples
 #' prettyRainfallPlot("Raji")
-#' prettyRainfallPlot("Raji", chromosome = c(3,9,"chr14",22,"X"))
-#' prettyRainfallPlot("Raji", chromosome = c(3,9), projection = "hg38", label_ashm_genes = FALSE)
-#' prettyRainfallPlot("Raji", zoom_in_region = "8:125252796-135253201", label_sv = TRUE)
-#' prettyRainfallPlot("Raji", chromosome = 6, label_sv = TRUE)
-#' prettyRainfallPlot( zoom_in_region = "chr3:5,221,286-5,269,723", seq_type="genome") #multi-sample rainfall plot for one gene region
+#' prettyRainfallPlot("Raji",
+#'                    chromosome = c(3, 9, "chr14", 22, "X"))
+#' 
+#' prettyRainfallPlot("Raji",
+#'                    chromosome = c(3,9),
+#'                    projection = "hg38",
+#'                    label_ashm_genes = FALSE)
+#' 
+#' prettyRainfallPlot("Raji",
+#'                    zoom_in_region = "8:125252796-135253201",
+#'                    label_sv = TRUE)
+#' 
+#' prettyRainfallPlot("Raji",
+#'                    chromosome = 6,
+#'                    label_sv = TRUE)
+#' 
+#' #multi-sample rainfall plot for one gene region
+#' prettyRainfallPlot(zoom_in_region = "chr3:5,221,286-5,269,723",
+#'                    seq_type = "genome")
 
 prettyRainfallPlot = function(this_sample_id,
                               label_ashm_genes = TRUE,
@@ -494,10 +508,14 @@ prettyGeneCloud = function(maf_df,
 #' this_metadata = get_gambl_metadata()
 #'
 #' #get myc region
-#' myc_region = gene_to_region(gene_symbol = "MYC", return_as = "region")
+#' myc_region = gene_to_region(gene_symbol = "MYC",
+#'                             return_as = "region")
 #'
 #' #build plot
-#' focal_cn_plot(these_samples_metadata = this_metadata, region = myc_region, type = "loss", crop_distance = 100000000)
+#' focal_cn_plot(these_samples_metadata = this_metadata,
+#'               region = myc_region,
+#'               type = "loss",
+#'               crop_distance = 100000000)
 #'
 focal_cn_plot = function(region,
                          gene,
@@ -570,7 +588,8 @@ focal_cn_plot = function(region,
 #'  dplyr::filter(consensus_pathology %in% c("FL", "DLBCL"))
 #'
 #' #get maf data for returned samples
-#' maf = get_coding_ssm(limit_samples = this_metadata$sample_id, seq_type = "genome")
+#' maf = get_coding_ssm(limit_samples = this_metadata$sample_id, 
+#'                      seq_type = "genome")
 #'
 #' #construct pretty_lollipop_plot.
 #' pretty_lollipop_plot(maf_df = maf, 
@@ -641,10 +660,12 @@ pretty_lollipop_plot = function(maf_df,
 #'
 #' @examples
 #' #load metadata.
-#' dlbcl_bl_meta = get_gambl_metadata() %>% dplyr::filter(pathology %in% c("DLBCL", "BL")) #subset on specific pathology.
+#' dlbcl_bl_meta = get_gambl_metadata() %>%
+#'  dplyr::filter(pathology %in% c("DLBCL", "BL")) #subset on specific pathology.
 #'
 #' #bring together all derived sample-level results from many GAMBL pipelines.
-#' dlbcl_bl_meta = collate_results(join_with_full_metadata = TRUE, these_samples_metadata = dlbcl_bl_meta)
+#' dlbcl_bl_meta = collate_results(join_with_full_metadata = TRUE,
+#'                                 these_samples_metadata = dlbcl_bl_meta)
 #'
 #' #get ashm regions
 #' some_regions = grch37_ashm_regions
@@ -1000,8 +1021,16 @@ plot_mutation_dynamics_heatmap = function(maf1,
 #' @import dplyr ggsci
 #'
 #' @examples
-#' all_cols=map_metadata_to_colours(legend_metadata_columns,these_meta,verbose=T)
-#' all_cols=map_metadata_to_colours(c("lymphgen","pathology","genetic_subgroup"),these_samples_metadata = all_meta,column_alias=list("nothing"="FL"),as_vector = F)
+#' all_cols = map_metadata_to_colours(metadata_columns = legend_metadata_columns, 
+#'                                    these_samples_metadata = these_meta,
+#'                                    verbose = T)
+#' 
+#' all_cols = map_metadata_to_colours(metadata_columns = c("lymphgen",
+#'                                                         "pathology",
+#'                                                         "genetic_subgroup"),
+#'                                    these_samples_metadata = all_meta,
+#'                                    column_alias = list("nothing" = "FL"),
+#'                                    as_vector = F)
 #'
 map_metadata_to_colours = function(metadataColumns,
                                    these_samples_metadata,
@@ -1161,7 +1190,26 @@ map_metadata_to_colours = function(metadataColumns,
 #'
 #' @examples
 #' this_samp = "13-38657_tumorB"
-#' GAMBLR::plot_sample_circos(this_sample_id=this_samp,legend_metadata_columns = c("pathology","lymphgen","COO_consensus","DHITsig_consensus","bcl2_ba","myc_ba"),legend_metadata_names = c("pathology","LymphGen","COO","DHITsig","BCL2","MYC"),auto_label_sv = TRUE,chrom_list = c("chr2","chr3","chr8","chr14","chr18"))
+#' 
+#' plot_sample_circos(this_sample_id = this_samp,
+#'                    legend_metadata_columns = c("pathology",
+#'                                                "lymphgen",
+#'                                                "COO_consensus",
+#'                                                "DHITsig_consensus",
+#'                                                "bcl2_ba",
+#'                                                "myc_ba"),
+#'                    legend_metadata_names = c("pathology",
+#'                                              "LymphGen",
+#'                                              "COO",
+#'                                              "DHITsig",
+#'                                              "BCL2",
+#'                                              "MYC"),
+#'                    auto_label_sv = TRUE,
+#'                    chrom_list = c("chr2",
+#'                                   "chr3",
+#'                                   "chr8",
+#'                                   "chr14",
+#'                                   "chr18"))
 #'
 plot_sample_circos = function(this_sample_id,
                               sv_df,
@@ -1356,16 +1404,31 @@ plot_sample_circos = function(this_sample_id,
 #' @export
 #'
 #' @examples
-#' prettyOncoplot(maftools_obj = maf_obj,genes = bl_genes,
-#' these_samples_metadata = extra_meta,
-#' metadataColumns = c("pathology","COO_consensus", "cluster_name", "lymphgen","EBV_status_inf", "manta_BCL6_sv"),
-#' hide_annotations = c(some_ashm,"lymphgen","COO_consensus", "pathology","manta_BCL6_sv"),
-#' expressionColumns = c("IRF4",some_ashm),
-#' sortByColumns = c("IRF4"),
-#' keepGeneOrder = FALSE,splitGeneGroups = groups,
-#' splitColumnName = "cluster_name",
-#' metadataBarHeight = 2.5,metadataBarFontsize = 6,fontSizeGene = 8,
-#' recycleOncomatrix = TRUE,removeNonMutated = FALSE)
+#' prettyOncoplot(maftools_obj = maf_obj,
+#'                genes = bl_genes,
+#'                these_samples_metadata = extra_meta,
+#'                metadataColumns = c("pathology",
+#'                                    "COO_consensus",
+#'                                    "cluster_name",
+#'                                    "lymphgen",
+#'                                    "EBV_status_inf",
+#'                                    "manta_BCL6_sv"),
+#'                hide_annotations = c(some_ashm,
+#'                                     "lymphgen",
+#'                                     "COO_consensus",
+#'                                     "pathology",
+#'                                     "manta_BCL6_sv"),
+#'                expressionColumns = c("IRF4", 
+#'                                      some_ashm),
+#'                sortByColumns = c("IRF4"),
+#'                keepGeneOrder = FALSE,
+#'                splitGeneGroups = groups,
+#'                splitColumnName = "cluster_name",
+#'                metadataBarHeight = 2.5,
+#'                metadataBarFontsize = 6,
+#'                fontSizeGene = 8,
+#'                recycleOncomatrix = TRUE,
+#'                removeNonMutated = FALSE)
 #'
 prettyOncoplot = function(maftools_obj,
                           onco_matrix_path,
@@ -1938,22 +2001,31 @@ prettyOncoplot = function(maftools_obj,
 #' @export
 #'
 #' @examples
-#' ssm=get_coding_ssm(limit_cohort = c("BL_Adult", "BL_Pediatric"))
-#' ssm=maftools::read.maf(ssm)
-#' meta=get_gambl_metadata() %>% dplyr::filter(cohort %in% c("BL_Adult", "BL_Pediatric"))
-#' prettyCoOncoplot(maf=ssm,
-#'     metadata = meta,
-#'     comparison_column = "cohort",
-#'     include_noncoding = NULL,
-#'     minMutationPercent = 0,
-#'     genes=c("MYC", "TET2", "TP53", "DDX3X", "ID3"),
-#'     metadataColumns=c("pathology", "EBV_status_inf", "pairing_status", "cohort"),
-#'     splitColumnName="EBV_status_inf",
-#'     metadataBarHeight=10,
-#'     fontSizeGene=12,
-#'     metadataBarFontsize=10,
-#'     label1="Adult",
-#'     label2="Pediatric")
+#' ssm = get_coding_ssm(limit_cohort = c("BL_Adult", "BL_Pediatric"))
+#' ssm = maftools::read.maf(ssm)
+#' meta = get_gambl_metadata() %>%
+#'  dplyr::filter(cohort %in% c("BL_Adult", "BL_Pediatric"))
+#' 
+#' prettyCoOncoplot(maf = ssm,
+#'                  metadata = meta,
+#'                  comparison_column = "cohort",
+#'                  include_noncoding = NULL,
+#'                  minMutationPercent = 0,
+#'                  genes = c("MYC",
+#'                            "TET2",
+#'                            "TP53",
+#'                            "DDX3X",
+#'                            "ID3"),
+#'                  metadataColumns = c("pathology",
+#'                                      "EBV_status_inf",
+#'                                      "pairing_status",
+#'                                      "cohort"),
+#'                  splitColumnName = "EBV_status_inf",
+#'                  metadataBarHeight = 10,
+#'                  fontSizeGene = 12,
+#'                  metadataBarFontsize = 10,
+#'                  label1 = "Adult",
+#'                  label2 = "Pediatric")
 #'
 prettyCoOncoplot = function(maf,
                             metadata,
@@ -2074,7 +2146,9 @@ prettyCoOncoplot = function(maf,
 #'                                   regions_to_display = "chr3",
 #'                                   exclude_classification = "some-classification",
 #'                                   metadata = "my_metadata",
-#'                                   custom_colours = c("#onecolour, "#anothercolour", "athirdcolour"),
+#'                                   custom_colours = c("#onecolour,
+#'                                                      "#anothercolour",
+#'                                                      "#athirdcolour"),
 #'                                   classification_column = "lymphgen",
 #'                                   maf_data = my_maf)
 #'
@@ -2320,11 +2394,24 @@ copy_number_vaf_plot = function(this_sample_id,
 #' #basic usage
 #' region = "chr6:90975034-91066134"
 #' metadata = get_gambl_metadata()
-#' plot = ashm_rainbow_plot(metadata = metadata, region = region)
+#' 
+#' plot = ashm_rainbow_plot(metadata = metadata,
+#'                          region = region)
 #'
 #' #advanced usages
-#' mybed = data.frame(start=c(128806578,128805652,128748315), end=c(128806992,128809822,128748880), name=c("TSS","enhancer","MYC-e1"))
-#' ashm_rainbow_plot(mutations_maf=my_mutations,metadata=my_metadata,bed=mybed)
+#' mybed = data.frame(start = c(128806578,
+#'                              128805652,
+#'                              128748315),
+#'                    end = c(128806992,
+#'                            128809822,
+#'                            128748880),
+#'                    name = c("TSS",
+#'                             "enhancer",
+#'                             "MYC-e1"))
+#' 
+#' ashm_rainbow_plot(mutations_maf = my_mutations,
+#'                   metadata = my_metadata,
+#'                   bed = mybed)
 #'
 ashm_rainbow_plot = function(mutations_maf,
                              metadata,
@@ -2603,8 +2690,10 @@ plot_multi_timepoint = function(mafs,
 #' prettyChromoplot("path_to_gistic_results/scores.gistic")
 #'
 #' #advanced usages
-#' prettyChromoplot("path_to_gistic_results/scores.gistic", genes_to_label="path_to_gene_coordinates_table.tsv", cutoff=0.75) +
-#' ...(any ggplot options to customize plot appearance)
+#' prettyChromoplot(scorees = "path_to_gistic_results/scores.gistic",
+#'                  genes_to_label = "path_to_gene_coordinates_table.tsv",
+#'                  cutoff = 0.75) +
+#'                   ... #any ggplot options to customize plot appearance
 #'
 prettyChromoplot = function(scores,
                             genes_to_label,
@@ -2790,13 +2879,19 @@ theme_Morons = function(base_size = 14,
 #'   dplyr::filter(pairing_status == "matched") %>%
 #'   dplyr::filter(consensus_pathology %in% c("FL", "DLBCL"))
 #'
-#' maf = get_coding_ssm(limit_samples = metadata$sample_id, basic_columns = TRUE, seq_type = "genome")
+#' maf = get_coding_ssm(limit_samples = metadata$sample_id,
+#'                      basic_columns = TRUE,
+#'                      seq_type = "genome")
 #'
 #' prettyForestPlot(maf = maf,
 #'                  metadata = metadata,
-#'                  genes = c("ATP6V1B2", "EZH2", "TNFRSF14", "RRAGC"),
+#'                  genes = c("ATP6V1B2",
+#'                            "EZH2",
+#'                            "TNFRSF14",
+#'                            "RRAGC"),
 #'                  comparison_column = "consensus_pathology",
-#'                  comparison_values = c("DLBCL", "FL"),
+#'                  comparison_values = c("DLBCL",
+#'                                        "FL"),
 #'                  separate_hotspots = FALSE,
 #'                  comparison_name = "FL vs DLBCL")
 #'
@@ -3059,15 +3154,20 @@ prettyForestPlot = function(maf,
 #' @export
 #'
 #' @examples
-#' splendidHeatmap(
-#'  this_matrix = data,
-#'  importance_values = rf$importance[,c(1:3)],
-#'  these_samples_metadata = MASTER.METADATA,
-#'  splitColumnName = "pathology",
-#'  metadataColumns = c("cohort", "pathology", "sex", ".", "COO_consensus", "DHITsig_consensus", "seq_type"),
-#'  numericMetadataColumns = ".",
-#'  numericMetadataMax = 0.7,
-#'  custom_colours=custom_colours)
+#' splendidHeatmap(this_matrix = data,
+#'                 importance_values = rf$importance[,c(1:3)],
+#'                 these_samples_metadata = MASTER.METADATA,
+#'                 splitColumnName = "pathology",
+#'                 metadataColumns = c("cohort",
+#'                                     "pathology",
+#'                                     "sex",
+#'                                     ".",
+#'                                     "COO_consensus",
+#'                                     "DHITsig_consensus",
+#'                                     "seq_type"),
+#'                 numericMetadataColumns = ".",
+#'                 numericMetadataMax = 0.7,
+#'                 custom_colours = custom_colours)
 #'
 splendidHeatmap = function(this_matrix,
                            importance_values,
@@ -3376,13 +3476,16 @@ splendidHeatmap = function(this_matrix,
 #'
 #' @examples
 #' #plot SVs.
-#' ssm = fancy_v_chrcount(this_sample_id = "HTMCP-01-06-00422-01A-01D", ssm = TRUE)
+#' ssm = fancy_v_chrcount(this_sample_id = "HTMCP-01-06-00422-01A-01D",
+#'                        ssm = TRUE)
 #'
 #' #plot SVs and SSM.
-#' ssm = fancy_v_chrcount(this_sample_id = "HTMCP-01-06-00422-01A-01D", ssm = TRUE)
+#' ssm = fancy_v_chrcount(this_sample_id = "HTMCP-01-06-00422-01A-01D",
+#'                        ssm = TRUE)
 #'
 #'
-#' svs = fancy_v_chrcount(this_sample_id = "HTMCP-01-06-00422-01A-01D", ssm = FALSE,
+#' svs = fancy_v_chrcount(this_sample_id = "HTMCP-01-06-00422-01A-01D",
+#'                        ssm = FALSE,
 #'                        min_vaf = 0,
 #'                        projection = "grch37",
 #'                        chr_select = paste0("chr", c(1:5)),
@@ -3550,7 +3653,9 @@ fancy_v_chrcount = function(this_sample_id,
 #' snv_plot = fancy_snv_chrdistplot(this_sample_id = "HTMCP-01-06-00422-01A-01D")
 #' 
 #' #plot SNVs and DNPs
-#' snv_dnp_plot = fancy_snv_chrdistplot(this_sample_id = "HTMCP-01-06-00422-01A-01D", include_dnp = TRUE, plot_subtitle = "SNV + DNP Distribution Per Chromosome")
+#' snv_dnp_plot = fancy_snv_chrdistplot(this_sample_id = "HTMCP-01-06-00422-01A-01D",
+#'                                      include_dnp = TRUE,
+#'                                      plot_subtitle = "SNV + DNP Distribution Per Chromosome")
 #'
 fancy_snv_chrdistplot = function(this_sample_id,
                                  maf_data,
@@ -3683,7 +3788,8 @@ fancy_snv_chrdistplot = function(this_sample_id,
 #' svs = fancy_v_count(this_sample_id = "HTMCP-01-06-00422-01A-01D")
 #'
 #' #count and plot all variants on chromosome 1
-#' chr1_sv = fancy_v_count(this_sample_id = "HTMCP-01-06-00422-01A-01D", chr_select = c(1))
+#' chr1_sv = fancy_v_count(this_sample_id = "HTMCP-01-06-00422-01A-01D",
+#'                         chr_select = c(1))
 #'
 fancy_v_count = function(this_sample_id,
                          maf_data,
@@ -3822,7 +3928,8 @@ fancy_v_count = function(this_sample_id,
 #' cns = fancy_cnbar(this_sample_id = "HTMCP-01-06-00422-01A-01D")
 #'
 #' #Plot all copy number states for chromosome 1.
-#' chr1_cns = fancy_cnbar(this_sample_id = "HTMCP-01-06-00422-01A-01D", chr_select = c(1))
+#' chr1_cns = fancy_cnbar(this_sample_id = "HTMCP-01-06-00422-01A-01D",
+#'                        chr_select = c(1))
 #' 
 fancy_cnbar = function(this_sample_id,
                        seq_data,
@@ -4126,17 +4233,19 @@ fancy_v_sizedis = function(this_sample_id,
 #'   pull(Gene)
 #'
 #' #get FL genes on chromosome 1
-#' fl_genes_chr1 = gene_to_region(gene_symbol = fl_genes, return_as = "df") %>%
+#' fl_genes_chr1 = gene_to_region(gene_symbol = fl_genes,
+#'                                return_as = "df") %>%
 #'   dplyr::filter(chromosome == "1") %>%
 #'   pull(hugo_symbol)
 #'
-#' #build an ideogram showing ssm and copy number states for chromosome 1, and superimpose with FL genes.
+#' #build an ideogram showing ssm and copy number states for chr 1, and superimpose with FL genes.
 #' ideogram_fl_chr1 = fancy_ideogram(this_sample_id = "HTMCP-01-06-00422-01A-01D",
 #'                                   gene_annotation = fl_genes_chr1,
 #'                                   intersect_regions = "chr1:10000-249250621")
 #'
-#' #
-#' fl_regions = gene_to_region(gene_symbol = fl_genes, return_as = "df")
+#' fl_regions = gene_to_region(gene_symbol = fl_genes,
+#'                             return_as = "df")
+#' 
 #' ideogram_fl = fancy_ideogram(this_sample_id = "HTMCP-01-06-00422-01A-01D",
 #'                               gene_annotation = fl_genes,
 #'                               intersect_regions = fl_regions)
@@ -4453,7 +4562,8 @@ fancy_ideogram = function(this_sample_id,
 #'
 #' @examples
 #' #two samples ideogram
-#' ideo_2_samp = fancy_multisamp_ideogram(these_sample_ids = c("00-15201_tumorA", "00-15201_tumorB"),
+#' ideo_2_samp = fancy_multisamp_ideogram(these_sample_ids = c("00-15201_tumorA",
+#'                                                             "00-15201_tumorB"),
 #'                                        chr_anno_dist = 4)
 #'
 fancy_multisamp_ideogram = function(these_sample_ids,
@@ -4718,7 +4828,9 @@ fancy_multisamp_ideogram = function(these_sample_ids,
 #'
 #' @examples
 #' #create a PDF report for one sample, as well as exporting all individual plots.
-#' comp_report(this_sample = "HTMCP-01-06-00422-01A-01D", out = "reports/", export_individual_plots = TRUE)
+#' comp_report(this_sample = "HTMCP-01-06-00422-01A-01D",
+#'             out = "reports/",
+#'             export_individual_plots = TRUE)
 #'
 comp_report = function(this_sample_id,
                        export_individual_plots = FALSE,
@@ -4847,12 +4959,15 @@ comp_report = function(this_sample_id,
 #'  pull(Gene)
 #'
 #' # get regions for selected genes
-#' fl_genes_list = gene_to_region(gene_symbol = fl_genes, return_as = "bed")
+#' fl_genes_list = gene_to_region(gene_symbol = fl_genes,
+#'                                return_as = "bed")
 #'
 #' fancy_circos_plot_new(this_sample_id = "DOHH-2",
 #'                       ssm_calls = FALSE,
 #'                       gene_list = fl_genes_list,
-#'                       chr_select = c("chr8", "chr14", "chr18"),
+#'                       chr_select = c("chr8",
+#'                                      "chr14",
+#'                                      "chr18"),
 #'                       out = "../../plots/",
 #'                       plot_title = "DOHH-2 (SVs) Example Plot",
 #'                       pdf = FALSE,
@@ -5176,7 +5291,10 @@ fancy_circos_plot = function(this_sample_id,
 #'
 #' @examples
 #' myplot = fancy_sv_sizedens(this_sample_id = "HTMCP-01-06-00422-01A-01D")
-#' myplot2 = fancy_sv_sizedens(this_sample_id = "HTMCP-01-06-00422-01A-01D", size_cutoff = 0, chr_select = c("chr1", "chr2"))
+#' 
+#' myplot2 = fancy_sv_sizedens(this_sample_id = "HTMCP-01-06-00422-01A-01D",
+#'                             size_cutoff = 0,
+#'                             chr_select = c("chr1", "chr2"))
 #'
 fancy_sv_sizedens = function(this_sample_id,
                              maf_data,
@@ -5298,19 +5416,22 @@ fancy_sv_sizedens = function(this_sample_id,
 #' #Example 1 - using these_sample_ids parameter
 #' #subset on FL cases with QC metrics available and plot
 #' kridel_fl = get_gambl_metadata() %>%
-#'  dplyr::filter(pathology == "FL", cohort == "FL_Kridel") %>%
+#'  dplyr::filter(pathology == "FL", 
+#'                cohort == "FL_Kridel") %>%
 #'  dplyr::select(sample_id)
 #'
 #' my_plot_1 = fancy_alignment_plot(these_sample_ids = kridel_fl)
 #'
 #' #Example 2 - using already filtered metadata (these_samples_metadata)
 #' fl_metadata = get_gambl_metadata() %>%
-#'  dplyr::filter(pathology == "FL", cohort == "FL_Kridel")
+#'  dplyr::filter(pathology == "FL", 
+#'                cohort == "FL_Kridel")
 #'
 #' my_plot_2 = fancy_alignment_plot(these_samples_metadata = fl_metadata)
 #'
 #' #Example 3 - using in-house metadata fitlering options
-#' my_plot_3 = fancy_alignment_plot(keep_cohort = "FL_Kridel", keep_pathology = "FL")
+#' my_plot_3 = fancy_alignment_plot(keep_cohort = "FL_Kridel",
+#'                                  keep_pathology = "FL")
 #'
 fancy_alignment_plot = function(these_sample_ids,
                                 metadata,
@@ -5640,7 +5761,8 @@ fancy_qc_plot = function(these_sample_ids,
 #' my_plot_2 = fancy_propcov_plot(these_samples_metadata = fl_metadata)
 #'
 #' #Example 3 - using in-house metadata fitlering options
-#' my_plot_3 = fancy_propcov_plot(keep_cohort = "FL_Kridel", keep_pathology = "FL")
+#' my_plot_3 = fancy_propcov_plot(keep_cohort = "FL_Kridel",
+#'                                keep_pathology = "FL")
 #'
 fancy_propcov_plot = function(these_sample_ids,
                               metadata,
@@ -5771,7 +5893,8 @@ fancy_propcov_plot = function(these_sample_ids,
 #' my_plot_2 = fancy_proportions_plot(these_samples_metadata = fl_metadata)
 #'
 #' #Example 3 - using in-house metadata fitlering options
-#' my_plot_3 = fancy_proportions_plot(keep_cohort = "FL_Kridel", keep_pathology = "FL")
+#' my_plot_3 = fancy_proportions_plot(keep_cohort = "FL_Kridel",
+#'                                    keep_pathology = "FL")
 #'
 fancy_proportions_plot = function(these_sample_ids,
                                   metadata,

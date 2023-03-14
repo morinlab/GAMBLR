@@ -422,7 +422,8 @@ populate_each_tool_result = function(tool,
 #' @import dplyr readr
 #'
 #' @examples
-#' manta_bedpe = read_merge_manta_with_liftover(bedpe_paths = "some_path.bedpe", out_dir = "../")
+#' manta_bedpe = read_merge_manta_with_liftover(bedpe_paths = "some_path.bedpe",
+#'                                              out_dir = "../")
 #'
 read_merge_manta_with_liftover = function(bedpe_paths = c(),
                                           pattern = "--matched",
@@ -645,7 +646,8 @@ process_all_manta_bedpe = function(file_df,
 #' @export
 #'
 #' @examples
-#' fetch_output_files(tool = "manta", unix_group = "genome")
+#' fetch_output_files(tool = "manta",
+#'                    unix_group = "genome")
 #'
 fetch_output_files = function(tool,
                               base_path,
@@ -745,7 +747,9 @@ fetch_output_files = function(tool,
 #' @export
 #'
 #' @examples
-#' file_details_manta = find_files_extract_wildcards(tool_name = "manta", genome_build = c("hg38", "grch37"), search_pattern = ".bed")
+#' file_details_manta = find_files_extract_wildcards(tool_name = "manta",
+#'                                                   genome_build = c("hg38", "grch37"),
+#'                                                   search_pattern = ".bed")
 #'
 find_files_extract_wildcards = function(tool_results_path,
                                         search_pattern,
@@ -803,11 +807,12 @@ find_files_extract_wildcards = function(tool_results_path,
 #' maf_cols = fread_maf(return_cols = TRUE)
 #'
 #' #read maf with only a selection of columns
-#' my_maf = fread_maf(maf_file_path = "some_directory/this_is_a.maf", select_cols = c(Hugo_Symbol="character",
-#'                                                                                    Chromosome="character",
-#'                                                                                    Start_Position="integer",
-#'                                                                                    End_Position="integer",
-#'                                                                                    Variant_Type="character"))
+#' my_maf = fread_maf(maf_file_path = "some_directory/this_is_a.maf", 
+#'                    select_cols = c(Hugo_Symbol = "character",
+#'                                    Chromosome = "character",
+#'                                    Start_Position = "integer",
+#'                                    End_Position = "integer",
+#'                                    Variant_Type = "character"))
 #'
 fread_maf = function(maf_file_path,
                      select_cols,
@@ -1064,7 +1069,11 @@ tidy_gene_expression = function(return_df = FALSE){
 #' @export
 #'
 #' @examples
-#' assemble_file_details(file_paths = c(one.maf, another.maf), tool_name = "manta", unix_group = "genome", output_type = "maf", these_sample_ids = c(one_sample, another_sample))
+#' assemble_file_details(file_paths = c(one.maf, another.maf), 
+#'                       tool_name = "manta",
+#'                       unix_group = "genome",
+#'                       output_type = "maf",
+#'                       these_sample_ids = c(one_sample, another_sample))
 #'
 assemble_file_details = function(file_details_df,
                                  file_paths,
@@ -1113,8 +1122,11 @@ assemble_file_details = function(file_details_df,
 #' @export
 #'
 #' @examples
-#' hg19_sv = get_manta_sv() %>% head(100)
-#' hg38_sv = liftover_bedpe(bedpe_df = hg19_sv, target_build = "hg38")
+#' hg19_sv = get_manta_sv() %>%
+#'  head(100)
+#' 
+#' hg38_sv = liftover_bedpe(bedpe_df = hg19_sv, 
+#'                          target_build = "hg38")
 #'
 liftover_bedpe = function(bedpe_file,
                           bedpe_df,
