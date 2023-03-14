@@ -2508,6 +2508,12 @@ get_coding_ssm = function(limit_cohort,
     coding_class = coding_class[coding_class != "Silent"]
   }
   if(!missing(these_samples_metadata)){
+
+    #sanity check if the metadata table used with these_samples_metadata is empty, if so, return an useful error. 
+    if(nrow(these_samples_metadata) == 0){
+      stop("The provided metadata table is empty.\n  If you have subset the incoming metadata table (these_samples_metadata) to specific samples, ensure sample/patient IDs are actually avaialble in the original metadata...")
+    }
+
     all_meta = these_samples_metadata
     seq_type = pull(all_meta,seq_type) %>% unique()
     if(length(seq_type)>1){
