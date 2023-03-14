@@ -210,6 +210,21 @@ The description is taken from the next paragraph. It’s shown at the top of doc
 #### Details
 Additional details are anything after the description. Details are optional, but can be any length so are useful if you want to dig deep into some important aspect of the function. Note that, even though the details come right after the description in the introduction, they appear much later in rendered documentation.
 
+#### Parameters
+Detailed parameter descriptions should be included for all functions. Remember to state the required data types, default values, if the parameter is required or optional, etc.
+
+#### Return
+Specify the returned object, is it a data frame, a list, a vector or characters, etc.
+
+#### Import
+Always import all the packages from which you are calling any functions outside of base R and R [packages](https://cran.r-project.org/doc/FAQ/R-FAQ.html#R-Add_002dOn-Packages) that gets loaded per default. Remember to not import `tidyverse`, rather, import the individual packages from `tidyverse` that the function is depending on. 
+
+#### Export
+Should this function be exported to NAMESPACE (i.e make it directly accessible for anyone who loads GAMBLR) or is the function considered to be an internal/helper function (i.e don't export it)?
+
+#### Examples
+Please provide fully reproducible examples for the function. Ideally, the example should demonstrate basic usage, as well as more advanced usage with different parameter combinations. Note that examples can not extend over 100 characters per line, since this will cause the lines to  be truncated in the rendered PDF manual. 
+
 ```
 #' @title
 #'
@@ -226,6 +241,8 @@ Additional details are anything after the description. Details are optional, but
 #' @export
 #'
 #' @examples
+#' #this is an example
+#' ###For your reference, this line is exactly 100 characters. Do not exceed 100 characters per line
 #'
 
 function_name = function(a_parameter,
