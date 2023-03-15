@@ -594,6 +594,7 @@ intersect_maf = function(maf1,
 #' @param maf_path If the status of coding SSM should be tabulated from a custom maf file, provide path to the maf in this argument. The default is set to NULL.
 #' @param maf_data Either a maf loaded from disk or from the database using a get_ssm function.
 #' @param include_hotspots Logical parameter indicating whether hotspots object should also be tabulated. Default is TRUE.
+#' @param keep_multihit_hotspot Logical parameter indicating whether to keep the gene annotation as mutated when the gene has both hot spot and non-hotspot mutation. Default is FALSE.
 #' @param recurrence_min Integer value indicating minimal recurrence level.
 #' @param seq_type The seq_type you want back, default is genome.
 #' @param projection Specify projection (grch37 or hg38) of mutations. Default is grch37.
