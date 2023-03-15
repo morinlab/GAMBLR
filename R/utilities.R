@@ -619,6 +619,7 @@ get_coding_ssm_status = function(gene_symbols,
                                  maf_path = NULL,
                                  maf_data,
                                  include_hotspots = TRUE,
+                                 keep_multihit_hotspot = FALSE,
                                  recurrence_min = 5,
                                  seq_type = "genome",
                                  projection = "grch37",
@@ -709,7 +710,34 @@ get_coding_ssm_status = function(gene_symbols,
       message("OK")
       # if both gene and it's hotspot are in the matrix, give priority to hotspot feature
       all_tabulated[(all_tabulated[, this_gene] >0 & all_tabulated[, paste0(this_gene, "HOTSPOT")] == 1),][,c(this_gene, paste0(this_gene, "HOTSPOT"))][, this_gene] = 0
+
+      # in case gene has both hotspot and another mutation in the same gene,
+      # keep both tabulated as multihits
+      if(keep_multihit_hotspot){
+        # determine which samples have hot spot and another mutation in same gene
+        multihits <- annotated %>%
+            dplyr::filter(Hugo_Symbol == this_gene) %>%
+            group_by(Tumor_Sample_Barcode) %>%
+            dplyr::mutate(n_mut = n()) %>%
+            dplyr::filter(
+                n_mut > 1,
+                hot_spot == "TRUE"
+            ) %>%
+            dplyr::distinct(Tumor_Sample_Barcode) %>%
+            pull
+        # Return the annotation of this gene to mutated in these samples
+        all_tabulated <- all_tabulated %>%
+            dplyr::mutate(
+                {{this_gene}} := ifelse(
+                        sample_id %in% multihits,
+                        1,
+                        !!!syms(this_gene)
+                    )
+            )
+      }
+
     }
+
   }
   return(all_tabulated)
 }
