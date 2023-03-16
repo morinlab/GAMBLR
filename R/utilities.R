@@ -594,7 +594,7 @@ intersect_maf = function(maf1,
 #' @param maf_path If the status of coding SSM should be tabulated from a custom maf file, provide path to the maf in this argument. The default is set to NULL.
 #' @param maf_data Either a maf loaded from disk or from the database using a get_ssm function.
 #' @param include_hotspots Logical parameter indicating whether hotspots object should also be tabulated. Default is TRUE.
-#' @param keep_multihit_hotspot Logical parameter indicating whether to keep the gene annotation as mutated when the gene has both hot spot and non-hotspot mutation. Default is FALSE.
+#' @param keep_multihit_hotspot Logical parameter indicating whether to keep the gene annotation as mutated when the gene has both hot spot and non-hotspot mutation. Default is FALSE. If set to TRUE, will report the number of non-hotspot mutations instead of tabulating for just mutation presence.
 #' @param recurrence_min Integer value indicating minimal recurrence level.
 #' @param seq_type The seq_type you want back, default is genome.
 #' @param projection Specify projection (grch37 or hg38) of mutations. Default is grch37.
@@ -721,20 +721,40 @@ get_coding_ssm_status = function(gene_symbols,
             group_by(Tumor_Sample_Barcode) %>%
             dplyr::mutate(n_mut = n()) %>%
             dplyr::filter(
-                n_mut > 1,
-                hot_spot == "TRUE"
+                n_mut > 1
             ) %>%
-            dplyr::distinct(Tumor_Sample_Barcode) %>%
-            pull
+            dplyr::distinct(Tumor_Sample_Barcode, n_mut, hot_spot) %>%
+            # account for cases with both hotspot and not hotspot to avoid
+            # double-counting the number of mutations
+            mutate_at(vars(hot_spot), ~replace_na(., "FALSE")) %>%
+            dplyr::mutate(
+                n_mut = ifelse(
+                    hot_spot == "TRUE",
+                    n_mut - 1,
+                    n_mut
+                )
+            ) %>%
+            group_by(Tumor_Sample_Barcode) %>%
+            dplyr::arrange(n_mut) %>%
+            slice_head() %>%
+            ungroup %>%
+            select(-hot_spot)
+
         # Return the annotation of this gene to mutated in these samples
         all_tabulated <- all_tabulated %>%
+            left_join(
+              .,
+              multihits,
+              by = c("sample_id" = "Tumor_Sample_Barcode")
+            ) %>%
             dplyr::mutate(
                 {{this_gene}} := ifelse(
-                        sample_id %in% multihits,
-                        1,
+                        !is.na(n_mut),
+                        n_mut,
                         !!!syms(this_gene)
                     )
-            )
+            ) %>%
+            select(- n_mut)
       }
 
     }
