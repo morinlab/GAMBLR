@@ -40,7 +40,7 @@ get_coding_ssm_status(
 
 \item{include_hotspots}{Logical parameter indicating whether hotspots object should also be tabulated. Default is TRUE.}
 
-\item{keep_multihit_hotspot}{Logical parameter indicating whether to keep the gene annotation as mutated when the gene has both hot spot and non-hotspot mutation. Default is FALSE.}
+\item{keep_multihit_hotspot}{Logical parameter indicating whether to keep the gene annotation as mutated when the gene has both hot spot and non-hotspot mutation. Default is FALSE. If set to TRUE, will report the number of non-hotspot mutations instead of tabulating for just mutation presence.}
 
 \item{recurrence_min}{Integer value indicating minimal recurrence level.}
 
