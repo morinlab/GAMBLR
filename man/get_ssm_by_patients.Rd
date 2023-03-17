@@ -59,10 +59,15 @@ This function expects either a vector of patient IDs (\code{thse_patients_ids}) 
 \examples{
 #example 1, using a vector of patient IDs.
 patients = c("00-14595", "00-15201", "01-12047")
-patients_maf = get_ssm_by_patients(these_patient_ids = patients, seq_type = "genome", subset_from_merge = FALSE)
+patients_maf = get_ssm_by_patients(these_patient_ids = patients,
+                                   seq_type = "genome",
+                                   subset_from_merge = FALSE)
 
 #example 2, using a metadata table, subset to the patient IDs of interest.
-patient_meta = get_gambl_metadata(seq_type_filter = "genome") \%>\% dplyr::filter(patient_id \%in\% patients)
-patients_maf_2 = get_ssm_by_patients(these_samples_metadata = patient_meta,subset_from_merge = FALSE)
+patient_meta = get_gambl_metadata(seq_type_filter = "genome") \%>\% 
+ dplyr::filter(patient_id \%in\% patients)
+
+patients_maf_2 = get_ssm_by_patients(these_samples_metadata = patient_meta,
+                                     subset_from_merge = FALSE)
 
 }

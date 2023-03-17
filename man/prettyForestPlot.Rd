@@ -66,13 +66,19 @@ metadata = get_gambl_metadata(case_set = "tFL-study") #\%>\%
   dplyr::filter(pairing_status == "matched") \%>\%
   dplyr::filter(consensus_pathology \%in\% c("FL", "DLBCL"))
 
-maf = get_coding_ssm(limit_samples = metadata$sample_id, basic_columns = TRUE, seq_type = "genome")
+maf = get_coding_ssm(limit_samples = metadata$sample_id,
+                     basic_columns = TRUE,
+                     seq_type = "genome")
 
 prettyForestPlot(maf = maf,
                  metadata = metadata,
-                 genes = c("ATP6V1B2", "EZH2", "TNFRSF14", "RRAGC"),
+                 genes = c("ATP6V1B2",
+                           "EZH2",
+                           "TNFRSF14",
+                           "RRAGC"),
                  comparison_column = "consensus_pathology",
-                 comparison_values = c("DLBCL", "FL"),
+                 comparison_values = c("DLBCL",
+                                       "FL"),
                  separate_hotspots = FALSE,
                  comparison_name = "FL vs DLBCL")
 

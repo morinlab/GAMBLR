@@ -22,6 +22,8 @@ INTERNAL FUNCTION, not meant for out-of-package use.
 }
 \examples{
 these_chrs = c(8, "13", "chr4", "chrY")
-standardize_chr_prefix(these_chrs, projection = "hg38")
+
+standardize_chr_prefix(incoming_vector = these_chrs,
+                       projection = "hg38")
 
 }

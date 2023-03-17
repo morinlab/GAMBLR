@@ -33,7 +33,10 @@ Prepare a matrix with one row per sample and one column per region using a set o
 Values are the number of mutations in that patient in the region.
 }
 \examples{
-regions_bed = grch37_ashm_regions \%>\% mutate(name = paste(gene, region, sep = "_"))
-matrix = get_ashm_count_matrix(regions_bed = regions_bed, seq_type="genome")
+regions_bed = grch37_ashm_regions \%>\%
+ mutate(name = paste(gene, region, sep = "_"))
+
+matrix = get_ashm_count_matrix(regions_bed = regions_bed,
+                               seq_type="genome")
 
 }

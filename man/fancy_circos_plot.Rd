@@ -73,12 +73,15 @@ fl_genes = dplyr::filter(lymphoma_genes, FL == TRUE) \%>\%
  pull(Gene)
 
 # get regions for selected genes
-fl_genes_list = gene_to_region(gene_symbol = fl_genes, return_as = "bed")
+fl_genes_list = gene_to_region(gene_symbol = fl_genes,
+                               return_as = "bed")
 
 fancy_circos_plot_new(this_sample_id = "DOHH-2",
                       ssm_calls = FALSE,
                       gene_list = fl_genes_list,
-                      chr_select = c("chr8", "chr14", "chr18"),
+                      chr_select = c("chr8",
+                                     "chr14",
+                                     "chr18"),
                       out = "../../plots/",
                       plot_title = "DOHH-2 (SVs) Example Plot",
                       pdf = FALSE,

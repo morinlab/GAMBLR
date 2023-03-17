@@ -23,6 +23,7 @@ This function expects a sample ID (\code{sample}) or a patient ID (\code{patient
 }
 \examples{
 this_sv = filter(annotate_sv(get_manta_sv()), partner == "HIST1H2BK")
+
 #arbitrarily grab one SV
 bam_details = get_bams(sample = this_sv[1,"tumour_sample_id"])
 

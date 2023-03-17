@@ -58,7 +58,8 @@ To instead plot discordant CN segments, set this parameter to FALSE.
 }
 \examples{
 #two samples ideogram
-ideo_2_samp = fancy_multisamp_ideogram(these_sample_ids = c("00-15201_tumorA", "00-15201_tumorB"),
+ideo_2_samp = fancy_multisamp_ideogram(these_sample_ids = c("00-15201_tumorA",
+                                                            "00-15201_tumorB"),
                                        chr_anno_dist = 4)
 
 }

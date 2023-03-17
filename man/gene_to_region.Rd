@@ -33,7 +33,10 @@ The possible return formats are; bed, data frame and in "region" format (chr:sta
 For returning genes residing in specific regions, see \code{regions_to_genes}.
 }
 \examples{
-bcl2_region = gene_to_region(gene_symbol = "BCL2", genome_build = "grch37")
-bcl2_region = gene_to_region(ensembl_id = "ENSG00000171791", genome_build = "grch37")
+bcl2_region = gene_to_region(gene_symbol = "BCL2",
+                             genome_build = "grch37")
+
+bcl2_region = gene_to_region(ensembl_id = "ENSG00000171791",
+                             genome_build = "grch37")
 
 }

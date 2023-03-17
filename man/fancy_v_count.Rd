@@ -87,6 +87,7 @@ the variant types specified in this parameter must match with whatever is presen
 svs = fancy_v_count(this_sample_id = "HTMCP-01-06-00422-01A-01D")
 
 #count and plot all variants on chromosome 1
-chr1_sv = fancy_v_count(this_sample_id = "HTMCP-01-06-00422-01A-01D", chr_select = c(1))
+chr1_sv = fancy_v_count(this_sample_id = "HTMCP-01-06-00422-01A-01D",
+                        chr_select = c(1))
 
 }

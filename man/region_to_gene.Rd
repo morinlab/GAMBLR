@@ -24,7 +24,12 @@ This function takes a region as a vector of characters, or a data frame with of 
 and returns the genes residing withing the specified region. For the other way around (i.e gene to regions, refer to \code{gene_to_regions}).
 }
 \examples{
-myc_region = gene_to_region(gene_symbol = "MYC", genome_build = "grch37", return_as = "df")
-region = region_to_gene(region = myc_region, gene_format = "hugo", genome_build = "grch37")
+myc_region = gene_to_region(gene_symbol = "MYC",
+                            genome_build = "grch37",
+                            return_as = "df")
+
+region = region_to_gene(region = myc_region,
+                        gene_format = "hugo",
+                        genome_build = "grch37")
 
 }

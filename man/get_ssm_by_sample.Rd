@@ -56,8 +56,16 @@ The current use case is to allow a force_unmatched output to be used to replace 
 This will also be useful to apply a blacklist to individual MAFs when coupled with annotate_ssm_blacklist.
 }
 \examples{
-this_sample_df = get_ssm_by_sample(this_sample_id = "HTMCP-01-06-00485-01A-01D", this_seq_type = "genome",tool_name = "slims-3", projection = "grch37")
+this_sample_df = get_ssm_by_sample(this_sample_id = "HTMCP-01-06-00485-01A-01D", 
+                                   this_seq_type = "genome",
+                                   tool_name = "slims-3", 
+                                   projection = "grch37")
+
 capture_meta = get_gambl_metadata(seq_type_filter = "capture")
-ssm_sample = get_ssm_by_sample(this_sample_id = "CASA0002_2015-03-10", projection = "grch37",augmented = T,these_samples_metadata = capture_meta)
+
+ssm_sample = get_ssm_by_sample(this_sample_id = "CASA0002_2015-03-10",
+                               projection = "grch37",
+                               augmented = T,
+                               these_samples_metadata = capture_meta)
 
 }

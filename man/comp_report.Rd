@@ -44,6 +44,8 @@ file on disk with the \code{seq_path} and \code{maf_path} parameters.
 }
 \examples{
 #create a PDF report for one sample, as well as exporting all individual plots.
-comp_report(this_sample = "HTMCP-01-06-00422-01A-01D", out = "reports/", export_individual_plots = TRUE)
+comp_report(this_sample = "HTMCP-01-06-00422-01A-01D",
+            out = "reports/",
+            export_individual_plots = TRUE)
 
 }

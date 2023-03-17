@@ -153,15 +153,30 @@ The first one should match the Tumor_Sample_Barcode in the MAF object or onco_ma
 sample_id, pathology
 }
 \examples{
-prettyOncoplot(maftools_obj = maf_obj,genes = bl_genes,
-these_samples_metadata = extra_meta,
-metadataColumns = c("pathology","COO_consensus", "cluster_name", "lymphgen","EBV_status_inf", "manta_BCL6_sv"),
-hide_annotations = c(some_ashm,"lymphgen","COO_consensus", "pathology","manta_BCL6_sv"),
-expressionColumns = c("IRF4",some_ashm),
-sortByColumns = c("IRF4"),
-keepGeneOrder = FALSE,splitGeneGroups = groups,
-splitColumnName = "cluster_name",
-metadataBarHeight = 2.5,metadataBarFontsize = 6,fontSizeGene = 8,
-recycleOncomatrix = TRUE,removeNonMutated = FALSE)
+prettyOncoplot(maftools_obj = maf_obj,
+               genes = bl_genes,
+               these_samples_metadata = extra_meta,
+               metadataColumns = c("pathology",
+                                   "COO_consensus",
+                                   "cluster_name",
+                                   "lymphgen",
+                                   "EBV_status_inf",
+                                   "manta_BCL6_sv"),
+               hide_annotations = c(some_ashm,
+                                    "lymphgen",
+                                    "COO_consensus",
+                                    "pathology",
+                                    "manta_BCL6_sv"),
+               expressionColumns = c("IRF4", 
+                                     some_ashm),
+               sortByColumns = c("IRF4"),
+               keepGeneOrder = FALSE,
+               splitGeneGroups = groups,
+               splitColumnName = "cluster_name",
+               metadataBarHeight = 2.5,
+               metadataBarFontsize = 6,
+               fontSizeGene = 8,
+               recycleOncomatrix = TRUE,
+               removeNonMutated = FALSE)
 
 }

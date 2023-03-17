@@ -61,6 +61,7 @@ fl_metadata = get_gambl_metadata() \%>\%
 my_plot_2 = fancy_proportions_plot(these_samples_metadata = fl_metadata)
 
 #Example 3 - using in-house metadata fitlering options
-my_plot_3 = fancy_proportions_plot(keep_cohort = "FL_Kridel", keep_pathology = "FL")
+my_plot_3 = fancy_proportions_plot(keep_cohort = "FL_Kridel",
+                                   keep_pathology = "FL")
 
 }

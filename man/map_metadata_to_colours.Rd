@@ -35,7 +35,15 @@ INTERNAL FUNCTION called by plot_sample_circos and get_mutation_frequency_bin_ma
 Assign a colour palette to metadata columns automatically and consistently.
 }
 \examples{
-all_cols=map_metadata_to_colours(legend_metadata_columns,these_meta,verbose=T)
-all_cols=map_metadata_to_colours(c("lymphgen","pathology","genetic_subgroup"),these_samples_metadata = all_meta,column_alias=list("nothing"="FL"),as_vector = F)
+all_cols = map_metadata_to_colours(metadata_columns = legend_metadata_columns, 
+                                   these_samples_metadata = these_meta,
+                                   verbose = T)
+
+all_cols = map_metadata_to_colours(metadata_columns = c("lymphgen",
+                                                        "pathology",
+                                                        "genetic_subgroup"),
+                                   these_samples_metadata = all_meta,
+                                   column_alias = list("nothing" = "FL"),
+                                   as_vector = F)
 
 }

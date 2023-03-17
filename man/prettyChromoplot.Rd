@@ -54,7 +54,9 @@ Other parameters are all optional. For a detailed explanation of how to use thes
 prettyChromoplot("path_to_gistic_results/scores.gistic")
 
 #advanced usages
-prettyChromoplot("path_to_gistic_results/scores.gistic", genes_to_label="path_to_gene_coordinates_table.tsv", cutoff=0.75) +
-...(any ggplot options to customize plot appearance)
+prettyChromoplot(scorees = "path_to_gistic_results/scores.gistic",
+                 genes_to_label = "path_to_gene_coordinates_table.tsv",
+                 cutoff = 0.75) +
+                  ... #any ggplot options to customize plot appearance
 
 }

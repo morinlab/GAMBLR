@@ -72,8 +72,13 @@ For more usage examples, refer to the parameter descriptions and examples in the
 \examples{
 #basic usage
 my_mutations = get_ssm_by_region(region = "chr8:128,723,128-128,774,067")
+
 #specifying chromosome, start and end individually
-my_mutations = get_ssm_by_region(chromosome = "8", qstart = 128723128, qend = 128774067)
-bcl2_all_details = get_ssm_by_region(region="chr18:60796500-60988073",basic_columns=T)
+my_mutations = get_ssm_by_region(chromosome = "8",
+                                 qstart = 128723128,
+                                 qend = 128774067)
+
+bcl2_all_details = get_ssm_by_region(region = "chr18:60796500-60988073",
+                                     basic_columns = T)
 
 }

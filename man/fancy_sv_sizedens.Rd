@@ -77,6 +77,9 @@ parameters; \code{hide_legend}, \code{plot_title}, \code{plot_subtitle}, \code{a
 }
 \examples{
 myplot = fancy_sv_sizedens(this_sample_id = "HTMCP-01-06-00422-01A-01D")
-myplot2 = fancy_sv_sizedens(this_sample_id = "HTMCP-01-06-00422-01A-01D", size_cutoff = 0, chr_select = c("chr1", "chr2"))
+
+myplot2 = fancy_sv_sizedens(this_sample_id = "HTMCP-01-06-00422-01A-01D",
+                            size_cutoff = 0,
+                            chr_select = c("chr1", "chr2"))
 
 }

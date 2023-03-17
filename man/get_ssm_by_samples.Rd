@@ -63,10 +63,25 @@ See \code{get_ssm_by_sample} for more information.
 }
 \examples{
 #examples using the these_sample_ids parameter.
-sample_ssms = get_ssm_by_samples(these_sample_ids=c("HTMCP-01-06-00485-01A-01D","14-35472_tumorA","14-35472_tumorB"))
-hg38_ssms = get_ssm_by_samples(these_sample_ids=c("HTMCP-01-06-00485-01A-01D","14-35472_tumorA","14-35472_tumorB"),projection="hg38")
-readr_sample_ssms = get_ssm_by_samples(these_sample_ids=c("HTMCP-01-06-00485-01A-01D","14-35472_tumorA","14-35472_tumorB"),subset_from_merge=TRUE,engine="readr")
-slow_sample_ssms = get_ssm_by_samples(these_sample_ids=c("HTMCP-01-06-00485-01A-01D","14-35472_tumorA","14-35472_tumorB"),subset_from_merge=TRUE)
+sample_ssms = get_ssm_by_samples(these_sample_ids = c("HTMCP-01-06-00485-01A-01D",
+                                                      "14-35472_tumorA",
+                                                      "14-35472_tumorB"))
+
+hg38_ssms = get_ssm_by_samples(projection="hg38",
+                               these_sample_ids = c("HTMCP-01-06-00485-01A-01D",
+                                                    "14-35472_tumorA",
+                                                    "14-35472_tumorB"))
+
+readr_sample_ssms = get_ssm_by_samples(subset_from_merge = TRUE,
+                                       engine = "readr",
+                                       these_sample_ids = c("HTMCP-01-06-00485-01A-01D",
+                                                            "14-35472_tumorA",
+                                                            "14-35472_tumorB"))
+
+slow_sample_ssms = get_ssm_by_samples(subset_from_merge = TRUE,
+                                      these_sample_ids = c("HTMCP-01-06-00485-01A-01D",
+                                                           "14-35472_tumorA",
+                                                           "14-35472_tumorB"))
 
 #example using a metadata table subset to sample IDs of interest.
 my_metadata = get_gambl_metadata(seq_type_filter = "genome") \%>\%

@@ -34,7 +34,10 @@ Lastly, \code{p_thresh} sets the p value threshold, default is 0.05.
 }
 \examples{
 hot_ssms = annotate_hotspots(all_ssm)
+
 hot_maf = read.maf(hot_ssms)
-oncoplot(hot_maf,genes=c("MEF2B","TP53","MYD88"),additionalFeature = c("hot_spot",TRUE))
+oncoplot(hot_maf,
+         genes = c("MEF2B", "TP53", "MYD88"),
+         additionalFeature = c("hot_spot", TRUE))
 
 }

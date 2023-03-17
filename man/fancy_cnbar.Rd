@@ -70,6 +70,7 @@ useful for overviewing the extent of each copy number state, in the context of t
 cns = fancy_cnbar(this_sample_id = "HTMCP-01-06-00422-01A-01D")
 
 #Plot all copy number states for chromosome 1.
-chr1_cns = fancy_cnbar(this_sample_id = "HTMCP-01-06-00422-01A-01D", chr_select = c(1))
+chr1_cns = fancy_cnbar(this_sample_id = "HTMCP-01-06-00422-01A-01D",
+                       chr_select = c(1))
 
 }

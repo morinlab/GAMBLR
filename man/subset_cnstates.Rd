@@ -23,7 +23,12 @@ Get the available CN states in the incoming data frame.
 INTERNAL FUNCTION called by fancy_multisample_ideo, for sub-setting copy number information based on segments available in cn data
 }
 \examples{
-cn_states = get_sample_cn_segments(multiple_samples = TRUE, sample_list = c("00-15201_tumorA", "HTMCP-01-06-00422-01A-01D"), streamlined = FALSE)
-subset_cnstates(cn_segments = cn_states, samplen = 1)
+cn_states = get_sample_cn_segments(multiple_samples = TRUE,
+                                   sample_list = c("00-15201_tumorA",
+                                                   "HTMCP-01-06-00422-01A-01D"),
+                                   streamlined = FALSE)
+
+subset_cnstates(cn_segments = cn_states,
+                samplen = 1)
 
 }

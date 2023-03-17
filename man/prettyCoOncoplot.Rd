@@ -47,21 +47,30 @@ you want to be plotted on the left side. For developers: new arguments added to 
 are expected to be out-of-the-box compatible with this function nd would not need code modifications.
 }
 \examples{
-ssm=get_coding_ssm(limit_cohort = c("BL_Adult", "BL_Pediatric"))
-ssm=maftools::read.maf(ssm)
-meta=get_gambl_metadata() \%>\% dplyr::filter(cohort \%in\% c("BL_Adult", "BL_Pediatric"))
-prettyCoOncoplot(maf=ssm,
-    metadata = meta,
-    comparison_column = "cohort",
-    include_noncoding = NULL,
-    minMutationPercent = 0,
-    genes=c("MYC", "TET2", "TP53", "DDX3X", "ID3"),
-    metadataColumns=c("pathology", "EBV_status_inf", "pairing_status", "cohort"),
-    splitColumnName="EBV_status_inf",
-    metadataBarHeight=10,
-    fontSizeGene=12,
-    metadataBarFontsize=10,
-    label1="Adult",
-    label2="Pediatric")
+ssm = get_coding_ssm(limit_cohort = c("BL_Adult", "BL_Pediatric"))
+ssm = maftools::read.maf(ssm)
+meta = get_gambl_metadata() \%>\%
+ dplyr::filter(cohort \%in\% c("BL_Adult", "BL_Pediatric"))
+
+prettyCoOncoplot(maf = ssm,
+                 metadata = meta,
+                 comparison_column = "cohort",
+                 include_noncoding = NULL,
+                 minMutationPercent = 0,
+                 genes = c("MYC",
+                           "TET2",
+                           "TP53",
+                           "DDX3X",
+                           "ID3"),
+                 metadataColumns = c("pathology",
+                                     "EBV_status_inf",
+                                     "pairing_status",
+                                     "cohort"),
+                 splitColumnName = "EBV_status_inf",
+                 metadataBarHeight = 10,
+                 fontSizeGene = 12,
+                 metadataBarFontsize = 10,
+                 label1 = "Adult",
+                 label2 = "Pediatric")
 
 }

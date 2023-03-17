@@ -21,6 +21,6 @@ Determine which cases have NFKBIZ UTR mutations.
 INTERNAL FUNCTION called by \code{collate_results}, not meant for out-of-package usage.
 }
 \examples{
-sample_table = collate_nfkbiz_results(sample_table=sample_table)
+sample_table = collate_nfkbiz_results(sample_table = sample_table)
 
 }

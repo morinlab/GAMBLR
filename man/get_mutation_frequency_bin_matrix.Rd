@@ -99,10 +99,12 @@ and extended usage examples, refer to the SSM tutorial vignette section 1.4.9.
 }
 \examples{
 #load metadata.
-dlbcl_bl_meta = get_gambl_metadata() \%>\% dplyr::filter(pathology \%in\% c("DLBCL", "BL")) #subset on specific pathology.
+dlbcl_bl_meta = get_gambl_metadata() \%>\%
+ dplyr::filter(pathology \%in\% c("DLBCL", "BL")) #subset on specific pathology.
 
 #bring together all derived sample-level results from many GAMBL pipelines.
-dlbcl_bl_meta = collate_results(join_with_full_metadata = TRUE, these_samples_metadata = dlbcl_bl_meta)
+dlbcl_bl_meta = collate_results(join_with_full_metadata = TRUE,
+                                these_samples_metadata = dlbcl_bl_meta)
 
 #get ashm regions
 some_regions = grch37_ashm_regions

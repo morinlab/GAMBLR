@@ -20,7 +20,10 @@ Transform input maf columns to allow for usage of dplyr verbs.
 Allowing for a stright-forward plotting workflow as well as downstream data aggregation and manipulation.
 }
 \examples{
-ssm_sample = get_ssm_by_sample(this_sample_id = "HTMCP-01-06-00485-01A-01D", tool_name = "slims-3", projection = "grch37")
+ssm_sample = get_ssm_by_sample(this_sample_id = "HTMCP-01-06-00485-01A-01D",
+                               tool_name = "slims-3",
+                               projection = "grch37")
+
 clean_maf = cleanup_maf(maf_df = ssm_sample)
 
 }

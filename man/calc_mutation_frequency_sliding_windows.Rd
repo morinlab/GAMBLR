@@ -73,6 +73,9 @@ There are a collection of parameters available for further customizing the retur
 \code{calc_mutation_frequency_sliding_window} is unlikely to be used directly in most cases. See \code{get_mutation_frequency_bin_matrix} instead.
 }
 \examples{
-chr11_mutation_freq = calc_mutation_frequency_sliding_windows(this_region = "chr11:69455000-69459900", metadata = meta_df, slide_by = 10, window_size = 10000)
+chr11_mut_freq = calc_mutation_frequency_sliding_windows(this_region = "chr11:69455000-69459900",
+                                                         metadata = meta_df,
+                                                         slide_by = 10,
+                                                         window_size = 10000)
 
 }

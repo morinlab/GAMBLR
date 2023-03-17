@@ -56,8 +56,12 @@ See parameter descriptions for \code{get_ssm_by_region} for more information on 
 }
 \examples{
 #basic usage, adding custom names from bundled ashm data frame
-regions_bed = grch37_ashm_regions \%>\% mutate(name = paste(gene, region, sep = "_"))
+regions_bed = grch37_ashm_regions \%>\% 
+ mutate(name = paste(gene, region, sep = "_"))
+
 ashm_basic_details = get_ssm_by_regions(regions_bed = regions_bed)
-full_details_maf = get_ssm_by_regions(regions_bed = regions_bed,basic_columns=T)
+
+full_details_maf = get_ssm_by_regions(regions_bed = regions_bed,
+                                      basic_columns=T)
 
 }

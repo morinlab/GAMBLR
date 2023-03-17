@@ -57,6 +57,25 @@ Convenient Boolean parameteers are also avaialble for restricting the plot to sp
 }
 \examples{
 this_samp = "13-38657_tumorB"
-GAMBLR::plot_sample_circos(this_sample_id=this_samp,legend_metadata_columns = c("pathology","lymphgen","COO_consensus","DHITsig_consensus","bcl2_ba","myc_ba"),legend_metadata_names = c("pathology","LymphGen","COO","DHITsig","BCL2","MYC"),auto_label_sv = TRUE,chrom_list = c("chr2","chr3","chr8","chr14","chr18"))
+
+plot_sample_circos(this_sample_id = this_samp,
+                   legend_metadata_columns = c("pathology",
+                                               "lymphgen",
+                                               "COO_consensus",
+                                               "DHITsig_consensus",
+                                               "bcl2_ba",
+                                               "myc_ba"),
+                   legend_metadata_names = c("pathology",
+                                             "LymphGen",
+                                             "COO",
+                                             "DHITsig",
+                                             "BCL2",
+                                             "MYC"),
+                   auto_label_sv = TRUE,
+                   chrom_list = c("chr2",
+                                  "chr3",
+                                  "chr8",
+                                  "chr14",
+                                  "chr18"))
 
 }

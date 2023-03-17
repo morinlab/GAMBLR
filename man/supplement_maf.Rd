@@ -22,8 +22,14 @@ Specify the initial MAF with \code{incoming_maf} (to be supplemented with missin
 give the function a filtered metadata table (with the sample IDs of interest) to the \code{these_samples_metadata}.
 }
 \examples{
-small_maf = get_coding_ssm(limit_cohort = "dlbcl_reddy", seq_type = "capture") \%>\% dplyr::filter(Hugo_Symbol=="MYC")
-reddy_meta = get_gambl_metadata(seq_type_filter = "capture") \%>\% dplyr::filter(cohort=="dlbcl_reddy")
-complete_maf = supplement_maf(incoming_maf = small_maf, these_samples_metadata = reddy_meta)
+small_maf = get_coding_ssm(limit_cohort = "dlbcl_reddy",
+                           seq_type = "capture") \%>\% 
+ dplyr::filter(Hugo_Symbol=="MYC")
+
+reddy_meta = get_gambl_metadata(seq_type_filter = "capture") \%>\% 
+ dplyr::filter(cohort=="dlbcl_reddy")
+
+complete_maf = supplement_maf(incoming_maf = small_maf,
+                              these_samples_metadata = reddy_meta)
 
 }

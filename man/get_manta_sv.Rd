@@ -76,11 +76,19 @@ some_sv = get_manta_sv(these_sample_ids = "94-15772_tumorA")
 myc_locus_sv = get_manta_sv(region = "8:128723128-128774067")
 
 #get SVs for multiple samples, using these_samples_id
-my_samples = get_gambl_metadata() \%>\% dplyr::select(sample_id) \%>\% head(10) \%>\% pull(sample_id)
-my_svs_2 = get_manta_sv(these_sample_ids = my_samples, projection = "hg38")
+my_samples = get_gambl_metadata() \%>\% 
+ dplyr::select(sample_id) \%>\% 
+ head(10) \%>\% 
+ pull(sample_id)
+
+my_svs_2 = get_manta_sv(these_sample_ids = my_samples,
+                        projection = "hg38")
 
 #get SVs for multiple samples using a metadata table and with no VAF/score filtering
-my_metadata = get_gambl_metadata() \%>\% head(10)
-my_svs = get_manta_sv(these_samples_metadata = my_metadata, min_vaf = 0, min_score = 0)
+my_metadata = get_gambl_metadata() \%>\% 
+ head(10)
+my_svs = get_manta_sv(these_samples_metadata = my_metadata,
+                      min_vaf = 0,
+                      min_score = 0)
 
 }

@@ -37,8 +37,12 @@ and/or perform some statistical analysis on the frequency and assortment of muta
 User J can run this function on a maf file and provide the path of the output to user B.
 }
 \examples{
-lymph_genes = lymphoma_genes$Gene #note, this will be used by default if the user wants to be lazy
-secure_maf = "/projects/rmorin/projects/gambl-repos/gambl-rmorin/results/icgc_dart/slms-3_vcf2maf_current/level_3/final_merged_grch37.CDS.maf"
-safe_oncomatrix_path = sanitize_maf_data(mutation_maf_path = secure_maf, genes_keep = lymph_genes)
+#note, this will be used by default if the user wants to be lazy
+lymph_genes = lymphoma_genes$Gene
+
+secure_maf = "/projects/rmorin/projects/gambl-repos/gambl-rmorin/results/icgc_dart/
+slms-3_vcf2maf_current/level_3/final_merged_grch37.CDS.maf"
+safe_oncomatrix_path = sanitize_maf_data(mutation_maf_path = secure_maf,
+                                         genes_keep = lymph_genes)
 
 }

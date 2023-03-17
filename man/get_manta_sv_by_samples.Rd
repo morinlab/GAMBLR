@@ -34,7 +34,9 @@ This is a convenience wrapper function for get_manta_sv_by_sample (and called by
 }
 \examples{
 all_sv = get_manta_sv
-missing_samples = get_gambl_metadata() \%>\% anti_join(all_sv, by = c("sample_id" = "tumour_sample_id"))
+missing_samples = get_gambl_metadata() \%>\%
+ anti_join(all_sv, by = c("sample_id" = "tumour_sample_id"))
+
 missing_from_merge = get_manta_sv_by_samples(these_samples_metadata = missing_samples)
 
 }

@@ -60,7 +60,19 @@ Finally, the time series plot of CNV log ratios will be returned for all lymphom
 it to a panel of genes of interest.
 }
 \examples{
-cnvKompare(patient_id = "00-14595", genes_of_interest = c("EZH2", "TP53", "MYC", "CREBBP", "GNA13"))
-cnvKompare(patient_id = "13-26835", genes_of_interest = c("EZH2", "TP53", "MYC", "CREBBP", "GNA13"), projection = "hg38")
+cnvKompare(patient_id = "00-14595",
+           genes_of_interest = c("EZH2",
+                                 "TP53",
+                                 "MYC", 
+                                 "CREBBP",
+                                 "GNA13"))
+
+cnvKompare(patient_id = "13-26835",
+           genes_of_interest = c("EZH2",
+                                 "TP53",
+                                 "MYC",
+                                 "CREBBP",
+                                 "GNA13"),
+           projection = "hg38")
 
 }

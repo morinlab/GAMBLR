@@ -51,7 +51,12 @@ The user can also use an already loaded maf file with \code{maf_df}. In addition
 For more information on how to run this function with the parameters at hand, refer to the parameter descriptions and function examples.
 }
 \examples{
-tumour_purity = estimate_purity(in_maf = "path/to/file.maf", in_seg = "path/to/file.seg", seg_file_source = "ichorCNA", show_plots = TRUE)
-tumour_purity = estimate_purity(in_maf="path/to/file.maf", assume_diploid = TRUE)
+tumour_purity = estimate_purity(in_maf = "path/to/file.maf",
+                                in_seg = "path/to/file.seg",
+                                seg_file_source = "ichorCNA",
+                                show_plots = TRUE)
+
+tumour_purity = estimate_purity(in_maf = "path/to/file.maf",
+                                assume_diploid = TRUE)
 
 }

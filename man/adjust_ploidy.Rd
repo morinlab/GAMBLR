@@ -42,12 +42,15 @@ multi-sample seg file. The telomeres are always excluded from calculation, and s
 The chromosome prefix is handled internally per projection and does not need to be consistent.
 }
 \examples{
-sample_seg = get_sample_cn_segments(this_sample_id = "14-36022T") \%>\% rename("sample"="ID")
+sample_seg = get_sample_cn_segments(this_sample_id = "14-36022T") \%>\%
+ rename("sample"="ID")
+
 adjust_ploidy(this_seg = sample_seg)
 
 multi_sample_seg = rbind(get_sample_cn_segments(this_sample_id = "14-36022T"),
                          get_sample_cn_segments(this_sample_id = "BLGSP-71-21-00243-01A-11E")) \%>\%
-                         rename("sample"="ID")
-adjust_ploidy(this_seg=multi_sample_seg)
+                         rename("sample" = "ID")
+
+adjust_ploidy(this_seg = multi_sample_seg)
 
 }

@@ -34,6 +34,8 @@ Lastly, the \code{add_chr_prefix} lets the user control if chromosomes should be
 The default is TRUE.
 }
 \examples{
-SVs_bedpe = sv_to_bedpe_file(sv_dataframe, "SVs.bedpe", TRUE)
+SVs_bedpe = sv_to_bedpe_file(sv_df = sv_dataframe, 
+                             filename = "SVs.bedpe",
+                             add_chr_prefix = TRUE)
 
 }

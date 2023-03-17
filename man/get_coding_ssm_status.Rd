@@ -67,7 +67,10 @@ or an already loaded MAF can be used with the \code{maf_data} parameter. If both
 This function also has a lot of filtering and convenience parameters giving the user full control of the return. For more information, refer to the parameter descriptions and examples.
 }
 \examples{
-coding_tabulated_df = get_coding_ssm_status(maf_data = "maf", gene_symbols=c("MYC","KMT2D"))
-coding_tabulated_df = get_coding_ssm_status() #all lymphoma genes from bundled NHL gene list
+coding_tabulated_df = get_coding_ssm_status(maf_data = "maf",
+                                            gene_symbols = c("MYC","KMT2D"))
+
+#all lymphoma genes from bundled NHL gene list
+coding_tabulated_df = get_coding_ssm_status()
 
 }

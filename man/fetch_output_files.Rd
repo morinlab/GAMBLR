@@ -38,6 +38,7 @@ First, specify the name of the tool with \code{tool}, then set the seq type (\co
 together with the genome build (\code{genome_build}). A data frame will be returned with one row per file and sample IDs together with GAMBL wildcards.
 }
 \examples{
-fetch_output_files(tool = "manta", unix_group = "genome")
+fetch_output_files(tool = "manta",
+                   unix_group = "genome")
 
 }

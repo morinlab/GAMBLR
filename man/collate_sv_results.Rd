@@ -30,6 +30,8 @@ Determine and summarize which cases have specific oncogene SVs.
 INTERNAL FUNCTION called by \code{collate_results}, not meant for out-of-package usage.
 }
 \examples{
-results = collate_samples_sv_results(samples, "manta", c("MYC", "BCL2"))
+results = collate_samples_sv_results(sample_table = samples,
+                                     tool = "manta",
+                                     oncogenes = c("MYC", "BCL2"))
 
 }

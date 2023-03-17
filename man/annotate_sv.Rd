@@ -47,6 +47,10 @@ Specify a data frame with SVs (preferably the output from \code{get_manta_sv}) t
 # Basic usage
 sv_df = get_manta_sv()
 annotated_sv = annotate_sv(sv_df)
-annotated_entrez = annotate_sv(sv_data = sv_df, with_chr_prefix = FALSE, collapse_redundant = FALSE, return_as = "bedpe_entrez", genome_build = "grch37")
+annotated_entrez = annotate_sv(sv_data = sv_df,
+                               with_chr_prefix = FALSE,
+                               collapse_redundant = FALSE,
+                               return_as = "bedpe_entrez", 
+                               genome_build = "grch37")
 
 }
