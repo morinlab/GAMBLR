@@ -2,30 +2,30 @@
 % Please edit documentation in R/utilities.R
 \name{region_to_bins}
 \alias{region_to_bins}
-\title{Split a contiguous genomic region on a chromosome into non-overlapping bins}
+\title{Region To Bins.}
 \usage{
-region_to_bins(
-  chromosome = "chr1",
-  start = 10000,
-  end = 121500000,
-  bin_size = 2000
-)
+region_to_bins(chromosome, start, end, bin_size = 2000)
 }
 \arguments{
-\item{chromosome}{}
+\item{chromosome}{The chromosome you are restricting to (with or without a chr prefix).}
 
-\item{start}{}
+\item{start}{Query start coordinate of the range you are restricting to.}
 
-\item{end}{}
+\item{end}{Query end coordinate of the range you are restricting to.}
 
-\item{bin_size}{}
+\item{bin_size}{The size of the bins, default is 2000.}
 }
 \value{
-Data frame describing the bins various ways
+Data frame describing the bins various ways.
 }
 \description{
 Split a contiguous genomic region on a chromosome into non-overlapping bins
 }
+\details{
+This function takes genomic coordinates with the \code{chromosome}, \code{start}, and \code{end} parameters.
+Lastly, the user can also specify the bin size with \code{bin_size}. Default is 20000
+}
 \examples{
-chr8q_bins = region_to_bins(chromosome="8",start=48100000,end=146364022,bin_size = 20000)
+chr8q_bins = region_to_bins(chromosome = "8", start = 48100000, end = 146364022, bin_size = 20000)
+
 }

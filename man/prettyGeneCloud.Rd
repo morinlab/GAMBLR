@@ -2,7 +2,7 @@
 % Please edit documentation in R/viz.R
 \name{prettyGeneCloud}
 \alias{prettyGeneCloud}
-\title{Make a word cloud of gene names from a MAF file based on mutation frequency}
+\title{Gene Cloud Plot}
 \usage{
 prettyGeneCloud(
   maf_df,
@@ -30,5 +30,23 @@ prettyGeneCloud(
 data frame with counts for each gene
 }
 \description{
-Make a word cloud of gene names from a MAF file based on mutation frequency
+Make a word cloud of gene names from a MAF file based on mutation frequency.
+}
+\details{
+Create a wordcloud from an incoming MAF. Required parameter is \code{maf_df}.
+Optional parameters are \code{these_genes}, \code{other_genes}, \code{these_genes_colour}, \code{other_genes_colour} and \code{colour_index}.
+If no genes are supplied when calling the function, this function will default to all lymphoma genes.
+}
+\examples{
+#get all coding SSM
+maf = get_coding_ssm(seq_type = "genome")
+
+#get gene symbols from MAF
+maf_genes = dplyr::filter(maf, Hugo_Symbol != "Unknown") \%>\%
+ dplyr::filter(Chromosome == "1") \%>\%
+ pull(Hugo_Symbol)
+
+#build wordcloud
+prettyGeneCloud(maf_df = maf, these_genes = maf_genes)
+
 }

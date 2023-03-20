@@ -2,7 +2,7 @@
 % Please edit documentation in R/web.R
 \name{web_initialize_gambl_site}
 \alias{web_initialize_gambl_site}
-\title{Set up a fresh instance of a website to host on gitlab}
+\title{Web Initialize GAMBL Site.}
 \usage{
 web_initialize_gambl_site(
   site_base_name,
@@ -12,10 +12,14 @@ web_initialize_gambl_site(
 )
 }
 \arguments{
-\item{site_base_name}{base name for site}
+\item{site_base_name}{Base name for site.}
 
-\item{base_directory}{path to base directory}
+\item{base_directory}{Path to base directory.}
+
+\item{my_name}{My name.}
+
+\item{my_gitlab_email}{The email used for gitlab.}
 }
 \description{
-Set up a fresh instance of a website to host on gitlab
+Set up a fresh instance of a website to host on gitlab.
 }

@@ -2,20 +2,23 @@
 % Please edit documentation in R/preprocessing_io.R
 \name{populate_tool_results}
 \alias{populate_tool_results}
-\title{Populate the database with the per-sample summarized results of various tools}
+\title{Populate Tool Results.}
 \usage{
-populate_tool_results()
+populate_tool_results(tool_name)
 }
 \arguments{
-\item{tool}{Name of the tool to get the results for}
+\item{tool_name}{Name of the tool to get the results for.}
 }
 \value{
-Nothing
+Nothing.
 }
 \description{
-Populate the database with the per-sample summarized results of various tools
+Populate the database with the per-sample summarized results of various tools.
+}
+\details{
+this function is still in draft mode, export to NAMESPACE has been removed for now.
 }
 \examples{
-results = populate_tool_results("slims_3")
+results = populate_tool_results(tool_name = "slims_3")
 
 }

@@ -2,10 +2,10 @@
 % Please edit documentation in R/viz.R
 \name{fancy_v_count}
 \alias{fancy_v_count}
-\title{Generate a bar plot visualizing total variant (SSM or SVs) count for selected contigs.}
+\title{Total n variants count plot.}
 \usage{
 fancy_v_count(
-  this_sample,
+  this_sample_id,
   maf_data,
   maf_path = NULL,
   ssm = TRUE,
@@ -13,7 +13,7 @@ fancy_v_count(
   min_vaf = 0,
   variant_type_col = 10,
   chromosome_col = 5,
-  plot_title = paste0(this_sample),
+  plot_title = paste0(this_sample_id),
   plot_subtitle = "Variant Count For Selected Contigs",
   chr_select = paste0("chr", c(1:22)),
   variant_select = c("DEL", "INS", "DUP"),
@@ -26,7 +26,7 @@ fancy_v_count(
 )
 }
 \arguments{
-\item{this_sample}{Sample to be plotted.}
+\item{this_sample_id}{Sample to be plotted.}
 
 \item{maf_data}{Optional parameter with maf like df already loaded into R.}
 
@@ -48,7 +48,7 @@ fancy_v_count(
 
 \item{chr_select}{vector of chromosomes to be included in plot, defaults to autosomes.}
 
-\item{variant_select}{Subtypes of SVs to be incldued in plot, default is DEL, INS and DUP.}
+\item{variant_select}{Subtypes of SVs to be included in plot, default is DEL, INS and DUP.}
 
 \item{snp_colours}{Optional vector with colours for SNPs (DNP and TNP).}
 
@@ -60,16 +60,33 @@ fancy_v_count(
 
 \item{from_flatfile}{If set to true the function will use flat files instead of the database.}
 
-\item{use_augmented}{Boolean statement if to use augmented maf, default is TRUE.}
+\item{use_augmented_maf}{Boolean statement if to use augmented maf, default is TRUE.}
 }
 \value{
-plot as ggplot object.
+A plot as a ggplot object (grob).
 }
 \description{
 Generate a bar plot visualizing total variant (SSM or SVs) count for selected contigs.
 }
+\details{
+This function creates a barplot showing the total number of variants for a selected sample.
+Convenience parameters for restricting the returned plot are available. For example, with \code{ssm} (Boolean)
+you can toggle if the plot will be in respect to SSM (\code{ssm = TRUE}) or if you wish to count SVs (\code{ssm = FALSE}).
+In addition, this plot can also accept a variety of incoming data types. Either, you supply the function with a sample ID
+(\code{this_sample_id}) and the function will retrieve data using \code{assign_cn_to_ssm} or \code{get_combined_sv} (depending on how the \code{ssm} parameter is used).
+This function also supports a maf or maf-like data frame directly, this is done with \code{maf_data} or \code{maf_path}. If data is supplied with either of these parameters,
+the user can specify what column holds the variant type information as well as chromosome information (\code{variant_type_col} and \code{chromosome_col}).
+Restricting the plot to coding mutations is done with \code{coding_only = TRUE}. Flat-file and augmented maf options can be toggled with \code{from_flatfile}
+and \code{use_augmented_maf}. Both are TRUE by default and should rarely be set to FALSE. Lastly, this plotting function also have convenient parameters for
+customizing the returned plot, e.g \code{plot_title}, \code{y_interval}, \code{hide_legend}, and\code{plot_subtitle} and \code{snp_colours}. lastly, it is also possible
+to control what variants are to be counted with \code{variant_select}. Default is deletions, insertions and duplications, c("DEL", "DUP", "INS"). Not that
+the variant types specified in this parameter must match with whatever is present in the corresponding \code{variant_type_col}.
+}
 \examples{
-chr1_sv = fancy_v_count(this_sample = "HTMCP-01-06-00422-01A-01D", chr_select = c(1))
-svs = fancy_v_count(this_sample = "HTMCP-01-06-00422-01A-01D")
+#count all variants for one sample (defualt parameters)
+svs = fancy_v_count(this_sample_id = "HTMCP-01-06-00422-01A-01D")
+
+#count and plot all variants on chromosome 1
+chr1_sv = fancy_v_count(this_sample_id = "HTMCP-01-06-00422-01A-01D", chr_select = c(1))
 
 }

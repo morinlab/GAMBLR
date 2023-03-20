@@ -2,7 +2,7 @@
 % Please edit documentation in R/preprocessing_io.R
 \name{process_all_manta_bedpe}
 \alias{process_all_manta_bedpe}
-\title{This is a helper function that is not meant to be used routinely}
+\title{Process All Manta Bedpe.}
 \usage{
 process_all_manta_bedpe(
   file_df,
@@ -13,14 +13,19 @@ process_all_manta_bedpe(
 )
 }
 \arguments{
-\item{out_dir}{output directory}
+\item{file_df}{Paths to bedpe.}
 
-\item{projection_build}{The genome we want all results to be relative to (lifted if necessary)}
+\item{out_dir}{output directory.}
 
-\item{bedpe_paths}{paths to bedpe}
+\item{group}{The unix group.}
 
-\item{pattern}{pattern}
+\item{genome_build}{Genome build.}
+
+\item{projection_build}{The genome we want all results to be relative to (lifted if necessary).}
 }
 \description{
-This is a helper function that is not meant to be used routinely
+This function is in draft mode.
+}
+\details{
+This is a helper function that is not meant to be used routinely.
 }

@@ -2,7 +2,7 @@
 % Please edit documentation in R/database.R
 \name{get_sample_cn_segments}
 \alias{get_sample_cn_segments}
-\title{Get all segments for a single (or multiple) sample_id(s).}
+\title{GetSample CN Segments.}
 \usage{
 get_sample_cn_segments(
   this_sample_id,
@@ -17,25 +17,34 @@ get_sample_cn_segments(
 \arguments{
 \item{this_sample_id}{Optional argument, single sample_id for the sample to retrieve segments for.}
 
-\item{multiple_samples}{Set to TRUE to return cn segments for multiple samples (list) pf samples to be specified in samples_list parameter.}
+\item{multiple_samples}{Set to TRUE to return cn segments for multiple samples specified in \code{samples_list} parameter. Default is FALSE.}
 
-\item{with_chr_prefix}{Set to TRUE to add a chr prefix to chromosome names.}
+\item{sample_list}{Optional vector of type character with one sample per row, required if multiple_samples is set to TRUE.}
 
-\item{streamlined}{Return a minimal output rather than full details.}
+\item{from_flatfile}{Set to TRUE by default.}
 
-\item{samples_list}{Optional vector of type character with one sample per row, rewuired if multiple_samples is set to TRUE.}
+\item{projection}{Selected genome projection for returned CN segments. Default is "grch37".}
+
+\item{with_chr_prefix}{Set to TRUE to add a chr prefix to chromosome names. Default is FALSE.}
+
+\item{streamlined}{Return a minimal output rather than full details. Default is FALSE.}
 }
 \value{
-A list of segments for a specific or multiple sample ID(s)
+A data frame of segments for a specific or multiple sample ID(s).
 }
 \description{
 Get all segments for a single (or multiple) sample_id(s).
+}
+\details{
+This function returns CN segments for samples. This works for single sample or multiple samples.
+For multiple samples, remember to set the Boolean parameter \code{multiple_samples = TRUE} and give the \code{sample_lsit} a vector of characters with one sample ID per row.
+For more information on how this function can be run in different ways, refer to the parameter descriptions, examples and vignettes.
 }
 \examples{
 Return cn segments for one sample:
 sample_cn_seg = get_sample_cn_segments(this_sample_id = "some-sample-id", multiple_samples = FALSE)
 
-Return cn segments for multiple samples (provided as list):
+Return cn segments for multiple samples (provided as vector of sample IDs):
 samples = get_sample_cn_segments(multiple_samples = TRUE, sample_list = c("some_sample", "another_sample"))
 
 Return cn segments for multiple samples (read csv with one sample per line):

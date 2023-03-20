@@ -2,10 +2,10 @@
 % Please edit documentation in R/viz.R
 \name{fancy_v_chrcount}
 \alias{fancy_v_chrcount}
-\title{Visualizing variant (SSM or SVs) counts per chromosome}
+\title{n variants per chromosome plot.}
 \usage{
 fancy_v_chrcount(
-  this_sample,
+  this_sample_id,
   maf_data,
   maf_path = NULL,
   ssm = TRUE,
@@ -13,7 +13,8 @@ fancy_v_chrcount(
   min_vaf = 0,
   variant_type_col = 10,
   chromosome_col = 5,
-  plot_title = paste0(this_sample),
+  plot_title = paste0(this_sample_id),
+  y_interval = 1,
   hide_legend = FALSE,
   plot_subtitle = "Variant Count Distribution Per Chromosome",
   chr_select = paste0("chr", c(1:22)),
@@ -25,7 +26,7 @@ fancy_v_chrcount(
 )
 }
 \arguments{
-\item{this_sample}{Sample to be plotted.}
+\item{this_sample_id}{Sample to be plotted.}
 
 \item{maf_data}{Optional parameter with maf like df already loaded into R.}
 
@@ -43,6 +44,8 @@ fancy_v_chrcount(
 
 \item{plot_title}{Title of plot (default to sample ID).}
 
+\item{y_interval}{Optional parameter for specifying intervals on y-axis.}
+
 \item{hide_legend}{Set to True to remove legend from plot, default is FALSE.}
 
 \item{plot_subtitle}{Subtitle for created plot.}
@@ -53,24 +56,40 @@ fancy_v_chrcount(
 
 \item{from_flatfile}{If set to true the function will use flat files instead of the database.}
 
+\item{use_augmented_maf}{Boolean statement if to use augmented maf, default is FALSE.}
+
 \item{add_qc_metric}{Boolean statement, if set to TRUE specified QC metric will be added (second y-axis).}
 
 \item{seq_type}{Default is "genome".}
-
-\item{use_augmented}{Boolean statement if to use augmented maf, default is FALSE.}
 }
 \value{
-plot as ggplot object.
+A plot as a ggplot object (grob).
 }
 \description{
-Visualizing variant (SSM or SVs) counts per chromosome
+Visualizing variant (SSM or SVs) counts per chromosome.
+}
+\details{
+Takes a maf data frame (or path to a maf), counts the number of variants per chromosome.
+Selected chromosomes (\code{chr_select}) are plotted along the x-axis and the variant counts are represented on the y-axis.
+This function can plot both Structural Variants (SV) and Simple Shared Motifs (SSM).
+It plots SVs per default and SSM can be added with setting \code{ssm = TRUE}.
+This plot can also be restricted to only show coding mutations. To do so, set \code{coding_only} to TRUE.
+In addition, the returned plot can also be superimposed with a sample-specific mean coverage (from collate_results).
+To do so, set \code{add_qc_metric} to TRUE. A collection of parameters for customizing the returned plot are also available.
+e.g \code{plot_title}, \code{y_interval}, \code{hide_legend}, and \code{plot_subtitle}.
 }
 \examples{
-ssm = fancy_v_chrcount(this_sample = "HTMCP-01-06-00422-01A-01D", ssm = TRUE)
-svs = fancy_v_chrcount(this_sample = "HTMCP-01-06-00422-01A-01D", ssm = FALSE,
-                    min_vaf = 0,
-                    projection = "grch37",
-                    chr_select = paste0("chr", c(1:5)),
-                    plot_subtitle = "SV Count Distribution (chr1-5)")
+#plot SVs.
+ssm = fancy_v_chrcount(this_sample_id = "HTMCP-01-06-00422-01A-01D", ssm = TRUE)
+
+#plot SVs and SSM.
+ssm = fancy_v_chrcount(this_sample_id = "HTMCP-01-06-00422-01A-01D", ssm = TRUE)
+
+
+svs = fancy_v_chrcount(this_sample_id = "HTMCP-01-06-00422-01A-01D", ssm = FALSE,
+                       min_vaf = 0,
+                       projection = "grch37",
+                       chr_select = paste0("chr", c(1:5)),
+                       plot_subtitle = "SV Count Distribution (chr1-5)")
 
 }

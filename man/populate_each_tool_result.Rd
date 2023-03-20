@@ -2,7 +2,7 @@
 % Please edit documentation in R/preprocessing_io.R
 \name{populate_each_tool_result}
 \alias{populate_each_tool_result}
-\title{Title}
+\title{Populate Each Tool Results.}
 \usage{
 populate_each_tool_result(
   tool,
@@ -12,16 +12,26 @@ populate_each_tool_result(
 )
 }
 \arguments{
-\item{tool}{Name of tool to get results from}
+\item{tool}{Name of tool to get results from.}
 
-\item{include_silent}{Logical parameter indicating whether to include siment mutations into coding mutations. Default is FALSE}
+\item{genome_builds}{A single genome build or a vector of all genome builds to process.}
 
-\item{genome_build}{A list of all genome builds to process}
+\item{unix_groups}{A single unix group or a vector of all unix groups to process.}
 
-\item{unix_group}{A list of all unix groups to process}
+\item{include_silent}{Logical parameter indicating whether to include silent mutations into coding mutations. Default is FALSE.}
+}
+\value{
+Nothing.
 }
 \description{
-Title
+Convenience function for returning results from a specified tool.
+}
+\details{
+This function takes a tool name \code{tool} as well as other parameters for specifying the requested result.
+Other parameters include \code{genome_build}, this can be just one parameter or a vector with different genome builds to return results for.
+Similarly, \code{unix_group} can take either one value or a vector with all the different unix groups to return results for.
+Lastly, the user can subset the returned results to only silent mutations.
+This is done with setting \code{include_silent = TRUE} (default is FALSE).
 }
 \examples{
 tool_results = populate_each_tool_result("smlims_3", "grch37", "gambl", FALSE)

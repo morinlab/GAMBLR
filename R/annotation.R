@@ -2,24 +2,45 @@
 coding_vc = c("Frame_Shift_Del", "Frame_Shift_Ins", "In_Frame_Del", "In_Frame_Ins", "Missense_Mutation", "Nonsense_Mutation", "Nonstop_Mutation", "Splice_Region", "Splice_Site", "Targeted_Region", "Translation_Start_Site")
 
 
-#' Annotate and auto-drop a MAF data frame with existing blacklists to remove variants that would be dropped during the merge process.
+#' @title Annotate SSM with Blacklists
 #'
-#' @param mutations_df df with mutation data.
-#' @param seq_type The seq_type of your mutations if you prefer to apply only the corresponding blacklist (default is to use all available)
-#' @param unix_group The unix group (should be the same for all)
-#' @param tool_name The tool or pipeline that generated the files (should be the same for all)
-#' @param flavour Set to "clustered" if you want to use the blacklist for the new and improved SLMS-3 outputs (otherwise leave empty)
-#' @param genome_build The genome build projection for the variants you are working with (default is grch37)
-#' @param project_base Optional: A full path to the directory that your blacklist_file_pattern is relative to
-#' @param blacklist_file_pattern Optional: A string that contains the relative path to your blacklist file from after the project_base (i.e. results) with any wildcards surrounded with curly braces
-#' @param drop_threshold The minimum count from one of the blacklists to drop a variant
-#' @param verbose For debugging, print out a bunch of possibly useful information
-#' @param invert USE WITH CAUTION! This returns only the variants that would be dropped in the process (opposite of what you want, probably)
+#' @description Annotate and auto-drop a MAF data frame with existing blacklists.
 #'
+#' @details Annotate and auto-drop a MAF data frame with existing blacklists to remove variants that would be dropped during the merge process.
+#' This function returns a MAF format data frame with two new columns, indicating the number of occurrences of each variant in the two blacklists.
+#' Note that there are a collection of parameters to this function to improve flexibility for many applications,
+#' such as `return_blacklist` (returns the used blacklist to the vector given the function, or printed to the terminal if blank).
+#' For returning variants that would be dropped, one can specify `invert = TRUE`, please use with caution, this is most likely the opposite of what you want from this function.
+#' Lastly, the minimum count from one of the blacklists to drop a variant is specified with `drop_threshold = 4`.
+#' This function also conveniently lets you know how many variants that were dropped in the annotation process.
+#'
+#' @param mutations_df A data frame with mutation data.
+#' @param seq_type The seq_type of your mutations if you prefer to apply only the corresponding blacklist. More than one seq_type can be specified as a vector if desired. This parameter is required.
+#' @param tool_name The tool or pipeline that generated the files (should be the same for all).
+#' @param tool_version The version of the tool specified under `tool_name`.
+#' @param annotator_name Name of annotator, default is "vcf2maf".
+#' @param annotator_version Version of annotator specified under `annotator_name`.
+#' @param genome_build The genome build projection for the variants you are working with (default is grch37).
+#' @param project_base Optional: A full path to the directory that your blacklist_file_pattern is relative to.
+#' @param blacklist_file_template Optional: A string that contains the relative path to your blacklist file from after the project_base (i.e. results) with any wildcards surrounded with curly braces.
+#' @param drop_threshold The minimum count from one of the blacklists to drop a variant.
+#' @param return_blacklist Boolean parameter for returning the blacklist. Default is FALSE.
+#' @param use_curated_blacklist Boolean parameter for using a curated blacklist, default is FALSE.
+#' @param verbose For debugging, print out a bunch of possibly useful information.
+#' @param invert USE WITH CAUTION! This returns only the variants that would be dropped in the process (opposite of what you want, probably).
+#' 
 #' @return A MAF format data frame with two new columns indicating the number of occurrences of each variant in the two blacklists.
+#' 
+#' @import dplyr readr tidyr
+#' 
 #' @export
 #'
-#' @examples deblacklisted_maf_df = annotate_ssm_blacklist(original_maf_df)
+#' @examples 
+#'
+#' #annotate MAF
+#' deblacklisted_maf = annotate_ssm_blacklist(grande_maf,
+#'                                           seq_type = "genome",
+#'                                           genome_build = "hg38")
 #'
 annotate_ssm_blacklist = function(mutations_df,
                                   seq_type,
@@ -32,74 +53,104 @@ annotate_ssm_blacklist = function(mutations_df,
                                   blacklist_file_template,
                                   drop_threshold = 4,
                                   return_blacklist = FALSE,
+                                  use_curated_blacklist = FALSE,
                                   verbose = FALSE,
                                   invert = FALSE){
+
   if(missing(seq_type)){
     message("User must specify seq_type of the mutations to select the right blacklist file. More than one seq_type can be specified as a vector if desired.")
     return()
   }
+
   projection = genome_build
+
   if(missing(blacklist_file_template)){
-    blacklist_template = config::get("resources")$blacklist$template
+    blacklist_template = check_config_value(config::get("resources")$blacklist$template)
   }else{
     blacklist_template = blacklist_file_template
   }
+
   if(missing(project_base)){
-    project_base = config::get("project_base")
+    project_base = check_config_value(config::get("project_base"))
   }
-  blacklist_files = glue::glue(blacklist_template)
-  blacklist_list = list()
-  for(b in blacklist_files){
-    full_path = paste0(project_base,b) 
+  
+  if(!use_curated_blacklist){
+    blacklist_files = glue::glue(blacklist_template)
+    blacklist_list = list()
+    for(b in blacklist_files){
+      full_path = paste0(project_base,b)
 
-    #check for missingness
-    if(!file.exists(full_path)){
-      print(paste("missing: ", full_path))
-      message("Cannot find file locally. If working remotely, perhaps you forgot to load your config (see below) or sync your files?")
-      message('Sys.setenv(R_CONFIG_ACTIVE = "remote")')
+      #check for missingness
+      if(!file.exists(full_path)){
+        print(paste("missing: ", full_path))
+        message("Cannot find file locally. If working remotely, perhaps you forgot to load your config (see below) or sync your files?")
+        message('Sys.setenv(R_CONFIG_ACTIVE = "remote")')
+      }
+
+      lifted_blacklist = suppressMessages(readr::read_tsv(full_path, col_names = c("chrpos", "blacklist_count"), col_types = "ci"))
+
+      lifted_blacklist = lifted_blacklist %>%
+        separate(chrpos, into = c("Chromosome", "Start_Position"), sep = ":") %>% 
+        mutate(Start_Position = as.numeric(Start_Position))
+  
+      blacklist_list[[b]] = lifted_blacklist
     }
 
-    lifted_blacklist = read_tsv(full_path, col_names = c("chrpos", "blacklist_count"),col_types="ci")
-    lifted_blacklist = lifted_blacklist %>%
-      separate(chrpos, into = c("Chromosome", "Start_Position"), sep = ":")
-
-    blacklist_list[[b]] = lifted_blacklist
-  }
-  combined_blacklist = do.call("rbind", blacklist_list)
-
-  # Collapse variant counts per Start_Position
-  combined_blacklist = mutate(combined_blacklist, Start_Position = as.integer(Start_Position)) %>%
-    group_by(Start_Position, Chromosome) %>%
-    summarize(blacklist_count = sum(blacklist_count)) %>%
-    ungroup()
-
-  if(return_blacklist){
-    return(combined_blacklist)
-  }
-
-  #join using chromosome and position
-  if(verbose){
-    print(head(mutations_df))
-    print(head(combined_blacklist))
-  }
-  if(str_detect(mutations_df$Chromosome, "chr")[1]){
-    combined_blacklist = mutate(combined_blacklist, Chromosome = paste0("chr", Chromosome))
-
-  }
-  mutations_df = left_join(mutations_df,combined_blacklist,by = c("Chromosome", "Start_Position")) %>%
-    mutate(blacklist_count = replace_na(blacklist_count, 0))
-
-
-  dropped = dplyr::filter(mutations_df, blacklist_count > drop_threshold)
-  if(verbose){
-    if(length(dropped) > 0 ){
-      ndrop = length(dropped$Tumor_Sample_Barcode)
-      message(paste(ndrop, "variants were dropped"))
-    } else {
-      message("0 variants were dropped")
+    combined_blacklist = do.call("rbind", blacklist_list)
+    
+    if(return_blacklist){
+      return(combined_blacklist)
+    }
+  
+    #join using chromosome and position
+    if(verbose){
+      print(head(mutations_df))
+      print(head(combined_blacklist))
     }
 
+    if(str_detect(mutations_df$Chromosome, "chr")[1]){
+      combined_blacklist = mutate(combined_blacklist, Chromosome = paste0("chr", Chromosome))
+    }
+    
+    mutations_df = left_join(mutations_df, combined_blacklist, by = c("Chromosome", "Start_Position")) %>%
+      mutate(blacklist_count = replace_na(blacklist_count, 0))
+    dropped = dplyr::filter(mutations_df, blacklist_count > drop_threshold)
+
+    if(verbose){
+      if(nrow(dropped) > 0 ){
+        ndrop = length(dropped$Tumor_Sample_Barcode)
+        message(paste(ndrop, "variants were dropped"))
+      }else{
+        message("0 variants were dropped")
+      }
+    }
+  
+  }else{
+    repo_base = check_config_value(config::get("repo_base"))
+    full_path = paste0(repo_base, check_config_value(config::get("resources")$curated_blacklist))
+    
+    additional_blacklist = glue::glue(full_path) %>% 
+    readr::read_tsv()
+
+    additional_blacklist = additional_blacklist %>%
+      separate(chrpos, into = c("Chromosome", "Start_Position"), sep = ":") %>% 
+      mutate(Start_Position = as.numeric(Start_Position))
+
+    mutations_df = left_join(mutations_df, additional_blacklist, by = c("Chromosome", "Start_Position")) %>%
+      mutate(blacklist_count = tidyr::replace_na(blacklist_count, 0))
+
+    dropped = dplyr::filter(mutations_df, blacklist_count > drop_threshold)
+
+    if(verbose){
+      if(nrow(dropped) > 0 ){
+        ndrop = length(dropped$Tumor_Sample_Barcode)
+        message(paste(ndrop, "variants were dropped"))
+      } else {
+        message("0 variants were dropped")
+      }
+    }
   }
+  
   #drop anything that exceeds our threshold but keep NA
   mutations_df = dplyr::filter(mutations_df, is.na(blacklist_count) | blacklist_count < drop_threshold)
   if(invert){
@@ -109,13 +160,16 @@ annotate_ssm_blacklist = function(mutations_df,
 }
 
 
-#' Annotates recurrent CNVs.
+#' @title Annotate Recurrent CNVs.
+#' 
+#' @description Annotates recurrent CNVs from a data frame with CNV data.
 #'
-#' @param seq_df Data frame of sequences with start and end coordinates.
-#' @param seq_file Optional argument to read sequences from file (currently not used in function).
+#' @details This function takes a data frame with CNVs (`seq_df`) and annotates recurrent CNVs.
 #'
-#' @return Nothing
-#' @export
+#' @param seg_df Data frame of sequences with start and end coordinates.
+#' @param seg_file Optional argument to read sequences from file (currently not used in function).
+#'
+#' @return Nothing.
 #'
 #' @examples
 #' annotated = annotate_recurrent_cnv(my_seq_df)
@@ -138,12 +192,20 @@ annotate_recurrent_cnv = function(seg_df,
 }
 
 
-#' Add annotation to IGH breakpoints to infer mechanism based on location within IGH.
+#' @title Annotate IGH Breakpoints.
+#'
+#' @description Add annotation to IGH breakpoints to infer mechanism based on location within IGH.
+#'
+#' @details Returns a modified bedpe with additional columns.
+#' The most useful columns that are added are mechanism (one of CSR, AID, VDJ) and label (NA if unmatched, otherwise one of Emu, Smu, one of the J segments or switch regions).
 #'
 #' @param annotated_df Previously annotated data frame of SVs.
 #' @param genome_build Version of reference build to be used, only grch37 currently accepted.
 #'
-#' @return A slightly modified bedpe with some added columns. The most useful columns that are added are mechanism (one of CSR, AID, VDJ) and label (NA if unmatched, otherwise one of Emu, Smu, one of the J segments or switch regions)
+#' @return A slightly modified bedpe with added columns.
+#'
+#' @rawNamespace import(data.table, except = c("last", "first", "between", "transpose"))
+#' @import dplyr
 #' @export
 #'
 #' @examples
@@ -197,14 +259,21 @@ annotate_igh_breakpoints = function(annotated_df,
 }
 
 
-#' Retrieve data or use supplied data frame of genes to get/annotate MAF data indicating which rows are putative driver mutations.
+#' @title Annotate Driver SSM.
 #'
-#' @param maf_df Data frame of MAF-format mutations (default is to retrieve automatically).
+#' @description Retrieve data or use the supplied data frame of genes to get/annotate MAF data indicating which rows are putative driver mutations.
+#'
+#' @details Provide a maf-like data frame with `maf_df` as the only required parameter. 
+#' For information on how to use the additional parameters, refer to the parameter descriptions and function examples. 
+#'
+#' @param maf_df Data frame of MAF-format mutations.
 #' @param lymphoma_type Optional keyword to find genes for annotation (e.g. "BL","DLBCL","FL") is not specifying driver genes.
 #' @param driver_genes Optional vector of Hugo_Symbol of genes for coding mutations.
 #' @param noncoding_regions Optional named vector of regions to use to further restrict noncoding mutations per gene.
 #'
-#' @return Driver ssm kepts from maf.
+#' @return Incoming MAF, subset to putative driver mutations.
+#'
+#' @import dplyr
 #' @export
 #'
 #' @examples
@@ -250,7 +319,11 @@ annotate_driver_ssm = function(maf_df,
 }
 
 
-#' Annotate a data frame of SV breakpoints represented in an extended BEDPE format.
+#' @title Annotate SVs.
+#'
+#' @description Annotate a data frame of SV breakpoints represented in an extended BEDPE format.
+#'
+#' @details Specify a data frame with SVs (preferably the output from `get_manta_sv`) to the `sv_df` parameter and get back the same data frame with SV annotations.
 #'
 #' @param sv_data A data frame of SVs. This should be the output of get_manta_sv. If you aren't using the database backend you can supply your own data frame in the format show below.
 #' Most of this data is directly from the bedpe files that are obtained by converting the Manta outputs from VCF.
@@ -258,16 +331,17 @@ annotate_driver_ssm = function(maf_df,
 #'  CHROM_A  START_A    END_A CHROM_B  START_B    END_B NAME SOMATIC_SCORE STRAND_A STRAND_B TYPE FILTER VAF_tumour VAF_normal DP_tumour DP_normal tumour_sample_id normal_sample_id pair_status
 #'   1  1556541  1556547       1  1556664  1556670    .            40        -        -  BND   PASS      0.145          0        55        73  00-14595_tumorA  00-14595_normal     matched
 #' @param partner_bed Optional bed-format data frame to use for annotating oncogene partners (e.g. enhancers). required columns are: chrom,start,end,gene
-#' @param with_chr_prefix Optionally request that chromosome names are returned with a chr prefix.
-#' @param collapse_redundant Remove reciprocal events and only return one per event.
-#' @param return_as Stated format for returned output, default is bedpe. Other accepted output format is bed and bedpe_entrez (to keep entrez_ids for compatabillity with portal.R and cBioPortal).
-#' @param blacklist A list of regions to be removed from annotations. Default coordinates are in respect to hg19.
-#' @param genome_build Reference genome build parameter, default is grch37 (hg38 is also accepted).
+#' @param with_chr_prefix Optionally request that chromosome names are returned with a chr prefix. Default is FALSE.
+#' @param collapse_redundant Remove reciprocal events and only return one per event. Default is FALSE.
+#' @param return_as Stated format for returned output, default is "bedpe". Other accepted output formats are "bed" and "bedpe_entrez" (to keep entrez_ids for compatibility with portal.R and cBioPortal).
+#' @param blacklist A vector of regions to be removed from annotations. Default coordinates are in respect to hg19.
+#' @param genome_build Reference genome build parameter, default is grch37.
 #'
-#' @return A data frame with annotated SVs (gene symbol and entrez ID)
+#' @return A data frame with annotated SVs (gene symbol and entrez ID).
+#' 
+#' @rawNamespace import(data.table, except = c("last", "first", "between", "transpose"))
+#' @import tidyr dplyr stringr
 #' @export
-#' @import tidyverse
-#' @import data.table
 #'
 #' @examples
 #' # Basic usage
@@ -279,7 +353,7 @@ annotate_sv = function(sv_data,
                        partner_bed,
                        with_chr_prefix = FALSE,
                        collapse_redundant = FALSE,
-                       return_as = "bedpe_entrez",
+                       return_as = "bedpe",
                        blacklist = c(60565248, 30303126, 187728894, 101357565, 101359747, 161734970, 69400840, 65217851, 187728889, 187728888,187728892, 187728893,188305164),
                        genome_build = "grch37"){
 

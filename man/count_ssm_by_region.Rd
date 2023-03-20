@@ -2,7 +2,7 @@
 % Please edit documentation in R/utilities.R
 \name{count_ssm_by_region}
 \alias{count_ssm_by_region}
-\title{Count the variants in a region with a variety of filtering options}
+\title{Count SSM In A Region}
 \usage{
 count_ssm_by_region(
   region,
@@ -16,22 +16,38 @@ count_ssm_by_region(
 )
 }
 \arguments{
-\item{region}{}
+\item{region}{Region formatted like chrX:1234-5678 instead of specifying chromosome, start and end separately.}
 
-\item{chromosome}{}
+\item{chromosome}{The chromosome you are restricting to (with or without a chr prefix).}
 
-\item{start}{}
+\item{start}{Query start coordinate of the range you are restricting to.}
 
-\item{end}{}
+\item{end}{Query end coordinate of the range you are restricting to.}
 
-\item{all_mutations_in_these_regions}{If you are calling this function many times (e.g. bins spanning a larger region), to save a ton of time you are strongly encouraged to provide the output of get_ssm_by_region on the entire region of interest and passing it to this function}
+\item{all_mutations_in_these_regions}{If you are calling this function many times (e.g. bins spanning a larger region), to save a ton of time you are strongly encouraged to provide the output of \code{get_ssm_by_region} on the entire region of interest and passing it to this function}
 
-\item{these_samples_metadata}{}
+\item{these_samples_metadata}{A metadata table subset to the sample IDs of interest. If not provided, the function will call \code{get_gambl_metadata} and regions will be returned for all samples in the metadata.}
 
 \item{count_by}{Defaults to counting all variants. Specify 'sample_id' if you want to collapse and count only one per sample}
 
-\item{seq_type}{}
+\item{seq_type}{The seq_type you want back, default is genome.}
 }
 \description{
-Count the variants in a region with a variety of filtering options
+Count the variants in a region with a variety of filtering options.
+}
+\details{
+This function internally calls \code{get_ssm_by_region} thus, the parameters available to this function are arguments that are being passed to the internal call.
+For more details on how these parameters can be used, refer to \code{get_ssm_by_region}.
+}
+\examples{
+#define a region.
+my_region = gene_to_region(gene_symbol = "MYC", return_as = "region")
+
+#subset metadata.
+my_metadata = get_gambl_metadata() \%>\%
+ dplyr::filter(pathology == "FL")
+
+#count SSMs for the selected sample subset and defined region.
+fl_ssm_counts_myc = count_ssm_by_region(region = my_region, these_samples_metadata = my_metadata)
+
 }

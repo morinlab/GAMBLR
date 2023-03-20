@@ -2,7 +2,7 @@
 % Please edit documentation in R/viz.R
 \name{pretty_lollipop_plot}
 \alias{pretty_lollipop_plot}
-\title{Generate a more visually appealing and flexible lollipop plot.}
+\title{Lollipop Plot}
 \usage{
 pretty_lollipop_plot(maf_df, gene, plot_title, plot_theme = "cbioportal")
 }
@@ -16,13 +16,28 @@ pretty_lollipop_plot(maf_df, gene, plot_title, plot_theme = "cbioportal")
 \item{plot_theme}{Options: cbioportal(default), blue, simple, nature, nature2, ggplot2, and dark.}
 }
 \value{
-Nothing
+Nothing.
 }
 \description{
-Generate a more visually appealing and flexible lollipop plot.
+Generates a visually appealing and interactive lollipop plot.
+}
+\details{
+This function is depending on a modified version of \code{readMAF} from the \code{g3viz} package.
+Returned plot is interactive, meaning the user can hover over individual points in the plot to reveal more information.
+The plot can also be exported in a variety of file formats inside the interactive view of the lollipop plot.
 }
 \examples{
-pretty_lollipop_plot = (mutation_df, "MYC", "Mutation data for MYC", "blue")
-pretty_lollipop_plot = (mutation_df, "BCL2")
+#get metadata (Fl and DLBCL)
+this_metadata = get_gambl_metadata() \%>\%
+ dplyr::filter(consensus_pathology \%in\% c("FL", "DLBCL"))
+
+#get maf data for returned samples
+maf = get_coding_ssm(limit_samples = this_metadata$sample_id, seq_type = "genome")
+
+#construct pretty_lollipop_plot.
+pretty_lollipop_plot(maf_df = maf, 
+                     gene = "MYC",
+                     plot_title = "Mutation data for MYC", 
+                     plot_theme = "nature2")
 
 }

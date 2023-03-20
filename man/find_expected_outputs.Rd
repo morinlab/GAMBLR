@@ -2,7 +2,7 @@
 % Please edit documentation in R/preprocessing_io.R
 \name{find_expected_outputs}
 \alias{find_expected_outputs}
-\title{Get the details including file paths for the anticipated outputs from a pipeline or tool}
+\title{Find Expected Outputs.}
 \usage{
 find_expected_outputs(
   targ_df,
@@ -14,20 +14,25 @@ find_expected_outputs(
 )
 }
 \arguments{
-\item{targ_df}{Optionally provide a data frame with all file details}
+\item{targ_df}{Optionally provide a data frame with all file details.}
 
-\item{tool_name}{The tool or pipeline that generated the files (should be the same for all)}
+\item{tool_name}{The tool or pipeline that generated the files (should be the same for all).}
 
-\item{unix_group}{The unix group (should be the same for all)}
+\item{unix_group}{The unix group (should be the same for all).}
 
-\item{filename_end_pattern}{Optionally specify a pattern to search for the files among a longer set of files in the outputs}
+\item{filename_end_pattern}{Optionally specify a pattern to search for the files among a longer set of files in the outputs.}
 
-\item{update_db}{Set to TRUE to overwrite any existing rows in the table for this tool/unix_group combination}
+\item{update_db}{Set to TRUE to overwrite any existing rows in the table for this tool/unix_group combination.}
 
 \item{target_path}{Path to targets.}
 }
 \description{
-Get the details including file paths for the anticipated outputs from a pipeline or tool
+Get the details including file paths for the anticipated outputs from a pipeline or tool.
+}
+\details{
+This function takes a tool or pipeline with \code{tool_name} and the unix group with \code{unix_group} and returns information such as paths to individual files.
+Optionally, the user can provide an already loaded data frame with all the file details (\code{targ_df}).
+for more information and examples, refer to the parameter descriptions as well as function examples.
 }
 \examples{
 ex_outs = find_expected_outputs(my_df, "slims_3", "gambl")

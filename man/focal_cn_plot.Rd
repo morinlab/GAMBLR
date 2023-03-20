@@ -2,7 +2,7 @@
 % Please edit documentation in R/viz.R
 \name{focal_cn_plot}
 \alias{focal_cn_plot}
-\title{Generate a plot of all CN segments.}
+\title{Copy Number Segments Plot}
 \usage{
 focal_cn_plot(
   region,
@@ -20,11 +20,13 @@ focal_cn_plot(
 
 \item{gene}{Optional variable, converts gene to region if region not supplied.}
 
-\item{these_samples_metadata}{GAMBL metadata subset to the cases you want to process (or full metadata)}
+\item{these_samples_metadata}{Required parameter. GAMBL metadata subset to the cases you want to process (or full metadata).}
 
-\item{type}{Type of CN segment to be ploitted. Default is gain (CN > 2).}
+\item{type}{Type of CN segment to be plotted. Default is gain (CN > 2).}
 
-\item{crop_segments}{Boolean statement that crops segment by first checking if crop segment is smaller than lef/right distance, then adds or subtracts  crop distance to end/start coordiantes. Default is TRUE.}
+\item{segment_size}{This parameter controls the size of the segment plotted with ggplot2, default is 1.}
+
+\item{crop_segments}{Boolean statement that crops segment by first checking if crop segment is smaller than lef/right distance, then adds or subtracts  crop distance to end/start coordinates. Default is TRUE.}
 
 \item{sort_by_annotation}{Sort CN by annotation, default is "pathology".}
 
@@ -34,10 +36,22 @@ focal_cn_plot(
 Nothing
 }
 \description{
-Generate a plot of all CN segments.
+Generates a plot of all CN segments for a specified region.
+}
+\details{
+This function visualizes all CN segments for a defined region, colours the returned segments based on lymphgen information.
+In addition, this function takes either a specified region (chr:start-end format). If no region is supplied, the user can give the function a gene symbol
+with \code{gene}. If so, the function will internally retrieve the region for the specified gene.
+Sample IDs are specified along the y-axis and the genomic position is visualized along the x-axis.
 }
 \examples{
-plot = focal_cn_plot(gene = "BCL2", type = "gain", segment_size = 2, crop_distance = 1000000)
-plot = focal_cn_plot(region = "chr4:100154645-5488465512", type = "loss", crop_distance = 100000000)
+#get metadata
+this_metadata = get_gambl_metadata()
+
+#get myc region
+myc_region = gene_to_region(gene_symbol = "MYC", return_as = "region")
+
+#build plot
+focal_cn_plot(these_samples_metadata = this_metadata, region = myc_region, type = "loss", crop_distance = 100000000)
 
 }
