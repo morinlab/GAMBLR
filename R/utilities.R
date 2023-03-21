@@ -1635,6 +1635,11 @@ collate_results = function(sample_table,
 
     full_table = left_join(meta_data, sample_table)
 
+    #check for missing columns, add any missing columns and fill with NA
+    col_check = c("ashm_MYC", "manta_MYC_sv", "ICGC_MYC_sv", "myc_ba", "ashm_BCL2", "manta_BCL2_sv", "ICGC_BCL2_sv", "bcl2_ba") #create a vector of the columns to check for
+    missing = setdiff(col_check, names(full_table)) #return the missing columns
+    full_table[missing] = NA #add missing columns to full_table and fill such columns with NAs
+
     full_table = full_table %>%
       mutate("MYC_SV_any" = case_when(ashm_MYC > 3 ~ "POS", manta_MYC_sv == "POS" ~ "POS", ICGC_MYC_sv == "POS" ~ "POS", myc_ba == "POS" ~ "POS", TRUE ~ "NEG"))
 
