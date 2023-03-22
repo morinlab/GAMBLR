@@ -175,10 +175,7 @@ A great way to overview SVs and Copy Number Segments on sample-level is to call 
 fancy_ideogram(this_sample_id = this_sample,
                gene_annotation = "MYC",
                plot_title = "Sample-level Ideogram Example",
-               plot_subtitle = "grch37",
-               coding_only = FALSE,
-               from_flatfile = TRUE,
-               use_augmented_maf = TRUE)
+               plot_subtitle = "grch37")
 ```
 
 ## Multi-sample Ideograms
@@ -189,14 +186,11 @@ two_samples = c("00-15201_tumorA", "00-15201_tumorB")
 
 #build plot
 fancy_multisamp_ideogram(these_sample_ids = two_samples, 
-                         include_cn2 = FALSE,
+                         include_cn2 = TRUE,
                          plot_title = "Multi-sample Ideograms Example",
                          plot_sub = "grch37",
                          chr_anno_dist = 2.5,
-                         chr_select = paste0("chr", c(1:22)),
-                         coding_only = FALSE,
-                         from_flatfile = FALSE,
-                         use_augmented_maf = FALSE)
+                         chr_select = paste0("chr", c(1:22)))
 ```
 
 # Quality Control Metric Visualization, Sample Subset and Comparison Groups.
