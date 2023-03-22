@@ -576,9 +576,11 @@ compare_mutation_flavour = function(these_sample_ids,
 #' @export
 #'
 #' @examples
+#' \dontrun{
 #' intersected_mafs_l1 = intersect_maf(maf_list1, maf_list2, "maf1_only")
 #' intersected_mafs_l2 = intersect_maf(maf_list1, maf_list2, "maf2_only")
-#'
+#' }
+#' 
 intersect_maf = function(maf1,
                          maf2,
                          set_returned = "maf1_only"){
@@ -624,8 +626,8 @@ intersect_maf = function(maf1,
 #' @export
 #'
 #' @examples
-#' coding_tabulated_df = get_coding_ssm_status(maf_data = "maf",
-#'                                             gene_symbols = c("MYC","KMT2D"))
+#' coding_tabulated_df = get_coding_ssm_status(maf_data = grande_maf,
+#'                                             gene_symbols = "EGFR")
 #' 
 #' #all lymphoma genes from bundled NHL gene list
 #' coding_tabulated_df = get_coding_ssm_status()
@@ -745,8 +747,10 @@ get_coding_ssm_status = function(gene_symbols,
 #' @return Numeric value.
 #'
 #' @examples
+#' \dontrun{
 #' trimmed = trim_scale_expression(2)
-#'
+#' }
+#' 
 trim_scale_expression = function(x){
   quants = unname(quantile(x, probs = c(0.05, 0.95), na.rm = TRUE))
   x = ifelse(x < quants[1], quants[1], x)
@@ -952,10 +956,12 @@ calc_mutation_frequency_sliding_windows = function(this_region,
 #' @export
 #'
 #' @examples
+#' \dontrun{
 #' SVs_bedpe = sv_to_bedpe_file(sv_df = sv_dataframe, 
 #'                              filename = "SVs.bedpe",
 #'                              add_chr_prefix = TRUE)
-#'
+#' }
+#' 
 sv_to_bedpe_file = function(sv_df,
                             path = "/projects/rmorin/projects/gambl-repos/gambl-rmorin/results/icgc_dart/misc/",
                             filename = "my_svs.bedpe",
@@ -1084,12 +1090,12 @@ sanitize_maf_data = function(mutation_maf_path,
 #' @export
 #'
 #' @examples
-#' hot_ssms = annotate_hotspots(all_ssm)
-#' 
-#' hot_maf = read.maf(hot_ssms)
-#' oncoplot(hot_maf,
-#'          genes = c("MEF2B", "TP53", "MYD88"),
-#'          additionalFeature = c("hot_spot", TRUE))
+#' my_metadata = get_gambl_metadata()
+#' all_coding_ssm = get_coding_ssm(these_samples_metadata = my_metadata,
+#'                                 projection = "grch37", 
+#'                                 seq_type = "genome")
+#'
+#' hot_ssms = annotate_hotspots(all_coding_ssm)
 #'
 annotate_hotspots = function(mutation_maf,
                              recurrence_min = 5,
@@ -1182,7 +1188,7 @@ annotate_hotspots = function(mutation_maf,
 #' @export
 #'
 #' @examples
-#' hot_ssms = review_hotspots(annotate_hotspots(get_coding_ssm()),
+#' hot_ssms = review_hotspots(annotate_hotspots(get_coding_ssm(seq_type = "genome")),
 #'                            genes_of_interest = c("CREBBP"))
 #'
 review_hotspots = function(annotated_maf,
@@ -1288,6 +1294,7 @@ review_hotspots = function(annotated_maf,
 #' @export
 #'
 #' @examples
+#' \dontrun{
 #' #custom track with annotations
 #' all_sv = get_manta_sv()
 #' annotated_sv = annotate_sv(sv_data = all_sv)
@@ -1299,7 +1306,8 @@ review_hotspots = function(annotated_maf,
 #' sv_to_custom_track(all_sv,
 #'                    output_file = "GAMBL_sv_custom_track_annotated.bed",
 #'                    is_annotated = FALSE)
-#'
+#' }
+#' 
 sv_to_custom_track = function(sv_bedpe,
                               output_file,
                               is_annotated = TRUE,
@@ -1395,8 +1403,10 @@ sv_to_custom_track = function(sv_bedpe,
 #' @export
 #'
 #' @examples
+#' \dontrun{
 #' maf_to_custom_track(my_maf_data, "/home/rmorin/private/some_mutations.bed")
-#'
+#' }
+#' 
 maf_to_custom_track = function(maf_data,
                                these_samples_metadata,
                                seq_type = "genome",
@@ -1537,12 +1547,7 @@ test_glue = function(placeholder="INSERTED"){
 #' @export
 #'
 #' @examples
-#' #generate new cached results for all genome samples in gambl 
-#' #(Warning, is this what you really want to do?)
-#' genome_collated = collate_results(seq_type_filter = "genome",
-#'                                   from_cache = FALSE,
-#'                                   write_to_file = TRUE)
-#'
+#' 
 #' #get collated results for all capture samples, using cached results
 #' capture_collated_everything = collate_results(seq_type_filter = "capture",
 #'                                               from_cache = TRUE,
@@ -1669,8 +1674,9 @@ collate_results = function(sample_table,
 #' @import dplyr DBI RMariaDB
 #'
 #' @examples
+#' \dontrun{
 #' gambl_results_derived = collate_derived_results(samples_df)
-#'
+#' }
 collate_derived_results = function(sample_table,
                                    seq_type_filter = "genome",
                                    from_flatfile = FALSE){
@@ -1708,8 +1714,10 @@ collate_derived_results = function(sample_table,
 #' @import readr dplyr
 #'
 #' @examples
+#' \dontrun{
 #' gambl_results_derived = collate_csr_results(gambl_results_derived)
-#'
+#' }
+#' 
 collate_csr_results = function(sample_table,
                                seq_type_filter = "genome"){
 
@@ -1744,9 +1752,11 @@ collate_csr_results = function(sample_table,
 #' @import dplyr
 #'
 #' @examples
+#' \dontrun{
 #' ssm_results = colalte_ssm_results(sample_table = samples,
 #'                                   include_silent = TRUE)
-#'
+#' }
+#' 
 collate_ssm_results = function(sample_table,
                                seq_type_filter = "genome",
                                projection = "grch37",
@@ -1829,8 +1839,10 @@ collate_ssm_results = function(sample_table,
 #' @import readr dplyr
 #'
 #' @examples
+#' \dontrun{
 #' gambl_results_derived = collate_curated_sv_results(gambl_results_derived)
-#'
+#' }
+#' 
 collate_curated_sv_results = function(sample_table,
                                       seq_type_filter = "genome"){
 
@@ -2275,8 +2287,10 @@ estimate_purity = function(in_maf,
 #' @import DBI RMariaDB readr
 #' 
 #' @examples
+#' \dontrun{
 #' refresh_full_table(table_x, con,file_x)
-#'
+#' }
+#' 
 refresh_full_table = function(table_name,
                               connection,
                               file_path){
@@ -2298,8 +2312,10 @@ refresh_full_table = function(table_name,
 #' @import RMariaDB DBI dplyr
 #' 
 #' @examples
+#' \dontrun{
 #' ref_meta = referesh_metadata_tables()
-#'
+#' }
+#' 
 referesh_metadata_tables = function(){
 
   con = dbConnect(RMariaDB::MariaDB(), dbname = database_name)
@@ -2324,8 +2340,10 @@ referesh_metadata_tables = function(){
 #' @export
 #'
 #' @examples
+#' \dontrun{
 #' sane_meta_data = sanity_check_metadata()
-#'
+#' }
+#' 
 sanity_check_metadata = function(){
 
   cfg = check_config_value(config::get("tables"))
@@ -2384,8 +2402,10 @@ sanity_check_metadata = function(){
 #' @import stringr readr dplyr
 #' 
 #' @examples
+#' \dontrun{
 #' table = collate_ancestry(sample_table = "my_sample_table.txt")
-#'
+#' }
+#' 
 collate_ancestry = function(sample_table,
                             seq_type_filter="genome",
                             somalier_output){
@@ -2419,8 +2439,10 @@ collate_ancestry = function(sample_table,
 #' @import readr dplyr
 #'
 #' @examples
+#' \dontrun{
 #' table = collate_extra_metadata(sample_table = "my_sample_table.txt")
-#'
+#' }
+#' 
 collate_extra_metadata = function(sample_table,
                                   file_path){
 
@@ -2447,9 +2469,10 @@ collate_extra_metadata = function(sample_table,
 #' @import dplyr tibble
 #'
 #' @examples
+#' \dontrun{
 #' collated = collate_sbs_results(sample_table = sample_table,
 #'                                sbs_manipulation = sbs_manipulation)
-#'
+#' }
 collate_sbs_results = function(sample_table,
                                seq_type_filter = "genome",
                                file_path,
@@ -2535,8 +2558,10 @@ collate_sbs_results = function(sample_table,
 #' @import dplyr
 #'
 #' @examples
+#' \dontrun{
 #' sample_table = collate_nfkbiz_results(sample_table = sample_table)
-#'
+#' }
+#' 
 collate_nfkbiz_results = function(sample_table,
                                   seq_type_filter = "genome"){
 
@@ -2580,8 +2605,10 @@ collate_nfkbiz_results = function(sample_table,
 #' @import dplyr tidyr tibble
 #'
 #' @examples
+#' \dontrun{
 #' sample_table = collate_ashm_results(sample_table = sample_table)
-#'
+#' }
+#' 
 collate_ashm_results = function(sample_table,
                                 seq_type_filter = "genome"){
 
@@ -2625,10 +2652,12 @@ collate_ashm_results = function(sample_table,
 #' @import dplyr
 #'
 #' @examples
+#' \dontrun{
 #' results = collate_samples_sv_results(sample_table = samples,
 #'                                      tool = "manta",
 #'                                      oncogenes = c("MYC", "BCL2"))
-#'
+#' }
+#' 
 collate_sv_results = function(sample_table,
                               tool = "manta",
                               seq_type_filter = "genome",
@@ -2700,9 +2729,11 @@ collate_sv_results = function(sample_table,
 #' @examples
 #' lymphgen_cols = get_gambl_colours("lymphgen")
 #' 
+#' \dontrun{
 #' #be sure to install ggsci from https://github.com/morinlab/ggsci
 #' #install_github("morinlab/ggsci")
-#'
+#' }
+#' 
 get_gambl_colours = function(classification = "all",
                              alpha = 1,
                              as_list = FALSE,
@@ -3438,10 +3469,10 @@ genome_to_exome = function(maf,
 #'
 #' @examples
 #' metadata = get_gambl_metadata()
-#' tidy_lymphgen(df = metadata,
-#'               lymphgen_column_in = "lymphgen_with_cnv",
-#'               lymphgen_column_out = "lymphgen_with_cnv_tidy",
-#'               relevel = TRUE)
+#' lymphgen = tidy_lymphgen(df = metadata,
+#'                          lymphgen_column_in = "lymphgen_with_cnv",
+#'                          lymphgen_column_out = "lymphgen_with_cnv_tidy",
+#'                          relevel = TRUE)
 #'
 tidy_lymphgen = function(df,
                          lymphgen_column_in = "Subtype.Prediction",
@@ -3670,7 +3701,9 @@ collate_lymphgen = function(these_samples_metadata,
 #' @import dplyr readr
 #'
 #' @examples
+#' \dontrun{
 #' qc_metrics = collate_qc_results(sample_table = sample_table)
+#' }
 #'
 collate_qc_results = function(sample_table,
                               seq_type_filter = "genome"){
@@ -4116,13 +4149,6 @@ subset_cnstates = function(cn_segments,
 #' @export
 #'
 #' @examples
-#' cnvKompare(patient_id = "00-14595",
-#'            genes_of_interest = c("EZH2",
-#'                                  "TP53",
-#'                                  "MYC", 
-#'                                  "CREBBP",
-#'                                  "GNA13"))
-#' 
 #' cnvKompare(patient_id = "13-26835",
 #'            genes_of_interest = c("EZH2",
 #'                                  "TP53",

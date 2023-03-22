@@ -23,8 +23,10 @@
 #'
 #' @examples
 #' Setup study and save included ids as a vector of characters:
+#' \dontrun{
 #' ids = setup_study(out_dir = "GAMBLR/cBioPortal/instance01/")
-#'
+#' }
+#' 
 setup_study = function(seq_type_filter = "genome",
                        short_name = "GAMBL",
                        human_friendly_name = "GAMBL data",
@@ -141,8 +143,9 @@ setup_study = function(seq_type_filter = "genome",
 #' @export
 #'
 #' @examples
+#' \dontrun{
 #' fusion_ids = setup_fusions(out_dir = "GAMBLR/cBioPortal/instance01/")
-#'
+#' }
 setup_fusions = function(short_name = "GAMBL",
                          human_friendly_name = "GAMBL data",
                          project_name = "gambl_genome",
@@ -272,8 +275,9 @@ setup_fusions = function(short_name = "GAMBL",
 #' @export
 #'
 #' @examples
+#' \dontrun{
 #' finalize_study(these_sample_ids = c(ids, fusion_ids), out_dir = "GAMBLR/cBioPortal/instance01/")
-#'
+#' }
 finalize_study = function(seq_type_filter = "genome",
                           short_name = "GAMBL",
                           human_friendly_name = "GAMBL data",
@@ -376,8 +380,9 @@ finalize_study = function(seq_type_filter = "genome",
 #' @export
 #'
 #' @examples
+#' \dontrun{
 #' samples_not_in_clinical = study_check(out_dir = "GAMBLR/cBioPortal/instance01/")
-#'
+#' }
 study_check = function(data_clinical_samples_path = "data_clinical_samples.txt",
                        data_fusions_path = "data_fusions.txt",
                        cases_fusions_path = "case_lists/cases_fusion.txt",
@@ -498,6 +503,7 @@ study_check = function(data_clinical_samples_path = "data_clinical_samples.txt",
 #' @export
 #'
 #' @examples
+#' \dontrun{
 #' #get some sample IDs
 #' my_samples = get_gambl_metadata() %>%
 #'  dplyr::filter(pathology == "FL") %>%
@@ -509,7 +515,8 @@ study_check = function(data_clinical_samples_path = "data_clinical_samples.txt",
 #'                 caselist_name = "FL_Canada",
 #'                 caselist_description = "Follicular Lymphoma from the Genome Canada Study",
 #'                 dir = "../path/to/study_directory/")
-#'
+#' }
+#' 
 custom_caselist = function(these_sample_ids,
                            caselist_name,
                            caselist_description,
@@ -574,12 +581,14 @@ custom_caselist = function(these_sample_ids,
 #' @export
 #'
 #' @examples
+#' \dontrun{
 #' #return study identifiers as  list:
 #' my_study_info= get_study_info(dir = "path/to/study/")
 #'
 #' #return all identifiers to the global environment:
 #' get_study_info(dir = "path/to/study/", list_to_global = TRUE)
-#'
+#' }
+#' 
 get_study_info = function(dir,
                           list_to_global = FALSE){
 
@@ -634,12 +643,14 @@ get_study_info = function(dir,
 #' @return Nothing. Rather, this function generates all files necessary for successfully importing a study into an active cBioPortal instance.
 #'
 #' @examples
+#' \dontrun{
 #' #generate cBioPortal study for all GAMBL genome samples:
 #' cbioportal_create()
 #'
 #' #generate a cBioPortal study for all GAMVL capture samples:
 #' cbioportal_create(this_seqtype = "capture", description = "GAMBL data from exomes")
-#'
+#' }
+#' 
 cbioportal_create = function(this_seqtype = "genome",
                              short_name = "GAMBL",
                              human_friendly_name = "GAMBL data",
@@ -734,9 +745,10 @@ cbioportal_create = function(this_seqtype = "genome",
 #' @export
 #'
 #' @examples
+#' \dontrun{
 #' #return expression data for lymphoma genes (all samples)
 #' expression_ids = setup_expression_data(out_dir = "../../")
-#'
+#' }
 setup_expreession_data = function(project_name = "gambl_genome",
                                   clinical_file_path = "data_clinical_samples.txt",
                                   these_genes,

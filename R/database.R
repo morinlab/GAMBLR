@@ -1041,6 +1041,7 @@ add_prps_result = function(incoming_metadata){
   patient_meta = bind_rows(patient_meta_g, patient_meta_r)
 }
 
+
 #' @title Add ICGC metadata.
 #'
 #' @description Layer on ICGC metadata from a supplemental table to fill in missing COO.
@@ -1054,6 +1055,7 @@ add_prps_result = function(incoming_metadata){
 #' @import dplyr readr stringr
 #'
 #' @examples
+#' my_meta = get_gambl_metadata()
 #' icgc_metadata = add_icgc_metadata(incoming_metadata = my_meta)
 #'
 add_icgc_metadata = function(incoming_metadata){
@@ -1464,8 +1466,10 @@ get_manta_sv = function(these_sample_ids,
 #' @export
 #'
 #' @examples
+#' \dontrun{
 #' lymphgens = get_lymphgen(flavour = "no_cnvs.no_sv.with_A53")
-#'
+#' }
+#' 
 get_lymphgen = function(these_samples_metadata,
                         flavour,
                         return_feature_matrix = FALSE,
@@ -1647,10 +1651,10 @@ get_lymphgen = function(these_samples_metadata,
 #' @export
 #'
 #' @examples
-#' #basic usage, generic lymphoma gene list
-#' cn_matrix = get_cn_states(regions_bed=grch37_lymphoma_genes_bed)
-#' single_gene_cn = get_cn_states(regions_list=c(this_region),
-#'                                region_names = c("FCGR2B"))
+#' myc_region = gene_to_region(gene_symbol = "MYC", genome_build = "grch37", return_as = "region")
+#' 
+#' single_gene_cn = get_cn_states(regions_list = myc_region,
+#'                                region_names = "MYC")
 #'
 get_cn_states = function(regions_list,
                          regions_bed,
@@ -1751,18 +1755,14 @@ get_cn_states = function(regions_list,
 #'
 #' @examples
 #' #Return cn segments for one sample:
-#' sample_cn_seg = get_sample_cn_segments(this_sample_id = "some-sample-id",
-#'                                        multiple_samples = FALSE)
+#' sample_cn_seg = get_sample_cn_segments(this_sample_id = "HTMCP-01-06-00422-01A-01D",
+#'                                        multiple_samples = FALSE)v
 #'
 #' #Return cn segments for multiple samples (provided as vector of sample IDs):
+#' these_sample_list = c("00-15201_tumorA", "00-15201_tumorB")
+#' 
 #' samples = get_sample_cn_segments(multiple_samples = TRUE, 
-#'                                  sample_list = c("some_sample",
-#'                                                  "another_sample"))
-#'
-#' #Return cn segments for multiple samples (read csv with one sample per line):
-#' sample_list = readLines("../samples-test.csv")
-#' multiple_samples = get_sample_cn_segments(multiple_samples = TRUE,
-#'                                           sample_list = sample_list)
+#'                                  sample_list = these_sample_list)
 #'
 get_sample_cn_segments = function(this_sample_id,
                                   multiple_samples = FALSE,
@@ -2042,7 +2042,9 @@ get_cn_segments = function(region,
 #' @import RMariaDB DBI
 #'
 #' @examples
+#' \dontrun{
 #' table_up = append_to_table("my_table", "my_df")
+#' }
 #'
 append_to_table = function(table_name,
                            data_df){
@@ -2483,8 +2485,9 @@ get_ssm_by_region = function(chromosome,
 #'
 #' @examples
 #' #basic usage
-#' maf_data = get_coding_ssm(limit_cohort = c("BL_ICGC"))
-#' maf_data = get_coding_ssm(limit_samples = "HTMCP-01-06-00485-01A-01D")
+#' maf_data = get_coding_ssm(seq_type = "genome", limit_cohort = c("BL_ICGC"))
+#'
+#' maf_data = get_coding_ssm(seq_type = "genome", limit_samples = "HTMCP-01-06-00485-01A-01D")
 #'
 get_coding_ssm = function(limit_cohort,
                           exclude_cohort,
@@ -2888,7 +2891,7 @@ get_gene_expression = function(metadata,
 #' @export
 #'
 #' @examples
-#' all_sv = get_manta_sv
+#' all_sv = get_manta_sv()
 #' missing_samples = get_gambl_metadata() %>%
 #'  anti_join(all_sv, by = c("sample_id" = "tumour_sample_id"))
 #' 

@@ -117,8 +117,10 @@ find_expected_outputs = function(targ_df,
 #' @return Nothing.
 #'
 #' @examples
+#' \dontrun{
 #' results = populate_tool_results(tool_name = "slims_3")
-#'
+#' }
+#' 
 populate_tool_results = function(tool_name){
 
   #IMPORTANT TODO: This function should only ever work with samples that exist in the metadata
@@ -422,9 +424,11 @@ populate_each_tool_result = function(tool,
 #' @import dplyr readr
 #'
 #' @examples
+#' \dontrun{
 #' manta_bedpe = read_merge_manta_with_liftover(bedpe_paths = "some_path.bedpe",
 #'                                              out_dir = "../")
-#'
+#' }
+#' 
 read_merge_manta_with_liftover = function(bedpe_paths = c(),
                                           pattern = "--matched",
                                           out_dir){
@@ -773,7 +777,7 @@ find_files_extract_wildcards = function(tool_results_path,
     mutate(pairing_status = case_when(grepl("--unmatched", filename) ~ "unmatched", TRUE ~"matched")) %>%
     dplyr::mutate(sample_id = strsplit(filename, "--")) %>%
     unnest_wider(sample_id, names_sep = "-") %>%
-    dplyr::rename(tumour_sample_id = `sample_id - 1`, normal_sample_id = `sample_id - 2`) %>%
+    dplyr::rename(tumour_sample_id = `sample_id-1`, normal_sample_id = `sample_id-2`) %>%
     dplyr::mutate(tool_name = tool_name, seq_type = seq_type, unix_group = unix_group) %>%
     dplyr::select(tumour_sample_id, unix_group, tool_name, seq_type, genome_build, file_path, pairing_status, normal_sample_id)
 
@@ -800,6 +804,7 @@ find_files_extract_wildcards = function(tool_results_path,
 #' @export
 #'
 #' @examples
+#' \dontrun{
 #' #read a maf into R with all columns kept
 #' my_maf = fread_maf(maf_file_path = "some_directory/this_is_a.maf")
 #'
@@ -813,6 +818,7 @@ find_files_extract_wildcards = function(tool_results_path,
 #'                                    Start_Position = "integer",
 #'                                    End_Position = "integer",
 #'                                    Variant_Type = "character"))
+#' }
 #'
 fread_maf = function(maf_file_path,
                      select_cols,
@@ -976,9 +982,11 @@ fread_maf = function(maf_file_path,
 #' @export
 #'
 #' @examples
+#' \dontrun{
 #' #return data frame with gene expression to R
 #' gene_expression = tidy_gene_expression(return_df = TRUE)
-#'
+#' }
+#' 
 tidy_gene_expression = function(return_df = FALSE){
 
   #read in the full matrix
@@ -1069,12 +1077,14 @@ tidy_gene_expression = function(return_df = FALSE){
 #' @export
 #'
 #' @examples
+#' \dontrun{
 #' assemble_file_details(file_paths = c(one.maf, another.maf), 
 #'                       tool_name = "manta",
 #'                       unix_group = "genome",
 #'                       output_type = "maf",
 #'                       these_sample_ids = c(one_sample, another_sample))
-#'
+#' }
+#' 
 assemble_file_details = function(file_details_df,
                                  file_paths,
                                  tool_name,

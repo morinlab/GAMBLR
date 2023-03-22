@@ -39,8 +39,8 @@ coding_vc = c("Frame_Shift_Del", "Frame_Shift_Ins", "In_Frame_Del", "In_Frame_In
 #'
 #' #annotate MAF
 #' deblacklisted_maf = annotate_ssm_blacklist(grande_maf,
-#'                                           seq_type = "genome",
-#'                                           genome_build = "hg38")
+#'                                            seq_type = "genome",
+#'                                            genome_build = "hg38")
 #'
 annotate_ssm_blacklist = function(mutations_df,
                                   seq_type,
@@ -172,9 +172,11 @@ annotate_ssm_blacklist = function(mutations_df,
 #' @return Nothing.
 #'
 #' @examples
-#' annotated = annotate_recurrent_cnv(my_seq_df)
-#' annotated = annotate_recurrent_cnv(seq_file = "my_seq_data.txt")
-#'
+#' \dontrun{
+#' my_segs = get_sample_cn_segments(this_sample_id = "HTMCP-01-06-00422-01A-01D")
+#' annotated = annotate_recurrent_cnv(seg_df = my_segs)
+#' }
+#' 
 annotate_recurrent_cnv = function(seg_df,
                                   seg_file){
 
@@ -346,9 +348,7 @@ annotate_driver_ssm = function(maf_df,
 #' @export
 #'
 #' @examples
-#' # Basic usage
 #' sv_df = get_manta_sv()
-#' annotated_sv = annotate_sv(sv_df)
 #' annotated_entrez = annotate_sv(sv_data = sv_df,
 #'                                with_chr_prefix = FALSE,
 #'                                collapse_redundant = FALSE,
