@@ -24,7 +24,9 @@ Takes a path to bedpe and runs liftover (\code{liftover_bedpe}) based on the ori
 This is a helper function that is not meant to be used routinely.
 }
 \examples{
+\dontrun{
 manta_bedpe = read_merge_manta_with_liftover(bedpe_paths = "some_path.bedpe",
                                              out_dir = "../")
+}
 
 }

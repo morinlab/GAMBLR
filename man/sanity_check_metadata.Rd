@@ -16,6 +16,8 @@ Function that performs sanity checks on metadata.
 Helper function for sanity checking GAMBL metadata.
 }
 \examples{
+\dontrun{
 sane_meta_data = sanity_check_metadata()
+}
 
 }

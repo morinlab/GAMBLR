@@ -21,6 +21,8 @@ Determine the hypermutation status of a few genes.
 INTERNAL FUNCTION called by \code{collate_results}, not meant for out-of-package usage.
 }
 \examples{
+\dontrun{
 sample_table = collate_ashm_results(sample_table = sample_table)
+}
 
 }

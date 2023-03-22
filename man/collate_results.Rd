@@ -49,11 +49,6 @@ Lastly, \code{seq_type_filter} lets the user control what seq type results will 
 refer to function examples, vignettes and parameter descriptions.
 }
 \examples{
-#generate new cached results for all genome samples in gambl 
-#(Warning, is this what you really want to do?)
-genome_collated = collate_results(seq_type_filter = "genome",
-                                  from_cache = FALSE,
-                                  write_to_file = TRUE)
 
 #get collated results for all capture samples, using cached results
 capture_collated_everything = collate_results(seq_type_filter = "capture",

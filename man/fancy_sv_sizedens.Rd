@@ -76,10 +76,12 @@ This function also allows the user to customize the returned plot. For more info
 parameters; \code{hide_legend}, \code{plot_title}, \code{plot_subtitle}, \code{adjust_value} and \code{trim}.
 }
 \examples{
-myplot = fancy_sv_sizedens(this_sample_id = "HTMCP-01-06-00422-01A-01D")
+#build plot sith default parameters
+fancy_sv_sizedens(this_sample_id = "HTMCP-01-06-00422-01A-01D")
 
-myplot2 = fancy_sv_sizedens(this_sample_id = "HTMCP-01-06-00422-01A-01D",
-                            size_cutoff = 0,
-                            chr_select = c("chr1", "chr2"))
+#restrict plot to only chromosome 1 and 2
+fancy_sv_sizedens(this_sample_id = "HTMCP-01-06-00422-01A-01D",
+                  size_cutoff = 0, 
+                  chr_select = c("chr1", "chr2"))
 
 }

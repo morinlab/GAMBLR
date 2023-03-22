@@ -35,9 +35,9 @@ to return the output column as a factor with plot friendly levels.
 }
 \examples{
 metadata = get_gambl_metadata()
-tidy_lymphgen(df = metadata,
-              lymphgen_column_in = "lymphgen_with_cnv",
-              lymphgen_column_out = "lymphgen_with_cnv_tidy",
-              relevel = TRUE)
+lymphgen = tidy_lymphgen(df = metadata,
+                         lymphgen_column_in = "lymphgen_with_cnv",
+                         lymphgen_column_out = "lymphgen_with_cnv_tidy",
+                         relevel = TRUE)
 
 }

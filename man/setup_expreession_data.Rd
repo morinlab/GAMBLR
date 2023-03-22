@@ -36,7 +36,8 @@ If no genes are provided, the function will default to all genes that are define
 This function internally calls \code{get_gene_expression} for returning expression data as outlined above.
 }
 \examples{
+\dontrun{
 #return expression data for lymphoma genes (all samples)
 expression_ids = setup_expression_data(out_dir = "../../")
-
+}
 }

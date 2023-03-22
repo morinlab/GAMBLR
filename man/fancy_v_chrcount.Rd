@@ -79,20 +79,16 @@ To do so, set \code{add_qc_metric} to TRUE. A collection of parameters for custo
 e.g \code{plot_title}, \code{y_interval}, \code{hide_legend}, and \code{plot_subtitle}.
 }
 \examples{
-#plot SVs.
-ssm = fancy_v_chrcount(this_sample_id = "HTMCP-01-06-00422-01A-01D",
-                       ssm = TRUE)
+#plot ssm
+fancy_v_chrcount(this_sample_id = "HTMCP-01-06-00422-01A-01D",
+                 ssm = TRUE)
 
-#plot SVs and SSM.
-ssm = fancy_v_chrcount(this_sample_id = "HTMCP-01-06-00422-01A-01D",
-                       ssm = TRUE)
-
-
-svs = fancy_v_chrcount(this_sample_id = "HTMCP-01-06-00422-01A-01D",
-                       ssm = FALSE,
-                       min_vaf = 0,
-                       projection = "grch37",
-                       chr_select = paste0("chr", c(1:5)),
-                       plot_subtitle = "SV Count Distribution (chr1-5)")
+#plot SVs for chr 1-5
+fancy_v_chrcount(this_sample_id = "HTMCP-01-06-00422-01A-01D",
+                 ssm = FALSE,
+                 min_vaf = 0,
+                 projection = "grch37",
+                 chr_select = paste0("chr", c(1:5)),
+                 plot_subtitle = "SV Count Distribution (chr1-5)")
 
 }

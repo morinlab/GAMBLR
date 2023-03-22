@@ -19,6 +19,8 @@ INTERNAL FUNCTION called by prettyOncoplot, not meant for out-of-package usage.
 INTERNAL FUNCTION called by prettyOncoplot, not meant for out-of-package usage.
 }
 \examples{
+\dontrun{
 trimmed = trim_scale_expression(2)
+}
 
 }

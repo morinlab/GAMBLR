@@ -51,6 +51,7 @@ The functions that should be run prior to these functions are; \code{setup_study
 Note, that all parameter arguments used in this function have to match the same parameter arguments for the previously run functions (\code{setup_study} and \code{setup_fusions}).
 }
 \examples{
+\dontrun{
 finalize_study(these_sample_ids = c(ids, fusion_ids), out_dir = "GAMBLR/cBioPortal/instance01/")
-
+}
 }

@@ -23,6 +23,8 @@ Gather ancestry information and expand the incoming sample table (or metadata).
 INTERNAL FUNCTION called by \code{collate_results}, not meant for out-of-package usage.
 }
 \examples{
+\dontrun{
 table = collate_ancestry(sample_table = "my_sample_table.txt")
+}
 
 }

@@ -21,6 +21,8 @@ Collate all SV calls from the genome data and summarize for main oncogenes of in
 INTERNAL FUNCTION called by collate_results, not meant for out-of-package usage.
 }
 \examples{
+\dontrun{
 gambl_results_derived = collate_curated_sv_results(gambl_results_derived)
+}
 
 }

@@ -55,10 +55,12 @@ This potentially will prevent an annoying error that prevents the study to be im
 Fusions are also handled based on the selected seq type (\code{this_seqtype}).
 }
 \examples{
+\dontrun{
 #generate cBioPortal study for all GAMBL genome samples:
 cbioportal_create()
 
 #generate a cBioPortal study for all GAMVL capture samples:
 cbioportal_create(this_seqtype = "capture", description = "GAMBL data from exomes")
+}
 
 }

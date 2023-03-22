@@ -87,6 +87,6 @@ For more info on how to run with these parameters, refer to the parameter descri
 }
 \examples{
 #plot SSM size distributions:
-plot = fancy_v_sizedis(this_sample_id = "HTMCP-01-06-00422-01A-01D")
+fancy_v_sizedis(this_sample_id = "HTMCP-01-06-00422-01A-01D")
 
 }

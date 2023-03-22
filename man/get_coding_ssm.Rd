@@ -68,7 +68,8 @@ For more information on how to implement the filtering parameters, refer to the 
 }
 \examples{
 #basic usage
-maf_data = get_coding_ssm(limit_cohort = c("BL_ICGC"))
-maf_data = get_coding_ssm(limit_samples = "HTMCP-01-06-00485-01A-01D")
+maf_data = get_coding_ssm(seq_type = "genome", limit_cohort = c("BL_ICGC"))
+
+maf_data = get_coding_ssm(seq_type = "genome", limit_samples = "HTMCP-01-06-00485-01A-01D")
 
 }

@@ -42,6 +42,7 @@ has to match the parameter arguments of \code{setup_study}, i.e if \code{short_n
 then the \code{short_name} in \code{setup_fusions} also has to be "GAMBL", etc.
 }
 \examples{
+\dontrun{
 fusion_ids = setup_fusions(out_dir = "GAMBLR/cBioPortal/instance01/")
-
+}
 }

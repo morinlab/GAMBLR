@@ -26,10 +26,12 @@ The user can also return the study identifiers to the global environment.
 To do so, set the \code{list_to_global = TRUE}.
 }
 \examples{
+\dontrun{
 #return study identifiers as  list:
 my_study_info= get_study_info(dir = "path/to/study/")
 
 #return all identifiers to the global environment:
 get_study_info(dir = "path/to/study/", list_to_global = TRUE)
+}
 
 }

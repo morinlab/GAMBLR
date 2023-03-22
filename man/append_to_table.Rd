@@ -21,6 +21,8 @@ Housekeeping function to add results to a table.
 INTERNAL FUNCTION, not meant for out-of-package usage.
 }
 \examples{
+\dontrun{
 table_up = append_to_table("my_table", "my_df")
+}
 
 }

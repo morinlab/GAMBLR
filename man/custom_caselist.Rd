@@ -32,6 +32,7 @@ This function takes a set of sample IDs \code{these_sample_ids} and intersect th
 This function also extracts the project name for the specified study, i.e the project name that is defined withing the folder specified under the \code{dir} parameter.
 }
 \examples{
+\dontrun{
 #get some sample IDs
 my_samples = get_gambl_metadata() \%>\%
  dplyr::filter(pathology == "FL") \%>\%
@@ -43,5 +44,6 @@ custom_caselist(these_sample_ids = my_samples,
                 caselist_name = "FL_Canada",
                 caselist_description = "Follicular Lymphoma from the Genome Canada Study",
                 dir = "../path/to/study_directory/")
+}
 
 }

@@ -16,6 +16,8 @@ Refresh the contents of a metadata table.
 INTERNAL FUNCTION, not meant for out-of-package usage.
 }
 \examples{
+\dontrun{
 ref_meta = referesh_metadata_tables()
+}
 
 }

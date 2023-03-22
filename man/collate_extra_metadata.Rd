@@ -21,6 +21,8 @@ Gather additional metadata information and expand the incoming sample table (or 
 INTERNAL FUNCTION called by \code{collate_results}, not meant for out-of-package usage.
 }
 \examples{
+\dontrun{
 table = collate_extra_metadata(sample_table = "my_sample_table.txt")
+}
 
 }

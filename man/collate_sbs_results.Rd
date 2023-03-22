@@ -33,7 +33,8 @@ Bring in the results from mutational signature analysis.
 INTERNAL FUNCTION called by \code{collate_results}, not meant for out-of-package usage.
 }
 \examples{
+\dontrun{
 collated = collate_sbs_results(sample_table = sample_table,
                                sbs_manipulation = sbs_manipulation)
-
+}
 }

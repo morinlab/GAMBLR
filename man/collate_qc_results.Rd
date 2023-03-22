@@ -21,6 +21,8 @@ Expand a metadata table horizontally with quality control metrics.
 INTERNAL FUNCTION called by \code{collate_results}, not meant for out-of-package usage.
 }
 \examples{
+\dontrun{
 qc_metrics = collate_qc_results(sample_table = sample_table)
+}
 
 }

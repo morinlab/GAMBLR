@@ -47,11 +47,13 @@ you want to be plotted on the left side. For developers: new arguments added to 
 are expected to be out-of-the-box compatible with this function nd would not need code modifications.
 }
 \examples{
-ssm = get_coding_ssm(limit_cohort = c("BL_Adult", "BL_Pediatric"))
+#get data for plotting
+ssm = get_coding_ssm(limit_cohort = c("BL_Adult", "BL_Pediatric"), seq_type = "genome")
 ssm = maftools::read.maf(ssm)
 meta = get_gambl_metadata() \%>\%
- dplyr::filter(cohort \%in\% c("BL_Adult", "BL_Pediatric"))
+  dplyr::filter(cohort \%in\% c("BL_Adult", "BL_Pediatric"))
 
+#build plot
 prettyCoOncoplot(maf = ssm,
                  metadata = meta,
                  comparison_column = "cohort",
@@ -69,7 +71,8 @@ prettyCoOncoplot(maf = ssm,
                  splitColumnName = "EBV_status_inf",
                  metadataBarHeight = 10,
                  fontSizeGene = 12,
-                 metadataBarFontsize = 10,
+                 metadataBarFontsize = 10, 
+                 legend_row = 2,
                  label1 = "Adult",
                  label2 = "Pediatric")
 

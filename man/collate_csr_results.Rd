@@ -21,6 +21,8 @@ Collate a few CSR annotations, including MiXCR.
 INTERNAL FUNCTION called by collate_results, not meant for out-of-package usage.
 }
 \examples{
+\dontrun{
 gambl_results_derived = collate_csr_results(gambl_results_derived)
+}
 
 }

@@ -23,6 +23,8 @@ Refresh the contents of a database table.
 INTERNAL FUNCTION called by referesh_metadata_tables, not meant for out-of-package usage.
 }
 \examples{
+\dontrun{
 refresh_full_table(table_x, con,file_x)
+}
 
 }

@@ -44,14 +44,3 @@ This plot is visualizing mutation VAFs per default, this can be turned off with 
 This only plots the segments. The user can also restrict the plotted segments to coding regions. To do so, set \code{coding_only= TRUE},
 and then specify the genes of interest (coding regions) with the \code{genes_to_label} (vector of genes).
 }
-\examples{
-cnv_vaf_plot = copy_number_vaf_plot(this_sample_id = "some-sample-name",
-                                    just_segments = FALSE,
-                                    coding_only = FALSE,
-                                    one_chrom = "chr2",
-                                    genes_to_label = "MYC",
-                                    from_flatfile = FALSE,
-                                    use_augmented_maf = FALSE,
-                                    add_chr_prefix = TRUE)
-
-}

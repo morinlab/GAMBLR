@@ -33,7 +33,7 @@ Load the manta output for a set of samples.
 This is a convenience wrapper function for get_manta_sv_by_sample (and called by get_manta_sv).
 }
 \examples{
-all_sv = get_manta_sv
+all_sv = get_manta_sv()
 missing_samples = get_gambl_metadata() \%>\%
  anti_join(all_sv, by = c("sample_id" = "tumour_sample_id"))
 

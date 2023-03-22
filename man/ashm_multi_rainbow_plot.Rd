@@ -47,14 +47,15 @@ In addition the user can also use the \code{metadata} parameter to use an alread
 This function will call \code{get_ssm_by_region} if \code{maf_data} is not called. For more info, refer to the parameter descriptions of this function.
 }
 \examples{
-my_plot = ashm_multi_rainbow_plot(regions_bed = "my_bed.bed",
-                                  regions_to_display = "chr3",
-                                  exclude_classification = "some-classification",
-                                  metadata = "my_metadata",
-                                  custom_colours = c("#onecolour,
-                                                     "#anothercolour",
-                                                     "#athirdcolour"),
-                                  classification_column = "lymphgen",
-                                  maf_data = my_maf)
+#get lymphgen colours
+lymphgen_colours = get_gambl_colours(classification = "lymphgen")
+
+#build plot
+ashm_multi_rainbow_plot(regions_to_display = c("BCL2-TSS",
+                                               "MYC-TSS",
+                                               "SGK1-TSS",
+                                               "IGL"),
+                        custom_colours = lymphgen_colours,
+                        seq_type = "genome")
 
 }

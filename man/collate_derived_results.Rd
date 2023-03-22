@@ -27,6 +27,7 @@ Extract derived results stored in the database (these are usually slower to deri
 INTERNAL FUNCTION called by collate_results, not meant for out-of-package usage.
 }
 \examples{
+\dontrun{
 gambl_results_derived = collate_derived_results(samples_df)
-
+}
 }

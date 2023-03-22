@@ -33,7 +33,9 @@ Compute summary statistics based on SSM calls.
 INTERNAL FUNCTION called by collate_results, not meant for out-of-package usage.
 }
 \examples{
+\dontrun{
 ssm_results = colalte_ssm_results(sample_table = samples,
                                   include_silent = TRUE)
+}
 
 }

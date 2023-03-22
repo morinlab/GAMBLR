@@ -42,17 +42,13 @@ For more information on how this function can be run in different ways, refer to
 }
 \examples{
 #Return cn segments for one sample:
-sample_cn_seg = get_sample_cn_segments(this_sample_id = "some-sample-id",
-                                       multiple_samples = FALSE)
+sample_cn_seg = get_sample_cn_segments(this_sample_id = "HTMCP-01-06-00422-01A-01D",
+                                       multiple_samples = FALSE)v
 
 #Return cn segments for multiple samples (provided as vector of sample IDs):
-samples = get_sample_cn_segments(multiple_samples = TRUE, 
-                                 sample_list = c("some_sample",
-                                                 "another_sample"))
+these_sample_list = c("00-15201_tumorA", "00-15201_tumorB")
 
-#Return cn segments for multiple samples (read csv with one sample per line):
-sample_list = readLines("../samples-test.csv")
-multiple_samples = get_sample_cn_segments(multiple_samples = TRUE,
-                                          sample_list = sample_list)
+samples = get_sample_cn_segments(multiple_samples = TRUE, 
+                                 sample_list = these_sample_list)
 
 }

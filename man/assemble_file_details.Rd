@@ -42,10 +42,12 @@ Lastly, specify the sample IDs with \code{these_sample_ids}.
 For more information on how to use the optional parameters, refer to the parameter descriptions.
 }
 \examples{
+\dontrun{
 assemble_file_details(file_paths = c(one.maf, another.maf), 
                       tool_name = "manta",
                       unix_group = "genome",
                       output_type = "maf",
                       these_sample_ids = c(one_sample, another_sample))
+}
 
 }

@@ -43,9 +43,11 @@ This can be done by setting \code{export_individual_plots} to TRUE. It is also p
 file on disk with the \code{seq_path} and \code{maf_path} parameters.
 }
 \examples{
+\dontrun{
 #create a PDF report for one sample, as well as exporting all individual plots.
 comp_report(this_sample = "HTMCP-01-06-00422-01A-01D",
             out = "reports/",
             export_individual_plots = TRUE)
+}
 
 }

@@ -26,6 +26,7 @@ To return all available columns, set \code{return_cols = TRUE}. For specifying c
 For more information, refer to the parameter descriptions as well as function examples.
 }
 \examples{
+\dontrun{
 #read a maf into R with all columns kept
 my_maf = fread_maf(maf_file_path = "some_directory/this_is_a.maf")
 
@@ -39,5 +40,6 @@ my_maf = fread_maf(maf_file_path = "some_directory/this_is_a.maf",
                                    Start_Position = "integer",
                                    End_Position = "integer",
                                    Variant_Type = "character"))
+}
 
 }

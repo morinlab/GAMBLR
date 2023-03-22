@@ -66,6 +66,7 @@ This function also has convenient filtering parameters available, see parameter 
 Lastly, this plot can also highlight genes of interest. To do so, provide a data frame (comparable to the return from \code{gene_to_region(return_as = "bed")}) to the \code{gene_list} parameter.
 }
 \examples{
+\dontrun{
 #retrieve gene names for FL genes
 fl_genes = dplyr::filter(lymphoma_genes, FL == TRUE) \%>\%
 fl_genes = dplyr::filter(lymphoma_genes, FL == TRUE) \%>\%
@@ -87,5 +88,6 @@ fancy_circos_plot_new(this_sample_id = "DOHH-2",
                       pdf = FALSE,
                       pdf = FALSE,
                       file_name = "dohh2_example.png")
+}
 
 }

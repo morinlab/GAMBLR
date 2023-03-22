@@ -67,11 +67,11 @@ also have convenient parameters for customizing the returned plot, e.g \code{plo
 }
 \examples{
 #plot SNVs
-snv_plot = fancy_snv_chrdistplot(this_sample_id = "HTMCP-01-06-00422-01A-01D")
+fancy_snv_chrdistplot(this_sample_id = "HTMCP-01-06-00422-01A-01D")
 
 #plot SNVs and DNPs
-snv_dnp_plot = fancy_snv_chrdistplot(this_sample_id = "HTMCP-01-06-00422-01A-01D",
-                                     include_dnp = TRUE,
-                                     plot_subtitle = "SNV + DNP Distribution Per Chromosome")
+fancy_snv_chrdistplot(this_sample_id = "HTMCP-01-06-00422-01A-01D",
+                      include_dnp = TRUE,
+                      plot_subtitle = "SNV + DNP Distribution Per Chromosome")
 
 }

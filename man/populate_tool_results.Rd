@@ -19,6 +19,8 @@ Populate the database with the per-sample summarized results of various tools.
 this function is still in draft mode, export to NAMESPACE has been removed for now.
 }
 \examples{
+\dontrun{
 results = populate_tool_results(tool_name = "slims_3")
+}
 
 }

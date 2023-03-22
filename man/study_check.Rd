@@ -42,6 +42,7 @@ The function then sub-sets the case list to only include samples from the clinic
 Note that the \code{project_name} has to match what is specified for the previously run functions (i.e \code{setup_study}, \code{setup_fusions} and \code{finalize_study}).
 }
 \examples{
+\dontrun{
 samples_not_in_clinical = study_check(out_dir = "GAMBLR/cBioPortal/instance01/")
-
+}
 }

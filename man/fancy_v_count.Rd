@@ -83,11 +83,11 @@ to control what variants are to be counted with \code{variant_select}. Default i
 the variant types specified in this parameter must match with whatever is present in the corresponding \code{variant_type_col}.
 }
 \examples{
-#count all variants for one sample (defualt parameters)
-svs = fancy_v_count(this_sample_id = "HTMCP-01-06-00422-01A-01D")
+#count all variants for one sample (default parameters)
+fancy_v_count(this_sample_id = "HTMCP-01-06-00422-01A-01D")
 
 #count and plot all variants on chromosome 1
-chr1_sv = fancy_v_count(this_sample_id = "HTMCP-01-06-00422-01A-01D",
-                        chr_select = c(1))
+fancy_v_count(this_sample_id = "HTMCP-01-06-00422-01A-01D",
+              chr_select = c("chr1"))
 
 }

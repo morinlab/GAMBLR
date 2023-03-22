@@ -37,9 +37,9 @@ This function returns CN states for the specified regions.
 For how to specify regions, refer to the parameter descriptions and function examples.
 }
 \examples{
-#basic usage, generic lymphoma gene list
-cn_matrix = get_cn_states(regions_bed=grch37_lymphoma_genes_bed)
-single_gene_cn = get_cn_states(regions_list=c(this_region),
-                               region_names = c("FCGR2B"))
+myc_region = gene_to_region(gene_symbol = "MYC", genome_build = "grch37", return_as = "region")
+
+single_gene_cn = get_cn_states(regions_list = myc_region,
+                               region_names = "MYC")
 
 }

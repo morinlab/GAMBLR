@@ -28,6 +28,7 @@ Lastly, the user can also specify if the incoming SV data frame should be subset
 This is specified with the \code{sv_name} parameter. Default is to include all SV subtypes.
 }
 \examples{
+\dontrun{
 #custom track with annotations
 all_sv = get_manta_sv()
 annotated_sv = annotate_sv(sv_data = all_sv)
@@ -39,5 +40,6 @@ sv_to_custom_track(annotated_sv,
 sv_to_custom_track(all_sv,
                    output_file = "GAMBL_sv_custom_track_annotated.bed",
                    is_annotated = FALSE)
+}
 
 }
