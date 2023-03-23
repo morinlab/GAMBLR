@@ -40,7 +40,7 @@ determine_version <- function(
 
     # Determine the highst version
     versions <- gsub(".*[/]([^/]+)[/].*", "\\1", all_files)
-
+    versions <- versions[grep('[0-9]+', versions)]
     versions <- sort(
         numeric_version(
             versions
@@ -93,4 +93,10 @@ grch37_ashm_regions <- determine_version(
 hg38_ashm_regions <- determine_version(
     mode = "somatic_hypermutation_locations",
     this_genome_build = "hg38"
+)
+
+lymphoma_genes <- GAMBLR.data::get_genes(
+    entities = c("BL", "MCL", "DLBCL"),
+    version = config::get("bundled_data_versions")[["lymphoma_genes"]],
+    gene_format = "data.frame"
 )

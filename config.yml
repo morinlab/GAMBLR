@@ -166,3 +166,4 @@ default:
     bundled_data_versions:
         # keep this key to always use the latest data. Othervise specify version, like "0.1"
         somatic_hypermutation_locations: "_latest"
+        lymphoma_genes: "_latest"
