@@ -1756,7 +1756,7 @@ get_cn_states = function(regions_list,
 #' @examples
 #' #Return cn segments for one sample:
 #' sample_cn_seg = get_sample_cn_segments(this_sample_id = "HTMCP-01-06-00422-01A-01D",
-#'                                        multiple_samples = FALSE)v
+#'                                        multiple_samples = FALSE)
 #'
 #' #Return cn segments for multiple samples (provided as vector of sample IDs):
 #' these_sample_list = c("00-15201_tumorA", "00-15201_tumorB")

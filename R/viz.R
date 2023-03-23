@@ -2720,6 +2720,7 @@ plot_multi_timepoint = function(mafs,
 #' @export
 #'
 #' @examples
+#' \dontrun{
 #' #basic usage
 #' prettyChromoplot("path_to_gistic_results/scores.gistic")
 #'
@@ -2728,6 +2729,7 @@ plot_multi_timepoint = function(mafs,
 #'                  genes_to_label = "path_to_gene_coordinates_table.tsv",
 #'                  cutoff = 0.75) +
 #'                   ... #any ggplot options to customize plot appearance
+#' }
 #'
 prettyChromoplot = function(scores,
                             genes_to_label,
@@ -3188,6 +3190,7 @@ prettyForestPlot = function(maf,
 #' @export
 #'
 #' @examples
+#' \dontrun{
 #' splendidHeatmap(this_matrix = data,
 #'                 importance_values = rf$importance[,c(1:3)],
 #'                 these_samples_metadata = MASTER.METADATA,
@@ -3202,6 +3205,7 @@ prettyForestPlot = function(maf,
 #'                 numericMetadataColumns = ".",
 #'                 numericMetadataMax = 0.7,
 #'                 custom_colours = custom_colours)
+#' }
 #'
 splendidHeatmap = function(this_matrix,
                            importance_values,

@@ -11,7 +11,7 @@ coding_class = c("Frame_Shift_Del", "Frame_Shift_Ins", "In_Frame_Del", "In_Frame
 #' for more information and examples, refer to the parameter descriptions as well as function examples.
 #' 
 #' @param targ_df Optionally provide a data frame with all file details.
-#' @param tool_name The tool or pipeline that generated the files (should be the same for all).
+#' @param tool_name The tool or pipeline that generated the files (should be the same for all). Acceptable values are manta and gridss.
 #' @param unix_group The unix group (should be the same for all).
 #' @param filename_end_pattern Optionally specify a pattern to search for the files among a longer set of files in the outputs.
 #' @param update_db Set to TRUE to overwrite any existing rows in the table for this tool/unix_group combination.
@@ -23,7 +23,8 @@ coding_class = c("Frame_Shift_Del", "Frame_Shift_Ins", "In_Frame_Del", "In_Frame
 #' @export
 #'
 #' @examples
-#' ex_outs = find_expected_outputs(my_df, "slims_3", "gambl")
+#' #get paths to unmatched manta bedpe files
+#'ex_outs = find_expected_outputs(tool_name = "manta", unix_group = "gambl", filename_end_pattern = "unmatched.somaticSV.bedpe")
 #'
 find_expected_outputs = function(targ_df,
                                  tool_name,
@@ -650,8 +651,8 @@ process_all_manta_bedpe = function(file_df,
 #' @export
 #'
 #' @examples
-#' fetch_output_files(tool = "manta",
-#'                    unix_group = "genome")
+#'
+#' ex_outs = fetch_output_files(tool = "manta", base_path = "gambl/sequenza_current", seq_type = "capture", build = "hg38")
 #'
 fetch_output_files = function(tool,
                               base_path,

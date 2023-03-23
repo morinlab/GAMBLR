@@ -530,18 +530,15 @@ region_to_gene = function(region,
 #' @description Get a MAF that is just the variants unique to one of two flavours of variant calls available.
 #'
 #' @details Subset a MAF to only have variants that are unique to one flavour (specified with `flavour1`).
+#' This function is currently not exported, since there is only one flavour available at the moment (see docs for `get_ssm_by_sample`).
 #'
-#' @param these_sample_ids sample IDs to be included.
+#' @param these_sample_ids A vector of sample IDs to be included.
 #' @param flavour1 First flavour of variant calls, to be returned as unique if not present in flavour2. Default is "clustered".
 #' @param flavour2 Second flavour of variant calls.
 #'
 #' @return a list with MAFs that are only present in flavour1.
 #'
 #' @rawNamespace import(data.table, except = c("last", "first", "between", "transpose"))
-#' @export
-#'
-#' @examples
-#' comp_flav = compare_mutation_flavour("clustered", "another_flavour")
 #'
 compare_mutation_flavour = function(these_sample_ids,
                                     flavour1 = "clustered",
@@ -550,7 +547,7 @@ compare_mutation_flavour = function(these_sample_ids,
   these_dfs = list()
   for(this_sample_id in these_sample_ids){
     message(this_sample_id)
-    maf1 = get_ssm_by_sample(this_sample_id, flavour = flavour1)
+    maf1 = get_ssm_by_sample(this_sample_id, flavour = flavour1, this_seq_type = seq_type)
     maf2  = get_ssm_by_sample(this_sample_id, flavour = flavour2)
     maf1_only = intersect_maf(maf1, maf2)
     these_dfs[[this_sample_id]] = maf1_only
@@ -1019,7 +1016,7 @@ region_to_chunks = function(region){
 #' @param mutation_maf_path Provide either the full path to a MAF file.
 #' @param mutation_maf_data Otherwise provide a data frame of the MAF data.
 #' @param output_oncomatrix Optionally provide the path for your sanitized output file (otherwise it writes to the working directory).
-#' @param genes_keep Specify which genes you want to remain in the output.
+#' @param genes_keep Specify which genes you want to remain in the output. Make sure there are no duplicated elements in the vector.
 #' @param genes_drop Optionally specify which genes to drop (this doesn't mean all other genes will remain. Maftools decides that part).
 #'
 #' @return The full path to the oncomatrix file (a matrix with Variant_Classification or Multi_Hit indicating coding mutation status per patient).
@@ -1028,13 +1025,11 @@ region_to_chunks = function(region){
 #' @export
 #'
 #' @examples
-#' #note, this will be used by default if the user wants to be lazy
-#' lymph_genes = lymphoma_genes$Gene
 #' 
-#' secure_maf = "/projects/rmorin/projects/gambl-repos/gambl-rmorin/results/icgc_dart/
-#' slms-3_vcf2maf_current/level_3/final_merged_grch37.CDS.maf"
-#' safe_oncomatrix_path = sanitize_maf_data(mutation_maf_path = secure_maf,
-#'                                          genes_keep = lymph_genes)
+#' safe_oncomatrix_path = sanitize_maf_data(mutation_maf_data = grande_maf, 
+#'                                          genes_keep = c("MYC", "ID3", "ARID1A",
+#'                                                         "FOXO1", "TP53", "FAT4",
+#'                                                         "IGLL5"))
 #'
 sanitize_maf_data = function(mutation_maf_path,
                              mutation_maf_data,
@@ -1054,7 +1049,7 @@ sanitize_maf_data = function(mutation_maf_path,
   #optionally we also exclude genes
   if(missing(genes_keep)){
     warning("you should provide a list of genes to retain in the output to ensure your genes of interest are included")
-    genes_keep = lymphoma_genes$Gene
+    genes_keep = rev(unique(lymphoma_genes$Gene))
   }
   maf_o = maftools::read.maf(mutation_maf_data)
 
@@ -2128,13 +2123,17 @@ assign_cn_to_ssm = function(this_sample_id,
 #' @export
 #'
 #' @examples
-#' tumour_purity = estimate_purity(in_maf = "path/to/file.maf",
-#'                                 in_seg = "path/to/file.seg",
-#'                                 seg_file_source = "ichorCNA",
-#'                                 show_plots = TRUE)
-#' 
-#' tumour_purity = estimate_purity(in_maf = "path/to/file.maf",
-#'                                 assume_diploid = TRUE)
+#' #load a maf
+#' this_maf = get_ssm_by_sample(this_sample_id = "HTMCP-01-06-00422-01A-01D", 
+#'                              this_seq_type = "genome")
+#'
+#' #estimate purity based on an already loaded maf object
+#' estimate_purity(maf_df = this_maf, 
+#'                 show_plots = TRUE)
+#'
+#' #estimate purity based sole on a smaple ID + added seg data.
+#' estimate_purity(this_sample_id = "HTMCP-01-06-00422-01A-01D", 
+#'                 show_plots = TRUE, coding_only = TRUE)
 #'
 estimate_purity = function(in_maf,
                            maf_df,
@@ -2998,10 +2997,10 @@ get_gambl_colours = function(classification = "all",
 #' @description Get full paths for bam files for a sample or patient.
 #' 
 #' @details Returns a list with BAM paths for tumour, normal and mrna data.
-#' This function expects a sample ID (`sample`) or a patient ID (`patient`).
+#' This function expects a sample ID (`this_sample_id`) or a patient ID (`this_patient_id`).
 #'
-#' @param sample Either provide sample_id or patient_id.
-#' @param patient Either provide sample_id or patient_id.
+#' @param this_sample_id Sample ID of interest.
+#' @param this_patient_id patient ID of interest.
 #'
 #' @return A list that contains the genome_build and an igv-friendly build (igv_build), a list of bam file paths for tumour, normal and mrna data.
 #' 
@@ -3009,27 +3008,29 @@ get_gambl_colours = function(classification = "all",
 #' @export
 #'
 #' @examples
-#' this_sv = filter(annotate_sv(get_manta_sv()), partner == "HIST1H2BK")
-#' 
-#' #arbitrarily grab one SV
-#' bam_details = get_bams(sample = this_sv[1,"tumour_sample_id"])
 #'
-get_bams = function(sample,
-                    patient){
+#' #example 1, using a sample ID
+#' bam_details = get_bams(this_sample_id = "HTMCP-01-06-00422-01A-01D")
+#'
+#' #example 2, using a patient ID
+#' bam_details = get_bams(this_patient_id = "HTMCP-01-06-00422")
+#'
+get_bams = function(this_sample_id,
+                    this_patient_id){
 
   meta = get_gambl_metadata(tissue_status_filter = c("tumour", "normal"), seq_type_filter = "genome")
   meta_mrna = get_gambl_metadata(seq_type_filter = "mrna")
   #get all samples for this patient
-  if(missing(patient)){
-    patient = meta %>%
-      dplyr::filter(sample_id == sample) %>%
+  if(missing(this_patient_id)){
+    this_patient_id = meta %>%
+      dplyr::filter(sample_id == this_sample_id) %>%
       dplyr::pull(patient_id)
   }
   meta_patient = meta %>%
-    dplyr::filter(patient_id == patient)
+    dplyr::filter(patient_id == this_patient_id)
 
   meta_mrna_patient = meta_mrna %>%
-    dplyr::filter(patient_id == patient)
+    dplyr::filter(patient_id == this_patient_id)
 
   build = dplyr::pull(meta_patient, genome_build) %>%
     head(1)
@@ -3049,7 +3050,8 @@ get_bams = function(sample,
     dplyr::pull(unix_group) %>%
     unique()
 
-  bam_details$pairing_status = dplyr::filter(meta_patient, tissue_status == "tumour") %>%
+  bam_details$pairing_status = get_gambl_metadata(seq_type_filter = "genome") %>%
+    dplyr::filter(tissue_status == "tumour", patient_id == this_patient_id) %>%
     dplyr::pull(pairing_status) %>%
     unique()
 
@@ -3095,6 +3097,7 @@ get_bams = function(sample,
 #' @export
 #'
 #' @examples
+#' \dontrun{
 #' #IMPORTANT: you must be running IGV on the host that is running R and you need to have it
 #' #listening on a port. The simplest scenario is to run this command on a terminal (if using a Mac),
 #' #assuming you are using R on gphost10 and you have a ssh config that routes gp10 to that host
@@ -3106,13 +3109,14 @@ get_bams = function(sample,
 #' this_sv = annotated_sv %>% 
 #'  filter(gene=="ETV6")
 #' 
-#' tumour_bam = get_bams(sample = this_sv$tumour_sample_id)
+#' tumour_bam = get_bams(this_sample_id = this_sv$tumour_sample_id)
 #' 
 #' make_igv_snapshot(chrom = this_sv$chrom2,
 #'                   start = this_sv$start2,
 #'                   end = this_sv$end2,
 #'                   this_sample_id = this_sv$tumour_sample_id,
 #'                   out_path = "~/IGV_snapshots/")
+#' }
 #'
 make_igv_snapshot = function(bams,
                              genome_build,
@@ -3168,6 +3172,7 @@ make_igv_snapshot = function(bams,
 #' @export
 #'
 #' @examples
+#' \dontrun{
 #' # basic usage
 #' FtestCNV(gistic_lesions = "path_to_GISTIC2.0_output/all_lesions.conf_{confidence_level}.txt",
 #'          metadata = derived_data,
@@ -3180,6 +3185,7 @@ make_igv_snapshot = function(bams,
 #'          fdr.method = "bonferroni",
 #'          fdr.cutoff = 0.05,
 #'          blacklisted_regions = c("3p12.3", "12p13.2"))
+#' }
 #'
 FtestCNV = function(gistic_lesions,
                      metadata,
@@ -4443,6 +4449,8 @@ cnvKompare = function(patient_id,
 #' 
 #' @details Transform input maf columns to allow for usage of dplyr verbs.
 #' Allowing for a stright-forward plotting workflow as well as downstream data aggregation and manipulation.
+#' This function expects a set number of columns to exist in the incoming maf in order for this to work.
+#' To view the columns, see bundled data; `grande_maf`.
 #'
 #' @param maf_df input MAF data frame.
 #'
@@ -4452,11 +4460,8 @@ cnvKompare = function(patient_id,
 #' @export
 #'
 #' @examples
-#' ssm_sample = get_ssm_by_sample(this_sample_id = "HTMCP-01-06-00485-01A-01D",
-#'                                tool_name = "slims-3",
-#'                                projection = "grch37")
 #' 
-#' clean_maf = cleanup_maf(maf_df = ssm_sample)
+#' clean_maf = cleanup_maf(maf_df = grande_maf)
 #'
 cleanup_maf = function(maf_df){
 
