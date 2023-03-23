@@ -3,6 +3,7 @@ remote:
     repo_base: "/Users/rmorin/git/gambl/"
     dependencies:
         tabix: "/Users/rmorin/miniconda3/bin/tabix"
+    host: "gphost03.bcgsc.ca"
 
 default:
     project_base: "/projects/nhl_meta_analysis_scratch/gambl/results_local/"
@@ -85,7 +86,7 @@ default:
             template: "all_the_things/cnv_master-1.0/merges/{seq_type}--{projection}.seg"
         sv: "icgc_dart/cbioportal-1.0/01-filtered-manta/genome-grch37/all_merged_sv_info.tsv"
         sv_manta:
-                template: "{unix_group}/manta_current/99-outputs/bedpe/{seq_type}--{genome_build}/somaticSV/{tumour_sample_id}--{normal_sample_id}--{pairing_status}.somaticSV.bedpe"
+            template: "{unix_group}/manta_current/99-outputs/bedpe/{seq_type}--{genome_build}/somaticSV/{tumour_sample_id}--{normal_sample_id}--{pairing_status}.somaticSV.bedpe"
         sv_combined:
             gambl: "gambl/svar_master-1.0/merges/gridss_manta.genome--grch37.bedpe"
             icgc_dart: "all_the_things/svar_master-1.0/merges/gridss_manta.genome--grch37.bedpe"
@@ -132,6 +133,7 @@ default:
 
     sample_sets:
         default: "data/metadata/level3_samples_subsets.tsv"
+        hashes: "data/metadata/level3_samples_subsets_hashes.tsv"
 
     unmatched_normal_ids:
         gambl:

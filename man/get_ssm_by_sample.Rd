@@ -2,7 +2,7 @@
 % Please edit documentation in R/database.R
 \name{get_ssm_by_sample}
 \alias{get_ssm_by_sample}
-\title{Get the ssms (i.e. load MAF) for a single sample.}
+\title{Get SSM By Sample.}
 \usage{
 get_ssm_by_sample(
   this_sample_id,
@@ -24,36 +24,36 @@ get_ssm_by_sample(
 
 \item{this_seq_type}{Required if not specifying these_samples_metadata. The seq_type of the sample you want data from.}
 
-\item{these_samples_metadata}{Required if not specifying both this_sample_id and this_seq_type a single row or entire metadata table containing your sample_id}
+\item{these_samples_metadata}{Required if not specifying both this_sample_id and this_seq_type a single row or entire metadata table containing your sample_id.}
 
-\item{tool_name}{The name of the variant calling pipeline (currently only slms-3 is supported)}
+\item{tool_name}{The name of the variant calling pipeline (currently only slms-3 is supported).}
 
 \item{projection}{The projection genome build. Supports hg38 and grch37.}
 
 \item{these_genes}{A vector of genes to subset ssm to.}
 
-\item{augmented}{default: TRUE. Set to FALSE if you instead want the original MAF from each sample for multi-sample patients instead of the augmented MAF}
+\item{augmented}{default: TRUE. Set to FALSE if you instead want the original MAF from each sample for multi-sample patients instead of the augmented MAF.}
 
-\item{flavour}{Currently this function only supports one flavour option but this feature is meant for eventual compatability with additional variant calling parameters/versions}
+\item{flavour}{Currently this function only supports one flavour option but this feature is meant for eventual compatibility with additional variant calling parameters/versions.}
 
-\item{min_read_support}{Only returns variants with at least this many reads in t_alt_count (for cleaning up augmented MAFs)}
+\item{min_read_support}{Only returns variants with at least this many reads in t_alt_count (for cleaning up augmented MAFs).}
 
 \item{basic_columns}{Return first 43 columns of MAF rather than full details. Default is TRUE.}
 
-\item{maf_cols}{if basic_columns is set to FALSE, the suer can specify what columns to be returned within the MAF. This parameter can either be a list of indexes (integer) or a list of characters.}
+\item{maf_cols}{if basic_columns is set to FALSE, the user can specify what columns to be returned within the MAF. This parameter can either be a vector of indexes (integer) or a vector of characters.}
 
-\item{verbose}{Enable for debugging/noisier output
-If specified, the function will assume the user is not on the network and will temporarily copy the file locally.}
+\item{verbose}{Enable for debugging/noisier output.}
 }
 \value{
 data frame in MAF format.
 }
 \description{
-This was implemented to allow flexibility because
-there are some samples that we may want to use a different set of variants than those in the main GAMBL merge.
-The current use case is to allow a force_unmatched output to be used to replace the SSMs from the merge for samples
-with known contamination in the normal. This will also be useful to apply a blacklist to individual MAFs when coupled with
-annotate_ssm_blacklist.
+Get the SSMs (i.e. load MAF) for a single sample.
+}
+\details{
+This was implemented to allow flexibility because there are some samples that we may want to use a different set of variants than those in the main GAMBL merge.
+The current use case is to allow a force_unmatched output to be used to replace the SSMs from the merge for samples with known contamination in the normal.
+This will also be useful to apply a blacklist to individual MAFs when coupled with annotate_ssm_blacklist.
 }
 \examples{
 this_sample_df = get_ssm_by_sample(this_sample_id = "HTMCP-01-06-00485-01A-01D", this_seq_type = "genome",tool_name = "slims-3", projection = "grch37")

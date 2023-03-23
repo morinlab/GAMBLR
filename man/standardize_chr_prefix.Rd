@@ -2,8 +2,7 @@
 % Please edit documentation in R/utilities.R
 \name{standardize_chr_prefix}
 \alias{standardize_chr_prefix}
-\title{Standartize the chr prefix in a vector of chromosome names based on projection.
-Internal helper function not meant for out-of-package use.}
+\title{Standardize Chromosome Prefix.}
 \usage{
 standardize_chr_prefix(incoming_vector, projection)
 }
@@ -16,8 +15,10 @@ standardize_chr_prefix(incoming_vector, projection)
 A vector of chromosome names with prefix standardized to projection
 }
 \description{
-Standartize the chr prefix in a vector of chromosome names based on projection.
-Internal helper function not meant for out-of-package use.
+Standardize the chr prefix in a vector of chromosome names based on projection.
+}
+\details{
+INTERNAL FUNCTION, not meant for out-of-package use.
 }
 \examples{
 these_chrs = c(8, "13", "chr4", "chrY")

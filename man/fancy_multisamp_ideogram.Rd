@@ -2,7 +2,7 @@
 % Please edit documentation in R/viz.R
 \name{fancy_multisamp_ideogram}
 \alias{fancy_multisamp_ideogram}
-\title{Generate ideograms for selected sample, visualizing copy number variation segments. Also possible to only plot concordant (or discordant) cn segments between two samples. i.e how two samples differ, or are a like.}
+\title{Genome-wide ideogram (CN segments) for multiple samples.}
 \usage{
 fancy_multisamp_ideogram(
   these_sample_ids,
@@ -33,30 +33,32 @@ fancy_multisamp_ideogram(
 
 \item{kompare}{Boolean statement, set to TRUE to call cnvKompare on the selected samples for plotting concordant (or discordant) cn segments across selected chromosomes.}
 
-\item{concordance}{Boolean parameter to be used when kompare = TRUE. Default is TRUE, to plot discordant segments, set parameter to FALSE.}
+\item{concordance}{Boolean parameter to be used when kompare = TRUE. Default is TRUE, to plot discordant segments, set the parameter to FALSE.}
 
 \item{coding_only}{Optional. Set to TRUE to restrict to plotting only coding mutations.}
 
 \item{from_flatfile}{If set to true the function will use flat files instead of the database.}
 
-\item{use_augmented}{Boolean statement if to use augmented maf, default is FALSE.}
+\item{use_augmented_maf}{Boolean statement if to use augmented maf, default is FALSE.}
 }
 \value{
-Nothing.
+A plot as a ggplot object (grob).
 }
 \description{
-Generate ideograms for selected sample, visualizing copy number variation segments. Also possible to only plot concordant (or discordant) cn segments between two samples. i.e how two samples differ, or are a like.
+Generate ideograms for selected samples, visualizing copy number variation segments.
+}
+\details{
+To create multi-sample ideograms, i.e showing CN segments across multiple samples, this function was created.
+This can be used to infer inheritance patterns, hotspots, etc. across multiple samples or the sample ID but for different timepoints.
+In addition, this plot can also allow to only plot concordant (or discordant) cn segments between two samples. i.e how two samples differ, or are alike.
+The function automatically detects the number of samples provided and sets the plotting parameters accordingly.
+The maximum number of samples this plot can deal with is 4 and sample IDs of interest are given to the \code{these_sample_ids}.
+In order to only plot segments that are concordant between the selected samples, set \code{komapre} to TRUE and \code{concordance} to TRUE.
+To instead plot discordant CN segments, set this parameter to FALSE.
 }
 \examples{
-
-two_samples = c("00-15201_tumorA", "00-15201_tumorB")
-ideo_2_samp = fancy_multisamp_ideogram(these_sample_ids = two_samples,
-                                       plot_title = "CN Segments Ideogram",
-                                       plot_sub = "grch37",
-                                       chr_anno_dist = 4,
-                                       chr_select = paste0("chr", c(1:22)),
-                                       coding_only = FALSE,
-                                       from_flatfile = TRUE,
-                                       use_augmented_maf = TRUE)
+#two samples ideogram
+ideo_2_samp = fancy_multisamp_ideogram(these_sample_ids = c("00-15201_tumorA", "00-15201_tumorB"),
+                                       chr_anno_dist = 4)
 
 }

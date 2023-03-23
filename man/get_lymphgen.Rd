@@ -2,8 +2,7 @@
 % Please edit documentation in R/database.R
 \name{get_lymphgen}
 \alias{get_lymphgen}
-\title{Get a specific flavour of LymphGen from the main GAMBL outputs and tidy the composites.
-Optionally return a matrix of features instead}
+\title{Get Lymphgen.}
 \usage{
 get_lymphgen(
   these_samples_metadata,
@@ -16,12 +15,31 @@ get_lymphgen(
 )
 }
 \arguments{
-\item{keep_original_columns}{}
+\item{these_samples_metadata}{A metadata table to auto-subset the data to samples in that table before returning.}
+
+\item{flavour}{Lymphgen flavour.}
+
+\item{return_feature_matrix}{Boolean parameter, default is FALSE.}
+
+\item{return_feature_annotation}{Boolean parameter, default is FALSE.}
+
+\item{lymphgen_file}{Path to lymphgen file.}
+
+\item{keep_all_rows}{Boolean parameter, default is FALSE.}
+
+\item{keep_original_columns}{Boolean parameter, default is FALSE.}
 }
 \value{
-
+A data frame.
 }
 \description{
+Get a specific flavour of LymphGen from the main GAMBL outputs.
+}
+\details{
 Get a specific flavour of LymphGen from the main GAMBL outputs and tidy the composites.
 Optionally return a matrix of features instead
+}
+\examples{
+lymphgens = get_lymphgen(flavour = "no_cnvs.no_sv.with_A53")
+
 }

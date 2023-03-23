@@ -6,11 +6,10 @@ Authors@R:
     person("Ryan", "Morin", , "rdmorin@sfu.ca", role = c("aut", "cre"),
            comment = c(ORCID = "YOUR-ORCID-ID"))
 Description: What the package does (one paragraph).
-License: `use_mit_license()`
+License: MIT + file LICENSE
 Depends:
-    R (>= 2.10)
+    R (>= 3.5.0)
 Imports:
-    biomaRt,
     broom,
     circlize,
     ComplexHeatmap,
@@ -19,34 +18,45 @@ Imports:
     data.table,
     DBI,
     dbplyr,
+    digest,
     dplyr,
+    forcats,
     g3viz,
-    GenomeInfoDb,
     ggbeeswarm,
     ggplot2,
     ggpubr,
     ggrepel,
     ggsci,
     ggthemes,
-    grid,
+    glue,
+    gridExtra,
+    lubridate,
     maftools,
     metaviz,
+    nloptr,
     plotly,
+    plyr,
+    purrr,
     RCircos,
+    RColorBrewer,
     readr (>= 2.1),
-    reshape2,
     RMariaDB,
     rtracklayer,
     S4Vectors,
     SRAdb,
-    stats,
+    ssh,
+    stringi,
+    stringr,
+    tibble,
+    tidyr,
+    vroom,
     wordcloud,
     workflowr
 Suggests:
     knitr,
     rmarkdown,
     testthat
-VignetteBuilder: 
+VignetteBuilder:
     knitr
 Remotes:
     cBioPortal/cgdsr,
@@ -56,5 +66,6 @@ Remotes:
 biocViews:
 Encoding: UTF-8
 LazyData: true
+LazyDataCompression: xz
 Roxygen: list(markdown = TRUE)
 RoxygenNote: 7.2.1

@@ -1,23 +1,31 @@
 
 
-#' Initialize a new cBioPortal instance or update existing portal data set, can also be used to retrieve sample ids included in study.
+#' @title Setup Study (cBioPortal).
 #'
+#' @description Initialize a new cBioPortal instance or update existing portal data set, can also be used to retrieve sample ids included in study.
+#'
+#' @details This function internally calls `get_coding_ssm` to retrieve coding mutations to be included in the study (if `overwrite = TRUE`).
+#' In addition, this function also creates and sets up the proper folder hierarchy and writes the files necessary to import a new cBioPortal study.
+#' Before a study is ready to be imported to cBioPortal, the user also needs to run `setup_fusions` and `finalize_study`.
+#' Optionally the user can also run `study_check` to ensure all samples described by the "clinical" file are included in the study.
+#' Also, note that the parameters chosen for this function have to match the same parameters called for any subsequent study function calls.
+#'
+#' @param seq_type_filter the seq type you are setting up a study for, default is "genome".
 #' @param short_name A concise name for your portal project.
-#' @param include_icgc_data Whether or not you want ICGC and other external data included.
 #' @param human_friendly_name A slightly more verbose name for your project.
 #' @param project_name Unique ID for your project.
 #' @param description A verbose description of your data set.
-#' @param exclude_cohorts Cohorts to be excluded.
-#' @param gambl_maf maf origin.
-#' @param gambl_icgc_maf Icgc maf origin.
 #' @param overwrite Flag to specify that files should be overwritten if they exist. Default is TRUE.
 #' @param out_dir The full path to the base directory where the files are being created.
 #'
 #' @return A vector of sample_id for the patients that have been included.
+#'
+#' @rawNamespace import(data.table, except = c("last", "first", "between", "transpose"))
+#' @import dplyr readr
 #' @export
 #'
 #' @examples
-#' Setup study and save included ids as a vector of characters:
+#' # Setup study and save included ids as a vector of characters:
 #' ids = setup_study(out_dir = "GAMBLR/cBioPortal/instance01/")
 #'
 setup_study = function(seq_type_filter = c("capture"),
@@ -113,19 +121,26 @@ setup_study = function(seq_type_filter = c("capture"),
 }
 
 
-#' Annotate SVs and create the input for fusions to be displayed in cBioPortal instance.
+#' @title Setup Fusions (cBioPortal).
+#' 
+#' @description Annotate SVs and create the input for fusions to be displayed in cBioPortal instance.
+#' 
+#' @details This function calls `get_combined_sv` and runs `annotate_sv` on the returned data frame.
+#' Should be run as the next step after running `setup_study`. Note that the parameters called with this function
+#' has to match the parameter arguments of `setup_study`, i.e if `short_name` is for `setup_study` is "GAMBL",
+#' then the `short_name` in `setup_fusions` also has to be "GAMBL", etc.
 #'
 #' @param short_name A concise name for your portal project.
-#' @param include_icgc_data Whether or not you want ICGC and other external data included.
 #' @param human_friendly_name A slightly more verbose name for your project.
 #' @param project_name Unique ID for your project.
 #' @param gambl_maf maf origin.
-#' @param gambl_icgc_maf Icgc maf origin.
+#' @param gambl_icgc_maf ICGC maf origin.
 #' @param description A verbose description of your data set.
-#'
 #' @param out_dir The full path to the base directory where the files are being created.
 #'
 #' @return A vector of sample_id for the patients that have been included.
+#' 
+#' @import dplyr readr tidyr
 #' @export
 #'
 #' @examples
@@ -235,23 +250,32 @@ setup_fusions = function(short_name = "GAMBL",
 }
 
 
-#' Finish setting up a new cBioPortal instance or updating an existing portal data set.
+#' @title Finalize Study (cBioPortal).
 #'
+#' @description Finish setting up a new cBioPortal instance or updating an existing portal data set.
+#'
+#' @details This function should be run as the last (or third step) in setting up a new cBioPortal instance.
+#' The functions that should be run prior to these functions are; `setup_study` and `setup_fusions`.
+#' `finalize_study` creates all the necessary tables and metadata files that are required to import a new study into cBioPortal.
+#' Note, that all parameter arguments used in this function have to match the same parameter arguments for the previously run functions (`setup_study` and `setup_fusions`).
+#'
+#' @param seq_type_filter the seq type you are setting up a study for, default is "genome".
 #' @param short_name A concise name for your portal project.
-#' @param include_icgc_data Whether or not you want ICGC and other external data included.
 #' @param human_friendly_name A slightly more verbose name for your project.
 #' @param project_name Unique ID for your project.
 #' @param description A verbose description of your data set.
 #' @param cancer_type Cancer types included in study, default is "mixed".
-#' @param sample_ids A vector of all the sample_id that were included in any of the data files for cbioportal.
+#' @param these_sample_ids A vector of all the sample_id that were included in any of the data files for cBioPortal.
 #' @param overwrite Flag to specify that files should be overwritten if they exist. Default is TRUE.
 #' @param out_dir The full path to the base directory where the files are being created.
 #'
 #' @return Nothing.
+#' 
+#' @import dplyr
 #' @export
 #'
 #' @examples
-#' finalize_study(sample_ids = c(ids, fusion_ids), out_dir = "GAMBLR/cBioPortal/instance01/")
+#' finalize_study(these_sample_ids = c(ids, fusion_ids), out_dir = "GAMBLR/cBioPortal/instance01/")
 #'
 finalize_study = function(seq_type_filter="genome",
                           short_name = "GAMBL",
@@ -259,7 +283,7 @@ finalize_study = function(seq_type_filter="genome",
                           project_name = "gambl_minus_icgc",
                           description = "GAMBL data without ICGC",
                           cancer_type = "mixed",
-                          sample_ids,
+                          these_sample_ids,
                           overwrite = TRUE,
                           out_dir){
 
@@ -267,7 +291,7 @@ finalize_study = function(seq_type_filter="genome",
   #create case list
   caselist = paste0(out_dir, "case_lists/cases_sequenced.txt")
 
-  tabseplist = paste(unique(sample_ids), collapse = "\t")
+  tabseplist = paste(unique(these_sample_ids), collapse = "\t")
 
   caselistdata = c(paste0("cancer_study_identifier: ", project_name),
                    paste0("stable_id: ", project_name, "_sequenced"), "case_list_name: Samples sequenced.", "case_list_description: This is this case list that contains all samples that are profiled for mutations.",
@@ -288,7 +312,7 @@ finalize_study = function(seq_type_filter="genome",
   #prepare and write out the relevant metadata
   clinsamp = paste0(out_dir, "data_clinical_samples.txt")
   meta_samples = get_gambl_metadata(seq_type_filter=seq_type_filter) %>%
-    dplyr::filter(sample_id %in% sample_ids) %>%
+    dplyr::filter(sample_id %in% these_sample_ids) %>%
     dplyr::select(patient_id, sample_id, pathology, EBV_status_inf, cohort, time_point, ffpe_or_frozen, myc_ba, bcl6_ba, bcl2_ba, COO_consensus, DHITsig_consensus, lymphgen)
 
   colnames(meta_samples) = toupper(colnames(meta_samples))
@@ -323,17 +347,27 @@ finalize_study = function(seq_type_filter="genome",
 }
 
 
-#' Helper function for checking integrity of study files.
+#' @title Study Check (cBioPortal).
 #'
-#' @param data_clinical_samples Path to clinical file.
-#' @param data_fusions Path to data_fusion file from setup_fusions.
-#' @param cases_fusions Path to cases_fusion from setup_fusions.
-#' @param cases_all Path to cases_all from setup_study.
-#' @param cases_sequenced Path to cases_sequenced from setup_study.
+#' @description Helper function for checking integrity of study files.
+#'
+#' @details This function was designed to ensure that all the sample IDs described in the maf are actually present in the clinical files.
+#' If this is not the case, the function will notify the user what samples are found in the case list that are not described in the clinical file.
+#' The function then sub-sets the case list to only include samples from the clinical file.
+#' Note that the `project_name` has to match what is specified for the previously run functions (i.e `setup_study`, `setup_fusions` and `finalize_study`).
+#'
+#' @param data_clinical_samples_path Path to clinical file.
+#' @param data_fusions_path Path to data_fusion file from setup_fusions.
+#' @param cases_fusions_path Path to cases_fusion from setup_fusions.
+#' @param cases_all_path Path to cases_all from setup_study.
+#' @param cases_sequenced_path Path to cases_sequenced from setup_study.
 #' @param project_name Project name, should match what is specified under setup_study/setup_fusions.
-#' @param out_dir Directory with all study related files, the only argument that needs to be specified, given that path to all generated study files are not changed from default.
+#' @param out_dir Directory with all study related files, the only argument that needs to be specified, given that paths to all generated study files are not changed from default.
 #'
 #' @return Nothing.
+#' 
+#' @rawNamespace import(data.table, except = c("last", "first", "between", "transpose"))
+#' @import dplyr readr
 #' @export
 #'
 #' @examples

@@ -2,8 +2,7 @@
 % Please edit documentation in R/viz.R
 \name{prettyRainfallPlot}
 \alias{prettyRainfallPlot}
-\title{Plot a rainfall plot for one sample. This function takes in MAF data frame, or path to custom MAF file.
-If non are specified, the SSM will be obtained though GAMBLR directly.}
+\title{Rainfall Plot}
 \usage{
 prettyRainfallPlot(
   this_sample_id,
@@ -40,8 +39,11 @@ prettyRainfallPlot(
 a ggplot2 plot. Print it using print() or save it using ggsave()
 }
 \description{
-Plot a rainfall plot for one sample. This function takes in MAF data frame, or path to custom MAF file.
-If non are specified, the SSM will be obtained though GAMBLR directly.
+Plot a rainfall plot for one sample. This function takes in the MAF data frame, or path to a custom MAF file.
+If non are specified, the SSM will be obtained through GAMBLR directly (with \code{get_ssm_by_region}).
+}
+\details{
+Create a sample-level rainfall plot visualizing single nucleotide substitutions mutations for selected chromosomes.
 }
 \examples{
 prettyRainfallPlot("Raji")

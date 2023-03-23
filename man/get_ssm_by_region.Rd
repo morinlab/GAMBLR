@@ -2,7 +2,7 @@
 % Please edit documentation in R/database.R
 \name{get_ssm_by_region}
 \alias{get_ssm_by_region}
-\title{Retrieve all SSMs from the GAMBL database within a single genomic coordinate range.}
+\title{Get SSM By Region.}
 \usage{
 get_ssm_by_region(
   chromosome,
@@ -50,12 +50,24 @@ get_ssm_by_region(
 \item{min_read_support}{Only returns variants with at least this many reads in t_alt_count (for cleaning up augmented MAFs).}
 
 \item{mode}{Only works with indexed flatfiles. Accepts 2 options of "slms-3" and "strelka2" to indicate which variant caller to use. Default is "slms-3".}
+
+\item{maf_columns}{Specify what MAF columns you want back. \code{basic_columns} needs to be set to TRUE.}
+
+\item{maf_column_types}{The column types of specified MAF columns \code{maf_columns}.}
+
+\item{verbose}{Boolean parameter set to FALSE per default.}
 }
 \value{
 A data frame containing all the MAF data columns (one row per mutation).
 }
 \description{
 Retrieve all SSMs from the GAMBL database within a single genomic coordinate range.
+}
+\details{
+This function lets the user specify a region of interest for returning SSM calls within that region.
+There are multiple ways a region can be specified. For example, the user can provide the full region in a "region" format (chr:start-end) to the \code{region} parameter.
+Or, the user can provide chromosome, start and end coordinates individually with \code{chr}, \code{start}, and \code{end} parameters.
+For more usage examples, refer to the parameter descriptions and examples in the vignettes.
 }
 \examples{
 #basic usage

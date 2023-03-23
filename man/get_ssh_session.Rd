@@ -2,16 +2,23 @@
 % Please edit documentation in R/utilities.R
 \name{get_ssh_session}
 \alias{get_ssh_session}
-\title{Create an ssh session to the GSC (requires active VPN connection)}
+\title{Get SSH Session.}
 \usage{
 get_ssh_session(host = "gphost01.bcgsc.ca")
 }
 \arguments{
-\item{host}{(default is gphost01.bcgsc.ca)}
+\item{host}{Default is "gphost01.bcgsc.ca".}
 }
 \value{
-
+An external pointer of class 'ssh_session'
 }
 \description{
 Create an ssh session to the GSC (requires active VPN connection)
+}
+\details{
+Using the ssh R package to create an ssh session.
+}
+\examples{
+my_session = get_ssh_session()
+
 }

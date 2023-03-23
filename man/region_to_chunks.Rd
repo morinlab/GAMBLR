@@ -2,8 +2,7 @@
 % Please edit documentation in R/utilities.R
 \name{region_to_chunks}
 \alias{region_to_chunks}
-\title{INTERNAL FUNCTION called by calc_mutation_frequency_sliding_windows, not meant for out-of-package usage.
-Parse a region string into chomosome, start and end.}
+\title{Region To Chunks.}
 \usage{
 region_to_chunks(region)
 }
@@ -14,8 +13,10 @@ region_to_chunks(region)
 A named list.
 }
 \description{
+Parse a region string into; chromosome, start and end.
+}
+\details{
 INTERNAL FUNCTION called by calc_mutation_frequency_sliding_windows, not meant for out-of-package usage.
-Parse a region string into chomosome, start and end.
 }
 \examples{
 chr_start_end = region_to_chunks("chr1:1111-2222")

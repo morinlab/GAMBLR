@@ -7,7 +7,11 @@ grob_wildcards = function(wildcarded_string){
   wildcards = stringr::str_remove_all(wildcards,"\\{") %>%  stringr::str_remove_all(.,"\\}")
   return(wildcards)
 }
-get_template_wildcards = function(parent_key,template_key){
+
+
+get_template_wildcards = function(parent_key,
+                                  template_key){
+
   if(missing(template_key)){
     wildcard_string = config::get(parent_key)
   }else{
@@ -17,7 +21,11 @@ get_template_wildcards = function(parent_key,template_key){
   return(unlist(wildcards))
 }
 
-copy_no_clobber = function(from_file,to_file,force=FALSE){
+
+copy_no_clobber = function(from_file,
+                           to_file,
+                           force = FALSE){
+
   to_dir = dirname(to_file)
   suppressMessages(suppressWarnings(dir.create(to_dir,recursive = T)))
   print(paste("COPYING",from_file,"TO",to_file))
@@ -25,45 +33,55 @@ copy_no_clobber = function(from_file,to_file,force=FALSE){
     file.copy(from_file,to_file)
   }
 }
-#' Check for a remote session and automagically confirm setup will work properly
-#' 
-#' This function determines if a user is working in GAMBLR remotely and, if so, will
-#' check if their config is loaded properly and ssh_session is available. 
+
+
+#' @title Check Remote Configuration.
+#'
+#' @description Check for a remote session and automagically confirm setup will work properly.
+#'
+#' @details This function determines if a user is working in GAMBLR remotely and, if so, will
+#' check if their config is loaded properly and ssh_session is available.
 #'
 #' @param auto_connect Set to TRUE to ensure an ssh_session is created if absent
 #'
-#' @return
+#' @return TRUE if a remote session is detected, FALSE otherwise.
+#'
 #' @export
 #'
 #' @examples
-check_remote_configuration = function(auto_connect=FALSE){
+#' check_remote_configuration()
+#'
+check_remote_configuration = function(auto_connect = FALSE){
+
   remote_gamblr = check_host(auto_connect=auto_connect)
   if(remote_gamblr){
     #code is running on a non-GSC computer. Check that the config is set up properly
-    if(exists("R_CONFIG_ACTIVE")){
-      if(!R_CONFIG_ACTIVE=="remote"){
-        warn(paste("WARNING: config set to",R_CONFIG_ACTIVE, "but you appear to be working on a remote hoste"))
-      }
-    }else{
+    if(!Sys.getenv("R_CONFIG_ACTIVE")=="remote"){
       stop('You seem to be running this on a remote computer but have not set R_CONFIG_ACTIVE properly\nTry running Sys.setenv(R_CONFIG_ACTIVE= "remote")')
     }
   }
   return(remote_gamblr)
 }
 
-#' Check if code is running remotely and react accordingly.
-#' 
-#' The function will (optionally) attempt a connection if necessary, and stores it in a global variable (ssh_session) 
-#' 
-#' @param auto_connect Set to TRUE if you want the function to create an ssh session (if necessary)
-#' @param verbose Set this to TRUE for verbose messages from the function
-#' 
+#' @title Check Host.
+#'
+#' @description Check if code is running remotely and react accordingly.
+#'
+#' @details The function will (optionally) attempt a connection if necessary, and stores it in a global variable (ssh_session).
+#'
+#' @param auto_connect Set to TRUE if you want the function to create an ssh session (if necessary).
+#' @param verbose Set this to TRUE for verbose messages from the function.
+#'
 #' @return TRUE if a remote session is detected, FALSE otherwise.
-#' 
+#'
 #' @export
 #'
-#' @examples check_host(auto_connect=TRUE)
-check_host = function(auto_connect=FALSE,verbose=FALSE){
+#' @examples
+#' check_host(auto_connect=TRUE)
+#'
+check_host = function(auto_connect = FALSE,
+                      verbose = FALSE){
+
   hostname = Sys.info()["nodename"]
   if(grepl("bcgsc.ca",hostname)){
     #we are on the GSC network
@@ -90,10 +108,13 @@ check_host = function(auto_connect=FALSE,verbose=FALSE){
   return(TRUE)
 }
 
-check_times = function(relative_paths,archive_mode=FALSE,force_backup=FALSE){
-  
-  local_base = base_path=config::get("project_base")
-  remote_base = base_path=config::get("project_base",config="default")
+
+check_times = function(relative_paths,
+                       archive_mode = FALSE,
+                       force_backup = FALSE){
+
+  local_base = check_config_value(config::get("project_base"))
+  remote_base = check_config_value(config::get("project_base",config="default"))
   if(archive_mode){
     if(local_base == remote_base){
       message("checking against local archive")
@@ -101,8 +122,8 @@ check_times = function(relative_paths,archive_mode=FALSE,force_backup=FALSE){
       message("Currently, this mode must be run on the GSC (not remotely)")
       return(NULL)
     }
-    local_base = base_path=config::get("archive")
-    
+    local_base = check_config_value(config::get("archive"))
+
   }
   for(rel_f in relative_paths){
     local_f = paste0(local_base,rel_f)
@@ -112,12 +133,12 @@ check_times = function(relative_paths,archive_mode=FALSE,force_backup=FALSE){
       mtime = file.info(local_f)$mtime
       mtime = stringr::str_remove(mtime,"\\s\\d+:\\d+:\\d+")
       #print(mtime)
-      
+
       remote_session = check_remote_configuration(auto_connect=TRUE)
       #print(remote_f)
       if(remote_session){
         output = ssh::ssh_exec_internal(ssh_session,paste("stat -L ",remote_f,"| grep Modify"))$stdout
-      
+
         output = rawToChar(output) %>% stringr::str_extract(.,"\\d+-\\d+-\\d+")
       }else{
         output = file.info(remote_f)$mtime %>% stringr::str_remove("\\s\\d+:\\d+:\\d+")
@@ -143,9 +164,10 @@ check_times = function(relative_paths,archive_mode=FALSE,force_backup=FALSE){
   }
 }
 
+
 check_file_details = function(relative_paths){
   not_found = c()
-  base_path=config::get("project_base")
+  base_path = check_config_value(config::get("project_base"))
   for(relative_path in relative_paths){
     full_path = paste0(base_path,relative_path)
     message(paste("Looking for:",full_path))
@@ -161,19 +183,24 @@ check_file_details = function(relative_paths){
   return(not_found)
 }
 
-#' Check that the GAMBLR config you have loaded will work in your setup
-#' 
-#' This function is mostly for remote GAMBLRs to ensure they keep their local mirror of the GAMBL data up-to-date. It 
+
+#' @title Check GAMBLR Config.
+#'
+#' @description Check that the GAMBLR config you have loaded will work in your setup.
+#'
+#' @details This function is mostly for remote GAMBLRs to ensure they keep their local mirror of the GAMBL data up-to-date.
 #'
 #' @param compare_timestamps Whether the function will compare timestamps on your local files to the remote copy. Only relevant if you are working remotely.
 #' @param ssh_session The ssh_session object see get_ssh_session() for more information. Only relevant if you are working remotely.
 #' @param archive_mode This is not currently working but the idea here is to keep a GSC archive of GAMBL in sync with the actively updated outputs
-#' @param force_backup 
+#' @param force_backup Boolean parameter set to FALSE per default.
 #'
-#' @return
+#' @import dplyr tidyr stringi
 #' @export
 #'
 #' @examples
+#' check_gamblr_config()
+#'
 check_gamblr_config = function(compare_timestamps=FALSE,
                                ssh_session,
                                archive_mode=FALSE,
@@ -184,23 +211,23 @@ check_gamblr_config = function(compare_timestamps=FALSE,
   seq_type_filter = seq_type
   unix_group = get_template_wildcards("unix_groups")
   projection = get_template_wildcards("projections")
-  
+
   #data frame for seq_type/projection expansion
   projection_expanded = tidyr::expand_grid(seq_type = get_template_wildcards("seq_types"),projection = get_template_wildcards("projections"))
   print(projection_expanded)
   #resources section of config (only needs blacklist right now)
-  blacklist_f = config::get("resources")$blacklist$template
+  blacklist_f = check_config_value(config::get("resources")$blacklist$template)
   blacklist_f = mutate(projection_expanded,output=glue::glue(blacklist_f)) %>% pull(output)
   files_to_check = c(files_to_check,blacklist_f)
-  
-  merged_keys = names(config::get("results_merged"))
+
+  merged_keys = names(check_config_value(config::get("results_merged")))
   #skip any file starting with "/"
   for (merge in merged_keys){
     merge_path = config::get("results_merged")[merge]
     if(!grepl("^/",merge_path)){
       files = unlist(merge_path)
       #print(names(files))
-      
+
       for(f in files){
         #print(paste("CHECKING",f))
         if(grepl("\\{",f)){
@@ -225,12 +252,12 @@ check_gamblr_config = function(compare_timestamps=FALSE,
             flavour =get_template_wildcards("results_merged",names(files))
             all_f = glue::glue(f)
             #print(all_f)
-            files_to_check = c(files_to_check,all_f) 
+            files_to_check = c(files_to_check,all_f)
           }
         }else{
           files_to_check = c(files_to_check,f)
         }
-        
+
       }
 
     }
@@ -249,20 +276,30 @@ check_gamblr_config = function(compare_timestamps=FALSE,
   print("DONE!")
 }
 
-#' Check GAMBL or other metadata for compatability with various features
+#' @title Check GAMBL Metadata.
 #'
-#' @param metadata_df Data frame output by get_gambl_metadata or some other source of metadata you plan to use
-#' @param to_check Specify one of "uniqueness", "colours" or "completeness" or leave empty to check all
-#' @param fix After identifying an issue, rerun this function with fix=TRUE to address errors (when possible). Currently this doesn't do anything. That's how I roll
-#' @param show_details Set to TRUE if you want the gory details about issues that are identified
+#' @description Check GAMBL or other metadata for compatibility with various features.
 #'
-#' @return
-#' @export
+#' @details Give this function a metadata output, preferably from `get_gambl_metadata()`, or any other source.
+#' The function then checks for duplicate sample IDs, colours for all values in all columns that map to a colour with `map_metadata_to_colours` and missing columns.
+#'
+#' @param metadata_df Data frame output by `get_gambl_metadata` or some other source of metadata you plan to use.
+#' @param to_check Specify one of "uniqueness", "colours" or "completeness" or leave empty to check all.
+#' @param fix After identifying an issue, rerun this function with fix=TRUE to address errors (when possible). Currently this doesn't do anything. That's how I roll.
+#' @param show_details Set to TRUE if you want the gory details about issues that are identified.
+#'
 #' @import dplyr
+#' @export
 #'
 #' @examples
-check_gambl_metadata = function(metadata_df,to_check="all",show_details=FALSE,fix=FALSE){
-  
+#' this_metadata = get_gambl_metadata()
+#' check_gambl_metadata(metadata_df = this_metadata)
+#'
+check_gambl_metadata = function(metadata_df,
+                                to_check = "all",
+                                show_details = FALSE,
+                                fix = FALSE){
+
   if(to_check == "all"){
     to_check = c("uniqueness","colours","completeness")
   }
@@ -285,7 +322,7 @@ check_gambl_metadata = function(metadata_df,to_check="all",show_details=FALSE,fi
       warning(paste("Some",numdup,"values in your sample_id column are duplicates"))
     }
     message("PASSED uniqueness test for sample_id")
-    
+
   }
   if("colours" %in% to_check){
     # confirm that we have colours for all values in all columns that map to a colour when we run map_metadata_to_colours
@@ -295,20 +332,20 @@ check_gambl_metadata = function(metadata_df,to_check="all",show_details=FALSE,fi
     alias_in_meta = alias_names[alias_names %in% colnames(metadata_df)]
     #print(paste("will check for colour mapping of values in",alias_in_meta))
     for(alias in alias_in_meta){
-      mapped = data.frame(map_metadata_to_colours(alias,metadata_df,as_vector=F)) %>% 
-        rename("colour"=alias) %>% 
+      mapped = data.frame(map_metadata_to_colours(alias,metadata_df,as_vector=F)) %>%
+        rename("colour"=alias) %>%
         rownames_to_column(var=alias)
-      
+
       this_col = pull(metadata_df,alias)
-      
+
       if(class(this_col)=="factor"){
         metadata_df = mutate(metadata_df,{{alias}} := as.character(.data[[alias]]))
       }
-      tabular = group_by(metadata_df,!!!syms(alias)) %>% 
+      tabular = group_by(metadata_df,!!!syms(alias)) %>%
         tally() %>%
         mutate({{alias}} := replace_na(.data[[alias]],"NA"))
       mapped = right_join(mapped,tabular,by=alias) %>% dplyr::filter(!is.na(n))
-      
+
       sum_na = dplyr::filter(mapped,is.na(colour)) %>% pull(n) %>% sum()
       percent=round(100 * sum_na/total,3)
       if(sum_na ==0){
@@ -330,24 +367,24 @@ check_gambl_metadata = function(metadata_df,to_check="all",show_details=FALSE,fi
 }
 
 get_runs_table = function(seq_type_filter="genome"){
-  t_meta = get_gambl_metadata(tissue_status_filter = c("tumour"),seq_type_filter=seq_type_filter) %>% 
-    dplyr::select(sample_id,patient_id,seq_type,genome_build,pairing_status,unix_group) %>% 
+  t_meta = get_gambl_metadata(tissue_status_filter = c("tumour"),seq_type_filter=seq_type_filter) %>%
+    dplyr::select(sample_id,patient_id,seq_type,genome_build,pairing_status,unix_group) %>%
     rename("tumour_sample_id"="sample_id")
   n_meta = get_gambl_metadata(tissue_status_filter = c("normal"),seq_type_filter=seq_type_filter) %>%
     dplyr::select(sample_id,patient_id,seq_type,genome_build) %>% rename("normal_sample_id"="sample_id")
   runs_df = left_join(t_meta,n_meta,by=c("patient_id","seq_type","genome_build"))
   #fill in normal_sample_id for unmatched cases
   unmatched_df = get_unmatched_normals(seq_type_filter=seq_type_filter)
-  runs_df = left_join(runs_df,unmatched_df,by=c("seq_type","genome_build","unix_group")) %>% 
-    mutate(normal_sample_id=ifelse(is.na(normal_sample_id.x),normal_sample_id.y,normal_sample_id.x)) %>% 
+  runs_df = left_join(runs_df,unmatched_df,by=c("seq_type","genome_build","unix_group")) %>%
+    mutate(normal_sample_id=ifelse(is.na(normal_sample_id.x),normal_sample_id.y,normal_sample_id.x)) %>%
     select(-normal_sample_id.x, -normal_sample_id.y)
   return(runs_df)
 }
 
 #helper function to get the unmatched normals from the main config
 get_unmatched_normals = function(seq_type_filter){
-  a=config::get("unmatched_normal_ids")
-  df = melt(a,value.name="normal_sample_id") %>% 
+  a = check_config_value(config::get("unmatched_normal_ids"))
+  df = melt(a,value.name="normal_sample_id") %>%
     rename(c("genome_build"="L3","seq_type"="L2","unix_group"="L1")) %>%
     dplyr::filter(seq_type == seq_type_filter)
   return(df)
@@ -357,10 +394,10 @@ check_expected_outputs = function(tool_name="battenberg",seq_type_filter="genome
   projection = get_template_wildcards("projections")
   #drop irrelevant rows of the metadata based on the scope of the tool etc
   if(tool_name=="battenberg"){
-    template_path = config::get("results_flatfiles")$cnv$battenberg
-    extra_wildcards = config::get("results_flatfiles")$cnv$battenberg_wildcards
+    template_path = check_config_value(config::get("results_flatfiles")$cnv$battenberg)
+    extra_wildcards = check_config_value(config::get("results_flatfiles")$cnv$battenberg_wildcards)
     #in the current setup, this drops unmatched samples (could be hard-coded but using the config is more transparent)
-    relevant_metadata = dplyr::filter(all_meta,base::get(names(extra_wildcards)[1]) == unname(extra_wildcards[1])) 
+    relevant_metadata = dplyr::filter(all_meta,base::get(names(extra_wildcards)[1]) == unname(extra_wildcards[1]))
     runs = dplyr::filter(relevant_metadata,seq_type == seq_type_filter) %>%
       mutate(tumour_sample_id = sample_id)
   }else if(tool_name=="slms_3"){
@@ -369,17 +406,36 @@ check_expected_outputs = function(tool_name="battenberg",seq_type_filter="genome
     runs = mutate(runs,vcf_base_name = vcf_base)
     #runs = mutate(runs,target_builds = projection)
     runs = expand_grid(runs,target_builds=projection)
-    template_path = config::get("results_flatfiles")$ssm$template$clustered$deblacklisted
+    template_path = check_config_value(config::get("results_flatfiles")$ssm$template$clustered$deblacklisted)
   }
   w = grob_wildcards(template_path)
-  
-  
-  
+
   #use the unix group and seq_type from the actual metadata and all available projections
   seq_type = seq_type_filter
-  
+
   runs_files = mutate(runs,outfile=glue::glue(template_path))
-  
+
 }
 
 
+#' @title Check Config Value.
+#'
+#' @description Check the existence of a specific config key.
+#' The function will notify the user and end the program if no such key exists.
+#'
+#' @details INTERNAL FUNCTION for checking the existence of a config value, not meant for out-of-package usage.
+#'
+#' @param config_key key from config, prefixed with config::get()
+#'
+#' @return A string with the path to a file specified in the config or nothing (if config key is NULL).
+#'
+#' @examples
+#' check_config_value(config::get("resources")$blacklist$template)
+#'
+check_config_value = function(config_key){
+  if(is.null(config_key)){
+    stop(paste0("ATTENTION! The above described key is missing from the config, make sure your config is up to date"))
+  }else{
+    return(config_key)
+  }
+}

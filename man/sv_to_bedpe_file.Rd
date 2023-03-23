@@ -2,14 +2,21 @@
 % Please edit documentation in R/utilities.R
 \name{sv_to_bedpe_file}
 \alias{sv_to_bedpe_file}
-\title{Write bedpe format data frame to a file that will work with IGV.}
+\title{SV To BED File.}
 \usage{
-sv_to_bedpe_file(sv_df, filename = "something.bedpe", add_chr_prefix = TRUE)
+sv_to_bedpe_file(
+  sv_df,
+  path = "/projects/rmorin/projects/gambl-repos/gambl-rmorin/results/icgc_dart/misc/",
+  filename = "my_svs.bedpe",
+  add_chr_prefix = TRUE
+)
 }
 \arguments{
 \item{sv_df}{data frame of bedpe formatted SV data.}
 
-\item{filename}{File name (will be written to results/icgc_dart/misc/FILENAME). Default is "something.bedpe". Maybe not a very good default name?}
+\item{path}{The path to the output folder. Default is "/projects/rmorin/projects/gambl-repos/gambl-rmorin/results/icgc_dart/misc/".}
+
+\item{filename}{File name (will be written to results/icgc_dart/misc/FILENAME).}
 
 \item{add_chr_prefix}{Whether to force chr to be added to chromosome names. Default is TRUE.}
 }
@@ -17,7 +24,14 @@ sv_to_bedpe_file(sv_df, filename = "something.bedpe", add_chr_prefix = TRUE)
 bedpe data frame that is compatible with IGN browser.
 }
 \description{
-Write bedpe format data frame to a file that will work with IGV.
+Write bedpe format data frame to a file that will work with IGV and UCSC genome browser.
+}
+\details{
+This function takes four parameters; a data frame with SVs, formatted as bedpe with \code{sv_df}.
+The \code{path} parameter lets the user control the output folder. The default is "/projects/rmorin/projects/gambl-repos/gambl-rmorin/results/icgc_dart/misc/".
+\code{file_name} for specifying the output file name. Results will be written to \verb{results/icgc_dart/misc/}.
+Lastly, the \code{add_chr_prefix} lets the user control if chromosomes should be prefixed with "chr" or not.
+The default is TRUE.
 }
 \examples{
 SVs_bedpe = sv_to_bedpe_file(sv_dataframe, "SVs.bedpe", TRUE)
