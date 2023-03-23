@@ -22,6 +22,7 @@ Imports:
     dplyr,
     forcats,
     g3viz,
+    GAMBLR.data (>= 0.1),
     ggbeeswarm,
     ggplot2,
     ggpubr,
