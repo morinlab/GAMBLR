@@ -46,6 +46,7 @@ The last remaining required parameter is \code{comparison}, this parameter takes
 For more information on how to run this function, refer to the function examples and parameter descriptions.
 }
 \examples{
+\dontrun{
 # basic usage
 FtestCNV(gistic_lesions = "path_to_GISTIC2.0_output/all_lesions.conf_{confidence_level}.txt",
          metadata = derived_data,
@@ -58,5 +59,6 @@ FtestCNV(gistic_lesions = "path_to_GISTIC2.0_output/all_lesions.conf_{confidence
          fdr.method = "bonferroni",
          fdr.cutoff = 0.05,
          blacklisted_regions = c("3p12.3", "12p13.2"))
+}
 
 }

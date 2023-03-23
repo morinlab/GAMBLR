@@ -51,12 +51,16 @@ The user can also use an already loaded maf file with \code{maf_df}. In addition
 For more information on how to run this function with the parameters at hand, refer to the parameter descriptions and function examples.
 }
 \examples{
-tumour_purity = estimate_purity(in_maf = "path/to/file.maf",
-                                in_seg = "path/to/file.seg",
-                                seg_file_source = "ichorCNA",
-                                show_plots = TRUE)
+#load a maf
+this_maf = get_ssm_by_sample(this_sample_id = "HTMCP-01-06-00422-01A-01D", 
+                             this_seq_type = "genome")
 
-tumour_purity = estimate_purity(in_maf = "path/to/file.maf",
-                                assume_diploid = TRUE)
+#estimate purity based on an already loaded maf object
+estimate_purity(maf_df = this_maf, 
+                show_plots = TRUE)
+
+#estimate purity based sole on a smaple ID + added seg data.
+estimate_purity(this_sample_id = "HTMCP-01-06-00422-01A-01D", 
+                show_plots = TRUE, coding_only = TRUE)
 
 }

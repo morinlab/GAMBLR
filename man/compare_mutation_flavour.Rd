@@ -11,7 +11,7 @@ compare_mutation_flavour(
 )
 }
 \arguments{
-\item{these_sample_ids}{sample IDs to be included.}
+\item{these_sample_ids}{A vector of sample IDs to be included.}
 
 \item{flavour1}{First flavour of variant calls, to be returned as unique if not present in flavour2. Default is "clustered".}
 
@@ -25,8 +25,5 @@ Get a MAF that is just the variants unique to one of two flavours of variant cal
 }
 \details{
 Subset a MAF to only have variants that are unique to one flavour (specified with \code{flavour1}).
-}
-\examples{
-comp_flav = compare_mutation_flavour("clustered", "another_flavour")
-
+This function is currently not exported, since there is only one flavour available at the moment (see docs for \code{get_ssm_by_sample}).
 }

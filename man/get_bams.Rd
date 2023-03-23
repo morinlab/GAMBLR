@@ -4,12 +4,12 @@
 \alias{get_bams}
 \title{Get BAMs.}
 \usage{
-get_bams(sample, patient)
+get_bams(this_sample_id, this_patient_id)
 }
 \arguments{
-\item{sample}{Either provide sample_id or patient_id.}
+\item{this_sample_id}{Sample ID of interest.}
 
-\item{patient}{Either provide sample_id or patient_id.}
+\item{this_patient_id}{patient ID of interest.}
 }
 \value{
 A list that contains the genome_build and an igv-friendly build (igv_build), a list of bam file paths for tumour, normal and mrna data.
@@ -19,12 +19,14 @@ Get full paths for bam files for a sample or patient.
 }
 \details{
 Returns a list with BAM paths for tumour, normal and mrna data.
-This function expects a sample ID (\code{sample}) or a patient ID (\code{patient}).
+This function expects a sample ID (\code{this_sample_id}) or a patient ID (\code{this_patient_id}).
 }
 \examples{
-this_sv = filter(annotate_sv(get_manta_sv()), partner == "HIST1H2BK")
 
-#arbitrarily grab one SV
-bam_details = get_bams(sample = this_sv[1,"tumour_sample_id"])
+#example 1, using a sample ID
+bam_details = get_bams(this_sample_id = "HTMCP-01-06-00422-01A-01D")
+
+#example 2, using a patient ID
+bam_details = get_bams(this_patient_id = "HTMCP-01-06-00422")
 
 }
