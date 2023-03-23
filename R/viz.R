@@ -1878,7 +1878,11 @@ prettyOncoplot = function(maftools_obj,
                                     direction=legend_direction,
                                     labels_gp = gpar(fontsize = legendFontSize)))
   } else {
-    right_annotation = NULL
+      if(hideSideBarplot){
+        right_annotation = NULL
+      }else{
+        right_annotation = rowAnnotation(rbar = anno_oncoprint_barplot())
+      }
   }
 
   ch = ComplexHeatmap::oncoPrint(mat[intersect(genes, genes_kept),patients_kept],
