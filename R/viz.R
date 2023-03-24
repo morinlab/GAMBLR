@@ -2336,7 +2336,7 @@ ashm_multi_rainbow_plot = function(regions_bed,
 #' copy_number_vaf_plot(this_sample_id = "HTMCP-01-06-00422-01A-01D")
 #'
 #' #plot only cn segments
-#' copy_number_vaf_plot(this_sample_id = "HTMCP-01-06-00422-01A-01
+#' copy_number_vaf_plot(this_sample_id = "HTMCP-01-06-00422-01A-01",
 #'                      just_segments = TRUE)
 #'
 #' #coding only

@@ -54,4 +54,5 @@ irf4_myc_expressions = get_gene_expression_new(hugo_symbols = c("IRF4", "MYC"),
                                                join_with = "genome",
                                                from_flatfile = FALSE,
                                                expression_data = full_expression_df)
+
 }

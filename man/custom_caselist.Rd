@@ -23,6 +23,9 @@ custom_caselist(
 
 \item{dir}{The directory where all study specific files live.}
 }
+\value{
+Nothing.
+}
 \description{
 Create and a custom case list for easy data subset in cBioPortal.
 }

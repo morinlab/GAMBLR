@@ -56,4 +56,5 @@ FtestCNV(gistic_lesions = "path_to_GISTIC2.0_output/all_lesions.conf_{confidence
          fdr.cutoff = 0.05,
          blacklisted_regions = c("3p12.3", "12p13.2"))
 }
+
 }

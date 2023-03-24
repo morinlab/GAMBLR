@@ -60,4 +60,5 @@ prettyChromoplot(scorees = "path_to_gistic_results/scores.gistic",
                  cutoff = 0.75) +
                   ... #any ggplot options to customize plot appearance
 }
+
 }

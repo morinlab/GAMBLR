@@ -22,7 +22,7 @@
 #' @export
 #'
 #' @examples
-#' Setup study and save included ids as a vector of characters:
+#' #Setup study and save included ids as a vector of characters:
 #' \dontrun{
 #' ids = setup_study(out_dir = "GAMBLR/cBioPortal/instance01/")
 #' }
@@ -497,7 +497,7 @@ study_check = function(data_clinical_samples_path = "data_clinical_samples.txt",
 #' @param return_missing_samples Boolean parameter. Set to TRUE to return all sample IDs that are in the desired case list, but not represented in the study specific clinical file. Default is FALSE.
 #' @param dir The directory where all study specific files live.
 #'
-#' @return
+#' @return Nothing.
 #' 
 #' @import dplyr
 #' @export

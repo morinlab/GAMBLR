@@ -65,7 +65,7 @@ This function also computes the number of affected bases for each copy number st
 useful for overviewing the extent of each copy number state, in the context of the full genome.
 }
 \examples{
-
 #Return a plot for one sample, with default parameters. 
 fancy_cnbar(this_sample_id = "HTMCP-01-06-00422-01A-01D")
+
 }
