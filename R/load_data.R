@@ -50,7 +50,9 @@ determine_version <- function(
     latest_version <- max(versions)
 
     # Which version did the user requested in config?
-    requested_version <- config::get("bundled_data_versions")[[mode]]
+    requested_version <- check_config_value(
+        config::get("bundled_data_versions")[[mode]]
+    )
     # Convert to numeric value if it is a string
     if(requested_version == "_latest"){
         requested_version = latest_version
@@ -97,6 +99,8 @@ hg38_ashm_regions <- determine_version(
 
 lymphoma_genes <- GAMBLR.data::get_genes(
     entities = c("BL", "MCL", "DLBCL"),
-    version = config::get("bundled_data_versions")[["lymphoma_genes"]],
+    version = check_config_value(
+        config::get("bundled_data_versions")[["lymphoma_genes"]]
+    ),
     gene_format = "data.frame"
 )
