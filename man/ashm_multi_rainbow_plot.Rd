@@ -57,5 +57,4 @@ ashm_multi_rainbow_plot(regions_to_display = c("BCL2-TSS",
                                                "IGL"),
                         custom_colours = lymphgen_colours,
                         seq_type = "genome")
-
 }

@@ -47,5 +47,4 @@ Setup study and save included ids as a vector of characters:
 \dontrun{
 ids = setup_study(out_dir = "GAMBLR/cBioPortal/instance01/")
 }
-
 }

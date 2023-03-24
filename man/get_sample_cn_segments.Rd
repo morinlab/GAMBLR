@@ -50,5 +50,4 @@ these_sample_list = c("00-15201_tumorA", "00-15201_tumorB")
 
 samples = get_sample_cn_segments(multiple_samples = TRUE, 
                                  sample_list = these_sample_list)
-
 }

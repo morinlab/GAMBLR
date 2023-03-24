@@ -6,6 +6,7 @@
 \usage{
 fetch_output_files(
   tool,
+  unix_group,
   base_path,
   results_dir = "99-outputs",
   seq_type = "genome",
@@ -15,6 +16,8 @@ fetch_output_files(
 }
 \arguments{
 \item{tool}{Name of tool.}
+
+\item{unix_group}{The unix group of the sample set.}
 
 \item{base_path}{Either the full or relative path to where all the results directories are for the tool e.g. "gambl/sequenza_current".}
 

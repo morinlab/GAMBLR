@@ -13,6 +13,7 @@ get_coding_ssm_status(
   maf_path = NULL,
   maf_data,
   include_hotspots = TRUE,
+  keep_multihit_hotspot = FALSE,
   recurrence_min = 5,
   seq_type = "genome",
   projection = "grch37",
@@ -38,6 +39,8 @@ get_coding_ssm_status(
 \item{maf_data}{Either a maf loaded from disk or from the database using a get_ssm function.}
 
 \item{include_hotspots}{Logical parameter indicating whether hotspots object should also be tabulated. Default is TRUE.}
+
+\item{keep_multihit_hotspot}{Logical parameter indicating whether to keep the gene annotation as mutated when the gene has both hot spot and non-hotspot mutation. Default is FALSE. If set to TRUE, will report the number of non-hotspot mutations instead of tabulating for just mutation presence.}
 
 \item{recurrence_min}{Integer value indicating minimal recurrence level.}
 

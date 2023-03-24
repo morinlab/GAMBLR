@@ -7,7 +7,7 @@
 trim_scale_expression(x)
 }
 \arguments{
-\item{x}{}
+\item{x}{Numeric value (of expression) to be trimmed.}
 }
 \value{
 Numeric value.

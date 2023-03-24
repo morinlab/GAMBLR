@@ -13,7 +13,7 @@ colour_aliases = list("COO_consensus" = "coo", "COO" = "coo", "DHITsig_consensus
 #' @description Plot a rainfall plot for one sample. This function takes in the MAF data frame, or path to a custom MAF file.
 #' If non are specified, the SSM will be obtained through GAMBLR directly (with `get_ssm_by_region`).
 #'
-#' @details Create a sample-level rainfall plot visualizing single nucleotide substitutions mutations for selected chromosomes. 
+#' @details Create a sample-level rainfall plot visualizing single nucleotide substitutions mutations for selected chromosomes.
 #'
 #' @param this_sample_id Sample id for the sample to display. This is argument is not required if you want a multi-sample plot but is otherwise needed.
 #' @param label_ashm_genes Boolean argument indicating whether the aSHM regions will be labeled or not.
@@ -26,7 +26,7 @@ colour_aliases = list("COO_consensus" = "coo", "COO" = "coo", "DHITsig_consensus
 #' @param seq_type Specify one of "genome" or "capture" when relying on the function to obtain mutations from a region (i.e. if you haven't provided a MAF or single sample_id)
 #'
 #' @return a ggplot2 plot. Print it using print() or save it using ggsave()
-#' 
+#'
 #' @rawNamespace import(data.table, except = c("last", "first", "between", "transpose"))
 #' @import ggplot2 dplyr readr stringr tidyr
 #' @export
@@ -407,7 +407,7 @@ gene_mutation_tally = function(maf_df,these_samples_metadata,these_genes,groupin
 #'
 #' @description Make a word cloud of gene names from a MAF file based on mutation frequency.
 #'
-#' @details Create a wordcloud from an incoming MAF. Required parameter is `maf_df`. 
+#' @details Create a wordcloud from an incoming MAF. Required parameter is `maf_df`.
 #' Optional parameters are `these_genes`, `other_genes`, `these_genes_colour`, `other_genes_colour` and `colour_index`.
 #' If no genes are supplied when calling the function, this function will default to all lymphoma genes.
 #'
@@ -419,7 +419,7 @@ gene_mutation_tally = function(maf_df,these_samples_metadata,these_genes,groupin
 #' @param colour_index Optional named character vector with a name for each gene in these_genes and a colour as the value
 #'
 #' @return data frame with counts for each gene
-#' 
+#'
 #' @import wordcloud RColorBrewer dplyr
 #' @export
 #'
@@ -434,7 +434,7 @@ gene_mutation_tally = function(maf_df,these_samples_metadata,these_genes,groupin
 #'
 #' #build wordcloud
 #' prettyGeneCloud(maf_df = maf, these_genes = maf_genes)
-#' 
+#'
 prettyGeneCloud = function(maf_df,
                            these_genes,
                            other_genes,
@@ -494,7 +494,7 @@ prettyGeneCloud = function(maf_df,
 #' In addition, this function takes either a specified region (chr:start-end format). If no region is supplied, the user can give the function a gene symbol
 #' with `gene`. If so, the function will internally retrieve the region for the specified gene.
 #' Sample IDs are specified along the y-axis and the genomic position is visualized along the x-axis.
-#' 
+#'
 #' @param region Genomic region for plotting in bed format.
 #' @param gene Optional variable, converts gene to region if region not supplied.
 #' @param these_samples_metadata Required parameter. GAMBL metadata subset to the cases you want to process (or full metadata).
@@ -505,7 +505,7 @@ prettyGeneCloud = function(maf_df,
 #' @param crop_distance Crop distance for cropping segments. Default value is 10000000 bp.
 #'
 #' @return Nothing
-#' 
+#'
 #' @import dplyr cowplot tidyr ggplot2
 #' @export
 #'
@@ -571,7 +571,7 @@ focal_cn_plot = function(region,
 
 
 #' @title Lollipop Plot
-#' 
+#'
 #' @description Generates a visually appealing and interactive lollipop plot.
 #'
 #' @details This function is depending on a modified version of `readMAF` from the `g3viz` package.
@@ -584,7 +584,7 @@ focal_cn_plot = function(region,
 #' @param plot_theme Options: cbioportal(default), blue, simple, nature, nature2, ggplot2, and dark.
 #'
 #' @return Nothing.
-#' 
+#'
 #' @import g3viz dplyr
 #' @export
 #'
@@ -598,9 +598,9 @@ focal_cn_plot = function(region,
 #'                      seq_type = "genome")
 #'
 #' #construct pretty_lollipop_plot.
-#' pretty_lollipop_plot(maf_df = maf, 
+#' pretty_lollipop_plot(maf_df = maf,
 #'                      gene = "MYC",
-#'                      plot_title = "Mutation data for MYC", 
+#'                      plot_title = "Mutation data for MYC",
 #'                      plot_theme = "nature2")
 #'
 pretty_lollipop_plot = function(maf_df,
@@ -624,12 +624,12 @@ pretty_lollipop_plot = function(maf_df,
 
 
 #' @title Mutation Frequency Heatmap
-#' 
+#'
 #' @description Count hypermutated bins and generate heatmap/cluster the data.
-#' 
+#'
 #' @details This function takes a metadata table with `these_samples_metadata` parameter and internally calls `calc_mutation_frequency_sliding_windows` (that internally calls `get_ssm_by_regions`)
 #' to retrieve mutations for plotting. This plotting function has a variety of useful parameters, providing many customizable plotting options. For more details on how these parameters can be used,
-#' and extended usage examples, refer to the SSM tutorial vignette section 1.4.9. 
+#' and extended usage examples, refer to the SSM tutorial vignette section 1.4.9.
 #'
 #' @param regions Vector of regions in the format "chr:start-end".
 #' @param regions_df Data frame of regions with four columns (chrom,start,end,gene_name).
@@ -659,9 +659,9 @@ pretty_lollipop_plot = function(maf_df,
 #' @param mode Only works with indexed flat files. Accepts 2 options of "slms-3" and "strelka2" to indicate which variant caller to use. Default is "slms-3".
 #'
 #' @return Nothing
-#' 
+#'
 #' @rawNamespace import(data.table, except = c("last", "first", "between", "transpose"))
-#' @import dplyr tidyr circlize ComplexHeatmap tibble 
+#' @import dplyr tidyr circlize ComplexHeatmap tibble
 #' @export
 #'
 #' @examples
@@ -851,12 +851,12 @@ get_mutation_frequency_bin_matrix = function(regions,
 
 
 #' @title VAF Heatmap
-#' 
+#'
 #' @description Plot a heatmap comparing the VAF of mutations in T1/T2 pairs.
 #'
 #' @details Currently unfinished plotting function. Thus, I have removed it from export until it's in a state where it can be included in GAMBLR.
 #' Parameter descriptions need to be updated so that the origin of the incoming data is clear. Examples would also need to be added before this function gets exported into NAMESPACE.
-#' 
+#'
 #' @param maf1 Data frame of simple somatic mutations at time point A.
 #' @param maf2 Data frame of simple somatic mutations at time point B.
 #' @param vafcolname Name of variable that holds VAF in maf. If not supplied, vaf will be calcualted.
@@ -874,7 +874,7 @@ get_mutation_frequency_bin_matrix = function(regions,
 #' @param cluster_rows Boolean statement for clustering by rows, defaults to FALSE.
 #'
 #' @return Nothing
-#' 
+#'
 #' @rawNamespace import(data.table, except = c("last", "first", "between", "transpose"))
 #' @import dplyr tidyr circlize ComplexHeatmap tibble
 #'
@@ -1023,7 +1023,7 @@ plot_mutation_dynamics_heatmap = function(maf1,
 #' @param annoAlpha Optional alpha to apply to annotation colours.
 #'
 #' @return Either a vector or list of colours.
-#' 
+#'
 #' @import dplyr ggsci
 #'
 #' @examples
@@ -1169,17 +1169,17 @@ map_metadata_to_colours = function(metadataColumns,
 
 
 #' @title Sample-level Circos Plot
-#' 
+#'
 #' @description Plot a sample-centric circos overview.
 #'
-#' @details This function takes a sample ID in the `this_sample_id` parameter. 
+#' @details This function takes a sample ID in the `this_sample_id` parameter.
 #' Optionally, the user can supply already loaded data frames (SV, CNV, SSM) with the `sv_df`, `cnv_df` and `ssm_df` parameters.
 #' Convenient Boolean parameteers are also avaialble for restricting the plot to specific mutation types (`include_sv`, `include_cnv`, and `include_ssm`).
 #'
 #' @param this_sample_id Sample ID for the sample to plot.
 #' @param sv_df Optional data frame of SVs. If not provided this function will run `get_manta_sv` to retrieve SVs.
 #' @param cnv_df Optional data frame of CNVs. If not provided, this function will run `get_sample_cn_segments` to retrieve CNVs.
-#' @param ssm_df This parameter does not do anything yet. Maybe it was meant to be implemented. 
+#' @param ssm_df This parameter does not do anything yet. Maybe it was meant to be implemented.
 #' @param include_sv Default TRUE. (does not do anything yet).
 #' @param include_cnv Default TRUE. (does not do anything yet).
 #' @param this_projection The selected projection, default is grch37 and it's the only supported peojection.
@@ -1191,7 +1191,7 @@ map_metadata_to_colours = function(metadataColumns,
 #' @param auto_label_sv Default is FALSE
 #'
 #' @return Nothing
-#' 
+#'
 #' @import dplyr circlize ComplexHeatmap ggplot2
 #' @export
 #'
@@ -1365,9 +1365,9 @@ plot_sample_circos = function(this_sample_id,
 
 
 #' @title Oncooplot
-#' 
-#' @deescription Create a highly customizable oncoplot.
-#' 
+#'
+#' @description Create a highly customizable oncoplot.
+#'
 #' @details Make an oncoplot that is pretty using ComplexHeatmap. The metadata is expected to follow the structure and column naming used in GAMBL.
 #' If you provide your own non-GAMBL samples and metadata, you must include at least the following columns with these names.
 #' The first one should match the Tumor_Sample_Barcode in the MAF object or onco_matrix you provide.
@@ -1419,8 +1419,9 @@ plot_sample_circos = function(this_sample_id,
 #' @param legendFontSize Font size for legend, default is 10.
 #'
 #' @return Nothing
-#' 
+#'
 #' @import tidyr dplyr circlize ComplexHeatmap ggsci ggplot2 maftools tibble
+#' @importFrom utils getFromNamespace
 #' @export
 #'
 #' @examples
@@ -1518,6 +1519,9 @@ prettyOncoplot = function(maftools_obj,
                           annotation_col = 1,
                           verbose = FALSE){
 
+  # Use non-exported function from maftools
+  createOncoMatrix <- getFromNamespace("createOncoMatrix", "maftools")
+
   patients = pull(these_samples_metadata, sample_id)
   #ensure patients not in metadata get dropped up-front to ensure mutation frequencies are accurate
   if(!recycleOncomatrix & missing(onco_matrix_path)){
@@ -1540,9 +1544,9 @@ prettyOncoplot = function(maftools_obj,
       genes = genes[fractMutated * 100 >= minMutationPercent, Hugo_Symbol]
       lg = length(genes)
       message(paste("creating oncomatrix with", lg, "genes"))
-      om = maftools:::createOncoMatrix(m = maftools_obj, g = genes, add_missing = TRUE)
+      om = createOncoMatrix(m = maftools_obj, g = genes, add_missing = TRUE)
       mat_origin = om$oncoMatrix
-      tsbs = levels(maftools:::getSampleSummary(x = maftools_obj)[,Tumor_Sample_Barcode])
+      tsbs = levels(maftools::getSampleSummary(x = maftools_obj)[,Tumor_Sample_Barcode])
       print(paste("numcases:", length(tsbs)))
 
       if(!removeNonMutated){
@@ -1556,9 +1560,9 @@ prettyOncoplot = function(maftools_obj,
       if(any(duplicated(genes))){
         stop("There are duplicated elements in the provided gene list (@param genes). Please ensure only unique entries are present in this list.")
       }
-      om = maftools:::createOncoMatrix(m = maftools_obj, g = genes, add_missing = TRUE)
+      om = createOncoMatrix(m = maftools_obj, g = genes, add_missing = TRUE)
       mat_origin = om$oncoMatrix
-      tsbs = levels(maftools:::getSampleSummary(x = maftools_obj)[,Tumor_Sample_Barcode])
+      tsbs = levels(maftools::getSampleSummary(x = maftools_obj)[,Tumor_Sample_Barcode])
       print(paste("numcases:",length(tsbs)))
       print(paste("numgenes:",length(mat_origin[,1])))
       if(!removeNonMutated){
@@ -1635,7 +1639,7 @@ prettyOncoplot = function(maftools_obj,
       warning("mintMutationPercent option is not available when you provide your own oncomatrix. Feel free to implement this if you need it")
       return()
     }
-    mutation_counts <- maftools_obj@gene.summary %>% 
+    mutation_counts <- maftools_obj@gene.summary %>%
       select(Hugo_Symbol, MutatedSamples)
 
     numpat = length(patients)
@@ -2035,10 +2039,10 @@ prettyOncoplot = function(maftools_obj,
 #' @param comparison_column Required: the name of the metadata column containing the comparison values.
 #' @param label1 Optional argument. Label to be shown as a title for the oncoplot #1.
 #' @param label2 Optional argument. Label to be shown as a title for the oncoplot #2.
-#' @param ... `prettyOncoplot` arguments, see that function for more info on avaialble parameters. 
+#' @param ... `prettyOncoplot` arguments, see that function for more info on avaialble parameters.
 #'
 #' @return A ggplot object with 2 oncoplots side-by-side.
-#' 
+#'
 #' @rawNamespace import(ggpubr, except = "get_legend")
 #' @import ComplexHeatmap dplyr maftools
 #' @export
@@ -2527,9 +2531,9 @@ ashm_rainbow_plot = function(mutations_maf,
 
   p = p +
     labs(y = "Sample") +
-    theme_Morons() + 
+    theme_Morons() +
     theme(plot.margin = ggplot2::margin(1,1,1,1, "cm"), title = element_blank(), plot.subtitle = element_blank(), axis.title.x = element_blank())
-  
+
   if(hide_ids){
     p = p + theme(axis.text.y = element_blank(), axis.ticks.y = element_blank())
   }else{
@@ -2546,8 +2550,6 @@ ashm_rainbow_plot = function(mutations_maf,
 #' @param genes TODO
 #' @param show_noncoding TODO
 #' @param detail TODO
-#'
-#' @return
 #'
 plot_multi_timepoint = function(mafs,
                                 this_sample_id,
@@ -2704,7 +2706,7 @@ plot_multi_timepoint = function(mafs,
 #'
 #' @param scores Output file scores.gistic from the run of GISTIC2.0
 #' @param genes_to_label Optional. Provide a data frame of genes to label (if mutated). The first 3 columns must contain chromosome, start, and end coordinates. Another required column must contain gene names and be named `gene`. All other columns are ignored. If no data frame provided, oncogenes from GAMBLR packages are used by default to annotate on the plot.
-#' @param cutoff Optional. Used to determine which regions to color as aberrant. Must be float in the range [0-1]. The higher the number, the less regions will be considered as aberrant. The default is 0.5.
+#' @param cutoff Optional. Used to determine which regions to color as aberrant. Must be float in the range between 0 and 1. The higher the number, the less regions will be considered as aberrant. The default is 0.5.
 #' @param adjust_amps Optional. The value of G-score for highest amplification peak will be multiplied by this value to determine how far up the gene label will be displayed. Default 0.5.
 #' @param adjust_dels Optional. The value of G-score for highest deletion peak will be multiplied by this value to determine how far down the gene label will be displayed. Default 2.75.
 #' @param label_size Optional. The font size for the gene label to be displayed. Default 3.
@@ -2713,7 +2715,7 @@ plot_multi_timepoint = function(mafs,
 #' @param segment.ncp Optional. Indicates number of control points to make a smoother curve. Higher value allows for more flexibility for the curve. Default 4.
 #' @param segment.angle Optional. Numeric value in the range 0-180, where less than 90 skews control points of the arrow from label to data point toward the start point. Default 25.
 #'
-#' @return Nothing
+#' @return plot
 #'
 #' @rawNamespace import(data.table, except = c("last", "first", "between", "transpose"))
 #' @import dplyr ggplot2 ggrepel
@@ -2839,8 +2841,8 @@ prettyChromoplot = function(scores,
 #'
 #' @return Nothing.
 #'
-#' @rawNamespace import(ggthemes, except = "theme_map")
 #' @import ggplot2
+#' @importFrom ggthemes theme_foundation
 #' @export
 #'
 #' @examples
@@ -2853,8 +2855,7 @@ theme_Morons = function(base_size = 14,
                         my_legend_position = "bottom",
                         my_legend_direction = "horizontal"){
 
-  library(ggthemes)
-  (theme_foundation(base_size = base_size, base_family = base_family) +
+  (ggthemes::theme_foundation(base_size = base_size, base_family = base_family) +
    theme(plot.title = element_text(face = "bold", size = rel(1.2), hjust = 0.5),
          text = element_text(colour = "black"),
          panel.background = element_rect(colour = NA),
@@ -3072,7 +3073,8 @@ prettyForestPlot = function(maf,
   t %>%
   as.data.frame %>%
   `rownames<-`(NULL) %>%
-  mutate_at(c(2:10), as.numeric)
+  mutate_at(c(2:10), as.numeric) %>%
+  arrange(estimate)
 
 
   point_size = 50 / round(length(fish_test$gene))
@@ -3087,6 +3089,7 @@ prettyForestPlot = function(maf,
   }
   message(paste("FONT:", font_size, "POINT:", point_size, length(fish_test$gene)))
   forest = fish_test %>%
+    dplyr::mutate(gene = factor(gene, levels = fish_test$gene)) %>%
     ggplot(aes(x = gene, y = log(estimate))) +
     geom_point(size = point_size, shape = "square") +
     geom_hline(yintercept = 0, lty = 2) +
@@ -3135,7 +3138,7 @@ prettyForestPlot = function(maf,
     drop_na() %>%
     summarise(percent_mutated = sum(is_mutated) / n() * 100) %>%
     dplyr::filter(gene %in% fish_test$gene) %>%
-    dplyr::mutate(gene = factor(gene, levels = levels(fish_test$gene))) %>%
+    dplyr::mutate(gene = factor(gene, levels = fish_test$gene)) %>%
     ggplot(aes(x = gene, y = percent_mutated, fill = comparison)) +
     geom_col(position = "dodge", width = 0.5) +
     xlab("") + ylab("% Mutated") +
@@ -3186,7 +3189,7 @@ prettyForestPlot = function(maf,
 #'
 #' @return Nothing
 #'
-#' @import dplyr circlize ComplexHeatmap ggplot2 stringr tibble 
+#' @import dplyr circlize ComplexHeatmap ggplot2 stringr tibble
 #' @export
 #'
 #' @examples
@@ -3662,7 +3665,7 @@ fancy_v_chrcount = function(this_sample_id,
 #' counting coding mutations (`coding_only`). Flat-file and augmented maf options can be toggled with `from_flatfile`
 #' and `use_augmented_maf`. Both are TRUE by default and should rarely be set to FALSE. Lastly, this plotting function
 #' also have convenient parameters for customizing the returned plot, e.g `plot_title`, `y_interval`, `hide_legend`, and`plot_subtitle`.
-#' 
+#'
 #' @param this_sample_id Sample to be plotted.
 #' @param maf_data Optional parameter with maf like df already loaded into R.
 #' @param maf_path Optional parameter with path to external maf like file.
@@ -3678,7 +3681,7 @@ fancy_v_chrcount = function(this_sample_id,
 #' @param use_augmented_maf Boolean statement if to use augmented maf, default is FALSE.
 #'
 #' @return A plot as a ggplot object (grob).
-#' 
+#'
 #' @import ggplot2 dplyr cowplot
 #' @export
 #'
@@ -3792,7 +3795,7 @@ fancy_snv_chrdistplot = function(this_sample_id,
 #' customizing the returned plot, e.g `plot_title`, `y_interval`, `hide_legend`, and`plot_subtitle` and `snp_colours`. lastly, it is also possible
 #' to control what variants are to be counted with `variant_select`. Default is deletions, insertions and duplications, c("DEL", "DUP", "INS"). Not that
 #' the variant types specified in this parameter must match with whatever is present in the corresponding `variant_type_col`.
-#' 
+#'
 #' @param this_sample_id Sample to be plotted.
 #' @param maf_data Optional parameter with maf like df already loaded into R.
 #' @param maf_path Optional parameter with path to external maf like file.
@@ -3813,7 +3816,7 @@ fancy_snv_chrdistplot = function(this_sample_id,
 #' @param use_augmented_maf Boolean statement if to use augmented maf, default is TRUE.
 #'
 #' @return A plot as a ggplot object (grob).
-#' 
+#'
 #' @import ggplot2 dplyr cowplot
 #' @export
 #'
@@ -3957,7 +3960,6 @@ fancy_v_count = function(this_sample_id,
 #' @export
 #'
 #' @examples
-#' 
 #' #Return a plot for one sample, with default parameters. 
 #' fancy_cnbar(this_sample_id = "HTMCP-01-06-00422-01A-01D")
 #' 
@@ -4080,7 +4082,7 @@ fancy_cnbar = function(this_sample_id,
 #' restrict the returned plot to any given chromosome. This is done with the `chr_select` parameter (default is all autosomes).
 #' In addition, plot aesthetics can also be controlled with `plot_title`, `plot_subtitle`, `scale_value`, `log10`, and `trim`.
 #' For more info on how to run with these parameters, refer to the parameter descriptions.
-#' 
+#'
 #'
 #' @param this_sample_id Sample to be plotted.
 #' @param maf_data Optional parameter with maf like df already loaded into R.
@@ -4096,7 +4098,7 @@ fancy_cnbar = function(this_sample_id,
 #' @param plot_subtitle Subtitle for created plot.
 #' @param scale_value Scale type for violin plot, accepted values are "area", "width", and "count", default is "count.
 #' @param log_10 Boolean statement for y-axis, default is TRUE.
-#' @param plot_trim If TRUE, trim the tails of the violins to the range of the data. If FALSE (default), don't trim the tails. 
+#' @param plot_trim If TRUE, trim the tails of the violins to the range of the data. If FALSE (default), don't trim the tails.
 #' @param chr_select vector of chromosomes to be included in plot, defaults to autosomes.
 #' @param coding_only Optional. Set to TRUE to restrict to plotting only coding mutations.
 #' @param from_flatfile If set to true the function will use flat files instead of the database.
@@ -4227,7 +4229,7 @@ fancy_v_sizedis = function(this_sample_id,
 #' In order to annotate the ideogram with genes, simply give the `gene_annotations` parameter a set of genes as a vector of characters or a data frame with gene names in the first column.
 #' Another useful parameter for restricting the plotted regions is to call the function with `intersect_regions`.
 #' This parameter takes a vector of characters or a data frame with regions that the plotted calls are restricted to.
-#' 
+#'
 #' @param this_sample_id Sample to be plotted (for multiple samples, see fancy_multisample_ideogram.
 #' @param gene_annotation Annotate ideogram with a set of genes. These genes can either be specified as a vector of characters or a data frame.
 #' @param seq_data Optional parameter with copy number df already loaded into R.
@@ -4252,7 +4254,7 @@ fancy_v_sizedis = function(this_sample_id,
 #' @param use_augmented_maf Boolean statement if to use augmented maf, default is FALSE.
 #'
 #' @return A plot as a ggplot object (grob).
-#' 
+#'
 #' @import ggplot2 dplyr cowplot
 #' @export
 #'
@@ -4378,7 +4380,7 @@ fancy_ideogram = function(this_sample_id,
 
       intersect_regions$start = as.numeric(intersect_regions$start)
       intersect_regions$end = as.numeric(intersect_regions$end)
-      
+
       if(!str_detect(intersect_regions$chrom[1], "chr")){
         intersect_regions = mutate(intersect_regions, chrom = paste0("chr", chrom))
       }
@@ -4836,9 +4838,9 @@ fancy_multisamp_ideogram = function(these_sample_ids,
 #' @param seq_path Optional parameter with path to external cn file.
 #' @param maf_data Optional parameter with maf like df already loaded into R.
 #' @param maf_path Optional parameter with path to external maf like file.
-#' 
+#'
 #' @return Nothing.
-#' 
+#'
 #' @rawNamespace import(gridExtra, except = "combine")
 #' @import ggplot2 dplyr
 #' @export
@@ -5307,7 +5309,7 @@ fancy_circos_plot = function(this_sample_id,
 #'
 #' @return A plot as a ggplot object (grob).
 #'
-#' @import dplyr ggplot2 cowplot 
+#' @import dplyr ggplot2 cowplot
 #' @export
 #'
 #' @examples
@@ -5416,7 +5418,7 @@ fancy_sv_sizedens = function(this_sample_id,
 #' metadata table with `these_samples_metadata`. For adding a comparison group to the returned plot, simply give another cohort/set of samples to the `comparison_group` parameter.
 #' Similarly to `these_sample_ids`, this parameter also expects a data frame with sample IDs in the first column. In addition, this plot can also add additional read-metrics such as
 #' mean values for all plotted metrics and corrected coverage. To enable these features, simply set `add_mean` and `add_corrected_coverage` to TRUE (default).
-#' 
+#'
 #' @param these_sample_ids Data frame with sample IDs (to be plotted) in the first column.
 #' @param metadata Optional argument, used to derive sample IDs if sample_table is Null.
 #' @param these_samples_metadata GAMBL metadata subset to the cases you want to process.
@@ -5556,7 +5558,7 @@ fancy_alignment_plot = function(these_sample_ids,
 }
 
 
-#' @title Plot Quality Control Metrics. 
+#' @title Plot Quality Control Metrics.
 #'
 #' @description Plot for visualizing QC metrics and allowing for grouping by different metadata columns.
 #'
@@ -5570,7 +5572,7 @@ fancy_alignment_plot = function(these_sample_ids,
 #' If an interactive plot is generated, it is also possible to dictate what information should be available in the plotted data points. Default for this parameter is sample ID and cohort.
 #' Sometimes it can also be useful to see how a subset of samples compares to another group; to do this one could call the function with a vector of additional sample IDs given to the `comparison_samples` parameter (see examples for more information).
 #' lastly, the plot can also be configured with custom plot title and axis labels (`plot_title` and `y_axis_lab`). For more information, see examples and parameter descriptions.
-#' 
+#'
 #' @param these_sample_ids Data frame with sample IDs (to be plotted) in the first column (has to be named sample_id).
 #' @param keep_cohort Optional parameter to be used when these_sample is NULL. Calls get_gambl_metadata() and filters on the cohort supplied in this parameter.
 #' @param keep_pathology Optional parameter to be used when these_sample is NULL. Calls get_gambl_metadata() and filters on the pathology supplied in this parameter.
@@ -5656,7 +5658,7 @@ fancy_qc_plot = function(these_sample_ids,
 
   if(!missing(these_samples_metadata)){
     these_sample_ids = dplyr::select(these_samples_metadata, sample_id) %>%
-      as.data.frame(strings.as.factors = FALSE) 
+      as.data.frame(strings.as.factors = FALSE)
   }
 
   #filter metadata on selected cohort/pathology
@@ -5818,7 +5820,7 @@ fancy_propcov_plot = function(these_sample_ids,
     }
 
     if(missing(keep_cohort) && missing(keep_pathology)){
-      these_sample_ids = dplyr::select(this_meta, sample_id) 
+      these_sample_ids = dplyr::select(this_meta, sample_id)
     }
   }
 
@@ -5869,7 +5871,7 @@ fancy_propcov_plot = function(these_sample_ids,
 }
 
 #' @title Proportional Metrics Plot.
-#' 
+#'
 #' @details Visualize proportional metrics for selected samples.
 #'
 #' @description This function takes all the available proportional quality control metrics and a vector of sample IDs (plotted on the x-ais) and plots the vlaues along the y-axis.
@@ -5879,7 +5881,7 @@ fancy_propcov_plot = function(these_sample_ids,
 #' If `these_samples_ids` and `these_samples_metadata` is not provided, the user can subset al GAMBL samples on the fly with `keep_cohort` and/or `keep_pathology`.
 #' This function also provides parameters for easy customization of the plot aesthetics. For example, the subtitle of the plot can easily be controlled with the `plot_subtitle` parameter.
 #' For usage examples and more information, refer to the parameter descriptions and examples in the fancy vignette.
-#' 
+#'
 #' @param these_sample_ids Data frame with sample IDs (to be plotted) in the first column.
 #' @param metadata Optional, user can provide a metadata df to subset sample IDs from.
 #' @param these_samples_metadata GAMBL metadata subset to the cases you want to process.
