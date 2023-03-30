@@ -410,7 +410,7 @@ populate_each_tool_result = function(tool,
 
 #' @title Read Merge Manta With Liftover.
 #'
-#' @description Takes a path to bedpe and runs liftover (`liftover_bedpe`) based on the original genome build of the bedpe.
+#' @description Takes a path to bedpe and runs liftover ([GAMBLR::liftover_bedpe]) based on the original genome build of the bedpe.
 #'
 #' @details This is a helper function that is not meant to be used routinely.
 #'
@@ -1059,7 +1059,7 @@ tidy_gene_expression = function(return_df = FALSE){
 #' Lastly, specify the sample IDs with `these_sample_ids`.
 #' For more information on how to use the optional parameters, refer to the parameter descriptions.
 #'
-#' @param file_details_df Optionally supply the data frame directly instead (e.g. from find_files_extract_wildcards).
+#' @param file_details_df Optionally supply the data frame directly instead (e.g. from [GAMBLR::find_files_extract_wildcards]).
 #' @param file_paths A vector of full file paths, e.g. the output of dir.
 #' @param tool_name The tool or pipeline that generated the files (should be the same for all).
 #' @param unix_group The unix group (should be the same for all).

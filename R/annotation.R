@@ -279,7 +279,7 @@ annotate_igh_breakpoints = function(annotated_df,
 #' @export
 #'
 #' @examples
-#' driver_ssm = annotate_driver_ssm(maf_df = maf,
+#' driver_ssm = annotate_driver_ssm(maf_df = grande_maf,
 #'                                  lymphoma_type = "DLBCL",
 #'                                  noncoding_regions=c("NFKBIZ"="chr3:101578206-101578365"))
 #'
@@ -327,7 +327,7 @@ annotate_driver_ssm = function(maf_df,
 #'
 #' @description Annotate a data frame of SV breakpoints represented in an extended BEDPE format.
 #'
-#' @details Specify a data frame with SVs (preferably the output from `get_manta_sv`) to the `sv_df` parameter and get back the same data frame with SV annotations.
+#' @details Specify a data frame with SVs (preferably the output from [GAMBLR::get_manta_sv]) to the `sv_df` parameter and get back the same data frame with SV annotations.
 #'
 #' @param sv_data A data frame of SVs. This should be the output of get_manta_sv. If you aren't using the database backend you can supply your own data frame in the format show below.
 #' Most of this data is directly from the bedpe files that are obtained by converting the Manta outputs from VCF.

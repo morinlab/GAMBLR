@@ -43,9 +43,11 @@ get_excluded_samples = function(tool_name = "slms-3"){
 #' @description Get MAF-format data frame for more than one patient.
 #'
 #' @details This function returns variants from a set of patients avoiding duplicated mutations from multiple samples from that patient (i.e. unique superset of variants).
-#' This is done either by combining the contents of individual MAF files or subset from a merged MAF (wraps get_ssm_by_samples).
-#' In most situations, this should never need to be run with `subset_from_merge = TRUE`. Instead use one of `get_coding_ssm` or `get_ssm_by_region`.
-#' This function expects either a vector of patient IDs (`thse_patients_ids`) or an already subset metadata table (`these_samples_metadata`).
+#' This is done either by combining the contents of individual MAF files or subset from a merged MAF (wraps [GAMBLR::get_ssm_by_samples]).
+#' In most situations, this should never need to be run with `subset_from_merge = TRUE`. Instead use one of [GAMBLR::get_coding_ssm] or [GAMBLR::get_ssm_by_region].
+#' This function expects either a vector of patient IDs (`thse_patients_ids`) or an already subset metadata table (`these_samples_metadata`). 
+#' Is this function not what you are looking for? Try one of the following, similar, functions; [GAMBLR::get_coding_ssm], [GAMBLR::get_coding_ssm_status],
+#' [GAMBLR::get_ssm_by_sample], [GAMBLR::get_ssm_by_samples], [GAMBLR::get_ssm_by_region], [GAMBLR::get_ssm_by_regions]
 #'
 #' @param these_patient_ids A vector of patient IDs that you want results for. The user can also use a metadata table that has been subset to the patient IDs of interest (`these_samples_metadata`).
 #' @param these_samples_metadata A metadata subset to contain the rows corresponding to the patients of interest. If the vector of patient IDs is missing (`these_patient_ids`), this function will default to all patient IDs in the metadata table given to this parameter. 
@@ -139,12 +141,14 @@ get_ssm_by_patients = function(these_patient_ids,
 #'
 #' @description Get MAF-format data frame for more than one sample and combine them together.
 #'
-#' @details This function internally runs `get_ssm_by_sample`. 
+#' @details This function internally runs [GAMBLR::get_ssm_by_sample]. 
 #' The user can either give the function a vector of sample IDs of interest with `these_sample_ids`,
 #' or use a metadata table (`these_samples_metadata`), already subset to the sample IDs of interest.
 #' In most situations, this should never need to be run with subset_from_merge = TRUE. 
-#' Instead use one of `get_coding_ssm` or `get_ssm_by_region`.
-#' See `get_ssm_by_sample` for more information.
+#' Instead use one of [GAMBLR::get_coding_ssm] or [GAMBLR::get_ssm_by_region].
+#' See [GAMBLR::get_ssm_by_sample] for more information.
+#' Is this function not what you are looking for? Try one of the following, similar, functions; [GAMBLR::get_coding_ssm], 
+#' [GAMBLR::get_coding_ssm_status], [GAMBLR::get_ssm_by_patients], [GAMBLR::get_ssm_by_sample], [GAMBLR::get_ssm_by_region], [GAMBLR::get_ssm_by_regions]
 #'
 #' @param these_sample_ids A vector of sample_id that you want results for.
 #' @param these_samples_metadata Optional metadata table. If provided, the function will return SSM calls for the sample IDs in the provided metadata table. 
@@ -359,7 +363,9 @@ get_ssm_by_samples = function(these_sample_ids,
 #'
 #' @details This was implemented to allow flexibility because there are some samples that we may want to use a different set of variants than those in the main GAMBL merge.
 #' The current use case is to allow a force_unmatched output to be used to replace the SSMs from the merge for samples with known contamination in the normal.
-#' This will also be useful to apply a blacklist to individual MAFs when coupled with annotate_ssm_blacklist.
+#' This will also be useful to apply a blacklist to individual MAFs when coupled with [GAMBLR::annotate_ssm_blacklist].
+#' Is this function not what you are looking for? Try one of the following, similar, functions; [GAMBLR::get_coding_ssm], [GAMBLR::get_coding_ssm_status], 
+#' [GAMBLR::get_ssm_by_patients], [GAMBLR::get_ssm_by_samples], [GAMBLR::get_ssm_by_region], [GAMBLR::get_ssm_by_regions]
 #'
 #' @param this_sample_id Required. The sample_id you want the data from.
 #' @param this_seq_type Required if not specifying these_samples_metadata. The seq_type of the sample you want data from.
@@ -1046,13 +1052,15 @@ add_prps_result = function(incoming_metadata){
 #'
 #' @description Layer on ICGC metadata from a supplemental table to fill in missing COO.
 #'
-#' @details INTERNAL FUNCTION called by `get_gambl_metadata`, not meant for out-of-package usage.
+#' @details INTERNAL FUNCTION called by [GAMBLR::get_gambl_metadata], not meant for out-of-package usage.
 #'
 #' @param incoming_metadata A metadata table (probably output from `get_gambl_metadata`).
 #'
 #' @return Metadata with layered information (ICGC).
 #'
 #' @import dplyr readr stringr
+#' 
+#' @noRd
 #'
 #' @examples
 #' my_meta = get_gambl_metadata()
@@ -1103,7 +1111,7 @@ add_icgc_metadata = function(incoming_metadata){
 #'
 #' @description Get the patient-centric clinical metadata.
 #'
-#' @details INTERNAL FUNCTION called by `get_gambl_metadata`, not meant for out-of-package usage.
+#' @details INTERNAL FUNCTION called by [GAMBLR::get_gambl_metadata], not meant for out-of-package usage.
 #'
 #' @param patient_ids Vector of patient IDs.
 #' @param time_unit Return follow-up times in one of three time units: year, month or day. Default is "year".
@@ -1114,6 +1122,8 @@ add_icgc_metadata = function(incoming_metadata){
 #' @return Data frame with one row for each patient_id.
 #'
 #' @import tidyr dplyr readr RMariaDB DBI
+#' 
+#' @noRd
 #'
 #' @examples
 #' outcome_df = get_gambl_outcomes()
@@ -1215,6 +1225,8 @@ get_gambl_outcomes = function(patient_ids,
 #' Therefore if you wish to post-filter the SVs we recommend doing so carefully after loading this data frame.
 #' Further, the input bedpe file is annotated with oncogenes and superenhancers from naive and germinal centre B-cells.
 #' You can subset to events affecting certain loci using the "oncogenes" argument.
+#' Is this function not what you are looking for? Try one of the following, similar, functions; 
+#' [GAMBLR::get_manta_sv], [GAMBLR::get_manta_sv_by_sample], [GAMBLR::get_manta_sv_by_samples]
 #'
 #' @param min_vaf The minimum tumour VAF for a SV to be returned. Recommended: 0. (default: 0)
 #' @param these_sample_ids A character vector of tumour sample IDs you wish to retrieve SVs for.
@@ -1294,14 +1306,16 @@ get_combined_sv = function(min_vaf = 0,
 #' give this parameter one sample ID, as a string (or a vector of characters). The user can also call the `these_samples_metadata`
 #' parameter to make use of an already subset metadata table. In this case, the returned calls will be restricted to the sample_ids 
 #' within that data frame. This function relies on a set of specific functions to be successful in returning SV calls for any 
-#' available sample in gambl. First, this function calls `get_combined_sv` and performs an `anit_join` with the full metadata to 
-#' identify what samples are currently missing from the return of `get_combined_sv`. This function then calls `get_manta_sv_by_samples` 
-#' (wrapper function for `get_manta_sv_by_sample`) on the subset of the missing samples. The merged calls are subject to any 
+#' available sample in gambl. First, this function calls [GAMBLR::get_combined_sv] and performs an `anit_join` with the full metadata to 
+#' identify what samples are currently missing from the return of [GAMBLR::get_combined_sv]. This function then calls [GAMBLR::get_manta_sv_by_samples] 
+#' (wrapper function for [GAMBLR::get_manta_sv_by_sample]) on the subset of the missing samples. The merged calls are subject to any 
 #' filtering that is specified within this function. This function can also restrict the returned calls to any genomic regions 
 #' specified within `chromosome`, `qstart`, `qend`, or the complete region specified under `region` (in chr:start-end format). 
 #' Useful filtering parameters are also available, use `min_vaf` to set the minimum tumour VAF for a SV to be returned and `min_score` 
 #' to set the lowest Manta somatic score for a SV to be returned. `pair_status` can be used to only return variants that are 
 #' annotated with PASS in the filtering column (VCF).
+#' Is this function not what you are looking for? Try one of the following, similar, functions; 
+#' [GAMBLR::get_combined_sv], [GAMBLR::get_manta_sv_by_sample], [GAMBLR::get_manta_sv_by_samples]
 #'
 #' @param these_sample_ids A vector of multiple sample_id (or a single sample ID as a string) that you want results for.
 #' @param these_samples_metadata A metadata table to auto-subset the data to samples in that table before returning.
@@ -1637,6 +1651,7 @@ get_lymphgen = function(these_samples_metadata,
 #'
 #' @details This function returns CN states for the specified regions.
 #' For how to specify regions, refer to the parameter descriptions and function examples.
+#' Is this function not what you are looking for? Try one of the following, similar, functions; [GAMBLR::assign_cn_to_ssm], [GAMBLR::get_cn_segments], [GAMBLR::get_sample_cn_segments]
 #'
 #' @param regions_list A vector of regions in the format chrom:start-end.
 #' @param regions_bed A bed file with one row for each region you want to determine the CN state from.
@@ -1739,6 +1754,7 @@ get_cn_states = function(regions_list,
 #' @details This function returns CN segments for samples. This works for single sample or multiple samples.
 #' For multiple samples, remember to set the Boolean parameter `multiple_samples = TRUE` and give the `sample_lsit` a vector of characters with one sample ID per row.
 #' For more information on how this function can be run in different ways, refer to the parameter descriptions, examples and vignettes.
+#' Is this function not what you are looking for? Try one of the following, similar, functions; [GAMBLR::assign_cn_to_ssm], [GAMBLR::get_cn_segments], [GAMBLR::get_cn_states],  
 #'
 #' @param this_sample_id Optional argument, single sample_id for the sample to retrieve segments for.
 #' @param multiple_samples Set to TRUE to return cn segments for multiple samples specified in `samples_list` parameter. Default is FALSE.
@@ -1882,6 +1898,7 @@ get_sample_cn_segments = function(this_sample_id,
 #' For example, the user can provide the full region in a "region" format (chr:start-end) to the `region` parameter.
 #' Or, the user can provide chromosome, start and end coordinates individually with `chr`, `start`, and `end` parameters.
 #' For more usage examples, refer to the parameter descriptions and examples in the vignettes.
+#' Is this function not what you are looking for? Try one of the following, similar, functions; [GAMBLR::assign_cn_to_ssm], [GAMBLR::get_cn_states], [GAMBLR::get_sample_cn_segments]
 #'
 #' @param region Region formatted like chrX:1234-5678 or X:1234-56789.
 #' @param chromosome The chromosome you are restricting to. Required parameter if region is not specified.
@@ -2040,11 +2057,11 @@ get_cn_segments = function(region,
 #' @return A table.
 #'
 #' @import RMariaDB DBI
+#' 
+#' @noRd
 #'
 #' @examples
-#' \dontrun{
 #' table_up = append_to_table("my_table", "my_df")
-#' }
 #'
 append_to_table = function(table_name,
                            data_df){
@@ -2128,8 +2145,11 @@ get_ashm_count_matrix = function(regions_bed,
 #'
 #' @description Efficiently retrieve all mutations across a range of genomic regions.
 #'
-#' @details This function internally calls `get_ssm_by_region` to retrieve SSM calls for the specified regions.
-#' See parameter descriptions for `get_ssm_by_region` for more information on how the different parameters can be called.
+#' @details This function internally calls [GAMBLR::get_ssm_by_region] to retrieve SSM calls for the specified regions.
+#' See parameter descriptions for [GAMBLR::get_ssm_by_region] for more information on how the different parameters can be called.
+#' Is this function not what you are looking for? Try one of the following, similar, functions; [GAMBLR::get_coding_ssm], 
+#' [GAMBLR::get_coding_ssm_status], [GAMBLR::get_ssm_by_patients], [GAMBLR::get_ssm_by_sample], 
+#' [GAMBLR::get_ssm_by_samples], [GAMBLR::get_ssm_by_region]
 #'
 #' @param regions_list Either provide a vector of regions in the chr:start-end format OR.
 #' @param regions_bed Better yet, provide a bed file with the coordinates you want to retrieve.
@@ -2237,6 +2257,8 @@ get_ssm_by_regions = function(regions_list,
 #' There are multiple ways a region can be specified. For example, the user can provide the full region in a "region" format (chr:start-end) to the `region` parameter.
 #' Or, the user can provide chromosome, start and end coordinates individually with `chr`, `start`, and `end` parameters.
 #' For more usage examples, refer to the parameter descriptions and examples in the vignettes.
+#' Is this function not what you are looking for? Try one of the following, similar, functions; [GAMBLR::get_coding_ssm], 
+#' [GAMBLR::get_coding_ssm_status], [GAMBLR::get_ssm_by_patients], [GAMBLR::get_ssm_by_sample], [GAMBLR::get_ssm_by_samples], [GAMBLR::get_ssm_by_regions]
 #'
 #' @param chromosome The chromosome you are restricting to (with or without a chr prefix).
 #' @param qstart Query start coordinate of the range you are restricting to.
@@ -2460,13 +2482,15 @@ get_ssm_by_region = function(chromosome,
 #'
 #' @details Effectively retrieve coding SSM calls. Multiple filtering parameters are available for this function.
 #' For more information on how to implement the filtering parameters, refer to the parameter descriptions as well as examples in the vignettes.
+#' Is this function not what you are looking for? Try one of the following, similar, functions; [GAMBLR::get_coding_ssm], [GAMBLR::get_coding_ssm_status],
+#' [GAMBLR::get_ssm_by_patients], [GAMBLR::get_ssm_by_sample], [GAMBLR::get_ssm_by_samples], [GAMBLR::get_ssm_by_region], [GAMBLR::get_ssm_by_regions]
 #'
 #' @param limit_cohort Supply this to restrict mutations to one or more cohorts in a vector.
 #' @param exclude_cohort  Supply this to exclude mutations from one or more cohorts in a vector.
 #' @param limit_pathology Supply this to restrict mutations to one pathology.
 #' @param limit_samples Supply this to restrict mutations to a vector of sample_id (instead of subsetting using the provided metadata)
 #' @param these_samples_metadata Supply a metadata table to auto-subset the data to samples in that table before returning
-#' @param force_unmatched_samples Optional argument for forcing unmatched samples, using get_ssm_by_samples.
+#' @param force_unmatched_samples Optional argument for forcing unmatched samples, using [GAMBLR::get_ssm_by_samples].
 #' @param projection Reference genome build for the coordinates in the MAF file. The default is hg19 genome build.
 #' @param seq_type The seq_type you want back, default is genome.
 #' @param basic_columns Set to FALSE to override the default behavior of returning only the first 45 columns of MAF data.
@@ -2877,7 +2901,9 @@ get_gene_expression = function(metadata,
 #'
 #' @description Load the manta output for a set of samples.
 #'
-#' @details This is a convenience wrapper function for get_manta_sv_by_sample (and called by get_manta_sv).
+#' @details This is a convenience wrapper function for [GAMBLR::get_manta_sv_by_sample] (and called by [GAMBLR::get_manta_sv]).
+#' Is this function not what you are looking for? Try one of the following, similar, functions; [GAMBLR::get_combined_sv],
+#' [GAMBLR::get_manta_sv], [GAMBLR::get_manta_sv_by_sample]
 #'
 #' @param these_samples_metadata The only required parameter is a metadata table (data frame) that must contain a row for each sample you want the data from. The additional columns the data frame needs to contain, besides sample_id, are: unix_group, genome_build, seq_type, pairing_status.
 #' @param min_vaf The minimum tumour VAF for a SV to be returned. Default value is 0.1.
@@ -2969,11 +2995,12 @@ get_manta_sv_by_samples = function(these_samples_metadata,
 #' @description Load the manta output (from individual flat file) for 1 sample.
 #'
 #' @details This function is used for retrieving Manta results (structural variants) from individual flat-files (one sample). 
-#' For multiple samples, please see `get_manta_sv_by_samples` (a convenience wrapper function for `get_manta_by_sample`). 
+#' For multiple samples, please see [GAMBLR::get_manta_sv_by_samples] (a convenience wrapper function for [GAMBLR::get_manta_by_sample]). 
 #' Additional columns are extracted from the VCF column and standard filtering options are available. 
 #' This function also performs a lift-over to selected projection, if needed. 
 #' Please note, if `force_lift` is set to FALSE, an extra column will be added that states if the returned variant calls need to be lifted. 
 #' The value for this column is returned TRUE (for all rows) if the available genome projection for the selected sample does not match the selected projection (i.e requiring the user to manually lift the calls).
+#' Is this function not what you are looking for? Try one of the following, similar, functions; [GAMBLR::get_combined_sv], [GAMBLR::get_manta_sv], [GAMBLR::get_manta_sv_by_samples]
 #'
 #' @param this_sample_id The single sample ID you want to obtain the result from. If this parameter is not supplied, the function will retrieve sample ID from the supplied metadata table (these_samples_metadata).
 #' @param these_samples_metadata A metadata table containing metadata for this_sample_id, or sample of interest. This parameter is required.

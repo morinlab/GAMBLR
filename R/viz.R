@@ -11,7 +11,7 @@ colour_aliases = list("COO_consensus" = "coo", "COO" = "coo", "DHITsig_consensus
 #' @title Rainfall Plot
 #'
 #' @description Plot a rainfall plot for one sample. This function takes in the MAF data frame, or path to a custom MAF file.
-#' If non are specified, the SSM will be obtained through GAMBLR directly (with `get_ssm_by_region`).
+#' If non are specified, the SSM will be obtained through GAMBLR directly (with [GAMBLR::get_ssm_by_region]).
 #'
 #' @details Create a sample-level rainfall plot visualizing single nucleotide substitutions mutations for selected chromosomes.
 #'
@@ -627,7 +627,7 @@ pretty_lollipop_plot = function(maf_df,
 #'
 #' @description Count hypermutated bins and generate heatmap/cluster the data.
 #'
-#' @details This function takes a metadata table with `these_samples_metadata` parameter and internally calls `calc_mutation_frequency_sliding_windows` (that internally calls `get_ssm_by_regions`)
+#' @details This function takes a metadata table with `these_samples_metadata` parameter and internally calls [GAMBLR::calc_mutation_frequency_sliding_windows] (that internally calls [GAMBLR::get_ssm_by_regions])
 #' to retrieve mutations for plotting. This plotting function has a variety of useful parameters, providing many customizable plotting options. For more details on how these parameters can be used,
 #' and extended usage examples, refer to the SSM tutorial vignette section 1.4.9.
 #'
@@ -855,7 +855,8 @@ get_mutation_frequency_bin_matrix = function(regions,
 #' @description Plot a heatmap comparing the VAF of mutations in T1/T2 pairs.
 #'
 #' @details Currently unfinished plotting function. Thus, I have removed it from export until it's in a state where it can be included in GAMBLR.
-#' Parameter descriptions need to be updated so that the origin of the incoming data is clear. Examples would also need to be added before this function gets exported into NAMESPACE.
+#' Parameter descriptions need to be updated so that the origin of the incoming data is clear. 
+#' Examples would also need to be added before this function gets exported into NAMESPACE.
 #'
 #' @param maf1 Data frame of simple somatic mutations at time point A.
 #' @param maf2 Data frame of simple somatic mutations at time point B.
@@ -1012,7 +1013,7 @@ plot_mutation_dynamics_heatmap = function(maf1,
 }
 
 
-#' INTERNAL FUNCTION called by plot_sample_circos and get_mutation_frequency_bin_matrix, not meant for out-of-package usage.
+#' INTERNAL FUNCTION called by [GAMBLR::plot_sample_circos] and [GAMBLR::get_mutation_frequency_bin_matrix], not meant for out-of-package usage.
 #' Assign a colour palette to metadata columns automatically and consistently.
 #'
 #' @param metadataColumns Names of the metadata columns to assign colours for.
@@ -1025,7 +1026,9 @@ plot_mutation_dynamics_heatmap = function(maf1,
 #' @return Either a vector or list of colours.
 #'
 #' @import dplyr ggsci
-#'
+#' 
+#' @noRd
+#' 
 #' @examples
 #' #get metadata
 #' all_meta = get_gambl_metadata()
@@ -2021,11 +2024,11 @@ prettyOncoplot = function(maftools_obj,
 
 #' @title Side-by-side Oncoplots
 #'
-#' @description `prettyCoOncoplot` returns ggplot-compatible figure of 2 prettyOncoplots side-by-side.
+#' @description `prettyCoOncoplot` returns ggplot-compatible figure of 2 [GAMBLR::prettyOncoplot] side-by-side.
 #'
 #' @details This function will generate a graphic displaying 2 oncoplots side-by-side. Optionally user can
 #' annotate each oncoplot with it's own title that will be displayed at the top. All the arguments
-#' recognized by prettyOncoplot are supported and can be specified when calling this function.
+#' recognized by [GAMBLR::prettyOncoplot] are supported and can be specified when calling this function.
 #' For both oncoplots the same specified parameters will be applied (e.g. genes to display, split columns,
 #' font size, top annotation etc). If the provided argument is not recognized by prettyOncoplot,
 #' it will be discarded. If you want a specific order of oncoplots on the left and right, please
@@ -2175,7 +2178,7 @@ prettyCoOncoplot = function(maf,
 #' The user also needs to specify a vector of names (`regions_to_display`) to further control what regions are to be displayed on the returned plot.
 #' It is also possible to exclude specific classifications from the metadata file. This is achieved with `exclude_classifications`.
 #' In addition the user can also use the `metadata` parameter to use an already subset and arranged metadata table.
-#' This function will call `get_ssm_by_region` if `maf_data` is not called. For more info, refer to the parameter descriptions of this function.
+#' This function will call [GAMBLR::get_ssm_by_region] if `maf_data` is not called. For more info, refer to the parameter descriptions of this function.
 #'
 #' @param regions_bed Bed file with chromosome coordinates, should contain columns chr, start, end, name (with these exact names).
 #' @param regions_to_display Optional vector of names from default regions_bed to use.
@@ -2312,7 +2315,7 @@ ashm_multi_rainbow_plot = function(regions_bed,
 #'
 #' @description Create a genome-wide copy number plot for one sample and (optionally) display mutation VAF.
 #'
-#' @details This function takes a sample ID and internally calls `assign_cn_to_ssm` to get copy number segments for plotting.
+#' @details This function takes a sample ID and internally calls [GAMBLR::assign_cn_to_ssm] to get copy number segments for plotting.
 #' This plot is visualizing mutation VAFs per default, this can be turned off with setting `just_segments` to TRUE.
 #' This only plots the segments. The user can also restrict the plotted segments to coding regions. To do so, set `coding_only= TRUE`,
 #' and then specify the genes of interest (coding regions) with the `genes_to_label` (vector of genes).
@@ -2543,13 +2546,15 @@ ashm_rainbow_plot = function(mutations_maf,
 }
 
 
-#' This function doesn't do anything yet, thus, I ahve removed it from being exported to NAMESPACE (for now).
+#' This function doesn't do anything yet, thus, it's not currently exported to NAMESPACE.
 #'
 #' @param mafs TODO
 #' @param this_sample_id TODO
 #' @param genes TODO
 #' @param show_noncoding TODO
 #' @param detail TODO
+#' 
+#' @noRd
 #'
 plot_multi_timepoint = function(mafs,
                                 this_sample_id,
@@ -2898,7 +2903,7 @@ theme_Morons = function(base_size = 14,
 #' @param comparison_column Mandatory: the name of the metadata column containing the comparison values.
 #' @param rm_na_samples Set to TRUE to remove 0 mutation samples. Default is FALSE.
 #' @param comparison_values Optional: If the comparison column contains more than two values or is not a factor, specify a character vector of length two in the order you would like the factor levels to be set, reference group first.
-#' @param separate_hotspots Optional: If you would like to treat hotspots separately from other mutations in any gene. Requires that the maf file is annotated with GAMBLR::annotate_hotspots.
+#' @param separate_hotspots Optional: If you would like to treat hotspots separately from other mutations in any gene. Requires that the maf file is annotated with [GAMBLR::annotate_hotspots].
 #' @param comparison_name Optional: Specify the legend title if different from the comparison column name.
 #' @param custom_colours Optional: Specify a named vector of colours that match the values in the comparison column.
 #' @param custom_labels Optional: Specify custom labels for the legend categories. Must be in the same order as comparison_values.
@@ -3487,14 +3492,14 @@ splendidHeatmap = function(this_matrix,
 #' This function can plot both Structural Variants (SV) and Simple Shared Motifs (SSM).
 #' It plots SVs per default and SSM can be added with setting `ssm = TRUE`.
 #' This plot can also be restricted to only show coding mutations. To do so, set `coding_only` to TRUE.
-#' In addition, the returned plot can also be superimposed with a sample-specific mean coverage (from collate_results).
+#' In addition, the returned plot can also be superimposed with a sample-specific mean coverage (from [GAMBLR::collate_results]).
 #' To do so, set `add_qc_metric` to TRUE. A collection of parameters for customizing the returned plot are also available.
 #' e.g `plot_title`, `y_interval`, `hide_legend`, and `plot_subtitle`.
 #'
 #' @param this_sample_id Sample to be plotted.
 #' @param maf_data Optional parameter with maf like df already loaded into R.
 #' @param maf_path Optional parameter with path to external maf like file.
-#' @param ssm Set to FALSE to get plotting data from get_combined_sv (SVs). Default value is TRUE (plots SSM retrieved from annotate_cn_by_ssm$maf)
+#' @param ssm Set to FALSE to get plotting data from [GAMBLR::get_combined_sv] (SVs). Default value is TRUE (plots SSM retrieved from annotate_cn_by_ssm$maf)
 #' @param projection Genome build for returned variants (only applicable for ssm = FALSE)
 #' @param min_vaf The minimum tumour VAF for a SV to be returned. Recommended: 0 (only applicable for ssm = FALSE).
 #' @param variant_type_col Index of column holding Variant Type (to be used with either maf_data or maf_path).
@@ -3656,7 +3661,7 @@ fancy_v_chrcount = function(this_sample_id,
 #' @description Visualizing the number of SNVs per chromosome.
 #'
 #' @details This function takes on an already loaded maf-like data frame, or a path to the maf file of interest.
-#' In addition, the user can also give this function a sample ID and the function will run assign_cn_to_ssm
+#' In addition, the user can also give this function a sample ID and the function will run [GAMBLR::assign_cn_to_ssm]
 #' to get data for plotting. If a maf file or data frame is used, the user has the chance to specify what column
 #' that holds the Variant Type information (`variant_type_col`), in addition the user can also specify what column
 #' in the incoming maf that is corresponding to the chromosome annotations. This function also includes useful subsetting
@@ -3787,7 +3792,7 @@ fancy_snv_chrdistplot = function(this_sample_id,
 #' Convenience parameters for restricting the returned plot are available. For example, with `ssm` (Boolean)
 #' you can toggle if the plot will be in respect to SSM (`ssm = TRUE`) or if you wish to count SVs (`ssm = FALSE`).
 #' In addition, this plot can also accept a variety of incoming data types. Either, you supply the function with a sample ID
-#' (`this_sample_id`) and the function will retrieve data using `assign_cn_to_ssm` or `get_combined_sv` (depending on how the `ssm` parameter is used).
+#' (`this_sample_id`) and the function will retrieve data using [GAMBLR::assign_cn_to_ssm] or [GAMBLR::get_combined_sv] (depending on how the `ssm` parameter is used).
 #' This function also supports a maf or maf-like data frame directly, this is done with `maf_data` or `maf_path`. If data is supplied with either of these parameters,
 #' the user can specify what column holds the variant type information as well as chromosome information (`variant_type_col` and `chromosome_col`).
 #' Restricting the plot to coding mutations is done with `coding_only = TRUE`. Flat-file and augmented maf options can be toggled with `from_flatfile`
@@ -3930,7 +3935,7 @@ fancy_v_count = function(this_sample_id,
 #' @description Generate a bar plot visualizing sample-specific copy number states and affected bases for each CN segment.
 #'
 #' @details `fancy_cnbar` visualizes copy number (CN) states on sample-level. Similarly to other fancy_x_plots this function
-#' accepts either a sample ID, for which the function will get copy number states with `get_sample_cn_states`. The function
+#' accepts either a sample ID, for which the function will get copy number states with [GAMBLR::get_sample_cn_states]. The function
 #' can also accept an already loaded seq file given to the `seq_data` parameter. It can also load a seq file with the `seq_path`
 #' parameter. If the user calls either `seq_data` or `seq_path`, there are a collection of parameters available for specifying
 #' the relevant columns in the given data frame (`chrom_col`, `starat_col`, `end_col`, `cn_col`). It is also possible to
@@ -4946,14 +4951,14 @@ comp_report = function(this_sample_id,
 #'
 #' @details This function is using RCircos to create sample-level cirocs plots, annotating SVs and SSM with the potential of adding gene annotations.
 #' To control what variants are to be plotted, simply use the two Boolean parameters; `ssm_calls` and `sv_calls` (both TRUE by default).
-#' Provide the sample ID of interest in with the `this_sample_id` parameter. This function calls `assing_cn_to_ssm` and `get_combined_sv` to retrieve data for plotting.
+#' Provide the sample ID of interest in with the `this_sample_id` parameter. This function calls [GAMBLR::assing_cn_to_ssm] and [GAMBLR::get_combined_sv] to retrieve data for plotting.
 #' Since this function does not create a grob, but rather outputs a rendered PDF/PNG, the user has to provide an output path with the `out` parameter.
 #' In addition, the user can control the output format. For PDF, set `pdf` to TRUE (default) and to export the created plot as PNG, set the same parameter to FALSE.
 #' This function also has convenient filtering parameters available, see parameter descriptions for more information and how to properly use the filtering parameters.
 #' Lastly, this plot can also highlight genes of interest. To do so, provide a data frame (comparable to the return from `gene_to_region(return_as = "bed")`) to the `gene_list` parameter.
 #'
 #' @param this_sample_id Sample to be plotted.
-#' @param gene_list Optional parameter to annotate genes on the circos plot from a data frame of genes. Is compatible with gene_to_region (return_as = "bed") output format. See examples.
+#' @param gene_list Optional parameter to annotate genes on the circos plot from a data frame of genes. Is compatible with [GAMBLR::gene_to_region] (return_as = "bed") output format. See examples.
 #' @param ssm_calls Boolean parameter for plotting ssm. Default is TRUE.
 #' @param sv_calls Boolean parameter for plotting SVs, default is TRUE.
 #' @param chr_select Optional argument for subset on selected chromosomes, default is all autosomes.
@@ -5284,7 +5289,7 @@ fancy_circos_plot = function(this_sample_id,
 #' For example, it is possible to subset the included variants to a specific VAF threshold with `VAF_cutoff`. The `size_cutoff` is another parameter
 #' for filtering the variants on set variant sizes, the default for this parameter is to only include variants of at least 50bp.
 #' This function takes either a sample ID (`this_sample_id`) or an already loaded data frame (`maf_data` or a path to a maf-like file with `maf_path`).
-#' If `this_sample_id` is called, the function will run `GAMBLR::get_combined_sv` to retrieve SV calls.
+#' If `this_sample_id` is called, the function will run [GAMBLR::get_combined_sv] to retrieve SV calls.
 #' If either of the `maf` parameters are used, note that it's possible to specify the columns of interest;
 #' (`chrom_a_col`, `start_a_col`, `end_a_col` and `variant_type_col`), allowing this function to work with any maf-like data frames.
 #' This function also allows the user to customize the returned plot. For more info on how to do this, please refer to the aesthetic
@@ -5885,8 +5890,8 @@ fancy_propcov_plot = function(these_sample_ids,
 #' @param these_sample_ids Data frame with sample IDs (to be plotted) in the first column.
 #' @param metadata Optional, user can provide a metadata df to subset sample IDs from.
 #' @param these_samples_metadata GAMBL metadata subset to the cases you want to process.
-#' @param keep_cohort Optional parameter to be used when these_sample is NULL. Calls get_gambl_metadata() and filters on the cohort supplied in this parameter.
-#' @param keep_pathology Optional parameter to be used when these_sample is NULL. Calls get_gambl_metadata() and filters on the pathology supplied in this parameter.
+#' @param keep_cohort Optional parameter to be used when these_sample is NULL. Calls [GAMBLR::get_gambl_metadata] and filters on the cohort supplied in this parameter.
+#' @param keep_pathology Optional parameter to be used when these_sample is NULL. Calls [GAMBLR::get_gambl_metadata] and filters on the pathology supplied in this parameter.
 #' @param seq_type Selected seq type for incoming QC metrics.
 #' @param plot_subtitle Plotting parameter, subtitle of generated plot.
 #'

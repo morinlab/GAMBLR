@@ -2,10 +2,10 @@
 #'
 #' @description Initialize a new cBioPortal instance or update existing portal data set, can also be used to retrieve sample ids included in study.
 #'
-#' @details This function internally calls `get_coding_ssm` to retrieve coding mutations to be included in the study (if `overwrite = TRUE`).
+#' @details This function internally calls [GAMBLR::get_coding_ssm] to retrieve coding mutations to be included in the study (if `overwrite = TRUE`).
 #' In addition, this function also creates and sets up the proper folder hierarchy and writes the files necessary to import a new cBioPortal study.
-#' Before a study is ready to be imported to cBioPortal, the user also needs to run `setup_fusions` and `finalize_study`.
-#' Optionally the user can also run `study_check` to ensure all samples described by the "clinical" file are included in the study.
+#' Before a study is ready to be imported to cBioPortal, the user also needs to run [GAMBLR::setup_fusions] and [GAMBLR::finalize_study].
+#' Optionally the user can also run [GAMBLR::study_check] to ensure all samples described by the "clinical" file are included in the study.
 #' Also, note that the parameters chosen for this function have to match the same parameters called for any subsequent study function calls.
 #'
 #' @param seq_type_filter the seq type you are setting up a study for, default is "genome".
@@ -124,10 +124,10 @@ setup_study = function(seq_type_filter = "genome",
 #'
 #' @description Annotate SVs and create the input for fusions to be displayed in cBioPortal instance.
 #'
-#' @details This function calls `get_combined_sv` and runs `annotate_sv` on the returned data frame.
-#' Should be run as the next step after running `setup_study`. Note that the parameters called with this function
-#' has to match the parameter arguments of `setup_study`, i.e if `short_name` is for `setup_study` is "GAMBL",
-#' then the `short_name` in `setup_fusions` also has to be "GAMBL", etc.
+#' @details This function calls [GAMBLR::get_combined_sv] and runs [GAMBLR::annotate_sv] on the returned data frame.
+#' Should be run as the next step after running [GAMBLR::setup_study]. Note that the parameters called with this function
+#' has to match the parameter arguments of [GAMBLR::setup_study], i.e if `short_name` is for [GAMBLR::setup_study] is "GAMBL",
+#' then the `short_name` in [GAMBLR::setup_fusions] also has to be "GAMBL", etc.
 #'
 #' @param short_name A concise name for your portal project.
 #' @param human_friendly_name A slightly more verbose name for your project.
@@ -254,8 +254,8 @@ setup_fusions = function(short_name = "GAMBL",
 #' @description Finish setting up a new cBioPortal instance or updating an existing portal data set.
 #'
 #' @details This function should be run as the last (or third step) in setting up a new cBioPortal instance.
-#' The functions that should be run prior to these functions are; `setup_study` and `setup_fusions`.
-#' `finalize_study` creates all the necessary tables and metadata files (case lists) that are required to import a new study into cBioPortal.
+#' The functions that should be run prior to these functions are; [GAMBLR::setup_study] and [GAMBLR::setup_fusions].
+#' [GAMBLR::finalize_study] creates all the necessary tables and metadata files (case lists) that are required to import a new study into cBioPortal.
 #' Note, that all parameter arguments used in this function have to match the same parameter arguments for the previously run functions (`setup_study` and `setup_fusions`).
 #'
 #' @param seq_type_filter the seq type you are setting up a study for, default is "genome".
@@ -364,7 +364,7 @@ finalize_study = function(seq_type_filter = "genome",
 #' @details This function was designed to ensure that all the sample IDs described in the maf are actually present in the clinical files.
 #' If this is not the case, the function will notify the user what samples are found in the case list that are not described in the clinical file.
 #' The function then sub-sets the case list to only include samples from the clinical file.
-#' Note that the `project_name` has to match what is specified for the previously run functions (i.e `setup_study`, `setup_fusions` and `finalize_study`).
+#' Note that the `project_name` has to match what is specified for the previously run functions (i.e [GAMBLR::setup_study], [GAMBLR::setup_fusions] and [GAMBLR::vfinalize_study]).
 #'
 #' @param data_clinical_samples_path Path to clinical file.
 #' @param data_fusions_path Path to data_fusion file from setup_fusions.
@@ -622,7 +622,7 @@ get_study_info = function(dir,
 #'
 #' @description Wrapper function for creating a import-ready cBioPortal study.
 #'
-#' @details This function internally calls `setup_study`, `setup_fusions`, `finalize_study` and `study_check` to generate all necessary files for importing a study into cBioPortal.
+#' @details This function internally calls [GAMBLR::setup_study], [GAMBLR::setup_fusions], [GAMBLR::finalize_study] and [GAMBLR::study_check] to generate all necessary files for importing a study into cBioPortal.
 #' This function was developed to streamline this step and at the same time ensure that the study information and selected data type is consistent throughout the individual steps of generating a study.
 #' In addition, the user can also control if the generated study should be checked for sample IDs in case lists that are not described in the clinical file.
 #' This potentially will prevent an annoying error that prevents the study to be imported into the active cBioPortal instance, default is TRUE.
@@ -732,7 +732,7 @@ cbioportal_create = function(this_seqtype = "genome",
 #' @details This function takes a set of genes with the `these_genes` (character of vectors) parameter and returns expression data.
 #' Expression data is then formatted to match the expected format for import to a cBioPortal study.
 #' If no genes are provided, the function will default to all genes that are defined in the `lymphoma_genes` bundled data.
-#' This function internally calls `get_gene_expression` for returning expression data as outlined above.
+#' This function internally calls [GAMBLR::get_gene_expression] for returning expression data as outlined above.
 #'
 #' @param project_name Unique ID for your project.
 #' @param clinical_file_path The path to the study specific clinical file (data_clinical_samples.txt).
