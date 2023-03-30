@@ -45,7 +45,7 @@ Final_purity is the finalized purity estimation per mutation after considering d
 Annotate a MAF with segmented absolute copy number data and added additional columns (VAF, Ploidy and Final_purity).
 }
 \details{
-This function takes a sample ID with the \code{this_sample_id} parameter and calls \code{assign_cn_to_ssm} to get CN information.
+This function takes a sample ID with the \code{this_sample_id} parameter and calls \link{assign_cn_to_ssm} to get CN information.
 The user can also use an already loaded maf file with \code{maf_df}. In addition, a path to the maf/seq file of interest can also be passed to this function with
 \code{in_maf} and \code{in_seg}. To visualize VAF and purity distributions, set the \code{show_plots} to TRUE (default is FALSE).
 For more information on how to run this function with the parameters at hand, refer to the parameter descriptions and function examples.

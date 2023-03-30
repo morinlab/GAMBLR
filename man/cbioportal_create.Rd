@@ -48,7 +48,7 @@ Nothing. Rather, this function generates all files necessary for successfully im
 Wrapper function for creating a import-ready cBioPortal study.
 }
 \details{
-This function internally calls \code{setup_study}, \code{setup_fusions}, \code{finalize_study} and \code{study_check} to generate all necessary files for importing a study into cBioPortal.
+This function internally calls \link{setup_study}, \link{setup_fusions}, \link{finalize_study} and \link{study_check} to generate all necessary files for importing a study into cBioPortal.
 This function was developed to streamline this step and at the same time ensure that the study information and selected data type is consistent throughout the individual steps of generating a study.
 In addition, the user can also control if the generated study should be checked for sample IDs in case lists that are not described in the clinical file.
 This potentially will prevent an annoying error that prevents the study to be imported into the active cBioPortal instance, default is TRUE.

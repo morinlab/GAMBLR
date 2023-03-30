@@ -53,7 +53,7 @@ Generate a bar plot visualizing sample-specific copy number states and affected 
 }
 \details{
 \code{fancy_cnbar} visualizes copy number (CN) states on sample-level. Similarly to other fancy_x_plots this function
-accepts either a sample ID, for which the function will get copy number states with \code{get_sample_cn_states}. The function
+accepts either a sample ID, for which the function will get copy number states with \link{get_sample_cn_states}. The function
 can also accept an already loaded seq file given to the \code{seq_data} parameter. It can also load a seq file with the \code{seq_path}
 parameter. If the user calls either \code{seq_data} or \code{seq_path}, there are a collection of parameters available for specifying
 the relevant columns in the given data frame (\code{chrom_col}, \code{starat_col}, \code{end_col}, \code{cn_col}). It is also possible to

@@ -47,6 +47,7 @@ There are multiple ways a region can be specified.
 For example, the user can provide the full region in a "region" format (chr:start-end) to the \code{region} parameter.
 Or, the user can provide chromosome, start and end coordinates individually with \code{chr}, \code{start}, and \code{end} parameters.
 For more usage examples, refer to the parameter descriptions and examples in the vignettes.
+Is this function not what you are looking for? Try one of the following, similar, functions; \link{assign_cn_to_ssm}, \link{get_cn_states}, \link{get_sample_cn_segments}
 }
 \examples{
 #Example using chromosome, qstart and qend parameters:

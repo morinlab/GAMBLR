@@ -36,10 +36,10 @@ A vector of sample_id for the patients that have been included.
 Initialize a new cBioPortal instance or update existing portal data set, can also be used to retrieve sample ids included in study.
 }
 \details{
-This function internally calls \code{get_coding_ssm} to retrieve coding mutations to be included in the study (if \code{overwrite = TRUE}).
+This function internally calls \link{get_coding_ssm} to retrieve coding mutations to be included in the study (if \code{overwrite = TRUE}).
 In addition, this function also creates and sets up the proper folder hierarchy and writes the files necessary to import a new cBioPortal study.
-Before a study is ready to be imported to cBioPortal, the user also needs to run \code{setup_fusions} and \code{finalize_study}.
-Optionally the user can also run \code{study_check} to ensure all samples described by the "clinical" file are included in the study.
+Before a study is ready to be imported to cBioPortal, the user also needs to run \link{setup_fusions} and \link{finalize_study}.
+Optionally the user can also run \link{study_check} to ensure all samples described by the "clinical" file are included in the study.
 Also, note that the parameters chosen for this function have to match the same parameters called for any subsequent study function calls.
 }
 \examples{

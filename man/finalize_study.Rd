@@ -46,8 +46,8 @@ Finish setting up a new cBioPortal instance or updating an existing portal data 
 }
 \details{
 This function should be run as the last (or third step) in setting up a new cBioPortal instance.
-The functions that should be run prior to these functions are; \code{setup_study} and \code{setup_fusions}.
-\code{finalize_study} creates all the necessary tables and metadata files (case lists) that are required to import a new study into cBioPortal.
+The functions that should be run prior to these functions are; \link{setup_study} and \link{setup_fusions}.
+\link{finalize_study} creates all the necessary tables and metadata files (case lists) that are required to import a new study into cBioPortal.
 Note, that all parameter arguments used in this function have to match the same parameter arguments for the previously run functions (\code{setup_study} and \code{setup_fusions}).
 }
 \examples{

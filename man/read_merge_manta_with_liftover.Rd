@@ -18,7 +18,7 @@ read_merge_manta_with_liftover(
 \item{out_dir}{output directory}
 }
 \description{
-Takes a path to bedpe and runs liftover (\code{liftover_bedpe}) based on the original genome build of the bedpe.
+Takes a path to bedpe and runs liftover (\link{liftover_bedpe}) based on the original genome build of the bedpe.
 }
 \details{
 This is a helper function that is not meant to be used routinely.

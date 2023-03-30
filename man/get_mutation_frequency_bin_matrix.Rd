@@ -93,7 +93,7 @@ Nothing
 Count hypermutated bins and generate heatmap/cluster the data.
 }
 \details{
-This function takes a metadata table with \code{these_samples_metadata} parameter and internally calls \code{calc_mutation_frequency_sliding_windows} (that internally calls \code{get_ssm_by_regions})
+This function takes a metadata table with \code{these_samples_metadata} parameter and internally calls \link{calc_mutation_frequency_sliding_windows} (that internally calls \link{get_ssm_by_regions})
 to retrieve mutations for plotting. This plotting function has a variety of useful parameters, providing many customizable plotting options. For more details on how these parameters can be used,
 and extended usage examples, refer to the SSM tutorial vignette section 1.4.9.
 }

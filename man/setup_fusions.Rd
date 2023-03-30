@@ -36,10 +36,10 @@ A vector of sample_id for the patients that have been included.
 Annotate SVs and create the input for fusions to be displayed in cBioPortal instance.
 }
 \details{
-This function calls \code{get_combined_sv} and runs \code{annotate_sv} on the returned data frame.
-Should be run as the next step after running \code{setup_study}. Note that the parameters called with this function
-has to match the parameter arguments of \code{setup_study}, i.e if \code{short_name} is for \code{setup_study} is "GAMBL",
-then the \code{short_name} in \code{setup_fusions} also has to be "GAMBL", etc.
+This function calls \link{get_combined_sv} and runs \link{annotate_sv} on the returned data frame.
+Should be run as the next step after running \link{setup_study}. Note that the parameters called with this function
+has to match the parameter arguments of \link{setup_study}, i.e if \code{short_name} is for \link{setup_study} is "GAMBL",
+then the \code{short_name} in \link{setup_fusions} also has to be "GAMBL", etc.
 }
 \examples{
 \dontrun{

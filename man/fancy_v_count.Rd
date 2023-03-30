@@ -73,7 +73,7 @@ This function creates a barplot showing the total number of variants for a selec
 Convenience parameters for restricting the returned plot are available. For example, with \code{ssm} (Boolean)
 you can toggle if the plot will be in respect to SSM (\code{ssm = TRUE}) or if you wish to count SVs (\code{ssm = FALSE}).
 In addition, this plot can also accept a variety of incoming data types. Either, you supply the function with a sample ID
-(\code{this_sample_id}) and the function will retrieve data using \code{assign_cn_to_ssm} or \code{get_combined_sv} (depending on how the \code{ssm} parameter is used).
+(\code{this_sample_id}) and the function will retrieve data using \link{assign_cn_to_ssm} or \link{get_combined_sv} (depending on how the \code{ssm} parameter is used).
 This function also supports a maf or maf-like data frame directly, this is done with \code{maf_data} or \code{maf_path}. If data is supplied with either of these parameters,
 the user can specify what column holds the variant type information as well as chromosome information (\code{variant_type_col} and \code{chromosome_col}).
 Restricting the plot to coding mutations is done with \code{coding_only = TRUE}. Flat-file and augmented maf options can be toggled with \code{from_flatfile}

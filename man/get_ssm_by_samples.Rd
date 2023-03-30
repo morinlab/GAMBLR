@@ -54,12 +54,14 @@ A data frame in MAF format.
 Get MAF-format data frame for more than one sample and combine them together.
 }
 \details{
-This function internally runs \code{get_ssm_by_sample}.
+This function internally runs \link{get_ssm_by_sample}.
 The user can either give the function a vector of sample IDs of interest with \code{these_sample_ids},
 or use a metadata table (\code{these_samples_metadata}), already subset to the sample IDs of interest.
 In most situations, this should never need to be run with subset_from_merge = TRUE.
-Instead use one of \code{get_coding_ssm} or \code{get_ssm_by_region}.
-See \code{get_ssm_by_sample} for more information.
+Instead use one of \link{get_coding_ssm} or \link{get_ssm_by_region}.
+See \link{get_ssm_by_sample} for more information.
+Is this function not what you are looking for? Try one of the following, similar, functions; \link{get_coding_ssm},
+\link{get_coding_ssm_status}, \link{get_ssm_by_patients}, \link{get_ssm_by_sample}, \link{get_ssm_by_region}, \link{get_ssm_by_regions}
 }
 \examples{
 #examples using the these_sample_ids parameter.

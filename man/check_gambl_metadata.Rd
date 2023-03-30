@@ -24,7 +24,7 @@ check_gambl_metadata(
 Check GAMBL or other metadata for compatibility with various features.
 }
 \details{
-Give this function a metadata output, preferably from \code{get_gambl_metadata()}, or any other source.
+Give this function a metadata output, preferably from \link{get_gambl_metadata}, or any other source.
 The function then checks for duplicate sample IDs, colours for all values in all columns that map to a colour with \code{map_metadata_to_colours} and missing columns.
 }
 \examples{

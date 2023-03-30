@@ -21,9 +21,9 @@ fancy_proportions_plot(
 
 \item{these_samples_metadata}{GAMBL metadata subset to the cases you want to process.}
 
-\item{keep_cohort}{Optional parameter to be used when these_sample is NULL. Calls get_gambl_metadata() and filters on the cohort supplied in this parameter.}
+\item{keep_cohort}{Optional parameter to be used when these_sample is NULL. Calls \link{get_gambl_metadata} and filters on the cohort supplied in this parameter.}
 
-\item{keep_pathology}{Optional parameter to be used when these_sample is NULL. Calls get_gambl_metadata() and filters on the pathology supplied in this parameter.}
+\item{keep_pathology}{Optional parameter to be used when these_sample is NULL. Calls \link{get_gambl_metadata} and filters on the pathology supplied in this parameter.}
 
 \item{seq_type}{Selected seq type for incoming QC metrics.}
 

@@ -33,7 +33,7 @@ Generate expression data based on a set of genes, format and export data for cBi
 This function takes a set of genes with the \code{these_genes} (character of vectors) parameter and returns expression data.
 Expression data is then formatted to match the expected format for import to a cBioPortal study.
 If no genes are provided, the function will default to all genes that are defined in the \code{lymphoma_genes} bundled data.
-This function internally calls \code{get_gene_expression} for returning expression data as outlined above.
+This function internally calls \link{get_gene_expression} for returning expression data as outlined above.
 }
 \examples{
 \dontrun{

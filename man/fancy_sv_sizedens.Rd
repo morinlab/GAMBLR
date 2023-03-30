@@ -69,7 +69,7 @@ Plot sample-level SV sizes across selected chromosomes. This function also has a
 For example, it is possible to subset the included variants to a specific VAF threshold with \code{VAF_cutoff}. The \code{size_cutoff} is another parameter
 for filtering the variants on set variant sizes, the default for this parameter is to only include variants of at least 50bp.
 This function takes either a sample ID (\code{this_sample_id}) or an already loaded data frame (\code{maf_data} or a path to a maf-like file with \code{maf_path}).
-If \code{this_sample_id} is called, the function will run \code{GAMBLR::get_combined_sv} to retrieve SV calls.
+If \code{this_sample_id} is called, the function will run \link{get_combined_sv} to retrieve SV calls.
 If either of the \code{maf} parameters are used, note that it's possible to specify the columns of interest;
 (\code{chrom_a_col}, \code{start_a_col}, \code{end_a_col} and \code{variant_type_col}), allowing this function to work with any maf-like data frames.
 This function also allows the user to customize the returned plot. For more info on how to do this, please refer to the aesthetic

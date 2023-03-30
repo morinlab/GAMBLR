@@ -44,7 +44,7 @@ Note that for this function to work, the column names must be exactly this.
 The user also needs to specify a vector of names (\code{regions_to_display}) to further control what regions are to be displayed on the returned plot.
 It is also possible to exclude specific classifications from the metadata file. This is achieved with \code{exclude_classifications}.
 In addition the user can also use the \code{metadata} parameter to use an already subset and arranged metadata table.
-This function will call \code{get_ssm_by_region} if \code{maf_data} is not called. For more info, refer to the parameter descriptions of this function.
+This function will call \link{get_ssm_by_region} if \code{maf_data} is not called. For more info, refer to the parameter descriptions of this function.
 }
 \examples{
 #get lymphgen colours

@@ -37,7 +37,7 @@ prettyForestPlot(
 
 \item{comparison_values}{Optional: If the comparison column contains more than two values or is not a factor, specify a character vector of length two in the order you would like the factor levels to be set, reference group first.}
 
-\item{separate_hotspots}{Optional: If you would like to treat hotspots separately from other mutations in any gene. Requires that the maf file is annotated with GAMBLR::annotate_hotspots.}
+\item{separate_hotspots}{Optional: If you would like to treat hotspots separately from other mutations in any gene. Requires that the maf file is annotated with \link{annotate_hotspots}.}
 
 \item{comparison_name}{Optional: Specify the legend title if different from the comparison column name.}
 

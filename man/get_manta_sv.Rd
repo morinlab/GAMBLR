@@ -56,14 +56,16 @@ To return SV calls for multiple samples, give \code{these_sample_ids} a vector o
 give this parameter one sample ID, as a string (or a vector of characters). The user can also call the \code{these_samples_metadata}
 parameter to make use of an already subset metadata table. In this case, the returned calls will be restricted to the sample_ids
 within that data frame. This function relies on a set of specific functions to be successful in returning SV calls for any
-available sample in gambl. First, this function calls \code{get_combined_sv} and performs an \code{anit_join} with the full metadata to
-identify what samples are currently missing from the return of \code{get_combined_sv}. This function then calls \code{get_manta_sv_by_samples}
-(wrapper function for \code{get_manta_sv_by_sample}) on the subset of the missing samples. The merged calls are subject to any
+available sample in gambl. First, this function calls \link{get_combined_sv} and performs an \code{anit_join} with the full metadata to
+identify what samples are currently missing from the return of \link{get_combined_sv}. This function then calls \link{get_manta_sv_by_samples}
+(wrapper function for \link{get_manta_sv_by_sample}) on the subset of the missing samples. The merged calls are subject to any
 filtering that is specified within this function. This function can also restrict the returned calls to any genomic regions
 specified within \code{chromosome}, \code{qstart}, \code{qend}, or the complete region specified under \code{region} (in chr:start-end format).
 Useful filtering parameters are also available, use \code{min_vaf} to set the minimum tumour VAF for a SV to be returned and \code{min_score}
 to set the lowest Manta somatic score for a SV to be returned. \code{pair_status} can be used to only return variants that are
 annotated with PASS in the filtering column (VCF).
+Is this function not what you are looking for? Try one of the following, similar, functions;
+\link{get_combined_sv}, \link{get_manta_sv_by_sample}, \link{get_manta_sv_by_samples}
 }
 \examples{
 #lazily get every SV in the table with default quality filters

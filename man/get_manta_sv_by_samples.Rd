@@ -30,7 +30,9 @@ A data frame containing the Manta outputs from all sample_id in these_samples_me
 Load the manta output for a set of samples.
 }
 \details{
-This is a convenience wrapper function for get_manta_sv_by_sample (and called by get_manta_sv).
+This is a convenience wrapper function for \link{get_manta_sv_by_sample} (and called by \link{get_manta_sv}).
+Is this function not what you are looking for? Try one of the following, similar, functions; \link{get_combined_sv},
+\link{get_manta_sv}, \link{get_manta_sv_by_sample}
 }
 \examples{
 all_sv = get_manta_sv()

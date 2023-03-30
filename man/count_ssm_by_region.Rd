@@ -36,8 +36,8 @@ count_ssm_by_region(
 Count the variants in a region with a variety of filtering options.
 }
 \details{
-This function internally calls \code{get_ssm_by_region} thus, the parameters available to this function are arguments that are being passed to the internal call.
-For more details on how these parameters can be used, refer to \code{get_ssm_by_region}.
+This function internally calls \link{get_ssm_by_region} thus, the parameters available to this function are arguments that are being passed to the internal call.
+For more details on how these parameters can be used, refer to \link{get_ssm_by_region}.
 }
 \examples{
 #define a region.

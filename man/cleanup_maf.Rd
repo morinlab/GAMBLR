@@ -19,7 +19,7 @@ Transform input maf columns to allow for usage of dplyr verbs.
 Transform input maf columns to allow for usage of dplyr verbs.
 Allowing for a stright-forward plotting workflow as well as downstream data aggregation and manipulation.
 This function expects a set number of columns to exist in the incoming maf in order for this to work.
-To view the columns, see bundled data; \code{grande_maf}.
+To view the columns, see bundled data; \link{grande_maf}.
 }
 \examples{
 

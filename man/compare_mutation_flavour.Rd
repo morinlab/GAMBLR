@@ -25,5 +25,5 @@ Get a MAF that is just the variants unique to one of two flavours of variant cal
 }
 \details{
 Subset a MAF to only have variants that are unique to one flavour (specified with \code{flavour1}).
-This function is currently not exported, since there is only one flavour available at the moment (see docs for \code{get_ssm_by_sample}).
+This function is currently not exported, since there is only one flavour available at the moment (see docs for \link{get_ssm_by_sample}).
 }

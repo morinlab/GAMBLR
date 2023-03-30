@@ -15,7 +15,7 @@ assemble_file_details(
 )
 }
 \arguments{
-\item{file_details_df}{Optionally supply the data frame directly instead (e.g. from find_files_extract_wildcards).}
+\item{file_details_df}{Optionally supply the data frame directly instead (e.g. from \link{find_files_extract_wildcards}).}
 
 \item{file_paths}{A vector of full file paths, e.g. the output of dir.}
 

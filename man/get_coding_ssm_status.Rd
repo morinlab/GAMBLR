@@ -65,9 +65,11 @@ Tabulate mutation status (SSM) for a set of genes.
 \details{
 This function takes a vector of gene symbols and subsets the incoming MAF to specified genes. If no genes are provided, the function will default to all lymphoma genes.
 The function can accept a wide range of incoming MAFs. For example, the user can call this function with \code{these_samples_metadata} (preferably a metadata table that has been subset to the sample IDs of interest).
-If this parameter is not called, the function will default to all samples available with \code{get_gambl_metadata}. The user can also provide a path to a MAF, or MAF-like file with \code{maf_path},
+If this parameter is not called, the function will default to all samples available with \link{get_gambl_metadata}. The user can also provide a path to a MAF, or MAF-like file with \code{maf_path},
 or an already loaded MAF can be used with the \code{maf_data} parameter. If both \code{maf_path} and \code{maf_data} is missing, the function will default to run \code{get_coding_ssm}.
 This function also has a lot of filtering and convenience parameters giving the user full control of the return. For more information, refer to the parameter descriptions and examples.
+Is this function not what you are looking for? Try one of the following, similar, functions; \link{get_coding_ssm}, \link{get_ssm_by_patients}, \link{get_ssm_by_sample},
+\link{get_ssm_by_samples}, \link{get_ssm_by_region}, \link{get_ssm_by_regions}
 }
 \examples{
 coding_tabulated_df = get_coding_ssm_status(maf_data = grande_maf,

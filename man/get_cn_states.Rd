@@ -35,6 +35,7 @@ Get a copy number matrix for all samples based on segmented data in the database
 \details{
 This function returns CN states for the specified regions.
 For how to specify regions, refer to the parameter descriptions and function examples.
+Is this function not what you are looking for? Try one of the following, similar, functions; \link{assign_cn_to_ssm}, \link{get_cn_segments}, \link{get_sample_cn_segments}
 }
 \examples{
 myc_region = gene_to_region(gene_symbol = "MYC", genome_build = "grch37", return_as = "region")

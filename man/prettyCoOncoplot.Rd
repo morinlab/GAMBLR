@@ -33,12 +33,12 @@ prettyCoOncoplot(
 A ggplot object with 2 oncoplots side-by-side.
 }
 \description{
-\code{prettyCoOncoplot} returns ggplot-compatible figure of 2 prettyOncoplots side-by-side.
+\code{prettyCoOncoplot} returns ggplot-compatible figure of 2 \link{prettyOncoplot} side-by-side.
 }
 \details{
 This function will generate a graphic displaying 2 oncoplots side-by-side. Optionally user can
 annotate each oncoplot with it's own title that will be displayed at the top. All the arguments
-recognized by prettyOncoplot are supported and can be specified when calling this function.
+recognized by \link{prettyOncoplot} are supported and can be specified when calling this function.
 For both oncoplots the same specified parameters will be applied (e.g. genes to display, split columns,
 font size, top annotation etc). If the provided argument is not recognized by prettyOncoplot,
 it will be discarded. If you want a specific order of oncoplots on the left and right, please
