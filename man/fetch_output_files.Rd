@@ -42,6 +42,9 @@ together with the genome build (\code{genome_build}). A data frame will be retur
 }
 \examples{
 
-ex_outs = fetch_output_files(tool = "manta", base_path = "gambl/sequenza_current", seq_type = "capture", build = "hg38")
+ex_outs = fetch_output_files(tool = "manta",
+                             base_path = "gambl/sequenza_current",
+                             seq_type = "capture",
+                             build = "hg38")
 
 }

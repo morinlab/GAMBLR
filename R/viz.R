@@ -3935,7 +3935,7 @@ fancy_v_count = function(this_sample_id,
 #' @description Generate a bar plot visualizing sample-specific copy number states and affected bases for each CN segment.
 #'
 #' @details `fancy_cnbar` visualizes copy number (CN) states on sample-level. Similarly to other fancy_x_plots this function
-#' accepts either a sample ID, for which the function will get copy number states with [GAMBLR::get_sample_cn_states]. The function
+#' accepts either a sample ID, for which the function will get copy number states with [GAMBLR::get_sample_cn_segments]. The function
 #' can also accept an already loaded seq file given to the `seq_data` parameter. It can also load a seq file with the `seq_path`
 #' parameter. If the user calls either `seq_data` or `seq_path`, there are a collection of parameters available for specifying
 #' the relevant columns in the given data frame (`chrom_col`, `starat_col`, `end_col`, `cn_col`). It is also possible to
@@ -4931,15 +4931,15 @@ comp_report = function(this_sample_id,
 
   #export individual plots
   if(export_individual_plots){
-    ggsave(ssm_chr, file = paste0(out, this_sample_id, "_ssm_dist_chr.pdf"), limitsize = FALSE, width = 17, height = 12, units = c("in"), dpi = 300)
-    ggsave(sv_chr, file = paste0(out, this_sample_id, "_sv_dist_chr.pdf"), limitsize = FALSE, width = 17, height = 12, units = c("in"), dpi = 300)
-    ggsave(snv_plot, file = paste0(out, this_sample_id, "_snv_dist_chr.pdf"), limitsize = FALSE, width = 17, height = 12, units = c("in"), dpi = 300)
-    ggsave(ssm_count, file = paste0(out, this_sample_id, "_ssm_counts.pdf"), limitsize = FALSE, width = 12, height = 12, units = c("in"), dpi = 300)
-    ggsave(sv_count, file = paste0(out, this_sample_id, "_sv_counts.pdf"), limitsize = FALSE, width = 12, height = 12, units = c("in"), dpi = 300)
-    ggsave(sv_size, file = paste0(out, this_sample_id, "_sv_size_dens.pdf"), limitsize = FALSE, width = 12, height = 12, units = c("in"), dpi = 300)
-    ggsave(cns, file = paste0(out, this_sample_id, "_cn_states.pdf"), limitsize = FALSE, width = 12, height = 12, units = c("in"), dpi = 300)
-    ggsave(violine_plot, file = paste0(out, this_sample_id, "_sv_size_dist.pdf"), limitsize = FALSE, width = 12, height = 12, units = c("in"), dpi = 300)
-    ggsave(cnv_ideogram, file = paste0(out, this_sample_id, "_cnv_ideo.pdf"), limitsize = FALSE, width = 17, height = 12, units = c("in"), dpi = 300)
+    ggsave(ssm_chr, filename = paste0(out, this_sample_id, "_ssm_dist_chr.pdf"), limitsize = FALSE, width = 17, height = 12, units = c("in"), dpi = 300)
+    ggsave(sv_chr, filename = paste0(out, this_sample_id, "_sv_dist_chr.pdf"), limitsize = FALSE, width = 17, height = 12, units = c("in"), dpi = 300)
+    ggsave(snv_plot, filename = paste0(out, this_sample_id, "_snv_dist_chr.pdf"), limitsize = FALSE, width = 17, height = 12, units = c("in"), dpi = 300)
+    ggsave(ssm_count, filename = paste0(out, this_sample_id, "_ssm_counts.pdf"), limitsize = FALSE, width = 12, height = 12, units = c("in"), dpi = 300)
+    ggsave(sv_count, filename = paste0(out, this_sample_id, "_sv_counts.pdf"), limitsize = FALSE, width = 12, height = 12, units = c("in"), dpi = 300)
+    ggsave(sv_size, filename = paste0(out, this_sample_id, "_sv_size_dens.pdf"), limitsize = FALSE, width = 12, height = 12, units = c("in"), dpi = 300)
+    ggsave(cns, filename = paste0(out, this_sample_id, "_cn_states.pdf"), limitsize = FALSE, width = 12, height = 12, units = c("in"), dpi = 300)
+    ggsave(violine_plot, filename = paste0(out, this_sample_id, "_sv_size_dist.pdf"), limitsize = FALSE, width = 12, height = 12, units = c("in"), dpi = 300)
+    ggsave(cnv_ideogram, filename = paste0(out, this_sample_id, "_cnv_ideo.pdf"), limitsize = FALSE, width = 17, height = 12, units = c("in"), dpi = 300)
   }
   return()
 }
@@ -4951,7 +4951,7 @@ comp_report = function(this_sample_id,
 #'
 #' @details This function is using RCircos to create sample-level cirocs plots, annotating SVs and SSM with the potential of adding gene annotations.
 #' To control what variants are to be plotted, simply use the two Boolean parameters; `ssm_calls` and `sv_calls` (both TRUE by default).
-#' Provide the sample ID of interest in with the `this_sample_id` parameter. This function calls [GAMBLR::assing_cn_to_ssm] and [GAMBLR::get_combined_sv] to retrieve data for plotting.
+#' Provide the sample ID of interest in with the `this_sample_id` parameter. This function calls [GAMBLR::assign_cn_to_ssm] and [GAMBLR::get_combined_sv] to retrieve data for plotting.
 #' Since this function does not create a grob, but rather outputs a rendered PDF/PNG, the user has to provide an output path with the `out` parameter.
 #' In addition, the user can control the output format. For PDF, set `pdf` to TRUE (default) and to export the created plot as PNG, set the same parameter to FALSE.
 #' This function also has convenient filtering parameters available, see parameter descriptions for more information and how to properly use the filtering parameters.

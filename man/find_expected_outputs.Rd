@@ -36,6 +36,8 @@ for more information and examples, refer to the parameter descriptions as well a
 }
 \examples{
 #get paths to unmatched manta bedpe files
-ex_outs = find_expected_outputs(tool_name = "manta", unix_group = "gambl", filename_end_pattern = "unmatched.somaticSV.bedpe")
+ex_outs = find_expected_outputs(tool_name = "manta",
+                               unix_group = "gambl",
+                               filename_end_pattern = "unmatched.somaticSV.bedpe")
 
 }

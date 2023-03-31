@@ -59,7 +59,7 @@ Create a circos plot visualizing SVS and SSM with optional gene annotations.
 \details{
 This function is using RCircos to create sample-level cirocs plots, annotating SVs and SSM with the potential of adding gene annotations.
 To control what variants are to be plotted, simply use the two Boolean parameters; \code{ssm_calls} and \code{sv_calls} (both TRUE by default).
-Provide the sample ID of interest in with the \code{this_sample_id} parameter. This function calls \link{assing_cn_to_ssm} and \link{get_combined_sv} to retrieve data for plotting.
+Provide the sample ID of interest in with the \code{this_sample_id} parameter. This function calls \link{assign_cn_to_ssm} and \link{get_combined_sv} to retrieve data for plotting.
 Since this function does not create a grob, but rather outputs a rendered PDF/PNG, the user has to provide an output path with the \code{out} parameter.
 In addition, the user can control the output format. For PDF, set \code{pdf} to TRUE (default) and to export the created plot as PNG, set the same parameter to FALSE.
 This function also has convenient filtering parameters available, see parameter descriptions for more information and how to properly use the filtering parameters.

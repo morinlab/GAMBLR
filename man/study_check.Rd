@@ -39,7 +39,7 @@ Helper function for checking integrity of study files.
 This function was designed to ensure that all the sample IDs described in the maf are actually present in the clinical files.
 If this is not the case, the function will notify the user what samples are found in the case list that are not described in the clinical file.
 The function then sub-sets the case list to only include samples from the clinical file.
-Note that the \code{project_name} has to match what is specified for the previously run functions (i.e \link{setup_study}, \link{setup_fusions} and \link{vfinalize_study}).
+Note that the \code{project_name} has to match what is specified for the previously run functions (i.e \link{setup_study}, \link{setup_fusions} and \link{finalize_study}).
 }
 \examples{
 \dontrun{

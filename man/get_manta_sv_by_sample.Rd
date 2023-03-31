@@ -40,7 +40,7 @@ Load the manta output (from individual flat file) for 1 sample.
 }
 \details{
 This function is used for retrieving Manta results (structural variants) from individual flat-files (one sample).
-For multiple samples, please see \link{get_manta_sv_by_samples} (a convenience wrapper function for \link{get_manta_by_sample}).
+For multiple samples, please see \link{get_manta_sv_by_samples} (a convenience wrapper function for \link{get_manta_sv_by_sample}).
 Additional columns are extracted from the VCF column and standard filtering options are available.
 This function also performs a lift-over to selected projection, if needed.
 Please note, if \code{force_lift} is set to FALSE, an extra column will be added that states if the returned variant calls need to be lifted.

@@ -364,7 +364,7 @@ finalize_study = function(seq_type_filter = "genome",
 #' @details This function was designed to ensure that all the sample IDs described in the maf are actually present in the clinical files.
 #' If this is not the case, the function will notify the user what samples are found in the case list that are not described in the clinical file.
 #' The function then sub-sets the case list to only include samples from the clinical file.
-#' Note that the `project_name` has to match what is specified for the previously run functions (i.e [GAMBLR::setup_study], [GAMBLR::setup_fusions] and [GAMBLR::vfinalize_study]).
+#' Note that the `project_name` has to match what is specified for the previously run functions (i.e [GAMBLR::setup_study], [GAMBLR::setup_fusions] and [GAMBLR::finalize_study]).
 #'
 #' @param data_clinical_samples_path Path to clinical file.
 #' @param data_fusions_path Path to data_fusion file from setup_fusions.

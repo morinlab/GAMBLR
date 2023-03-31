@@ -70,7 +70,7 @@ This function is called to return the mutation frequency for a given region, for
 Alternatively, the region of interest can also be specified by calling the function with \code{chromosome}, \code{start_pos}, and \code{end_pos} parameters.
 It is also possible to return a plot of the created bins. This is done with setting \code{plot_type = TRUE}.
 There are a collection of parameters available for further customizing the return, for more information, refer to the parameter descriptions and examples.
-\link{calc_mutation_frequency_sliding_window} is unlikely to be used directly in most cases. See \link{get_mutation_frequency_bin_matrix} instead.
+This function is unlikely to be used directly in most cases. See \link{get_mutation_frequency_bin_matrix} instead.
 }
 \examples{
 chr11_mut_freq = calc_mutation_frequency_sliding_windows(this_region = "chr11:69455000-69459900",

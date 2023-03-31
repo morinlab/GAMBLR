@@ -22,7 +22,9 @@ coding_class = c("Frame_Shift_Del", "Frame_Shift_Ins", "In_Frame_Del", "In_Frame
 #'
 #' @examples
 #' #get paths to unmatched manta bedpe files
-#'ex_outs = find_expected_outputs(tool_name = "manta", unix_group = "gambl", filename_end_pattern = "unmatched.somaticSV.bedpe")
+#'ex_outs = find_expected_outputs(tool_name = "manta",
+#'                                unix_group = "gambl",
+#'                                filename_end_pattern = "unmatched.somaticSV.bedpe")
 #'
 find_expected_outputs = function(targ_df,
                                  tool_name,
@@ -647,7 +649,10 @@ process_all_manta_bedpe = function(file_df,
 #'
 #' @examples
 #'
-#' ex_outs = fetch_output_files(tool = "manta", base_path = "gambl/sequenza_current", seq_type = "capture", build = "hg38")
+#' ex_outs = fetch_output_files(tool = "manta",
+#'                              base_path = "gambl/sequenza_current",
+#'                              seq_type = "capture",
+#'                              build = "hg38")
 #'
 fetch_output_files = function(tool,
                               unix_group,

@@ -339,7 +339,7 @@ get_ssh_session = function(host="gphost01.bcgsc.ca"){
 #' @details This function takes one or multiple gene names, either as hugo symbols or Ensembl IDs
 #' and returns the coordinates for the selected genes in multiple formats (`return_as`).
 #' The possible return formats are; bed, data frame and in "region" format (chr:start-end).
-#' For returning genes residing in specific regions, see [GAMBLR::regions_to_genes].
+#' For returning genes residing in specific regions, see [GAMBLR::region_to_gene].
 #'
 #' @param gene_symbol A vector of one or more gene symbols.
 #' @param ensembl_id A vector of one or more Ensembl IDs.
@@ -814,7 +814,7 @@ trim_scale_expression = function(x){
 #' Alternatively, the region of interest can also be specified by calling the function with `chromosome`, `start_pos`, and `end_pos` parameters.
 #' It is also possible to return a plot of the created bins. This is done with setting `plot_type = TRUE`.
 #' There are a collection of parameters available for further customizing the return, for more information, refer to the parameter descriptions and examples.
-#' [GAMBLR::calc_mutation_frequency_sliding_window] is unlikely to be used directly in most cases. See [GAMBLR::get_mutation_frequency_bin_matrix] instead.
+#' This function is unlikely to be used directly in most cases. See [GAMBLR::get_mutation_frequency_bin_matrix] instead.
 #'
 #' @param this_region Genomic region in bed format.
 #' @param chromosome Chromosome name in region.
