@@ -875,6 +875,7 @@ get_mutation_frequency_bin_matrix = function(regions,
 #' @param cluster_rows Boolean statement for clustering by rows, defaults to FALSE.
 #'
 #' @return Nothing
+#' @noRd
 #'
 #' @rawNamespace import(data.table, except = c("last", "first", "between", "transpose"))
 #' @import dplyr tidyr circlize ComplexHeatmap tibble
