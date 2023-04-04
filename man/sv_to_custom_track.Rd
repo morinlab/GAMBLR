@@ -30,7 +30,7 @@ This is specified with the \code{sv_name} parameter. Default is to include all S
 \examples{
 \dontrun{
 #custom track with annotations
-all_sv = get_manta_sv()
+all_sv = get_manta_sv(verbose = FALSE)
 annotated_sv = annotate_sv(sv_data = all_sv)
 sv_to_custom_track(annotated_sv,
                    output_file = "GAMBL_sv_custom_track_annotated.bed",

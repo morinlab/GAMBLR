@@ -98,6 +98,8 @@ to retrieve mutations for plotting. This plotting function has a variety of usef
 and extended usage examples, refer to the SSM tutorial vignette section 1.4.9.
 }
 \examples{
+library(dplyr)
+
 #load metadata.
 dlbcl_bl_meta = get_gambl_metadata() \%>\%
  dplyr::filter(pathology \%in\% c("DLBCL", "BL")) #subset on specific pathology.

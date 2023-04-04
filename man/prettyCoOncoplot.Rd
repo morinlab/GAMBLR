@@ -47,6 +47,8 @@ you want to be plotted on the left side. For developers: new arguments added to 
 are expected to be out-of-the-box compatible with this function nd would not need code modifications.
 }
 \examples{
+library(dplyr)
+
 #get data for plotting
 ssm = get_coding_ssm(limit_cohort = c("BL_Adult", "BL_Pediatric"), seq_type = "genome")
 ssm = maftools::read.maf(ssm)

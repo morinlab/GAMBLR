@@ -47,26 +47,8 @@ Create a sample-level rainfall plot visualizing single nucleotide substitutions 
 }
 \examples{
 prettyRainfallPlot(this_sample_id = "Raji", 
-                   seq_type = "genome")
-
-prettyRainfallPlot(this_sample_id = "Raji",
-                   seq_type = "genome",
-                   chromosome = c(3, 9, "chr14", 22, "X"))
-
-prettyRainfallPlot(this_sample_id = "Raji", 
-                   seq_type = "genome",
-                   chromosome = c(3,9),
-                   projection = "hg38",
-                   label_ashm_genes = TRUE)
-
-prettyRainfallPlot(this_sample_id = "Raji", 
                    seq_type = "genome",
                    zoom_in_region = "8:125252796-135253201",
-                   label_sv = TRUE)
-
-prettyRainfallPlot(this_sample_id = "Raji", 
-                   seq_type = "genome",
-                   chromosome = 6,
                    label_sv = TRUE)
 
 #multi-sample rainfall plot for one gene region

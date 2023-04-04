@@ -49,6 +49,7 @@ Lastly, \code{seq_type_filter} lets the user control what seq type results will 
 refer to function examples, vignettes and parameter descriptions.
 }
 \examples{
+library(dplyr)
 
 #get collated results for all capture samples, using cached results
 capture_collated_everything = collate_results(seq_type_filter = "capture",

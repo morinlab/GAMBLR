@@ -48,10 +48,6 @@ and then specify the genes of interest (coding regions) with the \code{genes_to_
 #build plot
 copy_number_vaf_plot(this_sample_id = "HTMCP-01-06-00422-01A-01D")
 
-#plot only cn segments
-copy_number_vaf_plot(this_sample_id = "HTMCP-01-06-00422-01A-01",
-                     just_segments = TRUE)
-
 #coding only
 copy_number_vaf_plot(this_sample_id = "HTMCP-01-06-00422-01A-01D",
                      coding_only = TRUE)

@@ -45,6 +45,8 @@ For usage examples and more information, refer to the parameter descriptions and
 Visualize proportional metrics for selected samples.
 }
 \examples{
+library(dplyr)
+
 #Example 1 - using these_sample_ids parameter
 #subset on FL cases with QC metrics available and plot
 kridel_fl = get_gambl_metadata() \%>\%

@@ -421,6 +421,8 @@ populate_each_tool_result = function(tool,
 #' @param out_dir output directory
 #'
 #' @import dplyr readr
+#' 
+#' @noRd
 #'
 #' @examples
 #' \dontrun{
@@ -505,6 +507,8 @@ read_merge_manta_with_liftover = function(bedpe_paths = c(),
 #' @param projection_build The genome we want all results to be relative to (lifted if necessary).
 #'
 #' @import dplyr readr
+#' 
+#' @noRd
 #'
 process_all_manta_bedpe = function(file_df,
                                    out_dir,
@@ -1133,7 +1137,9 @@ assemble_file_details = function(file_details_df,
 #' @export
 #'
 #' @examples
-#' hg19_sv = get_manta_sv() %>%
+#' library(dplyr)
+#' 
+#' hg19_sv = get_manta_sv(verbose = FALSE) %>%
 #'  head(100)
 #' 
 #' hg38_sv = liftover_bedpe(bedpe_df = hg19_sv, 

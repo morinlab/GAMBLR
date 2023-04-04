@@ -40,10 +40,10 @@ Refer to parameter descriptions for more information on how to use the available
 myc_ashm_maf = get_ssm_by_region(region = "8:128748352-128749427")
 
 #get mutations with 100 bp padding (default)
-genome_to_exome(maf = myc_ashm_maf)
+maf = genome_to_exome(maf = myc_ashm_maf)
 
 #get mutations covered in WEX with no padding
-genome_to_exome(maf = myc_ashm_maf, 
+maf = genome_to_exome(maf = myc_ashm_maf, 
                 padding = 0) 
 
 }

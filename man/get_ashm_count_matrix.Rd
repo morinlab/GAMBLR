@@ -33,6 +33,7 @@ Prepare a matrix with one row per sample and one column per region using a set o
 Values are the number of mutations in that patient in the region.
 }
 \examples{
+library(dplyr)
 regions_bed = grch37_ashm_regions \%>\%
  mutate(name = paste(gene, region, sep = "_"))
 

@@ -30,6 +30,7 @@ This function was set up to have a standardized ggplot theme for creating consis
 The parameters in this function lets the user control theme parameters such as; font size, font style and legend positions.
 }
 \examples{
+library(ggplot2)
 ggplot(mpg, aes(displ, hwy, colour = class)) +
 geom_point() +
 theme_Morons()

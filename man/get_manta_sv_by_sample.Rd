@@ -12,7 +12,8 @@ get_manta_sv_by_sample(
   min_vaf = 0.1,
   min_score = 40,
   pass = TRUE,
-  projection = "grch37"
+  projection = "grch37",
+  verbose = TRUE
 )
 }
 \arguments{
@@ -31,6 +32,8 @@ get_manta_sv_by_sample(
 \item{pass}{If set to TRUE, only return SVs that are annotated with PASS in the FILTER column. Set to FALSE to keep all variants, regardless if they PASS the filters. Default is TRUE.}
 
 \item{projection}{The projection of returned calls. Default is grch37.}
+
+\item{verbose}{Set to FALSE to prevent the path of the requested bedpe file to be printed.}
 }
 \value{
 a data frame containing the Manta outputs from this_sample_id in a bedpe-like format with additional columns extracted from the VCF column.
@@ -48,6 +51,8 @@ The value for this column is returned TRUE (for all rows) if the available genom
 Is this function not what you are looking for? Try one of the following, similar, functions; \link{get_combined_sv}, \link{get_manta_sv}, \link{get_manta_sv_by_samples}
 }
 \examples{
+library(dplyr)
+
 #example 1
 #get manta calls for a sample that needs to be lifted to "hg38" and let this function
 #take care of the liftover step for you. 

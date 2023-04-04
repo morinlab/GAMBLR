@@ -47,6 +47,8 @@ This function can also plot the same results for a comparison group of interest,
 To do this one would call the function with \code{comparison_samples} parameter. For more info on how to use this function, please refer to examples, vignettes (fancy_vignette) and parameter descriptions.
 }
 \examples{
+library(dplyr)
+
 #Example 1 - using these_sample_ids parameter
 #subset on FL cases with QC metrics available and plot
 kridel_fl = get_gambl_metadata() \%>\%

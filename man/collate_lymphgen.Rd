@@ -30,6 +30,8 @@ If this is done, the function will join the lymphgen data with this table. Curre
 For more information refer to the function examples.
 }
 \examples{
+library(dplyr)
+
 this_meta = get_gambl_metadata() \%>\%
  dplyr::filter(pathology == "DLBCL")
 

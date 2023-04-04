@@ -31,28 +31,10 @@ colour_aliases = list("COO_consensus" = "coo", "COO" = "coo", "DHITsig_consensus
 #' @import ggplot2 dplyr readr stringr tidyr
 #' @export
 #'
-#' @examples
-#' prettyRainfallPlot(this_sample_id = "Raji", 
-#'                    seq_type = "genome")
-#' 
-#' prettyRainfallPlot(this_sample_id = "Raji",
-#'                    seq_type = "genome",
-#'                    chromosome = c(3, 9, "chr14", 22, "X"))
-#' 
-#' prettyRainfallPlot(this_sample_id = "Raji", 
-#'                    seq_type = "genome",
-#'                    chromosome = c(3,9),
-#'                    projection = "hg38",
-#'                    label_ashm_genes = TRUE)
-#' 
+#' @examples 
 #' prettyRainfallPlot(this_sample_id = "Raji", 
 #'                    seq_type = "genome",
 #'                    zoom_in_region = "8:125252796-135253201",
-#'                    label_sv = TRUE)
-#' 
-#' prettyRainfallPlot(this_sample_id = "Raji", 
-#'                    seq_type = "genome",
-#'                    chromosome = 6,
 #'                    label_sv = TRUE)
 #' 
 #' #multi-sample rainfall plot for one gene region
@@ -424,6 +406,8 @@ gene_mutation_tally = function(maf_df,these_samples_metadata,these_genes,groupin
 #' @export
 #'
 #' @examples
+#' library(dplyr)
+#' 
 #' #get all coding SSM
 #' maf = get_coding_ssm(seq_type = "genome")
 #'
@@ -589,6 +573,8 @@ focal_cn_plot = function(region,
 #' @export
 #'
 #' @examples
+#' library(dplyr)
+#' 
 #' #get metadata (Fl and DLBCL)
 #' this_metadata = get_gambl_metadata() %>%
 #'  dplyr::filter(consensus_pathology %in% c("FL", "DLBCL"))
@@ -665,6 +651,8 @@ pretty_lollipop_plot = function(maf_df,
 #' @export
 #'
 #' @examples
+#' library(dplyr)
+#' 
 #' #load metadata.
 #' dlbcl_bl_meta = get_gambl_metadata() %>%
 #'  dplyr::filter(pathology %in% c("DLBCL", "BL")) #subset on specific pathology.
@@ -1263,7 +1251,7 @@ plot_sample_circos = function(this_sample_id,
       dplyr::mutate(chromosome = paste0("chr", chromosome))
   }
   if(missing(sv_df)){
-    sv_df = get_manta_sv() %>%
+    sv_df = get_manta_sv(verbose = FALSE) %>%
       dplyr::filter(tumour_sample_id == this_sample_id)
   }else{
     sv_df = sv_df %>%
@@ -1429,10 +1417,12 @@ plot_sample_circos = function(this_sample_id,
 #' @export
 #'
 #' @examples
+#' library(grid)
+#' 
 #' #get some data
 #' maf_data = get_coding_ssm(seq_type = "genome")
 #' maf_metadata = get_gambl_metadata()
-#' maf = read.maf(maf_data, clinicalData = maf_metadata)
+#' maf = maftools::read.maf(maf_data, clinicalData = maf_metadata)
 #'
 #' #define some genes of interest
 #' bl_genes = c("NFKBIZ", "ID3", "TP53", "ARID1A", "FBXO11", 
@@ -2052,6 +2042,8 @@ prettyOncoplot = function(maftools_obj,
 #' @export
 #'
 #' @examples
+#' library(dplyr)
+#' 
 #' #get data for plotting
 #' ssm = get_coding_ssm(limit_cohort = c("BL_Adult", "BL_Pediatric"), seq_type = "genome")
 #' ssm = maftools::read.maf(ssm)
@@ -2338,10 +2330,6 @@ ashm_multi_rainbow_plot = function(regions_bed,
 #' @examples
 #' #build plot
 #' copy_number_vaf_plot(this_sample_id = "HTMCP-01-06-00422-01A-01D")
-#'
-#' #plot only cn segments
-#' copy_number_vaf_plot(this_sample_id = "HTMCP-01-06-00422-01A-01",
-#'                      just_segments = TRUE)
 #'
 #' #coding only
 #' copy_number_vaf_plot(this_sample_id = "HTMCP-01-06-00422-01A-01D",
@@ -2852,6 +2840,7 @@ prettyChromoplot = function(scores,
 #' @export
 #'
 #' @examples
+#' library(ggplot2)
 #' ggplot(mpg, aes(displ, hwy, colour = class)) +
 #' geom_point() +
 #' theme_Morons()
@@ -2918,6 +2907,8 @@ theme_Morons = function(base_size = 14,
 #' @export
 #'
 #' @examples
+#' library(dplyr)
+#' 
 #' metadata = get_gambl_metadata(case_set = "tFL-study") #%>%
 #'   dplyr::filter(pairing_status == "matched") %>%
 #'   dplyr::filter(consensus_pathology %in% c("FL", "DLBCL"))
@@ -5444,6 +5435,8 @@ fancy_sv_sizedens = function(this_sample_id,
 #' @export
 #'
 #' @examples
+#' library(dplyr)
+#' 
 #' #Example 1 - using these_sample_ids parameter
 #' #subset on FL cases with QC metrics available and plot
 #' kridel_fl = get_gambl_metadata() %>%
@@ -5601,6 +5594,8 @@ fancy_alignment_plot = function(these_sample_ids,
 #' @export
 #'
 #' @examples
+#' library(dplyr)
+#' 
 #' #Example 1 - using these_sample_ids parameter
 #' #subset on FL cases with QC metrics available and plot
 #' kridel_fl = get_gambl_metadata() %>%
@@ -5771,6 +5766,8 @@ fancy_qc_plot = function(these_sample_ids,
 #' @export
 #'
 #' @examples
+#' library(dplyr)
+#' 
 #' #Example 1 - using these_sample_ids parameter
 #' #subset on FL cases with QC metrics available and plot
 #' kridel_fl = get_gambl_metadata() %>%
@@ -5902,6 +5899,8 @@ fancy_propcov_plot = function(these_sample_ids,
 #' @export
 #'
 #' @examples
+#' library(dplyr)
+#' 
 #' #Example 1 - using these_sample_ids parameter
 #' #subset on FL cases with QC metrics available and plot
 #' kridel_fl = get_gambl_metadata() %>%

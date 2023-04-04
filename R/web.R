@@ -10,6 +10,7 @@
 #'
 #' @import workflowr
 #' @export
+#' @noRd
 #'
 web_initialize_gambl_site = function(site_base_name,
                                      base_directory = "/home/rmorin/",

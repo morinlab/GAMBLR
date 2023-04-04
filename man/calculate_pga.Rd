@@ -40,6 +40,8 @@ sample, chrom, start, end, and log.ratio. The function can work with either indi
 excluded from calculation, and centromeres/sex chromosomes can be optionally included or excluded.
 }
 \examples{
+library(dplyr)
+
 sample_seg = get_sample_cn_segments(this_sample_id = "14-36022T") \%>\%
  rename("sample"="ID")
 

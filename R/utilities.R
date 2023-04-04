@@ -206,6 +206,8 @@ cache_output = function(result_df,
 #' @export
 #'
 #' @examples
+#' library(dplyr)
+#' 
 #' #define a region.
 #' my_region = gene_to_region(gene_symbol = "MYC", 
 #'                            return_as = "region")
@@ -535,6 +537,8 @@ region_to_gene = function(region,
 #'
 #' @return a list with MAFs that are only present in flavour1.
 #'
+#' @noRd
+#'
 #' @rawNamespace import(data.table, except = c("last", "first", "between", "transpose"))
 #'
 compare_mutation_flavour = function(these_sample_ids,
@@ -842,7 +846,6 @@ trim_scale_expression = function(x){
 #'
 #' @examples
 #' chr11_mut_freq = calc_mutation_frequency_sliding_windows(this_region = "chr11:69455000-69459900",
-#'                                                          metadata = meta_df,
 #'                                                          slide_by = 10,
 #'                                                          window_size = 10000)
 #'
@@ -1341,7 +1344,7 @@ review_hotspots = function(annotated_maf,
 #' @examples
 #' \dontrun{
 #' #custom track with annotations
-#' all_sv = get_manta_sv()
+#' all_sv = get_manta_sv(verbose = FALSE)
 #' annotated_sv = annotate_sv(sv_data = all_sv)
 #' sv_to_custom_track(annotated_sv,
 #'                    output_file = "GAMBL_sv_custom_track_annotated.bed",
@@ -1592,6 +1595,7 @@ test_glue = function(placeholder="INSERTED"){
 #' @export
 #'
 #' @examples
+#' library(dplyr)
 #' 
 #' #get collated results for all capture samples, using cached results
 #' capture_collated_everything = collate_results(seq_type_filter = "capture",
@@ -2388,7 +2392,8 @@ referesh_metadata_tables = function(){
 #' @return A table.
 #'
 #' @import tibble readr dplyr
-#' @export
+#' 
+#' @noRd
 #'
 #' @examples
 #' \dontrun{
@@ -3432,10 +3437,10 @@ FtestCNV = function(gistic_lesions,
 #' myc_ashm_maf = get_ssm_by_region(region = "8:128748352-128749427")
 #' 
 #' #get mutations with 100 bp padding (default)
-#' genome_to_exome(maf = myc_ashm_maf)
+#' maf = genome_to_exome(maf = myc_ashm_maf)
 #' 
 #' #get mutations covered in WEX with no padding
-#' genome_to_exome(maf = myc_ashm_maf, 
+#' maf = genome_to_exome(maf = myc_ashm_maf, 
 #'                 padding = 0) 
 #' 
 genome_to_exome = function(maf,
@@ -3678,6 +3683,8 @@ consolidate_lymphgen = function(sample_table,
 #' @export
 #'
 #' @examples
+#' library(dplyr)
+#' 
 #' this_meta = get_gambl_metadata() %>%
 #'  dplyr::filter(pathology == "DLBCL")
 #' 
@@ -3869,6 +3876,8 @@ standardize_chr_prefix = function(incoming_vector,
 #' @export
 #'
 #' @examples
+#' library(dplyr)
+#' 
 #' sample_seg = get_sample_cn_segments(this_sample_id = "14-36022T") %>%
 #'  rename("sample"="ID")
 #' 
@@ -4022,6 +4031,8 @@ calculate_pga = function(this_seg,
 #' @export
 #'
 #' @examples
+#' library(dplyr)
+#' 
 #' sample_seg = get_sample_cn_segments(this_sample_id = "14-36022T") %>%
 #'  rename("sample"="ID")
 #' 
@@ -4550,6 +4561,8 @@ cleanup_maf = function(maf_df){
 #' @export
 #'
 #' @examples
+#' library(dplyr)
+#' 
 #' small_maf = get_coding_ssm(limit_cohort = "dlbcl_reddy",
 #'                            seq_type = "capture") %>% 
 #'  dplyr::filter(Hugo_Symbol=="MYC")

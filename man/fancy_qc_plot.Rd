@@ -69,6 +69,8 @@ Sometimes it can also be useful to see how a subset of samples compares to anoth
 lastly, the plot can also be configured with custom plot title and axis labels (\code{plot_title} and \code{y_axis_lab}). For more information, see examples and parameter descriptions.
 }
 \examples{
+library(dplyr)
+
 #Example 1 - using these_sample_ids parameter
 #subset on FL cases with QC metrics available and plot
 kridel_fl = get_gambl_metadata() \%>\%

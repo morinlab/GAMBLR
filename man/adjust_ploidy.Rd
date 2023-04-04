@@ -42,6 +42,8 @@ multi-sample seg file. The telomeres are always excluded from calculation, and s
 The chromosome prefix is handled internally per projection and does not need to be consistent.
 }
 \examples{
+library(dplyr)
+
 sample_seg = get_sample_cn_segments(this_sample_id = "14-36022T") \%>\%
  rename("sample"="ID")
 

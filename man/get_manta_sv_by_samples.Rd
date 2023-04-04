@@ -9,7 +9,8 @@ get_manta_sv_by_samples(
   min_vaf = 0.1,
   min_score = 40,
   pass = TRUE,
-  projection = "grch37"
+  projection = "grch37",
+  verbose = TRUE
 )
 }
 \arguments{
@@ -22,6 +23,8 @@ get_manta_sv_by_samples(
 \item{pass}{If set to TRUE, only return SVs that are annotated with PASS in the FILTER column. Set to FALSE to keep all variants, regardless if they PASS the filters. Default is TRUE.}
 
 \item{projection}{The projection of returned calls. Default is grch37.}
+
+\item{verbose}{Set to FALSE to prevent the path of the requested bedpe file to be printed.}
 }
 \value{
 A data frame containing the Manta outputs from all sample_id in these_samples_metadata in a bedpe-like format with additional columns extracted from the VCF column.
@@ -35,6 +38,7 @@ Is this function not what you are looking for? Try one of the following, similar
 \link{get_manta_sv}, \link{get_manta_sv_by_sample}
 }
 \examples{
+library(dplyr)
 all_sv = get_manta_sv()
 missing_samples = get_gambl_metadata() \%>\%
  anti_join(all_sv, by = c("sample_id" = "tumour_sample_id"))

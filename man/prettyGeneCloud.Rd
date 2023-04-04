@@ -38,6 +38,8 @@ Optional parameters are \code{these_genes}, \code{other_genes}, \code{these_gene
 If no genes are supplied when calling the function, this function will default to all lymphoma genes.
 }
 \examples{
+library(dplyr)
+
 #get all coding SSM
 maf = get_coding_ssm(seq_type = "genome")
 

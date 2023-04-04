@@ -68,6 +68,9 @@ get_excluded_samples = function(tool_name = "slms-3"){
 #' @export
 #'
 #' @examples
+#' library(dplyr)
+#' library(parallel)
+#' 
 #' #example 1, using a vector of patient IDs.
 #' patients = c("00-14595", "00-15201", "01-12047")
 #' patients_maf = get_ssm_by_patients(these_patient_ids = patients,
@@ -170,6 +173,9 @@ get_ssm_by_patients = function(these_patient_ids,
 #' @export
 #'
 #' @examples
+#' library(dplyr)
+#' library(parallel)
+#' 
 #' #examples using the these_sample_ids parameter.
 #' sample_ssms = get_ssm_by_samples(these_sample_ids = c("HTMCP-01-06-00485-01A-01D",
 #'                                                       "14-35472_tumorA",
@@ -1329,6 +1335,7 @@ get_combined_sv = function(min_vaf = 0,
 #' @param pass If set to TRUE, only return SVs that are annotated with PASS in the FILTER column. Set to FALSE to keep all variants, regardless if they PASS the filters. Default is TRUE. 
 #' @param pairing_status Use to restrict results (if desired) to matched or unmatched results (default is to return all).
 #' @param from_flatfile Set to TRUE by default, FALSE is no longer supported (database).
+#' @param verbose Set to FALSE to prevent the path of the requested bedpe file to be printed.
 #'
 #' @return A data frame in a bedpe-like format with additional columns that allow filtering of high-confidence SVs.
 #' 
@@ -1336,14 +1343,15 @@ get_combined_sv = function(min_vaf = 0,
 #' @export
 #'
 #' @examples
+#' library(dplyr)
 #' #lazily get every SV in the table with default quality filters
-#' all_sv = get_manta_sv()
+#' all_sv = get_manta_sv(verbose = FALSE)
 #'
 #' #get all SVs for a single sample
 #' some_sv = get_manta_sv(these_sample_ids = "94-15772_tumorA")
 #'
 #' #get the SVs in a region around MYC
-#' myc_locus_sv = get_manta_sv(region = "8:128723128-128774067")
+#' myc_locus_sv = get_manta_sv(region = "8:128723128-128774067", verbose = FALSE)
 #'
 #' #get SVs for multiple samples, using these_samples_id
 #' my_samples = get_gambl_metadata() %>% 
@@ -1352,12 +1360,15 @@ get_combined_sv = function(min_vaf = 0,
 #'  pull(sample_id)
 #' 
 #' my_svs_2 = get_manta_sv(these_sample_ids = my_samples,
-#'                         projection = "hg38")
+#'                         projection = "hg38",
+#'                         verbose = FALSE)
 #'
 #' #get SVs for multiple samples using a metadata table and with no VAF/score filtering
 #' my_metadata = get_gambl_metadata() %>% 
 #'  head(10)
+#' 
 #' my_svs = get_manta_sv(these_samples_metadata = my_metadata,
+#'                       verbose = FALSE,
 #'                       min_vaf = 0,
 #'                       min_score = 0)
 #'
@@ -1372,7 +1383,8 @@ get_manta_sv = function(these_sample_ids,
                         min_score = 40,
                         pass = TRUE,
                         pairing_status,
-                        from_flatfile = TRUE){
+                        from_flatfile = TRUE,
+                        verbose = TRUE){
   
   if(!missing(region)){
     region = gsub(",", "", region)
@@ -1427,7 +1439,8 @@ get_manta_sv = function(these_sample_ids,
                                            projection = projection,
                                            min_vaf = min_vaf,
                                            min_score = min_score,
-                                           pass = pass)
+                                           pass = pass,
+                                           verbose = verbose)
     
     #combine current manta merged results with missing samples
     all_sv = bind_rows(all_sv, missing_sv)
@@ -2101,6 +2114,7 @@ append_to_table = function(table_name,
 #' @export
 #'
 #' @examples
+#' library(dplyr)
 #' regions_bed = grch37_ashm_regions %>%
 #'  mutate(name = paste(gene, region, sep = "_"))
 #' 
@@ -2181,6 +2195,8 @@ get_ashm_count_matrix = function(regions_bed,
 #' @export
 #'
 #' @examples
+#' library(dplyr)
+#' 
 #' #basic usage, adding custom names from bundled ashm data frame
 #' regions_bed = grch37_ashm_regions %>% 
 #'  mutate(name = paste(gene, region, sep = "_"))
@@ -2762,11 +2778,11 @@ get_gene_cn_and_expression = function(gene_symbol,
 #' MYC_expr = get_gene_expression(hugo_symbols = c("MYC"), join_with = "mrna")
 #' 
 #' #Read full expression values df (no subsetting on genes)
-#' full_expression_df = get_gene_expression_new(all_genes = TRUE,
+#' full_expression_df = get_gene_expression(all_genes = TRUE,
 #'                                              join_with = "genome")
 #' 
 #' #Use loaded df (in the previous step) to get expression values for IRF4 and MYC.
-#' irf4_myc_expressions = get_gene_expression_new(hugo_symbols = c("IRF4", "MYC"),
+#' irf4_myc_expressions = get_gene_expression(hugo_symbols = c("IRF4", "MYC"),
 #'                                                all_genes = FALSE, 
 #'                                                join_with = "genome",
 #'                                                from_flatfile = FALSE,
@@ -2921,6 +2937,7 @@ get_gene_expression = function(metadata,
 #' @param min_score The lowest Manta somatic score for a SV to be returned. Default value is 40.
 #' @param pass If set to TRUE, only return SVs that are annotated with PASS in the FILTER column. Set to FALSE to keep all variants, regardless if they PASS the filters. Default is TRUE. 
 #' @param projection The projection of returned calls. Default is grch37.
+#' @param verbose Set to FALSE to prevent the path of the requested bedpe file to be printed.
 #' 
 #' @return A data frame containing the Manta outputs from all sample_id in these_samples_metadata in a bedpe-like format with additional columns extracted from the VCF column.
 #'
@@ -2928,6 +2945,7 @@ get_gene_expression = function(metadata,
 #' @export
 #'
 #' @examples
+#' library(dplyr)
 #' all_sv = get_manta_sv()
 #' missing_samples = get_gambl_metadata() %>%
 #'  anti_join(all_sv, by = c("sample_id" = "tumour_sample_id"))
@@ -2938,7 +2956,8 @@ get_manta_sv_by_samples = function(these_samples_metadata,
                                    min_vaf = 0.1,
                                    min_score = 40,
                                    pass = TRUE,
-                                   projection = "grch37"){
+                                   projection = "grch37",
+                                   verbose = TRUE){
   
   #check remote configuration
   remote_session = check_remote_configuration(auto_connect = TRUE)
@@ -2957,7 +2976,8 @@ get_manta_sv_by_samples = function(these_samples_metadata,
                                                                  min_vaf = min_vaf,
                                                                  min_score = min_score,
                                                                  pass = pass,
-                                                                 projection = projection)})
+                                                                 projection = projection,
+                                                                 verbose = verbose)})
   
   #un-nest list into long format.
   merged_bedpe = bind_rows(all_bedpe)
@@ -3026,6 +3046,7 @@ get_manta_sv_by_samples = function(these_samples_metadata,
 #' @param min_score The lowest Manta somatic score for a SV to be returned. Default value is 40.
 #' @param pass If set to TRUE, only return SVs that are annotated with PASS in the FILTER column. Set to FALSE to keep all variants, regardless if they PASS the filters. Default is TRUE. 
 #' @param projection The projection of returned calls. Default is grch37.
+#' @param verbose Set to FALSE to prevent the path of the requested bedpe file to be printed.
 #'
 #' @return a data frame containing the Manta outputs from this_sample_id in a bedpe-like format with additional columns extracted from the VCF column.
 #'
@@ -3033,6 +3054,8 @@ get_manta_sv_by_samples = function(these_samples_metadata,
 #' @export
 #'
 #' @examples
+#' library(dplyr)
+#' 
 #' #example 1
 #' #get manta calls for a sample that needs to be lifted to "hg38" and let this function
 #' #take care of the liftover step for you. 
@@ -3057,7 +3080,8 @@ get_manta_sv_by_sample = function(this_sample_id,
                                   min_vaf = 0.1,
                                   min_score = 40,
                                   pass = TRUE,
-                                  projection = "grch37"){
+                                  projection = "grch37",
+                                  verbose = TRUE){
 
   #safetynet for preventing users to mistakenly return un-lifted variant calls.
   if(!force_lift){ #i.e I will run liftover on my own, based on the information in the extra column (need_lift).
@@ -3121,7 +3145,9 @@ get_manta_sv_by_sample = function(this_sample_id,
   }
   
   #read sample flat-file
-  message(paste0("Reading ", this_sample_id, " from: ", bedpe_path))
+  if(verbose){
+    message(paste0("Reading ", this_sample_id, " from: ", bedpe_path))
+  }
   bedpe_dat_raw = suppressMessages(read_tsv(bedpe_path, comment = "##", col_types = "cddcddccccccccccccccccc"))
 
   #return empty data frame

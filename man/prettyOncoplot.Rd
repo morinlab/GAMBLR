@@ -153,10 +153,12 @@ The first one should match the Tumor_Sample_Barcode in the MAF object or onco_ma
 sample_id, pathology
 }
 \examples{
+library(grid)
+
 #get some data
 maf_data = get_coding_ssm(seq_type = "genome")
 maf_metadata = get_gambl_metadata()
-maf = read.maf(maf_data, clinicalData = maf_metadata)
+maf = maftools::read.maf(maf_data, clinicalData = maf_metadata)
 
 #define some genes of interest
 bl_genes = c("NFKBIZ", "ID3", "TP53", "ARID1A", "FBXO11", 

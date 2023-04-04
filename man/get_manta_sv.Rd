@@ -16,7 +16,8 @@ get_manta_sv(
   min_score = 40,
   pass = TRUE,
   pairing_status,
-  from_flatfile = TRUE
+  from_flatfile = TRUE,
+  verbose = TRUE
 )
 }
 \arguments{
@@ -43,6 +44,8 @@ get_manta_sv(
 \item{pairing_status}{Use to restrict results (if desired) to matched or unmatched results (default is to return all).}
 
 \item{from_flatfile}{Set to TRUE by default, FALSE is no longer supported (database).}
+
+\item{verbose}{Set to FALSE to prevent the path of the requested bedpe file to be printed.}
 }
 \value{
 A data frame in a bedpe-like format with additional columns that allow filtering of high-confidence SVs.
@@ -68,14 +71,15 @@ Is this function not what you are looking for? Try one of the following, similar
 \link{get_combined_sv}, \link{get_manta_sv_by_sample}, \link{get_manta_sv_by_samples}
 }
 \examples{
+library(dplyr)
 #lazily get every SV in the table with default quality filters
-all_sv = get_manta_sv()
+all_sv = get_manta_sv(verbose = FALSE)
 
 #get all SVs for a single sample
 some_sv = get_manta_sv(these_sample_ids = "94-15772_tumorA")
 
 #get the SVs in a region around MYC
-myc_locus_sv = get_manta_sv(region = "8:128723128-128774067")
+myc_locus_sv = get_manta_sv(region = "8:128723128-128774067", verbose = FALSE)
 
 #get SVs for multiple samples, using these_samples_id
 my_samples = get_gambl_metadata() \%>\% 
@@ -84,12 +88,15 @@ my_samples = get_gambl_metadata() \%>\%
  pull(sample_id)
 
 my_svs_2 = get_manta_sv(these_sample_ids = my_samples,
-                        projection = "hg38")
+                        projection = "hg38",
+                        verbose = FALSE)
 
 #get SVs for multiple samples using a metadata table and with no VAF/score filtering
 my_metadata = get_gambl_metadata() \%>\% 
  head(10)
+
 my_svs = get_manta_sv(these_samples_metadata = my_metadata,
+                      verbose = FALSE,
                       min_vaf = 0,
                       min_score = 0)
 

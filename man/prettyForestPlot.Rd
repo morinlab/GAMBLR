@@ -62,6 +62,8 @@ This is done with the \code{min_mutations} parameter.
 For extended examples on how to use this function, refer to the example inside the function documentation or the vignettes.
 }
 \examples{
+library(dplyr)
+
 metadata = get_gambl_metadata(case_set = "tFL-study") #\%>\%
   dplyr::filter(pairing_status == "matched") \%>\%
   dplyr::filter(consensus_pathology \%in\% c("FL", "DLBCL"))

@@ -40,6 +40,8 @@ This function internally calls \link{get_ssm_by_region} thus, the parameters ava
 For more details on how these parameters can be used, refer to \link{get_ssm_by_region}.
 }
 \examples{
+library(dplyr)
+
 #define a region.
 my_region = gene_to_region(gene_symbol = "MYC", 
                            return_as = "region")

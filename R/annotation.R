@@ -211,7 +211,8 @@ annotate_recurrent_cnv = function(seg_df,
 #' @export
 #'
 #' @examples
-#' all_annotated = get_manta_sv() %>% annotate_sv()
+#' library(dplyr)
+#' all_annotated = get_manta_sv(verbose = FALSE) %>% annotate_sv()
 #' ig_annotated = annotate_igh_breakpoints(all_annotated)
 #'
 annotate_igh_breakpoints = function(annotated_df,
@@ -348,7 +349,7 @@ annotate_driver_ssm = function(maf_df,
 #' @export
 #'
 #' @examples
-#' sv_df = get_manta_sv()
+#' sv_df = get_manta_sv(verbose = FALSE)
 #' annotated_entrez = annotate_sv(sv_data = sv_df,
 #'                                with_chr_prefix = FALSE,
 #'                                collapse_redundant = FALSE,

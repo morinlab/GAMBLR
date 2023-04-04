@@ -44,7 +44,7 @@ Annotate a data frame of SV breakpoints represented in an extended BEDPE format.
 Specify a data frame with SVs (preferably the output from \link{get_manta_sv}) to the \code{sv_df} parameter and get back the same data frame with SV annotations.
 }
 \examples{
-sv_df = get_manta_sv()
+sv_df = get_manta_sv(verbose = FALSE)
 annotated_entrez = annotate_sv(sv_data = sv_df,
                                with_chr_prefix = FALSE,
                                collapse_redundant = FALSE,

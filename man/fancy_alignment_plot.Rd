@@ -58,6 +58,8 @@ Similarly to \code{these_sample_ids}, this parameter also expects a data frame w
 mean values for all plotted metrics and corrected coverage. To enable these features, simply set \code{add_mean} and \code{add_corrected_coverage} to TRUE (default).
 }
 \examples{
+library(dplyr)
+
 #Example 1 - using these_sample_ids parameter
 #subset on FL cases with QC metrics available and plot
 kridel_fl = get_gambl_metadata() \%>\%
