@@ -1386,7 +1386,29 @@ get_manta_sv = function(these_sample_ids,
   if(from_flatfile){
     all_sv = get_combined_sv(projection = projection)
 
-    all_meta = get_gambl_metadata()
+    #sample IDs are provided, metadata is not
+    if(!missing(these_sample_ids) && missing(these_samples_metadata)){
+      all_meta = get_gambl_metadata() %>%
+        dplyr::filter(sample_id %in% these_sample_ids)
+    }
+    
+    #metadata is provided, sample IDs are not.
+    if(!missing(these_samples_metadata) && missing(these_sample_ids)){
+      all_meta = these_samples_metadata
+    }
+
+    #missing sample IDs and metadata
+    if(missing(these_sample_ids) && missing(these_samples_metadata)){
+      all_meta = get_gambl_metadata()
+    }
+
+    #both metadata and sample IDs are provided
+    if(!missing(these_samples_metadata) && !missing(these_sample_ids)){
+      #sanity check to see if the provided sample ID(s) are in the provided metadata
+        message("Warning, you have provided both sample ID(s) (with `these_sample_ids`) and metadata (with `these_samples_meetadata`)")
+        message("This function will now default to the sample IDs present in the metadata table...")
+        all_meta = these_samples_metadata
+      }
 
     #add pairing status to get_combined_sv return
     sub_meta = all_meta %>%
@@ -1399,16 +1421,17 @@ get_manta_sv = function(these_sample_ids,
     missing_samples = all_meta %>%
       anti_join(all_sv, by = c("sample_id" = "tumour_sample_id"))
     
-    #call get manta_sv_by_samples on samples missing from current merge
-    missing_sv = get_manta_sv_by_samples(these_samples_metadata = missing_samples,
-                                         projection = projection,
-                                         min_vaf = min_vaf,
-                                         min_score = min_score,
-                                         pass = pass)
+    if(nrow(missing_samples) > 0){
+      #call get manta_sv_by_samples on samples missing from current merge
+      missing_sv = get_manta_sv_by_samples(these_samples_metadata = missing_samples,
+                                           projection = projection,
+                                           min_vaf = min_vaf,
+                                           min_score = min_score,
+                                           pass = pass)
     
     #combine current manta merged results with missing samples
     all_sv = bind_rows(all_sv, missing_sv)
-    
+    }    
   }else{
     stop("database usage is deprecated, please set from_flatfile to TRUE...")
   }
@@ -1438,18 +1461,6 @@ get_manta_sv = function(these_sample_ids,
   if(!missing(pairing_status)){
     all_sv = all_sv %>%
       dplyr::filter(pair_status == pairing_status)
-  }
-
-  #sample IDs filter
-  if(!missing(these_sample_ids) && missing(these_samples_metadata)){
-    all_sv = all_sv %>%
-      dplyr::filter(tumour_sample_id %in% these_sample_ids)
-  }
-  
-  #metadata filter
-  if(!missing(these_samples_metadata) && missing(these_sample_ids)){
-    all_sv = all_sv %>%
-      dplyr::filter(tumour_sample_id %in% these_samples_metadata$sample_id)
   }
   
   #as data frame
@@ -2955,16 +2966,21 @@ get_manta_sv_by_samples = function(these_samples_metadata,
   to_be_lifted = merged_bedpe %>%
     dplyr::filter(need_lift == TRUE)
   
-  #lift to selected projection
-  lifted_calls = liftover_bedpe(bedpe_df = to_be_lifted, target_build = projection)
-  
-  #subset calls that does not need a "lift"
-  no_lift_needed = merged_bedpe %>%
-    dplyr::filter(need_lift == FALSE)
-  
-  #combine calls (lifted and not lifted), arrange and sort accordingly, drop temporary column
-  merged_bedpe = bind_rows(lifted_calls, no_lift_needed) %>%
-    dplyr::select(-need_lift)
+  if(nrow(to_be_lifted) > 0){
+    lifted_calls = liftover_bedpe(bedpe_df = to_be_lifted, target_build = projection)
+    
+    #subset calls that does not need a "lift"
+    no_lift_needed = merged_bedpe %>%
+      dplyr::filter(need_lift == FALSE)
+    
+    #combine calls (lifted and not lifted), arrange and sort accordingly, drop temporary column
+    merged_bedpe = bind_rows(lifted_calls, no_lift_needed) %>%
+      dplyr::select(-need_lift)
+    
+  }else{ #if no samples needs to be lifted, just remove the need_lift column
+    merged_bedpe = merged_bedpe %>%
+      dplyr::select(-need_lift)
+  }
 
   #add chr prefix to the chromosome name for builds that expect it, but only add when necessary
   #hg38 and hg19 (with chr prefix)
