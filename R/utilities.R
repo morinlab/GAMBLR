@@ -2396,9 +2396,7 @@ referesh_metadata_tables = function(){
 #' @noRd
 #'
 #' @examples
-#' \dontrun{
 #' sane_meta_data = sanity_check_metadata()
-#' }
 #' 
 sanity_check_metadata = function(){
 
