@@ -2291,17 +2291,15 @@ get_ssm_by_regions = function(regions_list,
 #' @param qstart Query start coordinate of the range you are restricting to.
 #' @param qend Query end coordinate of the range you are restricting to.
 #' @param region Region formatted like chrX:1234-5678 instead of specifying chromosome, start and end separately.
-#' @param basic_columns Set to TRUE to override the default behaviour of returning only the first 45 columns of MAF data.
-#' @param streamlined Return a basic rather than full MAF format, default is FALSE.
-#' @param maf_data Parameter description.
+#' @param basic_columns Set to FALSE to return MAF with all columns (116). Default is TRUE, which returns the first 45 columns. Note that if streamlined is set to TRUE, only two columns will be returned, regardless of what's specified in this parameter.
+#' @param streamlined Return Start_Position and Tumor_Smaple_Barcode as the only two MAF columns. Default is FALSE. Setting to TRUE will overwrite anything specified with `basic_columns`.
+#' @param maf_data An already loaded MAF like object to subset to regions of interest.
 #' @param seq_type The seq_type you want back, default is genome.
 #' @param projection Obtain variants projected to this reference (one of grch37 or hg38).
 #' @param from_indexed_flatfile Set to TRUE to avoid using the database and instead rely on flatfiles (only works for streamlined data, not full MAF details).
 #' @param augmented default: TRUE. Set to FALSE if you instead want the original MAF from each sample for multi-sample patients instead of the augmented MAF .
 #' @param min_read_support Only returns variants with at least this many reads in t_alt_count (for cleaning up augmented MAFs).
 #' @param mode Only works with indexed flatfiles. Accepts 2 options of "slms-3" and "strelka2" to indicate which variant caller to use. Default is "slms-3".
-#' @param maf_columns Specify what MAF columns you want back. `basic_columns` needs to be set to TRUE.
-#' @param maf_column_types The column types of specified MAF columns `maf_columns`.
 #' @param verbose Boolean parameter set to FALSE per default.
 #'
 #' @return A data frame containing all the MAF data columns (one row per mutation).
@@ -2326,7 +2324,7 @@ get_ssm_by_region = function(chromosome,
                              qstart,
                              qend,
                              region = "",
-                             basic_columns = FALSE,
+                             basic_columns = TRUE,
                              streamlined = FALSE,
                              maf_data,
                              seq_type = "genome",
@@ -2335,23 +2333,26 @@ get_ssm_by_region = function(chromosome,
                              augmented = TRUE,
                              min_read_support = 3,
                              mode = "slms-3",
-                             maf_columns = c("Chromosome", "Start_Position", "End_Position", "Tumor_Sample_Barcode", "t_alt_count"),
-                             maf_column_types = "ciici",
                              verbose = FALSE){
+
   remote_session = check_remote_configuration(auto_connect = TRUE)
-  if(basic_columns){
-    #this means we ignore/clobber the contents of maf_columns so the first 45 are used instead
+  
+  if(streamlined){
+    maf_columns = names(maf_header)[c(6,16,42)]
+    maf_column_types = "ici"
+
+  }else if(basic_columns){ #get first 45 columns
     maf_columns = names(maf_header)[c(1:45)]
     maf_column_types = "ccccciiccccccccccccccccccccccnccccccccciiiiii"
-    streamlined = FALSE
-    #these two arguments are really mutually exclusive so basic_columns must force the other to be FALSE to avoid problems
+  }else{
+    maf_columns = names(maf_header)[c(1:75)] #for some reason, this only works for the first 75 columns. Any additional columns will return only 10 columns. Remaining columns will be retreived in a later step.
+    maf_column_types = "ciccciiccccccclcccclllllllllllllllccccciiiiiiccccccccccccinnccccccccccccccc"
   }
   #check that maf_columns requested all exist in the header and get their indexes
   if(!all(maf_columns %in% names(maf_header))){
     stop("Cannot find one of the requested maf_columns in your MAF header")
   }
   maf_indexes = maf_header[maf_columns]
-
   maf_indexes = maf_indexes[order(maf_indexes)]
   maf_columns = names(maf_indexes)
   maf_indexes = unname(maf_indexes)
@@ -2364,7 +2365,6 @@ get_ssm_by_region = function(chromosome,
   base_path_remote = check_config_value(config::get("project_base",config="default"))
 
   if(from_indexed_flatfile){
-
     #test if we have permissions for the full gambl + icgc merge
     if(mode == "slms-3"){
       if(augmented){
@@ -2449,8 +2449,29 @@ get_ssm_by_region = function(chromosome,
         muts = run_command_remote(ssh_session,tabix_command)
         muts_region = vroom::vroom(I(muts),col_types = maf_column_types,
                                    col_names=maf_columns)
-      }else{
 
+        if(!basic_columns){ #get the remaining columns (76 to 116)
+          maf_columns_set2 = names(maf_header)[c(76:116)]
+          maf_column_types_set2 = "cccclcccccccccnclcncccclncccclllllllllicn"
+
+          maf_indexes_set2 = maf_header[maf_columns_set2]
+          maf_indexes_set2 = maf_indexes_set2[order(maf_indexes_set2)]
+          maf_columns_set2 = names(maf_indexes_set2)
+          maf_indexes_set2 = unname(maf_indexes_set2)
+          
+          tabix_command_set2 = paste("/home/rmorin/miniconda3/bin/tabix", full_maf_path_comp, region, "| cut -f", paste(maf_indexes_set_2,collapse=","))
+          
+          if(verbose){
+          print(tabix_command_set2)
+          }
+          
+          muts_set2 = run_command_remote(ssh_session,tabix_command_set2)
+          muts_region_set2 = vroom::vroom(I(muts_set2),col_types = maf_column_types_set2,
+                                     col_names=maf_columns_set2)
+
+          muts_region = cbind(muts_region, muts_region_set2) #cbind first 75 columns with the remaining columns.
+        }
+      }else{
         tabix_command = paste(tabix_bin, full_maf_path_comp, region, "| cut -f" , paste(maf_indexes,collapse=","))
         if(verbose){
           print(tabix_command)
@@ -2476,6 +2497,24 @@ get_ssm_by_region = function(chromosome,
           print('SUCCESS')
         }
       }
+
+      if(!basic_columns){ #get the remaining columns (76 to 116)
+        maf_columns_set2 = names(maf_header)[c(76:116)]
+        maf_column_types_set2 = "cccclcccccccccnclcncccclncccclllllllllicn"
+
+        maf_indexes_set2 = maf_header[maf_columns_set2]
+        maf_indexes_set2 = maf_indexes_set2[order(maf_indexes_set2)]
+        maf_columns_set2 = names(maf_indexes_set2)
+        maf_indexes_set2 = unname(maf_indexes_set2)
+
+        tabix_command_set2 = paste(tabix_bin, full_maf_path_comp, region, "| cut -f" , paste(maf_indexes_set2,collapse=","))
+        muts_set2 = system(tabix_command_set2, intern = TRUE)
+        muts_region_set2 = vroom::vroom(I(muts_set2), col_types = paste(maf_column_types_set2,collapse=""),
+                            col_names=maf_columns_set2)
+
+        muts_region = cbind(muts_region, muts_region_set2) #cbind first 75 columns with the remaining columns.
+      }
+
       if(augmented){
         # drop poorly supported reads but only from augmented MAF
         muts_region = dplyr::filter(muts_region, t_alt_count >= min_read_support)
@@ -2496,7 +2535,7 @@ get_ssm_by_region = function(chromosome,
 
   if(streamlined){
     muts_region = muts_region %>%
-      dplyr::select(Start_Position, Tumor_Sample_Barcode)
+      dplyr::select(-t_alt_count) #drop t_alt_count columns (used for augmented MAFs)
   }
 
   return(muts_region)
@@ -2509,7 +2548,7 @@ get_ssm_by_region = function(chromosome,
 #'
 #' @details Effectively retrieve coding SSM calls. Multiple filtering parameters are available for this function.
 #' For more information on how to implement the filtering parameters, refer to the parameter descriptions as well as examples in the vignettes.
-#' Is this function not what you are looking for? Try one of the following, similar, functions; [GAMBLR::get_coding_ssm], [GAMBLR::get_coding_ssm_status],
+#' Is this function not what you are looking for? Try one of the following, similar, functions; [GAMBLR::get_coding_ssm_status],
 #' [GAMBLR::get_ssm_by_patients], [GAMBLR::get_ssm_by_sample], [GAMBLR::get_ssm_by_samples], [GAMBLR::get_ssm_by_region], [GAMBLR::get_ssm_by_regions]
 #'
 #' @param limit_cohort Supply this to restrict mutations to one or more cohorts in a vector.
