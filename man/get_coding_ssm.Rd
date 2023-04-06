@@ -65,7 +65,7 @@ Retrieve all coding SSMs from the GAMBL database in MAF-like format.
 \details{
 Effectively retrieve coding SSM calls. Multiple filtering parameters are available for this function.
 For more information on how to implement the filtering parameters, refer to the parameter descriptions as well as examples in the vignettes.
-Is this function not what you are looking for? Try one of the following, similar, functions; \link{get_coding_ssm}, \link{get_coding_ssm_status},
+Is this function not what you are looking for? Try one of the following, similar, functions; \link{get_coding_ssm_status},
 \link{get_ssm_by_patients}, \link{get_ssm_by_sample}, \link{get_ssm_by_samples}, \link{get_ssm_by_region}, \link{get_ssm_by_regions}
 }
 \examples{

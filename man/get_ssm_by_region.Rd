@@ -9,7 +9,7 @@ get_ssm_by_region(
   qstart,
   qend,
   region = "",
-  basic_columns = FALSE,
+  basic_columns = TRUE,
   streamlined = FALSE,
   maf_data,
   seq_type = "genome",
@@ -18,9 +18,6 @@ get_ssm_by_region(
   augmented = TRUE,
   min_read_support = 3,
   mode = "slms-3",
-  maf_columns = c("Chromosome", "Start_Position", "End_Position",
-    "Tumor_Sample_Barcode", "t_alt_count"),
-  maf_column_types = "ciici",
   verbose = FALSE
 )
 }
@@ -33,11 +30,11 @@ get_ssm_by_region(
 
 \item{region}{Region formatted like chrX:1234-5678 instead of specifying chromosome, start and end separately.}
 
-\item{basic_columns}{Set to TRUE to override the default behaviour of returning only the first 45 columns of MAF data.}
+\item{basic_columns}{Set to FALSE to return MAF with all columns (116). Default is TRUE, which returns the first 45 columns. Note that if streamlined is set to TRUE, only two columns will be returned, regardless of what's specified in this parameter.}
 
-\item{streamlined}{Return a basic rather than full MAF format, default is FALSE.}
+\item{streamlined}{Return Start_Position and Tumor_Smaple_Barcode as the only two MAF columns. Default is FALSE. Setting to TRUE will overwrite anything specified with \code{basic_columns}.}
 
-\item{maf_data}{Parameter description.}
+\item{maf_data}{An already loaded MAF like object to subset to regions of interest.}
 
 \item{seq_type}{The seq_type you want back, default is genome.}
 
@@ -50,10 +47,6 @@ get_ssm_by_region(
 \item{min_read_support}{Only returns variants with at least this many reads in t_alt_count (for cleaning up augmented MAFs).}
 
 \item{mode}{Only works with indexed flatfiles. Accepts 2 options of "slms-3" and "strelka2" to indicate which variant caller to use. Default is "slms-3".}
-
-\item{maf_columns}{Specify what MAF columns you want back. \code{basic_columns} needs to be set to TRUE.}
-
-\item{maf_column_types}{The column types of specified MAF columns \code{maf_columns}.}
 
 \item{verbose}{Boolean parameter set to FALSE per default.}
 }
