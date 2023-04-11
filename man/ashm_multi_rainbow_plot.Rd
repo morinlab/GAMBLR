@@ -51,7 +51,7 @@ my_plot = ashm_multi_rainbow_plot(regions_bed = "my_bed.bed",
                                   regions_to_display = "chr3",
                                   exclude_classification = "some-classification",
                                   metadata = "my_metadata",
-                                  custom_colours = c("#onecolour, "#anothercolour", "athirdcolour"),
+                                  custom_colours = c("onecolour", "anothercolour", "athirdcolour"),
                                   classification_column = "lymphgen",
                                   maf_data = my_maf)
 

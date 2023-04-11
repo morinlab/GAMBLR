@@ -27,7 +27,7 @@ calculate_pga(
 \item{exclude_centromeres}{Boolean argument specifying whether to exclude centromeres from calculation. Default is TRUE.}
 }
 \value{
-A data frame of sample_id and a float in the range \link{0..1} indicating the fraction of genome altered by CNV.
+data frame
 }
 \description{
 \code{calculate_pga} returns a data.frame with estimated proportion of genome altered for each sample.

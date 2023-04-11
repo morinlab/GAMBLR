@@ -22,7 +22,7 @@ prettyChromoplot(
 
 \item{genes_to_label}{Optional. Provide a data frame of genes to label (if mutated). The first 3 columns must contain chromosome, start, and end coordinates. Another required column must contain gene names and be named \code{gene}. All other columns are ignored. If no data frame provided, oncogenes from GAMBLR packages are used by default to annotate on the plot.}
 
-\item{cutoff}{Optional. Used to determine which regions to color as aberrant. Must be float in the range \link{0-1}. The higher the number, the less regions will be considered as aberrant. The default is 0.5.}
+\item{cutoff}{Optional. Used to determine which regions to color as aberrant. Must be float in the range between 0 and 1. The higher the number, the less regions will be considered as aberrant. The default is 0.5.}
 
 \item{adjust_amps}{Optional. The value of G-score for highest amplification peak will be multiplied by this value to determine how far up the gene label will be displayed. Default 0.5.}
 
@@ -39,7 +39,7 @@ prettyChromoplot(
 \item{segment.angle}{Optional. Numeric value in the range 0-180, where less than 90 skews control points of the arrow from label to data point toward the start point. Default 25.}
 }
 \value{
-Nothing
+plot
 }
 \description{
 Use GISTIC2.0 scores output to reproduce maftools::chromoplot with more flexibility.
@@ -55,6 +55,6 @@ prettyChromoplot("path_to_gistic_results/scores.gistic")
 
 #advanced usages
 prettyChromoplot("path_to_gistic_results/scores.gistic", genes_to_label="path_to_gene_coordinates_table.tsv", cutoff=0.75) +
-...(any ggplot options to customize plot appearance)
+# ...(any ggplot options to customize plot appearance)
 
 }

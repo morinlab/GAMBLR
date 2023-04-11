@@ -6,9 +6,9 @@ Authors@R:
     person("Ryan", "Morin", , "rdmorin@sfu.ca", role = c("aut", "cre"),
            comment = c(ORCID = "YOUR-ORCID-ID"))
 Description: What the package does (one paragraph).
-License: `use_mit_license()`
+License: MIT + file LICENSE
 Depends:
-    R (>= 2.10)
+    R (>= 3.5.0)
 Imports:
     broom,
     circlize,
@@ -28,11 +28,14 @@ Imports:
     ggrepel,
     ggsci,
     ggthemes,
+    glue,
     gridExtra,
+    lubridate,
     maftools,
     metaviz,
-    nloptr (<= 1.2.2.3),
+    nloptr,
     plotly,
+    plyr,
     purrr,
     RCircos,
     RColorBrewer,
@@ -41,6 +44,8 @@ Imports:
     rtracklayer,
     S4Vectors,
     SRAdb,
+    ssh,
+    stringi,
     stringr,
     tibble,
     tidyr,
@@ -60,5 +65,6 @@ Remotes:
 biocViews:
 Encoding: UTF-8
 LazyData: true
+LazyDataCompression: xz
 Roxygen: list(markdown = TRUE)
 RoxygenNote: 7.2.1

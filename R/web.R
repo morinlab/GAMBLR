@@ -1,15 +1,13 @@
 
 #' @title Web Initialize GAMBL Site.
-#' 
+#'
 #' @description Set up a fresh instance of a website to host on gitlab.
-#' 
+#'
 #' @param site_base_name Base name for site.
 #' @param base_directory Path to base directory.
 #' @param my_name My name.
 #' @param my_gitlab_email The email used for gitlab.
 #'
-#' @return
-#' 
 #' @import workflowr
 #' @export
 #'
