@@ -2,8 +2,7 @@
 % Please edit documentation in R/database.R
 \name{get_gambl_outcomes}
 \alias{get_gambl_outcomes}
-\title{INTERNAL FUNCTION called by get_gambl_metadata, not meant for out-of-package usage.
-Get the patient-centric clinical metadata.}
+\title{Get GAMBL Outcomes.}
 \usage{
 get_gambl_outcomes(
   patient_ids,
@@ -16,20 +15,22 @@ get_gambl_outcomes(
 \arguments{
 \item{patient_ids}{Vector of patient IDs.}
 
-\item{time_unit}{Return follow-up times in one of three time units: year, month or day.}
+\item{time_unit}{Return follow-up times in one of three time units: year, month or day. Default is "year".}
 
-\item{censor_cbioportal}{Optionally request the censoring to be encoded in the specific style required by cBioPortal.}
+\item{censor_cbioportal}{Optionally request the censoring to be encoded in the specific style required by cBioPortal. Default is FALSE.}
 
-\item{complete_missing}{Optionally fill in any gaps to ensure we have values for every patient (censor at 0 if missing).}
+\item{complete_missing}{Optionally fill in any gaps to ensure we have values for every patient (censor at 0 if missing). Default is FALSE.}
 
-\item{from_flatfile}{Optionally set to FALSE to use the database to get the survival data.}
+\item{from_flatfile}{Optionally set to FALSE to use the database to get the survival data. Default is TRUE.}
 }
 \value{
 Data frame with one row for each patient_id.
 }
 \description{
-INTERNAL FUNCTION called by get_gambl_metadata, not meant for out-of-package usage.
 Get the patient-centric clinical metadata.
+}
+\details{
+INTERNAL FUNCTION called by \code{get_gambl_metadata}, not meant for out-of-package usage.
 }
 \examples{
 outcome_df = get_gambl_outcomes()

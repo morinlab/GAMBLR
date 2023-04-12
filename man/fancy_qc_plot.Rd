@@ -2,72 +2,100 @@
 % Please edit documentation in R/viz.R
 \name{fancy_qc_plot}
 \alias{fancy_qc_plot}
-\title{Plot for visualizing QC metrics and allowing for grouping by different metadata columns.}
+\title{Plot Quality Control Metrics.}
 \usage{
 fancy_qc_plot(
-  these_samples,
-  filter_cohort,
-  filter_pathology,
+  these_sample_ids,
+  keep_cohort,
+  keep_pathology,
   seq_type = "genome",
   metadata,
+  these_samples_metadata,
   plot_data,
-  fill_by,
+  fill_by = "pathology",
+  labels = c("sample_id", "cohort"),
+  interactive = FALSE,
   comparison_samples,
-  filter_comp_cohort,
-  filter_comp_pathology,
   plot_title = "",
-  plot_subtitle = "",
   y_axis_lab = "",
   return_plotdata = FALSE
 )
 }
 \arguments{
-\item{these_samples}{Data frame with sample IDs (to be plotted) in the first column (has to be named sample_id).}
+\item{these_sample_ids}{Data frame with sample IDs (to be plotted) in the first column (has to be named sample_id).}
 
-\item{filter_cohort}{Optional parameter to be used when these_sample is NULL. Calls get_gambl_metadata() and filters on the cohort supplied in this parameter.}
+\item{keep_cohort}{Optional parameter to be used when these_sample is NULL. Calls get_gambl_metadata() and filters on the cohort supplied in this parameter.}
 
-\item{filter_pathology}{Optional parameter to be used when these_sample is NULL. Calls get_gambl_metadata() and filters on the pathology supplied in this parameter.}
+\item{keep_pathology}{Optional parameter to be used when these_sample is NULL. Calls get_gambl_metadata() and filters on the pathology supplied in this parameter.}
 
 \item{seq_type}{Selected seq type for incoming QC metrics.}
 
 \item{metadata}{Optional, user can provide a metadata df to subset sample IDs from.}
 
+\item{these_samples_metadata}{GAMBL metadata subset to the cases you want to process.}
+
 \item{plot_data}{Plotting parameter, define the data type to be plotted.}
 
-\item{fill_by}{Plotting parameter, Set fill for bar plot, can be pathology, cohort, etc.}
+\item{fill_by}{Parameter for specifying fill variable for grouped bar plot. Can be any factor from incoming metadata, e.g pathology, cohort, etc.}
 
-\item{comparison_samples}{Optional parameter, give the function a list of sample IDs to be compared against the main plotting group.}
+\item{labels}{If HTML plot version is rendered, you can specify what labels should be visible when hovering over the dots. Default is sample id and cohort. This parameter expects a vector of charachters.}
 
-\item{filter_comp_cohort}{Optional parameter for filtering the comparison group (cohort).}
+\item{interactive}{Boolean parameter for generating interactive plot (HTML). Default is FALSE.}
 
-\item{filter_comp_pathology}{Optional parameter for filtering the comparison group (pathology).}
+\item{comparison_samples}{Optional parameter, give the function a vector of sample IDs to be compared against the main plotting group. Pathology is default.}
 
 \item{plot_title}{Plotting parameter, plot title.}
 
-\item{plot_subtitle}{Plotting parameter, subtitle of generated plot.}
-
 \item{y_axis_lab}{Plotting parameter, label of y-axis.}
 
-\item{return_plotdata}{Optional parameter, if set to TRUE a list of acceptable data types for plotting will be returned, and nothing else.}
-
-\item{sort_by}{Plotting parameter, set sorting column for bar plots.}
+\item{return_plotdata}{Optional parameter, if set to TRUE a vector of acceptable data types for plotting will be returned, and nothing else.}
 }
 \value{
-plot as ggplot object.
+A plot as a ggplot object (grob).
 }
 \description{
 Plot for visualizing QC metrics and allowing for grouping by different metadata columns.
 }
+\details{
+This function is readily available for visualizing a variety of quality control metrics. To get started, the user can easily overview all the available metrics with \code{return_plotdata = TRUE}.
+When this parameter is set to TRUE, a vector of characters will be returned detailing all the, for this plot, available metrics. After deciding what metric to plot, simply give the metric of choice to the \code{plot_data} parameter.
+This function also lets the user provide a data frame with sample IDs to be included in the plot. Optionally, the user can also provide an already filtered metadata table with sample IDs of interest to the \code{these_samples_metadata}.
+If none of the two parameters are supplied, the user can easily restrict the plot to any cohort and/or pathology of their liking. This is done by calling \code{keep_cohort} and \code{keep_pathology}.
+If these parameters are used, the function will retrieve metadata for all available GAMBL sample IDs and then subset to the specified cohort or pathology.
+The layout of the returned plot can also be further customized with \code{sort_by}. This parameter controls the order in which samples would appear. Similarly, \code{fill_by} allows the user to control on what factor the plot will be filled by.
+In addition, the generated plot can also be returned as an interactive HTML rendering, allowing the user to easily hover over any of the points in the plot and get expanded information on each data point. To toggle this function, set the \code{interactive} parameter to TRUE.
+If an interactive plot is generated, it is also possible to dictate what information should be available in the plotted data points. Default for this parameter is sample ID and cohort.
+Sometimes it can also be useful to see how a subset of samples compares to another group; to do this one could call the function with a vector of additional sample IDs given to the \code{comparison_samples} parameter (see examples for more information).
+lastly, the plot can also be configured with custom plot title and axis labels (\code{plot_title} and \code{y_axis_lab}). For more information, see examples and parameter descriptions.
+}
 \examples{
-fancy_qc_plot(filter_pathology = "FL",
-              filter_cohort = "FL_Kridel",
-              filter_comp_pathology = "BL",
-              filter_comp_cohort = "BL_Pediatric",
-              plot_data = "AverageBaseQuality",
-              fill_by = "pathology",
-              plot_subtitle = "Example Plot",
-              y_axis_lab = "Average Base Quality",
-              plot_title = "A. Base Quality For FL_Kridel vs. BL_Pediatric",
-              seq_type = "genome")
+#Example 1 - using these_sample_ids parameter
+#subset on FL cases with QC metrics available and plot
+kridel_fl = get_gambl_metadata() \%>\%
+ dplyr::filter(pathology == "FL", cohort == "FL_Kridel") \%>\%
+ dplyr::select(sample_id) \%>\%
+
+my_plot_1 = fancy_qc_plot(these_sample_ids = kridel_fl,
+                          plot_data = "AverageBaseQuality",
+                          y_axis_lab = "Average Base Quality",
+                          plot_title = "Average Base Quality For FL_Kridel")
+
+#Example 2 - using already filtered metadata (these_samples_metadata)
+fl_metadata = get_gambl_metadata() \%>\%
+ dplyr::filter(pathology == "FL", cohort == "FL_Kridel")
+
+my_plot_2 = fancy_qc_plot(these_samples_metadata = fl_metadata,
+                          interactive = TRUE,
+                          labels = c("cohort", "pathology"),
+                          plot_data = "AverageBaseQuality",
+                          y_axis_lab = "Average Base Quality",
+                          plot_title = "Average Base Quality For FL_Kridel")
+
+#Example 3 - using in-house metadata filtering options
+my_plot_3 = fancy_qc_plot(keep_cohort = "FL_Kridel",
+                          keep_pathology = "FL",
+                          plot_data = "AverageBaseQuality",
+                          y_axis_lab = "Average Base Quality",
+                          plot_title = "Average Base Quality For FL_Kridel")
 
 }

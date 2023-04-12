@@ -2,8 +2,7 @@
 % Please edit documentation in R/database.R
 \name{append_to_table}
 \alias{append_to_table}
-\title{INTERNAL FUNCTION, not meant for out-of-package usage.
-Housekeeping function to add results to a table.}
+\title{Append To Table.}
 \usage{
 append_to_table(table_name, data_df)
 }
@@ -13,11 +12,13 @@ append_to_table(table_name, data_df)
 \item{data_df}{A dataframe of values to load into the table.}
 }
 \value{
-Table
+A table.
 }
 \description{
-INTERNAL FUNCTION, not meant for out-of-package usage.
 Housekeeping function to add results to a table.
+}
+\details{
+INTERNAL FUNCTION, not meant for out-of-package usage.
 }
 \examples{
 table_up = append_to_table("my_table", "my_df")

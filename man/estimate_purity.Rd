@@ -2,34 +2,36 @@
 % Please edit documentation in R/utilities.R
 \name{estimate_purity}
 \alias{estimate_purity}
-\title{Estimate purity.}
+\title{Estimate Purity.}
 \usage{
 estimate_purity(
   in_maf,
+  maf_df,
   in_seg,
-  sample_id,
+  this_sample_id,
   seg_file_source = "battenberg",
   show_plots = FALSE,
   assume_diploid = FALSE,
   coding_only = FALSE,
-  genes,
-  ssh_session
+  genes
 )
 }
 \arguments{
 \item{in_maf}{Path to a local maf file.}
 
+\item{maf_df}{Optional. Instead of using the path to a maf file, use a local dataframe as the maf file.}
+
 \item{in_seg}{Path to a local corresponding seg file for the same sample ID as the input maf.}
 
-\item{sample_id}{Specify the sample_id or any other string you want embedded in the file name.}
+\item{this_sample_id}{Specify the sample_id or any other string you want embedded in the file name.}
 
 \item{seg_file_source}{Specify what copy number calling program the input seg file is from, as it handles ichorCNA differently than WisecondorX, battenberg, etc.}
 
-\item{show_plots}{Optional. Show two faceted plots that display the VAF and purity distributions for each copy number state in the sample.}
+\item{show_plots}{Optional. Show two faceted plots that display the VAF and purity distributions for each copy number state in the sample. Default is FALSE.}
 
-\item{assume_diploid}{Optional. If no local seg file is provided, instead of defaulting to a GAMBL sample, this parameter annotates every mutation as copy neutral.}
+\item{assume_diploid}{Optional. If no local seg file is provided, instead of defaulting to a GAMBL sample, this parameter annotates every mutation as copy neutral. Default is FALSE.}
 
-\item{coding_only}{Optional. set to TRUE to rescrict to only coding variants.}
+\item{coding_only}{Optional. set to TRUE to restrict to only coding variants. Default is FALSE.}
 
 \item{genes}{Genes of interest.}
 }
@@ -37,10 +39,16 @@ estimate_purity(
 A list containing a data frame (MAF-like format) with the segmented absolute copy number data and three extra columns:
 VAF is the variant allele frequency calculated from the t_ref_count and t_alt_count
 Ploidy is the number of copies of an allele in the tumour cell
-Final_purity is the finalized purity estimation per mutation after considering different copy number states and LOH events
+Final_purity is the finalized purity estimation per mutation after considering different copy number states and LOH events.
 }
 \description{
-Estimate purity.
+Annotate a MAF with segmented absolute copy number data and added additional columns (VAF, Ploidy and Final_purity).
+}
+\details{
+This function takes a sample ID with the \code{this_sample_id} parameter and calls \code{assign_cn_to_ssm} to get CN information.
+The user can also use an already loaded maf file with \code{maf_df}. In addition, a path to the maf/seq file of interest can also be passed to this function with
+\code{in_maf} and \code{in_seg}. To visualize VAF and purity distributions, set the \code{show_plots} to TRUE (default is FALSE).
+For more information on how to run this function with the parameters at hand, refer to the parameter descriptions and function examples.
 }
 \examples{
 tumour_purity = estimate_purity(in_maf = "path/to/file.maf", in_seg = "path/to/file.seg", seg_file_source = "ichorCNA", show_plots = TRUE)

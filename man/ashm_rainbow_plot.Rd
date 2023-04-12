@@ -2,7 +2,7 @@
 % Please edit documentation in R/viz.R
 \name{ashm_rainbow_plot}
 \alias{ashm_rainbow_plot}
-\title{Make a rainbow plot of all mutations in a region, ordered and coloured by metadata.}
+\title{ASHM Rainbow Plot}
 \usage{
 ashm_rainbow_plot(
   mutations_maf,
@@ -13,14 +13,13 @@ ashm_rainbow_plot(
   bed,
   region,
   custom_colours,
-  hide_ids = TRUE,
-  ssh_session = NULL
+  hide_ids = TRUE
 )
 }
 \arguments{
 \item{mutations_maf}{A data frame containing mutations (MAF format) within a region of interest (i.e. use the get_ssm_by_region).}
 
-\item{metadata}{should be a data frame with sample_id as a column that should match Tumor_Sample_Barcode in the database.}
+\item{metadata}{should be a data frame with sample_id as a column.}
 
 \item{exclude_classifications}{Optional argument for excluding specific classifications from a metadeta file.}
 
@@ -42,11 +41,19 @@ ggplot2 object
 \description{
 Make a rainbow plot of all mutations in a region, ordered and coloured by metadata.
 }
+\details{
+This function creates a rainbow plot for all mutations in a region. Region can either be specified with the \code{region} parameter,
+or the user can provide a maf that has already been subset to the region(s) of interest with \code{mutation_maf}.
+As a third alternative, the regions can also be specified as a bed file with \code{bed}.
+Lastly, this function has a variety of parameters that can be used to further customize the returned plot in many different ways.
+Refer to the parameter descriptions, examples as well as the vignettes for more demonstrations how this function can be called.
+}
 \examples{
 #basic usage
 region = "chr6:90975034-91066134"
 metadata = get_gambl_metadata()
 plot = ashm_rainbow_plot(metadata = metadata, region = region)
+
 #advanced usages
 mybed = data.frame(start=c(128806578,128805652,128748315), end=c(128806992,128809822,128748880), name=c("TSS","enhancer","MYC-e1"))
 ashm_rainbow_plot(mutations_maf=my_mutations,metadata=my_metadata,bed=mybed)

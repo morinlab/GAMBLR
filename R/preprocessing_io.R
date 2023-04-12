@@ -2,16 +2,22 @@
 coding_class = c("Frame_Shift_Del", "Frame_Shift_Ins", "In_Frame_Del", "In_Frame_Ins", "Missense_Mutation", "Nonsense_Mutation", "Nonstop_Mutation", "Silent", "Splice_Region", "Splice_Site", "Targeted_Region", "Translation_Start_Site")
 
 
-#' Get the details including file paths for the anticipated outputs from a pipeline or tool
+#' @title Find Expected Outputs.
 #'
-#' @param targ_df Optionally provide a data frame with all file details
-#' @param tool_name The tool or pipeline that generated the files (should be the same for all)
-#' @param unix_group The unix group (should be the same for all)
-#' @param filename_end_pattern Optionally specify a pattern to search for the files among a longer set of files in the outputs
-#' @param update_db Set to TRUE to overwrite any existing rows in the table for this tool/unix_group combination
+#' @description Get the details including file paths for the anticipated outputs from a pipeline or tool.
+#'
+#' @details This function takes a tool or pipeline with `tool_name` and the unix group with `unix_group` and returns information such as paths to individual files.
+#' Optionally, the user can provide an already loaded data frame with all the file details (`targ_df`).
+#' for more information and examples, refer to the parameter descriptions as well as function examples.
+#'
+#' @param targ_df Optionally provide a data frame with all file details.
+#' @param tool_name The tool or pipeline that generated the files (should be the same for all).
+#' @param unix_group The unix group (should be the same for all).
+#' @param filename_end_pattern Optionally specify a pattern to search for the files among a longer set of files in the outputs.
+#' @param update_db Set to TRUE to overwrite any existing rows in the table for this tool/unix_group combination.
 #' @param target_path Path to targets.
 #'
-#' @return
+#' @import dplyr readr RMariaDB stringr DBI tidyr
 #' @export
 #'
 #' @examples
@@ -24,7 +30,7 @@ find_expected_outputs = function(targ_df,
                                  update_db = FALSE,
                                  target_path){
 
-  repo_base = config::get("repo_base")
+  repo_base = check_config_value(config::get("repo_base"))
   if(missing(target_path)){
     target_path = paste0(repo_base, "targets/", tool_name, "--", unix_group)
   }
@@ -33,7 +39,7 @@ find_expected_outputs = function(targ_df,
     if(missing(targ_df)){
       filename_end_pattern = ".somaticSV.bedpe"
 
-      targ_df = read_tsv(target_path, col_names = c("file")) %>%
+      targ_df = suppressMessages(read_tsv(target_path, col_names = c("file"))) %>%
         dplyr::filter(str_detect(file, pattern = filename_end_pattern))
 
       targ_df = mutate(targ_df, file_path = paste0(repo_base, file)) %>%
@@ -55,7 +61,7 @@ find_expected_outputs = function(targ_df,
   }else if(tool_name == "gridss"){
     filename_end_pattern = ".gridss_somatic_filtered.bedpe"
 
-    targ_df = read_tsv(target_path, col_names = c("file")) %>%
+    targ_df = suppressMessages(read_tsv(target_path, col_names = c("file"))) %>%
       dplyr::filter(str_detect(file, pattern = filename_end_pattern))
 
     targ_df = mutate(targ_df, file_path = paste0(repo_base, file)) %>%
@@ -71,9 +77,9 @@ find_expected_outputs = function(targ_df,
     targ_df$output_type = "bedpe"
   }
   if(update_db){
-    database_name = config::get("database_name")
+    database_name = check_config_value(config::get("database_name"))
     con = dbConnect(RMariaDB::MariaDB(), dbname = database_name)
-    table_name = config::get("tables")$files
+    table_name = check_config_value(config::get("tables")$files)
     message(paste("updating", table_name,"in", database_name))
     #clear all files for this tool/unix_group combination
     update_q = paste0("DELETE from ", table_name, " WHERE tool_name = \"", tool_name, "\" and unix_group = \"", unix_group, "\" ;")
@@ -98,26 +104,28 @@ find_expected_outputs = function(targ_df,
 }
 
 
-#' Populate the database with the per-sample summarized results of various tools
+#' @title Populate Tool Results.
 #'
-#' @param tool Name of the tool to get the results for
+#' @description Populate the database with the per-sample summarized results of various tools.
 #'
-#' @return Nothing
-#' @export
-#' @import tidyverse DBI
+#' @details this function is still in draft mode, export to NAMESPACE has been removed for now.
+#'
+#' @param tool_name Name of the tool to get the results for.
+#'
+#' @return Nothing.
 #'
 #' @examples
-#' results = populate_tool_results("slims_3")
+#' results = populate_tool_results(tool_name = "slims_3")
 #'
-populate_tool_results = function(){
+populate_tool_results = function(tool_name){
 
   #IMPORTANT TODO: This function should only ever work with samples that exist in the metadata
   # Perhaps it should report any excluded outputs in case they need to be deleted from the main output directories
-  matched_analyses = unlist(config::get("analyses")$matched)
+  matched_analyses = unlist(check_config_value(config::get("analyses")$matched))
   print(matched_analyses)
-  database_name = config::get("database_name")
-  genome_builds = unlist(strsplit(config::get("genome_builds"), ","))
-  groups = unlist(strsplit(config::get("unix_groups"), ","))
+  database_name = check_config_value(config::get("database_name"))
+  genome_builds = unlist(strsplit(check_config_value(config::get("genome_builds")), ","))
+  groups = unlist(strsplit(check_config_value(config::get("unix_groups")), ","))
   for(analysis_type in names(matched_analyses)){
     tool_name = matched_analyses[analysis_type]
     message(paste("populating results for", tool_name))
@@ -126,14 +134,24 @@ populate_tool_results = function(){
 }
 
 
-#' Title
+#' @title Populate Each Tool Results.
 #'
-#' @param tool Name of tool to get results from
-#' @param genome_build A list of all genome builds to process
-#' @param unix_group A list of all unix groups to process
-#' @param include_silent Logical parameter indicating whether to include siment mutations into coding mutations. Default is FALSE
+#' @description Convenience function for returning results from a specified tool.
 #'
-#' @return
+#' @details This function takes a tool name `tool` as well as other parameters for specifying the requested result.
+#' Other parameters include `genome_build`, this can be just one parameter or a vector with different genome builds to return results for.
+#' Similarly, `unix_group` can take either one value or a vector with all the different unix groups to return results for.
+#' Lastly, the user can subset the returned results to only silent mutations.
+#' This is done with setting `include_silent = TRUE` (default is FALSE).
+#'
+#' @param tool Name of tool to get results from.
+#' @param genome_builds A single genome build or a vector of all genome builds to process.
+#' @param unix_groups A single unix group or a vector of all unix groups to process.
+#' @param include_silent Logical parameter indicating whether to include silent mutations into coding mutations. Default is FALSE.
+#'
+#' @return Nothing.
+#'
+#' @import purrr dplyr RMariaDB DBI tidyr
 #' @export
 #'
 #' @examples
@@ -144,7 +162,7 @@ populate_each_tool_result = function(tool,
                                      unix_groups,
                                      include_silent = FALSE){
 
-  database_name = config::get("database_name")
+  database_name = check_config_value(config::get("database_name"))
   con = dbConnect(RMariaDB::MariaDB(), dbname = database_name)
   all_meta = get_gambl_metadata()
   generic_update = function(field_name, sample_id, field_value){
@@ -190,7 +208,7 @@ populate_each_tool_result = function(tool,
     parse_sequenza = function(sequenza_files){
 
       seq_data=sequenza_files %>%
-        purrr::map(read_tsv) %>% #read each file into a list of tibbles
+        purrr::map(suppressMessages(read_tsv)) %>% #read each file into a list of tibbles
         purrr::map(head, 1) %>% #just keep the first line
         purrr::reduce(rbind) %>% #rbind the elements all back into one
         dplyr::rename(sequenza_cellularity = cellularity, sequenza_ploidy = ploidy) #change the column names
@@ -341,7 +359,7 @@ populate_each_tool_result = function(tool,
     # parse purity and ploidy values from copy number caller and add to database
     parse_batt = function(batt_file){
       batt_data =  batt_file %>%
-        purrr::map(read_tsv) %>%
+        purrr::map(suppressMessages(read_tsv)) %>%
         purrr::reduce(rbind) %>%
         dplyr::rename(battenberg_cellularity = cellularity, battenberg_ploidy = ploidy, battenberg_psi = psi)
 
@@ -387,15 +405,20 @@ populate_each_tool_result = function(tool,
 }
 
 
-#' This is a helper function that is not meant to be used routinely
+#' @title Read Merge Manta With Liftover.
+#'
+#' @description Takes a path to bedpe and runs liftover (`liftover_bedpe`) based on the original genome build of the bedpe.
+#'
+#' @details This is a helper function that is not meant to be used routinely.
 #'
 #' @param bedpe_paths path to bedpe
 #' @param pattern pattern
 #' @param out_dir output directory
 #'
-#' @return
-#' @import tidyverse
+#' @import dplyr readr
 #'
+#' @examples
+#' manta_bedpe = read_merge_manta_with_liftover(bedpe_paths = "some_path.bedpe", out_dir = "../")
 #'
 read_merge_manta_with_liftover = function(bedpe_paths = c(),
                                           pattern = "--matched",
@@ -414,7 +437,7 @@ read_merge_manta_with_liftover = function(bedpe_paths = c(),
         print("using liftOver")
         svbed = liftover_bedpe(full_path) #load and convert to grch37 coordinates
       }else{
-        svbed = read_tsv(full_path, comment = "##", col_types = "cddcddccccccccccccccccc")
+        svbed = suppressMessages(read_tsv(full_path, comment = "##", col_types = "cddcddccccccccccccccccc"))
       }
 
       this_patient = colnames(svbed)[23]
@@ -461,17 +484,19 @@ read_merge_manta_with_liftover = function(bedpe_paths = c(),
 }
 
 
-#' This is a helper function that is not meant to be used routinely
+#' @title Process All Manta Bedpe.
 #'
-#' @param bedpe_paths paths to bedpe
-#' @param pattern pattern
-#' @param out_dir output directory
-#' @param projection_build The genome we want all results to be relative to (lifted if necessary)
+#' @description This function is in draft mode.
 #'
-#' @return
-#' @import tidyverse
+#' @details This is a helper function that is not meant to be used routinely.
 #'
-#' @export
+#' @param file_df Paths to bedpe.
+#' @param out_dir output directory.
+#' @param group The unix group.
+#' @param genome_build Genome build.
+#' @param projection_build The genome we want all results to be relative to (lifted if necessary).
+#'
+#' @import dplyr readr
 #'
 process_all_manta_bedpe = function(file_df,
                                    out_dir,
@@ -481,14 +506,14 @@ process_all_manta_bedpe = function(file_df,
 
   to_merge = list()
   if(missing(out_dir)){
-    project_base = config::get("project_base")
-    base_out_dir = config::get("results_staging")$manta
+    project_base = check_config_value(config::get("project_base"))
+    base_out_dir = check_config_value(config::get("results_staging")$manta)
     out_dir = paste0(project_base, group, "/", base_out_dir)
   }
 
   process_manta = function(bedpe_file, liftover_to_hg19 = FALSE, liftover_to_hg38 = FALSE, only_return_missing = FALSE, projection = "grch37"){
     cnames = c("CHROM_A", "START_A", "END_A", "CHROM_B", "START_B", "END_B", "NAME", "SOMATIC_SCORE", "STRAND_A", "STRAND_B", "TYPE", "FILTER", "VAF_tumour", "VAF_normal", "DP_tumour", "DP_normal", "tumour_sample_id", "normal_sample_id", "pair_status")
-    svbed = read_tsv(bedpe_file, comment = "##", col_types = "cddcddccccccccccccccccc")
+    svbed = suppressMessages(read_tsv(bedpe_file, comment = "##", col_types = "cddcddccccccccccccccccc"))
     this_patient = colnames(svbed)[23]
     this_normal = colnames(svbed)[22]
 
@@ -513,7 +538,7 @@ process_all_manta_bedpe = function(file_df,
     if(file.exists(out_file)){
       if(!only_return_missing){
         print(paste("LOADING", out_file))
-        svbed = read_tsv(out_file, col_types = "ccccccccccccnnnnccc", col_names = cnames)
+        svbed = suppressMessages(read_tsv(out_file, col_types = "ccccccccccccnnnnccc", col_names = cnames))
         return(svbed)
       }
       else{
@@ -593,18 +618,29 @@ process_all_manta_bedpe = function(file_df,
 }
 
 
-#' Title
+#' @title Fetch Output Files.
 #'
-#' @param tool_name name of tool
-#' @param base_path Either the full or relative path to where all the results directories are for the tool e.g. "gambl/sequenza_current"
-#' @param results_dir directory with results
-#' @param seq_type either genome or capture
-#' @param genome_build default is hg38
-#' @param search_pattern file-extensions search pattern
+#' @description Get output files from a set of conditions.
 #'
-#' @return A data frame with one row per file and sample IDs parsed from the file name along with other GAMBL wildcards
+#' @details This function lets the user specify multiple conditions for returning result subsets.
+#' First, specify the name of the tool with `tool`, then set the seq type (`seq_type`) to either genome or capture,
+#' together with the genome build (`genome_build`). A data frame will be returned with one row per file and sample IDs together with GAMBL wildcards.
+#'
+#' @param tool Name of tool.
+#' @param unix_group The unix group of the sample set.
+#' @param base_path Either the full or relative path to where all the results directories are for the tool e.g. "gambl/sequenza_current".
+#' @param results_dir Directory with results.
+#' @param seq_type Either genome or capture.
+#' @param build Default is hg38.
+#' @param search_pattern File-extensions search pattern.
+#'
+#' @return A data frame with one row per file and sample IDs parsed from the file name along with other GAMBL wildcards.
+#'
+#' @import dplyr tibble tidyr
 #' @export
-#' @import tidyverse
+#'
+#' @examples
+#' fetch_output_files(tool = "manta", unix_group = "genome")
 #'
 fetch_output_files = function(tool,
                               unix_group,
@@ -612,16 +648,15 @@ fetch_output_files = function(tool,
                               results_dir = "99-outputs",
                               seq_type = "genome",
                               build = "hg38",
-                              search_pattern = "cellularity_ploidy.txt",
-                              ssh_session){
+                              search_pattern = "cellularity_ploidy.txt"){
 
   if(!grepl("^/", base_path)){
-    project_base = config::get("project_base",config="default")
-    local_project_base = config::get("project_base")
+    project_base = check_config_value(config::get("project_base",config="default"))
+    local_project_base = check_config_value(config::get("project_base"))
     #project_base = "/projects/nhl_meta_analysis_scratch/gambl/results_local/"
     local_base_path = paste0(local_project_base, base_path)
     base_path = paste0(project_base, base_path)
-    
+
   }
   if(tool == "battenberg"){
     results_path = paste0(base_path, "/", results_dir, "/seg/", seq_type, "--projection/")
@@ -630,7 +665,7 @@ fetch_output_files = function(tool,
     results_path = paste0(base_path, "/", results_dir, "/", seq_type, "--projection/")
     local_results_path = paste0(local_base_path, "/", results_dir, "/", seq_type, "--projection/")
   }
- 
+
   #This still fails when a matching file isn't found. No clue why this doesn't work
   if(tool == "sequenza"){
 
@@ -652,7 +687,8 @@ fetch_output_files = function(tool,
   }else if(tool == "battenberg"){
     results_path = paste0(base_path, "/", results_dir, "/seg/", seq_type, "--", build,"/")
     all_files = dir(results_path, pattern = search_pattern)
-
+    print(results_path)
+    print(search_pattern)
     #extract tumour and normal ID
     all_tumours = unlist(lapply(all_files, function(x){tumour = unlist(strsplit(x, "--"))[1]}))
     all_normals = unlist(lapply(all_files, function(x){tumour = unlist(strsplit(x, "--"))[2]}))
@@ -676,7 +712,7 @@ fetch_output_files = function(tool,
 
     return(found_files)
   }else if(tool == "manta"){
-    tool_results_path = config::get("results_directories")$manta
+    tool_results_path = check_config_value(config::get("results_directories")$manta)
     search_pattern=".bedpe"
     new_df = find_files_extract_wildcards(tool_name = "manta", genome_build = c("hg38", "grch37"), search_pattern = ".bed")
 
@@ -687,15 +723,22 @@ fetch_output_files = function(tool,
 }
 
 
-#' Title
+#' @title Find Files Extract Wildcards
 #'
-#' @param tool_results_path path to results
-#' @param search_pattern search pattern
-#' @param genome_build genome projection to be sued
-#' @param seq_type default si geneome
-#' @param unix_group default value is gambl
+#' @description Get wildcards for a set of samples.
 #'
-#' @return
+#' @details Specify the file extension with `search_pattern` and the seq type, unix group, and genome build and the function will return a tibble with sample wildcards.
+#'
+#' @param tool_results_path Optional parameter, path to results.
+#' @param search_pattern Search pattern.
+#' @param genome_build Genome projection to be used.
+#' @param seq_type Default is genome.
+#' @param unix_group Default value is gambl.
+#' @param tool_name Name of the tool.
+#'
+#' @return A tibble with wildcards.
+#'
+#' @import dplyr tidyr tibble
 #' @export
 #'
 #' @examples
@@ -708,9 +751,9 @@ find_files_extract_wildcards = function(tool_results_path,
                                         unix_group = "gambl",
                                         tool_name){
 
-  project_base = config::get("project_base")
+  project_base = check_config_value(config::get("project_base"))
   if(missing(tool_results_path)){
-    tool_results_paths = config::get("results_directories")
+    tool_results_paths = check_config_value(config::get("results_directories"))
     tool_results_path = tool_results_paths[[tool_name]]
   }
   results_paths = paste0(project_base, unix_group, "/", tool_results_path, "genome--", genome_build, "/somaticSV/")
@@ -731,14 +774,42 @@ find_files_extract_wildcards = function(tool_results_path,
 }
 
 
-#' Title
+#' @title Fread MAF.
 #'
-#' @param maf_file_path
+#' @description Read a MAF into R with options for what columns to keep (default all columns will be returned).
 #'
-#' @return a data table containing MAF data from a MAF file
+#' @details This function lets the user specify a path to a MAF file on disk, this function then reads this MAF into R.
+#' The user has the option to keep specific columns from the incoming MAF file (default is to keep all columns).
+#' To return all available columns, set `return_cols = TRUE`. For specifying columns of interest, refer to the `select_cols` parameter.
+#' For more information, refer to the parameter descriptions as well as function examples.
+#'
+#' @param maf_file_path Path to maf that is about to be read.
+#' @param select_cols Optional parameter for specifying what columns are to be returned. If not specified, all columns will be kept.
+#' @param return_cols Optional parameter for returning the names of all available MAF columns. If set to TRUE a character vector of column names will be returned, and no MAF will be read. Default is FALSE.
+#'
+#' @return A data table containing MAF data from a MAF file.
+#'
+#' @rawNamespace import(data.table, except = c("last", "first", "between", "transpose"))
 #' @export
 #'
-fread_maf = function(maf_file_path,select_cols){
+#' @examples
+#' #read a maf into R with all columns kept
+#' my_maf = fread_maf(maf_file_path = "some_directory/this_is_a.maf")
+#'
+#' #return what columns are available
+#' maf_cols = fread_maf(return_cols = TRUE)
+#'
+#' #read maf with only a selection of columns
+#' my_maf = fread_maf(maf_file_path = "some_directory/this_is_a.maf", select_cols = c(Hugo_Symbol="character",
+#'                                                                                    Chromosome="character",
+#'                                                                                    Start_Position="integer",
+#'                                                                                    End_Position="integer",
+#'                                                                                    Variant_Type="character"))
+#'
+fread_maf = function(maf_file_path,
+                     select_cols,
+                     return_cols = FALSE){
+
   colClasses=c(Hugo_Symbol="character",
                Entrez_Gene_Id="integer",
                Center="character",
@@ -797,7 +868,7 @@ fread_maf = function(maf_file_path,select_cols){
                Codons="character",
                Existing_variation="character",
                ALLELE_NUM="integer",
-               DISTANCE="logical",
+               DISTANCE="numeric",
                STRAND_VEP="numeric", #for some reason, many are -1.0 or 1.0 instead of just -1 or 1. Numeric seems to work
                SYMBOL="character",
                SYMBOL_SOURCE="character",
@@ -827,9 +898,9 @@ fread_maf = function(maf_file_path,select_cols){
                CLIN_SIG="character",
                SOMATIC="character",
                PUBMED="character",
-               MOTIF_NAME="logical",
-               MOTIF_POS="logical",
-               HIGH_INF_POS="logical",
+               MOTIF_NAME="character",
+               MOTIF_POS="numeric",
+               HIGH_INF_POS="character",
                MOTIF_SCORE_CHANGE="logical",
                IMPACT="character",
                PICK="numeric", #for some reason, many are -1.0 or 1.0 instead of just -1 or 1. Numeric seems to work
@@ -855,9 +926,13 @@ fread_maf = function(maf_file_path,select_cols){
                vcf_pos="integer",
                gnomADg_AF="character",
                blacklist_count="numeric")
+
   if(missing(select_cols)){
     #get all column names from the variable that defines the classes
     select_cols = names(colClasses)
+    if(return_cols){
+      return(select_cols)
+    }
   }
   maf_dt = data.table::fread(
     file = maf_file_path,
@@ -873,24 +948,35 @@ fread_maf = function(maf_file_path,select_cols){
     colClasses = colClasses,
     select=select_cols
     )
-  
+
   return(maf_dt)
 }
 
 
-#' Read a full expression matrix and subset to samples in GAMBL that have metadata (remove duplicates with consistent preferences)
+#' @title Tidy gene Expression.
 #'
-#' @return
+#' @description Read a full expression matrix.
+#'
+#' @details Read a full expression matrix and subset to samples in GAMBL that have metadata (remove duplicates with consistent preferences).
+#' The user can also specify if they want the data frame returned into their R session, or if the data frame should be written to file (default).
+#'
+#' @param return_df Boolean parameter to return the dataframe, default is FALSE (i.e writing results to file).
+#'
+#' @import dplyr readr stringr tidyr
 #' @export
+#'
+#' @examples
+#' #return data frame with gene expression to R
+#' gene_expression = tidy_gene_expression(return_df = TRUE)
 #'
 tidy_gene_expression = function(return_df = FALSE){
 
   #read in the full matrix
-  ex_matrix_file = config::get("results_merged")$ex_matrix_file
-  tidy_expression_file = config::get("results_merged")$tidy_expression_file
+  ex_matrix_file = check_config_value(config::get("results_merged")$ex_matrix_file)
+  tidy_expression_file = check_config_value(config::get("results_merged")$tidy_expression_file)
   print("Loading and tidying the full matrix file...")
 
-  ex_tidy = read_tsv(ex_matrix_file) %>%
+  ex_tidy = suppressMessages(read_tsv(ex_matrix_file)) %>%
     dplyr::select(-gene_id) %>%
     dplyr::rename("Hugo_Symbol" = "hgnc_symbol") %>%
     pivot_longer(-c(Hugo_Symbol, ensembl_gene_id), names_to = "sample_id", values_to = "expression")
@@ -950,24 +1036,36 @@ tidy_gene_expression = function(return_df = FALSE){
 }
 
 
-#' Title
+#' @title Assemble File Details.
 #'
-#' @param file_paths A vector of full file paths, e.g. the output of dir
-#' @param tool_name The tool or pipeline that generated the files (should be the same for all)
-#' @param output_type The file type to distinguish different output file types from the same pipeline (e.g. seg, maf, ploidy)
-#' @param tool_version Optional: provide the version of the pipeline or tool
-#' @param unix_group The unix group (should be the same for all)
-#' @param sample_ids A vector of sample_id the same length and in the same order as the file paths
-#' @param file_details_df Optionally supply the data frame directly instead (e.g. from find_files_extract_wildcards)
+#' @description Update the database by appending to the gambl_files table.
+#'
+#' @details Specify the file paths with `file_paths` followed by the name of the tool (`tool_name`).
+#' Next, set the output type (e.g seq, maf, etc.) and unix group (should be the same for all).
+#' Lastly, specify the sample IDs with `these_sample_ids`.
+#' For more information on how to use the optional parameters, refer to the parameter descriptions.
+#'
+#' @param file_details_df Optionally supply the data frame directly instead (e.g. from find_files_extract_wildcards).
+#' @param file_paths A vector of full file paths, e.g. the output of dir.
+#' @param tool_name The tool or pipeline that generated the files (should be the same for all).
+#' @param unix_group The unix group (should be the same for all).
+#' @param these_sample_ids A vector of sample_id the same length and in the same order as the file paths.
+#' @param output_type The file type to distinguish different output file types from the same pipeline (e.g. seg, maf, ploidy).
+#' @param is_production Boolean parameter. Default is yes.
 #'
 #' @return Updates the database by appending to the gambl_files table. Use with caution!
+#'
+#' @import tibble RMariaDB DBI tidyr
 #' @export
+#'
+#' @examples
+#' assemble_file_details(file_paths = c(one.maf, another.maf), tool_name = "manta", unix_group = "genome", output_type = "maf", these_sample_ids = c(one_sample, another_sample))
 #'
 assemble_file_details = function(file_details_df,
                                  file_paths,
                                  tool_name,
                                  unix_group,
-                                 sample_ids,
+                                 these_sample_ids,
                                  output_type = "ploidy",
                                  is_production = "yes"){
 
@@ -975,7 +1073,7 @@ assemble_file_details = function(file_details_df,
   #sample_id, unix_group, tool_name, tool_version, seq_type, genome_build, is_production, output_type, is_lifted_over, pairing_status
   # is_production, output_type, file_path, file_timestamp
   if(missing(file_details_df)){
-  file_details_df = tibble(sample_id = sample_ids, unix_group = unix_group, tool_name = tool_name, output_type = output_type, is_production = is_production,
+  file_details_df = tibble(sample_id = these_sample_ids, unix_group = unix_group, tool_name = tool_name, output_type = output_type, is_production = is_production,
                            file_timestamp = lapply(file_paths, function(x){as.character(file.mtime(x))}),
                            file_path = file_paths) %>%
                               unnest_longer(file_timestamp)
@@ -987,15 +1085,27 @@ assemble_file_details = function(file_details_df,
 }
 
 
-#' Use liftOver to convert a bedpe file between the two main genome builds (grch37/hg38)
+#' @title Liftover Bedpe.
 #'
-#' @param bedpe_file Either specify the path to a bedpe file
-#' @param bedpe_df Or specify the bedpe data in a data frame
-#' @param target_build Specify which build the data should be lifted to (must be one of hg19, grch37, hg38, grch38)
+#' @description Use liftOver to convert a bedpe file between the two main genome builds (grch37/hg38).
 #'
-#' @return Data frame containing original bedpe data with new coordinates
+#' @details The user can specify a path to the bedpe file that needs to be lifted with `bedpe_file`,
+#' or, the suer can specify the bedpe data in a data frame with `bedpe_df`.
+#' The other required parameter is `target_build`, this parameter decides the final projection of the lifted bedpe file.
+#'
+#' @param bedpe_file Either specify the path to a bedpe file.
+#' @param bedpe_df Or specify the bedpe data in a data frame.
+#' @param target_build Specify which build the data should be lifted to (must be one of hg19, grch37, hg38, grch38).
+#' @param col_names If not provided, the column names will be imposed.
+#' @param col_types Specify column types if column names are also defined with `col_names`.
+#' @param standard_bed Boolean parameter for defining the type of bed file that is provided with `bedpe_file`. Deafult is FALSE.
+#' @param verbose Set to TRUE for verbose output. Default is FALSE.
+#'
+#' @return Data frame containing original bedpe data with new coordinates.
+#'
+#' @rawNamespace import(S4Vectors, except = c("merge", "second", "first", "union", "intersect", "setdiff", "setequal", "rename", "expand"))
+#' @import dplyr tidyr readr rtracklayer
 #' @export
-#' @import tidyverse rtracklayer S4Vectors
 #'
 #' @examples
 #' hg19_sv = get_manta_sv() %>% head(100)
@@ -1006,15 +1116,16 @@ liftover_bedpe = function(bedpe_file,
                           target_build = "grch37",
                           col_names,
                           col_types,
-                          standard_bed = FALSE){
+                          standard_bed = FALSE,
+                          verbose = FALSE){
 
   if(!missing(bedpe_file)){
     if(missing(col_names)){
       message("imposing column names")
-      original_bedpe = read_tsv(bedpe_file, comment = "##", col_types="cddcddccccccccccccccccc")
+      original_bedpe = suppressMessages(read_tsv(bedpe_file, comment = "##", col_types="cddcddccccccccccccccccc"))
     }else{
       message(paste("using column names", col_names, sep = ": "))
-      original_bedpe = read_tsv(bedpe_file, col_names = col_names, col_types = col_types)
+      original_bedpe = suppressMessages(read_tsv(bedpe_file, col_names = col_names, col_types = col_types))
     }
   }else{
     original_bedpe = bedpe_df
@@ -1023,15 +1134,14 @@ liftover_bedpe = function(bedpe_file,
     colnames(original_bedpe)[1] = "CHROM_A"
     original_bedpe = as.data.frame(original_bedpe)
 
-    original_bedpe = original_bedpe %>%
-      mutate_if(is.numeric, as.integer)
-
     #print(head(original_bedpe))
     original_bedpe = original_bedpe %>%
       dplyr::mutate(CHROM_A = ifelse(!grepl("chr", CHROM_A), paste0("chr", CHROM_A), CHROM_A),
                     CHROM_B = ifelse(!grepl("chr", CHROM_B), paste0("chr", CHROM_B), CHROM_B))
 
-    print(head(original_bedpe))
+    if(verbose){
+      print(head(original_bedpe))
+    }
 
     char_vec = original_bedpe %>%
       tidyr::unite(united, sep = "\t") %>%
@@ -1099,7 +1209,7 @@ liftover_bedpe = function(bedpe_file,
     first_ok = subset(lifted, no_problem)
 
     output = rtracklayer::export(first_ok, format = "bed") %>%
-      read_tsv(col_names = c("chrom", "start", "end", "score", "strand", "nothing", "s1", "e1", "junk", "more", "stuff", "nada")) %>%
+      suppressMessages(read_tsv(col_names = c("chrom", "start", "end", "score", "strand", "nothing", "s1", "e1", "junk", "more", "stuff", "nada"))) %>%
       dplyr::select("chrom", "start", "end")
 
     return(output)

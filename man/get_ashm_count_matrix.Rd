@@ -2,16 +2,14 @@
 % Please edit documentation in R/database.R
 \name{get_ashm_count_matrix}
 \alias{get_ashm_count_matrix}
-\title{Prepare a matrix with one row per sample and one column per region using a set of hypermutated regions.
-Values are the number of mutations in that patient in the region.}
+\title{Get ASHM Count Matrix.}
 \usage{
 get_ashm_count_matrix(
   regions_bed,
   maf_data,
   these_samples_metadata,
   seq_type,
-  from_indexed_flatfile = TRUE,
-  ssh_session = NULL
+  from_indexed_flatfile = TRUE
 )
 }
 \arguments{
@@ -19,19 +17,19 @@ get_ashm_count_matrix(
 
 \item{maf_data}{Optionally provide a data frame in the MAF format, otherwise the database will be used.}
 
-\item{from_indexed_flatfile}{Set to TRUE to avoid using the database and instead rely on flatfiles (only works for streamlined data, not full MAF details).}
+\item{these_samples_metadata}{This is used to complete your matrix. All GAMBL samples will be used by default. Provide a data frame with at least sample_id for all samples if you are using non-GAMBL data.}
 
-\item{sample_metadata}{This is used to complete your matrix. All GAMBL samples will be used by default. Provide a data frame with at least sample_id for all samples if you are using non-GAMBL data.}
+\item{seq_type}{The seq type to return results for.}
 
-\item{use_name_column}{Set this to true to force the function to use the value in column "name" to name each feature in the output.}
-
-\item{allow_clustered}{Set to TRUE to utilize the latest SLMS-3 variant calls that allow clustered variants.}
+\item{from_indexed_flatfile}{Boolean parameter set to TRUE per default.}
 }
 \value{
-Matrix
+A matrix.
 }
 \description{
 Prepare a matrix with one row per sample and one column per region using a set of hypermutated regions.
+}
+\details{
 Values are the number of mutations in that patient in the region.
 }
 \examples{

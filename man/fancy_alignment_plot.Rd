@@ -2,28 +2,31 @@
 % Please edit documentation in R/viz.R
 \name{fancy_alignment_plot}
 \alias{fancy_alignment_plot}
-\title{Visualize (stacked barplot) genomic read-subsets across a selection of samples.}
+\title{Plot Alignment Metrics}
 \usage{
 fancy_alignment_plot(
-  these_samples,
+  these_sample_ids,
   metadata,
+  these_samples_metadata,
   comparison_group,
   seq_type = "genome",
   add_mean = TRUE,
   add_corrected_coverage = TRUE,
-  filter_cohort,
-  filter_pathology,
+  keep_cohort,
+  keep_pathology,
   this_color_palette = c(TotalReads = "#3D405B", TotalUniquelyMapped = "#81B29A",
     TotalDuplicatedreads = "#E07A5F"),
   plot_sub = ""
 )
 }
 \arguments{
-\item{these_samples}{Data frame with sample IDs (to be plotted) in the first column.}
+\item{these_sample_ids}{Data frame with sample IDs (to be plotted) in the first column.}
 
 \item{metadata}{Optional argument, used to derive sample IDs if sample_table is Null.}
 
-\item{comparison_group}{Optional argument for plotting mean alignment metrics. Default is plotting the mean for samples provided. This parameter takes a list of sample IDs.}
+\item{these_samples_metadata}{GAMBL metadata subset to the cases you want to process.}
+
+\item{comparison_group}{Optional argument for plotting mean alignment metrics. Default is plotting the mean for samples provided. This parameter takes a vector of sample IDs.}
 
 \item{seq_type}{Subset qc metrics to a specific seq_type, default is genome.}
 
@@ -31,33 +34,45 @@ fancy_alignment_plot(
 
 \item{add_corrected_coverage}{Set to TRUE to add corrected coverage for selected samples.}
 
-\item{filter_cohort}{If no df with sample IDs is supplied (these_samples = NULL) the function calls get_gambl_metadata and subsets on selected cohort.}
+\item{keep_cohort}{If no df with sample IDs is supplied (these_sample_ids = NULL) the function calls get_gambl_metadata and subsets on selected cohorts.}
 
-\item{filter_pathology}{If no df with sample IDs is supplied (these_samples = NULL) the function calls get_gambl_metadata and subsets on selected pathology.}
+\item{keep_pathology}{If no df with sample IDs is supplied (these_sample_ids = NULL) the function calls get_gambl_metadata and subsets on selected pathology.}
 
 \item{this_color_palette}{Optional parameter that holds the selected colours for the plotted bars.}
 
-\item{plot_sub}{Optional parameter, add a subtitle to alignment metric plot.}
+\item{plot_sub}{Optional parameter, add a subtitle to the alignment metric plot.}
 }
 \value{
-plot as ggplot object.
+A plot as a ggplot object (grob).
 }
 \description{
-Visualize (stacked barplot) genomic read-subsets across a selection of samples.
+Visualize (stacked barplot) genomic read-subsets (metrics) across a selection of samples.
+}
+\details{
+This function is available for plotting relevant alignment metrics (read-subsets) for a selection of samples. Per default, this plot returns the following read-metrics;
+total n reads, total n uniquely mapped reads, total n duplicated reads. This plot can also be superimposed with read metrics from additional samples,
+allowing for easy comparisons between different sample populations. To run this function, simply specify the sample IDs you are interested in with \code{these_sample_ids}.
+This parameter expects a data frame with sample IDs in the first column. Optionally, the user can also provide an already subset (with the sample IDS of interest)
+metadata table with \code{these_samples_metadata}. For adding a comparison group to the returned plot, simply give another cohort/set of samples to the \code{comparison_group} parameter.
+Similarly to \code{these_sample_ids}, this parameter also expects a data frame with sample IDs in the first column. In addition, this plot can also add additional read-metrics such as
+mean values for all plotted metrics and corrected coverage. To enable these features, simply set \code{add_mean} and \code{add_corrected_coverage} to TRUE (default).
 }
 \examples{
-this_meta = get_gambl_metadata()
+#Example 1 - using these_sample_ids parameter
+#subset on FL cases with QC metrics available and plot
+kridel_fl = get_gambl_metadata() \%>\%
+ dplyr::filter(pathology == "FL", cohort == "FL_Kridel") \%>\%
+ dplyr::select(sample_id)
 
-all_fl = dplyr::filter(this_meta, pathology == "FL") \%>\%
-  dplyr::select(sample_id) \%>\%
-  arrange(sample_id) \%>\%
-  as.data.frame()
+my_plot_1 = fancy_alignment_plot(these_sample_ids = kridel_fl)
 
-all_bl = dplyr::filter(this_meta, pathology == "BL") \%>\%
-  dplyr::select(sample_id) \%>\%
-  arrange(sample_id) \%>\%
-  as.data.frame()
+#Example 2 - using already filtered metadata (these_samples_metadata)
+fl_metadata = get_gambl_metadata() \%>\%
+ dplyr::filter(pathology == "FL", cohort == "FL_Kridel")
 
-plot = fancy_alignment_plot(these_samples = all_fl, seq_type = "genome", comparison_group = all_bl, plot_sub = "all FL cases (BL comparison group)")
+my_plot_2 = fancy_alignment_plot(these_samples_metadata = fl_metadata)
+
+#Example 3 - using in-house metadata fitlering options
+my_plot_3 = fancy_alignment_plot(keep_cohort = "FL_Kridel", keep_pathology = "FL")
 
 }

@@ -2,7 +2,7 @@
 % Please edit documentation in R/preprocessing_io.R
 \name{read_merge_manta_with_liftover}
 \alias{read_merge_manta_with_liftover}
-\title{This is a helper function that is not meant to be used routinely}
+\title{Read Merge Manta With Liftover.}
 \usage{
 read_merge_manta_with_liftover(
   bedpe_paths = c(),
@@ -18,5 +18,12 @@ read_merge_manta_with_liftover(
 \item{out_dir}{output directory}
 }
 \description{
-This is a helper function that is not meant to be used routinely
+Takes a path to bedpe and runs liftover (\code{liftover_bedpe}) based on the original genome build of the bedpe.
+}
+\details{
+This is a helper function that is not meant to be used routinely.
+}
+\examples{
+manta_bedpe = read_merge_manta_with_liftover(bedpe_paths = "some_path.bedpe", out_dir = "../")
+
 }

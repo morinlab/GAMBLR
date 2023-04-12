@@ -2,7 +2,7 @@
 % Please edit documentation in R/utilities.R
 \name{supplement_maf}
 \alias{supplement_maf}
-\title{Complement maf with missing samples.}
+\title{Supplement MAF.}
 \usage{
 supplement_maf(incoming_maf, these_samples_metadata)
 }
@@ -12,10 +12,14 @@ supplement_maf(incoming_maf, these_samples_metadata)
 \item{these_samples_metadata}{The metadata data frame that contains Tumor_Sample_Barcode column with ids to be present in the complemented MAF.}
 }
 \value{
-maf_df with complemented Tumor_Sample_Barcode and other columns ready to be used downstream
+maf_df with complemented Tumor_Sample_Barcode and other columns ready to be used downstream.
 }
 \description{
 Complement maf with missing samples.
+}
+\details{
+Specify the initial MAF with \code{incoming_maf} (to be supplemented with missing samples) and
+give the function a filtered metadata table (with the sample IDs of interest) to the \code{these_samples_metadata}.
 }
 \examples{
 small_maf = get_coding_ssm(limit_cohort = "dlbcl_reddy", seq_type = "capture") \%>\% dplyr::filter(Hugo_Symbol=="MYC")

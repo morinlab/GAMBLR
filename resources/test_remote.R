@@ -4,9 +4,14 @@ library(GAMBLR)
 library(tidyverse)
 #library(ssh)
 #skip this next line if you are running on the GSC network
-Sys.setenv(R_CONFIG_ACTIVE= "remote")
+Sys.setenv(R_CONFIG_ACTIVE= "remote") 
+#Even when working remotely, this step should be handled by the bundled Rprofile but users are responsible for copying that to the right location
 
-check_gamblr_config() #check for missing local files
+check_gamblr_config() #check for missing local files. If a file is missing you need to figure out why. Most common explanations:
+# 1. you haven't yet run get_gambl_results.smk and need to do that
+# 2. someone added a new file to GAMBLR but hasn't updated the snakefile to support the syncing of that file locally (or telling this function it's not expected). 
+# To avoid future confusion this should be addressed by updating either this function, the function it calls or the snakefile. 
+# 3. 
 
 session = get_ssh_session() #only run this if you have an active VPN connection
 check_gamblr_config(compare_timestamps = T,ssh_session=session)
@@ -88,7 +93,7 @@ session = GAMBLR::get_ssh_session() # If your local machine username doesn't
 # match your GSC username, you need to add "<your_username>@gphost01.bcgsc.ca"
 # as the only argument to this function.
 test_ssm = get_ssm_by_samples(these_sample_ids = c("14-24534_tumorA","14-24534_tumorB"),
-                              ssh_session = session,subset_from_merge = F)
+                              ssh_session = session,subset_from_merge = T)
 
 table(test_ssm$Tumor_Sample_Barcode)
 
@@ -112,12 +117,12 @@ cn_seg = get_sample_cn_segments("14-24534_tumorB",from_flatfile = T)
 cn_ssm = assign_cn_to_ssm("14-24534_tumorB",seg_file_source = "battenberg",ssh_session = session)
 
 
-pursteenah = estimate_purity(sample_id = "14-24534_tumorB",seg_file_source = "battenberg",ssh_session=session)
+pursteenah = estimate_purity(this_sample_id = "14-24534_tumorB",seg_file_source = "battenberg",ssh_session=session)
 
 pursteenah$sample_purity_estimation
 
 
-#pure=estimate_purity(sample_id="12-17272_tumorB",seg_file_source = "battenberg")
+#pure=estimate_purity(this_sample_id="12-17272_tumorB",seg_file_source = "battenberg")
 #fetching: slms-3                                                                                                                                   
 #using flatfile: /projects/nhl_meta_analysis_scratch/gambl/results_local/gambl/battenberg_current/99-outputs/seg/genome--grch37/12-17272_tumorB--12-17272_normal_subclones.igv.seg
 #Rows: 45 Columns: 6                                                                                                                                

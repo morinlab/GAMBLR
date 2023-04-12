@@ -2,7 +2,7 @@
 % Please edit documentation in R/viz.R
 \name{prettyCoOncoplot}
 \alias{prettyCoOncoplot}
-\title{Display 2 prettyOncoplots side-by-side.}
+\title{Side-by-side Oncoplots}
 \usage{
 prettyCoOncoplot(
   maf,
@@ -26,6 +26,8 @@ prettyCoOncoplot(
 \item{label1}{Optional argument. Label to be shown as a title for the oncoplot #1.}
 
 \item{label2}{Optional argument. Label to be shown as a title for the oncoplot #2.}
+
+\item{...}{\code{prettyOncoplot} arguments, see that function for more info on avaialble parameters.}
 }
 \value{
 A ggplot object with 2 oncoplots side-by-side.

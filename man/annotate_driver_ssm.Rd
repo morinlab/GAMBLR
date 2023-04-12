@@ -2,7 +2,7 @@
 % Please edit documentation in R/annotation.R
 \name{annotate_driver_ssm}
 \alias{annotate_driver_ssm}
-\title{Retrieve data or use supplied data frame of genes to get/annotate MAF data indicating which rows are putative driver mutations.}
+\title{Annotate Driver SSM.}
 \usage{
 annotate_driver_ssm(
   maf_df,
@@ -13,7 +13,7 @@ annotate_driver_ssm(
 )
 }
 \arguments{
-\item{maf_df}{Data frame of MAF-format mutations (default is to retrieve automatically).}
+\item{maf_df}{Data frame of MAF-format mutations.}
 
 \item{lymphoma_type}{Optional keyword to find genes for annotation (e.g. "BL","DLBCL","FL") is not specifying driver genes.}
 
@@ -22,10 +22,14 @@ annotate_driver_ssm(
 \item{noncoding_regions}{Optional named vector of regions to use to further restrict noncoding mutations per gene.}
 }
 \value{
-Driver ssm kepts from maf.
+Incoming MAF, subset to putative driver mutations.
 }
 \description{
-Retrieve data or use supplied data frame of genes to get/annotate MAF data indicating which rows are putative driver mutations.
+Retrieve data or use the supplied data frame of genes to get/annotate MAF data indicating which rows are putative driver mutations.
+}
+\details{
+Provide a maf-like data frame with \code{maf_df} as the only required parameter.
+For information on how to use the additional parameters, refer to the parameter descriptions and function examples.
 }
 \examples{
 driver_ssm = annotate_driver_ssm(maf_df = maf, lymphoma_type = "DLBCL", noncoding_regions=c("NFKBIZ"="chr3:101578206-101578365"))

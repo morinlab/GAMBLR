@@ -2,8 +2,7 @@
 % Please edit documentation in R/utilities.R
 \name{collate_qc_results}
 \alias{collate_qc_results}
-\title{INTERNAL FUNCTION called by collate_results, not meant for out-of-package usage.
-Collate qc metrics.}
+\title{Collate Quality Control Results.}
 \usage{
 collate_qc_results(sample_table, seq_type_filter = "genome")
 }
@@ -16,11 +15,12 @@ collate_qc_results(sample_table, seq_type_filter = "genome")
 The sample table with additional columns.
 }
 \description{
-INTERNAL FUNCTION called by collate_results, not meant for out-of-package usage.
-Collate qc metrics.
+Expand a metadata table horizontally with quality control metrics.
+}
+\details{
+INTERNAL FUNCTION called by \code{collate_results}, not meant for out-of-package usage.
 }
 \examples{
-sample_table <- data.frame (sample_id  = c("09-33003T", "05-18426T", "BLGSP-71-06-00174-01A-01D", "BLGSP-71-22-00347-01A-12E", "SP59282"))
-qc_metrics = collate_qc_results(sample_table = sample_table, seq_type_filter = "genome")
+qc_metrics = collate_qc_results(sample_table = sample_table)
 
 }

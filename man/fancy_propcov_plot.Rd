@@ -2,56 +2,67 @@
 % Please edit documentation in R/viz.R
 \name{fancy_propcov_plot}
 \alias{fancy_propcov_plot}
-\title{Visualize proportional coverage (10X and 30X) for selected samples and add comparison group (optional).}
+\title{Proportional Coverage Plot.}
 \usage{
 fancy_propcov_plot(
-  these_samples,
+  these_sample_ids,
   metadata,
-  filter_cohort,
-  filter_pathology,
+  these_samples_metadata,
+  keep_cohort,
+  keep_pathology,
   comparison_samples,
   seq_type = "genome",
   plot_subtitle = ""
 )
 }
 \arguments{
-\item{these_samples}{Data frame with sample IDs (to be plotted) in the first column.}
+\item{these_sample_ids}{Data frame with sample IDs (to be plotted) in the first column.}
 
 \item{metadata}{Optional, user can provide a metadata df to subset sample IDs from.}
 
-\item{filter_cohort}{Optional parameter to be used when these_sample is NULL. Calls get_gambl_metadata() and filters on the cohort supplied in this parameter.}
+\item{these_samples_metadata}{GAMBL metadata subset to the cases you want to process.}
 
-\item{filter_pathology}{Optional parameter to be used when these_sample is NULL. Calls get_gambl_metadata() and filters on the pathology supplied in this parameter.}
+\item{keep_cohort}{Optional parameter to be used when these_sample is NULL. Calls get_gambl_metadata() and filters on the cohort supplied in this parameter.}
 
-\item{comparison_samples}{Optional parameter, give the function a list of sample IDs to be compared against the main plotting group.}
+\item{keep_pathology}{Optional parameter to be used when these_sample is NULL. Calls get_gambl_metadata() and filters on the pathology supplied in this parameter.}
+
+\item{comparison_samples}{Optional parameter, give the function a vector of sample IDs to be compared against the main plotting group.}
 
 \item{seq_type}{Selected seq type for incoming QC metrics.}
 
 \item{plot_subtitle}{Plotting parameter, subtitle of generated plot.}
 }
 \value{
-plot as ggplot object.
+A plot as a ggplot object (grob).
 }
 \description{
 Visualize proportional coverage (10X and 30X) for selected samples and add comparison group (optional).
 }
+\details{
+Create a highly customizable plot visualizing proportional alignment metrics i.e what proportions of the aligned reads that show 10x and 30x coverage.
+This function provides straightforward subsetting parameters allowing for a straightforward execution. Either provide a data frame with sample IDs in the first column to the \code{these_samples_ids} parameter.
+Or, call one of the optional parameters for using an already subset metadata table (subset to the sample IDs of interest).
+If \code{these_samples_ids} and \code{these_samples_metadata} is not provided, the user can subset al GAMBL samples on the fly with \code{keep_cohort} and/or \code{keep_pathology}.
+This function can also plot the same results for a comparison group of interest, i.e another table with sample IDs. This can be useful for visualising how certain cohorts/pathologies compares to each other.
+To do this one would call the function with \code{comparison_samples} parameter. For more info on how to use this function, please refer to examples, vignettes (fancy_vignette) and parameter descriptions.
+}
 \examples{
-#Example 1: Compare proportional coverage for all samples compared to all FL cases:
-#prepare comparison data:
-this_meta = get_gambl_metadata()
-all_fl = dplyr::filter(this_meta, pathology == "FL") \%>\%
-dplyr::select(sample_id) \%>\%
-  arrange(sample_id) \%>\%
-  as.data.frame()
+#Example 1 - using these_sample_ids parameter
+#subset on FL cases with QC metrics available and plot
+kridel_fl = get_gambl_metadata() \%>\%
+ dplyr::filter(pathology == "FL", cohort == "FL_Kridel") \%>\%#
+ dplyr::select(sample_id) \%>\%
+ pull(sample_id)
 
-sub_fl = all_fl[c(128:183),]
-sub_fl = as.data.frame(sub_fl)
-colnames(sub_fl)[1] = "sample_id"
+my_plot_1 = fancy_propcov_plot(these_sample_ids = kridel_fl)
 
-plot:
-my_plot = fancy_propcov_plot(seq_type = "genome", comparison_samples = sub_fl, plot_subtitle = "Proportional coverage for all samples compared to all FL cases")
+#Example 2 - using already filtered metadata (these_samples_metadata)
+fl_metadata = get_gambl_metadata() \%>\%
+ dplyr::filter(pathology == "FL", cohort == "FL_Kridel")
 
-Example 2: Visualize proportional coverage for all FL cases (no comparison group)
-all_fl = fancy_propcov_plot(filter_pathology = "FL", seq_type = "genome", plot_subtitle = "Proportional coverage for all FL cases")
+my_plot_2 = fancy_propcov_plot(these_samples_metadata = fl_metadata)
+
+#Example 3 - using in-house metadata fitlering options
+my_plot_3 = fancy_propcov_plot(keep_cohort = "FL_Kridel", keep_pathology = "FL")
 
 }

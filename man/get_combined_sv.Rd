@@ -2,11 +2,11 @@
 % Please edit documentation in R/database.R
 \name{get_combined_sv}
 \alias{get_combined_sv}
-\title{Retrieve Combined Manta and GRIDSS-derived SVs from a flatfile and filter.}
+\title{Get Combined SV.}
 \usage{
 get_combined_sv(
   min_vaf = 0,
-  sample_ids,
+  these_sample_ids,
   with_chr_prefix = FALSE,
   projection = "grch37",
   oncogenes
@@ -15,11 +15,11 @@ get_combined_sv(
 \arguments{
 \item{min_vaf}{The minimum tumour VAF for a SV to be returned. Recommended: 0. (default: 0)}
 
-\item{sample_ids}{A character vector of tumour sample IDs you wish to retrieve SVs for.}
+\item{these_sample_ids}{A character vector of tumour sample IDs you wish to retrieve SVs for.}
 
-\item{with_chr_prefix}{Prepend all chromosome names with chr (required by some downstream analyses)}
+\item{with_chr_prefix}{Prepend all chromosome names with chr (required by some downstream analyses). Default is FALSE.}
 
-\item{projection}{The projection genome build. Currently only grch37 is supported but hg38 should be easy to add.}
+\item{projection}{The projection genome build. Default is "grch37".}
 
 \item{oncogenes}{A character vector of genes commonly involved in translocations. Possible values: CCND1, CIITA, SOCS1, BCL2, RFTN1, BCL6, MYC, PAX5.}
 }
@@ -27,6 +27,9 @@ get_combined_sv(
 A data frame in a bedpe-like format with additional columns that allow filtering of high-confidence SVs.
 }
 \description{
+Retrieve Combined Manta and GRIDSS-derived SVs from a flatfile and filter.
+}
+\details{
 The bedpe files used as input to this function were pre-filtered for a minimum VAF of 0.05, and SVs affecting.
 common translocation regions (BCL2, BCL6, MYC, CCND1) were whitelisted (e.g. no VAF filter applied).
 Therefore if you wish to post-filter the SVs we recommend doing so carefully after loading this data frame.

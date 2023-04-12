@@ -2,26 +2,25 @@
 % Please edit documentation in R/utilities.R
 \name{collate_ashm_results}
 \alias{collate_ashm_results}
-\title{INTERNAL FUNCTION called by collate_results, not meant for out-of-package usage.
-Determine the hypermutation status of a few genes.}
+\title{Collate ASHM Results.}
 \usage{
-collate_ashm_results(
-  sample_table,
-  seq_type_filter = "genome",
-  ssh_session = NULL
-)
+collate_ashm_results(sample_table, seq_type_filter = "genome")
 }
 \arguments{
 \item{sample_table}{A data frame with sample_id as the first column.}
+
+\item{seq_type_filter}{Filtering criteria, default is genomes.}
 }
 \value{
 Samples table.
 }
 \description{
-INTERNAL FUNCTION called by collate_results, not meant for out-of-package usage.
 Determine the hypermutation status of a few genes.
 }
+\details{
+INTERNAL FUNCTION called by \code{collate_results}, not meant for out-of-package usage.
+}
 \examples{
-sample_table = collate_ashm_results(sample_table=sample_table)
+sample_table = collate_ashm_results(sample_table = sample_table)
 
 }

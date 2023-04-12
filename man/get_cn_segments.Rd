@@ -2,46 +2,61 @@
 % Please edit documentation in R/database.R
 \name{get_cn_segments}
 \alias{get_cn_segments}
-\title{Retrieve all copy number segments from the GAMBL database that overlap with a single genomic coordinate range.}
+\title{Get CN Segments.}
 \usage{
 get_cn_segments(
-  chromosome = "",
+  region,
+  chromosome,
   qstart,
   qend,
-  region,
+  projection = "grch37",
+  this_seq_type = "genome",
   with_chr_prefix = FALSE,
   streamlined = FALSE,
-  from_flatfile = FALSE,
-  ssh_session
+  from_flatfile = TRUE
 )
 }
 \arguments{
-\item{chromosome}{The chromosome you are restricting to.}
+\item{region}{Region formatted like chrX:1234-5678 or X:1234-56789.}
 
-\item{qstart}{Start coordinate of the range you are restricting to.}
+\item{chromosome}{The chromosome you are restricting to. Required parameter if region is not specified.}
 
-\item{qend}{End coordinate of the range you are restricting to.}
+\item{qstart}{Start coordinate of the range you are restricting to. Required parameter if region is not specified.}
 
-\item{region}{Region formatted like chrX:1234-5678 instead of specifying chromosome, start and end separately.}
+\item{qend}{End coordinate of the range you are restricting to. Required parameter if region is not specified.}
 
-\item{with_chr_prefix}{Prepend all chromosome names with chr (required by some downstream analyses).}
+\item{projection}{Selected genome projection for returned CN segments. Default is "grch37".}
 
-\item{streamlined}{Return a basic rather than full MAF format.}
+\item{this_seq_type}{Seq type for returned CN segments. Currently, only genome is supported. Capture samples will be added once processed through CNV protocols.}
 
-\item{from_flatfile}{Set to FALSE by default.}
+\item{with_chr_prefix}{Boolean parameter for toggling if chr prefixes should be present in the return, default is FALSE.}
+
+\item{streamlined}{Return a basic rather than full MAF format. Default is FALSE.}
+
+\item{from_flatfile}{Set to TRUE by default.}
 }
 \value{
-A data frame containing all the MAF data columns (one row per mutation).
+A data frame with CN segments for the specified region.
 }
 \description{
 Retrieve all copy number segments from the GAMBL database that overlap with a single genomic coordinate range.
 }
+\details{
+This function returns CN segments for s specified region.
+There are multiple ways a region can be specified.
+For example, the user can provide the full region in a "region" format (chr:start-end) to the \code{region} parameter.
+Or, the user can provide chromosome, start and end coordinates individually with \code{chr}, \code{start}, and \code{end} parameters.
+For more usage examples, refer to the parameter descriptions and examples in the vignettes.
+}
 \examples{
-#basic usage
-my_segments = get_cn_segments(region="chr8:128,723,128-128,774,067")
-#specifying chromosome, start and end individually
-my_segments = get_cn_segments(chromosome="8",qstart=128723128,qend=128774067)
-#Asking for chromosome names to have a chr prefix (default is un-prefixed)
-prefixed_segments = get_cn_segments(chromosome ="12",qstart = 122456912, qend = 122464036, with_chr_prefix = TRUE)
+#Example using chromosome, qstart and qend parameters:
+segments_region_grch37 = get_cn_segments(chromosome = "chr8",
+                                         qstart = 128723128,
+                                         qend = 128774067)
+                                   
+#Example using the regions parameter:
+segments_region_hg38 = get_cn_segments(region = "chr8:128,723,128-128,774,067",
+                                       projection = "hg38",
+                                       with_chr_prefix = TRUE)
 
 }

@@ -1,23 +1,14 @@
 Package: GAMBLR
-Title: Database, mining, manipulation and convenience functions for working with GAMBL results
+Title: Database, mining, manipulation and convenience functions for
+    working with GAMBL results
 Version: 0.0.0.9500
 Authors@R:
-    person(given = "Ryan",
-           family = "Morin",
-           role = c("aut", "cre"),
-           email = "rdmorin@sfu.ca",
+    person("Ryan", "Morin", , "rdmorin@sfu.ca", role = c("aut", "cre"),
            comment = c(ORCID = "YOUR-ORCID-ID"))
 Description: What the package does (one paragraph).
-License: `use_mit_license()`
-Encoding: UTF-8
-LazyData: true
-Roxygen: list(markdown = TRUE)
-RoxygenNote: 7.2.1
-Suggests:
-    knitr,
-    rmarkdown,
-    testthat
-biocViews:
+License: MIT + file LICENSE
+Depends:
+    R (>= 3.5.0)
 Imports:
     broom,
     circlize,
@@ -27,31 +18,53 @@ Imports:
     data.table,
     DBI,
     dbplyr,
+    digest,
     dplyr,
+    forcats,
     g3viz,
-    GenomeInfoDb,
     ggbeeswarm,
     ggplot2,
+    ggpubr,
     ggrepel,
     ggsci,
     ggthemes,
-    grid,
+    glue,
+    gridExtra,
+    lubridate,
     maftools,
     metaviz,
-    reshape2,
+    nloptr,
+    plotly,
+    plyr,
+    purrr,
+    RCircos,
+    RColorBrewer,
+    readr (>= 2.1),
     RMariaDB,
     rtracklayer,
-    RCircos,
     S4Vectors,
     SRAdb,
-    stats,
-    readr (>= 2.1),
-    workflowr,
-    ggpubr
+    ssh,
+    stringi,
+    stringr,
+    tibble,
+    tidyr,
+    vroom,
+    wordcloud,
+    workflowr
+Suggests:
+    knitr,
+    rmarkdown,
+    testthat
+VignetteBuilder:
+    knitr
 Remotes:
-    morinlab/g3viz,
     cBioPortal/cgdsr,
+    morinlab/g3viz,
     morinlab/ggsci
-VignetteBuilder: knitr
-Depends:
-    R (>= 2.10)
+biocViews:
+Encoding: UTF-8
+LazyData: true
+LazyDataCompression: xz
+Roxygen: list(markdown = TRUE)
+RoxygenNote: 7.2.1

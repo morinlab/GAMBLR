@@ -2,60 +2,87 @@
 % Please edit documentation in R/viz.R
 \name{fancy_circos_plot}
 \alias{fancy_circos_plot}
-\title{Create a circos plots visualizing translocations and SVs (deletions and duplications).}
+\title{SSM and SV Circos Plot.}
 \usage{
 fancy_circos_plot(
-  this_sample,
-  vaf_cutoff = 0,
+  this_sample_id,
+  gene_list,
+  ssm_calls = TRUE,
+  sv_calls = TRUE,
   chr_select = paste0("chr", c(1:22)),
-  use_sv_calls = TRUE,
+  vaf_cutoff = 0,
   coding_only = FALSE,
   from_flatfile = TRUE,
   use_augmented_maf = TRUE,
-  include_del = TRUE,
-  include_dup = TRUE,
   projection = "grch37",
+  plot_title = paste0(this_sample_id),
   out,
-  gene_list,
-  gene_name_col = 4
+  pdf = TRUE,
+  file_name = paste0(this_sample_id, "_circos.pdf")
 )
 }
 \arguments{
-\item{this_sample}{Sample to be plotted.}
+\item{this_sample_id}{Sample to be plotted.}
+
+\item{gene_list}{Optional parameter to annotate genes on the circos plot from a data frame of genes. Is compatible with gene_to_region (return_as = "bed") output format. See examples.}
+
+\item{ssm_calls}{Boolean parameter for plotting ssm. Default is TRUE.}
+
+\item{sv_calls}{Boolean parameter for plotting SVs, default is TRUE.}
+
+\item{chr_select}{Optional argument for subset on selected chromosomes, default is all autosomes.}
 
 \item{vaf_cutoff}{Threshold for filtering variants on VAF (events with a VAF > cutoff will be retained).}
 
-\item{chr_select}{Optional argument for subsetting on selected chromosomes, default is all autosomes.}
-
 \item{coding_only}{Optional. Set to TRUE to restrict to plotting only coding mutations.}
 
-\item{from_flatfile}{If set to true the function will use flat files instead of the database.}
+\item{from_flatfile}{If set to TRUE the function will use flat files instead of the database.}
 
 \item{use_augmented_maf}{Boolean statement if to use augmented maf, default is TRUE.}
 
-\item{include_del}{Boolean statement to include SVs of subtype deletion. Default is TRUE.}
+\item{projection}{Genomic projection for variants and circos plot. Accepted values are grch37 and hg38, default is grch37.}
 
-\item{include_dup}{Boolean statement to include SVs of subtype duplication. Default is TRUE.}
-
-\item{projection}{Genomic projection for SVs and circos plot. Accepted values are grch37 and hg38.}
+\item{plot_title}{Optional parameter for naming your plot, default is this_sample.}
 
 \item{out}{Path to output folder, to where the plot will be exported.}
 
-\item{gene_list}{Optional parameter to annotate genes on the circos plot from a list of genes (df). Important, gene_list is expected to have the following columns Chromosome:chromStart:chromEnd:Gene.}
+\item{pdf}{Set to FALSE for png, default is TRUE (pdf).}
 
-\item{gene_name_col}{Index number of gene_list that holds gene names.}
-
-\item{manta_calls}{Set to TRUE for get_combined_sv approach of retreiving plot data. Set to FALSE to run assign_cn_to_ssm. Default is TRUE.}
+\item{file_name}{Optional parameter for specifying the file name of generated circos plot, default is "{this_sample}_circos.pdf". If pdf is set to FALSE, a png will be generated, thus the .png extension needs to be attached to the file_name.}
 }
 \value{
 Nothing.
 }
 \description{
-Create a circos plots visualizing translocations and SVs (deletions and duplications).
+Create a circos plot visualizing SVS and SSM with optional gene annotations.
+}
+\details{
+This function is using RCircos to create sample-level cirocs plots, annotating SVs and SSM with the potential of adding gene annotations.
+To control what variants are to be plotted, simply use the two Boolean parameters; \code{ssm_calls} and \code{sv_calls} (both TRUE by default).
+Provide the sample ID of interest in with the \code{this_sample_id} parameter. This function calls \code{assing_cn_to_ssm} and \code{get_combined_sv} to retrieve data for plotting.
+Since this function does not create a grob, but rather outputs a rendered PDF/PNG, the user has to provide an output path with the \code{out} parameter.
+In addition, the user can control the output format. For PDF, set \code{pdf} to TRUE (default) and to export the created plot as PNG, set the same parameter to FALSE.
+This function also has convenient filtering parameters available, see parameter descriptions for more information and how to properly use the filtering parameters.
+Lastly, this plot can also highlight genes of interest. To do so, provide a data frame (comparable to the return from \code{gene_to_region(return_as = "bed")}) to the \code{gene_list} parameter.
 }
 \examples{
-data(RCircos.Gene.Label.Data)
-genes = RCircos.Gene.Label.Data
-circos_plot = fancy_circos_plot(this_sample = "HTMCP-01-06-00422-01A-01D", out = "some/path/to/a/destination/")
+#retrieve gene names for FL genes
+fl_genes = dplyr::filter(lymphoma_genes, FL == TRUE) \%>\%
+fl_genes = dplyr::filter(lymphoma_genes, FL == TRUE) \%>\%
+ dplyr::select(Gene) \%>\%
+ pull(Gene)
+
+# get regions for selected genes
+fl_genes_list = gene_to_region(gene_symbol = fl_genes, return_as = "bed")
+
+fancy_circos_plot_new(this_sample_id = "DOHH-2",
+                      ssm_calls = FALSE,
+                      gene_list = fl_genes_list,
+                      chr_select = c("chr8", "chr14", "chr18"),
+                      out = "../../plots/",
+                      plot_title = "DOHH-2 (SVs) Example Plot",
+                      pdf = FALSE,
+                      pdf = FALSE,
+                      file_name = "dohh2_example.png")
 
 }

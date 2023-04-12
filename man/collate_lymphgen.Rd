@@ -2,25 +2,35 @@
 % Please edit documentation in R/utilities.R
 \name{collate_lymphgen}
 \alias{collate_lymphgen}
-\title{Supplement the "lymphgen" column of the metadata with classification for additional samples.
-Expects at least to have columns "patient_id" to bind on, and "lymphgen" to supplement the data on.}
+\title{Collate Lymphgen.}
 \usage{
-collate_lymphgen(sample_table, derived_data_path = "", verbose = TRUE)
+collate_lymphgen(
+  these_samples_metadata,
+  lymphgen_version = "default",
+  tidy = FALSE
+)
 }
 \arguments{
-\item{sample_table}{Input data frame with metadata.}
+\item{these_samples_metadata}{Optional parameter with metadata filtered for sample_ids of interest. If provided, this function will join lymphgen with this metadata, regardless of tidy TRUE/FALSE.}
 
-\item{derived_data_path}{Optional argument specifying the path to a folder with files following the pattern *lymphgen.txt}
+\item{lymphgen_version}{Version of selected lymphgen, default is "default".}
+
+\item{tidy}{Boolean parameter, set to TRUE for tidy format (i.e long format with no columns dropped). Default is FALSE, which returns the data in a wide format, keeping both the original Subtype. Prediction and tidied LymphGen values and puts the values from each "flavour" in its own column.}
 }
 \value{
-A data frame with a supplemented lymphGen column
+A df with lymphgen information.
 }
 \description{
-Supplement the "lymphgen" column of the metadata with classification for additional samples.
-Expects at least to have columns "patient_id" to bind on, and "lymphgen" to supplement the data on.
+Expand a sample_table (metadata) horizontally with different flavours of lymphgen data.
+}
+\details{
+This function takes a sample table (metadata) and adds different flavours of lymphgen data.
+It is possible to call this function with an already subset metadata table (with sample IDs of interest) with \code{these_samples_metadata}.
+If this is done, the function will join the lymphgen data with this table. Currently, the only supported \code{lymphgen_version} is "default".
+For more information refer to the function examples.
 }
 \examples{
-metadata <- get_gambl_metadata()
-GAMBLR::collate_lymphgen(metadata)
+this_meta = get_gambl_metadata() \%>\% dplyr::filter(pathology == "DLBCL")
+wide_lymphgen = collate_lymphgen(these_samples_metadata = this_meta, lymphgen_version = "default", tidy = FALSE)
 
 }

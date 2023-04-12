@@ -2,7 +2,7 @@
 % Please edit documentation in R/viz.R
 \name{get_mutation_frequency_bin_matrix}
 \alias{get_mutation_frequency_bin_matrix}
-\title{Count hypermutated bins and generate heatmaps/cluster the data.}
+\title{Mutation Frequency Heatmap}
 \usage{
 get_mutation_frequency_bin_matrix(
   regions,
@@ -30,8 +30,7 @@ get_mutation_frequency_bin_matrix(
   legend_direction = "horizontal",
   legendFontSize = 10,
   from_indexed_flatfile = TRUE,
-  mode = "slms-3",
-  ssh_session = NULL
+  mode = "slms-3"
 )
 }
 \arguments{
@@ -41,15 +40,19 @@ get_mutation_frequency_bin_matrix(
 
 \item{these_samples_metadata}{GAMBL metadata subset to the cases you want to process (or full metadata).}
 
+\item{seq_type}{The seq_type you want back, default is genome.}
+
 \item{region_padding}{How many bases will be added on the left and right of the regions to ensure any small regions are sufficiently covered by bins. Default is  1000.}
 
 \item{metadataColumns}{What metadata will be shown in the visualization.}
 
 \item{sortByColumns}{Which of the metadata to sort on for the heatmap.}
 
-\item{expressionColumns}{Optional variable for retreiving expression values for a specific gene(s).}
+\item{expressionColumns}{Optional variable for retrieving expression values for a specific gene(s).}
 
 \item{orientation}{Specify the sample orientation, default is sample_rows.}
+
+\item{skip_regions}{Regions to be filtered out from the regions data frame. Only applies if \code{regions_df} is not provided. Default is MYC, BCL2 and IGLL5.}
 
 \item{customColour}{Optional named list of named vectors for specifying all colours for metadata. Can be generated with map_metadata_to_colours. Default is NULL.}
 
@@ -63,7 +66,7 @@ get_mutation_frequency_bin_matrix(
 
 \item{min_bin_patient}{How many bins must a patient mutated in to retain in the visualization.}
 
-\item{region_fontsize}{Fontsize of regions in plot, default is 8ppt.}
+\item{region_fontsize}{Font size of regions in plot, default is 8ppt.}
 
 \item{cluster_rows_heatmap}{Optional parameter to enable/disable clustering of each dimension of the heatmap. Default is FALSE.}
 
@@ -77,20 +80,34 @@ get_mutation_frequency_bin_matrix(
 
 \item{legend_direction}{Accepts one of "horizontal" (default) or "vertical" to indicate in which direction the legend will be drawn.}
 
-\item{legendFontSize}{Fontsize of legend in plot, defualt is 10ppt.}
+\item{legendFontSize}{Font size of legend in plot, default is 10ppt.}
 
-\item{from_indexed_flatfile}{Set to TRUE to avoid using the database and instead rely on flatfiles (only works for streamlined data, not full MAF details).}
+\item{from_indexed_flatfile}{Set to TRUE to avoid using the database and instead rely on flat files (only works for streamlined data, not full MAF details).}
 
-\item{mode}{Only works with indexed flatfiles. Accepts 2 options of "slms-3" and "strelka2" to indicate which variant caller to use. Default is "slms-3".}
+\item{mode}{Only works with indexed flat files. Accepts 2 options of "slms-3" and "strelka2" to indicate which variant caller to use. Default is "slms-3".}
 }
 \value{
 Nothing
 }
 \description{
-Count hypermutated bins and generate heatmaps/cluster the data.
+Count hypermutated bins and generate heatmap/cluster the data.
+}
+\details{
+This function takes a metadata table with \code{these_samples_metadata} parameter and internally calls \code{calc_mutation_frequency_sliding_windows} (that internally calls \code{get_ssm_by_regions})
+to retrieve mutations for plotting. This plotting function has a variety of useful parameters, providing many customizable plotting options. For more details on how these parameters can be used,
+and extended usage examples, refer to the SSM tutorial vignette section 1.4.9.
 }
 \examples{
-roi = c("chr1:102502-130210")
-mut_freq = get_mutation_frequency_bin_matrix(regions = roi, region_padding = 1500, show_gene_colours = TRUE, legendFontSize = 12)
+#load metadata.
+dlbcl_bl_meta = get_gambl_metadata() \%>\% dplyr::filter(pathology \%in\% c("DLBCL", "BL")) #subset on specific pathology.
+
+#bring together all derived sample-level results from many GAMBL pipelines.
+dlbcl_bl_meta = collate_results(join_with_full_metadata = TRUE, these_samples_metadata = dlbcl_bl_meta)
+
+#get ashm regions
+some_regions = grch37_ashm_regions
+
+get_mutation_frequency_bin_matrix(these_samples_metadata = dlbcl_bl_meta,
+                                  regions_df = some_regions)
 
 }

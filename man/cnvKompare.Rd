@@ -6,7 +6,7 @@
 \usage{
 cnvKompare(
   patient_id,
-  sample_ids,
+  these_sample_ids,
   this_seg,
   seg_path,
   genes_of_interest,
@@ -22,7 +22,7 @@ cnvKompare(
 \arguments{
 \item{patient_id}{Specify patient_id to retrieve sample ids from GAMBL metadata.}
 
-\item{sample_ids}{Optionally, specify sample ids for comparison.}
+\item{these_sample_ids}{Optionally, specify sample ids for comparison.}
 
 \item{this_seg}{Optional input data frame of seg file. Must adhere to seg format.}
 
@@ -34,29 +34,27 @@ cnvKompare(
 
 \item{ignore_cytoband_labels}{Cytobands to be ignored. By default, "acen", "gvar", "stalk" are excluded.}
 
-\item{max_overlap}{For time-series plot, how many maximum overlapping points are allowed?}
+\item{max_overlap}{For a time-series plot, how many maximum overlapping points are allowed?}
 
-\item{min_concordance}{Integer value from 0 to 100 to indicate the minimum required similarity between cytobands to be considered concordant. The dafult is 90 (90\%).}
+\item{min_concordance}{Integer value from 0 to 100 to indicate the minimum required similarity between cytobands to be considered concordant. The default is 90 (90\%).}
 
 \item{exclude_sex}{Boolean argument specifying whether to exclude sex chromosomes from calculation. Default is FALSE.}
 
 \item{return_heatmap}{Boolean argument specifying whether to return a heatmap of cnvKompare scores. Default is TRUE.}
 
-\item{compare_pairwise}{Boolean argument specifying whether to perform pairwise comparisons is there are more than 2 time points in the group. Default is TRUE.}
-
-\item{pga_cutoff}{Minimum PGA for the sample to adjust ploidy. Default is 0.05 (5\%).}
+\item{compare_pairwise}{Boolean argument specifying whether to perform pairwise comparisons if there are more than 2 time points in the group. Default is TRUE.}
 }
 \value{
-A list of overall and pairwise percent concordance, concordant and discordant cytobands, comparison heatmap of cnvKompare socres, and time series ggplot object.
+A list of overall and pairwise percent concordance, concordant and discordant cytobands, comparison heatmap of cnvKompare scores, and time series ggplot object.
 }
 \description{
 \code{cnvKompare} returns a list in variable data formats allowing to evaluate concordance of CNV data between multiple samples.
 }
 \details{
 This function will compare CNV data between samples with multiple time points. It can also handle same-sample comparison
-between different CNV callers if sample ID is specified in unique fashion. For groups with more than 2 samples,
-optionally the pairwise comparisons can be performed. The comparison is made based on the internally calculated score,
-which reflects percentage of each cytoband covered by CNV (rounded to the nearest 5\%) and its absolute CN. Optionally,
+between different CNV callers if the sample ID is specified in unique fashion. For groups with more than 2 samples,
+optionally pairwise comparisons can be performed. The comparison is made based on the internally calculated score,
+which reflects the percentage of each cytoband covered by CNV (rounded to the nearest 5\%) and its absolute CN. Optionally,
 the heatmap of cnvKompare scores can be returned. In addition, the function will return all concordant and discordant cytobands.
 Finally, the time series plot of CNV log ratios will be returned for all lymphoma genes, with further functionality to subset
 it to a panel of genes of interest.
@@ -64,4 +62,5 @@ it to a panel of genes of interest.
 \examples{
 cnvKompare(patient_id = "00-14595", genes_of_interest = c("EZH2", "TP53", "MYC", "CREBBP", "GNA13"))
 cnvKompare(patient_id = "13-26835", genes_of_interest = c("EZH2", "TP53", "MYC", "CREBBP", "GNA13"), projection = "hg38")
+
 }

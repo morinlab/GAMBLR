@@ -3175,7 +3175,6 @@ socketWrite = function (sock, string) {
 #'       gene=x["Hugo_Symbol"],socket=socket)})
 #'       
 make_igv_snapshot = function(bams,
-                             sample_ids,
                              this_seq_type="genome",
                              genome_build,
                              region,
@@ -3183,6 +3182,7 @@ make_igv_snapshot = function(bams,
                              chrom,
                              start,
                              end,
+                             this_sample_id,
                              out_path = "/tmp/",
                              igv_port = 60506,
                              socket,
@@ -3278,6 +3278,7 @@ make_igv_snapshot = function(bams,
   if(viewaspairs){
     socketWrite(sock,paste("viewaspairs", "\n"))
   }
+  filename = paste(this_sample_id, region, "snapshot.png", sep = "_")
   IGVsnapshot(sock, fname = filename, dirname = out_path)
   return(paste0(out_path, filename))
 }

@@ -2,60 +2,85 @@
 % Please edit documentation in R/database.R
 \name{get_manta_sv}
 \alias{get_manta_sv}
-\title{Retrieve Manta SVs from the database and filter.}
+\title{Get Manta SVs}
 \usage{
 get_manta_sv(
-  min_vaf = 0.1,
-  min_score = 40,
-  pass = TRUE,
-  pairing_status,
-  sample_id,
+  these_sample_ids,
+  these_samples_metadata,
+  projection = "grch37",
   chromosome,
   qstart,
   qend,
   region,
-  with_chr_prefix = FALSE,
-  from_flatfile = TRUE,
-  projection = "grch37"
+  min_vaf = 0.1,
+  min_score = 40,
+  pass = TRUE,
+  pairing_status,
+  from_flatfile = TRUE
 )
 }
 \arguments{
-\item{min_vaf}{The minimum tumour VAF for a SV to be returned.}
+\item{these_sample_ids}{A vector of multiple sample_id (or a single sample ID as a string) that you want results for.}
 
-\item{min_score}{The lowest Manta somatic score for a SV to be returned.}
+\item{these_samples_metadata}{A metadata table to auto-subset the data to samples in that table before returning.}
 
-\item{pass}{If set to TRUE, include SVs that are annotated with PASS in FILTER column. Default is TRUE.}
+\item{projection}{The projection genome build.}
 
-\item{sample_id}{Filter on specific sample IDs in tumour_sample_id column.}
+\item{chromosome}{Optional, the chromosome you are restricting to.}
 
-\item{chromosome}{The chromosome you are restricting to.}
+\item{qstart}{Optional, query start coordinate of the range you are restricting to.}
 
-\item{qstart}{Query start coordinate of the range you are restricting to.}
+\item{qend}{Optional, query end coordinate of the range you are restricting to.}
 
-\item{qend}{Query end coordinate of the range you are restricting to.}
+\item{region}{Optional, region formatted like chrX:1234-5678 instead of specifying chromosome, start and end separately.}
 
-\item{region}{Region formatted like chrX:1234-5678 instead of specifying chromosome, start and end separately.}
+\item{min_vaf}{The minimum tumour VAF for a SV to be returned. Default is 0.1.}
 
-\item{with_chr_prefix}{Prepend all chromosome names with chr (required by some downstream analyses).}
+\item{min_score}{The lowest Manta somatic score for a SV to be returned. Default is 40.}
 
-\item{from_flatfile}{Set to FALSE by default.}
+\item{pass}{If set to TRUE, only return SVs that are annotated with PASS in the FILTER column. Set to FALSE to keep all variants, regardless if they PASS the filters. Default is TRUE.}
 
-\item{projection}{The projection genome build. Currently only grch37 is supported.}
+\item{pairing_status}{Use to restrict results (if desired) to matched or unmatched results (default is to return all).}
 
-\item{pair_status}{Use to restrict results (if desired) to matched or unmatched results (default is to return all).}
+\item{from_flatfile}{Set to TRUE by default, FALSE is no longer supported (database).}
 }
 \value{
 A data frame in a bedpe-like format with additional columns that allow filtering of high-confidence SVs.
 }
 \description{
-Retrieve Manta SVs from the database and filter.
+Retrieve Manta SVs and filter.
+}
+\details{
+Return Manta SVs with aditional VCF information to allow for filtering of high-confidence variants.
+To return SV calls for multiple samples, give \code{these_sample_ids} a vector of sample IDs, if only one sample is desired,
+give this parameter one sample ID, as a string (or a vector of characters). The user can also call the \code{these_samples_metadata}
+parameter to make use of an already subset metadata table. In this case, the returned calls will be restricted to the sample_ids
+within that data frame. This function relies on a set of specific functions to be successful in returning SV calls for any
+available sample in gambl. First, this function calls \code{get_combined_sv} and performs an \code{anit_join} with the full metadata to
+identify what samples are currently missing from the return of \code{get_combined_sv}. This function then calls \code{get_manta_sv_by_samples}
+(wrapper function for \code{get_manta_sv_by_sample}) on the subset of the missing samples. The merged calls are subject to any
+filtering that is specified within this function. This function can also restrict the returned calls to any genomic regions
+specified within \code{chromosome}, \code{qstart}, \code{qend}, or the complete region specified under \code{region} (in chr:start-end format).
+Useful filtering parameters are also available, use \code{min_vaf} to set the minimum tumour VAF for a SV to be returned and \code{min_score}
+to set the lowest Manta somatic score for a SV to be returned. \code{pair_status} can be used to only return variants that are
+annotated with PASS in the filtering column (VCF).
 }
 \examples{
 #lazily get every SV in the table with default quality filters
 all_sv = get_manta_sv()
+
 #get all SVs for a single sample
-some_sv = get_manta_sv(sample_id="94-15772_tumorA")
+some_sv = get_manta_sv(these_sample_ids = "94-15772_tumorA")
+
 #get the SVs in a region around MYC
-myc_locus_sv = get_manta_sv(region="8:128723128-128774067").
+myc_locus_sv = get_manta_sv(region = "8:128723128-128774067")
+
+#get SVs for multiple samples, using these_samples_id
+my_samples = get_gambl_metadata() \%>\% dplyr::select(sample_id) \%>\% head(10) \%>\% pull(sample_id)
+my_svs_2 = get_manta_sv(these_sample_ids = my_samples, projection = "hg38")
+
+#get SVs for multiple samples using a metadata table and with no VAF/score filtering
+my_metadata = get_gambl_metadata() \%>\% head(10)
+my_svs = get_manta_sv(these_samples_metadata = my_metadata, min_vaf = 0, min_score = 0)
 
 }

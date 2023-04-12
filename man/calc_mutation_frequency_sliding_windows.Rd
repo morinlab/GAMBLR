@@ -2,7 +2,7 @@
 % Please edit documentation in R/utilities.R
 \name{calc_mutation_frequency_sliding_windows}
 \alias{calc_mutation_frequency_sliding_windows}
-\title{Count the number of mutations in a sliding window across a region for all samples. Unlikely to be used directly in most cases. See get_mutation_frequency_bin_matrix instead.}
+\title{Calculate Mutation Frequency By Sliding Window.}
 \usage{
 calc_mutation_frequency_sliding_windows(
   this_region,
@@ -21,8 +21,7 @@ calc_mutation_frequency_sliding_windows(
   drop_unmutated = FALSE,
   classification_column = "lymphgen",
   from_indexed_flatfile = FALSE,
-  mode = "slms-3",
-  ssh_session = NULL
+  mode = "slms-3"
 )
 }
 \arguments{
@@ -35,6 +34,8 @@ calc_mutation_frequency_sliding_windows(
 \item{end_pos}{End coordinate of region.}
 
 \item{metadata}{Data frame containing sample ids and column with annotated data for the 2 groups of interest. All other columns are ignored. Currently, function exits if asked to compare more than 2 groups.}
+
+\item{seq_type}{The seq_type you want back, default is genome.}
 
 \item{slide_by}{Slide size for sliding window, default is 100.}
 
@@ -50,19 +51,26 @@ calc_mutation_frequency_sliding_windows(
 
 \item{return_count}{Boolean statement to return count. Default is FALSE.}
 
-\item{drop_unmutated}{This may not currently work properly. Default is FALSE. Not a very good parameter desciption?}
+\item{drop_unmutated}{This may not currently work properly. Default is FALSE.}
 
 \item{classification_column}{Only used for plotting, default is "lymphgen"}
 
-\item{from_indexed_flatfile}{Set to TRUE to avoid using the database and instead rely on flatfiles (only works for streamlined data, not full MAF details). Default is FALSE.}
+\item{from_indexed_flatfile}{Set to TRUE to avoid using the database and instead rely on flat-files (only works for streamlined data, not full MAF details). Default is FALSE.}
 
-\item{mode}{Only works with indexed flatfiles. Accepts 2 options of "slms-3" and "strelka2" to indicate which variant caller to use. Default is "slms-3".}
+\item{mode}{Only works with indexed flat-files. Accepts 2 options of "slms-3" and "strelka2" to indicate which variant caller to use. Default is "slms-3".}
 }
 \value{
 Count matrix.
 }
 \description{
-Count the number of mutations in a sliding window across a region for all samples. Unlikely to be used directly in most cases. See get_mutation_frequency_bin_matrix instead.
+Count the number of mutations in a sliding window across a region for all samples.
+}
+\details{
+This function is called to return the mutation frequency for a given region, for all GAMBL samples. Regions are specified with the \code{this_region}parameter.
+Alternatively, the region of interest can also be specified by calling the function with \code{chromosome}, \code{start_pos}, and \code{end_pos} parameters.
+It is also possible to return a plot of the created bins. This is done with setting \code{plot_type = TRUE}.
+There are a collection of parameters available for further customizing the return, for more information, refer to the parameter descriptions and examples.
+\code{calc_mutation_frequency_sliding_window} is unlikely to be used directly in most cases. See \code{get_mutation_frequency_bin_matrix} instead.
 }
 \examples{
 chr11_mutation_freq = calc_mutation_frequency_sliding_windows(this_region = "chr11:69455000-69459900", metadata = meta_df, slide_by = 10, window_size = 10000)

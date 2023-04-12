@@ -2,7 +2,7 @@
 % Please edit documentation in R/viz.R
 \name{plot_sample_circos}
 \alias{plot_sample_circos}
-\title{Plot a sample-centric circos overview.}
+\title{Sample-level Circos Plot}
 \usage{
 plot_sample_circos(
   this_sample_id,
@@ -22,21 +22,21 @@ plot_sample_circos(
 \arguments{
 \item{this_sample_id}{Sample ID for the sample to plot.}
 
-\item{sv_df}{Optional data frame of SVs (default is to use the database).}
+\item{sv_df}{Optional data frame of SVs. If not provided this function will run \code{get_manta_sv} to retrieve SVs.}
 
-\item{cnv_df}{Optional data frame of CNVs (default is to use the database).}
+\item{cnv_df}{Optional data frame of CNVs. If not provided, this function will run \code{get_sample_cn_segments} to retrieve CNVs.}
 
-\item{ssm_df}{Optional data frame of SSMs (default is to use the database).}
+\item{ssm_df}{This parameter does not do anything yet. Maybe it was meant to be implemented.}
 
-\item{include_sv}{Default TRUE.}
+\item{include_sv}{Default TRUE. (does not do anything yet).}
 
-\item{include_ssm}{Defaul FALSE.}
+\item{include_ssm}{Defaul FALSE. (does not do anything yet).}
 
-\item{legend_metadata_columns}{Column names from meta data}
+\item{legend_metadata_columns}{Column names from metadata}
 
-\item{legend_metadata_names}{List of meta data names to be plotted.}
+\item{legend_metadata_names}{List of metadata names to be plotted.}
 
-\item{include_cnv}{Default TRUE.}
+\item{include_cnv}{Default TRUE. (does not do anything yet).}
 
 \item{chrom_list}{List of chromosomes to be plotted. If not stated, chr1-22+X will bes used.}
 
@@ -49,6 +49,11 @@ Nothing
 }
 \description{
 Plot a sample-centric circos overview.
+}
+\details{
+This function takes a sample ID in the \code{this_sample_id} parameter.
+Optionally, the user can supply already loaded data frames (SV, CNV, SSM) with the \code{sv_df}, \code{cnv_df} and \code{ssm_df} parameters.
+Convenient Boolean parameteers are also avaialble for restricting the plot to specific mutation types (\code{include_sv}, \code{include_cnv}, and \code{include_ssm}).
 }
 \examples{
 this_samp = "13-38657_tumorB"

@@ -2,7 +2,7 @@
 % Please edit documentation in R/utilities.R
 \name{get_coding_ssm_status}
 \alias{get_coding_ssm_status}
-\title{Tabulate mutation status for non-silent SSMs for a set of genes.}
+\title{Get Coding SSM Status.}
 \usage{
 get_coding_ssm_status(
   gene_symbols,
@@ -13,6 +13,7 @@ get_coding_ssm_status(
   maf_path = NULL,
   maf_data,
   include_hotspots = TRUE,
+  keep_multihit_hotspot = FALSE,
   recurrence_min = 5,
   seq_type = "genome",
   projection = "grch37",
@@ -23,9 +24,9 @@ get_coding_ssm_status(
 )
 }
 \arguments{
-\item{gene_symbols}{List of gene symbols for which the mutation status will be tabulated. If not provided, lymphoma genes will be returned by default.}
+\item{gene_symbols}{A vector of gene symbols for which the mutation status will be tabulated. If not provided, lymphoma genes will be returned by default.}
 
-\item{these_samples_metadata}{The matedata for samples of interest to be included in the returned matrix. Only the column "sample_id" is required. If not provided, the matrix is tabulated for all available samples as default.}
+\item{these_samples_metadata}{The metadata for samples of interest to be included in the returned matrix. Only the column "sample_id" is required. If not provided, the matrix is tabulated for all available samples as default.}
 
 \item{from_flatfile}{Optional argument whether to use database or flat file to retrieve mutations. Default is TRUE.}
 
@@ -39,21 +40,34 @@ get_coding_ssm_status(
 
 \item{include_hotspots}{Logical parameter indicating whether hotspots object should also be tabulated. Default is TRUE.}
 
+\item{keep_multihit_hotspot}{Logical parameter indicating whether to keep the gene annotation as mutated when the gene has both hot spot and non-hotspot mutation. Default is FALSE. If set to TRUE, will report the number of non-hotspot mutations instead of tabulating for just mutation presence.}
+
 \item{recurrence_min}{Integer value indicating minimal recurrence level.}
+
+\item{seq_type}{The seq_type you want back, default is genome.}
+
+\item{projection}{Specify projection (grch37 or hg38) of mutations. Default is grch37.}
 
 \item{review_hotspots}{Logical parameter indicating whether hotspots object should be reviewed to include functionally relevant mutations or rare lymphoma-related genes. Default is TRUE.}
 
-\item{genes_of_interest}{List of genes for hotspot review. Currently only FOXO1, MYD88, and CREBBP are supported.}
+\item{genes_of_interest}{A vector of genes for hotspot review. Currently only FOXO1, MYD88, and CREBBP are supported.}
 
 \item{genome_build}{Reference genome build for the coordinates in the MAF file. The default is hg19 genome build.}
 
-\item{include_silent}{Logical parameter indicating whether to include siment mutations into coding mutations. Default is TRUE.}
+\item{include_silent}{Logical parameter indicating whether to include silent mutations into coding mutations. Default is TRUE.}
 }
 \value{
-Data frame.
+A data frame with tabulated mutation status.
 }
 \description{
-Tabulate mutation status for non-silent SSMs for a set of genes.
+Tabulate mutation status (SSM) for a set of genes.
+}
+\details{
+This function takes a vector of gene symbols and subsets the incoming MAF to specified genes. If no genes are provided, the function will default to all lymphoma genes.
+The function can accept a wide range of incoming MAFs. For example, the user can call this function with \code{these_samples_metadata} (preferably a metadata table that has been subset to the sample IDs of interest).
+If this parameter is not called, the function will default to all samples available with \code{get_gambl_metadata}. The user can also provide a path to a MAF, or MAF-like file with \code{maf_path},
+or an already loaded MAF can be used with the \code{maf_data} parameter. If both \code{maf_path} and \code{maf_data} is missing, the function will default to run \code{get_coding_ssm}.
+This function also has a lot of filtering and convenience parameters giving the user full control of the return. For more information, refer to the parameter descriptions and examples.
 }
 \examples{
 coding_tabulated_df = get_coding_ssm_status(maf_data = "maf", gene_symbols=c("MYC","KMT2D"))

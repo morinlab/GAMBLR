@@ -2,13 +2,14 @@
 % Please edit documentation in R/viz.R
 \name{prettyForestPlot}
 \alias{prettyForestPlot}
-\title{Create a forest plot comparing mutation frequencies for a set of genes between two groups.}
+\title{Forest Plot.}
 \usage{
 prettyForestPlot(
   maf,
   mutmat,
   metadata,
   genes,
+  min_mutations = 1,
   comparison_column,
   rm_na_samples = FALSE,
   comparison_values = FALSE,
@@ -22,11 +23,13 @@ prettyForestPlot(
 \arguments{
 \item{maf}{A maf data frame. Minimum required columns are Hugo_Symbol and Tumor_Sample_Barcode.}
 
-\item{mutmat}{Optional argument for binary mutation matrix. If not supplied, function will generate this amtrix from the file used in argument "maf".}
+\item{mutmat}{Optional argument for binary mutation matrix. If not supplied, function will generate this matrix from the file used in argument "maf".}
 
 \item{metadata}{Metadata for the comparisons. Minimum required columns are Tumor_Sample_Barcode and the column assigning each case to one of two groups.}
 
-\item{genes}{An optional list of genes to restrict your plot to.}
+\item{genes}{An optional vector of genes to restrict your plot to. If no gene-list is supplied, the function will extract all mutated genes from the incoming maf. See min_mutations parameter for more info.}
+
+\item{min_mutations}{Optional parameter for when no \code{genes} is provided. This parameter ensures only genes with n mutations are kept in \code{genes}. Default value is 1, this means all genes in the incoming maf will be plotted.}
 
 \item{comparison_column}{Mandatory: the name of the metadata column containing the comparison values.}
 
@@ -45,19 +48,25 @@ prettyForestPlot(
 \item{max_q}{cut off for q values to be filtered in fish test}
 }
 \value{
-A convenient list containing all the data frames that were created in making the plot, including the mutation matrix.
-
-It also produces (and returns) ggplot object with a side-by-side forest plot and bar plot showing mutation incidences across two groups.
+A convenient list containing all the data frames that were created in making the plot, including the mutation matrix. It also produces (and returns) ggplot object with a side-by-side forest plot and bar plot showing mutation incidences across two groups.
 }
 \description{
 Create a forest plot comparing mutation frequencies for a set of genes between two groups.
+}
+\details{
+This function returns two types of plot (box plot and forest plot), the user can either view them separately or arranged on the same grob.
+In addition this function also lets the user control the mutation frequencies of the plotted genes.
+If no \code{genes} is provided, this function auto-defaults to all genes in the incoming maf.
+The user can then control the minimum number of mutations requirement for a gene to be included in the plot.
+This is done with the \code{min_mutations} parameter.
+For extended examples on how to use this function, refer to the example inside the function documentation or the vignettes.
 }
 \examples{
 metadata = get_gambl_metadata(case_set = "tFL-study") #\%>\%
   dplyr::filter(pairing_status == "matched") \%>\%
   dplyr::filter(consensus_pathology \%in\% c("FL", "DLBCL"))
 
-maf = get_coding_ssm(limit_samples = metadata$sample_id, basic_columns = TRUE)
+maf = get_coding_ssm(limit_samples = metadata$sample_id, basic_columns = TRUE, seq_type = "genome")
 
 prettyForestPlot(maf = maf,
                  metadata = metadata,
