@@ -3044,7 +3044,7 @@ get_bams = function(sample,
 #' # conda activate igv; igv &
 #' # socket = make_igv_snapshot() #run with no arguments to get the socket for a running IGV instance
 #' # this_mutation = get_coding_ssm(seq_type="capture") %>% head(1)
-#'
+#' # view_mutation_igv(this_mutation,socket=socket,this_seq_type="capture",colour_by="READ_STRAND",squish=TRUE,viewaspairs=TRUE)
 view_mutation_igv = function(
                              this_mutation,
                              this_seq_type="genome",
@@ -3175,6 +3175,7 @@ socketWrite = function (sock, string) {
 #'       gene=x["Hugo_Symbol"],socket=socket)})
 #'       
 make_igv_snapshot = function(bams,
+                             sample_ids,
                              this_seq_type="genome",
                              genome_build,
                              region,
@@ -3182,7 +3183,6 @@ make_igv_snapshot = function(bams,
                              chrom,
                              start,
                              end,
-                             this_sample_id,
                              out_path = "/tmp/",
                              igv_port = 60506,
                              socket,
