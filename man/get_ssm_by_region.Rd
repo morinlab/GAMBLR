@@ -40,9 +40,9 @@ get_ssm_by_region(
 
 \item{projection}{Obtain variants projected to this reference (one of grch37 or hg38).}
 
-\item{from_indexed_flatfile}{Set to TRUE to avoid using the database and instead rely on flatfiles (only works for streamlined data, not full MAF details).}
+\item{from_indexed_flatfile}{Set to TRUE to avoid using the database and instead rely on flatfiles.}
 
-\item{augmented}{default: TRUE. Set to FALSE if you instead want the original MAF from each sample for multi-sample patients instead of the augmented MAF .}
+\item{augmented}{default: TRUE. Set to FALSE if you instead want the original MAF from each sample for multi-sample patients instead of the augmented MAF.}
 
 \item{min_read_support}{Only returns variants with at least this many reads in t_alt_count (for cleaning up augmented MAFs).}
 
@@ -72,8 +72,9 @@ my_mutations = get_ssm_by_region(region = "chr8:128,723,128-128,774,067")
 my_mutations = get_ssm_by_region(chromosome = "8",
                                  qstart = 128723128,
                                  qend = 128774067)
-
+                                 
+#keep all 116 columns in the read MAF
 bcl2_all_details = get_ssm_by_region(region = "chr18:60796500-60988073",
-                                     basic_columns = T)
+                                     basic_columns = FALSE)
 
 }

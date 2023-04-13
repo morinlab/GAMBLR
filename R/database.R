@@ -2296,8 +2296,8 @@ get_ssm_by_regions = function(regions_list,
 #' @param maf_data An already loaded MAF like object to subset to regions of interest.
 #' @param seq_type The seq_type you want back, default is genome.
 #' @param projection Obtain variants projected to this reference (one of grch37 or hg38).
-#' @param from_indexed_flatfile Set to TRUE to avoid using the database and instead rely on flatfiles (only works for streamlined data, not full MAF details).
-#' @param augmented default: TRUE. Set to FALSE if you instead want the original MAF from each sample for multi-sample patients instead of the augmented MAF .
+#' @param from_indexed_flatfile Set to TRUE to avoid using the database and instead rely on flatfiles.
+#' @param augmented default: TRUE. Set to FALSE if you instead want the original MAF from each sample for multi-sample patients instead of the augmented MAF.
 #' @param min_read_support Only returns variants with at least this many reads in t_alt_count (for cleaning up augmented MAFs).
 #' @param mode Only works with indexed flatfiles. Accepts 2 options of "slms-3" and "strelka2" to indicate which variant caller to use. Default is "slms-3".
 #' @param verbose Boolean parameter set to FALSE per default.
@@ -2316,9 +2316,10 @@ get_ssm_by_regions = function(regions_list,
 #' my_mutations = get_ssm_by_region(chromosome = "8",
 #'                                  qstart = 128723128,
 #'                                  qend = 128774067)
-#' 
+#'                                  
+#' #keep all 116 columns in the read MAF
 #' bcl2_all_details = get_ssm_by_region(region = "chr18:60796500-60988073",
-#'                                      basic_columns = T)
+#'                                      basic_columns = FALSE)
 #'
 get_ssm_by_region = function(chromosome,
                              qstart,
@@ -2335,53 +2336,59 @@ get_ssm_by_region = function(chromosome,
                              mode = "slms-3",
                              verbose = FALSE){
 
+  #check remote connection
   remote_session = check_remote_configuration(auto_connect = TRUE)
   
   if(streamlined){
-    maf_columns = names(maf_header)[c(6,16,42)]
+    maf_columns = names(maf_header)[c(6, 16, 42)]
     maf_column_types = "ici"
 
-  }else if(basic_columns){ #get first 45 columns
+  }else if(basic_columns){ #get first 45 columns of the MAF
     maf_columns = names(maf_header)[c(1:45)]
-    maf_column_types = "ccccciiccccccccccccccccccccccnccccccccciiiiii"
+    maf_column_types =  "ciccciiccccccclcccclllllllllllllllccccciiiiii"
   }else{
-    maf_columns = names(maf_header)[c(1:75)] #for some reason, this only works for the first 75 columns. Any additional columns will return only 10 columns. Remaining columns will be retreived in a later step.
-    maf_column_types = "ciccciiccccccclcccclllllllllllllllccccciiiiiiccccccccccccinnccccccccccccccc"
+    maf_columns = names(maf_header) #return all MAF columns (116)
+    maf_column_types = "ciccciiccccccclcccclllllllllllllllccccciiiiiiccccccccccccinnccccccccccccccccccclcccccccccnclcncccclncccclllllllllicn"
   }
+  
   #check that maf_columns requested all exist in the header and get their indexes
   if(!all(maf_columns %in% names(maf_header))){
     stop("Cannot find one of the requested maf_columns in your MAF header")
   }
+  
+  #get MAF column indexes
   maf_indexes = maf_header[maf_columns]
   maf_indexes = maf_indexes[order(maf_indexes)]
   maf_columns = names(maf_indexes)
   maf_indexes = unname(maf_indexes)
-  #this is to put the indexes and their names back into numerical order because cut returns columns that way
 
+  #get config values
   tabix_bin = check_config_value(config::get("dependencies")$tabix)
   table_name = check_config_value(config::get("results_tables")$ssm)
   db = check_config_value(config::get("database_name"))
   base_path = check_config_value(config::get("project_base"))
   base_path_remote = check_config_value(config::get("project_base",config="default"))
 
+  #get absolute file paths based on the selected mode and check existance for the file
   if(from_indexed_flatfile){
-    #test if we have permissions for the full gambl + icgc merge
     if(mode == "slms-3"){
       if(augmented){
         maf_partial_path = check_config_value(config::get("results_flatfiles")$ssm$template$merged$augmented)
       }else{
         maf_partial_path = check_config_value(config::get("results_flatfiles")$ssm$template$merged$deblacklisted)
-        }
+      }
     }else if (mode == "strelka2"){
       maf_partial_path = check_config_value(config::get("results_flatfiles")$ssm$all$strelka2)
     }else{
       stop("You requested results from indexed flatfile. The mode should be set to either slms-3 (default) or strelka2. Please specify one of these modes.")
     }
 
+    #use glue to get the absolute path
     maf_path = glue::glue(maf_partial_path)
     full_maf_path = paste0(base_path, maf_path)
     full_maf_path_comp = paste0(base_path, maf_path, ".bgz")
 
+    #check if file is existing or missing
     if(!file.exists(full_maf_path_comp)){
       print(paste("missing:", full_maf_path_comp))
       check_host(verbose=TRUE)
@@ -2393,6 +2400,7 @@ get_ssm_by_region = function(chromosome,
     }
   }
 
+  #split region into chunks (chr, start, end) and deal with chr prefixes based on the selected projection
   if(!region == ""){
     region = gsub(",", "", region)
     split_chunks = unlist(strsplit(region, ":"))
@@ -2407,14 +2415,15 @@ get_ssm_by_region = function(chromosome,
     if(projection =="grch37"){
       chromosome = gsub("chr", "", chromosome)
     }
-    region=paste0(chromosome,":",qstart,"-",qend)
+    region = paste0(chromosome, ":", qstart, "-", qend)
   }
 
   if(projection =="grch37"){
     chromosome = gsub("chr", "", chromosome)
   }
 
- if(missing(maf_data)){
+  #use vroom on indexed maf files (if maf_data is not provided)
+  if(missing(maf_data)){
     if(from_indexed_flatfile){
       if(remote_session){
         if(verbose){
@@ -2422,9 +2431,9 @@ get_ssm_by_region = function(chromosome,
         }
         #Helper function that may come in handy elsewhere so could be moved out of this function if necessary
         run_command_remote = function(ssh_session,to_run){
-        output = ssh::ssh_exec_internal(ssh_session,to_run)$stdout
-        output = rawToChar(output)
-        return(output)
+          output = ssh::ssh_exec_internal(ssh_session,to_run)$stdout
+          output = rawToChar(output)
+          return(output)
         }
 
         # NOTE!
@@ -2438,44 +2447,26 @@ get_ssm_by_region = function(chromosome,
         #  message('Sys.setenv(R_CONFIG_ACTIVE= "remote")')
         #  check_host()
         #}else{
-          message(paste("reading from:", full_maf_path_comp))
+        message(paste("reading from:", full_maf_path_comp))
         #}
 
-        tabix_command = paste("/home/rmorin/miniconda3/bin/tabix", full_maf_path_comp, region, "| cut -f", paste(maf_indexes,collapse=","))
+        tabix_command = paste("/home/rmorin/miniconda3/bin/tabix", full_maf_path_comp, region, "| cut -f", paste(maf_indexes, collapse = ","))
+
         if(verbose){
           print(tabix_command)
         }
-        #stop()
-        muts = run_command_remote(ssh_session,tabix_command)
-        muts_region = vroom::vroom(I(muts),col_types = maf_column_types,
-                                   col_names=maf_columns)
 
-        if(!basic_columns){ #get the remaining columns (76 to 116)
-          maf_columns_set2 = names(maf_header)[c(76:116)]
-          maf_column_types_set2 = "cccclcccccccccnclcncccclncccclllllllllicn"
+        muts = run_command_remote(ssh_session, tabix_command)
+        muts_region = vroom::vroom(I(muts),col_types = maf_column_types, col_names = maf_columns, delim = "\t")
 
-          maf_indexes_set2 = maf_header[maf_columns_set2]
-          maf_indexes_set2 = maf_indexes_set2[order(maf_indexes_set2)]
-          maf_columns_set2 = names(maf_indexes_set2)
-          maf_indexes_set2 = unname(maf_indexes_set2)
-          
-          tabix_command_set2 = paste("/home/rmorin/miniconda3/bin/tabix", full_maf_path_comp, region, "| cut -f", paste(maf_indexes_set_2,collapse=","))
-          
-          if(verbose){
-          print(tabix_command_set2)
-          }
-          
-          muts_set2 = run_command_remote(ssh_session,tabix_command_set2)
-          muts_region_set2 = vroom::vroom(I(muts_set2),col_types = maf_column_types_set2,
-                                     col_names=maf_columns_set2)
-
-          muts_region = cbind(muts_region, muts_region_set2) #cbind first 75 columns with the remaining columns.
-        }
-      }else{
-        tabix_command = paste(tabix_bin, full_maf_path_comp, region, "| cut -f" , paste(maf_indexes,collapse=","))
+      }else{ #(not remote)
+        #get tabix command
+        tabix_command = paste(tabix_bin, full_maf_path_comp, region, "| cut -f", paste(maf_indexes, collapse = ","))
         if(verbose){
           print(tabix_command)
         }
+
+        #execute the tabix command
         muts = system(tabix_command, intern = TRUE)
         if(verbose){
           print(paste("TYPES:"))
@@ -2483,38 +2474,23 @@ get_ssm_by_region = function(chromosome,
           print("NAMES:")
           print(maf_columns)
         }
-        if(length(muts)==0){
-          maf_types_sep = str_split(maf_column_types,pattern="")[[1]] %>%
-            str_replace_all("c","character") %>%
-            str_replace_all("i|n","numeric")
 
-          muts_region = read.table(textConnection(""), col.names = maf_columns,colClasses = maf_types_sep)
+        if(length(muts)==0){
+          maf_types_sep = str_split(maf_column_types, pattern = "")[[1]] %>%
+            str_replace_all("c", "character") %>%
+            str_replace_all("i|n", "numeric")
+
+          muts_region = read.table(textConnection(""), col.names = maf_columns, colClasses = maf_types_sep)
         }else{
-          muts_region = vroom::vroom(I(muts), col_types = paste(maf_column_types,collapse=""),
-                            col_names=maf_columns)
+          #this is what gets executed with default parameters
+          muts_region = vroom::vroom(I(muts), col_types = paste(maf_column_types, collapse = ""), col_names = maf_columns, delim = "\t")
         }
+
         if(verbose){
           print('SUCCESS')
         }
+
       }
-
-      if(!basic_columns){ #get the remaining columns (76 to 116)
-        maf_columns_set2 = names(maf_header)[c(76:116)]
-        maf_column_types_set2 = "cccclcccccccccnclcncccclncccclllllllllicn"
-
-        maf_indexes_set2 = maf_header[maf_columns_set2]
-        maf_indexes_set2 = maf_indexes_set2[order(maf_indexes_set2)]
-        maf_columns_set2 = names(maf_indexes_set2)
-        maf_indexes_set2 = unname(maf_indexes_set2)
-
-        tabix_command_set2 = paste(tabix_bin, full_maf_path_comp, region, "| cut -f" , paste(maf_indexes_set2,collapse=","))
-        muts_set2 = system(tabix_command_set2, intern = TRUE)
-        muts_region_set2 = vroom::vroom(I(muts_set2), col_types = paste(maf_column_types_set2,collapse=""),
-                            col_names=maf_columns_set2)
-
-        muts_region = cbind(muts_region, muts_region_set2) #cbind first 75 columns with the remaining columns.
-      }
-
       if(augmented){
         # drop poorly supported reads but only from augmented MAF
         muts_region = dplyr::filter(muts_region, t_alt_count >= min_read_support)
@@ -2535,7 +2511,7 @@ get_ssm_by_region = function(chromosome,
 
   if(streamlined){
     muts_region = muts_region %>%
-      dplyr::select(-t_alt_count) #drop t_alt_count columns (used for augmented MAFs)
+      dplyr::select(Start_Position, Tumor_Sample_Barcode)
   }
 
   return(muts_region)
