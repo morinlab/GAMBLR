@@ -152,9 +152,7 @@ prettyRainfallPlot = function(this_sample_id,
       this_sample_id = "all samples"
     }
     message(paste("Will use all mutations for",seq_type, "in this region:",zoom_in_region))
-    these_ssm = get_ssm_by_region(region = region,seq_type = seq_type,projection=projection,
-                                  maf_columns = c("Hugo_Symbol","Chromosome", "Start_Position", "End_Position", "Tumor_Sample_Barcode", "t_alt_count","Reference_Allele","Tumor_Seq_Allele2"),
-                                  maf_column_types = c("c","c","i","i","c","i","c","c"))
+    these_ssm = get_ssm_by_region(region = region,seq_type = seq_type,projection=projection)
   }
 
   # do rainfall calculation using lag
