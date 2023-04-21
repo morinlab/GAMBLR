@@ -1,6 +1,6 @@
-![Build GAMBLR](https://github.com/morinlab/GAMBLR/actions/workflows/build_check.yml/badge.svg)
+## <img src="man/figures/gamblr_log.png" align="right" alt="" width="120" />
 
-# GAMBLR - an R package with convenience functions for working with GAMBL results
+## An R package with convenience functions for working with GAMBL results.
 
 ## Installation
 If you have access to gphost, the easiest way to obtain and run GAMBLR is to do this via Rstudio on a gphost. If you do not have access to gphost, please refer to the [Run Remote On A Local Machine](#Run Remote On A Local Machine) section. Assuming you are running Rstudio on gphost, clone the repo to your home directory (not your GAMBL working directory).
