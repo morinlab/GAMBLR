@@ -1616,6 +1616,10 @@ collate_results = function(sample_table,
     sample_table = collate_ancestry(sample_table = sample_table, seq_type_filter = seq_type_filter)
     sample_table = collate_sbs_results(sample_table = sample_table, sbs_manipulation = sbs_manipulation, seq_type_filter = seq_type_filter)
     sample_table = collate_qc_results(sample_table = sample_table, seq_type_filter = seq_type_filter)
+    sample_table <- collate_pga(
+        these_samples_metadata = sample_table,
+        this_seq_type = seq_type_filter
+    )
   }
   if(write_to_file){
     #write results from "slow option" to new cached results file
@@ -3670,10 +3674,33 @@ collate_qc_results = function(sample_table,
   return(sample_table)
 }
 
+
+#' @title Collate PGA results for samples with CN data.
+#'
+#' @description Expand a metadata table horizontally with PGA metrics.
+#'
+#' @details Helper function called by `collate_results`, not meant for out-of-package usage.
+#'
+#' @param these_samples_metadata The metadata to be expanded with sample_id column.
+#' @param this_seq_type default is genome, but capture is not currently supported.
+#'
+#' @noRd
+#'
+#' @return data frame
+#' @import dplyr
+#'
+#' @examples
+#' meta <- get_gambl_metadata()
+#' pga_metrics <- collate_pga(these_samples_metadata = meta)
+#'
 collate_pga <- function(
     these_samples_metadata,
     this_seq_type = "genome"
 ) {
+
+    message(
+        "Collating the PGA results ..."
+    )
     # Currently only works for genomes
     if(! this_seq_type %in% c("genome", "capture")) {
         stop("Please provide a valid seq_type (\"genome\" or \"capture\").")
