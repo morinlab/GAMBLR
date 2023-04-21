@@ -1,12 +1,14 @@
 # Helper functions not for export
 
-#' Check for a version of data to load
+#' @title Check the version of the data to load.
 #'
-#' This function determines if a user is requesting the latest version
+#' @description Helper function to determine whether the user is requesting the latest version
 #' of the bundled data or wants to access one of the earlier veresions.
 #'
 #' @param mode Determines which data to handle. Defaults to somatic_hypermutation_locations. Will grow with more options as more data is version tracked.
 #' @param this_genome_build The genome build of the data if coordinate-based. Accepts grch37 (default) or hg38.
+#'
+#' @noRd
 #'
 #' @return data frame
 #' @import config dplyr readr GAMBLR.data
