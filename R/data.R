@@ -9,7 +9,7 @@
 #'   \item{start}{Start coordinate for the specified oncogene.}
 #'   \item{end}{End coordinate for the specified oncogene.}
 #'   \item{gene}{Lymphoma oncogene.}
-#'   \item{entrez}{ENTREZ ID for the dpecified oncogene.}
+#'   \item{entrez}{ENTREZ ID for the specified oncogene.}
 #' }
 "grch37_oncogene"
 
@@ -24,7 +24,7 @@
 #'   \item{start}{Start coordinate for the specified oncogene.}
 #'   \item{end}{End coordinate for the specified oncogene.}
 #'   \item{gene}{Lymphoma oncogene.}
-#'   \item{entrez}{ENTREZ ID for the dpecified oncogene.}
+#'   \item{entrez}{ENTREZ ID for the specified oncogene.}
 #' }
 "hg38_oncogene"
 
