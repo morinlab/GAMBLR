@@ -59,7 +59,6 @@ Is this function not what you are looking for? Try one of the following, similar
 \link{get_ssm_by_sample}, \link{get_ssm_by_samples}, \link{get_ssm_by_region}, \link{get_ssm_by_regions}
 }
 \examples{
-library(dplyr)
 library(parallel)
 
 #example 1, using a vector of patient IDs.
@@ -69,8 +68,8 @@ patients_maf = get_ssm_by_patients(these_patient_ids = patients,
                                    subset_from_merge = FALSE)
 
 #example 2, using a metadata table, subset to the patient IDs of interest.
-patient_meta = get_gambl_metadata(seq_type_filter = "genome") \%>\% 
- dplyr::filter(patient_id \%in\% patients)
+patient_meta = get_gambl_metadata(seq_type_filter = "genome")
+patient_meta = dplyr::filter(patient_meta, patient_id \%in\% patients)
 
 patients_maf_2 = get_ssm_by_patients(these_samples_metadata = patient_meta,
                                      subset_from_merge = FALSE)

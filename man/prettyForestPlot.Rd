@@ -62,18 +62,16 @@ This is done with the \code{min_mutations} parameter.
 For extended examples on how to use this function, refer to the example inside the function documentation or the vignettes.
 }
 \examples{
-library(dplyr)
+metadata = get_gambl_metadata(case_set = "tFL-study")
+this_meta = dplyr::filter(metadata, pairing_status == "matched")
+this_meta = dplyr::filter(this_meta, consensus_pathology \%in\% c("FL", "DLBCL"))
 
-metadata = get_gambl_metadata(case_set = "tFL-study") #\%>\%
-  dplyr::filter(pairing_status == "matched") \%>\%
-  dplyr::filter(consensus_pathology \%in\% c("FL", "DLBCL"))
-
-maf = get_coding_ssm(limit_samples = metadata$sample_id,
+maf = get_coding_ssm(limit_samples = this_metadata$sample_id,
                      basic_columns = TRUE,
                      seq_type = "genome")
 
 prettyForestPlot(maf = maf,
-                 metadata = metadata,
+                 metadata = this_metadata,
                  genes = c("ATP6V1B2",
                            "EZH2",
                            "TNFRSF14",

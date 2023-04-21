@@ -38,11 +38,10 @@ Is this function not what you are looking for? Try one of the following, similar
 \link{get_manta_sv}, \link{get_manta_sv_by_sample}
 }
 \examples{
-library(dplyr)
 all_sv = get_manta_sv()
-missing_samples = get_gambl_metadata() \%>\%
- anti_join(all_sv, by = c("sample_id" = "tumour_sample_id"))
+metadata = get_gambl_metadata()
+missing_samples = dplyr::anti_join(metadata, all_sv, by = c("sample_id" = "tumour_sample_id"))
 
-missing_from_merge = get_manta_sv_by_samples(these_samples_metadata = missing_samples)
+missing_from_merge = get_manta_sv_by_samples(these_samples_metadata = missing_samples, verbose = FALSE)
 
 }

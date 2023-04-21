@@ -49,20 +49,18 @@ Lastly, \code{seq_type_filter} lets the user control what seq type results will 
 refer to function examples, vignettes and parameter descriptions.
 }
 \examples{
-library(dplyr)
-
 #get collated results for all capture samples, using cached results
 capture_collated_everything = collate_results(seq_type_filter = "capture",
                                               from_cache = TRUE,
                                               write_to_file = FALSE)
 
 #use an already subset metadata table for getting collated results (cached)
-metadata = get_gambl_metadata(seq_type_filter = "genome") \%>\%
- dplyr::filter(pathology == "FL")
+my_metadata = get_gambl_metadata()
+fl_metadata = dplyr::filter(my_metadata, pathology == "FL")
 
 fl_collated = collate_results(seq_type_filter = "genome",
                               join_with_full_metadata = TRUE,
-                              these_samples_metadata = metadata,
+                              these_samples_metadata = fl_metadata,
                               write_to_file = FALSE,
                               from_cache = TRUE)
 
@@ -72,9 +70,7 @@ everything_collated = collate_results(seq_type_filter = "genome",
                                       join_with_full_metadata = TRUE)
 
 #another example demonstrating correct usage of the sample_table parameter.
-fl_samples = get_gambl_metadata(seq_type_filter = "genome") \%>\%
- dplyr::filter(pathology == "FL") \%>\%
- dplyr::select(sample_id, patient_id, biopsy_id)
+fl_samples = dplyr::select(fl_metadata, sample_id, patient_id, biopsy_id)
 
 fl_collated = collate_results(sample_table = fl_samples,
                               seq_type_filter = "genome",

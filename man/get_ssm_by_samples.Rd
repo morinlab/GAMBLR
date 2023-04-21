@@ -64,7 +64,6 @@ Is this function not what you are looking for? Try one of the following, similar
 \link{get_coding_ssm_status}, \link{get_ssm_by_patients}, \link{get_ssm_by_sample}, \link{get_ssm_by_region}, \link{get_ssm_by_regions}
 }
 \examples{
-library(dplyr)
 library(parallel)
 
 #examples using the these_sample_ids parameter.
@@ -89,8 +88,8 @@ slow_sample_ssms = get_ssm_by_samples(subset_from_merge = TRUE,
                                                            "14-35472_tumorB"))
 
 #example using a metadata table subset to sample IDs of interest.
-my_metadata = get_gambl_metadata(seq_type_filter = "genome") \%>\%
- dplyr::filter(pathology == "FL")
+my_metadata = get_gambl_metadata(seq_type_filter = "genome")
+my_metadata = dplyr::filter(my_metadata, pathology == "FL")
 
 sample_ssms = get_ssm_by_samples(these_samples_metadata = my_metadata)
 

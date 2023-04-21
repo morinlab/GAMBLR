@@ -58,11 +58,8 @@ Is this function not what you are looking for? Try one of the following, similar
 \link{get_ssm_by_samples}, \link{get_ssm_by_region}
 }
 \examples{
-library(dplyr)
-
 #basic usage, adding custom names from bundled ashm data frame
-regions_bed = grch37_ashm_regions \%>\% 
- mutate(name = paste(gene, region, sep = "_"))
+regions_bed = dplyr::mutate(grch37_ashm_regions, name = paste(gene, region, sep = "_"))
 
 ashm_basic_details = get_ssm_by_regions(regions_bed = regions_bed)
 

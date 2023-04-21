@@ -41,10 +41,8 @@ or, the suer can specify the bedpe data in a data frame with \code{bedpe_df}.
 The other required parameter is \code{target_build}, this parameter decides the final projection of the lifted bedpe file.
 }
 \examples{
-library(dplyr)
-
-hg19_sv = get_manta_sv(verbose = FALSE) \%>\%
- head(100)
+hg19_sv = get_manta_sv(verbose = FALSE)
+hg19_sv = head(hg19_sv, 100)
 
 hg38_sv = liftover_bedpe(bedpe_df = hg19_sv, 
                          target_build = "hg38")
