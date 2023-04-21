@@ -206,19 +206,17 @@ cache_output = function(result_df,
 #' @export
 #'
 #' @examples
-#' library(dplyr)
-#' 
 #' #define a region.
 #' my_region = gene_to_region(gene_symbol = "MYC", 
 #'                            return_as = "region")
 #'
-#' #subset metadata.
-#' my_metadata = get_gambl_metadata() %>%
-#'  dplyr::filter(pathology == "FL")
+#' #get meta data and subset
+#' my_metadata = get_gambl_metadata()
+#' fl_metadata = dplyr::filter(my_metadata, pathology == "FL")
 #'
 #' #count SSMs for the selected sample subset and defined region.
 #' fl_ssm_counts_myc = count_ssm_by_region(region = my_region,
-#'                                        these_samples_metadata = my_metadata)
+#'                                        these_samples_metadata = fl_metadata)
 #'
 count_ssm_by_region = function(region,
                                chromosome,
@@ -1595,20 +1593,18 @@ test_glue = function(placeholder="INSERTED"){
 #' @export
 #'
 #' @examples
-#' library(dplyr)
-#' 
 #' #get collated results for all capture samples, using cached results
 #' capture_collated_everything = collate_results(seq_type_filter = "capture",
 #'                                               from_cache = TRUE,
 #'                                               write_to_file = FALSE)
 #'
 #' #use an already subset metadata table for getting collated results (cached)
-#' metadata = get_gambl_metadata(seq_type_filter = "genome") %>%
-#'  dplyr::filter(pathology == "FL")
+#' my_metadata = get_gambl_metadata()
+#' fl_metadata = dplyr::filter(my_metadata, pathology == "FL")
 #' 
 #' fl_collated = collate_results(seq_type_filter = "genome",
 #'                               join_with_full_metadata = TRUE,
-#'                               these_samples_metadata = metadata,
+#'                               these_samples_metadata = fl_metadata,
 #'                               write_to_file = FALSE,
 #'                               from_cache = TRUE)
 #'
@@ -1618,9 +1614,7 @@ test_glue = function(placeholder="INSERTED"){
 #'                                       join_with_full_metadata = TRUE)
 #'
 #' #another example demonstrating correct usage of the sample_table parameter.
-#' fl_samples = get_gambl_metadata(seq_type_filter = "genome") %>%
-#'  dplyr::filter(pathology == "FL") %>%
-#'  dplyr::select(sample_id, patient_id, biopsy_id)
+#' fl_samples = dplyr::select(fl_metadata, sample_id, patient_id, biopsy_id)
 #' 
 #' fl_collated = collate_results(sample_table = fl_samples,
 #'                               seq_type_filter = "genome",
@@ -3681,12 +3675,10 @@ consolidate_lymphgen = function(sample_table,
 #' @export
 #'
 #' @examples
-#' library(dplyr)
+#' this_meta = get_gambl_metadata()
+#' dlbcl_meta = dplyr::filter(this_meta, pathology == "DLBCL")
 #' 
-#' this_meta = get_gambl_metadata() %>%
-#'  dplyr::filter(pathology == "DLBCL")
-#' 
-#' wide_lymphgen = collate_lymphgen(these_samples_metadata = this_meta,
+#' wide_lymphgen = collate_lymphgen(these_samples_metadata = dlbcl_meta,
 #'                                  lymphgen_version = "default",
 #'                                  tidy = FALSE)
 #'
@@ -3874,20 +3866,22 @@ standardize_chr_prefix = function(incoming_vector,
 #' @export
 #'
 #' @examples
-#' library(dplyr)
-#' 
-#' sample_seg = get_sample_cn_segments(this_sample_id = "14-36022T") %>%
-#'  rename("sample"="ID")
+#' sample_seg = get_sample_cn_segments(this_sample_id = "14-36022T")
+#' sample_seg = dplyr::rename(sample_seg, "sample" = "ID")
 #' 
 #' calculate_pga(this_seg = sample_seg)
 #' 
 #' calculate_pga(this_seg = sample_seg,
 #'               exclude_sex = FALSE)
 #'
-#' multi_sample_seg = rbind(get_sample_cn_segments(this_sample_id = "14-36022T"),
-#'                          get_sample_cn_segments(this_sample_id = "BLGSP-71-21-00243-01A-11E")) %>%
-#'                          rename("sample"="ID")
-#' 
+#' one_sample = get_sample_cn_segments(this_sample_id = "14-36022T")
+#' one_sample = dplyr::rename(one_sample, "sample" = "ID")
+#'
+#' another_sample = get_sample_cn_segments(this_sample_id = "BLGSP-71-21-00243-01A-11E")
+#' another_sample = dplyr::rename(another_sample, "sample" = "ID")
+#'
+#' multi_sample_seg = rbind(one_sample, another_sample)
+#'
 #' calculate_pga(this_seg = multi_sample_seg)
 #'
 calculate_pga = function(this_seg,
@@ -4029,17 +4023,19 @@ calculate_pga = function(this_seg,
 #' @export
 #'
 #' @examples
-#' library(dplyr)
-#' 
-#' sample_seg = get_sample_cn_segments(this_sample_id = "14-36022T") %>%
-#'  rename("sample"="ID")
-#' 
+#' sample_seg = get_sample_cn_segments(this_sample_id = "14-36022T")
+#' sample_seg = dplyr::rename(sample_seg, "sample" = "ID")
+#'  
 #' adjust_ploidy(this_seg = sample_seg)
-#'
-#' multi_sample_seg = rbind(get_sample_cn_segments(this_sample_id = "14-36022T"),
-#'                          get_sample_cn_segments(this_sample_id = "BLGSP-71-21-00243-01A-11E")) %>%
-#'                          rename("sample" = "ID")
 #' 
+#' one_sample = get_sample_cn_segments(this_sample_id = "14-36022T")
+#' one_sample = dplyr::rename(one_sample, "sample" = "ID")
+#' 
+#' another_sample = get_sample_cn_segments(this_sample_id = "BLGSP-71-21-00243-01A-11E")
+#' another_sample = dplyr::rename(another_sample, "sample" = "ID")
+#' 
+#' multi_sample_seg = rbind(one_sample, another_sample)
+#'  
 #' adjust_ploidy(this_seg = multi_sample_seg)
 #'
 adjust_ploidy = function(this_seg,
@@ -4558,15 +4554,14 @@ cleanup_maf = function(maf_df){
 #'
 #' @export
 #'
-#' @examples
-#' library(dplyr)
-#' 
+#' @examples 
 #' small_maf = get_coding_ssm(limit_cohort = "dlbcl_reddy",
-#'                            seq_type = "capture") %>% 
-#'  dplyr::filter(Hugo_Symbol=="MYC")
+#'                            seq_type = "capture")
 #' 
-#' reddy_meta = get_gambl_metadata(seq_type_filter = "capture") %>% 
-#'  dplyr::filter(cohort=="dlbcl_reddy")
+#' small_maf = dplyr::filter(small_maf, Hugo_Symbol == "MYC")
+#'  
+#' my_metadata = get_gambl_metadata(seq_type_filter = "capture")
+#' reddy_meta = dplyr::filter(my_metadata, cohort=="dlbcl_reddy")
 #' 
 #' complete_maf = supplement_maf(incoming_maf = small_maf,
 #'                               these_samples_metadata = reddy_meta)

@@ -68,7 +68,6 @@ get_excluded_samples = function(tool_name = "slms-3"){
 #' @export
 #'
 #' @examples
-#' library(dplyr)
 #' library(parallel)
 #' 
 #' #example 1, using a vector of patient IDs.
@@ -78,8 +77,8 @@ get_excluded_samples = function(tool_name = "slms-3"){
 #'                                    subset_from_merge = FALSE)
 #'
 #' #example 2, using a metadata table, subset to the patient IDs of interest.
-#' patient_meta = get_gambl_metadata(seq_type_filter = "genome") %>% 
-#'  dplyr::filter(patient_id %in% patients)
+#' patient_meta = get_gambl_metadata(seq_type_filter = "genome")
+#' patient_meta = dplyr::filter(patient_meta, patient_id %in% patients)
 #' 
 #' patients_maf_2 = get_ssm_by_patients(these_samples_metadata = patient_meta,
 #'                                      subset_from_merge = FALSE)
@@ -173,7 +172,6 @@ get_ssm_by_patients = function(these_patient_ids,
 #' @export
 #'
 #' @examples
-#' library(dplyr)
 #' library(parallel)
 #' 
 #' #examples using the these_sample_ids parameter.
@@ -198,8 +196,8 @@ get_ssm_by_patients = function(these_patient_ids,
 #'                                                            "14-35472_tumorB"))
 #'
 #' #example using a metadata table subset to sample IDs of interest.
-#' my_metadata = get_gambl_metadata(seq_type_filter = "genome") %>%
-#'  dplyr::filter(pathology == "FL")
+#' my_metadata = get_gambl_metadata(seq_type_filter = "genome")
+#' my_metadata = dplyr::filter(my_metadata, pathology == "FL")
 #'
 #' sample_ssms = get_ssm_by_samples(these_samples_metadata = my_metadata)
 #'
@@ -1343,7 +1341,6 @@ get_combined_sv = function(min_vaf = 0,
 #' @export
 #'
 #' @examples
-#' library(dplyr)
 #' #lazily get every SV in the table with default quality filters
 #' all_sv = get_manta_sv(verbose = FALSE)
 #'
@@ -1354,10 +1351,10 @@ get_combined_sv = function(min_vaf = 0,
 #' myc_locus_sv = get_manta_sv(region = "8:128723128-128774067", verbose = FALSE)
 #'
 #' #get SVs for multiple samples, using these_samples_id
-#' my_samples = get_gambl_metadata() %>% 
-#'  dplyr::select(sample_id) %>% 
-#'  head(10) %>% 
-#'  pull(sample_id)
+#' my_metadata = get_gambl_metadata()
+#' these_samples = dplyr::select(my_metadata, sample_id)
+#' my_samples_df = head(these_samples, 10)
+#' my_samples = pull(my_samples_df, sample_id)
 #' 
 #' my_svs_2 = get_manta_sv(these_sample_ids = my_samples,
 #'                         projection = "hg38",
@@ -1365,9 +1362,9 @@ get_combined_sv = function(min_vaf = 0,
 #'
 #' #get SVs for multiple samples using a metadata table and with no VAF/score filtering
 #' my_metadata = get_gambl_metadata() %>% 
-#'  head(10)
+#' this_metadata = head(my_metadata, 10)
 #' 
-#' my_svs = get_manta_sv(these_samples_metadata = my_metadata,
+#' my_svs = get_manta_sv(these_samples_metadata = this_metadata,
 #'                       verbose = FALSE,
 #'                       min_vaf = 0,
 #'                       min_score = 0)
@@ -2114,12 +2111,10 @@ append_to_table = function(table_name,
 #' @export
 #'
 #' @examples
-#' library(dplyr)
-#' regions_bed = grch37_ashm_regions %>%
-#'  mutate(name = paste(gene, region, sep = "_"))
+#' regions_bed = dplyr::mutate(grch37_ashm_regions, name = paste(gene, region, sep = "_"))
 #' 
 #' matrix = get_ashm_count_matrix(regions_bed = regions_bed,
-#'                                seq_type="genome")
+#'                                seq_type = "genome")
 #'
 get_ashm_count_matrix = function(regions_bed,
                                  maf_data,
@@ -2194,12 +2189,9 @@ get_ashm_count_matrix = function(regions_bed,
 #' @import tibble dplyr tidyr
 #' @export
 #'
-#' @examples
-#' library(dplyr)
-#' 
+#' @examples 
 #' #basic usage, adding custom names from bundled ashm data frame
-#' regions_bed = grch37_ashm_regions %>% 
-#'  mutate(name = paste(gene, region, sep = "_"))
+#' regions_bed = dplyr::mutate(grch37_ashm_regions, name = paste(gene, region, sep = "_"))
 #' 
 #' ashm_basic_details = get_ssm_by_regions(regions_bed = regions_bed)
 #' 
@@ -2960,12 +2952,11 @@ get_gene_expression = function(metadata,
 #' @export
 #'
 #' @examples
-#' library(dplyr)
 #' all_sv = get_manta_sv()
-#' missing_samples = get_gambl_metadata() %>%
-#'  anti_join(all_sv, by = c("sample_id" = "tumour_sample_id"))
+#' metadata = get_gambl_metadata()
+#' missing_samples = dplyr::anti_join(metadata, all_sv, by = c("sample_id" = "tumour_sample_id"))
 #' 
-#' missing_from_merge = get_manta_sv_by_samples(these_samples_metadata = missing_samples)
+#' missing_from_merge = get_manta_sv_by_samples(these_samples_metadata = missing_samples, verbose = FALSE)
 #'
 get_manta_sv_by_samples = function(these_samples_metadata,
                                    min_vaf = 0.1,
@@ -3069,8 +3060,6 @@ get_manta_sv_by_samples = function(these_samples_metadata,
 #' @export
 #'
 #' @examples
-#' library(dplyr)
-#' 
 #' #example 1
 #' #get manta calls for a sample that needs to be lifted to "hg38" and let this function
 #' #take care of the liftover step for you. 
@@ -3081,8 +3070,8 @@ get_manta_sv_by_samples = function(these_samples_metadata,
 #'
 #' #example 2
 #' #get manta calls based on an already filtered metadata (with one sample ID)
-#' my_metadata = get_gambl_metadata() %>%
-#'  dplyr::filter(sample_id=="99-27783_tumorA")
+#' my_metadata = get_gambl_metadata()
+#' my_metadata = dplyr::filter(my_metadata, sample_id=="99-27783_tumorA")
 #' 
 #' my_sv = get_manta_sv_by_sample(these_samples_metadata = my_metadata,
 #'                                projection = "hg38",

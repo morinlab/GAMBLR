@@ -211,8 +211,8 @@ annotate_recurrent_cnv = function(seg_df,
 #' @export
 #'
 #' @examples
-#' library(dplyr)
-#' all_annotated = get_manta_sv(verbose = FALSE) %>% annotate_sv()
+#' manta_sv = get_manta_sv(verbose = FALSE)
+#' all_annotated = annotate_sv(sv_data = manta_sv)
 #' ig_annotated = annotate_igh_breakpoints(all_annotated)
 #'
 annotate_igh_breakpoints = function(annotated_df,

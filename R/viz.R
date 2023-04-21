@@ -404,18 +404,16 @@ gene_mutation_tally = function(maf_df,these_samples_metadata,these_genes,groupin
 #' @export
 #'
 #' @examples
-#' library(dplyr)
-#' 
 #' #get all coding SSM
 #' maf = get_coding_ssm(seq_type = "genome")
 #'
 #' #get gene symbols from MAF
-#' maf_genes = dplyr::filter(maf, Hugo_Symbol != "Unknown") %>%
-#'  dplyr::filter(Chromosome == "1") %>%
-#'  pull(Hugo_Symbol)
+#' maf_genes = dplyr::filter(maf, Hugo_Symbol != "Unknown")
+#' maf_genes_chr1 = dplyr::filter(maf_genes, Chromosome == "1")
+#' my_genes = pull(maf_genes_chr1, Hugo_Symbol)
 #'
 #' #build wordcloud
-#' prettyGeneCloud(maf_df = maf, these_genes = maf_genes)
+#' prettyGeneCloud(maf_df = maf, these_genes = my_genes)
 #'
 prettyGeneCloud = function(maf_df,
                            these_genes,
@@ -571,11 +569,9 @@ focal_cn_plot = function(region,
 #' @export
 #'
 #' @examples
-#' library(dplyr)
-#' 
 #' #get metadata (Fl and DLBCL)
-#' this_metadata = get_gambl_metadata() %>%
-#'  dplyr::filter(consensus_pathology %in% c("FL", "DLBCL"))
+#' metadata = get_gambl_metadata()
+#' this_metadata = dplyr::filter(metadata, consensus_pathology %in% c("FL", "DLBCL"))
 #'
 #' #get maf data for returned samples
 #' maf = get_coding_ssm(limit_samples = this_metadata$sample_id, 
@@ -649,11 +645,9 @@ pretty_lollipop_plot = function(maf_df,
 #' @export
 #'
 #' @examples
-#' library(dplyr)
-#' 
 #' #load metadata.
-#' dlbcl_bl_meta = get_gambl_metadata() %>%
-#'  dplyr::filter(pathology %in% c("DLBCL", "BL")) #subset on specific pathology.
+#' metadata = get_gambl_metadata()
+#' dlbcl_bl_meta = dplyr::filter(metadata, pathology %in% c("DLBCL", "BL"))
 #'
 #' #bring together all derived sample-level results from many GAMBL pipelines.
 #' dlbcl_bl_meta = collate_results(join_with_full_metadata = TRUE,
@@ -2040,13 +2034,11 @@ prettyOncoplot = function(maftools_obj,
 #' @export
 #'
 #' @examples
-#' library(dplyr)
-#' 
 #' #get data for plotting
 #' ssm = get_coding_ssm(limit_cohort = c("BL_Adult", "BL_Pediatric"), seq_type = "genome")
 #' ssm = maftools::read.maf(ssm)
-#' meta = get_gambl_metadata() %>%
-#'   dplyr::filter(cohort %in% c("BL_Adult", "BL_Pediatric"))
+#' meta = get_gambl_metadata()
+#' meta = dplyr::filter(meta, cohort %in% c("BL_Adult", "BL_Pediatric"))
 #'
 #' #build plot
 #' prettyCoOncoplot(maf = ssm,
@@ -2905,18 +2897,16 @@ theme_Morons = function(base_size = 14,
 #' @export
 #'
 #' @examples
-#' library(dplyr)
-#' 
-#' metadata = get_gambl_metadata(case_set = "tFL-study") #%>%
-#'   dplyr::filter(pairing_status == "matched") %>%
-#'   dplyr::filter(consensus_pathology %in% c("FL", "DLBCL"))
+#' metadata = get_gambl_metadata(case_set = "tFL-study")
+#' this_meta = dplyr::filter(metadata, pairing_status == "matched")
+#' this_meta = dplyr::filter(this_meta, consensus_pathology %in% c("FL", "DLBCL"))
 #'
-#' maf = get_coding_ssm(limit_samples = metadata$sample_id,
+#' maf = get_coding_ssm(limit_samples = this_metadata$sample_id,
 #'                      basic_columns = TRUE,
 #'                      seq_type = "genome")
 #'
 #' prettyForestPlot(maf = maf,
-#'                  metadata = metadata,
+#'                  metadata = this_metadata,
 #'                  genes = c("ATP6V1B2",
 #'                            "EZH2",
 #'                            "TNFRSF14",
@@ -5433,23 +5423,18 @@ fancy_sv_sizedens = function(this_sample_id,
 #' @export
 #'
 #' @examples
-#' library(dplyr)
-#' 
 #' #Example 1 - using these_sample_ids parameter
 #' #subset on FL cases with QC metrics available and plot
-#' kridel_fl = get_gambl_metadata() %>%
-#'   dplyr::filter(pathology == "FL",
-#'                cohort == "FL_Kridel") %>%
-#'   dplyr::select(sample_id)
+#' metadata = get_gambl_metadata()
+#' kridel_fl = dplyr::filter(metadata, pathology == "FL",
+#'                cohort == "FL_Kridel")
 #'
-#' fancy_alignment_plot(these_sample_ids = kridel_fl)
+#' kridel_fl_samples = dplyr::select(kridel_fl, sample_id)
+#'
+#' fancy_alignment_plot(these_sample_ids = kridel_fl_samples)
 #'
 #' #Example 2 - using already filtered metadata (these_samples_metadata)
-#' fl_metadata = get_gambl_metadata() %>%
-#'   dplyr::filter(pathology == "FL",
-#'                 cohort == "FL_Kridel")
-#'
-#' fancy_alignment_plot(these_samples_metadata = fl_metadata)
+#' fancy_alignment_plot(these_samples_metadata = kridel_fl)
 #'
 #' #Example 3 - using in-house metadata filtering options
 #' fancy_alignment_plot(keep_cohort = "FL_Kridel",
@@ -5592,24 +5577,20 @@ fancy_alignment_plot = function(these_sample_ids,
 #' @export
 #'
 #' @examples
-#' library(dplyr)
-#' 
 #' #Example 1 - using these_sample_ids parameter
 #' #subset on FL cases with QC metrics available and plot
-#' kridel_fl = get_gambl_metadata() %>%
-#'  dplyr::filter(pathology == "FL", cohort == "FL_Kridel") %>%
-#' dplyr::select(sample_id)
+#' metadata = get_gambl_metadata()
+#' kridel_fl = dplyr::filter(metadata, pathology == "FL",
+#'                cohort == "FL_Kridel")
+#' kridel_fl_samples = dplyr::select(kridel_fl, sample_id)
 #'
-#' fancy_qc_plot(these_sample_ids = kridel_fl,
+#' fancy_qc_plot(these_sample_ids = kridel_fl_samples,
 #'               plot_data = "AverageBaseQuality",
 #'               y_axis_lab = "Average Base Quality",
 #'               plot_title = "Average Base Quality For FL_Kridel")
 #'
 #' #Example 2 - using already filtered metadata (these_samples_metadata)
-#' fl_metadata = get_gambl_metadata() %>%
-#'  dplyr::filter(pathology == "FL", cohort == "FL_Kridel")
-#'
-#' fancy_qc_plot(these_samples_metadata = fl_metadata,
+#' fancy_qc_plot(these_samples_metadata = kridel_fl,
 #'               interactive = TRUE,
 #'               labels = c("cohort", "pathology"),
 #'               plot_data = "AverageBaseQuality",
@@ -5764,21 +5745,17 @@ fancy_qc_plot = function(these_sample_ids,
 #' @export
 #'
 #' @examples
-#' library(dplyr)
-#' 
 #' #Example 1 - using these_sample_ids parameter
 #' #subset on FL cases with QC metrics available and plot
-#' kridel_fl = get_gambl_metadata() %>%
-#'  dplyr::filter(pathology == "FL", cohort == "FL_Kridel") %>%#
-#'  dplyr::select(sample_id)
+#' metadata = get_gambl_metadata()
+#' kridel_fl = dplyr::filter(metadata, pathology == "FL",
+#'                cohort == "FL_Kridel")
+#' kridel_fl_samples = dplyr::select(kridel_fl, sample_id)
 #'
-#' fancy_propcov_plot(these_sample_ids = kridel_fl)
+#' fancy_propcov_plot(these_sample_ids = kridel_fl_samples)
 #'
 #' #Example 2 - using already filtered metadata (these_samples_metadata)
-#' fl_metadata = get_gambl_metadata() %>%
-#'  dplyr::filter(pathology == "FL", cohort == "FL_Kridel")
-#'
-#' fancy_propcov_plot(these_samples_metadata = fl_metadata)
+#' fancy_propcov_plot(these_samples_metadata = kridel_fl)
 #'
 #' #Example 3 - using in-house metadata filtering options
 #' fancy_propcov_plot(keep_cohort = "FL_Kridel",
@@ -5897,21 +5874,17 @@ fancy_propcov_plot = function(these_sample_ids,
 #' @export
 #'
 #' @examples
-#' library(dplyr)
-#' 
 #' #Example 1 - using these_sample_ids parameter
 #' #subset on FL cases with QC metrics available and plot
-#' kridel_fl = get_gambl_metadata() %>%
-#'  dplyr::filter(pathology == "FL", cohort == "FL_Kridel") %>%#
-#'  dplyr::select(sample_id)
+#' metadata = get_gambl_metadata() %>%
+#' kridel_fl = dplyr::filter(metadata, pathology == "FL",
+#'                cohort == "FL_Kridel")
+#' kridel_fl_samples = dplyr::select(kridel_fl, sample_id)
 #'
-#' fancy_proportions_plot(these_sample_ids = kridel_fl)
+#' fancy_proportions_plot(these_sample_ids = kridel_fl_samples)
 #'
 #' #Example 2 - using already filtered metadata (these_samples_metadata)
-#' fl_metadata = get_gambl_metadata() %>%
-#'  dplyr::filter(pathology == "FL", cohort == "FL_Kridel")
-#'
-#' fancy_proportions_plot(these_samples_metadata = fl_metadata)
+#' fancy_proportions_plot(these_samples_metadata = kridel_fl)
 #'
 #' #Example 3 - using in-house metadata filtering options
 #' fancy_proportions_plot(keep_cohort = "FL_Kridel",
