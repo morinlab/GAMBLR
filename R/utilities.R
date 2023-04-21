@@ -3718,7 +3718,6 @@ standardize_chr_prefix = function(incoming_vector,
 #'
 #' @return data frame
 #'
-#' @rawNamespace import(data.table, except = c("last", "first", "between", "transpose"))
 #' @import dplyr readr tidyr
 #' @export
 #'
@@ -3766,7 +3765,8 @@ calculate_pga = function(this_seg,
       group_by(chromosome) %>%
       mutate(start = min(start),
              end = max(end)) %>%
-      ungroup
+      ungroup %>%
+      distinct(chromosome, start, end)
   }
 
   # total size of genome in this projection
@@ -3776,10 +3776,10 @@ calculate_pga = function(this_seg,
     pull(genome_size)
 
   # prepare for the overlaps
-  chr_coordinates = as.data.table(chr_coordinates)  %>%
+  chr_coordinates = chr_coordinates  %>%
     rename("arm_start" = "start",
-           "arm_end" = "end")
-  setkey(chr_coordinates, chromosome, arm_start, arm_end)
+           "arm_end" = "end",
+           "chrom" = "chromosome")
 
   # work out the seg file
   if (!missing(seg_path)) {
@@ -3809,18 +3809,16 @@ calculate_pga = function(this_seg,
   }
 
   # prepare for the overlaps
-  this_seg = as.data.table(this_seg)
-  setkey(this_seg, chrom, start, end)
-
-  # what are the segments that overlap good regions in chromosome coordinates?
-  this_seg = foverlaps(
+  this_seg = inner_join(
     this_seg,
     chr_coordinates,
-    by.x = c("chrom", "start", "end"),
-    by.y = c('chromosome', 'arm_start', 'arm_end'),
-    nomatch = 0L
-  ) %>%
-    as.data.frame %>%
+    by = "chrom",
+    relationship = "many-to-many"
+  )
+
+  # what are the segments that overlap?
+  this_seg = df %>%
+    filter(start <= arm_end & arm_start <= end) %>%
     arrange(sample, chrom, start)
 
   # calculate total length of CNV
@@ -3840,7 +3838,8 @@ calculate_pga = function(this_seg,
   affected_regions = affected_regions %>%
     select(-total) %>%
     `names<-`(c("sample_id", "PGA")) %>%
-    as.data.frame()
+    as.data.frame() %>%
+    dplyr::mutate(PGA = round(PGA, 3))
 
   return(affected_regions)
 
