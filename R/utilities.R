@@ -3670,6 +3670,45 @@ collate_qc_results = function(sample_table,
   return(sample_table)
 }
 
+collate_pga <- function(
+    these_samples_metadata,
+    this_seq_type = "genome"
+) {
+    # Currently only works for genomes
+    if(! this_seq_type %in% c("genome", "capture")) {
+        stop("Please provide a valid seq_type (\"genome\" or \"capture\").")
+    } else if ("capture" %in% this_seq_type) {
+        stop("The requested seq_type \"capture\" is not currently supported.")
+    }
+
+    # Default to all samples if sample table is missing
+    if (missing(these_samples_metadata)) {
+        message("No sample table was provided. Defaulting to all metadata ...")
+        these_samples_metadata <- get_gambl_metadata(
+            seq_type_filter = this_seq_type
+        )
+    }
+
+    # Get the CN segments
+    multi_sample_seg <- get_sample_cn_segments(
+        sample_list = these_samples_metadata$sample_id,
+        multiple_samples = TRUE
+    ) %>%
+    dplyr::rename("sample" = "ID")
+
+    these_samples_pga <- calculate_pga(
+        this_seg = multi_sample_seg
+    )
+
+    these_samples_metadata <- left_join(
+        these_samples_metadata,
+        these_samples_pga
+    )
+
+    return(these_samples_metadata)
+
+}
+
 
 #' @title Standardize Chromosome Prefix.
 #'
