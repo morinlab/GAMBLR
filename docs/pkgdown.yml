@@ -1,9 +1,13 @@
-pandoc: 2.3.1
-pkgdown: 1.6.1
+pandoc: 2.11.4
+pkgdown: 2.0.7
 pkgdown_sha: ~
 articles:
-  GAMBLR_presentation: GAMBLR_presentation.html
-  examples: examples.html
-  lymphoma: lymphoma.html
-last_built: 2021-06-15T01:14Z
+  cn_sv_tutorial: cn_sv_tutorial.html
+  fancy_plots: fancy_plots.html
+  ssm_tutorial: ssm_tutorial.html
+  utilities_tutorial: utilities_tutorial.html
+last_built: 2023-04-21T19:38Z
+urls:
+  reference: https://github.com/morinlab/GAMBLR/reference
+  article: https://github.com/morinlab/GAMBLR/articles
 
