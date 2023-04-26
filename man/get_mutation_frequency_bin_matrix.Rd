@@ -93,16 +93,18 @@ Nothing
 Count hypermutated bins and generate heatmap/cluster the data.
 }
 \details{
-This function takes a metadata table with \code{these_samples_metadata} parameter and internally calls \code{calc_mutation_frequency_sliding_windows} (that internally calls \code{get_ssm_by_regions})
+This function takes a metadata table with \code{these_samples_metadata} parameter and internally calls \link{calc_mutation_frequency_sliding_windows} (that internally calls \link{get_ssm_by_regions})
 to retrieve mutations for plotting. This plotting function has a variety of useful parameters, providing many customizable plotting options. For more details on how these parameters can be used,
 and extended usage examples, refer to the SSM tutorial vignette section 1.4.9.
 }
 \examples{
 #load metadata.
-dlbcl_bl_meta = get_gambl_metadata() \%>\% dplyr::filter(pathology \%in\% c("DLBCL", "BL")) #subset on specific pathology.
+metadata = get_gambl_metadata()
+dlbcl_bl_meta = dplyr::filter(metadata, pathology \%in\% c("DLBCL", "BL"))
 
 #bring together all derived sample-level results from many GAMBL pipelines.
-dlbcl_bl_meta = collate_results(join_with_full_metadata = TRUE, these_samples_metadata = dlbcl_bl_meta)
+dlbcl_bl_meta = collate_results(join_with_full_metadata = TRUE,
+                                these_samples_metadata = dlbcl_bl_meta)
 
 #get ashm regions
 some_regions = grch37_ashm_regions

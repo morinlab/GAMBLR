@@ -33,8 +33,11 @@ The default is 5. \code{analysis_base} controls the base name go hotspot output 
 Lastly, \code{p_thresh} sets the p value threshold, default is 0.05.
 }
 \examples{
-hot_ssms = annotate_hotspots(all_ssm)
-hot_maf = read.maf(hot_ssms)
-oncoplot(hot_maf,genes=c("MEF2B","TP53","MYD88"),additionalFeature = c("hot_spot",TRUE))
+my_metadata = get_gambl_metadata()
+all_coding_ssm = get_coding_ssm(these_samples_metadata = my_metadata,
+                                projection = "grch37", 
+                                seq_type = "genome")
+
+hot_ssms = annotate_hotspots(all_coding_ssm)
 
 }

@@ -42,7 +42,10 @@ For more information regarding the available colours, refer to the utilities vig
 }
 \examples{
 lymphgen_cols = get_gambl_colours("lymphgen")
+
+\dontrun{
 #be sure to install ggsci from https://github.com/morinlab/ggsci
 #install_github("morinlab/ggsci")
+}
 
 }

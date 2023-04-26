@@ -79,14 +79,21 @@ and is expected to have samples in rows, and features in columns. The argument i
 It is also expected to have column names (having names of the groups that will be shown on heatmap) and rownames (corresponding to feature ids).
 }
 \examples{
-splendidHeatmap(
- this_matrix = data,
- importance_values = rf$importance[,c(1:3)],
- these_samples_metadata = MASTER.METADATA,
- splitColumnName = "pathology",
- metadataColumns = c("cohort", "pathology", "sex", ".", "COO_consensus", "DHITsig_consensus", "seq_type"),
- numericMetadataColumns = ".",
- numericMetadataMax = 0.7,
- custom_colours=custom_colours)
+\dontrun{
+splendidHeatmap(this_matrix = data,
+                importance_values = rf$importance[,c(1:3)],
+                these_samples_metadata = MASTER.METADATA,
+                splitColumnName = "pathology",
+                metadataColumns = c("cohort",
+                                    "pathology",
+                                    "sex",
+                                    ".",
+                                    "COO_consensus",
+                                    "DHITsig_consensus",
+                                    "seq_type"),
+                numericMetadataColumns = ".",
+                numericMetadataMax = 0.7,
+                custom_colours = custom_colours)
+}
 
 }

@@ -21,7 +21,9 @@ Annotates recurrent CNVs from a data frame with CNV data.
 This function takes a data frame with CNVs (\code{seq_df}) and annotates recurrent CNVs.
 }
 \examples{
-annotated = annotate_recurrent_cnv(my_seq_df)
-annotated = annotate_recurrent_cnv(seq_file = "my_seq_data.txt")
+\dontrun{
+my_segs = get_sample_cn_segments(this_sample_id = "HTMCP-01-06-00422-01A-01D")
+annotated = annotate_recurrent_cnv(seg_df = my_segs)
+}
 
 }

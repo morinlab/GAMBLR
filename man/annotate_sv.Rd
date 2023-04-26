@@ -41,12 +41,14 @@ A data frame with annotated SVs (gene symbol and entrez ID).
 Annotate a data frame of SV breakpoints represented in an extended BEDPE format.
 }
 \details{
-Specify a data frame with SVs (preferably the output from \code{get_manta_sv}) to the \code{sv_df} parameter and get back the same data frame with SV annotations.
+Specify a data frame with SVs (preferably the output from \link{get_manta_sv}) to the \code{sv_df} parameter and get back the same data frame with SV annotations.
 }
 \examples{
-# Basic usage
-sv_df = get_manta_sv()
-annotated_sv = annotate_sv(sv_df)
-annotated_entrez = annotate_sv(sv_data = sv_df, with_chr_prefix = FALSE, collapse_redundant = FALSE, return_as = "bedpe_entrez", genome_build = "grch37")
+sv_df = get_manta_sv(verbose = FALSE)
+annotated_entrez = annotate_sv(sv_data = sv_df,
+                               with_chr_prefix = FALSE,
+                               collapse_redundant = FALSE,
+                               return_as = "bedpe_entrez", 
+                               genome_build = "grch37")
 
 }

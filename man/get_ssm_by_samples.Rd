@@ -54,23 +54,42 @@ A data frame in MAF format.
 Get MAF-format data frame for more than one sample and combine them together.
 }
 \details{
-This function internally runs \code{get_ssm_by_sample}.
+This function internally runs \link{get_ssm_by_sample}.
 The user can either give the function a vector of sample IDs of interest with \code{these_sample_ids},
 or use a metadata table (\code{these_samples_metadata}), already subset to the sample IDs of interest.
 In most situations, this should never need to be run with subset_from_merge = TRUE.
-Instead use one of \code{get_coding_ssm} or \code{get_ssm_by_region}.
-See \code{get_ssm_by_sample} for more information.
+Instead use one of \link{get_coding_ssm} or \link{get_ssm_by_region}.
+See \link{get_ssm_by_sample} for more information.
+Is this function not what you are looking for? Try one of the following, similar, functions; \link{get_coding_ssm},
+\link{get_coding_ssm_status}, \link{get_ssm_by_patients}, \link{get_ssm_by_sample}, \link{get_ssm_by_region}, \link{get_ssm_by_regions}
 }
 \examples{
+library(parallel)
+
 #examples using the these_sample_ids parameter.
-sample_ssms = get_ssm_by_samples(these_sample_ids=c("HTMCP-01-06-00485-01A-01D","14-35472_tumorA","14-35472_tumorB"))
-hg38_ssms = get_ssm_by_samples(these_sample_ids=c("HTMCP-01-06-00485-01A-01D","14-35472_tumorA","14-35472_tumorB"),projection="hg38")
-readr_sample_ssms = get_ssm_by_samples(these_sample_ids=c("HTMCP-01-06-00485-01A-01D","14-35472_tumorA","14-35472_tumorB"),subset_from_merge=TRUE,engine="readr")
-slow_sample_ssms = get_ssm_by_samples(these_sample_ids=c("HTMCP-01-06-00485-01A-01D","14-35472_tumorA","14-35472_tumorB"),subset_from_merge=TRUE)
+sample_ssms = get_ssm_by_samples(these_sample_ids = c("HTMCP-01-06-00485-01A-01D",
+                                                      "14-35472_tumorA",
+                                                      "14-35472_tumorB"))
+
+hg38_ssms = get_ssm_by_samples(projection="hg38",
+                               these_sample_ids = c("HTMCP-01-06-00485-01A-01D",
+                                                    "14-35472_tumorA",
+                                                    "14-35472_tumorB"))
+
+readr_sample_ssms = get_ssm_by_samples(subset_from_merge = TRUE,
+                                       engine = "readr",
+                                       these_sample_ids = c("HTMCP-01-06-00485-01A-01D",
+                                                            "14-35472_tumorA",
+                                                            "14-35472_tumorB"))
+
+slow_sample_ssms = get_ssm_by_samples(subset_from_merge = TRUE,
+                                      these_sample_ids = c("HTMCP-01-06-00485-01A-01D",
+                                                           "14-35472_tumorA",
+                                                           "14-35472_tumorB"))
 
 #example using a metadata table subset to sample IDs of interest.
-my_metadata = get_gambl_metadata(seq_type_filter = "genome") \%>\%
- dplyr::filter(pathology == "FL")
+my_metadata = get_gambl_metadata(seq_type_filter = "genome")
+my_metadata = dplyr::filter(my_metadata, pathology == "FL")
 
 sample_ssms = get_ssm_by_samples(these_samples_metadata = my_metadata)
 

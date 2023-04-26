@@ -40,6 +40,8 @@ Get a specific flavour of LymphGen from the main GAMBL outputs and tidy the comp
 Optionally return a matrix of features instead
 }
 \examples{
+\dontrun{
 lymphgens = get_lymphgen(flavour = "no_cnvs.no_sv.with_A53")
+}
 
 }

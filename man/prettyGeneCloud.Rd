@@ -42,11 +42,11 @@ If no genes are supplied when calling the function, this function will default t
 maf = get_coding_ssm(seq_type = "genome")
 
 #get gene symbols from MAF
-maf_genes = dplyr::filter(maf, Hugo_Symbol != "Unknown") \%>\%
- dplyr::filter(Chromosome == "1") \%>\%
- pull(Hugo_Symbol)
+maf_genes = dplyr::filter(maf, Hugo_Symbol != "Unknown")
+maf_genes_chr1 = dplyr::filter(maf_genes, Chromosome == "1")
+my_genes = pull(maf_genes_chr1, Hugo_Symbol)
 
 #build wordcloud
-prettyGeneCloud(maf_df = maf, these_genes = maf_genes)
+prettyGeneCloud(maf_df = maf, these_genes = my_genes)
 
 }

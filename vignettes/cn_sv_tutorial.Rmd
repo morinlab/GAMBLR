@@ -93,9 +93,6 @@ myc_cns = get_cn_segments(region = myc_region,
                           streamlined = FALSE, 
                           from_flatfile = TRUE, 
                           with_chr_prefix = FALSE) %>% dplyr::filter(CN != 2)
-
-#preview returned table
-head(myc_cns, 5)
 ```
 
 ### CN States
@@ -104,9 +101,6 @@ If you are interested in returning the copy number states for a specific region,
 #get cn states for a specific region
 single_gene_cn = get_cn_states(regions_list = myc_region,
                                region_names = "MYC")
-
-#preview returned table
-head(single_gene_cn, 5)
 
 #filter out all copy number states that are equal to 2, i.e keep all samples that have copy number mutations in MYC and count the number of occurrences for each copy number state.
 myc_cn_mutated = dplyr::filter(single_gene_cn, MYC != 2) %>%
@@ -132,17 +126,11 @@ If you are interested in returning all CN segments for one sample (or multiple s
 #get cn segments for one sample.
 one_sample_cn_segs = get_sample_cn_segments(this_sample_id = this_sample_id)
 
-#preview returned table
-head(one_sample_cn_segs, 5)
-
 #return chr-prefixed cn segments for multiple samples.
 multiple_samples_cn_seqs = get_sample_cn_segments(multiple_samples = TRUE, 
                                                   sample_list = these_sample_list,
                                                   projection = "hg38", 
                                                   with_chr_prefix = TRUE)
-
-#preview returned table
-head(multiple_samples_cn_seqs, 5)
 ```
 
 ### Assign CN to SSM
@@ -151,9 +139,6 @@ For annotating mutations with CN information, we have `assign_cn_to_ssm` availab
 #annotate a MAF wigh compy number information.
 annotated_ssm = assign_cn_to_ssm(this_sample_id = this_sample_id)
 
-#preview returned table
-head(annotated_ssm$maf, 5)
-
 #use same sample for annotating SSM with CN restricted to commonly mutated lymphoma genes
 lymph_genes = lymphoma_genes %>%
   pull(Gene)
@@ -161,14 +146,8 @@ lymph_genes = lymphoma_genes %>%
 annotated_ssm_lymphgenes = assign_cn_to_ssm(this_sample_id = this_sample_id,
                                           genes = lymph_genes)
 
-#preview returned table
-head(annotated_ssm_lymphgenes$maf, 5)
-
 #additional example, using more parameters!
 annotated_ssm_extended = assign_cn_to_ssm(this_sample_id = this_sample_id, coding_only = TRUE, include_silent = TRUE)
-
-#preview returned table
-head(annotated_ssm_extended$maf, 5)
 ```
 
 ## SV
@@ -178,14 +157,8 @@ IF you want to retrieve combined SV calls (manta and GRIDSS-derived) for one or 
 #example with minimal parameter usage.
 combined_svs = get_combined_sv(these_sample_ids = this_sample_id)
 
-#preview returned table
-head(combined_svs, 5)
-
 #extended example, using additional parameters that are available. 
 combined_sv_extended = get_combined_sv(these_sample_ids = these_sample_list, projection = "hg38", oncogenes = c("MYC", "BCL2", "BCL6"))
-
-#preview returned table
-head(combined_sv_extended, 5)
 ```
 
 ### Manta SVs
@@ -202,9 +175,6 @@ manta_svs = get_manta_sv(min_vaf = 0.1,
                          min_score = 40, 
                          pass = TRUE, 
                          region = "8:128723128-128774067")
-
-#preview returned table
-head(manta_svs, 5)
 ```
 
 ### SV Calls to UCSC Genome Browser Custom Track

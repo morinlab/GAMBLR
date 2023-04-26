@@ -24,7 +24,7 @@ fancy_circos_plot(
 \arguments{
 \item{this_sample_id}{Sample to be plotted.}
 
-\item{gene_list}{Optional parameter to annotate genes on the circos plot from a data frame of genes. Is compatible with gene_to_region (return_as = "bed") output format. See examples.}
+\item{gene_list}{Optional parameter to annotate genes on the circos plot from a data frame of genes. Is compatible with \link{gene_to_region} (return_as = "bed") output format. See examples.}
 
 \item{ssm_calls}{Boolean parameter for plotting ssm. Default is TRUE.}
 
@@ -59,13 +59,14 @@ Create a circos plot visualizing SVS and SSM with optional gene annotations.
 \details{
 This function is using RCircos to create sample-level cirocs plots, annotating SVs and SSM with the potential of adding gene annotations.
 To control what variants are to be plotted, simply use the two Boolean parameters; \code{ssm_calls} and \code{sv_calls} (both TRUE by default).
-Provide the sample ID of interest in with the \code{this_sample_id} parameter. This function calls \code{assing_cn_to_ssm} and \code{get_combined_sv} to retrieve data for plotting.
+Provide the sample ID of interest in with the \code{this_sample_id} parameter. This function calls \link{assign_cn_to_ssm} and \link{get_combined_sv} to retrieve data for plotting.
 Since this function does not create a grob, but rather outputs a rendered PDF/PNG, the user has to provide an output path with the \code{out} parameter.
 In addition, the user can control the output format. For PDF, set \code{pdf} to TRUE (default) and to export the created plot as PNG, set the same parameter to FALSE.
 This function also has convenient filtering parameters available, see parameter descriptions for more information and how to properly use the filtering parameters.
 Lastly, this plot can also highlight genes of interest. To do so, provide a data frame (comparable to the return from \code{gene_to_region(return_as = "bed")}) to the \code{gene_list} parameter.
 }
 \examples{
+\dontrun{
 #retrieve gene names for FL genes
 fl_genes = dplyr::filter(lymphoma_genes, FL == TRUE) \%>\%
 fl_genes = dplyr::filter(lymphoma_genes, FL == TRUE) \%>\%
@@ -73,16 +74,20 @@ fl_genes = dplyr::filter(lymphoma_genes, FL == TRUE) \%>\%
  pull(Gene)
 
 # get regions for selected genes
-fl_genes_list = gene_to_region(gene_symbol = fl_genes, return_as = "bed")
+fl_genes_list = gene_to_region(gene_symbol = fl_genes,
+                               return_as = "bed")
 
 fancy_circos_plot_new(this_sample_id = "DOHH-2",
                       ssm_calls = FALSE,
                       gene_list = fl_genes_list,
-                      chr_select = c("chr8", "chr14", "chr18"),
+                      chr_select = c("chr8",
+                                     "chr14",
+                                     "chr18"),
                       out = "../../plots/",
                       plot_title = "DOHH-2 (SVs) Example Plot",
                       pdf = FALSE,
                       pdf = FALSE,
                       file_name = "dohh2_example.png")
+}
 
 }

@@ -93,25 +93,10 @@ Another useful parameter for restricting the plotted regions is to call the func
 This parameter takes a vector of characters or a data frame with regions that the plotted calls are restricted to.
 }
 \examples{
-#get FL genes
-fl_genes = dplyr::filter(lymphoma_genes, FL == TRUE) \%>\%
-  dplyr::select(Gene) \%>\%
-  pull(Gene)
-
-#get FL genes on chromosome 1
-fl_genes_chr1 = gene_to_region(gene_symbol = fl_genes, return_as = "df") \%>\%
-  dplyr::filter(chromosome == "1") \%>\%
-  pull(hugo_symbol)
-
-#build an ideogram showing ssm and copy number states for chromosome 1, and superimpose with FL genes.
-ideogram_fl_chr1 = fancy_ideogram(this_sample_id = "HTMCP-01-06-00422-01A-01D",
-                                  gene_annotation = fl_genes_chr1,
-                                  intersect_regions = "chr1:10000-249250621")
-
-#
-fl_regions = gene_to_region(gene_symbol = fl_genes, return_as = "df")
-ideogram_fl = fancy_ideogram(this_sample_id = "HTMCP-01-06-00422-01A-01D",
-                              gene_annotation = fl_genes,
-                              intersect_regions = fl_regions)
+#build plot
+fancy_ideogram(this_sample_id = "HTMCP-01-06-00422-01A-01D",
+               gene_annotation = "MYC",
+               plot_title = "Sample-level Ideogram Example",
+               plot_subtitle = "grch37")
 
 }

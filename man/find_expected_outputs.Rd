@@ -16,7 +16,7 @@ find_expected_outputs(
 \arguments{
 \item{targ_df}{Optionally provide a data frame with all file details.}
 
-\item{tool_name}{The tool or pipeline that generated the files (should be the same for all).}
+\item{tool_name}{The tool or pipeline that generated the files (should be the same for all). Acceptable values are manta and gridss.}
 
 \item{unix_group}{The unix group (should be the same for all).}
 
@@ -35,6 +35,9 @@ Optionally, the user can provide an already loaded data frame with all the file 
 for more information and examples, refer to the parameter descriptions as well as function examples.
 }
 \examples{
-ex_outs = find_expected_outputs(my_df, "slims_3", "gambl")
+#get paths to unmatched manta bedpe files
+ex_outs = find_expected_outputs(tool_name = "manta",
+                               unix_group = "gambl",
+                               filename_end_pattern = "unmatched.somaticSV.bedpe")
 
 }

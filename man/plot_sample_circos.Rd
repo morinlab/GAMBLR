@@ -14,6 +14,7 @@ plot_sample_circos(
   legend_metadata_columns,
   legend_metadata_names = c(),
   include_cnv = TRUE,
+  this_projection = "grch37",
   chrom_list,
   label_genes,
   auto_label_sv = FALSE
@@ -38,6 +39,8 @@ plot_sample_circos(
 
 \item{include_cnv}{Default TRUE. (does not do anything yet).}
 
+\item{this_projection}{The selected projection, default is grch37 and it's the only supported peojection.}
+
 \item{chrom_list}{List of chromosomes to be plotted. If not stated, chr1-22+X will bes used.}
 
 \item{label_genes}{Gene labels (df, list or what type?)}
@@ -56,7 +59,24 @@ Optionally, the user can supply already loaded data frames (SV, CNV, SSM) with t
 Convenient Boolean parameteers are also avaialble for restricting the plot to specific mutation types (\code{include_sv}, \code{include_cnv}, and \code{include_ssm}).
 }
 \examples{
-this_samp = "13-38657_tumorB"
-GAMBLR::plot_sample_circos(this_sample_id=this_samp,legend_metadata_columns = c("pathology","lymphgen","COO_consensus","DHITsig_consensus","bcl2_ba","myc_ba"),legend_metadata_names = c("pathology","LymphGen","COO","DHITsig","BCL2","MYC"),auto_label_sv = TRUE,chrom_list = c("chr2","chr3","chr8","chr14","chr18"))
+
+plot_sample_circos(this_sample_id = "13-38657_tumorB",
+                   legend_metadata_columns = c("pathology",
+                                               "lymphgen",
+                                               "COO_consensus",
+                                               "DHITsig_consensus",
+                                               "bcl2_ba",
+                                               "myc_ba"),
+                   legend_metadata_names = c("pathology",
+                                             "LymphGen",
+                                             "COO",
+                                             "DHITsig",
+                                             "BCL2",
+                                             "MYC"),
+                   chrom_list = c("chr2",
+                                  "chr3",
+                                  "chr8",
+                                  "chr14",
+                                  "chr18"))
 
 }

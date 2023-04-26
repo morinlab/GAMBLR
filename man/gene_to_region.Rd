@@ -30,10 +30,13 @@ Return coordinates for a given gene or a set of genes.
 This function takes one or multiple gene names, either as hugo symbols or Ensembl IDs
 and returns the coordinates for the selected genes in multiple formats (\code{return_as}).
 The possible return formats are; bed, data frame and in "region" format (chr:start-end).
-For returning genes residing in specific regions, see \code{regions_to_genes}.
+For returning genes residing in specific regions, see \link{region_to_gene}.
 }
 \examples{
-bcl2_region = gene_to_region(gene_symbol = "BCL2", genome_build = "grch37")
-bcl2_region = gene_to_region(ensembl_id = "ENSG00000171791", genome_build = "grch37")
+bcl2_region = gene_to_region(gene_symbol = "BCL2",
+                             genome_build = "grch37")
+
+bcl2_region = gene_to_region(ensembl_id = "ENSG00000171791",
+                             genome_build = "grch37")
 
 }

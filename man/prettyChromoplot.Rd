@@ -50,11 +50,15 @@ The only required parameter for this function is \code{scores}, which is the pat
 Other parameters are all optional. For a detailed explanation of how to use these, refer to the parameter descriptions.
 }
 \examples{
+\dontrun{
 #basic usage
 prettyChromoplot("path_to_gistic_results/scores.gistic")
 
 #advanced usages
-prettyChromoplot("path_to_gistic_results/scores.gistic", genes_to_label="path_to_gene_coordinates_table.tsv", cutoff=0.75) +
-# ...(any ggplot options to customize plot appearance)
+prettyChromoplot(scorees = "path_to_gistic_results/scores.gistic",
+                 genes_to_label = "path_to_gene_coordinates_table.tsv",
+                 cutoff = 0.75) +
+                  ... #any ggplot options to customize plot appearance
+}
 
 }

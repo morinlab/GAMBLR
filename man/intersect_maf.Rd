@@ -23,7 +23,9 @@ Perform set operations on two MAFs.
 Perform set operations on two MAFs.
 }
 \examples{
+\dontrun{
 intersected_mafs_l1 = intersect_maf(maf_list1, maf_list2, "maf1_only")
 intersected_mafs_l2 = intersect_maf(maf_list1, maf_list2, "maf2_only")
+}
 
 }

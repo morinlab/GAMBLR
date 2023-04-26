@@ -46,9 +46,6 @@ this_metadata = get_gambl_metadata(seq_type_filter = "genome")
 #subset metadata on a set of samples (samples classified as DLBCL for pathology)
 dlbcl_metadata = dplyr::filter(this_metadata, 
                                pathology == "DLBCL")
-
-#peek return
-head(dlbcl_metadata, 10)
 ```
 
 ## Get SSM data
@@ -64,9 +61,6 @@ this_sample = "00-15201_tumorA"
 this_sample_ssm = get_ssm_by_sample(this_sample_id = this_sample, 
                                     this_seq_type = "genome",
                                     projection = "grch37")
-
-#peek return
-head(this_sample_ssm, 10)
 ```
 
 To return SSMs for multiple samples one can use `get_ssm_by_samples`. Note, this function wraps `get_ssm_by_sample`.
@@ -80,8 +74,6 @@ these_samples = c("HTMCP-01-06-00485-01A-01D",
 these_samples_ssm = get_ssm_by_samples(these_sample_ids = these_samples,
                                        projection = "grch37",
                                        seq_type = "genome")
-#peek return
-head(these_samples_ssm, 10)
 ```
 
 ### By Patient
@@ -96,8 +88,6 @@ these_patients = c("00-14595",
 these_patients_ssm = get_ssm_by_patients(these_patient_ids = these_patients,
                                          seq_type = "genome",
                                          projection = "grch37")
-#peek return
-head(these_patients_ssm, 10)
 ```
 
 ### By Region
@@ -111,9 +101,6 @@ myc_region = gene_to_region(gene_symbol = "MYC",
 myc_ssm = get_ssm_by_region(region = myc_region,
                             projection = "grch37",
                             seq_type = "genome")
-
-#peek return
-head(myc_ssm, 10)
 ```
 
 For multiple regions, refer to `get_ssm_by_regions`. In this example we are returning SSMs for all ASHM regions (hyper mutated) across all samples. 
@@ -126,9 +113,6 @@ ashm_regions_bed = grch37_ashm_regions %>%
 ashm_ssm = get_ssm_by_regions(regions_bed = ashm_regions_bed,
                               projection = "grch37",
                               seq_type = "genome")
-
-#peek return
-head(ashm_ssm, 10)
 ```
 
 ### Coding SSM
@@ -142,9 +126,6 @@ my_sample_metadata = get_gambl_metadata(seq_type_filter = "genome") %>%
 all_coding_ssm = get_coding_ssm(these_samples_metadata = my_sample_metadata,
                                 projection = "grch37", 
                                 seq_type = "genome")
-
-#peek return
-head(all_coding_ssm, 10)
 ```
 
 ## Annotating SSMs
@@ -157,9 +138,6 @@ Annotate and auto-drop a MAF data frame with existing blacklists to remove varia
 deblacklisted_ssm = annotate_ssm_blacklist(mutations_df = all_coding_ssm, 
                                            genome_build = "grch37",   
                                            seq_type = "genome")
-
-#peek return
-head(deblacklisted_ssm, 10)
 ```
 
 ### Drivers
@@ -168,9 +146,6 @@ Another useful way to annotate SSMs is with `annotate_driver_ssm`. This function
 #annotate sample-level maf with putative driver mutations
 driver_ssm = annotate_driver_ssm(maf_df = this_sample_ssm, 
                                  lymphoma_type = c("DLBCL"))
-
-#peek return
-head(driver_ssm, 10)
 ```
 
 ### Hotspots
@@ -181,9 +156,6 @@ this_sample_ssm_hot = annotate_hotspots(mutation_maf = this_sample_ssm,
                                         recurrence_min = 5,
                                         p_thresh = 0.05,
                                         analysis_base = c("FL--DLBCL"))
-
-#peek return
-head(this_sample_ssm_hot, 10)
 ```
 
 ### Review Hotspots
@@ -193,9 +165,6 @@ Returned hotspots can also be further reviewed with `review_hotspots`. This func
 this_sample_ssm_hot_rev = review_hotspots(annotated_maf = this_sample_ssm_hot, 
                                           genes_of_interest = "MYD88", 
                                           genome_build = "grch37")
-
-#peek return
-head(this_sample_ssm_hot_rev, 10)
 ```
 
 ### Custom Track (UCSC)

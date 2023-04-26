@@ -25,12 +25,13 @@ The same data frame (as given to the \code{annotated_maf} parameter) with the re
 Annotate MAF-like data frome with a hot_spot column indicating recurrent mutations.
 }
 \details{
-This function takes an annotated MAF (with \code{annotate_hotspots}) and adds a new column, "hot_spot", to the same data frame.
+This function takes an annotated MAF (with \link{annotate_hotspots}) and adds a new column, "hot_spot", to the same data frame.
 Genes for hotspot review are supplied with the \code{genes_of_interest} parameter.
 Currently only a few sets of genes are supported, see parameter description for more information and limitations.
 The desired genome build can be specified with \code{genome_build} parameter. Should be the same as the incoming MAF.
 }
 \examples{
-hot_ssms = review_hotspots(annotate_hotspots(get_coding_ssm()), genes_of_interest = c("CREBBP"))
+hot_ssms = review_hotspots(annotate_hotspots(get_coding_ssm(seq_type = "genome")),
+                           genes_of_interest = c("CREBBP"))
 
 }

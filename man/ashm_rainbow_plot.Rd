@@ -50,12 +50,10 @@ Refer to the parameter descriptions, examples as well as the vignettes for more 
 }
 \examples{
 #basic usage
-region = "chr6:90975034-91066134"
-metadata = get_gambl_metadata()
-plot = ashm_rainbow_plot(metadata = metadata, region = region)
+this_region = "chr6:90975034-91066134"
+this_metadata = get_gambl_metadata()
 
-#advanced usages
-mybed = data.frame(start=c(128806578,128805652,128748315), end=c(128806992,128809822,128748880), name=c("TSS","enhancer","MYC-e1"))
-ashm_rainbow_plot(mutations_maf=my_mutations,metadata=my_metadata,bed=mybed)
+ashm_rainbow_plot(metadata = this_metadata,
+                  region = this_region)
 
 }

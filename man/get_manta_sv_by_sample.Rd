@@ -12,7 +12,8 @@ get_manta_sv_by_sample(
   min_vaf = 0.1,
   min_score = 40,
   pass = TRUE,
-  projection = "grch37"
+  projection = "grch37",
+  verbose = TRUE
 )
 }
 \arguments{
@@ -31,6 +32,8 @@ get_manta_sv_by_sample(
 \item{pass}{If set to TRUE, only return SVs that are annotated with PASS in the FILTER column. Set to FALSE to keep all variants, regardless if they PASS the filters. Default is TRUE.}
 
 \item{projection}{The projection of returned calls. Default is grch37.}
+
+\item{verbose}{Set to FALSE to prevent the path of the requested bedpe file to be printed.}
 }
 \value{
 a data frame containing the Manta outputs from this_sample_id in a bedpe-like format with additional columns extracted from the VCF column.
@@ -40,20 +43,29 @@ Load the manta output (from individual flat file) for 1 sample.
 }
 \details{
 This function is used for retrieving Manta results (structural variants) from individual flat-files (one sample).
-For multiple samples, please see \code{get_manta_sv_by_samples} (a convenience wrapper function for \code{get_manta_by_sample}).
+For multiple samples, please see \link{get_manta_sv_by_samples} (a convenience wrapper function for \link{get_manta_sv_by_sample}).
 Additional columns are extracted from the VCF column and standard filtering options are available.
 This function also performs a lift-over to selected projection, if needed.
 Please note, if \code{force_lift} is set to FALSE, an extra column will be added that states if the returned variant calls need to be lifted.
 The value for this column is returned TRUE (for all rows) if the available genome projection for the selected sample does not match the selected projection (i.e requiring the user to manually lift the calls).
+Is this function not what you are looking for? Try one of the following, similar, functions; \link{get_combined_sv}, \link{get_manta_sv}, \link{get_manta_sv_by_samples}
 }
 \examples{
 #example 1
-#get manta calls for a sample that needs to be lifted to "hg38" and let this function take care of the liftover step for you. 
-my_sv = get_manta_sv_by_sample(this_sample_id = "99-27783_tumorA", these_samples_metadata = get_gambl_metadata(), projection = "hg38", force_lift = TRUE)
+#get manta calls for a sample that needs to be lifted to "hg38" and let this function
+#take care of the liftover step for you. 
+my_sv = get_manta_sv_by_sample(this_sample_id = "99-27783_tumorA",
+                               these_samples_metadata = get_gambl_metadata(),
+                               projection = "hg38",
+                               force_lift = TRUE)
 
 #example 2
 #get manta calls based on an already filtered metadata (with one sample ID)
-my_metadata = get_gambl_metadata() \%>\% dplyr::filter(sample_id=="99-27783_tumorA")
-my_sv = get_manta_sv_by_sample(these_samples_metadata = my_metadata, projection = "hg38", force_lift = TRUE)
+my_metadata = get_gambl_metadata()
+my_metadata = dplyr::filter(my_metadata, sample_id=="99-27783_tumorA")
+
+my_sv = get_manta_sv_by_sample(these_samples_metadata = my_metadata,
+                               projection = "hg38",
+                               force_lift = TRUE)
 
 }

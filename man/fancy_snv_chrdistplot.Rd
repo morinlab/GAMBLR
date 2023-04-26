@@ -55,7 +55,7 @@ Visualizing the number of SNVs per chromosome.
 }
 \details{
 This function takes on an already loaded maf-like data frame, or a path to the maf file of interest.
-In addition, the user can also give this function a sample ID and the function will run assign_cn_to_ssm
+In addition, the user can also give this function a sample ID and the function will run \link{assign_cn_to_ssm}
 to get data for plotting. If a maf file or data frame is used, the user has the chance to specify what column
 that holds the Variant Type information (\code{variant_type_col}), in addition the user can also specify what column
 in the incoming maf that is corresponding to the chromosome annotations. This function also includes useful subsetting
@@ -67,9 +67,11 @@ also have convenient parameters for customizing the returned plot, e.g \code{plo
 }
 \examples{
 #plot SNVs
-snv_plot = fancy_snv_chrdistplot(this_sample_id = "HTMCP-01-06-00422-01A-01D")
+fancy_snv_chrdistplot(this_sample_id = "HTMCP-01-06-00422-01A-01D")
 
 #plot SNVs and DNPs
-snv_dnp_plot = fancy_snv_chrdistplot(this_sample_id = "HTMCP-01-06-00422-01A-01D", include_dnp = TRUE, plot_subtitle = "SNV + DNP Distribution Per Chromosome")
+fancy_snv_chrdistplot(this_sample_id = "HTMCP-01-06-00422-01A-01D",
+                      include_dnp = TRUE,
+                      plot_subtitle = "SNV + DNP Distribution Per Chromosome")
 
 }

@@ -69,7 +69,7 @@ This function also conveniently lets you know how many variants that were droppe
 
 #annotate MAF
 deblacklisted_maf = annotate_ssm_blacklist(grande_maf,
-                                          seq_type = "genome",
-                                          genome_build = "hg38")
+                                           seq_type = "genome",
+                                           genome_build = "hg38")
 
 }
