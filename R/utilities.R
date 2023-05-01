@@ -3883,8 +3883,8 @@ calculate_pga = function(this_seg,
   )
 
   # what are the segments that overlap?
-  this_seg = df %>%
-    filter(start <= arm_end & arm_start <= end) %>%
+  this_seg = this_seg %>%
+    dplyr::filter(start <= arm_end & arm_start <= end) %>%
     arrange(sample, chrom, start)
 
   # calculate total length of CNV
