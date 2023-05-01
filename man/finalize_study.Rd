@@ -13,7 +13,10 @@ finalize_study(
   cancer_type = "mixed",
   these_sample_ids,
   overwrite = TRUE,
-  meta_columns,
+  metacols,
+  metacol_names,
+  metacol_types,
+  metacol_prior,
   out_dir
 )
 }
@@ -34,7 +37,13 @@ finalize_study(
 
 \item{overwrite}{Flag to specify that files should be overwritten if they exist. Default is TRUE.}
 
-\item{meta_columns}{Optional parameter for specifying metadata fields in the study. If not provided, the function will resort to using default metadata columns.}
+\item{metacols}{Optional, specify any additional metadata/collate_result fields to be included in the cBioPortal metadata. Extra columns are specified as a vector of characters. If not provided, only "standard" metadata fields will be kept.}
+
+\item{metacol_names}{Separately specify the names of the columns given to \code{metacols} as a vector of characters. The number of elements needs to match the total number of columns specified with \code{metacols}. Required parameter if \code{metacols} is being called.}
+
+\item{metacol_types}{Specify the data type for selected metadata columns as a vector of characters. The number of elements specified needs to match the number of selected columns with \code{metacols}. Acceptable values are; STRING, NUMBER and BOOLEAN. Required parameter if \code{metacols} is being called.}
+
+\item{metacol_prior}{Explicitly state the priority of selected metadata columns as a vector of characters. A higher number indicates a higher priority. Required parameter if \code{metacols} is being called.}
 
 \item{out_dir}{The full path to the base directory where the files are being created.}
 }
@@ -47,11 +56,29 @@ Finish setting up a new cBioPortal instance or updating an existing portal data 
 \details{
 This function should be run as the last (or third step) in setting up a new cBioPortal instance.
 The functions that should be run prior to these functions are; \link{setup_study} and \link{setup_fusions}.
-\link{finalize_study} creates all the necessary tables and metadata files (case lists) that are required to import a new study into cBioPortal.
+\link{finalize_study} creates all the necessary tables and metadata files and case lists that are required to import a new study into cBioPortal.
 Note, that all parameter arguments used in this function have to match the same parameter arguments for the previously run functions (\code{setup_study} and \code{setup_fusions}).
+This function allows the user to specify additional fields from the collated metadata file (besides the "standard" fields).
+For more information on how to use, see \code{metacols} and related parameters (\code{metacol_names}, \code{metacol_types}, and \code{meta_prior}).
 }
 \examples{
 \dontrun{
+#basic usage
 finalize_study(these_sample_ids = c(ids, fusion_ids), out_dir = "GAMBLR/cBioPortal/instance01/")
+
+#advanced usage
+#get some samples
+all_meta = get_gambl_metadata()
+meta_sub = head(all_meta, 5)
+my_samples = pull(meta_sub, sample_id)
+
+#create a clinical file with additional collated metadata fields
+finalize_study(these_sample_ids = my_samples,
+               out_dir = "../",
+               metacols = c("MeanCorrectedCoverage", "total_ssm"),
+               metacol_names = c("Mean Corrected Coverage", "Total SSM"),
+               metacol_types = c("NUMBER", "NUMBER"),
+               metacol_prior = c("2", "1"))
 }
+
 }
