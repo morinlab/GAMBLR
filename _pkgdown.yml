@@ -16,7 +16,7 @@ home:
     href: https://github.com/morinlab/GAMBLR/pulse
 reference:
 - title: Annotations
-  desc: Functions used to annotate GAMBL data
+  desc: Functions used to annotate GAMBL data.
 - contents:
   - annotate_driver_ssm
   - annotate_hotspots
@@ -63,7 +63,7 @@ reference:
   - setup_study
   - study_check
 - title: Checks
-  desc: GAMBLR functions that falls under the check ccategory.
+  desc: GAMBLR functions that fall under the check category.
 - contents:
   - check_gambl_metadata
   - check_gamblr_config
@@ -71,7 +71,7 @@ reference:
   - check_remote_configuration
   - fread_maf
 - title: Get Data
-  desc: A collection of functions used to retreive data of different types.
+  desc: A collection of functions used to retrieve data of different types.
 - contents:
   - assign_cn_to_ssm
   - consolidate_lymphgen
@@ -138,8 +138,8 @@ reference:
   - prettyRainfallPlot
   - pretty_lollipop_plot
   - splendidHeatmap
-- title: Statistiacal testing and Computing
-  desc: Funcitons used for executing statistical and other calculations on incoming GAMBL data.
+- title: Statistical testing and Computing
+  desc: Functions used for executing statistical and other calculations on incoming GAMBL data.
 - contents:
   - FtestCNV
   - calc_mutation_frequency_sliding_windows
@@ -147,8 +147,8 @@ reference:
   - cnvKompare
   - count_ssm_by_region
   - estimate_purity
-- title: Utillities
-  desc: A collection of functions that fall under the utilities category.
+- title: Utilities
+  desc: A collection of functions that fall under the utility category.
 - contents:
   - adjust_ploidy
   - assemble_file_details
