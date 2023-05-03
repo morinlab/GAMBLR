@@ -538,7 +538,6 @@ region_to_gene = function(region,
 #' @noRd
 #'
 #' @rawNamespace import(data.table, except = c("last", "first", "between", "transpose"))
-#'
 compare_mutation_flavour = function(these_sample_ids,
                                     flavour1 = "clustered",
                                     flavour2 = ""){
