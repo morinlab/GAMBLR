@@ -40,13 +40,22 @@ sample, chrom, start, end, and log.ratio. The function can work with either indi
 excluded from calculation, and centromeres/sex chromosomes can be optionally included or excluded.
 }
 \examples{
-sample_seg = get_sample_cn_segments(this_sample_id = "14-36022T") \%>\% rename("sample"="ID")
-calculate_pga(this_seg = sample_seg)
-calculate_pga(this_seg = sample_seg, exclude_sex = FALSE)
+sample_seg = get_sample_cn_segments(this_sample_id = "14-36022T")
+sample_seg = dplyr::rename(sample_seg, "sample" = "ID")
 
-multi_sample_seg = rbind(get_sample_cn_segments(this_sample_id = "14-36022T"),
-                         get_sample_cn_segments(this_sample_id = "BLGSP-71-21-00243-01A-11E")) \%>\%
-                         rename("sample"="ID")
-GAMBLR::calculate_pga(this_seg = multi_sample_seg)
+calculate_pga(this_seg = sample_seg)
+
+calculate_pga(this_seg = sample_seg,
+              exclude_sex = FALSE)
+
+one_sample = get_sample_cn_segments(this_sample_id = "14-36022T")
+one_sample = dplyr::rename(one_sample, "sample" = "ID")
+
+another_sample = get_sample_cn_segments(this_sample_id = "BLGSP-71-21-00243-01A-11E")
+another_sample = dplyr::rename(another_sample, "sample" = "ID")
+
+multi_sample_seg = rbind(one_sample, another_sample)
+
+calculate_pga(this_seg = multi_sample_seg)
 
 }

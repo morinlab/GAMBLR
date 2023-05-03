@@ -18,9 +18,11 @@ Transform input maf columns to allow for usage of dplyr verbs.
 \details{
 Transform input maf columns to allow for usage of dplyr verbs.
 Allowing for a stright-forward plotting workflow as well as downstream data aggregation and manipulation.
+This function expects a set number of columns to exist in the incoming maf in order for this to work.
+To view the columns, see bundled data; \link{grande_maf}.
 }
 \examples{
-ssm_sample = get_ssm_by_sample(this_sample_id = "HTMCP-01-06-00485-01A-01D", tool_name = "slims-3", projection = "grch37")
-clean_maf = cleanup_maf(maf_df = ssm_sample)
+
+clean_maf = cleanup_maf(maf_df = grande_maf)
 
 }

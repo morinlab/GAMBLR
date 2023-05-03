@@ -25,6 +25,6 @@ Expects at least to have columns "patient_id" to bind on, and "lymphgen" to supp
 }
 \examples{
 metadata = get_gambl_metadata()
-GAMBLR::consolidate_lymphgen(metadata)
+consolidate_lymphgen(sample_table = metadata)
 
 }

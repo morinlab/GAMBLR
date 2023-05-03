@@ -280,7 +280,7 @@ check_gamblr_config = function(compare_timestamps=FALSE,
 #'
 #' @description Check GAMBL or other metadata for compatibility with various features.
 #'
-#' @details Give this function a metadata output, preferably from `get_gambl_metadata()`, or any other source.
+#' @details Give this function a metadata output, preferably from [GAMBLR::get_gambl_metadata], or any other source.
 #' The function then checks for duplicate sample IDs, colours for all values in all columns that map to a colour with `map_metadata_to_colours` and missing columns.
 #'
 #' @param metadata_df Data frame output by `get_gambl_metadata` or some other source of metadata you plan to use.
@@ -428,6 +428,8 @@ check_expected_outputs = function(tool_name="battenberg",seq_type_filter="genome
 #' @param config_key key from config, prefixed with config::get()
 #'
 #' @return A string with the path to a file specified in the config or nothing (if config key is NULL).
+#' 
+#' @noRd
 #'
 #' @examples
 #' check_config_value(config::get("resources")$blacklist$template)

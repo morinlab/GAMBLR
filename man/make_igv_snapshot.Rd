@@ -51,13 +51,25 @@ or the user can directly supply the chromosome, start and end coordinates with t
 For more information and examples, refer to the function examples and parameter descriptions.
 }
 \examples{
-#IMPORTANT: you must be running IGV on the host that is running R and you need to have it listening on a port
-# The simplest scenario is to run this command on a terminal (if using a Mac), assuming you are using R on gphost10 and you have a ssh config that routes gp10 to that host
-# ssh -X gp10
-# then launch IGV (e.e. from a conda installation):
-# conda activate igv; igv &
-# this_sv = annotated_sv \%>\% filter(gene=="ETV6")
-# tumour_bam = get_bams(sample=this_sv$tumour_sample_id)
-# make_igv_snapshot(chrom=this_sv$chrom2, start=this_sv$start2, end=this_sv$end2, this_sample_id=this_sv$tumour_sample_id,out_path="~/IGV_snapshots/")
+\dontrun{
+#IMPORTANT: you must be running IGV on the host that is running R and you need to have it
+#listening on a port. The simplest scenario is to run this command on a terminal (if using a Mac),
+#assuming you are using R on gphost10 and you have a ssh config that routes gp10 to that host
+
+ssh -X gp10
+
+#then launch IGV (e.e. from a conda installation):
+#conda activate igv; igv &
+this_sv = annotated_sv \%>\% 
+ filter(gene=="ETV6")
+
+tumour_bam = get_bams(this_sample_id = this_sv$tumour_sample_id)
+
+make_igv_snapshot(chrom = this_sv$chrom2,
+                  start = this_sv$start2,
+                  end = this_sv$end2,
+                  this_sample_id = this_sv$tumour_sample_id,
+                  out_path = "~/IGV_snapshots/")
+}
 
 }

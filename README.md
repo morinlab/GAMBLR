@@ -1,7 +1,6 @@
 ![Build GAMBLR](https://github.com/morinlab/GAMBLR/actions/workflows/build_check.yml/badge.svg)
 
-# GAMBLR - an R package with convenience functions for working with GAMBL results
-
+# GABMLR - an R package with convenience functions for working with GAMBL results.
 ## Installation
 If you have access to gphost, the easiest way to obtain and run GAMBLR is to do this via Rstudio on a gphost. If you do not have access to gphost, please refer to the [Run Remote On A Local Machine](#Run Remote On A Local Machine) section. Assuming you are running Rstudio on gphost, clone the repo to your home directory (not your GAMBL working directory).
 
@@ -212,6 +211,21 @@ The description is taken from the next paragraph. It’s shown at the top of doc
 #### Details
 Additional details are anything after the description. Details are optional, but can be any length so are useful if you want to dig deep into some important aspect of the function. Note that, even though the details come right after the description in the introduction, they appear much later in rendered documentation.
 
+#### Parameters
+Detailed parameter descriptions should be included for all functions. Remember to state the required data types, default values, if the parameter is required or optional, etc.
+
+#### Return
+Specify the returned object, is it a data frame, a list, a vector or characters, etc.
+
+#### Import
+Always import all the packages from which you are calling any functions outside of base R and R [packages](https://cran.r-project.org/doc/FAQ/R-FAQ.html#R-Add_002dOn-Packages) that gets loaded per default. Remember to not import `tidyverse`, rather, import the individual packages from `tidyverse` that the function is depending on. 
+
+#### Export
+Should this function be exported to NAMESPACE (i.e make it directly accessible for anyone who loads GAMBLR) or is the function considered to be an internal/helper function (i.e don't export it)?
+
+#### Examples
+Please provide fully reproducible examples for the function. Ideally, the example should demonstrate basic usage, as well as more advanced usage with different parameter combinations. Note that examples can not extend over 100 characters per line, since this will cause the lines to  be truncated in the rendered PDF manual. 
+
 ```
 #' @title
 #'
@@ -228,6 +242,8 @@ Additional details are anything after the description. Details are optional, but
 #' @export
 #'
 #' @examples
+#' #this is an example
+#' ###For your reference, this line is exactly 100 characters. Do not exceed 100 characters per line
 #'
 
 function_name = function(a_parameter,
@@ -258,7 +274,7 @@ For your convenience, as an example, here is a perfectly documented GAMBLR funct
 #' @param custom_colours Provide named vector (or named list of vectors) containing custom annotation colours if you do not want to use standartized pallette.
 #' @param hide_ids Boolean argument, if TRUE, ids will be removed.
 #'
-#' @return ggplot2 object
+#' @return ggplot2 object.
 #'
 #' @import dplyr ggplot2
 #' @export
@@ -270,7 +286,18 @@ For your convenience, as an example, here is a perfectly documented GAMBLR funct
 #' plot = ashm_rainbow_plot(metadata = metadata, region = region)
 #'
 #' #advanced usages
-#' mybed = data.frame(start=c(128806578,128805652,128748315), end=c(128806992,128809822,128748880), name=c("TSS","enhancer","MYC-e1"))
-#' ashm_rainbow_plot(mutations_maf=my_mutations,metadata=my_metadata,bed=mybed)
+#' mybed = data.frame(start = c(128806578,
+#'                              128805652,
+#'                              128748315),
+#'                    end = c(128806992,
+#'                            128809822,
+#'                            128748880),
+#'                    name = c("TSS",
+#'                             "enhancer",
+#'                             "MYC-e1"))
+#'
+#' ashm_rainbow_plot(mutations_maf = my_mutations,
+#'                   metadata = my_metadata,
+#'                   bed = mybed)
 #'
 ```

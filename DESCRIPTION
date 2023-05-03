@@ -2,9 +2,16 @@ Package: GAMBLR
 Title: Database, mining, manipulation and convenience functions for
     working with GAMBL results
 Version: 0.0.0.9500
-Authors@R:
+Authors@R: c(
     person("Ryan", "Morin", , "rdmorin@sfu.ca", role = c("aut", "cre"),
-           comment = c(ORCID = "YOUR-ORCID-ID"))
+           comment = c(ORCID = "YOUR-ORCID-ID")),
+    person("Kostia", "Dreval", role = "aut"),
+    person("Laura", "Hilton", role = "ctb"),
+    person("Adam", "Mattsson", , "cmattsson@bcgsc.ca", role = "aut",
+           comment = c(ORCID = "0000-0002-6318-7912")),
+    person("Haya", "Shaalan", role = "ctb"),
+    person("Kristena", "Daley", role = "ctb")
+  )
 Description: What the package does (one paragraph).
 License: MIT + file LICENSE
 Depends:

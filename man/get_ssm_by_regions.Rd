@@ -51,13 +51,19 @@ Returns a data frame of variants in MAF-like format.
 Efficiently retrieve all mutations across a range of genomic regions.
 }
 \details{
-This function internally calls \code{get_ssm_by_region} to retrieve SSM calls for the specified regions.
-See parameter descriptions for \code{get_ssm_by_region} for more information on how the different parameters can be called.
+This function internally calls \link{get_ssm_by_region} to retrieve SSM calls for the specified regions.
+See parameter descriptions for \link{get_ssm_by_region} for more information on how the different parameters can be called.
+Is this function not what you are looking for? Try one of the following, similar, functions; \link{get_coding_ssm},
+\link{get_coding_ssm_status}, \link{get_ssm_by_patients}, \link{get_ssm_by_sample},
+\link{get_ssm_by_samples}, \link{get_ssm_by_region}
 }
 \examples{
 #basic usage, adding custom names from bundled ashm data frame
-regions_bed = grch37_ashm_regions \%>\% mutate(name = paste(gene, region, sep = "_"))
+regions_bed = dplyr::mutate(grch37_ashm_regions, name = paste(gene, region, sep = "_"))
+
 ashm_basic_details = get_ssm_by_regions(regions_bed = regions_bed)
-full_details_maf = get_ssm_by_regions(regions_bed = regions_bed,basic_columns=T)
+
+full_details_maf = get_ssm_by_regions(regions_bed = regions_bed,
+                                      basic_columns=T)
 
 }

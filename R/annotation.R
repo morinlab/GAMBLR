@@ -39,8 +39,8 @@ coding_vc = c("Frame_Shift_Del", "Frame_Shift_Ins", "In_Frame_Del", "In_Frame_In
 #'
 #' #annotate MAF
 #' deblacklisted_maf = annotate_ssm_blacklist(grande_maf,
-#'                                           seq_type = "genome",
-#'                                           genome_build = "hg38")
+#'                                            seq_type = "genome",
+#'                                            genome_build = "hg38")
 #'
 annotate_ssm_blacklist = function(mutations_df,
                                   seq_type,
@@ -172,9 +172,11 @@ annotate_ssm_blacklist = function(mutations_df,
 #' @return Nothing.
 #'
 #' @examples
-#' annotated = annotate_recurrent_cnv(my_seq_df)
-#' annotated = annotate_recurrent_cnv(seq_file = "my_seq_data.txt")
-#'
+#' \dontrun{
+#' my_segs = get_sample_cn_segments(this_sample_id = "HTMCP-01-06-00422-01A-01D")
+#' annotated = annotate_recurrent_cnv(seg_df = my_segs)
+#' }
+#' 
 annotate_recurrent_cnv = function(seg_df,
                                   seg_file){
 
@@ -209,7 +211,8 @@ annotate_recurrent_cnv = function(seg_df,
 #' @export
 #'
 #' @examples
-#' all_annotated = get_manta_sv() %>% annotate_sv()
+#' manta_sv = get_manta_sv(verbose = FALSE)
+#' all_annotated = annotate_sv(sv_data = manta_sv)
 #' ig_annotated = annotate_igh_breakpoints(all_annotated)
 #'
 annotate_igh_breakpoints = function(annotated_df,
@@ -277,7 +280,9 @@ annotate_igh_breakpoints = function(annotated_df,
 #' @export
 #'
 #' @examples
-#' driver_ssm = annotate_driver_ssm(maf_df = maf, lymphoma_type = "DLBCL", noncoding_regions=c("NFKBIZ"="chr3:101578206-101578365"))
+#' driver_ssm = annotate_driver_ssm(maf_df = grande_maf,
+#'                                  lymphoma_type = "DLBCL",
+#'                                  noncoding_regions=c("NFKBIZ"="chr3:101578206-101578365"))
 #'
 annotate_driver_ssm = function(maf_df,
                                lymphoma_type,
@@ -323,7 +328,7 @@ annotate_driver_ssm = function(maf_df,
 #'
 #' @description Annotate a data frame of SV breakpoints represented in an extended BEDPE format.
 #'
-#' @details Specify a data frame with SVs (preferably the output from `get_manta_sv`) to the `sv_df` parameter and get back the same data frame with SV annotations.
+#' @details Specify a data frame with SVs (preferably the output from [GAMBLR::get_manta_sv]) to the `sv_df` parameter and get back the same data frame with SV annotations.
 #'
 #' @param sv_data A data frame of SVs. This should be the output of get_manta_sv. If you aren't using the database backend you can supply your own data frame in the format show below.
 #' Most of this data is directly from the bedpe files that are obtained by converting the Manta outputs from VCF.
@@ -344,10 +349,12 @@ annotate_driver_ssm = function(maf_df,
 #' @export
 #'
 #' @examples
-#' # Basic usage
-#' sv_df = get_manta_sv()
-#' annotated_sv = annotate_sv(sv_df)
-#' annotated_entrez = annotate_sv(sv_data = sv_df, with_chr_prefix = FALSE, collapse_redundant = FALSE, return_as = "bedpe_entrez", genome_build = "grch37")
+#' sv_df = get_manta_sv(verbose = FALSE)
+#' annotated_entrez = annotate_sv(sv_data = sv_df,
+#'                                with_chr_prefix = FALSE,
+#'                                collapse_redundant = FALSE,
+#'                                return_as = "bedpe_entrez", 
+#'                                genome_build = "grch37")
 #'
 annotate_sv = function(sv_data,
                        partner_bed,

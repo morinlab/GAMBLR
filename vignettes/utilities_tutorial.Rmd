@@ -61,9 +61,6 @@ fl_genes = dplyr::filter(lymphoma_genes, FL == TRUE) %>% pull(Gene)
 
 #get regions for Fl genes
 fl_genes_df = gene_to_region(gene_symbol = fl_genes, genome_build = "grch37", return_as = "df")
-
-#print head of returned FL genes
-head(fl_genes_df, 5)
 ```
 
 ### Region To Gene
@@ -77,9 +74,6 @@ genes_in_this_region
 
 #wider example using larger region (q-arm, chromosome 1) and using another genome build (hg38) and gene format (ensembl)
 chr1q_genes = region_to_gene(region = "chr1:143200000-248956422", gene_format = "ensembl", genome_build = "hg38")
-
-#print first 5 rows of chr1_q genes
-head(chr1q_genes, 5)
 ```
 
 ### Regions To Bins
@@ -87,9 +81,6 @@ This function was developed to split a contiguous genomic region on a chromosome
 ```{r regions_to_bin, message = FALSE, warning = FALSE}
 #regions to bin, bin chromosome 8 into 20000 bins
 chr8q_bins = region_to_bins(chromosome = "8", start = 48100000, end = 146364022, bin_size = 20000)
-
-#print first 5 rows of the returned data frame
-head(chr8q_bins, 5)
 ```
 
 ### Count SSM by Region
@@ -161,7 +152,6 @@ myc_ashm_maf = get_ssm_by_region(region = "8:128748352-128749427")
 
 #get mutations with 100 bp padding (default)
 wex = genome_to_exome(maf = myc_ashm_maf)
-head(wex, 5)
 ```
 
 ## Miscellaneous
@@ -170,21 +160,17 @@ Another useful function for collecting all derived sample-level results from a v
 ```{collate_results, message = FALSE, warning = FALSE}
 #collate all genome samples, using cached results
 genome_collated = collate_results(seq_type_filter = "genome", from_cache = TRUE)
-head(genome_collated, 5)
 
 #use an already subset metadata table for getting collated results (cached)
 fl_metadata = get_gambl_metadata(seq_type_filter = "genome") %>% dplyr::filter(pathology == "FL")
 fl_collated = collate_results(seq_type_filter = "genome", join_with_full_metadata = TRUE, these_samples_metadata = fl_metadata, from_cache = TRUE)
-head(fl_collated, 5)
 
 #get collated results (cached) for all genome samples and join with full metadata
 everything_collated = collate_results(seq_type_filter = "genome", from_cache = TRUE, join_with_full_metadata = TRUE)
-head(everything_collated, 5)
 
 #another example demonstrating correct usage of the sample_table parameter.
 fl_samples = get_gambl_metadata(seq_type_filter = "genome") %>% dplyr::filter(pathology == "FL") %>% dplyr::select(sample_id, patient_id, biopsy_id)
 fl_collated = collate_results(sample_table = fl_samples, seq_type_filter = "genome", from_cache = TRUE)
-head(fl_collated, 5)
 ```
 
 ## Data Exports

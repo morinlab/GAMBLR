@@ -26,6 +26,9 @@ This function takes genomic coordinates with the \code{chromosome}, \code{start}
 Lastly, the user can also specify the bin size with \code{bin_size}. Default is 20000
 }
 \examples{
-chr8q_bins = region_to_bins(chromosome = "8", start = 48100000, end = 146364022, bin_size = 20000)
+chr8q_bins = region_to_bins(chromosome = "8",
+                            start = 48100000,
+                            end = 146364022,
+                            bin_size = 20000)
 
 }

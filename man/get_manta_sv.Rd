@@ -16,7 +16,8 @@ get_manta_sv(
   min_score = 40,
   pass = TRUE,
   pairing_status,
-  from_flatfile = TRUE
+  from_flatfile = TRUE,
+  verbose = TRUE
 )
 }
 \arguments{
@@ -43,6 +44,8 @@ get_manta_sv(
 \item{pairing_status}{Use to restrict results (if desired) to matched or unmatched results (default is to return all).}
 
 \item{from_flatfile}{Set to TRUE by default, FALSE is no longer supported (database).}
+
+\item{verbose}{Set to FALSE to prevent the path of the requested bedpe file to be printed.}
 }
 \value{
 A data frame in a bedpe-like format with additional columns that allow filtering of high-confidence SVs.
@@ -56,31 +59,44 @@ To return SV calls for multiple samples, give \code{these_sample_ids} a vector o
 give this parameter one sample ID, as a string (or a vector of characters). The user can also call the \code{these_samples_metadata}
 parameter to make use of an already subset metadata table. In this case, the returned calls will be restricted to the sample_ids
 within that data frame. This function relies on a set of specific functions to be successful in returning SV calls for any
-available sample in gambl. First, this function calls \code{get_combined_sv} and performs an \code{anit_join} with the full metadata to
-identify what samples are currently missing from the return of \code{get_combined_sv}. This function then calls \code{get_manta_sv_by_samples}
-(wrapper function for \code{get_manta_sv_by_sample}) on the subset of the missing samples. The merged calls are subject to any
+available sample in gambl. First, this function calls \link{get_combined_sv} and performs an \code{anit_join} with the full metadata to
+identify what samples are currently missing from the return of \link{get_combined_sv}. This function then calls \link{get_manta_sv_by_samples}
+(wrapper function for \link{get_manta_sv_by_sample}) on the subset of the missing samples. The merged calls are subject to any
 filtering that is specified within this function. This function can also restrict the returned calls to any genomic regions
 specified within \code{chromosome}, \code{qstart}, \code{qend}, or the complete region specified under \code{region} (in chr:start-end format).
 Useful filtering parameters are also available, use \code{min_vaf} to set the minimum tumour VAF for a SV to be returned and \code{min_score}
 to set the lowest Manta somatic score for a SV to be returned. \code{pair_status} can be used to only return variants that are
 annotated with PASS in the filtering column (VCF).
+Is this function not what you are looking for? Try one of the following, similar, functions;
+\link{get_combined_sv}, \link{get_manta_sv_by_sample}, \link{get_manta_sv_by_samples}
 }
 \examples{
 #lazily get every SV in the table with default quality filters
-all_sv = get_manta_sv()
+all_sv = get_manta_sv(verbose = FALSE)
 
 #get all SVs for a single sample
 some_sv = get_manta_sv(these_sample_ids = "94-15772_tumorA")
 
 #get the SVs in a region around MYC
-myc_locus_sv = get_manta_sv(region = "8:128723128-128774067")
+myc_locus_sv = get_manta_sv(region = "8:128723128-128774067", verbose = FALSE)
 
 #get SVs for multiple samples, using these_samples_id
-my_samples = get_gambl_metadata() \%>\% dplyr::select(sample_id) \%>\% head(10) \%>\% pull(sample_id)
-my_svs_2 = get_manta_sv(these_sample_ids = my_samples, projection = "hg38")
+my_metadata = get_gambl_metadata()
+these_samples = dplyr::select(my_metadata, sample_id)
+my_samples_df = head(these_samples, 10)
+my_samples = pull(my_samples_df, sample_id)
+
+my_svs_2 = get_manta_sv(these_sample_ids = my_samples,
+                        projection = "hg38",
+                        verbose = FALSE)
 
 #get SVs for multiple samples using a metadata table and with no VAF/score filtering
-my_metadata = get_gambl_metadata() \%>\% head(10)
-my_svs = get_manta_sv(these_samples_metadata = my_metadata, min_vaf = 0, min_score = 0)
+my_metadata = get_gambl_metadata() \%>\% 
+this_metadata = head(my_metadata, 10)
+
+my_svs = get_manta_sv(these_samples_metadata = this_metadata,
+                      verbose = FALSE,
+                      min_vaf = 0,
+                      min_score = 0)
 
 }

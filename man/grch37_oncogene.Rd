@@ -13,7 +13,7 @@ A data frame with 19 rows and 5 columns.
 \item{start}{Start coordinate for the specified oncogene.}
 \item{end}{End coordinate for the specified oncogene.}
 \item{gene}{Lymphoma oncogene.}
-\item{entrez}{ENTREZ ID for the dpecified oncogene.}
+\item{entrez}{ENTREZ ID for the specified oncogene.}
 }
 }
 }

@@ -32,7 +32,7 @@ fancy_v_chrcount(
 
 \item{maf_path}{Optional parameter with path to external maf like file.}
 
-\item{ssm}{Set to FALSE to get plotting data from get_combined_sv (SVs). Default value is TRUE (plots SSM retrieved from annotate_cn_by_ssm$maf)}
+\item{ssm}{Set to FALSE to get plotting data from \link{get_combined_sv} (SVs). Default value is TRUE (plots SSM retrieved from annotate_cn_by_ssm$maf)}
 
 \item{projection}{Genome build for returned variants (only applicable for ssm = FALSE)}
 
@@ -74,22 +74,21 @@ Selected chromosomes (\code{chr_select}) are plotted along the x-axis and the va
 This function can plot both Structural Variants (SV) and Simple Shared Motifs (SSM).
 It plots SVs per default and SSM can be added with setting \code{ssm = TRUE}.
 This plot can also be restricted to only show coding mutations. To do so, set \code{coding_only} to TRUE.
-In addition, the returned plot can also be superimposed with a sample-specific mean coverage (from collate_results).
+In addition, the returned plot can also be superimposed with a sample-specific mean coverage (from \link{collate_results}).
 To do so, set \code{add_qc_metric} to TRUE. A collection of parameters for customizing the returned plot are also available.
 e.g \code{plot_title}, \code{y_interval}, \code{hide_legend}, and \code{plot_subtitle}.
 }
 \examples{
-#plot SVs.
-ssm = fancy_v_chrcount(this_sample_id = "HTMCP-01-06-00422-01A-01D", ssm = TRUE)
+#plot ssm
+fancy_v_chrcount(this_sample_id = "HTMCP-01-06-00422-01A-01D",
+                 ssm = TRUE)
 
-#plot SVs and SSM.
-ssm = fancy_v_chrcount(this_sample_id = "HTMCP-01-06-00422-01A-01D", ssm = TRUE)
-
-
-svs = fancy_v_chrcount(this_sample_id = "HTMCP-01-06-00422-01A-01D", ssm = FALSE,
-                       min_vaf = 0,
-                       projection = "grch37",
-                       chr_select = paste0("chr", c(1:5)),
-                       plot_subtitle = "SV Count Distribution (chr1-5)")
+#plot SVs for chr 1-5
+fancy_v_chrcount(this_sample_id = "HTMCP-01-06-00422-01A-01D",
+                 ssm = FALSE,
+                 min_vaf = 0,
+                 projection = "grch37",
+                 chr_select = paste0("chr", c(1:5)),
+                 plot_subtitle = "SV Count Distribution (chr1-5)")
 
 }
