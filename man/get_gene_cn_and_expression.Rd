@@ -4,12 +4,14 @@
 \alias{get_gene_cn_and_expression}
 \title{Get Gene CN and Expression.}
 \usage{
-get_gene_cn_and_expression(gene_symbol, ensembl_id)
+get_gene_cn_and_expression(gene_symbol, ensembl_id, this_seq_type = "genome")
 }
 \arguments{
 \item{gene_symbol}{One or more gene symbols. Should match the values in a maf file.}
 
 \item{ensembl_id}{One or more ensembl gene IDs. Only one of hugo_symbols or ensembl_gene_ids may be used.}
+
+\item{this_seq_type}{Seq type for returned CN segments. One of "genome" (default) or "capture".}
 }
 \value{
 A data frame with copy number information and gene expressions.

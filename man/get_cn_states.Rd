@@ -9,6 +9,7 @@ get_cn_states(
   regions_bed,
   region_names,
   these_samples_metadata,
+  this_seq_type = "genome",
   all_cytobands = FALSE,
   use_cytoband_name = FALSE
 )
@@ -21,6 +22,8 @@ get_cn_states(
 \item{region_names}{Subset CN states on specific regions (gene symbols e.g FCGR2B).}
 
 \item{these_samples_metadata}{A metadata table to auto-subset the data to samples in that table before returning.}
+
+\item{this_seq_type}{Seq type for returned CN segments. One of "genome" (default) or "capture".}
 
 \item{all_cytobands}{Include all cytobands, default is set to FALSE. Currently only supports hg19.}
 
@@ -40,5 +43,10 @@ For how to specify regions, refer to the parameter descriptions and function exa
 #basic usage, generic lymphoma gene list
 cn_matrix = get_cn_states(regions_bed=grch37_lymphoma_genes_bed)
 single_gene_cn = get_cn_states(regions_list=c(this_region), region_names = c("FCGR2B"))
+capture_cn = get_cn_states(
+ regions_list=c("8:128723128-128774067"),
+ region_names = c("MYC"),
+ this_seq_type = "capture"
+)
 
 }

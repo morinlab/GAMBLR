@@ -10,6 +10,7 @@ get_sample_cn_segments(
   sample_list,
   from_flatfile = TRUE,
   projection = "grch37",
+  this_seq_type = "genome",
   with_chr_prefix = FALSE,
   streamlined = FALSE
 )
@@ -24,6 +25,8 @@ get_sample_cn_segments(
 \item{from_flatfile}{Set to TRUE by default.}
 
 \item{projection}{Selected genome projection for returned CN segments. Default is "grch37".}
+
+\item{this_seq_type}{Seq type for returned CN segments. One of "genome" (default) or "capture".}
 
 \item{with_chr_prefix}{Set to TRUE to add a chr prefix to chromosome names. Default is FALSE.}
 
@@ -46,6 +49,12 @@ sample_cn_seg = get_sample_cn_segments(this_sample_id = "some-sample-id", multip
 
 # Return cn segments for multiple samples (provided as vector of sample IDs):
 samples = get_sample_cn_segments(multiple_samples = TRUE, sample_list = c("some_sample", "another_sample"))
+# Return cn segments for capture samples
+samples = get_sample_cn_segments(
+   multiple_samples = TRUE,
+   sample_list = c("some_sample", "another_sample"),
+   this_seq_type = "capture"
+)
 
 # Return cn segments for multiple samples (read csv with one sample per line):
 sample_list = readLines("../samples-test.csv")

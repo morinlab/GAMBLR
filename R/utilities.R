@@ -3690,8 +3690,12 @@ collate_qc_results = function(sample_table,
 #' @import dplyr
 #'
 #' @examples
+#' # For genomes
 #' meta <- get_gambl_metadata()
 #' pga_metrics <- collate_pga(these_samples_metadata = meta)
+#' # For exomes
+#' meta_capture <- get_gambl_metadata(seq_type_filter = "capture")
+#' pga_metrics_capture <- collate_pga(these_samples_metadata = meta_capture)
 #'
 collate_pga <- function(
     these_samples_metadata,

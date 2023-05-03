@@ -8,6 +8,7 @@ focal_cn_plot(
   region,
   gene,
   these_samples_metadata,
+  this_seq_type = "genome",
   type = "gain",
   segment_size = 1,
   crop_segments = TRUE,
@@ -21,6 +22,8 @@ focal_cn_plot(
 \item{gene}{Optional variable, converts gene to region if region not supplied.}
 
 \item{these_samples_metadata}{Required parameter. GAMBL metadata subset to the cases you want to process (or full metadata).}
+
+\item{this_seq_type}{Seq type for returned CN segments. One of "genome" (default) or "capture".}
 
 \item{type}{Type of CN segment to be plotted. Default is gain (CN > 2).}
 
