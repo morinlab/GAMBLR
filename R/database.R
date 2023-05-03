@@ -1717,6 +1717,12 @@ get_cn_states = function(regions_list,
 #'
 #' # Return cn segments for multiple samples (provided as vector of sample IDs):
 #' samples = get_sample_cn_segments(multiple_samples = TRUE, sample_list = c("some_sample", "another_sample"))
+#' # Return cn segments for capture samples
+#' samples = get_sample_cn_segments(
+#'    multiple_samples = TRUE,
+#'    sample_list = c("some_sample", "another_sample"),
+#'    this_seq_type = "capture"
+#' )
 #'
 #' # Return cn segments for multiple samples (read csv with one sample per line):
 #' sample_list = readLines("../samples-test.csv")
@@ -1727,10 +1733,11 @@ get_sample_cn_segments = function(this_sample_id,
                                   sample_list,
                                   from_flatfile = TRUE,
                                   projection = "grch37",
+                                  this_seq_type = "genome",
                                   with_chr_prefix = FALSE,
                                   streamlined = FALSE){
   if(from_flatfile){
-    seq_type = "genome"
+    seq_type = this_seq_type
     cnv_flatfile_template = check_config_value(config::get("results_flatfiles")$cnv_combined$icgc_dart)
     cnv_path =  glue::glue(cnv_flatfile_template)
     full_cnv_path =  paste0(check_config_value(config::get("project_base")), cnv_path)
