@@ -1853,7 +1853,7 @@ get_sample_cn_segments = function(this_sample_id,
 #' @param qstart Start coordinate of the range you are restricting to. Required parameter if region is not specified.
 #' @param qend End coordinate of the range you are restricting to. Required parameter if region is not specified.
 #' @param projection Selected genome projection for returned CN segments. Default is "grch37".
-#' @param this_seq_type Seq type for returned CN segments. Currently, only genome is supported. Capture samples will be added once processed through CNV protocols.
+#' @param this_seq_type Seq type for returned CN segments. One of "genome" (default) or "capture".
 #' @param with_chr_prefix Boolean parameter for toggling if chr prefixes should be present in the return, default is FALSE.
 #' @param streamlined Return a basic rather than full MAF format. Default is FALSE.
 #' @param from_flatfile Set to TRUE by default.
@@ -1868,6 +1868,13 @@ get_sample_cn_segments = function(this_sample_id,
 #' segments_region_grch37 = get_cn_segments(chromosome = "chr8",
 #'                                          qstart = 128723128,
 #'                                          qend = 128774067)
+#' # Example for the capture samples:
+#' capture_segments_region_grch37 = get_cn_segments(
+#'  chromosome = "chr8",
+#'  qstart = 128723128,
+#'  qend = 128774067,
+#'  this_seq_type = "capture"
+#' )
 #'                                    
 #' #Example using the regions parameter:
 #' segments_region_hg38 = get_cn_segments(region = "chr8:128,723,128-128,774,067",
@@ -1886,11 +1893,6 @@ get_cn_segments = function(region,
   
   #checks
   remote_session = check_remote_configuration(auto_connect = TRUE)
-  
-  #check seq type and return a message if anything besides "genome" is called. To be updated once capture samples have been processed through CNV protocols.
-  if(this_seq_type!="genome"){
-    stop("Currently, only genome samples are available for this function. Please select a valid seq type (i.e genome). Compatibility for capture samples will be added soon...")
-  }
   
   #get wildcards from this_seq_type (lazy)
   seq_type = this_seq_type
