@@ -3682,7 +3682,7 @@ collate_qc_results = function(sample_table,
 #' @details Helper function called by `collate_results`, not meant for out-of-package usage.
 #'
 #' @param these_samples_metadata The metadata to be expanded with sample_id column.
-#' @param this_seq_type default is genome, but capture is not currently supported.
+#' @param this_seq_type Seq type for returned CN segments. One of "genome" (default) or "capture".
 #'
 #' @noRd
 #'
@@ -3704,8 +3704,6 @@ collate_pga <- function(
     # Currently only works for genomes
     if(! this_seq_type %in% c("genome", "capture")) {
         stop("Please provide a valid seq_type (\"genome\" or \"capture\").")
-    } else if ("capture" %in% this_seq_type) {
-        stop("The requested seq_type \"capture\" is not currently supported.")
     }
 
     # Default to all samples if sample table is missing
