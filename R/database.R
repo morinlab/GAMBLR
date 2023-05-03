@@ -1600,6 +1600,7 @@ get_lymphgen = function(these_samples_metadata,
 #' @param regions_bed A bed file with one row for each region you want to determine the CN state from.
 #' @param region_names Subset CN states on specific regions (gene symbols e.g FCGR2B).
 #' @param these_samples_metadata A metadata table to auto-subset the data to samples in that table before returning.
+#' @param this_seq_type Seq type for returned CN segments. One of "genome" (default) or "capture".
 #' @param all_cytobands Include all cytobands, default is set to FALSE. Currently only supports hg19.
 #' @param use_cytoband_name Use cytoband names instead of region names, e.g p36.33.
 #'
@@ -1613,6 +1614,11 @@ get_lymphgen = function(these_samples_metadata,
 #' #basic usage, generic lymphoma gene list
 #' cn_matrix = get_cn_states(regions_bed=grch37_lymphoma_genes_bed)
 #' single_gene_cn = get_cn_states(regions_list=c(this_region), region_names = c("FCGR2B"))
+#' capture_cn = get_cn_states(
+#'  regions_list=c("8:128723128-128774067"),
+#'  region_names = c("MYC"),
+#'  this_seq_type = "capture"
+#' )
 #'
 get_cn_states = function(regions_list,
                          regions_bed,
@@ -1703,6 +1709,7 @@ get_cn_states = function(regions_list,
 #' @param sample_list Optional vector of type character with one sample per row, required if multiple_samples is set to TRUE.
 #' @param from_flatfile Set to TRUE by default.
 #' @param projection Selected genome projection for returned CN segments. Default is "grch37".
+#' @param this_seq_type Seq type for returned CN segments. One of "genome" (default) or "capture".
 #' @param with_chr_prefix Set to TRUE to add a chr prefix to chromosome names. Default is FALSE.
 #' @param streamlined Return a minimal output rather than full details. Default is FALSE.
 #'
@@ -2603,6 +2610,7 @@ get_coding_ssm = function(limit_cohort,
 #'
 #' @param gene_symbol One or more gene symbols. Should match the values in a maf file.
 #' @param ensembl_id One or more ensembl gene IDs. Only one of hugo_symbols or ensembl_gene_ids may be used.
+#' @param this_seq_type Seq type for returned CN segments. One of "genome" (default) or "capture".
 #'
 #' @return A data frame with copy number information and gene expressions.
 
@@ -2613,7 +2621,8 @@ get_coding_ssm = function(limit_cohort,
 #' MYC_cn_expression = get_gene_cn_and_expression("MYC")
 #'
 get_gene_cn_and_expression = function(gene_symbol,
-                                      ensembl_id){
+                                      ensembl_id,
+                                      this_seq_type = "genome"){
 
     if(!missing(gene_symbol)){
       this_row = grch37_gene_coordinates %>%
@@ -2631,7 +2640,10 @@ get_gene_cn_and_expression = function(gene_symbol,
       gene_name = ensembl_id
       gene_symbol = pull(this_row, hugo_symbol)
     }
-  gene_cn = get_cn_states(regions_list = c(this_region), region_names = c(gene_name)) %>%
+  gene_cn = get_cn_states(
+      regions_list = c(this_region),
+      region_names = c(gene_name),
+      this_seq_type = this_seq_type) %>%
     as.data.frame()
 
   colnames(gene_cn)[1] = paste(colnames(gene_cn)[1], "CN", sep = "_")

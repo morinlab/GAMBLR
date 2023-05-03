@@ -2042,7 +2042,7 @@ assign_cn_to_ssm = function(this_sample_id,
     data.table::setkey(seg_sample, Chromosome, Start_Position, End_Position)
     a = data.table::as.data.table(maf_sample)
   }else{
-    seg_sample = get_sample_cn_segments(this_sample_id = this_sample_id) %>%
+    seg_sample = get_sample_cn_segments(this_sample_id = this_sample_id, this_seq_type = this_seq_type) %>%
       dplyr::mutate(size = end - start) %>%
       dplyr::filter(size > 100) %>%
       dplyr::mutate(chrom = gsub("chr", "", chrom)) %>%
@@ -3719,7 +3719,8 @@ collate_pga <- function(
     # Get the CN segments
     multi_sample_seg <- get_sample_cn_segments(
         sample_list = these_samples_metadata$sample_id,
-        multiple_samples = TRUE
+        multiple_samples = TRUE,
+        this_seq_type = this_seq_type
     ) %>%
     dplyr::rename("sample" = "ID")
 
@@ -4098,6 +4099,7 @@ subset_cnstates = function(cn_segments,
 #' @param seg_path Optionally, specify the path to a local seg file. Must adhere to seg format.
 #' @param genes_of_interest Provide specific genes to be displayed on the time-series plot.
 #' @param projection Argument specifying the projection of seg file, which will determine coordinates of the cytobands. Default is grch37, but hg38 is also accepted.
+#' @param this_seq_type Seq type for returned CN segments. One of "genome" (default) or "capture".
 #' @param ignore_cytoband_labels Cytobands to be ignored. By default, "acen", "gvar", "stalk" are excluded.
 #' @param max_overlap For a time-series plot, how many maximum overlapping points are allowed?
 #' @param min_concordance Integer value from 0 to 100 to indicate the minimum required similarity between cytobands to be considered concordant. The default is 90 (90%).
@@ -4122,6 +4124,7 @@ cnvKompare = function(patient_id,
                       seg_path,
                       genes_of_interest,
                       projection = "grch37",
+                      this_seq_type = "genome",
                       ignore_cytoband_labels = c("acen", "gvar", "stalk"),
                       max_overlap = 20,
                       min_concordance = 90,
@@ -4186,7 +4189,8 @@ cnvKompare = function(patient_id,
                                                sample_list = these_sample_ids,
                                                from_flatfile = TRUE,
                                                projection = projection,
-                                               with_chr_prefix = TRUE)
+                                               with_chr_prefix = TRUE,
+                                               this_seq_type = this_seq_type)
   }
 
   these_samples_seg = these_samples_seg  %>%

@@ -478,6 +478,7 @@ prettyGeneCloud = function(maf_df,
 #' @param region Genomic region for plotting in bed format.
 #' @param gene Optional variable, converts gene to region if region not supplied.
 #' @param these_samples_metadata Required parameter. GAMBL metadata subset to the cases you want to process (or full metadata).
+#' @param this_seq_type Seq type for returned CN segments. One of "genome" (default) or "capture".
 #' @param type Type of CN segment to be plotted. Default is gain (CN > 2).
 #' @param segment_size This parameter controls the size of the segment plotted with ggplot2, default is 1.
 #' @param crop_segments Boolean statement that crops segment by first checking if crop segment is smaller than lef/right distance, then adds or subtracts  crop distance to end/start coordinates. Default is TRUE.
@@ -502,6 +503,7 @@ prettyGeneCloud = function(maf_df,
 focal_cn_plot = function(region,
                          gene,
                          these_samples_metadata,
+                         this_seq_type = "genome",
                          type = "gain",
                          segment_size = 1,
                          crop_segments = TRUE,
@@ -515,11 +517,11 @@ focal_cn_plot = function(region,
     chunks = region_to_chunks(region)
   }
   if(type == "gain"){
-    all_not_dip = get_cn_segments(region = region) %>%
+    all_not_dip = get_cn_segments(region = region, this_seq_type = this_seq_type) %>%
       mutate(size = end - start) %>%
       dplyr::filter(CN>2)
   }else{
-    all_not_dip = get_cn_segments(region = region) %>%
+    all_not_dip = get_cn_segments(region = region, this_seq_type = this_seq_type) %>%
       mutate(size = end - start) %>%
       dplyr::filter(CN<2)
   }
