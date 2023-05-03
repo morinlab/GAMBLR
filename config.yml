@@ -118,6 +118,7 @@ default:
     results_directories:
         manta: "manta_current/99-outputs/bedpe/"
         controlfreec: "controlfreec_liftover_current/99-outputs/"
+        mixcr: "{unix_group}/mixcr-1.2/99-outputs/"
 
     tables:
         biopsies: "biopsy_metadata"
