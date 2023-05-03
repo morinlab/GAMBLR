@@ -1618,10 +1618,10 @@ get_cn_states = function(regions_list,
                          regions_bed,
                          region_names,
                          these_samples_metadata,
+                         this_seq_type = "genome",
                          all_cytobands = FALSE,
                          use_cytoband_name = FALSE){
 
-  this_seq_type="genome" #this only supports genomes currently
   if(missing(these_samples_metadata)){
     these_samples_metadata = get_gambl_metadata(seq_type_filter=this_seq_type)
   }else{
@@ -1656,7 +1656,7 @@ get_cn_states = function(regions_list,
   }else{
     regions = regions_list
   }
-  region_segs = lapply(regions,function(x){get_cn_segments(region = x, streamlined = TRUE)})
+  region_segs = lapply(regions,function(x){get_cn_segments(region = x, streamlined = TRUE, this_seq_type = this_seq_type)})
   if(missing(region_names) & !use_cytoband_name){
     region_names = regions
   }
