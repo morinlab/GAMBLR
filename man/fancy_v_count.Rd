@@ -10,6 +10,7 @@ fancy_v_count(
   maf_path = NULL,
   ssm = TRUE,
   projection = "grch37",
+  this_seq_type = "genome",
   min_vaf = 0,
   variant_type_col = 10,
   chromosome_col = 5,
@@ -35,6 +36,8 @@ fancy_v_count(
 \item{ssm}{Set to FALSE to get plotting data from get_combined_sv (SVs). Default value is TRUE (plots SSM retrieved from annotate_cn_by_ssm$maf).}
 
 \item{projection}{Genome build for returned variants (only applicable for ssm = FALSE).}
+
+\item{this_seq_type}{Seq type for returned CN segments. One of "genome" (default) or "capture".}
 
 \item{min_vaf}{The minimum tumour VAF for a SV to be returned. Recommended: 0 (only applicable for ssm = FALSE).}
 

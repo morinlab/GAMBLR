@@ -50,7 +50,7 @@ full_expression_df = get_gene_expression(all_genes = TRUE,
 
 #Use loaded df (in the previous step) to get expression values for IRF4 and MYC.
 irf4_myc_expressions = get_gene_expression(hugo_symbols = c("IRF4", "MYC"),
-                                               all_genes = FALSE, 
+                                               all_genes = FALSE,
                                                join_with = "genome",
                                                from_flatfile = FALSE,
                                                expression_data = full_expression_df)

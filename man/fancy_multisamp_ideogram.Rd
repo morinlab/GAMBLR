@@ -8,6 +8,7 @@ fancy_multisamp_ideogram(
   these_sample_ids,
   plot_title = "CN Segments Ideogram",
   plot_sub = "grch37",
+  this_seq_type = "genome",
   chr_anno_dist = 3,
   chr_select = paste0("chr", c(1:22)),
   include_cn2 = FALSE,
@@ -24,6 +25,8 @@ fancy_multisamp_ideogram(
 \item{plot_title}{Main title of plot.}
 
 \item{plot_sub}{Subtitle of plot.}
+
+\item{this_seq_type}{Seq type for returned CN segments. One of "genome" (default) or "capture".}
 
 \item{chr_anno_dist}{Optional parameter to adjust chromosome annotations, default value is 3, increase to adjust annotations to left.}
 
@@ -59,7 +62,7 @@ To instead plot discordant CN segments, set this parameter to FALSE.
 \examples{
 #two samples ideogram
 fancy_multisamp_ideogram(these_sample_ids = c("00-15201_tumorA",
-                                              "00-15201_tumorB"), 
+                                              "00-15201_tumorB"),
                          include_cn2 = TRUE,
                          plot_title = "Multi-sample Ideograms Example",
                          plot_sub = "grch37",

@@ -15,6 +15,7 @@ plot_sample_circos(
   legend_metadata_names = c(),
   include_cnv = TRUE,
   this_projection = "grch37",
+  this_seq_type = "genome",
   chrom_list,
   label_genes,
   auto_label_sv = FALSE
@@ -40,6 +41,8 @@ plot_sample_circos(
 \item{include_cnv}{Default TRUE. (does not do anything yet).}
 
 \item{this_projection}{The selected projection, default is grch37 and it's the only supported peojection.}
+
+\item{this_seq_type}{Seq type for returned CN segments. One of "genome" (default) or "capture".}
 
 \item{chrom_list}{List of chromosomes to be plotted. If not stated, chr1-22+X will bes used.}
 

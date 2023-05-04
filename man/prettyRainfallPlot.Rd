@@ -46,7 +46,7 @@ If non are specified, the SSM will be obtained through GAMBLR directly (with \li
 Create a sample-level rainfall plot visualizing single nucleotide substitutions mutations for selected chromosomes.
 }
 \examples{
-prettyRainfallPlot(this_sample_id = "Raji", 
+prettyRainfallPlot(this_sample_id = "Raji",
                    seq_type = "genome",
                    zoom_in_region = "8:125252796-135253201",
                    label_sv = TRUE)

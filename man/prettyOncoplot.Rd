@@ -161,7 +161,7 @@ maf_metadata = get_gambl_metadata()
 maf = maftools::read.maf(maf_data, clinicalData = maf_metadata)
 
 #define some genes of interest
-bl_genes = c("NFKBIZ", "ID3", "TP53", "ARID1A", "FBXO11", 
+bl_genes = c("NFKBIZ", "ID3", "TP53", "ARID1A", "FBXO11",
              "GNA13", "TCF3", "TFAP4", "HNRNPU", "FOXO1",
              "CCND3", "SMARCA4", "DDX3X")
 
@@ -180,7 +180,7 @@ maf_metadata = dplyr::filter(maf_metadata,!lymphgen \%in\% c("COMPOSITE"))
 maf_metadata$pathology = as.factor(maf_metadata$pathology)
 
 #define order of factors for selected metadata column
-maf_metadata$pathology = factor(maf_metadata$pathology, 
+maf_metadata$pathology = factor(maf_metadata$pathology,
                                 levels = c("DLBCL", "BL",
                                            "B-ALL", "CLL",
                                            "COMFL", "DLBCL-BL-like",
@@ -198,7 +198,7 @@ prettyOncoplot(maftools_obj = maf,
                keepGeneOrder = TRUE,
                splitColumnName = "pathology",
                metadataBarHeight = 5,
-               metadataBarFontsize = 8, 
+               metadataBarFontsize = 8,
                legend_row = 2,
                fontSizeGene = 11,
                metadataColumns = c("pathology", "lymphgen", "sex", "EBV_status_inf", "cohort"),
