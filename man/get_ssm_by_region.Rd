@@ -72,7 +72,7 @@ my_mutations = get_ssm_by_region(region = "chr8:128,723,128-128,774,067")
 my_mutations = get_ssm_by_region(chromosome = "8",
                                  qstart = 128723128,
                                  qend = 128774067)
-                                 
+
 #keep all 116 columns in the read MAF
 bcl2_all_details = get_ssm_by_region(region = "chr18:60796500-60988073",
                                      basic_columns = FALSE)

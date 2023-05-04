@@ -51,11 +51,11 @@ multiple_samples = get_sample_cn_segments(multiple_samples = TRUE, sample_list =
 #Return cn segments for multiple samples (provided as vector of sample IDs):
 these_sample_list = c("00-15201_tumorA", "00-15201_tumorB")
 
-samples = get_sample_cn_segments(multiple_samples = TRUE, 
+samples = get_sample_cn_segments(multiple_samples = TRUE,
                                  sample_list = these_sample_list)
 # For capture
 samples = get_sample_cn_segments(
- multiple_samples = TRUE, 
+ multiple_samples = TRUE,
  sample_list = these_sample_list,
  this_seq_type = "capture"
 )

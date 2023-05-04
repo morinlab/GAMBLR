@@ -43,7 +43,7 @@ myc_ashm_maf = get_ssm_by_region(region = "8:128748352-128749427")
 maf = genome_to_exome(maf = myc_ashm_maf)
 
 #get mutations covered in WEX with no padding
-maf = genome_to_exome(maf = myc_ashm_maf, 
-                padding = 0) 
+maf = genome_to_exome(maf = myc_ashm_maf,
+                padding = 0)
 
 }

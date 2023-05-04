@@ -61,7 +61,7 @@ capture_segments_region_grch37 = get_cn_segments(
  qend = 128774067,
  this_seq_type = "capture"
 )
-                                   
+
 #Example using the regions parameter:
 segments_region_hg38 = get_cn_segments(region = "chr8:128,723,128-128,774,067",
                                        projection = "hg38",

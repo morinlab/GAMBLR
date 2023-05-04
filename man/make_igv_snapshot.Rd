@@ -60,7 +60,7 @@ ssh -X gp10
 
 #then launch IGV (e.e. from a conda installation):
 #conda activate igv; igv &
-this_sv = annotated_sv \%>\% 
+this_sv = annotated_sv \%>\%
  filter(gene=="ETV6")
 
 tumour_bam = get_bams(this_sample_id = this_sv$tumour_sample_id)

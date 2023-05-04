@@ -9,6 +9,7 @@ estimate_purity(
   maf_df,
   in_seg,
   this_sample_id,
+  this_seq_type = "genome",
   seg_file_source = "battenberg",
   show_plots = FALSE,
   assume_diploid = FALSE,
@@ -24,6 +25,8 @@ estimate_purity(
 \item{in_seg}{Path to a local corresponding seg file for the same sample ID as the input maf.}
 
 \item{this_sample_id}{Specify the sample_id or any other string you want embedded in the file name.}
+
+\item{this_seq_type}{Seq type for returned CN segments. One of "genome" (default) or "capture".}
 
 \item{seg_file_source}{Specify what copy number calling program the input seg file is from, as it handles ichorCNA differently than WisecondorX, battenberg, etc.}
 
@@ -52,15 +55,15 @@ For more information on how to run this function with the parameters at hand, re
 }
 \examples{
 #load a maf
-this_maf = get_ssm_by_sample(this_sample_id = "HTMCP-01-06-00422-01A-01D", 
+this_maf = get_ssm_by_sample(this_sample_id = "HTMCP-01-06-00422-01A-01D",
                              this_seq_type = "genome")
 
 #estimate purity based on an already loaded maf object
-estimate_purity(maf_df = this_maf, 
+estimate_purity(maf_df = this_maf,
                 show_plots = TRUE)
 
 #estimate purity based sole on a smaple ID + added seg data.
-estimate_purity(this_sample_id = "HTMCP-01-06-00422-01A-01D", 
+estimate_purity(this_sample_id = "HTMCP-01-06-00422-01A-01D",
                 show_plots = TRUE, coding_only = TRUE)
 
 }

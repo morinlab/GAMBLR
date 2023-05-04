@@ -41,7 +41,7 @@ For more details on how these parameters can be used, refer to \link{get_ssm_by_
 }
 \examples{
 #define a region.
-my_region = gene_to_region(gene_symbol = "MYC", 
+my_region = gene_to_region(gene_symbol = "MYC",
                            return_as = "region")
 
 #get meta data and subset

@@ -58,9 +58,9 @@ Is this function not what you are looking for? Try one of the following, similar
 \link{get_ssm_by_patients}, \link{get_ssm_by_samples}, \link{get_ssm_by_region}, \link{get_ssm_by_regions}
 }
 \examples{
-this_sample_df = get_ssm_by_sample(this_sample_id = "HTMCP-01-06-00485-01A-01D", 
+this_sample_df = get_ssm_by_sample(this_sample_id = "HTMCP-01-06-00485-01A-01D",
                                    this_seq_type = "genome",
-                                   tool_name = "slims-3", 
+                                   tool_name = "slims-3",
                                    projection = "grch37")
 
 capture_meta = get_gambl_metadata(seq_type_filter = "capture")

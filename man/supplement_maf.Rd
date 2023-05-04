@@ -26,7 +26,7 @@ small_maf = get_coding_ssm(limit_cohort = "dlbcl_reddy",
                            seq_type = "capture")
 
 small_maf = dplyr::filter(small_maf, Hugo_Symbol == "MYC")
- 
+
 my_metadata = get_gambl_metadata(seq_type_filter = "capture")
 reddy_meta = dplyr::filter(my_metadata, cohort=="dlbcl_reddy")
 

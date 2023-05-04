@@ -91,7 +91,7 @@ my_svs_2 = get_manta_sv(these_sample_ids = my_samples,
                         verbose = FALSE)
 
 #get SVs for multiple samples using a metadata table and with no VAF/score filtering
-my_metadata = get_gambl_metadata() \%>\% 
+my_metadata = get_gambl_metadata() \%>\%
 this_metadata = head(my_metadata, 10)
 
 my_svs = get_manta_sv(these_samples_metadata = this_metadata,

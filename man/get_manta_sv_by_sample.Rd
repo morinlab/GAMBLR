@@ -53,7 +53,7 @@ Is this function not what you are looking for? Try one of the following, similar
 \examples{
 #example 1
 #get manta calls for a sample that needs to be lifted to "hg38" and let this function
-#take care of the liftover step for you. 
+#take care of the liftover step for you.
 my_sv = get_manta_sv_by_sample(this_sample_id = "99-27783_tumorA",
                                these_samples_metadata = get_gambl_metadata(),
                                projection = "hg38",
