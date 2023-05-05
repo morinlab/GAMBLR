@@ -55,7 +55,7 @@ rule all:
     input:
         deblacklisted = expand(db_maf,seq_type=seq_types,projection=projections),
         augmented = expand(aug_maf,seq_type=seq_types,projection=projections),
-        combined_cnv = expand(cnv_combined,seq_type=['genome'],projection=projections),
+        combined_cnv = expand(cnv_combined,seq_type=['genome', 'capture'],projection=projections),
         combined_sv = expand(sv_combined,seq_type=['genome'],projection=projections),
         blacklists = expand(blacklist,seq_type=seq_types,projection=projections),
         expression = expression,
