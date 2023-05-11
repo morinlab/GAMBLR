@@ -102,8 +102,9 @@
 <ul class="task-list"><li><p><input type="checkbox" disabled>I tested the new code for my use case (please provide a reproducible example of how you tested the new functionality)</p></li>
 <li><p><input type="checkbox" disabled>I ensured all dplyr functions that commonly conflict with other packages are fully qualified.</p></li>
 </ul><p>This can be checked and addressed by running <code>check_functions.pl</code> and responding to the prompts. Test your code <em>after</em> you do this.</p>
-<ul class="task-list"><li>
-<input type="checkbox" disabled>I generated the documentation and checked for errors relating to the new function (e.g. <code><a href="https://devtools.r-lib.org/reference/document.html" class="external-link">devtools::document()</a></code>) and added <code>NAMESPACE</code> and all other modified files in the root directory and under <code>man</code>.</li></ul></div>
+<ul class="task-list"><li><p><input type="checkbox" disabled>I generated the documentation and checked for errors relating to the new function (e.g. <code><a href="https://devtools.r-lib.org/reference/document.html" class="external-link">devtools::document()</a></code>) and added <code>NAMESPACE</code> and all other modified files in the root directory and under <code>man</code>.</p></li>
+<li><p><input type="checkbox" disabled>I have rebuilt the site with <code>pkgdown::build_site(lazy = TRUE)</code> to reflect any updated package documentation.</p></li>
+</ul></div>
 <div class="section level3">
 <h3 id="optional-but-preferred-with-prs">Optional but preferred with PRs<a class="anchor" aria-label="anchor" href="#optional-but-preferred-with-prs"></a></h3>
 <ul class="task-list"><li>
