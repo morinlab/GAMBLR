@@ -196,7 +196,7 @@ navbar:
       - text: Fancy Plots
         href: articles/fancy_plots.html
       - text: Utilities
-        href: articles/utiliteis_tutorial.html
+        href: articles/utilities_tutorial.html
   right:
     - icon: fa-file-code-o
       text: "Functions & Bundled Data"
