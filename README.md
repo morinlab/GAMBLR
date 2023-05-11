@@ -1,4 +1,5 @@
-![Build GAMBLR](https://github.com/morinlab/GAMBLR/actions/workflows/build_check.yml/badge.svg)
+# <img src="man/figures/logo.png" align="right" />
+![](https://github.com/morinlab/GAMBLR/actions/workflows/build_check.yml/badge.svg)
 
 # GABMLR - an R package with convenience functions for working with GAMBL results.
 ## Installation
