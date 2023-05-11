@@ -255,8 +255,10 @@ setup_fusions = function(short_name = "GAMBL",
 #'
 #' @details This function should be run as the last (or third step) in setting up a new cBioPortal instance.
 #' The functions that should be run prior to these functions are; [GAMBLR::setup_study] and [GAMBLR::setup_fusions].
-#' [GAMBLR::finalize_study] creates all the necessary tables and metadata files (case lists) that are required to import a new study into cBioPortal.
+#' [GAMBLR::finalize_study] creates all the necessary tables and metadata files and case lists that are required to import a new study into cBioPortal.
 #' Note, that all parameter arguments used in this function have to match the same parameter arguments for the previously run functions (`setup_study` and `setup_fusions`).
+#' This function allows the user to specify additional fields from the collated metadata file (besides the "standard" fields).
+#' For more information on how to use, see `metacols` and related parameters (`metacol_names`, `metacol_types`, and `meta_prior`).
 #'
 #' @param seq_type_filter the seq type you are setting up a study for, default is "genome".
 #' @param short_name A concise name for your portal project.
@@ -266,7 +268,10 @@ setup_fusions = function(short_name = "GAMBL",
 #' @param cancer_type Cancer types included in study, default is "mixed".
 #' @param these_sample_ids A vector of all the sample_id that were included in any of the data files for cBioPortal (i.e the output from `setup_study` and `setup_fusions`).
 #' @param overwrite Flag to specify that files should be overwritten if they exist. Default is TRUE.
-#' @param meta_columns Optional parameter for specifying metadata fields in the study. If not provided, the function will resort to using default metadata columns.
+#' @param metacols Optional, specify any additional metadata/collate_result fields to be included in the cBioPortal metadata. Extra columns are specified as a vector of characters. If not provided, only "standard" metadata fields will be kept.
+#' @param metacol_names Separately specify the names of the columns given to `metacols` as a vector of characters. The number of elements needs to match the total number of columns specified with `metacols`. Required parameter if `metacols` is being called.
+#' @param metacol_types Specify the data type for selected metadata columns as a vector of characters. The number of elements specified needs to match the number of selected columns with `metacols`. Acceptable values are; STRING, NUMBER and BOOLEAN. Required parameter if `metacols` is being called.
+#' @param metacol_prior Explicitly state the priority of selected metadata columns as a vector of characters. A higher number indicates a higher priority. Required parameter if `metacols` is being called.
 #' @param out_dir The full path to the base directory where the files are being created.
 #'
 #' @return Nothing.
@@ -276,8 +281,24 @@ setup_fusions = function(short_name = "GAMBL",
 #'
 #' @examples
 #' \dontrun{
+#' #basic usage
 #' finalize_study(these_sample_ids = c(ids, fusion_ids), out_dir = "GAMBLR/cBioPortal/instance01/")
+#'
+#' #advanced usage
+#' #get some samples
+#' all_meta = get_gambl_metadata()
+#' meta_sub = head(all_meta, 5)
+#' my_samples = pull(meta_sub, sample_id)
+#'
+#' #create a clinical file with additional collated metadata fields
+#' finalize_study(these_sample_ids = my_samples,
+#'                out_dir = "../",
+#'                metacols = c("MeanCorrectedCoverage", "total_ssm"),
+#'                metacol_names = c("Mean Corrected Coverage", "Total SSM"),
+#'                metacol_types = c("NUMBER", "NUMBER"),
+#'                metacol_prior = c("2", "1"))
 #' }
+#'
 finalize_study = function(seq_type_filter = "genome",
                           short_name = "GAMBL",
                           human_friendly_name = "GAMBL data",
@@ -286,15 +307,53 @@ finalize_study = function(seq_type_filter = "genome",
                           cancer_type = "mixed",
                           these_sample_ids,
                           overwrite = TRUE,
-                          meta_columns,
+                          metacols,
+                          metacol_names,
+                          metacol_types,
+                          metacol_prior,
                           out_dir){
 
-  #resort to "default" metadata columns, if not specified
-  if(missing(meta_columns)){
-    meta_columns = c("patient_id", "sample_id", "pathology",
-                     "EBV_status_inf", "cohort", "time_point",
-                     "ffpe_or_frozen", "myc_ba", "bcl6_ba",
-                     "bcl2_ba", "COO_consensus", "DHITsig_consensus", "lymphgen")
+  #define standard columns
+  these_columns = c("patient_id", "sample_id", "pathology",
+                    "EBV_status_inf", "cohort", "time_point",
+                    "ffpe_or_frozen", "myc_ba", "bcl6_ba",
+                    "bcl2_ba", "COO_consensus", "DHITsig_consensus", "lymphgen")
+
+  these_names = c("Patient Identifier", "Sample Identifier", "Subtype",
+                  "EBV status", "Cohort", "Time point",
+                  "FFPE", "MYC_BA", "BCL6_BA",
+                  "BCL2_BA", "COO", "DHITsig", "LymphGen")
+
+  these_types = c(rep("STRING", 13))
+
+  these_priorities = c("1", "1", "3",
+                       "2", "4", "2",
+                       "2", "2", "2",
+                       "2", "2", "2", "4")
+
+  #add any extra columns, if such are specified.
+  if(!missing(metacols)){
+    metacols = c(these_columns, metacols)
+  }else{
+    metacols = these_columns
+  }
+
+  if(!missing(metacol_names)){
+    metacol_names = c(these_names, metacol_names)
+  }else{
+    metacol_names = these_names
+  }
+
+  if(!missing(metacol_types)){
+    metacol_types = c(these_types, metacol_types)
+  }else{
+    metacol_types = these_types
+  }
+
+  if(!missing(metacol_prior)){
+    metacol_prior = c(these_priorities, metacol_prior)
+  }else{
+    metacol_prior = these_priorities
   }
 
   #create necessary files
@@ -321,16 +380,45 @@ finalize_study = function(seq_type_filter = "genome",
   #meta samples
   #prepare and write out the relevant metadata
   clinsamp = paste0(out_dir, "data_clinical_samples.txt")
-  meta_samples = get_gambl_metadata(seq_type_filter=seq_type_filter) %>%
+  meta_samples = collate_results(seq_type_filter = seq_type_filter, join_with_full_metadata = TRUE) %>%
     dplyr::filter(sample_id %in% these_sample_ids) %>%
-    dplyr::select(all_of(meta_columns))
+    dplyr::select(all_of(metacols))
 
   colnames(meta_samples) = toupper(colnames(meta_samples))
 
-  header = paste0("#Patient Identifier\tSample Identifier\tSubtype\tEBV status\tCohort\tTime point\tFFPE\tMYC_BA\tBCL6_BA\tBCL2_BA\tCOO\tDHITsig\tLymphGen\n",
-                  "#Patient identifier\tSample Identifier\tSubtype\tEBV status\tCohort\tTime point\tFFPE\tMYC_BA\tBCL6_BA\tBCL2_BA\tCOO\tDHITsig\tLymphGen\n",
-                  "#STRING\tSTRING\tSTRING\tSTRING\tSTRING\tSTRING\tSTRING\tSTRING\tSTRING\tSTRING\tSTRING\tSTRING\tSTRING\n",
-                  "#1\t1\t1\t1\t1\t1\t1\t1\t1\t1\t1\t1\t1\n")
+  #wrangle to get header based on what columns are selected
+  #deal with column names
+  if(length(metacols) == length(metacol_names)){
+    col_names_tmp = paste(metacol_names, collapse = '\t')
+    col_names = paste0("#", col_names_tmp)
+  }else{
+    message("The number of column names specified with `metacol_names` does not match the number of columns specified with `metacols`")
+    message(paste0(length(metacol_names), " elements are specified with `metacol_names`, and there are ", length(metacols), " elements in the `metacols` parameter"))
+    stop()
+  }
+
+  #deal with column data type
+  if(length(metacols) == length(metacol_types)){
+    col_types_tmp = paste(metacol_types, collapse = '\t')
+    col_types = paste0("#", col_types_tmp)
+  }else{
+    message("The number of elements in `metacol_types` does not match the number of columns specified with `metacols`:")
+    message(paste0(length(metacol_types), " elements are specified with `metacol_types`, and there are ", length(metacols), " elements in the `metacols` parameter"))
+    stop()
+  }
+
+  #deal with column priority
+  if(length(metacols) == length(metacol_prior)){
+    col_prior_tmp = paste(metacol_prior, collapse = '\t')
+    col_prior = paste0("#", col_prior_tmp)
+  }else{
+    message("The number of elements in `metacol_prior` does not match the number of columns specified with `metacols`")
+    message(paste0(length(metacol_prior), " elements are specified with `metacol_prior`, and there are ", length(metacols), " elements in the `metacols` parameter"))
+    stop()
+  }
+
+  #construct the header
+  header = paste0(col_names, "\n", col_names, "\n", col_types, "\n", col_prior, "\n")
 
   cat(header, file = clinsamp)
 
