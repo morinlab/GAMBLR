@@ -1,10 +1,8 @@
 ---
-title: "SSM Tutorial - GAMBLR"
-author: "Adam Mattsson"
-date: "November 10, 2022"
+title: "SSM Tutorial"
 output: rmarkdown::html_vignette
 vignette: >
-  %\VignetteIndexEntry{02: SSM Tutorial}
+  %\VignetteIndexEntry{SSM Tutorial}
   %\VignetteEngine{knitr::rmarkdown}
   %\VignetteEncoding{UTF-8}
 ---

@@ -1,10 +1,8 @@
 ---
-title: "Utilities Tutorial - GAMBLR"
-author: "Adam Mattsson"
-date: "December 30, 2022"
+title: "Utilities Tutorial"
 output: rmarkdown::html_vignette
 vignette: >
-  %\VignetteIndexEntry{03: Utilities Tutorial}
+  %\VignetteIndexEntry{Utilities Tutorial}
   %\VignetteEngine{knitr::rmarkdown}
   %\VignetteEncoding{UTF-8}
 ---
