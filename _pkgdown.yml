@@ -181,11 +181,11 @@ navbar:
       text: "How To"
       menu:
       -  text: Install
-         href: path_once_integrated_on_github
+         href: https://morinlab.github.io/GAMBLR/#installation
       -  text: Run Remote On A Local Machine
-         href: path_once_integrated_on_github
+         href: https://morinlab.github.io/GAMBLR/#run-remote-on-a-local-machine
       -  text: Contribute
-         href: path_once_integrated_on_github
+         href: https://morinlab.github.io/GAMBLR/#contributing
     - icon: fa-light fa-person-chalkboard
       text: "Tutorials"
       menu:
@@ -196,7 +196,7 @@ navbar:
       - text: Fancy Plots
         href: articles/fancy_plots.html
       - text: Utilities
-        href: articles/utiliteis_tutorial.html
+        href: articles/utilities_tutorial.html
   right:
     - icon: fa-file-code-o
       text: "Functions & Bundled Data"

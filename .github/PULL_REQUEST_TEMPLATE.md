@@ -14,6 +14,8 @@ This can be checked and addressed by running `check_functions.pl` and responding
 
 - [ ] I generated the documentation and checked for errors relating to the new function (e.g. `devtools::document()`) and added `NAMESPACE` and all other modified files in the root directory and under `man`. 
 
+- [ ] I have rebuilt the site with `pkgdown::build_site(lazy = TRUE)` to reflect any updated package documentation.
+
 ### Optional but preferred with PRs
 
 - [ ] I updated and/or successfully knitted a vignette that relies on the modified code (which ones?)
