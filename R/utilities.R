@@ -384,9 +384,9 @@ gene_to_region = function(gene_symbol,
   region = dplyr::select(gene_coordinates, chromosome, start, end, gene_name, hugo_symbol, ensembl_gene_id) %>%
     as.data.frame() %>%
     dplyr::arrange(chromosome, start) %>%
-    dplyr::filter(chromosome %in% chr_select) %>%
-    mutate_all(na_if,"") %>%
-    distinct(.keep_all = TRUE)
+    dplyr::filter(chromosome %in% chr_select)
+  region[region == ""] = NA
+  region = distinct(region, .keep_all = TRUE)
 
   if(return_as == "bed"){
     #return one-row data frame with first 4 standard BED columns. TODO: Ideally also include strand if we have access to it in the initial data frame
