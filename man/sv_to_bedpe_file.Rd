@@ -35,7 +35,7 @@ The default is TRUE.
 }
 \examples{
 \dontrun{
-SVs_bedpe = sv_to_bedpe_file(sv_df = sv_dataframe, 
+SVs_bedpe = sv_to_bedpe_file(sv_df = sv_dataframe,
                              filename = "SVs.bedpe",
                              add_chr_prefix = TRUE)
 }

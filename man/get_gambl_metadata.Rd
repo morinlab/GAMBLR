@@ -50,7 +50,7 @@ For more information on how to use this function with different filtering criter
 examples and vignettes. Embargoed cases (current options: 'BLGSP-study', 'FL-study', 'DLBCL-study', 'FL-DLBCL-study', 'FL-DLBCL-all', 'DLBCL-unembargoed', 'BL-DLBCL-manuscript', 'MCL','MCL-CLL')
 }
 \examples{
-#basic usage 
+#basic usage
 my_metadata = get_gambl_metadata()
 
 #use pre-defined custom sample sets

@@ -10,6 +10,7 @@ copy_number_vaf_plot(
   coding_only = FALSE,
   one_chrom,
   genes_to_label,
+  this_seq_type = "genome",
   from_flatfile = TRUE,
   use_augmented_maf = TRUE,
   add_chr_prefix = FALSE
@@ -25,6 +26,8 @@ copy_number_vaf_plot(
 \item{one_chrom}{Subset plot to one chromosome.}
 
 \item{genes_to_label}{Optional. Provide a vector of genes to label (if mutated). Can only be used with coding_only (see above).}
+
+\item{this_seq_type}{Seq type for returned CN segments. One of "genome" (default) or "capture".}
 
 \item{from_flatfile}{If set to true the function will use flatfiles instead of the database.}
 

@@ -11,7 +11,8 @@ comp_report(
   seq_data,
   seq_path = NULL,
   maf_data,
-  maf_path = NULL
+  maf_path = NULL,
+  this_seq_type = "genome"
 )
 }
 \arguments{
@@ -28,6 +29,8 @@ comp_report(
 \item{maf_data}{Optional parameter with maf like df already loaded into R.}
 
 \item{maf_path}{Optional parameter with path to external maf like file.}
+
+\item{this_seq_type}{Seq type for returned CN segments. One of "genome" (default) or "capture".}
 }
 \value{
 Nothing.

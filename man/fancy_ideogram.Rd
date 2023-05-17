@@ -26,7 +26,8 @@ fancy_ideogram(
   ssm_count = TRUE,
   coding_only = FALSE,
   from_flatfile = TRUE,
-  use_augmented_maf = TRUE
+  use_augmented_maf = TRUE,
+  this_seq_type = "genome"
 )
 }
 \arguments{
@@ -73,6 +74,8 @@ fancy_ideogram(
 \item{from_flatfile}{If set to true the function will use flat files instead of the database.}
 
 \item{use_augmented_maf}{Boolean statement if to use augmented maf, default is FALSE.}
+
+\item{this_seq_type}{Seq type for returned CN segments. One of "genome" (default) or "capture".}
 }
 \value{
 A plot as a ggplot object (grob).

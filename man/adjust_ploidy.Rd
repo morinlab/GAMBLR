@@ -44,7 +44,7 @@ The chromosome prefix is handled internally per projection and does not need to 
 \examples{
 sample_seg = get_sample_cn_segments(this_sample_id = "14-36022T")
 sample_seg = dplyr::rename(sample_seg, "sample" = "ID")
- 
+
 adjust_ploidy(this_seg = sample_seg)
 
 one_sample = get_sample_cn_segments(this_sample_id = "14-36022T")
@@ -54,7 +54,7 @@ another_sample = get_sample_cn_segments(this_sample_id = "BLGSP-71-21-00243-01A-
 another_sample = dplyr::rename(another_sample, "sample" = "ID")
 
 multi_sample_seg = rbind(one_sample, another_sample)
- 
+
 adjust_ploidy(this_seg = multi_sample_seg)
 
 }

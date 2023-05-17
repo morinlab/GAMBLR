@@ -10,6 +10,7 @@ get_sample_cn_segments(
   sample_list,
   from_flatfile = TRUE,
   projection = "grch37",
+  this_seq_type = "genome",
   with_chr_prefix = FALSE,
   streamlined = FALSE
 )
@@ -24,6 +25,8 @@ get_sample_cn_segments(
 \item{from_flatfile}{Set to TRUE by default.}
 
 \item{projection}{Selected genome projection for returned CN segments. Default is "grch37".}
+
+\item{this_seq_type}{Seq type for returned CN segments. One of "genome" (default) or "capture".}
 
 \item{with_chr_prefix}{Set to TRUE to add a chr prefix to chromosome names. Default is FALSE.}
 
@@ -42,14 +45,19 @@ For more information on how this function can be run in different ways, refer to
 Is this function not what you are looking for? Try one of the following, similar, functions; \link{assign_cn_to_ssm}, \link{get_cn_segments}, \link{get_cn_states},
 }
 \examples{
-#Return cn segments for one sample:
-sample_cn_seg = get_sample_cn_segments(this_sample_id = "HTMCP-01-06-00422-01A-01D",
-                                       multiple_samples = FALSE)
-
+# Return cn segments for multiple samples (read csv with one sample per line):
+sample_list = readLines("../samples-test.csv")
+multiple_samples = get_sample_cn_segments(multiple_samples = TRUE, sample_list = sample_list)
 #Return cn segments for multiple samples (provided as vector of sample IDs):
 these_sample_list = c("00-15201_tumorA", "00-15201_tumorB")
 
-samples = get_sample_cn_segments(multiple_samples = TRUE, 
+samples = get_sample_cn_segments(multiple_samples = TRUE,
                                  sample_list = these_sample_list)
+# For capture
+samples = get_sample_cn_segments(
+ multiple_samples = TRUE,
+ sample_list = these_sample_list,
+ this_seq_type = "capture"
+)
 
 }

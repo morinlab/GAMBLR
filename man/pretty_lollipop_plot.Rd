@@ -32,7 +32,7 @@ metadata = get_gambl_metadata()
 this_metadata = dplyr::filter(metadata, consensus_pathology \%in\% c("FL", "DLBCL"))
 
 #get maf data for returned samples
-maf = get_coding_ssm(limit_samples = this_metadata$sample_id, 
+maf = get_coding_ssm(limit_samples = this_metadata$sample_id,
                      seq_type = "genome")
 
 #construct pretty_lollipop_plot.

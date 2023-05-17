@@ -29,6 +29,7 @@ Imports:
     dplyr,
     forcats,
     g3viz,
+    GAMBLR.data (>= 0.1),
     ggbeeswarm,
     ggplot2,
     ggpubr,
@@ -68,7 +69,8 @@ VignetteBuilder:
 Remotes:
     cBioPortal/cgdsr,
     morinlab/g3viz,
-    morinlab/ggsci
+    morinlab/ggsci,
+    morinlab/GAMBLR.data
 biocViews:
 Encoding: UTF-8
 LazyData: true

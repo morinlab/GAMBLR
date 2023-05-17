@@ -17,7 +17,8 @@ fancy_cnbar(
     "n CNV Segments (barplots, left y-axis), n Affected bases for each CN state",
   chr_select = paste0("chr", c(1:22)),
   cutoff = 15,
-  include_cn2 = TRUE
+  include_cn2 = TRUE,
+  this_seq_type = "genome"
 )
 }
 \arguments{
@@ -44,6 +45,8 @@ fancy_cnbar(
 \item{cutoff}{Set threshold for maximum CN state to be retrieved.}
 
 \item{include_cn2}{Optional boolean statement for including CN = 2 states in plot.}
+
+\item{this_seq_type}{Seq type for returned CN segments. One of "genome" (default) or "capture".}
 }
 \value{
 A plot as a ggplot object (grob).
@@ -65,7 +68,7 @@ This function also computes the number of affected bases for each copy number st
 useful for overviewing the extent of each copy number state, in the context of the full genome.
 }
 \examples{
-#Return a plot for one sample, with default parameters. 
+#Return a plot for one sample, with default parameters.
 fancy_cnbar(this_sample_id = "HTMCP-01-06-00422-01A-01D")
 
 }

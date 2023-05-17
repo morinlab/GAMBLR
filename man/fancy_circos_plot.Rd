@@ -15,6 +15,7 @@ fancy_circos_plot(
   from_flatfile = TRUE,
   use_augmented_maf = TRUE,
   projection = "grch37",
+  this_seq_type = "genome",
   plot_title = paste0(this_sample_id),
   out,
   pdf = TRUE,
@@ -41,6 +42,8 @@ fancy_circos_plot(
 \item{use_augmented_maf}{Boolean statement if to use augmented maf, default is TRUE.}
 
 \item{projection}{Genomic projection for variants and circos plot. Accepted values are grch37 and hg38, default is grch37.}
+
+\item{this_seq_type}{Seq type for returned CN segments. One of "genome" (default) or "capture".}
 
 \item{plot_title}{Optional parameter for naming your plot, default is this_sample.}
 
