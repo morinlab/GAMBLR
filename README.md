@@ -12,7 +12,7 @@ git clone git@github.com:morinlab/GAMBLR.git
 In Rstudio (on a gphost), set your working directory to the place you just cloned the repo.
 
 ```
-setwd("~/GAMBLR")
+setwd("~/GAMBLR-master")
 ```
 
 Install the package in R by running the following command (requires the devtools package)
@@ -21,11 +21,11 @@ Install the package in R by running the following command (requires the devtools
 devtools::install()
 ```
 
-## Run Remote On A Local Machine
-If you don't have access to gphost on GSC, no worries, you can still execute GAMBLR functions in another way. Remote support was developed for this purpose. This section explains how to run GAMBLR remote on a *local machine*. There are two different approaches to get this to work, both with its own advantages and limitations. We will be going over both in this next section.
+## Running GAMBLR On Your Own Computer
+If you don't have access to gphost on GSC, no worries, you can still execute GAMBLR functions in another way. Remote support was developed for this purpose. This section explains how to run GAMBLR remote on a *local machine* (i.e on your own computer). There are two different approaches to get this to work, both with its own advantages and limitations. We will be going over both in this next section.
 
-### Approach 1 - Quick Start (SSH)
-This section details how to deploy GAMBLR with limited functionality, using ssh_session parameter. This approach requires either a working GSC VPN connection (or is directly accessible if connected to the GSC network).
+### Approach 1 - Quick Start
+This section details how to deploy GAMBLR with limited functionality. This approach requires either a working GSC VPN connection (or is directly accessible if connected to the GSC network).
 
 #### Setup VPN Connection
 1. You need a working GSC VPN connection to use this approach. For setting up a VPN connection see [this](https://www.bcgsc.ca/wiki/pages/viewpage.action?spaceKey=SysHelp&title=Learn+how+to+use+VPN) guide. Keep in mind that a **VPN connection is not needed** if your already connected to the GSC network.
@@ -40,12 +40,12 @@ git clone https://github.com/morinlab/gambl
 git clone https://github.com/morinlab/GAMBLR
 ```
 
-3. Update the **paths** in your local [config.yml](https://github.com/morinlab/GAMBLR/blob/master/config.yml) to point to the recently cloned, local **gambl** folder (repo_base). In your favorite text editor, edit the line shown below (under *remote*). Similarly, you will also need to edit the line above it to point to where you will eventually sync the GAMBL results.
+3. Update the **paths** in your local [config.yml](https://github.com/morinlab/GAMBLR/blob/master/config.yml) (GAMBLR-master) to point to the recently cloned, local **gambl** folder (repo_base). In your favorite text editor, edit the line shown below (under *remote*). Similarly, you will also need to edit the line above it to point to where you will eventually sync the GAMBL results.
 
 ```
 remote:
     project_base: "/path/to/your/local/gambl_results_directory/"
-    repo_base: "/path/to/your/local/gambl_repo/"
+    repo_base: "~/git_repos/gambl-master/"
 ```
 
 4. Set the **working directory** in Rstudio. Open Rstudio on your local machine and locate the repo you cloned previously.
@@ -54,35 +54,27 @@ remote:
 setwd("~/git_repos/GAMBLR-master")
 ```
 
-5. Install R packages to you local R studio session.
+5. Install GAMBLR in your local R studio.
 
 ```
 devtools::install()
-install.packages("ssh")
 ```
 
 6. Load packages.
 
 ```
 library(GAMBLR)
-library(ssh)
 ```
 
-#### Setup SSH Connection in Rstudio
-7. Specify your SSH connection in Rstudio. If your local machine username **does not** match your GSC username, you need to add *"your_username<!-- -->@gphost01.bcgsc.ca"* as the only argument to this function.
-
-```
-session = GAMBLR::get_ssh_session()
-```
-
-8. Execute the following in Rstudio console to make use of the updated paths in the [config.yml](https://github.com/morinlab/GAMBLR/blob/master/config.yml) from step 3.
+#### Set Config To Remote
+7. Execute the following in Rstudio console to make use of the updated paths in the [config.yml](https://github.com/morinlab/GAMBLR/blob/master/config.yml) from step 3.
 
 ```
 Sys.setenv(R_CONFIG_ACTIVE = "remote")
 ```
 
 #### Run GAMBLR
-9. Test if setup was successful (e.g call `get_gambl_metadata()` to retrieve meta data for all gambl samples).
+8. Test if setup was successful (e.g call `get_gambl_metadata()` to retrieve meta data for all gambl samples).
 
 ```
 get_gambl_metadata() %>%
