@@ -1785,7 +1785,7 @@ get_cn_states = function(regions_list,
 }
 
 
-#' @title GetSample CN Segments.
+#' @title Get Sample CN Segments.
 #'
 #' @description Get all segments for a single (or multiple) sample_id(s).
 #'
