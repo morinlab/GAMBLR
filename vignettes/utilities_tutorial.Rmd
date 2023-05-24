@@ -12,6 +12,7 @@ knitr::opts_chunk$set(warning = FALSE, message = FALSE)
 
 ```{r load_packages, message = FALSE, warning = FALSE, echo = FALSE, results = 'hide'}
 library(GAMBLR)
+library(GAMBLR.data)
 library(tidyverse)
 library(rmarkdown)
 library(knitr)
@@ -55,7 +56,7 @@ genes_bed
 
 #gene to region, for multiple genes specified in an already subset list of gene names, return format is data frame
 #subset FL genes
-fl_genes = dplyr::filter(lymphoma_genes, FL == TRUE) %>% pull(Gene)
+fl_genes = dplyr::filter(lymphoma_genes_lymphoma_genes_v0.0, FL == TRUE) %>% pull(Gene)
 
 #get regions for Fl genes
 fl_genes_df = gene_to_region(gene_symbol = fl_genes, genome_build = "grch37", return_as = "df")
@@ -245,7 +246,7 @@ lapply(classes, function(x){plot_this_colour(this_group = x)})
 
 ### Gene Clouds
 Create a wordcloud from an incoming MAF with the `prettyGeneCloud` function. This function creates a figure with gene symbols from the provided maf, were the size of each printed gene symbol is proportional to the total n occurances in the maf. Required parameter is `maf_df`. Optional parameters are `these_genes`, `other_genes`, `these_genes_colour`, `other_genes_colour` and `colour_index`. If no genes are supplied when calling the function, this function will default to all lymphoma genes.
-```{r}
+```{r gene_cloud, message = FALSE, warning = FALSE}
 #get all coding SSM
 maf = get_coding_ssm(seq_type = "genome")
 
