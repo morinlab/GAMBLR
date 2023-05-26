@@ -40,7 +40,7 @@
       <a href="https://morinlab.github.io/GAMBLR/#installation" class="external-link">Install</a>
     </li>
     <li>
-      <a href="https://morinlab.github.io/GAMBLR/#run-remote-on-a-local-machine" class="external-link">Run Remote On A Local Machine</a>
+      <a href="https://morinlab.github.io/GAMBLR/#running-gamblr-on-your-own-computer" class="external-link">Running GAMBLR On Your Own Computer</a>
     </li>
     <li>
       <a href="https://morinlab.github.io/GAMBLR/#contributing" class="external-link">Contribute</a>
@@ -202,10 +202,8 @@ Lastly, this plot can also highlight genes of interest. To do so, provide a data
     <h2>Examples</h2>
     <div class="sourceCode"><pre class="sourceCode r"><code><span class="r-in"><span><span class="kw">if</span> <span class="op">(</span><span class="cn">FALSE</span><span class="op">)</span> <span class="op">{</span></span></span>
 <span class="r-in"><span><span class="co">#retrieve gene names for FL genes</span></span></span>
-<span class="r-in"><span><span class="va">fl_genes</span> <span class="op">=</span> <span class="fu">dplyr</span><span class="fu">::</span><span class="fu"><a href="https://dplyr.tidyverse.org/reference/filter.html" class="external-link">filter</a></span><span class="op">(</span><span class="va">lymphoma_genes</span>, <span class="va">FL</span> <span class="op">==</span> <span class="cn">TRUE</span><span class="op">)</span> <span class="op">%&gt;%</span></span></span>
-<span class="r-in"><span><span class="va">fl_genes</span> <span class="op">=</span> <span class="fu">dplyr</span><span class="fu">::</span><span class="fu"><a href="https://dplyr.tidyverse.org/reference/filter.html" class="external-link">filter</a></span><span class="op">(</span><span class="va">lymphoma_genes</span>, <span class="va">FL</span> <span class="op">==</span> <span class="cn">TRUE</span><span class="op">)</span> <span class="op">%&gt;%</span></span></span>
-<span class="r-in"><span> <span class="fu">dplyr</span><span class="fu">::</span><span class="fu"><a href="https://dplyr.tidyverse.org/reference/select.html" class="external-link">select</a></span><span class="op">(</span><span class="va">Gene</span><span class="op">)</span> <span class="op">%&gt;%</span></span></span>
-<span class="r-in"><span> <span class="fu">pull</span><span class="op">(</span><span class="va">Gene</span><span class="op">)</span></span></span>
+<span class="r-in"><span><span class="va">fl_genes</span> <span class="op">=</span> <span class="fu">dplyr</span><span class="fu">::</span><span class="fu"><a href="https://dplyr.tidyverse.org/reference/filter.html" class="external-link">filter</a></span><span class="op">(</span><span class="fu">GAMBLR.data</span><span class="fu">::</span><span class="va">lymphoma_genes_lymphoma_genes_v0.0</span>, <span class="va">FL</span> <span class="op">==</span> <span class="cn">TRUE</span><span class="op">)</span> <span class="op">%&gt;%</span></span></span>
+<span class="r-in"><span>  <span class="fu">pull</span><span class="op">(</span><span class="va">Gene</span><span class="op">)</span></span></span>
 <span class="r-in"><span></span></span>
 <span class="r-in"><span><span class="co"># get regions for selected genes</span></span></span>
 <span class="r-in"><span><span class="va">fl_genes_list</span> <span class="op">=</span> <span class="fu"><a href="gene_to_region.html">gene_to_region</a></span><span class="op">(</span>gene_symbol <span class="op">=</span> <span class="va">fl_genes</span>,</span></span>
