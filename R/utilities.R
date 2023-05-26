@@ -811,31 +811,28 @@ trim_scale_expression = function(x){
 #'
 #' @description Count the number of mutations in a sliding window across a region for all samples.
 #'
-#' @details This function is called to return the mutation frequency for a given region, for all GAMBL samples. Regions are specified with the `this_region`parameter.
+#' @details This function is called to return the mutation frequency for a given region, either from a provided input maf data frame or from the GAMBL maf data. 
+#' Regions are specified with the `this_region`parameter.
 #' Alternatively, the region of interest can also be specified by calling the function with `chromosome`, `start_pos`, and `end_pos` parameters.
-#' It is also possible to return a plot of the created bins. This is done with setting `plot_type = TRUE`.
-#' There are a collection of parameters available for further customizing the return, for more information, refer to the parameter descriptions and examples.
 #' This function is unlikely to be used directly in most cases. See [GAMBLR::get_mutation_frequency_bin_matrix] instead.
 #'
-#' @param this_region Genomic region in bed format.
+#' @param this_region A string describing a genomic region in the "chrom:start-end" format.
 #' @param chromosome Chromosome name in region.
 #' @param start_pos Start coordinate of region.
 #' @param end_pos End coordinate of region.
-#' @param metadata Data frame containing sample ids and column with annotated data for the 2 groups of interest. All other columns are ignored. Currently, function exits if asked to compare more than 2 groups.
-#' @param seq_type The seq_type you want back, default is genome.
+#' @param these_samples_metadata Optional data frame containing sample IDs. If not providing a maf file, seq_type is also a required column.
+#' @param these_sample_ids Optional vector of sample IDs. Output will be subset to IDs present in this vector. 
+#' @param maf Optional maf data frame. Will be subset to rows where Tumor_Sample_Barcode matches provided sample IDs or metadata table. 
 #' @param slide_by Slide size for sliding window, default is 100.
 #' @param window_size Size of sliding window, default is 1000.
-#' @param plot_type Set to TRUE for a plot of your bins. By default no plots are made.
-#' @param sortByColumns Which of the metadata to sort on for the heatmap
-#' @param return_format Return format of mutations. Accepted inputs are "long" and "long-simple". Default is "long-simple".
-#' @param min_count_per_bin Minimum counts per bin, default is 3.
-#' @param return_count Boolean statement to return count. Default is FALSE.
-#' @param drop_unmutated This may not currently work properly. Default is FALSE.
-#' @param classification_column Only used for plotting, default is "lymphgen"
-#' @param from_indexed_flatfile Set to TRUE to avoid using the database and instead rely on flat-files (only works for streamlined data, not full MAF details). Default is FALSE.
+#' @param return_format Return format of mutations. Accepted inputs are "long" and "wide". Long returns a data frame of one sample ID/window per row. Wide returns a matrix with one sample ID per row and one window per column. Using the "wide" format will retain all samples and windows regardless of the drop_unmutated or min_count_per_bin parameters. 
+#' @param min_count_per_bin Minimum counts per bin, default is 0. Setting this greater than 0 will drop unmutated windows when return_format is long. 
+#' @param return_count Boolean statement to return mutation count per window (TRUE) or binary mutated/unmutated status (FALSE). Default is TRUE.
+#' @param drop_unmutated Boolean for how to handle windows with 0 mutations when returning "long" format. 
+#' @param from_indexed_flatfile Set to TRUE to avoid using the database and instead rely on flat-files (only works for streamlined data, not full MAF details). Default is TRUE.
 #' @param mode Only works with indexed flat-files. Accepts 2 options of "slms-3" and "strelka2" to indicate which variant caller to use. Default is "slms-3".
 #'
-#' @return Count matrix.
+#' @return Either a matrix or a long tidy table of counts per window.
 #'
 #' @rawNamespace import(data.table, except = c("last", "first", "between", "transpose"))
 #' @import dplyr tidyr cowplot ggplot2
@@ -846,138 +843,237 @@ trim_scale_expression = function(x){
 #'                                                          slide_by = 10,
 #'                                                          window_size = 10000)
 #'
-calc_mutation_frequency_sliding_windows = function(this_region,
-                                                   chromosome,
-                                                   start_pos,
-                                                   end_pos,
-                                                   metadata,
-                                                   seq_type,
-                                                   slide_by = 100,
-                                                   window_size = 1000,
-                                                   plot_type = "none",
-                                                   sortByColumns = "pathology",
-                                                   return_format = "long-simple",
-                                                   min_count_per_bin = 3,
-                                                   return_count = FALSE,
-                                                   drop_unmutated = FALSE,
-                                                   classification_column = "lymphgen",
-                                                   from_indexed_flatfile = FALSE,
-                                                   mode = "slms-3"){
+calc_mutation_frequency_sliding_windows <- function(this_region,
+                                          chromosome,
+                                          start_pos,
+                                          end_pos,
+                                          these_samples_metadata,
+                                          these_sample_ids,
+                                          maf,
+                                          slide_by = 100,
+                                          window_size = 1000,
+                                          return_format = "long-simple",
+                                          min_count_per_bin = 0,
+                                          return_count = TRUE,
+                                          drop_unmutated = FALSE,
+                                          from_indexed_flatfile = TRUE,
+                                          mode = "slms-3") {
+  # Create objects to describe region both as string and individual objects
+  try(if (missing(this_region) & missing(chromosome)) {
+    stop("No region information provided. Please provide a region as a string in the chrom:start-end format, or as individual arguments. ")
+  })
 
-  max_region = 1000000
-  if(missing(metadata)){
-    metadata = get_gambl_metadata()
+  if ((drop_unmutated | min_count_per_bin > 0) & return_format == "wide") {
+    message("To return a wide table, all samples and windows must be kept. Ignoring drop_unmutated and min_count_per_bin flags. ")
   }
-  if(missing(this_region)){
-    this_region = paste0(chromosome, ":", start_pos, "-", end_pos)
-  }else{
-    chunks = region_to_chunks(this_region)
-    chromosome = chunks$chromosome
-    start_pos = as.numeric(chunks$start)
-    end_pos = as.numeric(chunks$end)
+
+  if (missing(this_region)) {
+    this_region <- paste0(
+      chromosome, ":", start_pos, "-",
+      end_pos
+    )
+  } else {
+    chunks <- GAMBLR:::region_to_chunks(this_region)
+    chromosome <- chunks$chromosome
+    start_pos <- as.numeric(chunks$start)
+    end_pos <- as.numeric(chunks$end)
   }
-  region_size = end_pos - start_pos
-  if(region_size < max_region){
-    message(paste("processing bins of size", window_size, "across", region_size, "bp region"))
-  }else{
+
+  # Check for provided metadata, else use GAMBL metadata
+  if (missing(these_samples_metadata)) {
+    metadata <- get_gambl_metadata(
+      seq_type_filter = c("capture", "genome")
+    )
+  } else {
+    metadata <- these_samples_metadata
+  }
+  # Ensure metadata is subset to specified sample IDs
+  if (!missing(these_sample_ids)) {
+    metadata <- dplyr::filter(
+      metadata,
+      sample_id %in% these_sample_ids
+    )
+  } else {
+    these_sample_ids <- metadata$sample_id
+  }
+
+  # Check region size and compare to max region size
+  # Is this really needed?
+  max_region <- 5e+06
+
+  region_size <- end_pos - start_pos
+  if (region_size < max_region) {
+    message(paste(
+      "processing bins of size", window_size,
+      "across", region_size, "bp region"
+    ))
+  } else {
     message(paste("CAUTION!\n", region_size, "exceeds maximum size recommended by this function."))
   }
-  windows = data.frame(start = seq(start_pos, end_pos, by = slide_by)) %>%
-    mutate(end = start + window_size - 1)
-  #use foverlaps to assign mutations to bins
-  windows.dt = as.data.table(windows)
-  region_ssm = GAMBLR::get_ssm_by_region(region = this_region, streamlined = FALSE, seq_type=seq_type, from_indexed_flatfile = from_indexed_flatfile, mode = mode) %>%
-    dplyr::rename(c("start" = "Start_Position", "sample_id" = "Tumor_Sample_Barcode")) %>%
-    mutate(mutated = 1)
 
-  region.dt = region_ssm %>%
-    dplyr::mutate(start = as.numeric(as.character(start)), end = start + 1, end = as.numeric(as.character(end))) %>%
-    dplyr::relocate(start, .before=end) %>%
+  # Split region into windows
+  windows <- data.frame(
+    start = seq(start_pos, end_pos, by = slide_by)
+  ) %>%
+    mutate(end = start + window_size - 1)
+  windows.dt <- as.data.table(windows)
+
+  # Obtain SSM coordinates from GAMBL if no maf was provided
+  if (missing(maf)) {
+    try(
+      if (!"seq_type" %in% colnames(metadata)) {
+        stop("seq_type must be present in metdata for compatibility with get_ssm_by_sample")
+      }
+    )
+    region_ssm <- list()
+    for (st in unique(metadata$seq_type)) {
+      this_seq_type <- GAMBLR::get_ssm_by_region(
+        region = this_region,
+        streamlined = FALSE,
+        seq_type = st,
+        from_indexed_flatfile = TRUE,
+        mode = "slms-3"
+      ) %>%
+        dplyr::select(
+          start = Start_Position,
+          sample_id = Tumor_Sample_Barcode
+        ) %>%
+        mutate(mutated = 1, seq_type = st) %>%
+        filter(sample_id %in% these_sample_ids)
+
+      region_ssm[[st]] <- data.frame(metadata) %>%
+        select(sample_id, seq_type) %>%
+        filter(seq_type == st) %>%
+        left_join(this_seq_type) %>%
+        filter(!is.na(mutated)) %>%
+        select(-seq_type)
+    }
+    region_ssm <- bind_rows(region_ssm)
+  } else {
+    #  Subset provided maf to specified region
+    maf.dt <- data.table(maf)
+    region_bed <- data.table(
+      "Chromosome" = as.character(chromosome),
+      "Start_Position" = as.numeric(start_pos),
+      "End_Position" = as.numeric(end_pos)
+    )
+    setkey(region_bed)
+    region_ssm <- foverlaps(maf.dt, region_bed) %>%
+      dplyr::filter(!is.na(Start_Position)) %>%
+      dplyr::select(
+        start = i.Start_Position,
+        sample_id = Tumor_Sample_Barcode
+      ) %>%
+      dplyr::mutate(mutated = 1)
+
+    region_ssm <- data.frame(metadata) %>%
+      select(sample_id) %>%
+      left_join(region_ssm) %>%
+      filter(!is.na(mutated))
+  }
+
+  # Check if the region is empty.
+  # If yes return NULL so that running this function with lapply will allow bind_rows to run on the output.
+  if (nrow(region_ssm) == 0 & (drop_unmutated | min_count_per_bin > 0)) {
+    message(paste0("No mutations found in region ", this_region, " for this sample set. "))
+    return(NULL)
+  }
+
+  # Ensure SSM data are in data.table format
+  region.dt <- region_ssm %>%
+    dplyr::mutate(
+      start = as.numeric(as.character(start)),
+      end = start + 1, end = as.numeric(as.character(end))
+    ) %>%
+    dplyr::relocate(start, .before = end) %>%
     as.data.table()
 
+  # Overlap SSM data with windows table
   setkey(windows.dt, start, end)
   setkey(region.dt, start, end)
-  windows_overlap = foverlaps(windows.dt, region.dt) %>%
+
+  # Count mutations per window
+  windows_tallied <- foverlaps(windows.dt, region.dt) %>%
     dplyr::filter(!is.na(start)) %>%
-    dplyr::rename(c("window_start" = "i.start", "mutation_position" = "start")) %>%
+    dplyr::rename(
+      window_start = "i.start",
+      mutation_position = "start"
+    ) %>%
     dplyr::select(-i.end, -end, -mutation_position) %>%
-    as.data.frame()
-
-  windows_tallied_full = windows_overlap %>%
-    group_by(sample_id, window_start) %>%
+    as.data.frame() %>%
+    group_by(
+      sample_id,
+      window_start
+    ) %>%
     tally() %>%
-    dplyr::filter(n >= min_count_per_bin) %>%
+    full_join(select(metadata, sample_id)) %>%
     arrange(sample_id) %>%
-    as.data.frame()
-  windows_tallied = windows_tallied_full
+    full_join(windows.dt[, "start"], by = c("window_start" = "start")) %>%
+    pivot_wider(
+      names_from = window_start,
+      values_from = n,
+      values_fill = 0
+    ) %>%
+    select(-matches("^NA$")) %>%
+    pivot_longer(
+      -c(sample_id),
+      names_to = "window_start",
+      values_to = "n"
+    ) %>%
+    distinct() %>%
+    filter(!is.na(sample_id))
 
-  all_samples = pull(metadata, sample_id) %>%
-    unique()
+  # Remove unmutated windows if requested
+  if (drop_unmutated | min_count_per_bin > 0) {
+    windows_tallied <- windows_tallied %>%
+      filter(n >= min_count_per_bin)
+    if (drop_unmutated & min_count_per_bin == 0) {
+      windows_tallied %>%
+        filter(n > 0)
+    }
+  }
 
-  num_samples = length(all_samples)
-  lg_cols = get_gambl_colours("lymphgen")
-  path_cols = get_gambl_colours("pathology")
-  annos = data.frame(window_start = rep(start_pos,num_samples), sample_id = factor(all_samples))
-  annos = left_join(annos, metadata, by = "sample_id")
-  windows_tallied = left_join(metadata, windows_tallied, by = "sample_id")
-  windows_tallied = arrange(windows_tallied, lymphgen)
-  windows_tallied$classification = factor(windows_tallied[,classification_column], levels = unique(windows_tallied[,classification_column]))
-  if(drop_unmutated){
-    windows_tallied = windows_tallied %>%
-      dplyr::filter(!is.na(n))
+  # Create requested data output format
+  if (return_count) {
+    # Return table of mutation counts per bin
+    windows_tallied_final <- mutate(
+      windows_tallied,
+      bin = paste0(chromosome, "_", window_start)
+    ) %>%
+      mutate(mutation_count = n) %>%
+      select(
+        sample_id,
+        bin,
+        mutation_count
+      )
+  } else {
+    # Return table of binary mutated/unmutated status per bin
+    windows_tallied_final <- mutate(
+      windows_tallied,
+      bin = paste0(chromosome, "_", window_start)
+    ) %>%
+      mutate(mutated = ifelse(n > 0, 1, 0)) %>%
+      select(
+        sample_id,
+        bin,
+        mutated
+      )
   }
-  if(classification_column == "lymphgen"){
-    windows_tallied = arrange(windows_tallied, pathology, lymphgen)
-    annos = arrange(annos, pathology, lymphgen)
-  }else{
-    windows_tallied = arrange(windows_tallied, classification)
-    annos = arrange(annos, classification)
-  }
-  annos$sample_id = factor(annos$sample_id, levels = unique(annos$sample_id))
-  windows_tallied$sample_id = factor(windows_tallied$sample_id, levels = unique(windows_tallied$sample_id))
-  if(plot_type %in% c("points", "point")){
-    #add a bin at position 1 for pathology
-    windows_tallied = dplyr::filter(windows_tallied, !is.na(window_start))
-    p = ggplot2::ggplot() +
-                 geom_point(data = annos, aes(x = window_start, y = sample_id, colour = pathology)) +
-                 geom_point(data = windows_tallied, aes(x = window_start, y = sample_id, colour = classification)) +
-                 theme(axis.text = element_text(size = 4)) +
-                 theme(axis.text.y = element_blank()) +
-                 scale_colour_manual(values = c(lg_cols, path_cols))
-  }else if(plot_type %in% c("tile", "tiled")){
-    print(annos)
-    p = ggplot() +
-        geom_point(data = annos, aes(x = window_start, y = sample_id, colour = lymphgen)) +
-        geom_tile(data = windows_tallied, aes(x = window_start, y = sample_id, fill = n)) +
-        scale_fill_gradient(low = "orange", high = "red", na.value = NA) +
-        theme_cowplot() +
-        scale_colour_manual(values = c(lg_cols, path_cols)) +
-        theme(axis.text.y = element_blank())
-  }
-  if(plot_type != "none"){
-    print(p)
-  }
-  if(return_count){
-    windows_tallied = mutate(windows_tallied, bin = paste0(window_start, "_", chromosome)) %>%
-      mutate(mutated = n)
-  }else{
-    #binary mutated or not
-    windows_tallied = mutate(windows_tallied, bin = paste0(window_start, "_", chromosome)) %>%
-    mutate(mutated = 1)
-  }
-  a = dplyr::select(windows_tallied, sample_id, bin, mutated)
-  completed = complete(a, sample_id, bin, fill = list(mutated = 0))
-  widened = pivot_wider(completed, names_from = sample_id, values_from = mutated)
-  if(return_format == "long"){
-    return(windows_tallied)
-  }else if(return_format == "long-simple"){
-    #just return the columns needed for completing and making a wide matrix for many regions
-    windows_simple = dplyr::select(windows_tallied, sample_id, bin, mutated)
-    return(windows_simple)
-  }else{
+
+  if (return_format == "wide") {
+    widened <- windows_tallied_final %>%
+      pivot_wider(
+        names_from = bin,
+        values_from = matches("mutat"),
+        values_fill = 0
+      )
     return(widened)
+  } else {
+    return(windows_tallied_final)
   }
 }
+
+
 
 
 #' @title SV To BED File.
