@@ -2137,7 +2137,7 @@ append_to_table = function(table_name,
 #' @export
 #'
 #' @examples
-#' regions_bed = dplyr::mutate(grch37_ashm_regions, name = paste(gene, region, sep = "_"))
+#' regions_bed = dplyr::mutate(GAMBLR.data::somatic_hypermutation_locations_GRCh37_v_latest, name = paste(gene, region, sep = "_"))
 #'
 #' matrix = get_ashm_count_matrix(regions_bed = regions_bed,
 #'                                seq_type = "genome")
