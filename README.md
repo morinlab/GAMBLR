@@ -139,7 +139,7 @@ devtools::install()
 ```
 
 #### Create and Setup Snakemake Environment
-9. In the terminal on your local machine, create a new snakemake environment from the [get_gambl_results.yml](https://github.com/morinlab/GAMBLR/blob/master/get_gambl_results.yml) file. Note that you can name this new environment whatever you would like. In this example, the new environment is called **snakemake_gambl**.
+9. In the terminal on your local machine, create a new snakemake environment from the [get_gambl_results.yml](https://github.com/morinlab/GAMBLR/blob/master/get_gambl_results.yml) file ([get_gambl_results_linux.yml](https://github.com/morinlab/GAMBLR/blob/master/get_gambl_results_linux.yml) for Linux). Note that you can name this new environment whatever you would like. In this example, the new environment is called **snakemake_gambl**.
 
 ```
 cd ~/gambl_results
