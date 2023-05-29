@@ -12,7 +12,7 @@ A data frame with 48 rows and 4 columns.
 \item{chromosome}{Chromosomes without chr-prefix, 1:22, X and Y.}
 \item{start}{Start coordinates for the specified chromosome arm.}
 \item{end}{End coordinates for the specified chromosome arm.}
-\item{arm{Chromosome arm, either p or q.}
+\item{arm}{Chromosome arm, either p or q.}
 }
 }
 }

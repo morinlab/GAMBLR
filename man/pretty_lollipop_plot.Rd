@@ -35,9 +35,9 @@ this_metadata = get_gambl_metadata() \%>\%
 maf = get_coding_ssm(limit_samples = this_metadata$sample_id, seq_type = "genome")
 
 #construct pretty_lollipop_plot.
-pretty_lollipop_plot(maf_df = maf, 
+pretty_lollipop_plot(maf_df = maf,
                      gene = "MYC",
-                     plot_title = "Mutation data for MYC", 
+                     plot_title = "Mutation data for MYC",
                      plot_theme = "nature2")
 
 }

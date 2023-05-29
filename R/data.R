@@ -1,3 +1,33 @@
+#' Oncogenes in grch37 genome build.
+#'
+#' A data frame with the coordinates of lymphoma oncogenes relative to the grch37 genome build.
+#'
+#' @format ## `grch37_oncogene`
+#' A data frame with 19 rows and 5 columns.
+#' \describe{
+#'   \item{chrom}{Chromosomes without chr-prefix, 1:22.}
+#'   \item{start}{Start coordinate for the specified oncogene.}
+#'   \item{end}{End coordinate for the specified oncogene.}
+#'   \item{gene}{Lymphoma oncogene.}
+#'   \item{entrez}{ENTREZ ID for the dpecified oncogene.}
+#' }
+"grch37_oncogene"
+
+#' Oncogenes in hg38 genome build.
+#'
+#' A data frame with the coordinates of lymphoma oncogenes relative to the hg38 genome build.
+#'
+#' @format ## `hg38_oncogene`
+#' A data frame with 19 rows and 5 columns.
+#' \describe{
+#'   \item{chrom}{Chromosomes without chr-prefix, 1:22.}
+#'   \item{start}{Start coordinate for the specified oncogene.}
+#'   \item{end}{End coordinate for the specified oncogene.}
+#'   \item{gene}{Lymphoma oncogene.}
+#'   \item{entrez}{ENTREZ ID for the dpecified oncogene.}
+#' }
+"hg38_oncogene"
+
 #' Chromosome Arms grch37.
 #'
 #' A data frame with the chromosome arm coordinates in respect to grch37.
@@ -8,7 +38,7 @@
 #'   \item{chromosome}{Chromosomes without chr-prefix, 1:22, X and Y.}
 #'   \item{start}{Start coordinates for the specified chromosome arm.}
 #'   \item{end}{End coordinates for the specified chromosome arm.}
-#'   \item{arm{Chromosome arm, either p or q.}
+#'   \item{arm}{Chromosome arm, either p or q.}
 #' }
 "chromosome_arms_grch37"
 
@@ -23,7 +53,7 @@
 #'   \item{chromosome}{Chromosomes with chr-prefix, 1:22, X and Y.}
 #'   \item{start}{Start coordinates for the specified chromosome arm.}
 #'   \item{end}{End coordinates for the specified chromosome arm.}
-#'   \item{arm{Chromosome arm, either p or q.}
+#'   \item{arm}{Chromosome arm, either p or q.}
 #' }
 "chromosome_arms_hg38"
 
@@ -367,7 +397,7 @@
 
 #' Lymphoma Genes Comprehensive.
 #'
-#' A detailed data frame with lymphoma genes, annotated with evidence from literature and aSHM. 
+#' A detailed data frame with lymphoma genes, annotated with evidence from literature and aSHM.
 #'
 #' @format ## `lymphoma_genes_comprehensive`
 #' A data frame with 127 rows and 9 columns.
