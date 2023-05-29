@@ -81,7 +81,7 @@ get_gambl_metadata() %>%
   head()
 ```
 
-### Approach 2 - The Full Instalation (Snakemake)
+### Approach 2 - The Full Installation (Snakemake)
 This section details how to obtain GAMBLR with **full** functionality, using a dedicated snake file to retrieve all necessary files and dependencies.
 
 #### Before You Get Started
@@ -159,8 +159,8 @@ snakemake -s get_gambl_results.smk --cores 1
 ```
 
 #### Use GAMBLR Functions Locally
-12. In Rstudio (local), open [test_remote.R](https://github.com/morinlab/GAMBLR/blob/master/test_remote.R) in GAMBLR master folder.
-13. Execute the following in Rstudio console to make use of the updated paths in the [config.yml](https://github.com/morinlab/GAMBLR/blob/master/config.yml) from step 5 (line 5 in [test_remote.r](https://github.com/morinlab/GAMBLR/blob/master/test_remote.R))
+12. In Rstudio (local), open [test_remote.R](https://github.com/morinlab/GAMBLR/blob/master/resources/test_remote.R) in GAMBLR master folder.
+13. Execute the following in Rstudio console to make use of the updated paths in the [config.yml](https://github.com/morinlab/GAMBLR/blob/master/config.yml) from step 5 (line 5 in [test_remote.r](https://github.com/morinlab/GAMBLR/blob/master/resources/test_remote.R))
 
 ```
 Sys.setenv(R_CONFIG_ACTIVE = "remote")
@@ -172,7 +172,7 @@ Sys.setenv(R_CONFIG_ACTIVE = "remote")
 check_gamblr_config()
 ```
 
-15. You should now be all set to explore a collection of GAMBLR function remotely on your local machine. For example you could try the following test code to ensure your setup was successful. For a set of comprehensive examples and tutorials, please refer to the [test_remote.r](https://github.com/morinlab/GAMBLR/blob/master/test_remote.R) script.
+15. You should now be all set to explore a collection of GAMBLR function remotely on your local machine. For example you could try the following test code to ensure your setup was successful. For a set of comprehensive examples and tutorials, please refer to the [test_remote.r](https://github.com/morinlab/GAMBLR/blob/master/resources/test_remote.R) script.
 
 ```
 get_gambl_metadata() %>%
