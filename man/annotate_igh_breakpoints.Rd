@@ -22,7 +22,8 @@ Returns a modified bedpe with additional columns.
 The most useful columns that are added are mechanism (one of CSR, AID, VDJ) and label (NA if unmatched, otherwise one of Emu, Smu, one of the J segments or switch regions).
 }
 \examples{
-all_annotated = get_manta_sv() \%>\% annotate_sv()
+manta_sv = get_manta_sv(verbose = FALSE)
+all_annotated = annotate_sv(sv_data = manta_sv)
 ig_annotated = annotate_igh_breakpoints(all_annotated)
 
 }

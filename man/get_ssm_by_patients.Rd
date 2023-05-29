@@ -52,17 +52,26 @@ Get MAF-format data frame for more than one patient.
 }
 \details{
 This function returns variants from a set of patients avoiding duplicated mutations from multiple samples from that patient (i.e. unique superset of variants).
-This is done either by combining the contents of individual MAF files or subset from a merged MAF (wraps get_ssm_by_samples).
-In most situations, this should never need to be run with \code{subset_from_merge = TRUE}. Instead use one of \code{get_coding_ssm} or \code{get_ssm_by_region}.
+This is done either by combining the contents of individual MAF files or subset from a merged MAF (wraps \link{get_ssm_by_samples}).
+In most situations, this should never need to be run with \code{subset_from_merge = TRUE}. Instead use one of \link{get_coding_ssm} or \link{get_ssm_by_region}.
 This function expects either a vector of patient IDs (\code{thse_patients_ids}) or an already subset metadata table (\code{these_samples_metadata}).
+Is this function not what you are looking for? Try one of the following, similar, functions; \link{get_coding_ssm}, \link{get_coding_ssm_status},
+\link{get_ssm_by_sample}, \link{get_ssm_by_samples}, \link{get_ssm_by_region}, \link{get_ssm_by_regions}
 }
 \examples{
+library(parallel)
+
 #example 1, using a vector of patient IDs.
 patients = c("00-14595", "00-15201", "01-12047")
-patients_maf = get_ssm_by_patients(these_patient_ids = patients, seq_type = "genome", subset_from_merge = FALSE)
+patients_maf = get_ssm_by_patients(these_patient_ids = patients,
+                                   seq_type = "genome",
+                                   subset_from_merge = FALSE)
 
 #example 2, using a metadata table, subset to the patient IDs of interest.
-patient_meta = get_gambl_metadata(seq_type_filter = "genome") \%>\% dplyr::filter(patient_id \%in\% patients)
-patients_maf_2 = get_ssm_by_patients(these_samples_metadata = patient_meta,subset_from_merge = FALSE)
+patient_meta = get_gambl_metadata(seq_type_filter = "genome")
+patient_meta = dplyr::filter(patient_meta, patient_id \%in\% patients)
+
+patients_maf_2 = get_ssm_by_patients(these_samples_metadata = patient_meta,
+                                     subset_from_merge = FALSE)
 
 }

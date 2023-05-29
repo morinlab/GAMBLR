@@ -9,7 +9,8 @@
 #' @param my_gitlab_email The email used for gitlab.
 #'
 #' @import workflowr
-#' @export
+#'
+#' @noRd
 #'
 web_initialize_gambl_site = function(site_base_name,
                                      base_directory = "/home/rmorin/",

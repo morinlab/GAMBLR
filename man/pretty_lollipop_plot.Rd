@@ -28,11 +28,12 @@ The plot can also be exported in a variety of file formats inside the interactiv
 }
 \examples{
 #get metadata (Fl and DLBCL)
-this_metadata = get_gambl_metadata() \%>\%
- dplyr::filter(consensus_pathology \%in\% c("FL", "DLBCL"))
+metadata = get_gambl_metadata()
+this_metadata = dplyr::filter(metadata, consensus_pathology \%in\% c("FL", "DLBCL"))
 
 #get maf data for returned samples
-maf = get_coding_ssm(limit_samples = this_metadata$sample_id, seq_type = "genome")
+maf = get_coding_ssm(limit_samples = this_metadata$sample_id,
+                     seq_type = "genome")
 
 #construct pretty_lollipop_plot.
 pretty_lollipop_plot(maf_df = maf,

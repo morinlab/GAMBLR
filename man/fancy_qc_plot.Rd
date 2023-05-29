@@ -71,31 +71,29 @@ lastly, the plot can also be configured with custom plot title and axis labels (
 \examples{
 #Example 1 - using these_sample_ids parameter
 #subset on FL cases with QC metrics available and plot
-kridel_fl = get_gambl_metadata() \%>\%
- dplyr::filter(pathology == "FL", cohort == "FL_Kridel") \%>\%
- dplyr::select(sample_id) \%>\%
+metadata = get_gambl_metadata()
+kridel_fl = dplyr::filter(metadata, pathology == "FL",
+               cohort == "FL_Kridel")
+kridel_fl_samples = dplyr::select(kridel_fl, sample_id)
 
-my_plot_1 = fancy_qc_plot(these_sample_ids = kridel_fl,
-                          plot_data = "AverageBaseQuality",
-                          y_axis_lab = "Average Base Quality",
-                          plot_title = "Average Base Quality For FL_Kridel")
+fancy_qc_plot(these_sample_ids = kridel_fl_samples,
+              plot_data = "AverageBaseQuality",
+              y_axis_lab = "Average Base Quality",
+              plot_title = "Average Base Quality For FL_Kridel")
 
 #Example 2 - using already filtered metadata (these_samples_metadata)
-fl_metadata = get_gambl_metadata() \%>\%
- dplyr::filter(pathology == "FL", cohort == "FL_Kridel")
-
-my_plot_2 = fancy_qc_plot(these_samples_metadata = fl_metadata,
-                          interactive = TRUE,
-                          labels = c("cohort", "pathology"),
-                          plot_data = "AverageBaseQuality",
-                          y_axis_lab = "Average Base Quality",
-                          plot_title = "Average Base Quality For FL_Kridel")
+fancy_qc_plot(these_samples_metadata = kridel_fl,
+              interactive = TRUE,
+              labels = c("cohort", "pathology"),
+              plot_data = "AverageBaseQuality",
+              y_axis_lab = "Average Base Quality",
+              plot_title = "Average Base Quality For FL_Kridel")
 
 #Example 3 - using in-house metadata filtering options
-my_plot_3 = fancy_qc_plot(keep_cohort = "FL_Kridel",
-                          keep_pathology = "FL",
-                          plot_data = "AverageBaseQuality",
-                          y_axis_lab = "Average Base Quality",
-                          plot_title = "Average Base Quality For FL_Kridel")
+fancy_qc_plot(keep_cohort = "FL_Kridel",
+              keep_pathology = "FL",
+              plot_data = "AverageBaseQuality",
+              y_axis_lab = "Average Base Quality",
+              plot_title = "Average Base Quality For FL_Kridel")
 
 }

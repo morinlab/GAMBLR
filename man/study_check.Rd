@@ -10,7 +10,7 @@ study_check(
   cases_fusions_path = "case_lists/cases_fusion.txt",
   cases_all_path = "case_lists/cases_all.txt",
   cases_sequenced_path = "case_lists/cases_sequenced.txt",
-  project_name = "gambl_minus_icgc",
+  project_name = "gambl_genome",
   out_dir
 )
 }
@@ -39,9 +39,10 @@ Helper function for checking integrity of study files.
 This function was designed to ensure that all the sample IDs described in the maf are actually present in the clinical files.
 If this is not the case, the function will notify the user what samples are found in the case list that are not described in the clinical file.
 The function then sub-sets the case list to only include samples from the clinical file.
-Note that the \code{project_name} has to match what is specified for the previously run functions (i.e \code{setup_study}, \code{setup_fusions} and \code{finalize_study}).
+Note that the \code{project_name} has to match what is specified for the previously run functions (i.e \link{setup_study}, \link{setup_fusions} and \link{finalize_study}).
 }
 \examples{
+\dontrun{
 samples_not_in_clinical = study_check(out_dir = "GAMBLR/cBioPortal/instance01/")
-
+}
 }

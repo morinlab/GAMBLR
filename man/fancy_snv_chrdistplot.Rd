@@ -17,7 +17,8 @@ fancy_snv_chrdistplot(
   hide_legend = FALSE,
   coding_only = FALSE,
   from_flatfile = TRUE,
-  use_augmented_maf = TRUE
+  use_augmented_maf = TRUE,
+  this_seq_type = "genome"
 )
 }
 \arguments{
@@ -46,6 +47,8 @@ fancy_snv_chrdistplot(
 \item{from_flatfile}{If set to true the function will use flat files instead of the database.}
 
 \item{use_augmented_maf}{Boolean statement if to use augmented maf, default is FALSE.}
+
+\item{this_seq_type}{Seq type for returned CN segments. One of "genome" (default) or "capture".}
 }
 \value{
 A plot as a ggplot object (grob).
@@ -55,7 +58,7 @@ Visualizing the number of SNVs per chromosome.
 }
 \details{
 This function takes on an already loaded maf-like data frame, or a path to the maf file of interest.
-In addition, the user can also give this function a sample ID and the function will run assign_cn_to_ssm
+In addition, the user can also give this function a sample ID and the function will run \link{assign_cn_to_ssm}
 to get data for plotting. If a maf file or data frame is used, the user has the chance to specify what column
 that holds the Variant Type information (\code{variant_type_col}), in addition the user can also specify what column
 in the incoming maf that is corresponding to the chromosome annotations. This function also includes useful subsetting
@@ -67,9 +70,11 @@ also have convenient parameters for customizing the returned plot, e.g \code{plo
 }
 \examples{
 #plot SNVs
-snv_plot = fancy_snv_chrdistplot(this_sample_id = "HTMCP-01-06-00422-01A-01D")
+fancy_snv_chrdistplot(this_sample_id = "HTMCP-01-06-00422-01A-01D")
 
 #plot SNVs and DNPs
-snv_dnp_plot = fancy_snv_chrdistplot(this_sample_id = "HTMCP-01-06-00422-01A-01D", include_dnp = TRUE, plot_subtitle = "SNV + DNP Distribution Per Chromosome")
+fancy_snv_chrdistplot(this_sample_id = "HTMCP-01-06-00422-01A-01D",
+                      include_dnp = TRUE,
+                      plot_subtitle = "SNV + DNP Distribution Per Chromosome")
 
 }

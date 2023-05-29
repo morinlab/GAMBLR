@@ -8,6 +8,7 @@ focal_cn_plot(
   region,
   gene,
   these_samples_metadata,
+  this_seq_type = "genome",
   type = "gain",
   segment_size = 1,
   crop_segments = TRUE,
@@ -21,6 +22,8 @@ focal_cn_plot(
 \item{gene}{Optional variable, converts gene to region if region not supplied.}
 
 \item{these_samples_metadata}{Required parameter. GAMBL metadata subset to the cases you want to process (or full metadata).}
+
+\item{this_seq_type}{Seq type for returned CN segments. One of "genome" (default) or "capture".}
 
 \item{type}{Type of CN segment to be plotted. Default is gain (CN > 2).}
 
@@ -49,9 +52,13 @@ Sample IDs are specified along the y-axis and the genomic position is visualized
 this_metadata = get_gambl_metadata()
 
 #get myc region
-myc_region = gene_to_region(gene_symbol = "MYC", return_as = "region")
+myc_region = gene_to_region(gene_symbol = "MYC",
+                            return_as = "region")
 
 #build plot
-focal_cn_plot(these_samples_metadata = this_metadata, region = myc_region, type = "loss", crop_distance = 100000000)
+focal_cn_plot(these_samples_metadata = this_metadata,
+              region = myc_region,
+              type = "loss",
+              crop_distance = 100000000)
 
 }

@@ -9,7 +9,7 @@ get_ssm_by_region(
   qstart,
   qend,
   region = "",
-  basic_columns = FALSE,
+  basic_columns = TRUE,
   streamlined = FALSE,
   maf_data,
   seq_type = "genome",
@@ -18,9 +18,6 @@ get_ssm_by_region(
   augmented = TRUE,
   min_read_support = 3,
   mode = "slms-3",
-  maf_columns = c("Chromosome", "Start_Position", "End_Position",
-    "Tumor_Sample_Barcode", "t_alt_count"),
-  maf_column_types = "ciici",
   verbose = FALSE
 )
 }
@@ -33,27 +30,23 @@ get_ssm_by_region(
 
 \item{region}{Region formatted like chrX:1234-5678 instead of specifying chromosome, start and end separately.}
 
-\item{basic_columns}{Set to TRUE to override the default behaviour of returning only the first 45 columns of MAF data.}
+\item{basic_columns}{Set to FALSE to return MAF with all columns (116). Default is TRUE, which returns the first 45 columns. Note that if streamlined is set to TRUE, only two columns will be returned, regardless of what's specified in this parameter.}
 
-\item{streamlined}{Return a basic rather than full MAF format, default is FALSE.}
+\item{streamlined}{Return Start_Position and Tumor_Smaple_Barcode as the only two MAF columns. Default is FALSE. Setting to TRUE will overwrite anything specified with \code{basic_columns}.}
 
-\item{maf_data}{Parameter description.}
+\item{maf_data}{An already loaded MAF like object to subset to regions of interest.}
 
 \item{seq_type}{The seq_type you want back, default is genome.}
 
 \item{projection}{Obtain variants projected to this reference (one of grch37 or hg38).}
 
-\item{from_indexed_flatfile}{Set to TRUE to avoid using the database and instead rely on flatfiles (only works for streamlined data, not full MAF details).}
+\item{from_indexed_flatfile}{Set to TRUE to avoid using the database and instead rely on flatfiles.}
 
-\item{augmented}{default: TRUE. Set to FALSE if you instead want the original MAF from each sample for multi-sample patients instead of the augmented MAF .}
+\item{augmented}{default: TRUE. Set to FALSE if you instead want the original MAF from each sample for multi-sample patients instead of the augmented MAF.}
 
 \item{min_read_support}{Only returns variants with at least this many reads in t_alt_count (for cleaning up augmented MAFs).}
 
 \item{mode}{Only works with indexed flatfiles. Accepts 2 options of "slms-3" and "strelka2" to indicate which variant caller to use. Default is "slms-3".}
-
-\item{maf_columns}{Specify what MAF columns you want back. \code{basic_columns} needs to be set to TRUE.}
-
-\item{maf_column_types}{The column types of specified MAF columns \code{maf_columns}.}
 
 \item{verbose}{Boolean parameter set to FALSE per default.}
 }
@@ -68,12 +61,20 @@ This function lets the user specify a region of interest for returning SSM calls
 There are multiple ways a region can be specified. For example, the user can provide the full region in a "region" format (chr:start-end) to the \code{region} parameter.
 Or, the user can provide chromosome, start and end coordinates individually with \code{chr}, \code{start}, and \code{end} parameters.
 For more usage examples, refer to the parameter descriptions and examples in the vignettes.
+Is this function not what you are looking for? Try one of the following, similar, functions; \link{get_coding_ssm},
+\link{get_coding_ssm_status}, \link{get_ssm_by_patients}, \link{get_ssm_by_sample}, \link{get_ssm_by_samples}, \link{get_ssm_by_regions}
 }
 \examples{
 #basic usage
 my_mutations = get_ssm_by_region(region = "chr8:128,723,128-128,774,067")
+
 #specifying chromosome, start and end individually
-my_mutations = get_ssm_by_region(chromosome = "8", qstart = 128723128, qend = 128774067)
-bcl2_all_details = get_ssm_by_region(region="chr18:60796500-60988073",basic_columns=T)
+my_mutations = get_ssm_by_region(chromosome = "8",
+                                 qstart = 128723128,
+                                 qend = 128774067)
+
+#keep all 116 columns in the read MAF
+bcl2_all_details = get_ssm_by_region(region = "chr18:60796500-60988073",
+                                     basic_columns = FALSE)
 
 }

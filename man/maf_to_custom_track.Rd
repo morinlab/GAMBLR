@@ -21,7 +21,7 @@ maf_to_custom_track(
 \arguments{
 \item{maf_data}{Either a maf loaded from disk or from the database using a get_ssm function.}
 
-\item{these_samples_metadata}{Optional argument, a metadata table subset to the samples of interest. If not provided, the function will run \code{get_gambl_metadata} for all available samples.}
+\item{these_samples_metadata}{Optional argument, a metadata table subset to the samples of interest. If not provided, the function will run \link{get_gambl_metadata} for all available samples.}
 
 \item{seq_type}{The seq type you want back, default is "genome".}
 
@@ -52,6 +52,8 @@ This function takes an incoming MAF and converts it to a UCSC Genome Browser rea
 Optional parameters available for further customization of the returned file. For more information, refer to the parameter descriptions and function examples.
 }
 \examples{
+\dontrun{
 maf_to_custom_track(my_maf_data, "/home/rmorin/private/some_mutations.bed")
+}
 
 }

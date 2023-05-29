@@ -10,6 +10,7 @@ copy_number_vaf_plot(
   coding_only = FALSE,
   one_chrom,
   genes_to_label,
+  this_seq_type = "genome",
   from_flatfile = TRUE,
   use_augmented_maf = TRUE,
   add_chr_prefix = FALSE
@@ -26,6 +27,8 @@ copy_number_vaf_plot(
 
 \item{genes_to_label}{Optional. Provide a vector of genes to label (if mutated). Can only be used with coding_only (see above).}
 
+\item{this_seq_type}{Seq type for returned CN segments. One of "genome" (default) or "capture".}
+
 \item{from_flatfile}{If set to true the function will use flatfiles instead of the database.}
 
 \item{use_augmented_maf}{Boolean statement if to use augmented maf, default is TRUE.}
@@ -39,19 +42,17 @@ Nothing
 Create a genome-wide copy number plot for one sample and (optionally) display mutation VAF.
 }
 \details{
-This function takes a sample ID and internally calls \code{assign_cn_to_ssm} to get copy number segments for plotting.
+This function takes a sample ID and internally calls \link{assign_cn_to_ssm} to get copy number segments for plotting.
 This plot is visualizing mutation VAFs per default, this can be turned off with setting \code{just_segments} to TRUE.
 This only plots the segments. The user can also restrict the plotted segments to coding regions. To do so, set \code{coding_only= TRUE},
 and then specify the genes of interest (coding regions) with the \code{genes_to_label} (vector of genes).
 }
 \examples{
-cnv_vaf_plot = copy_number_vaf_plot(this_sample_id = "some-sample-name",
-                                    just_segments = FALSE,
-                                    coding_only = FALSE,
-                                    one_chrom = "chr2",
-                                    genes_to_label = "MYC",
-                                    from_flatfile = FALSE,
-                                    use_augmented_maf = FALSE,
-                                    add_chr_prefix = TRUE)
+#build plot
+copy_number_vaf_plot(this_sample_id = "HTMCP-01-06-00422-01A-01D")
+
+#coding only
+copy_number_vaf_plot(this_sample_id = "HTMCP-01-06-00422-01A-01D",
+                     coding_only = TRUE)
 
 }

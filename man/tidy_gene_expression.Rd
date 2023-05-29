@@ -17,7 +17,9 @@ Read a full expression matrix and subset to samples in GAMBL that have metadata 
 The user can also specify if they want the data frame returned into their R session, or if the data frame should be written to file (default).
 }
 \examples{
+\dontrun{
 #return data frame with gene expression to R
 gene_expression = tidy_gene_expression(return_df = TRUE)
+}
 
 }

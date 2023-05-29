@@ -50,15 +50,17 @@ For more information on how to use this function with different filtering criter
 examples and vignettes. Embargoed cases (current options: 'BLGSP-study', 'FL-study', 'DLBCL-study', 'FL-DLBCL-study', 'FL-DLBCL-all', 'DLBCL-unembargoed', 'BL-DLBCL-manuscript', 'MCL','MCL-CLL')
 }
 \examples{
-#basic usage 
+#basic usage
 my_metadata = get_gambl_metadata()
 
 #use pre-defined custom sample sets
-only_blgsp_metadata = get_gambl_metadata(case_set="BLGSP-study")
+only_blgsp_metadata = get_gambl_metadata(case_set = "BLGSP-study")
 
-#override default filters and request metadata for samples other than tumour genomes, e.g. also get the normals
+#override default filters and request metadata for samples other than tumour genomes,
+#e.g. also get the normals
 only_normal_metadata = get_gambl_metadata(tissue_status_filter = c('tumour','normal'))
 
-non_duplicated_genome_and_capture = get_gambl_metadata(seq_type_filter=c('genome','capture'),seq_type_priority="genome")
+non_duplicated_genome_and_capture = get_gambl_metadata(seq_type_filter = c('genome', 'capture'),
+                                                       seq_type_priority = "genome")
 
 }

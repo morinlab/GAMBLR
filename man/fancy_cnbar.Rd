@@ -13,11 +13,12 @@ fancy_cnbar(
   end_col = 4,
   cn_col = 7,
   plot_title = paste0(this_sample_id),
- 
-    plot_subtitle = "n CNV Segments (barplots, left y-axis), n Affected bases for each CN state",
+  plot_subtitle =
+    "n CNV Segments (barplots, left y-axis), n Affected bases for each CN state",
   chr_select = paste0("chr", c(1:22)),
   cutoff = 15,
-  include_cn2 = TRUE
+  include_cn2 = TRUE,
+  this_seq_type = "genome"
 )
 }
 \arguments{
@@ -44,6 +45,8 @@ fancy_cnbar(
 \item{cutoff}{Set threshold for maximum CN state to be retrieved.}
 
 \item{include_cn2}{Optional boolean statement for including CN = 2 states in plot.}
+
+\item{this_seq_type}{Seq type for returned CN segments. One of "genome" (default) or "capture".}
 }
 \value{
 A plot as a ggplot object (grob).
@@ -53,7 +56,7 @@ Generate a bar plot visualizing sample-specific copy number states and affected 
 }
 \details{
 \code{fancy_cnbar} visualizes copy number (CN) states on sample-level. Similarly to other fancy_x_plots this function
-accepts either a sample ID, for which the function will get copy number states with \code{get_sample_cn_states}. The function
+accepts either a sample ID, for which the function will get copy number states with \link{get_sample_cn_segments}. The function
 can also accept an already loaded seq file given to the \code{seq_data} parameter. It can also load a seq file with the \code{seq_path}
 parameter. If the user calls either \code{seq_data} or \code{seq_path}, there are a collection of parameters available for specifying
 the relevant columns in the given data frame (\code{chrom_col}, \code{starat_col}, \code{end_col}, \code{cn_col}). It is also possible to
@@ -65,11 +68,7 @@ This function also computes the number of affected bases for each copy number st
 useful for overviewing the extent of each copy number state, in the context of the full genome.
 }
 \examples{
-
 #Return a plot for one sample, with default parameters.
-cns = fancy_cnbar(this_sample_id = "HTMCP-01-06-00422-01A-01D")
-
-#Plot all copy number states for chromosome 1.
-chr1_cns = fancy_cnbar(this_sample_id = "HTMCP-01-06-00422-01A-01D", chr_select = c(1))
+fancy_cnbar(this_sample_id = "HTMCP-01-06-00422-01A-01D")
 
 }

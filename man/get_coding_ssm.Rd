@@ -34,7 +34,7 @@ get_coding_ssm(
 
 \item{these_samples_metadata}{Supply a metadata table to auto-subset the data to samples in that table before returning}
 
-\item{force_unmatched_samples}{Optional argument for forcing unmatched samples, using get_ssm_by_samples.}
+\item{force_unmatched_samples}{Optional argument for forcing unmatched samples, using \link{get_ssm_by_samples}.}
 
 \item{projection}{Reference genome build for the coordinates in the MAF file. The default is hg19 genome build.}
 
@@ -65,10 +65,13 @@ Retrieve all coding SSMs from the GAMBL database in MAF-like format.
 \details{
 Effectively retrieve coding SSM calls. Multiple filtering parameters are available for this function.
 For more information on how to implement the filtering parameters, refer to the parameter descriptions as well as examples in the vignettes.
+Is this function not what you are looking for? Try one of the following, similar, functions; \link{get_coding_ssm_status},
+\link{get_ssm_by_patients}, \link{get_ssm_by_sample}, \link{get_ssm_by_samples}, \link{get_ssm_by_region}, \link{get_ssm_by_regions}
 }
 \examples{
 #basic usage
-maf_data = get_coding_ssm(limit_cohort = c("BL_ICGC"))
-maf_data = get_coding_ssm(limit_samples = "HTMCP-01-06-00485-01A-01D")
+maf_data = get_coding_ssm(seq_type = "genome", limit_cohort = c("BL_ICGC"))
+
+maf_data = get_coding_ssm(seq_type = "genome", limit_samples = "HTMCP-01-06-00485-01A-01D")
 
 }

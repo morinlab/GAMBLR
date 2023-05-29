@@ -11,7 +11,7 @@ colour_aliases = list("COO_consensus" = "coo", "COO" = "coo", "DHITsig_consensus
 #' @title Rainfall Plot
 #'
 #' @description Plot a rainfall plot for one sample. This function takes in the MAF data frame, or path to a custom MAF file.
-#' If non are specified, the SSM will be obtained through GAMBLR directly (with `get_ssm_by_region`).
+#' If non are specified, the SSM will be obtained through GAMBLR directly (with [GAMBLR::get_ssm_by_region]).
 #'
 #' @details Create a sample-level rainfall plot visualizing single nucleotide substitutions mutations for selected chromosomes.
 #'
@@ -32,13 +32,15 @@ colour_aliases = list("COO_consensus" = "coo", "COO" = "coo", "DHITsig_consensus
 #' @export
 #'
 #' @examples
-#' prettyRainfallPlot("Raji")
-#' prettyRainfallPlot("Raji", chromosome = c(3,9,"chr14",22,"X"))
-#' prettyRainfallPlot("Raji", chromosome = c(3,9), projection = "hg38", label_ashm_genes = FALSE)
-#' prettyRainfallPlot("Raji", zoom_in_region = "8:125252796-135253201", label_sv = TRUE)
-#' prettyRainfallPlot("Raji", chromosome = 6, label_sv = TRUE)
-#' prettyRainfallPlot( zoom_in_region = "chr3:5,221,286-5,269,723", seq_type="genome") #multi-sample rainfall plot for one gene region
-
+#' prettyRainfallPlot(this_sample_id = "Raji",
+#'                    seq_type = "genome",
+#'                    zoom_in_region = "8:125252796-135253201",
+#'                    label_sv = TRUE)
+#'
+#' #multi-sample rainfall plot for one gene region
+#' prettyRainfallPlot(zoom_in_region = "chr3:5,221,286-5,269,723",
+#'                    seq_type = "genome")
+#'
 prettyRainfallPlot = function(this_sample_id,
                               label_ashm_genes = TRUE,
                               projection = "grch37",
@@ -150,9 +152,7 @@ prettyRainfallPlot = function(this_sample_id,
       this_sample_id = "all samples"
     }
     message(paste("Will use all mutations for",seq_type, "in this region:",zoom_in_region))
-    these_ssm = get_ssm_by_region(region = region,seq_type = seq_type,projection=projection,
-                                  maf_columns = c("Hugo_Symbol","Chromosome", "Start_Position", "End_Position", "Tumor_Sample_Barcode", "t_alt_count","Reference_Allele","Tumor_Seq_Allele2"),
-                                  maf_column_types = c("c","c","i","i","c","i","c","c"))
+    these_ssm = get_ssm_by_region(region = region,seq_type = seq_type,projection=projection)
   }
 
   # do rainfall calculation using lag
@@ -408,12 +408,12 @@ gene_mutation_tally = function(maf_df,these_samples_metadata,these_genes,groupin
 #' maf = get_coding_ssm(seq_type = "genome")
 #'
 #' #get gene symbols from MAF
-#' maf_genes = dplyr::filter(maf, Hugo_Symbol != "Unknown") %>%
-#'  dplyr::filter(Chromosome == "1") %>%
-#'  pull(Hugo_Symbol)
+#' maf_genes = dplyr::filter(maf, Hugo_Symbol != "Unknown")
+#' maf_genes_chr1 = dplyr::filter(maf_genes, Chromosome == "1")
+#' my_genes = pull(maf_genes_chr1, Hugo_Symbol)
 #'
 #' #build wordcloud
-#' prettyGeneCloud(maf_df = maf, these_genes = maf_genes)
+#' prettyGeneCloud(maf_df = maf, these_genes = my_genes)
 #'
 prettyGeneCloud = function(maf_df,
                            these_genes,
@@ -478,6 +478,7 @@ prettyGeneCloud = function(maf_df,
 #' @param region Genomic region for plotting in bed format.
 #' @param gene Optional variable, converts gene to region if region not supplied.
 #' @param these_samples_metadata Required parameter. GAMBL metadata subset to the cases you want to process (or full metadata).
+#' @param this_seq_type Seq type for returned CN segments. One of "genome" (default) or "capture".
 #' @param type Type of CN segment to be plotted. Default is gain (CN > 2).
 #' @param segment_size This parameter controls the size of the segment plotted with ggplot2, default is 1.
 #' @param crop_segments Boolean statement that crops segment by first checking if crop segment is smaller than lef/right distance, then adds or subtracts  crop distance to end/start coordinates. Default is TRUE.
@@ -494,14 +495,19 @@ prettyGeneCloud = function(maf_df,
 #' this_metadata = get_gambl_metadata()
 #'
 #' #get myc region
-#' myc_region = gene_to_region(gene_symbol = "MYC", return_as = "region")
+#' myc_region = gene_to_region(gene_symbol = "MYC",
+#'                             return_as = "region")
 #'
 #' #build plot
-#' focal_cn_plot(these_samples_metadata = this_metadata, region = myc_region, type = "loss", crop_distance = 100000000)
+#' focal_cn_plot(these_samples_metadata = this_metadata,
+#'               region = myc_region,
+#'               type = "loss",
+#'               crop_distance = 100000000)
 #'
 focal_cn_plot = function(region,
                          gene,
                          these_samples_metadata,
+                         this_seq_type = "genome",
                          type = "gain",
                          segment_size = 1,
                          crop_segments = TRUE,
@@ -515,11 +521,11 @@ focal_cn_plot = function(region,
     chunks = region_to_chunks(region)
   }
   if(type == "gain"){
-    all_not_dip = get_cn_segments(region = region) %>%
+    all_not_dip = get_cn_segments(region = region, this_seq_type = this_seq_type) %>%
       mutate(size = end - start) %>%
       dplyr::filter(CN>2)
   }else{
-    all_not_dip = get_cn_segments(region = region) %>%
+    all_not_dip = get_cn_segments(region = region, this_seq_type = this_seq_type) %>%
       mutate(size = end - start) %>%
       dplyr::filter(CN<2)
   }
@@ -566,11 +572,12 @@ focal_cn_plot = function(region,
 #'
 #' @examples
 #' #get metadata (Fl and DLBCL)
-#' this_metadata = get_gambl_metadata() %>%
-#'  dplyr::filter(consensus_pathology %in% c("FL", "DLBCL"))
+#' metadata = get_gambl_metadata()
+#' this_metadata = dplyr::filter(metadata, consensus_pathology %in% c("FL", "DLBCL"))
 #'
 #' #get maf data for returned samples
-#' maf = get_coding_ssm(limit_samples = this_metadata$sample_id, seq_type = "genome")
+#' maf = get_coding_ssm(limit_samples = this_metadata$sample_id,
+#'                      seq_type = "genome")
 #'
 #' #construct pretty_lollipop_plot.
 #' pretty_lollipop_plot(maf_df = maf,
@@ -602,7 +609,7 @@ pretty_lollipop_plot = function(maf_df,
 #'
 #' @description Count hypermutated bins and generate heatmap/cluster the data.
 #'
-#' @details This function takes a metadata table with `these_samples_metadata` parameter and internally calls `calc_mutation_frequency_sliding_windows` (that internally calls `get_ssm_by_regions`)
+#' @details This function takes a metadata table with `these_samples_metadata` parameter and internally calls [GAMBLR::calc_mutation_frequency_sliding_windows] (that internally calls [GAMBLR::get_ssm_by_regions])
 #' to retrieve mutations for plotting. This plotting function has a variety of useful parameters, providing many customizable plotting options. For more details on how these parameters can be used,
 #' and extended usage examples, refer to the SSM tutorial vignette section 1.4.9.
 #'
@@ -641,10 +648,12 @@ pretty_lollipop_plot = function(maf_df,
 #'
 #' @examples
 #' #load metadata.
-#' dlbcl_bl_meta = get_gambl_metadata() %>% dplyr::filter(pathology %in% c("DLBCL", "BL")) #subset on specific pathology.
+#' metadata = get_gambl_metadata()
+#' dlbcl_bl_meta = dplyr::filter(metadata, pathology %in% c("DLBCL", "BL"))
 #'
 #' #bring together all derived sample-level results from many GAMBL pipelines.
-#' dlbcl_bl_meta = collate_results(join_with_full_metadata = TRUE, these_samples_metadata = dlbcl_bl_meta)
+#' dlbcl_bl_meta = collate_results(join_with_full_metadata = TRUE,
+#'                                 these_samples_metadata = dlbcl_bl_meta)
 #'
 #' #get ashm regions
 #' some_regions = grch37_ashm_regions
@@ -828,7 +837,8 @@ get_mutation_frequency_bin_matrix = function(regions,
 #' @description Plot a heatmap comparing the VAF of mutations in T1/T2 pairs.
 #'
 #' @details Currently unfinished plotting function. Thus, I have removed it from export until it's in a state where it can be included in GAMBLR.
-#' Parameter descriptions need to be updated so that the origin of the incoming data is clear. Examples would also need to be added before this function gets exported into NAMESPACE.
+#' Parameter descriptions need to be updated so that the origin of the incoming data is clear.
+#' Examples would also need to be added before this function gets exported into NAMESPACE.
 #'
 #' @param maf1 Data frame of simple somatic mutations at time point A.
 #' @param maf2 Data frame of simple somatic mutations at time point B.
@@ -847,6 +857,7 @@ get_mutation_frequency_bin_matrix = function(regions,
 #' @param cluster_rows Boolean statement for clustering by rows, defaults to FALSE.
 #'
 #' @return Nothing
+#' @noRd
 #'
 #' @rawNamespace import(data.table, except = c("last", "first", "between", "transpose"))
 #' @import dplyr tidyr circlize ComplexHeatmap tibble
@@ -985,7 +996,7 @@ plot_mutation_dynamics_heatmap = function(maf1,
 }
 
 
-#' INTERNAL FUNCTION called by plot_sample_circos and get_mutation_frequency_bin_matrix, not meant for out-of-package usage.
+#' INTERNAL FUNCTION called by [GAMBLR::plot_sample_circos] and [GAMBLR::get_mutation_frequency_bin_matrix], not meant for out-of-package usage.
 #' Assign a colour palette to metadata columns automatically and consistently.
 #'
 #' @param metadataColumns Names of the metadata columns to assign colours for.
@@ -999,9 +1010,19 @@ plot_mutation_dynamics_heatmap = function(maf1,
 #'
 #' @import dplyr ggsci
 #'
+#' @noRd
+#'
 #' @examples
-#' all_cols=map_metadata_to_colours(legend_metadata_columns,these_meta,verbose=T)
-#' all_cols=map_metadata_to_colours(c("lymphgen","pathology","genetic_subgroup"),these_samples_metadata = all_meta,column_alias=list("nothing"="FL"),as_vector = F)
+#' #get metadata
+#' all_meta = get_gambl_metadata()
+#'
+#' #get colours
+#' all_cols = map_metadata_to_colours(metadataColumns = c("lymphgen",
+#'                                                        "pathology",
+#'                                                        "genetic_subgroup"),
+#'                                    these_samples_metadata = all_meta,
+#'                                    column_alias = list("nothing" = "FL"),
+#'                                    as_vector = F)
 #'
 map_metadata_to_colours = function(metadataColumns,
                                    these_samples_metadata,
@@ -1147,6 +1168,8 @@ map_metadata_to_colours = function(metadataColumns,
 #' @param ssm_df This parameter does not do anything yet. Maybe it was meant to be implemented.
 #' @param include_sv Default TRUE. (does not do anything yet).
 #' @param include_cnv Default TRUE. (does not do anything yet).
+#' @param this_projection The selected projection, default is grch37 and it's the only supported peojection.
+#' @param this_seq_type Seq type for returned CN segments. One of "genome" (default) or "capture".
 #' @param include_ssm Defaul FALSE. (does not do anything yet).
 #' @param legend_metadata_columns Column names from metadata
 #' @param legend_metadata_names List of metadata names to be plotted.
@@ -1160,8 +1183,25 @@ map_metadata_to_colours = function(metadataColumns,
 #' @export
 #'
 #' @examples
-#' this_samp = "13-38657_tumorB"
-#' GAMBLR::plot_sample_circos(this_sample_id=this_samp,legend_metadata_columns = c("pathology","lymphgen","COO_consensus","DHITsig_consensus","bcl2_ba","myc_ba"),legend_metadata_names = c("pathology","LymphGen","COO","DHITsig","BCL2","MYC"),auto_label_sv = TRUE,chrom_list = c("chr2","chr3","chr8","chr14","chr18"))
+#'
+#' plot_sample_circos(this_sample_id = "13-38657_tumorB",
+#'                    legend_metadata_columns = c("pathology",
+#'                                                "lymphgen",
+#'                                                "COO_consensus",
+#'                                                "DHITsig_consensus",
+#'                                                "bcl2_ba",
+#'                                                "myc_ba"),
+#'                    legend_metadata_names = c("pathology",
+#'                                              "LymphGen",
+#'                                              "COO",
+#'                                              "DHITsig",
+#'                                              "BCL2",
+#'                                              "MYC"),
+#'                    chrom_list = c("chr2",
+#'                                   "chr3",
+#'                                   "chr8",
+#'                                   "chr14",
+#'                                   "chr18"))
 #'
 plot_sample_circos = function(this_sample_id,
                               sv_df,
@@ -1172,9 +1212,15 @@ plot_sample_circos = function(this_sample_id,
                               legend_metadata_columns,
                               legend_metadata_names = c(),
                               include_cnv = TRUE,
+                              this_projection = "grch37",
+                              this_seq_type = "genome",
                               chrom_list,
                               label_genes,
                               auto_label_sv = FALSE){
+
+  if(this_projection == "hg38"){
+    stop("Currently, only grch37 is supported...")
+  }
 
   add_cnv = function(cnv_df){
     bed = data.frame(cnv_df[,c("chrom", "start", "end", "log.ratio")])
@@ -1187,7 +1233,11 @@ plot_sample_circos = function(this_sample_id,
     }, bg.border = NA)
   }
   if(missing(cnv_df)){
-    cnv_df = get_sample_cn_segments(this_sample_id = this_sample_id, with_chr_prefix = TRUE)
+    cnv_df = get_sample_cn_segments(
+      this_sample_id = this_sample_id,
+      with_chr_prefix = TRUE,
+      this_seq_type = this_seq_type
+    )
   }
   if(missing(chrom_list)){
 
@@ -1201,10 +1251,20 @@ plot_sample_circos = function(this_sample_id,
       dplyr::mutate(chromosome = paste0("chr", chromosome))
   }
   if(missing(sv_df)){
-    sv_df = get_manta_sv() %>%
+    sv_df = get_manta_sv(verbose = FALSE) %>%
       dplyr::filter(tumour_sample_id == this_sample_id)
-
+  }else{
+    sv_df = sv_df %>%
+      dplyr::filter(tumour_sample_id == this_sample_id)
   }
+
+  #add chr prefixes if grch37 is selcted (expected by circlize)
+  if(this_projection == "grch37"){
+    sv_df = sv_df %>%
+      dplyr::mutate(CHROM_A = paste0("chr", CHROM_A)) %>%
+      dplyr::mutate(CHROM_B = paste0("chr", CHROM_B))
+  }
+
   sv_df = sv_df %>%
     dplyr::filter(CHROM_A %in% chrom_list) %>%
     dplyr::filter(CHROM_B %in% chrom_list)
@@ -1357,16 +1417,56 @@ plot_sample_circos = function(this_sample_id,
 #' @export
 #'
 #' @examples
-#' prettyOncoplot(maftools_obj = maf_obj,genes = bl_genes,
-#' these_samples_metadata = extra_meta,
-#' metadataColumns = c("pathology","COO_consensus", "cluster_name", "lymphgen","EBV_status_inf", "manta_BCL6_sv"),
-#' hide_annotations = c(some_ashm,"lymphgen","COO_consensus", "pathology","manta_BCL6_sv"),
-#' expressionColumns = c("IRF4",some_ashm),
-#' sortByColumns = c("IRF4"),
-#' keepGeneOrder = FALSE,splitGeneGroups = groups,
-#' splitColumnName = "cluster_name",
-#' metadataBarHeight = 2.5,metadataBarFontsize = 6,fontSizeGene = 8,
-#' recycleOncomatrix = TRUE,removeNonMutated = FALSE)
+#' library(grid)
+#'
+#' #get some data
+#' maf_data = get_coding_ssm(seq_type = "genome")
+#' maf_metadata = get_gambl_metadata()
+#' maf = maftools::read.maf(maf_data, clinicalData = maf_metadata)
+#'
+#' #define some genes of interest
+#' bl_genes = c("NFKBIZ", "ID3", "TP53", "ARID1A", "FBXO11",
+#'              "GNA13", "TCF3", "TFAP4", "HNRNPU", "FOXO1",
+#'              "CCND3", "SMARCA4", "DDX3X")
+#'
+#' dlbcl_genes = c("EZH2", "KMT2D", "MEF2B", "CREBBP", "MYD88")
+#'
+#' genes = c(bl_genes, dlbcl_genes)
+#'
+#' #define gene groups
+#' gene_groups = c(rep("BL", length(bl_genes)), rep("DLBCL", length(dlbcl_genes)))
+#' names(gene_groups) = genes
+#'
+#' #filter metadata
+#' maf_metadata = dplyr::filter(maf_metadata,!lymphgen %in% c("COMPOSITE"))
+#'
+#' #convert metadata column into factor
+#' maf_metadata$pathology = as.factor(maf_metadata$pathology)
+#'
+#' #define order of factors for selected metadata column
+#' maf_metadata$pathology = factor(maf_metadata$pathology,
+#'                                 levels = c("DLBCL", "BL",
+#'                                            "B-ALL", "CLL",
+#'                                            "COMFL", "DLBCL-BL-like",
+#'                                            "FL", "HGBL",
+#'                                            "MCL", "PBL",
+#'                                            "SCBC", "UNSPECIFIED"))
+#'
+#' maf_metadata = with(maf_metadata, maf_metadata[order(pathology),])
+#'
+#' #create prettyOncoplot
+#' prettyOncoplot(maftools_obj = maf,
+#'                genes = genes,
+#'                these_samples_metadata = maf_metadata,
+#'                splitGeneGroups = gene_groups,
+#'                keepGeneOrder = TRUE,
+#'                splitColumnName = "pathology",
+#'                metadataBarHeight = 5,
+#'                metadataBarFontsize = 8,
+#'                legend_row = 2,
+#'                fontSizeGene = 11,
+#'                metadataColumns = c("pathology", "lymphgen", "sex", "EBV_status_inf", "cohort"),
+#'                sortByColumns = c("pathology", "lymphgen", "sex", "EBV_status_inf", "cohort"))
 #'
 prettyOncoplot = function(maftools_obj,
                           onco_matrix_path,
@@ -1878,11 +1978,11 @@ prettyOncoplot = function(maftools_obj,
                                     direction=legend_direction,
                                     labels_gp = gpar(fontsize = legendFontSize)))
   } else {
-    if(hideSideBarplot){
-      right_annotation = NULL
-    }else{
-      right_annotation = rowAnnotation(rbar = anno_oncoprint_barplot())
-    }
+      if(hideSideBarplot){
+        right_annotation = NULL
+      }else{
+        right_annotation = rowAnnotation(rbar = anno_oncoprint_barplot())
+      }
   }
 
   ch = ComplexHeatmap::oncoPrint(mat[intersect(genes, genes_kept),patients_kept],
@@ -1919,11 +2019,11 @@ prettyOncoplot = function(maftools_obj,
 
 #' @title Side-by-side Oncoplots
 #'
-#' @description `prettyCoOncoplot` returns ggplot-compatible figure of 2 prettyOncoplots side-by-side.
+#' @description `prettyCoOncoplot` returns ggplot-compatible figure of 2 [GAMBLR::prettyOncoplot] side-by-side.
 #'
 #' @details This function will generate a graphic displaying 2 oncoplots side-by-side. Optionally user can
 #' annotate each oncoplot with it's own title that will be displayed at the top. All the arguments
-#' recognized by prettyOncoplot are supported and can be specified when calling this function.
+#' recognized by [GAMBLR::prettyOncoplot] are supported and can be specified when calling this function.
 #' For both oncoplots the same specified parameters will be applied (e.g. genes to display, split columns,
 #' font size, top annotation etc). If the provided argument is not recognized by prettyOncoplot,
 #' it will be discarded. If you want a specific order of oncoplots on the left and right, please
@@ -1946,22 +2046,34 @@ prettyOncoplot = function(maftools_obj,
 #' @export
 #'
 #' @examples
-#' ssm=get_coding_ssm(limit_cohort = c("BL_Adult", "BL_Pediatric"))
-#' ssm=maftools::read.maf(ssm)
-#' meta=get_gambl_metadata() %>% dplyr::filter(cohort %in% c("BL_Adult", "BL_Pediatric"))
-#' prettyCoOncoplot(maf=ssm,
-#'     metadata = meta,
-#'     comparison_column = "cohort",
-#'     include_noncoding = NULL,
-#'     minMutationPercent = 0,
-#'     genes=c("MYC", "TET2", "TP53", "DDX3X", "ID3"),
-#'     metadataColumns=c("pathology", "EBV_status_inf", "pairing_status", "cohort"),
-#'     splitColumnName="EBV_status_inf",
-#'     metadataBarHeight=10,
-#'     fontSizeGene=12,
-#'     metadataBarFontsize=10,
-#'     label1="Adult",
-#'     label2="Pediatric")
+#' #get data for plotting
+#' ssm = get_coding_ssm(limit_cohort = c("BL_Adult", "BL_Pediatric"), seq_type = "genome")
+#' ssm = maftools::read.maf(ssm)
+#' meta = get_gambl_metadata()
+#' meta = dplyr::filter(meta, cohort %in% c("BL_Adult", "BL_Pediatric"))
+#'
+#' #build plot
+#' prettyCoOncoplot(maf = ssm,
+#'                  metadata = meta,
+#'                  comparison_column = "cohort",
+#'                  include_noncoding = NULL,
+#'                  minMutationPercent = 0,
+#'                  genes = c("MYC",
+#'                            "TET2",
+#'                            "TP53",
+#'                            "DDX3X",
+#'                            "ID3"),
+#'                  metadataColumns = c("pathology",
+#'                                      "EBV_status_inf",
+#'                                      "pairing_status",
+#'                                      "cohort"),
+#'                  splitColumnName = "EBV_status_inf",
+#'                  metadataBarHeight = 10,
+#'                  fontSizeGene = 12,
+#'                  metadataBarFontsize = 10,
+#'                  legend_row = 2,
+#'                  label1 = "Adult",
+#'                  label2 = "Pediatric")
 #'
 prettyCoOncoplot = function(maf,
                             metadata,
@@ -2061,7 +2173,7 @@ prettyCoOncoplot = function(maf,
 #' The user also needs to specify a vector of names (`regions_to_display`) to further control what regions are to be displayed on the returned plot.
 #' It is also possible to exclude specific classifications from the metadata file. This is achieved with `exclude_classifications`.
 #' In addition the user can also use the `metadata` parameter to use an already subset and arranged metadata table.
-#' This function will call `get_ssm_by_region` if `maf_data` is not called. For more info, refer to the parameter descriptions of this function.
+#' This function will call [GAMBLR::get_ssm_by_region] if `maf_data` is not called. For more info, refer to the parameter descriptions of this function.
 #'
 #' @param regions_bed Bed file with chromosome coordinates, should contain columns chr, start, end, name (with these exact names).
 #' @param regions_to_display Optional vector of names from default regions_bed to use.
@@ -2078,13 +2190,16 @@ prettyCoOncoplot = function(maf,
 #' @export
 #'
 #' @examples
-#' my_plot = ashm_multi_rainbow_plot(regions_bed = "my_bed.bed",
-#'                                   regions_to_display = "chr3",
-#'                                   exclude_classification = "some-classification",
-#'                                   metadata = "my_metadata",
-#'                                   custom_colours = c("onecolour", "anothercolour", "athirdcolour"),
-#'                                   classification_column = "lymphgen",
-#'                                   maf_data = my_maf)
+#' #get lymphgen colours
+#' lymphgen_colours = get_gambl_colours(classification = "lymphgen")
+#'
+#' #build plot
+#' ashm_multi_rainbow_plot(regions_to_display = c("BCL2-TSS",
+#'                                                "MYC-TSS",
+#'                                                "SGK1-TSS",
+#'                                                "IGL"),
+#'                         custom_colours = lymphgen_colours,
+#'                         seq_type = "genome")
 #'
 ashm_multi_rainbow_plot = function(regions_bed,
                                    regions_to_display,
@@ -2195,7 +2310,7 @@ ashm_multi_rainbow_plot = function(regions_bed,
 #'
 #' @description Create a genome-wide copy number plot for one sample and (optionally) display mutation VAF.
 #'
-#' @details This function takes a sample ID and internally calls `assign_cn_to_ssm` to get copy number segments for plotting.
+#' @details This function takes a sample ID and internally calls [GAMBLR::assign_cn_to_ssm] to get copy number segments for plotting.
 #' This plot is visualizing mutation VAFs per default, this can be turned off with setting `just_segments` to TRUE.
 #' This only plots the segments. The user can also restrict the plotted segments to coding regions. To do so, set `coding_only= TRUE`,
 #' and then specify the genes of interest (coding regions) with the `genes_to_label` (vector of genes).
@@ -2205,6 +2320,7 @@ ashm_multi_rainbow_plot = function(regions_bed,
 #' @param coding_only Optional. Set to TRUE to restrict to plotting only coding mutations.
 #' @param one_chrom Subset plot to one chromosome.
 #' @param genes_to_label Optional. Provide a vector of genes to label (if mutated). Can only be used with coding_only (see above).
+#' @param this_seq_type Seq type for returned CN segments. One of "genome" (default) or "capture".
 #' @param from_flatfile If set to true the function will use flatfiles instead of the database.
 #' @param use_augmented_maf Boolean statement if to use augmented maf, default is TRUE.
 #' @param add_chr_prefix If TRUE, "chr" prefix will be added to chr column. Default is FALSE.
@@ -2215,20 +2331,19 @@ ashm_multi_rainbow_plot = function(regions_bed,
 #' @export
 #'
 #' @examples
-#' cnv_vaf_plot = copy_number_vaf_plot(this_sample_id = "some-sample-name",
-#'                                     just_segments = FALSE,
-#'                                     coding_only = FALSE,
-#'                                     one_chrom = "chr2",
-#'                                     genes_to_label = "MYC",
-#'                                     from_flatfile = FALSE,
-#'                                     use_augmented_maf = FALSE,
-#'                                     add_chr_prefix = TRUE)
+#' #build plot
+#' copy_number_vaf_plot(this_sample_id = "HTMCP-01-06-00422-01A-01D")
+#'
+#' #coding only
+#' copy_number_vaf_plot(this_sample_id = "HTMCP-01-06-00422-01A-01D",
+#'                      coding_only = TRUE)
 #'
 copy_number_vaf_plot = function(this_sample_id,
                                 just_segments = FALSE,
                                 coding_only = FALSE,
                                 one_chrom,
                                 genes_to_label,
+                                this_seq_type = "genome",
                                 from_flatfile = TRUE,
                                 use_augmented_maf = TRUE,
                                 add_chr_prefix = FALSE){
@@ -2239,7 +2354,13 @@ copy_number_vaf_plot = function(this_sample_id,
     chrom_order = factor(unlist(lapply(chrom_order, function(x){paste0("chr", x)})))
   }
   cn_colours = get_gambl_colours(classification = "copy_number")
-  maf_and_seg = assign_cn_to_ssm(this_sample_id = this_sample_id, coding_only = coding_only, from_flatfile = from_flatfile, use_augmented_maf = use_augmented_maf)
+  maf_and_seg = assign_cn_to_ssm(
+    this_sample_id = this_sample_id,
+    coding_only = coding_only,
+    from_flatfile = from_flatfile,
+    use_augmented_maf = use_augmented_maf,
+    this_seq_type = this_seq_type
+  )
   vaf_cn_maf = maf_and_seg[["maf"]]
   vaf_cn_maf = mutate(vaf_cn_maf, CN = case_when(LOH == "1" & CN == 2 ~ "nLOH", TRUE ~ as.character(CN)))
   if(!missing(one_chrom)){
@@ -2272,7 +2393,7 @@ copy_number_vaf_plot = function(this_sample_id,
       }else{
         #label any mutations that intersect with our gene list
         plot_genes = vaf_cn_maf %>%
-          dplyr::filter(Hugo_Symbol %in% my_genes)
+          dplyr::filter(Hugo_Symbol %in% genes_to_label)
 
         p = mutate(vaf_cn_maf, vaf = t_alt_count / (t_ref_count + t_alt_count)) %>%
         ggplot() +
@@ -2326,13 +2447,11 @@ copy_number_vaf_plot = function(this_sample_id,
 #'
 #' @examples
 #' #basic usage
-#' region = "chr6:90975034-91066134"
-#' metadata = get_gambl_metadata()
-#' plot = ashm_rainbow_plot(metadata = metadata, region = region)
+#' this_region = "chr6:90975034-91066134"
+#' this_metadata = get_gambl_metadata()
 #'
-#' #advanced usages
-#' mybed = data.frame(start=c(128806578,128805652,128748315), end=c(128806992,128809822,128748880), name=c("TSS","enhancer","MYC-e1"))
-#' ashm_rainbow_plot(mutations_maf=my_mutations,metadata=my_metadata,bed=mybed)
+#' ashm_rainbow_plot(metadata = this_metadata,
+#'                   region = this_region)
 #'
 ashm_rainbow_plot = function(mutations_maf,
                              metadata,
@@ -2426,13 +2545,15 @@ ashm_rainbow_plot = function(mutations_maf,
 }
 
 
-#' This function doesn't do anything yet, thus, I ahve removed it from being exported to NAMESPACE (for now).
+#' This function doesn't do anything yet, thus, it's not currently exported to NAMESPACE.
 #'
 #' @param mafs TODO
 #' @param this_sample_id TODO
 #' @param genes TODO
 #' @param show_noncoding TODO
 #' @param detail TODO
+#'
+#' @noRd
 #'
 plot_multi_timepoint = function(mafs,
                                 this_sample_id,
@@ -2605,12 +2726,16 @@ plot_multi_timepoint = function(mafs,
 #' @export
 #'
 #' @examples
+#' \dontrun{
 #' #basic usage
 #' prettyChromoplot("path_to_gistic_results/scores.gistic")
 #'
 #' #advanced usages
-#' prettyChromoplot("path_to_gistic_results/scores.gistic", genes_to_label="path_to_gene_coordinates_table.tsv", cutoff=0.75) +
-#' # ...(any ggplot options to customize plot appearance)
+#' prettyChromoplot(scorees = "path_to_gistic_results/scores.gistic",
+#'                  genes_to_label = "path_to_gene_coordinates_table.tsv",
+#'                  cutoff = 0.75) +
+#'                   ... #any ggplot options to customize plot appearance
+#' }
 #'
 prettyChromoplot = function(scores,
                             genes_to_label,
@@ -2725,6 +2850,7 @@ prettyChromoplot = function(scores,
 #' @export
 #'
 #' @examples
+#' library(ggplot2)
 #' ggplot(mpg, aes(displ, hwy, colour = class)) +
 #' geom_point() +
 #' theme_Morons()
@@ -2777,7 +2903,7 @@ theme_Morons = function(base_size = 14,
 #' @param comparison_column Mandatory: the name of the metadata column containing the comparison values.
 #' @param rm_na_samples Set to TRUE to remove 0 mutation samples. Default is FALSE.
 #' @param comparison_values Optional: If the comparison column contains more than two values or is not a factor, specify a character vector of length two in the order you would like the factor levels to be set, reference group first.
-#' @param separate_hotspots Optional: If you would like to treat hotspots separately from other mutations in any gene. Requires that the maf file is annotated with GAMBLR::annotate_hotspots.
+#' @param separate_hotspots Optional: If you would like to treat hotspots separately from other mutations in any gene. Requires that the maf file is annotated with [GAMBLR::annotate_hotspots].
 #' @param comparison_name Optional: Specify the legend title if different from the comparison column name.
 #' @param custom_colours Optional: Specify a named vector of colours that match the values in the comparison column.
 #' @param custom_labels Optional: Specify custom labels for the legend categories. Must be in the same order as comparison_values.
@@ -2791,17 +2917,23 @@ theme_Morons = function(base_size = 14,
 #' @export
 #'
 #' @examples
-#' metadata = get_gambl_metadata(case_set = "tFL-study") #%>%
-#'   dplyr::filter(pairing_status == "matched") %>%
-#'   dplyr::filter(consensus_pathology %in% c("FL", "DLBCL"))
+#' metadata = get_gambl_metadata(case_set = "tFL-study")
+#' this_meta = dplyr::filter(metadata, pairing_status == "matched")
+#' this_meta = dplyr::filter(this_meta, consensus_pathology %in% c("FL", "DLBCL"))
 #'
-#' maf = get_coding_ssm(limit_samples = metadata$sample_id, basic_columns = TRUE, seq_type = "genome")
+#' maf = get_coding_ssm(limit_samples = this_metadata$sample_id,
+#'                      basic_columns = TRUE,
+#'                      seq_type = "genome")
 #'
 #' prettyForestPlot(maf = maf,
-#'                  metadata = metadata,
-#'                  genes = c("ATP6V1B2", "EZH2", "TNFRSF14", "RRAGC"),
+#'                  metadata = this_metadata,
+#'                  genes = c("ATP6V1B2",
+#'                            "EZH2",
+#'                            "TNFRSF14",
+#'                            "RRAGC"),
 #'                  comparison_column = "consensus_pathology",
-#'                  comparison_values = c("DLBCL", "FL"),
+#'                  comparison_values = c("DLBCL",
+#'                                        "FL"),
 #'                  separate_hotspots = FALSE,
 #'                  comparison_name = "FL vs DLBCL")
 #'
@@ -3066,15 +3198,22 @@ prettyForestPlot = function(maf,
 #' @export
 #'
 #' @examples
-#' splendidHeatmap(
-#'  this_matrix = data,
-#'  importance_values = rf$importance[,c(1:3)],
-#'  these_samples_metadata = MASTER.METADATA,
-#'  splitColumnName = "pathology",
-#'  metadataColumns = c("cohort", "pathology", "sex", ".", "COO_consensus", "DHITsig_consensus", "seq_type"),
-#'  numericMetadataColumns = ".",
-#'  numericMetadataMax = 0.7,
-#'  custom_colours=custom_colours)
+#' \dontrun{
+#' splendidHeatmap(this_matrix = data,
+#'                 importance_values = rf$importance[,c(1:3)],
+#'                 these_samples_metadata = MASTER.METADATA,
+#'                 splitColumnName = "pathology",
+#'                 metadataColumns = c("cohort",
+#'                                     "pathology",
+#'                                     "sex",
+#'                                     ".",
+#'                                     "COO_consensus",
+#'                                     "DHITsig_consensus",
+#'                                     "seq_type"),
+#'                 numericMetadataColumns = ".",
+#'                 numericMetadataMax = 0.7,
+#'                 custom_colours = custom_colours)
+#' }
 #'
 splendidHeatmap = function(this_matrix,
                            importance_values,
@@ -3353,14 +3492,14 @@ splendidHeatmap = function(this_matrix,
 #' This function can plot both Structural Variants (SV) and Simple Shared Motifs (SSM).
 #' It plots SVs per default and SSM can be added with setting `ssm = TRUE`.
 #' This plot can also be restricted to only show coding mutations. To do so, set `coding_only` to TRUE.
-#' In addition, the returned plot can also be superimposed with a sample-specific mean coverage (from collate_results).
+#' In addition, the returned plot can also be superimposed with a sample-specific mean coverage (from [GAMBLR::collate_results]).
 #' To do so, set `add_qc_metric` to TRUE. A collection of parameters for customizing the returned plot are also available.
 #' e.g `plot_title`, `y_interval`, `hide_legend`, and `plot_subtitle`.
 #'
 #' @param this_sample_id Sample to be plotted.
 #' @param maf_data Optional parameter with maf like df already loaded into R.
 #' @param maf_path Optional parameter with path to external maf like file.
-#' @param ssm Set to FALSE to get plotting data from get_combined_sv (SVs). Default value is TRUE (plots SSM retrieved from annotate_cn_by_ssm$maf)
+#' @param ssm Set to FALSE to get plotting data from [GAMBLR::get_combined_sv] (SVs). Default value is TRUE (plots SSM retrieved from annotate_cn_by_ssm$maf)
 #' @param projection Genome build for returned variants (only applicable for ssm = FALSE)
 #' @param min_vaf The minimum tumour VAF for a SV to be returned. Recommended: 0 (only applicable for ssm = FALSE).
 #' @param variant_type_col Index of column holding Variant Type (to be used with either maf_data or maf_path).
@@ -3382,18 +3521,17 @@ splendidHeatmap = function(this_matrix,
 #' @export
 #'
 #' @examples
-#' #plot SVs.
-#' ssm = fancy_v_chrcount(this_sample_id = "HTMCP-01-06-00422-01A-01D", ssm = TRUE)
+#' #plot ssm
+#' fancy_v_chrcount(this_sample_id = "HTMCP-01-06-00422-01A-01D",
+#'                  ssm = TRUE)
 #'
-#' #plot SVs and SSM.
-#' ssm = fancy_v_chrcount(this_sample_id = "HTMCP-01-06-00422-01A-01D", ssm = TRUE)
-#'
-#'
-#' svs = fancy_v_chrcount(this_sample_id = "HTMCP-01-06-00422-01A-01D", ssm = FALSE,
-#'                        min_vaf = 0,
-#'                        projection = "grch37",
-#'                        chr_select = paste0("chr", c(1:5)),
-#'                        plot_subtitle = "SV Count Distribution (chr1-5)")
+#' #plot SVs for chr 1-5
+#' fancy_v_chrcount(this_sample_id = "HTMCP-01-06-00422-01A-01D",
+#'                  ssm = FALSE,
+#'                  min_vaf = 0,
+#'                  projection = "grch37",
+#'                  chr_select = paste0("chr", c(1:5)),
+#'                  plot_subtitle = "SV Count Distribution (chr1-5)")
 #'
 fancy_v_chrcount = function(this_sample_id,
                             maf_data,
@@ -3430,7 +3568,12 @@ fancy_v_chrcount = function(this_sample_id,
   #get maf data for a specific sample.
   if(missing(maf_data) && is.null(maf_path)){
     if(ssm){
-      maf = assign_cn_to_ssm(this_sample_id = this_sample_id, coding_only = coding_only, from_flatfile = from_flatfile, use_augmented_maf = use_augmented_maf, this_seq_type = seq_type)$maf
+      maf = assign_cn_to_ssm(
+        this_sample_id = this_sample_id,
+        coding_only = coding_only,
+        from_flatfile = from_flatfile,
+        use_augmented_maf = use_augmented_maf,
+        this_seq_type = seq_type)$maf
     }else{
       maf = get_combined_sv(these_sample_ids = this_sample_id, projection = projection, min_vaf = min_vaf) %>%
         dplyr::select(CHROM_A, START_A, END_A, manta_name)
@@ -3523,7 +3666,7 @@ fancy_v_chrcount = function(this_sample_id,
 #' @description Visualizing the number of SNVs per chromosome.
 #'
 #' @details This function takes on an already loaded maf-like data frame, or a path to the maf file of interest.
-#' In addition, the user can also give this function a sample ID and the function will run assign_cn_to_ssm
+#' In addition, the user can also give this function a sample ID and the function will run [GAMBLR::assign_cn_to_ssm]
 #' to get data for plotting. If a maf file or data frame is used, the user has the chance to specify what column
 #' that holds the Variant Type information (`variant_type_col`), in addition the user can also specify what column
 #' in the incoming maf that is corresponding to the chromosome annotations. This function also includes useful subsetting
@@ -3546,6 +3689,7 @@ fancy_v_chrcount = function(this_sample_id,
 #' @param coding_only Optional. Set to TRUE to restrict to plotting only coding mutations.
 #' @param from_flatfile If set to true the function will use flat files instead of the database.
 #' @param use_augmented_maf Boolean statement if to use augmented maf, default is FALSE.
+#' @param this_seq_type Seq type for returned CN segments. One of "genome" (default) or "capture".
 #'
 #' @return A plot as a ggplot object (grob).
 #'
@@ -3554,10 +3698,12 @@ fancy_v_chrcount = function(this_sample_id,
 #'
 #' @examples
 #' #plot SNVs
-#' snv_plot = fancy_snv_chrdistplot(this_sample_id = "HTMCP-01-06-00422-01A-01D")
+#' fancy_snv_chrdistplot(this_sample_id = "HTMCP-01-06-00422-01A-01D")
 #'
 #' #plot SNVs and DNPs
-#' snv_dnp_plot = fancy_snv_chrdistplot(this_sample_id = "HTMCP-01-06-00422-01A-01D", include_dnp = TRUE, plot_subtitle = "SNV + DNP Distribution Per Chromosome")
+#' fancy_snv_chrdistplot(this_sample_id = "HTMCP-01-06-00422-01A-01D",
+#'                       include_dnp = TRUE,
+#'                       plot_subtitle = "SNV + DNP Distribution Per Chromosome")
 #'
 fancy_snv_chrdistplot = function(this_sample_id,
                                  maf_data,
@@ -3571,7 +3717,8 @@ fancy_snv_chrdistplot = function(this_sample_id,
                                  hide_legend = FALSE,
                                  coding_only = FALSE,
                                  from_flatfile = TRUE,
-                                 use_augmented_maf = TRUE){
+                                 use_augmented_maf = TRUE,
+                                 this_seq_type = "genome"){
 
   if(!missing(maf_data)){
     maf = maf_data
@@ -3588,7 +3735,12 @@ fancy_snv_chrdistplot = function(this_sample_id,
 
   #get maf data for a specific sample.
   if(missing(maf_data) && is.null(maf_path)){
-    maf = assign_cn_to_ssm(this_sample_id = this_sample_id, coding_only = coding_only, from_flatfile = from_flatfile, use_augmented_maf = use_augmented_maf)$maf
+    maf = assign_cn_to_ssm(
+      this_sample_id = this_sample_id,
+      coding_only = coding_only,
+      from_flatfile = from_flatfile,
+      use_augmented_maf = use_augmented_maf,
+      this_seq_type = this_seq_type)$maf
   }
 
   #add chr prefix if missing
@@ -3652,7 +3804,7 @@ fancy_snv_chrdistplot = function(this_sample_id,
 #' Convenience parameters for restricting the returned plot are available. For example, with `ssm` (Boolean)
 #' you can toggle if the plot will be in respect to SSM (`ssm = TRUE`) or if you wish to count SVs (`ssm = FALSE`).
 #' In addition, this plot can also accept a variety of incoming data types. Either, you supply the function with a sample ID
-#' (`this_sample_id`) and the function will retrieve data using `assign_cn_to_ssm` or `get_combined_sv` (depending on how the `ssm` parameter is used).
+#' (`this_sample_id`) and the function will retrieve data using [GAMBLR::assign_cn_to_ssm] or [GAMBLR::get_combined_sv] (depending on how the `ssm` parameter is used).
 #' This function also supports a maf or maf-like data frame directly, this is done with `maf_data` or `maf_path`. If data is supplied with either of these parameters,
 #' the user can specify what column holds the variant type information as well as chromosome information (`variant_type_col` and `chromosome_col`).
 #' Restricting the plot to coding mutations is done with `coding_only = TRUE`. Flat-file and augmented maf options can be toggled with `from_flatfile`
@@ -3666,6 +3818,7 @@ fancy_snv_chrdistplot = function(this_sample_id,
 #' @param maf_path Optional parameter with path to external maf like file.
 #' @param ssm Set to FALSE to get plotting data from get_combined_sv (SVs). Default value is TRUE (plots SSM retrieved from annotate_cn_by_ssm$maf).
 #' @param projection Genome build for returned variants (only applicable for ssm = FALSE).
+#' @param this_seq_type Seq type for returned CN segments. One of "genome" (default) or "capture".
 #' @param min_vaf The minimum tumour VAF for a SV to be returned. Recommended: 0 (only applicable for ssm = FALSE).
 #' @param variant_type_col Index of column holding Variant Type (to be used with either maf_data or maf_path).
 #' @param chromosome_col Index of column holding Chromosome (to be used with either maf_data or maf_path).
@@ -3686,17 +3839,19 @@ fancy_snv_chrdistplot = function(this_sample_id,
 #' @export
 #'
 #' @examples
-#' #count all variants for one sample (defualt parameters)
-#' svs = fancy_v_count(this_sample_id = "HTMCP-01-06-00422-01A-01D")
+#' #count all variants for one sample (default parameters)
+#' fancy_v_count(this_sample_id = "HTMCP-01-06-00422-01A-01D")
 #'
 #' #count and plot all variants on chromosome 1
-#' chr1_sv = fancy_v_count(this_sample_id = "HTMCP-01-06-00422-01A-01D", chr_select = c(1))
+#' fancy_v_count(this_sample_id = "HTMCP-01-06-00422-01A-01D",
+#'               chr_select = c("chr1"))
 #'
 fancy_v_count = function(this_sample_id,
                          maf_data,
                          maf_path = NULL,
                          ssm = TRUE,
                          projection = "grch37",
+                         this_seq_type = "genome",
                          min_vaf = 0,
                          variant_type_col = 10,
                          chromosome_col = 5,
@@ -3727,7 +3882,12 @@ fancy_v_count = function(this_sample_id,
   #get maf data for a specific sample.
   if(missing(maf_data) && is.null(maf_path)){
     if(ssm){
-      maf = assign_cn_to_ssm(this_sample_id = this_sample_id, coding_only = coding_only, from_flatfile = from_flatfile, use_augmented_maf = use_augmented_maf)$maf
+      maf = assign_cn_to_ssm(
+        this_sample_id = this_sample_id,
+        coding_only = coding_only,
+        from_flatfile = from_flatfile,
+        use_augmented_maf = use_augmented_maf,
+        this_seq_type = this_seq_type)$maf
     }else{
       maf = get_combined_sv(these_sample_ids = this_sample_id, projection = projection, min_vaf = min_vaf) %>%
         dplyr::select(CHROM_A, START_A, END_A, manta_name)
@@ -3794,7 +3954,7 @@ fancy_v_count = function(this_sample_id,
 #' @description Generate a bar plot visualizing sample-specific copy number states and affected bases for each CN segment.
 #'
 #' @details `fancy_cnbar` visualizes copy number (CN) states on sample-level. Similarly to other fancy_x_plots this function
-#' accepts either a sample ID, for which the function will get copy number states with `get_sample_cn_states`. The function
+#' accepts either a sample ID, for which the function will get copy number states with [GAMBLR::get_sample_cn_segments]. The function
 #' can also accept an already loaded seq file given to the `seq_data` parameter. It can also load a seq file with the `seq_path`
 #' parameter. If the user calls either `seq_data` or `seq_path`, there are a collection of parameters available for specifying
 #' the relevant columns in the given data frame (`chrom_col`, `starat_col`, `end_col`, `cn_col`). It is also possible to
@@ -3817,6 +3977,7 @@ fancy_v_count = function(this_sample_id,
 #' @param chr_select Vector of chromosomes to be included in plot, defaults to autosomes.
 #' @param cutoff Set threshold for maximum CN state to be retrieved.
 #' @param include_cn2 Optional boolean statement for including CN = 2 states in plot.
+#' @param this_seq_type Seq type for returned CN segments. One of "genome" (default) or "capture".
 #'
 #' @return A plot as a ggplot object (grob).
 #'
@@ -3824,12 +3985,8 @@ fancy_v_count = function(this_sample_id,
 #' @export
 #'
 #' @examples
-#'
 #' #Return a plot for one sample, with default parameters.
-#' cns = fancy_cnbar(this_sample_id = "HTMCP-01-06-00422-01A-01D")
-#'
-#' #Plot all copy number states for chromosome 1.
-#' chr1_cns = fancy_cnbar(this_sample_id = "HTMCP-01-06-00422-01A-01D", chr_select = c(1))
+#' fancy_cnbar(this_sample_id = "HTMCP-01-06-00422-01A-01D")
 #'
 fancy_cnbar = function(this_sample_id,
                        seq_data,
@@ -3842,7 +3999,8 @@ fancy_cnbar = function(this_sample_id,
                        plot_subtitle = "n CNV Segments (barplots, left y-axis), n Affected bases for each CN state",
                        chr_select = paste0("chr", c(1:22)),
                        cutoff = 15,
-                       include_cn2 = TRUE) {
+                       include_cn2 = TRUE,
+                       this_seq_type = "genome") {
 
   if(!missing(seq_data)){
     seq = seq_data
@@ -3863,7 +4021,13 @@ fancy_cnbar = function(this_sample_id,
 
   #get maf data for a specific sample.
   if(missing(seq_data) && is.null(seq_path)){
-    seq = get_sample_cn_segments(this_sample_id = this_sample_id, multiple_samples = FALSE, streamlined = FALSE, from_flatfile = TRUE)
+    seq = get_sample_cn_segments(
+      this_sample_id = this_sample_id,
+      multiple_samples = FALSE,
+      streamlined = FALSE,
+      from_flatfile = TRUE,
+      this_seq_type = this_seq_type
+    )
   }
 
   #add chr prefix if missing
@@ -3957,6 +4121,7 @@ fancy_cnbar = function(this_sample_id,
 #' @param maf_path Optional parameter with path to external maf like file.
 #' @param ssm Set to FALSE to get plotting data from get_combined_sv (SVs). Default value is TRUE (plots SSM retrieved from annotate_cn_by_ssm$maf).
 #' @param projection Genome build for returned variants (only applicable for ssm = FALSE).
+#' @param this_seq_type Seq type for returned CN segments. One of "genome" (default) or "capture".
 #' @param min_vaf The minimum tumour VAF for a SV to be returned. Recommended: 0 (only applicable for ssm = FALSE).
 #' @param variant_type_col Index of column holding Variant Type (to be used with either maf_data or maf_path).
 #' @param chromosome_col Index of column holding Chromosome (to be used with either maf_data or maf_path).
@@ -3979,13 +4144,14 @@ fancy_cnbar = function(this_sample_id,
 #'
 #' @examples
 #' #plot SSM size distributions:
-#' plot = fancy_v_sizedis(this_sample_id = "HTMCP-01-06-00422-01A-01D")
+#' fancy_v_sizedis(this_sample_id = "HTMCP-01-06-00422-01A-01D")
 #'
 fancy_v_sizedis = function(this_sample_id,
                            maf_data,
                            maf_path = NULL,
                            ssm = TRUE,
                            projection = "grch37",
+                           this_seq_type = "genome",
                            min_vaf = 0,
                            variant_type_col = 10,
                            chromosome_col = 5,
@@ -4021,7 +4187,12 @@ fancy_v_sizedis = function(this_sample_id,
   #get maf data for a specific sample.
   if(missing(maf_data) && is.null(maf_path)){
     if(ssm){
-      maf = assign_cn_to_ssm(this_sample_id = this_sample_id, coding_only = coding_only, from_flatfile = from_flatfile, use_augmented_maf = use_augmented_maf)$maf
+      maf = assign_cn_to_ssm(
+        this_sample_id = this_sample_id,
+        coding_only = coding_only,
+        from_flatfile = from_flatfile,
+        use_augmented_maf = use_augmented_maf,
+        this_seq_type = this_seq_type)$maf
     }else{
       maf = get_combined_sv(these_sample_ids  = this_sample_id, projection = projection, min_vaf = min_vaf) %>%
         dplyr::select(CHROM_A, START_A, END_A, manta_name)
@@ -4120,6 +4291,7 @@ fancy_v_sizedis = function(this_sample_id,
 #' @param coding_only Optional. Set to TRUE to restrict to plotting only coding mutations.
 #' @param from_flatfile If set to true the function will use flat files instead of the database.
 #' @param use_augmented_maf Boolean statement if to use augmented maf, default is FALSE.
+#' @param this_seq_type Seq type for returned CN segments. One of "genome" (default) or "capture".
 #'
 #' @return A plot as a ggplot object (grob).
 #'
@@ -4127,26 +4299,11 @@ fancy_v_sizedis = function(this_sample_id,
 #' @export
 #'
 #' @examples
-#' #get FL genes
-#' fl_genes = dplyr::filter(lymphoma_genes, FL == TRUE) %>%
-#'   dplyr::select(Gene) %>%
-#'   pull(Gene)
-#'
-#' #get FL genes on chromosome 1
-#' fl_genes_chr1 = gene_to_region(gene_symbol = fl_genes, return_as = "df") %>%
-#'   dplyr::filter(chromosome == "1") %>%
-#'   pull(hugo_symbol)
-#'
-#' #build an ideogram showing ssm and copy number states for chromosome 1, and superimpose with FL genes.
-#' ideogram_fl_chr1 = fancy_ideogram(this_sample_id = "HTMCP-01-06-00422-01A-01D",
-#'                                   gene_annotation = fl_genes_chr1,
-#'                                   intersect_regions = "chr1:10000-249250621")
-#'
-#' #
-#' fl_regions = gene_to_region(gene_symbol = fl_genes, return_as = "df")
-#' ideogram_fl = fancy_ideogram(this_sample_id = "HTMCP-01-06-00422-01A-01D",
-#'                               gene_annotation = fl_genes,
-#'                               intersect_regions = fl_regions)
+#' #build plot
+#' fancy_ideogram(this_sample_id = "HTMCP-01-06-00422-01A-01D",
+#'                gene_annotation = "MYC",
+#'                plot_title = "Sample-level Ideogram Example",
+#'                plot_subtitle = "grch37")
 #'
 fancy_ideogram = function(this_sample_id,
                           gene_annotation,
@@ -4169,7 +4326,8 @@ fancy_ideogram = function(this_sample_id,
                           ssm_count = TRUE,
                           coding_only = FALSE,
                           from_flatfile = TRUE,
-                          use_augmented_maf = TRUE){
+                          use_augmented_maf = TRUE,
+                          this_seq_type = "genome"){
 
   #plot theme
   ideogram_theme = function(){
@@ -4221,7 +4379,13 @@ fancy_ideogram = function(this_sample_id,
 
   #get maf data for a specific sample.
   if(missing(seq_data) && is.null(seq_path)){
-    cn_states = get_sample_cn_segments(this_sample_id = this_sample_id, multiple_samples = FALSE, with_chr_prefix = FALSE, streamlined = FALSE)
+    cn_states = get_sample_cn_segments(
+      this_sample_id = this_sample_id,
+      multiple_samples = FALSE,
+      with_chr_prefix = FALSE,
+      streamlined = FALSE,
+      this_seq_type = this_seq_type
+    )
   }
 
   #convert chr into y coordinates
@@ -4320,7 +4484,12 @@ fancy_ideogram = function(this_sample_id,
     }
 
     if(missing(maf_data) && is.null(maf_path)){
-      maf = assign_cn_to_ssm(this_sample_id = this_sample, coding_only = coding_only, from_flatfile = from_flatfile, use_augmented_maf = use_augmented_maf)$maf
+      maf = assign_cn_to_ssm(
+        this_sample_id = this_sample_id,
+        coding_only = coding_only,
+        from_flatfile = from_flatfile,
+        use_augmented_maf = use_augmented_maf,
+        this_seq_type = this_seq_type)$maf
     }
 
     #transform maf data
@@ -4444,6 +4613,7 @@ fancy_ideogram = function(this_sample_id,
 #' @param these_sample_ids Sample to be plotted (accepts 2, 3 or 4 samples).
 #' @param plot_title Main title of plot.
 #' @param plot_sub Subtitle of plot.
+#' @param this_seq_type Seq type for returned CN segments. One of "genome" (default) or "capture".
 #' @param chr_anno_dist Optional parameter to adjust chromosome annotations, default value is 3, increase to adjust annotations to left.
 #' @param chr_select Optional parameter to subset plot to specific chromosomes. Default value is chr1-22.
 #' @param include_cn2 Set to TRUE for plotting CN states == 2.
@@ -4460,12 +4630,18 @@ fancy_ideogram = function(this_sample_id,
 #'
 #' @examples
 #' #two samples ideogram
-#' ideo_2_samp = fancy_multisamp_ideogram(these_sample_ids = c("00-15201_tumorA", "00-15201_tumorB"),
-#'                                        chr_anno_dist = 4)
+#' fancy_multisamp_ideogram(these_sample_ids = c("00-15201_tumorA",
+#'                                               "00-15201_tumorB"),
+#'                          include_cn2 = TRUE,
+#'                          plot_title = "Multi-sample Ideograms Example",
+#'                          plot_sub = "grch37",
+#'                          chr_anno_dist = 2.5,
+#'                          chr_select = paste0("chr", c(1:22)))
 #'
 fancy_multisamp_ideogram = function(these_sample_ids,
                                     plot_title = "CN Segments Ideogram",
                                     plot_sub = "grch37",
+                                    this_seq_type = "genome",
                                     chr_anno_dist = 3,
                                     chr_select = paste0("chr", c(1:22)),
                                     include_cn2 = FALSE,
@@ -4537,7 +4713,12 @@ fancy_multisamp_ideogram = function(these_sample_ids,
     cn_states = dplyr::select(cnv_cord, ID, chrom, start, end, CN)
   }else{
     #load CN data
-    cn_states = get_sample_cn_segments(multiple_samples = TRUE, sample_list = these_sample_ids, streamlined = FALSE)
+    cn_states = get_sample_cn_segments(
+      multiple_samples = TRUE,
+      sample_list = these_sample_ids,
+      streamlined = FALSE,
+      this_seq_type = this_seq_type
+    )
   }
 
   #convert chr into y coordinates
@@ -4716,6 +4897,7 @@ fancy_multisamp_ideogram = function(these_sample_ids,
 #' @param seq_path Optional parameter with path to external cn file.
 #' @param maf_data Optional parameter with maf like df already loaded into R.
 #' @param maf_path Optional parameter with path to external maf like file.
+#' @param this_seq_type Seq type for returned CN segments. One of "genome" (default) or "capture".
 #'
 #' @return Nothing.
 #'
@@ -4724,8 +4906,12 @@ fancy_multisamp_ideogram = function(these_sample_ids,
 #' @export
 #'
 #' @examples
+#' \dontrun{
 #' #create a PDF report for one sample, as well as exporting all individual plots.
-#' comp_report(this_sample = "HTMCP-01-06-00422-01A-01D", out = "reports/", export_individual_plots = TRUE)
+#' comp_report(this_sample = "HTMCP-01-06-00422-01A-01D",
+#'             out = "reports/",
+#'             export_individual_plots = TRUE)
+#' }
 #'
 comp_report = function(this_sample_id,
                        export_individual_plots = FALSE,
@@ -4733,7 +4919,8 @@ comp_report = function(this_sample_id,
                        seq_data,
                        seq_path = NULL,
                        maf_data,
-                       maf_path = NULL){
+                       maf_path = NULL,
+                       this_seq_type = "genome"){
 
   if(!missing(maf_data)){
     maf = maf_data
@@ -4771,11 +4958,22 @@ comp_report = function(this_sample_id,
 
   #read maf and seq data into r (avoid calling assign_cn_to_ssm and get_cn_segments for every plotting function)
   if(missing(maf_data) && is.null(maf_path)){
-    maf = assign_cn_to_ssm(this_sample_id = this_sample_id, coding_only = FALSE, from_flatfile = TRUE, use_augmented_maf = TRUE)$maf
+    maf = assign_cn_to_ssm(
+      this_sample_id = this_sample_id,
+      coding_only = FALSE,
+      from_flatfile = TRUE,
+      use_augmented_maf = TRUE,
+      this_seq_type = this_seq_type)$maf
   }
 
   if(missing(seq_data) && is.null(seq_path)){
-    seq = get_sample_cn_segments(this_sample_id = this_sample_id, multiple_samples = FALSE, streamlined = FALSE, from_flatfile = TRUE)
+    seq = get_sample_cn_segments(
+      this_sample_id = this_sample_id,
+      multiple_samples = FALSE,
+      streamlined = FALSE,
+      from_flatfile = TRUE,
+      this_seq_type = this_seq_type
+    )
   }
 
   #execute a collection of sample-level plots with default parameters
@@ -4800,15 +4998,15 @@ comp_report = function(this_sample_id,
 
   #export individual plots
   if(export_individual_plots){
-    ggsave(ssm_chr, file = paste0(out, this_sample_id, "_ssm_dist_chr.pdf"), limitsize = FALSE, width = 17, height = 12, units = c("in"), dpi = 300)
-    ggsave(sv_chr, file = paste0(out, this_sample_id, "_sv_dist_chr.pdf"), limitsize = FALSE, width = 17, height = 12, units = c("in"), dpi = 300)
-    ggsave(snv_plot, file = paste0(out, this_sample_id, "_snv_dist_chr.pdf"), limitsize = FALSE, width = 17, height = 12, units = c("in"), dpi = 300)
-    ggsave(ssm_count, file = paste0(out, this_sample_id, "_ssm_counts.pdf"), limitsize = FALSE, width = 12, height = 12, units = c("in"), dpi = 300)
-    ggsave(sv_count, file = paste0(out, this_sample_id, "_sv_counts.pdf"), limitsize = FALSE, width = 12, height = 12, units = c("in"), dpi = 300)
-    ggsave(sv_size, file = paste0(out, this_sample_id, "_sv_size_dens.pdf"), limitsize = FALSE, width = 12, height = 12, units = c("in"), dpi = 300)
-    ggsave(cns, file = paste0(out, this_sample_id, "_cn_states.pdf"), limitsize = FALSE, width = 12, height = 12, units = c("in"), dpi = 300)
-    ggsave(violine_plot, file = paste0(out, this_sample_id, "_sv_size_dist.pdf"), limitsize = FALSE, width = 12, height = 12, units = c("in"), dpi = 300)
-    ggsave(cnv_ideogram, file = paste0(out, this_sample_id, "_cnv_ideo.pdf"), limitsize = FALSE, width = 17, height = 12, units = c("in"), dpi = 300)
+    ggsave(ssm_chr, filename = paste0(out, this_sample_id, "_ssm_dist_chr.pdf"), limitsize = FALSE, width = 17, height = 12, units = c("in"), dpi = 300)
+    ggsave(sv_chr, filename = paste0(out, this_sample_id, "_sv_dist_chr.pdf"), limitsize = FALSE, width = 17, height = 12, units = c("in"), dpi = 300)
+    ggsave(snv_plot, filename = paste0(out, this_sample_id, "_snv_dist_chr.pdf"), limitsize = FALSE, width = 17, height = 12, units = c("in"), dpi = 300)
+    ggsave(ssm_count, filename = paste0(out, this_sample_id, "_ssm_counts.pdf"), limitsize = FALSE, width = 12, height = 12, units = c("in"), dpi = 300)
+    ggsave(sv_count, filename = paste0(out, this_sample_id, "_sv_counts.pdf"), limitsize = FALSE, width = 12, height = 12, units = c("in"), dpi = 300)
+    ggsave(sv_size, filename = paste0(out, this_sample_id, "_sv_size_dens.pdf"), limitsize = FALSE, width = 12, height = 12, units = c("in"), dpi = 300)
+    ggsave(cns, filename = paste0(out, this_sample_id, "_cn_states.pdf"), limitsize = FALSE, width = 12, height = 12, units = c("in"), dpi = 300)
+    ggsave(violine_plot, filename = paste0(out, this_sample_id, "_sv_size_dist.pdf"), limitsize = FALSE, width = 12, height = 12, units = c("in"), dpi = 300)
+    ggsave(cnv_ideogram, filename = paste0(out, this_sample_id, "_cnv_ideo.pdf"), limitsize = FALSE, width = 17, height = 12, units = c("in"), dpi = 300)
   }
   return()
 }
@@ -4820,14 +5018,14 @@ comp_report = function(this_sample_id,
 #'
 #' @details This function is using RCircos to create sample-level cirocs plots, annotating SVs and SSM with the potential of adding gene annotations.
 #' To control what variants are to be plotted, simply use the two Boolean parameters; `ssm_calls` and `sv_calls` (both TRUE by default).
-#' Provide the sample ID of interest in with the `this_sample_id` parameter. This function calls `assing_cn_to_ssm` and `get_combined_sv` to retrieve data for plotting.
+#' Provide the sample ID of interest in with the `this_sample_id` parameter. This function calls [GAMBLR::assign_cn_to_ssm] and [GAMBLR::get_combined_sv] to retrieve data for plotting.
 #' Since this function does not create a grob, but rather outputs a rendered PDF/PNG, the user has to provide an output path with the `out` parameter.
 #' In addition, the user can control the output format. For PDF, set `pdf` to TRUE (default) and to export the created plot as PNG, set the same parameter to FALSE.
 #' This function also has convenient filtering parameters available, see parameter descriptions for more information and how to properly use the filtering parameters.
 #' Lastly, this plot can also highlight genes of interest. To do so, provide a data frame (comparable to the return from `gene_to_region(return_as = "bed")`) to the `gene_list` parameter.
 #'
 #' @param this_sample_id Sample to be plotted.
-#' @param gene_list Optional parameter to annotate genes on the circos plot from a data frame of genes. Is compatible with gene_to_region (return_as = "bed") output format. See examples.
+#' @param gene_list Optional parameter to annotate genes on the circos plot from a data frame of genes. Is compatible with [GAMBLR::gene_to_region] (return_as = "bed") output format. See examples.
 #' @param ssm_calls Boolean parameter for plotting ssm. Default is TRUE.
 #' @param sv_calls Boolean parameter for plotting SVs, default is TRUE.
 #' @param chr_select Optional argument for subset on selected chromosomes, default is all autosomes.
@@ -4836,6 +5034,7 @@ comp_report = function(this_sample_id,
 #' @param from_flatfile If set to TRUE the function will use flat files instead of the database.
 #' @param use_augmented_maf Boolean statement if to use augmented maf, default is TRUE.
 #' @param projection Genomic projection for variants and circos plot. Accepted values are grch37 and hg38, default is grch37.
+#' @param this_seq_type Seq type for returned CN segments. One of "genome" (default) or "capture".
 #' @param out Path to output folder, to where the plot will be exported.
 #' @param plot_title Optional parameter for naming your plot, default is this_sample.
 #' @param pdf Set to FALSE for png, default is TRUE (pdf).
@@ -4847,6 +5046,7 @@ comp_report = function(this_sample_id,
 #' @export
 #'
 #' @examples
+#' \dontrun{
 #' #retrieve gene names for FL genes
 #' fl_genes = dplyr::filter(lymphoma_genes, FL == TRUE) %>%
 #' fl_genes = dplyr::filter(lymphoma_genes, FL == TRUE) %>%
@@ -4854,17 +5054,21 @@ comp_report = function(this_sample_id,
 #'  pull(Gene)
 #'
 #' # get regions for selected genes
-#' fl_genes_list = gene_to_region(gene_symbol = fl_genes, return_as = "bed")
+#' fl_genes_list = gene_to_region(gene_symbol = fl_genes,
+#'                                return_as = "bed")
 #'
 #' fancy_circos_plot_new(this_sample_id = "DOHH-2",
 #'                       ssm_calls = FALSE,
 #'                       gene_list = fl_genes_list,
-#'                       chr_select = c("chr8", "chr14", "chr18"),
+#'                       chr_select = c("chr8",
+#'                                      "chr14",
+#'                                      "chr18"),
 #'                       out = "../../plots/",
 #'                       plot_title = "DOHH-2 (SVs) Example Plot",
 #'                       pdf = FALSE,
 #'                       pdf = FALSE,
 #'                       file_name = "dohh2_example.png")
+#' }
 #'
 fancy_circos_plot = function(this_sample_id,
                              gene_list,
@@ -4876,6 +5080,7 @@ fancy_circos_plot = function(this_sample_id,
                              from_flatfile = TRUE,
                              use_augmented_maf = TRUE,
                              projection = "grch37",
+                             this_seq_type = "genome",
                              plot_title = paste0(this_sample_id),
                              out,
                              pdf = TRUE,
@@ -4968,7 +5173,12 @@ fancy_circos_plot = function(this_sample_id,
 
   #get SSM data
   if(ssm_calls){
-    maf = assign_cn_to_ssm(this_sample_id = this_sample_id, coding_only = coding_only, from_flatfile = from_flatfile, use_augmented_maf = use_augmented_maf)$maf #get maf data
+    maf = assign_cn_to_ssm(
+      this_sample_id = this_sample_id,
+      coding_only = coding_only,
+      from_flatfile = from_flatfile,
+      use_augmented_maf = use_augmented_maf,
+      this_seq_type = this_seq_type)$maf #get maf data
     maf_tmp = dplyr::select(maf, Chromosome, Start_Position, End_Position, Variant_Type) #select appropriate columns
     maf_tmp$Variant_Size = maf_tmp$End_Position - maf_tmp$Start_Position # calcualte variant size
     maf_tmp$Variant_Type = as.factor(maf_tmp$Variant_Type) #transform Variant_Type to factor
@@ -5153,7 +5363,7 @@ fancy_circos_plot = function(this_sample_id,
 #' For example, it is possible to subset the included variants to a specific VAF threshold with `VAF_cutoff`. The `size_cutoff` is another parameter
 #' for filtering the variants on set variant sizes, the default for this parameter is to only include variants of at least 50bp.
 #' This function takes either a sample ID (`this_sample_id`) or an already loaded data frame (`maf_data` or a path to a maf-like file with `maf_path`).
-#' If `this_sample_id` is called, the function will run `GAMBLR::get_combined_sv` to retrieve SV calls.
+#' If `this_sample_id` is called, the function will run [GAMBLR::get_combined_sv] to retrieve SV calls.
 #' If either of the `maf` parameters are used, note that it's possible to specify the columns of interest;
 #' (`chrom_a_col`, `start_a_col`, `end_a_col` and `variant_type_col`), allowing this function to work with any maf-like data frames.
 #' This function also allows the user to customize the returned plot. For more info on how to do this, please refer to the aesthetic
@@ -5182,8 +5392,13 @@ fancy_circos_plot = function(this_sample_id,
 #' @export
 #'
 #' @examples
-#' myplot = fancy_sv_sizedens(this_sample_id = "HTMCP-01-06-00422-01A-01D")
-#' myplot2 = fancy_sv_sizedens(this_sample_id = "HTMCP-01-06-00422-01A-01D", size_cutoff = 0, chr_select = c("chr1", "chr2"))
+#' #build plot sith default parameters
+#' fancy_sv_sizedens(this_sample_id = "HTMCP-01-06-00422-01A-01D")
+#'
+#' #restrict plot to only chromosome 1 and 2
+#' fancy_sv_sizedens(this_sample_id = "HTMCP-01-06-00422-01A-01D",
+#'                   size_cutoff = 0,
+#'                   chr_select = c("chr1", "chr2"))
 #'
 fancy_sv_sizedens = function(this_sample_id,
                              maf_data,
@@ -5304,20 +5519,20 @@ fancy_sv_sizedens = function(this_sample_id,
 #' @examples
 #' #Example 1 - using these_sample_ids parameter
 #' #subset on FL cases with QC metrics available and plot
-#' kridel_fl = get_gambl_metadata() %>%
-#'  dplyr::filter(pathology == "FL", cohort == "FL_Kridel") %>%
-#'  dplyr::select(sample_id)
+#' metadata = get_gambl_metadata()
+#' kridel_fl = dplyr::filter(metadata, pathology == "FL",
+#'                cohort == "FL_Kridel")
 #'
-#' my_plot_1 = fancy_alignment_plot(these_sample_ids = kridel_fl)
+#' kridel_fl_samples = dplyr::select(kridel_fl, sample_id)
+#'
+#' fancy_alignment_plot(these_sample_ids = kridel_fl_samples)
 #'
 #' #Example 2 - using already filtered metadata (these_samples_metadata)
-#' fl_metadata = get_gambl_metadata() %>%
-#'  dplyr::filter(pathology == "FL", cohort == "FL_Kridel")
+#' fancy_alignment_plot(these_samples_metadata = kridel_fl)
 #'
-#' my_plot_2 = fancy_alignment_plot(these_samples_metadata = fl_metadata)
-#'
-#' #Example 3 - using in-house metadata fitlering options
-#' my_plot_3 = fancy_alignment_plot(keep_cohort = "FL_Kridel", keep_pathology = "FL")
+#' #Example 3 - using in-house metadata filtering options
+#' fancy_alignment_plot(keep_cohort = "FL_Kridel",
+#'                      keep_pathology = "FL")
 #'
 fancy_alignment_plot = function(these_sample_ids,
                                 metadata,
@@ -5342,31 +5557,26 @@ fancy_alignment_plot = function(these_sample_ids,
 
   if(!missing(these_samples_metadata)){
     these_sample_ids = dplyr::select(these_samples_metadata, sample_id) %>%
-      as.data.frame(strings.as.factors = FALSE) %>%
-      pull(sample_id)
+      as.data.frame(strings.as.factors = FALSE)
   }
 
 
   #filter metadata on selected cohort/pathology
   if(missing(these_sample_ids)){
     if(!missing(keep_cohort) && missing(keep_pathology)){
-      these_sample_ids = dplyr::filter(this_meta, cohort == keep_cohort) %>%
-        pull(sample_id)
+      these_sample_ids = dplyr::filter(this_meta, cohort == keep_cohort)
     }
 
     if(!missing(keep_pathology) && missing(keep_cohort)){
-      these_sample_ids = dplyr::filter(this_meta, pathology == keep_pathology) %>%
-        pull(sample_id)
+      these_sample_ids = dplyr::filter(this_meta, pathology == keep_pathology)
     }
 
     if(!missing(keep_cohort) && !missing(keep_pathology)){
-      these_sample_ids = dplyr::filter(this_meta, pathology == keep_pathology, cohort == keep_cohort) %>%
-        pull(sample_id)
+      these_sample_ids = dplyr::filter(this_meta, pathology == keep_pathology, cohort == keep_cohort)
     }
 
     if(missing(keep_cohort) && missing(keep_pathology)){
-      these_sample_ids = dplyr::select(this_meta, sample_id) %>%
-        pull(sample_id)
+      these_sample_ids = dplyr::select(this_meta, sample_id)
     }
   }
 
@@ -5463,32 +5673,30 @@ fancy_alignment_plot = function(these_sample_ids,
 #' @examples
 #' #Example 1 - using these_sample_ids parameter
 #' #subset on FL cases with QC metrics available and plot
-#' kridel_fl = get_gambl_metadata() %>%
-#'  dplyr::filter(pathology == "FL", cohort == "FL_Kridel") %>%
-#'  dplyr::select(sample_id) %>%
+#' metadata = get_gambl_metadata()
+#' kridel_fl = dplyr::filter(metadata, pathology == "FL",
+#'                cohort == "FL_Kridel")
+#' kridel_fl_samples = dplyr::select(kridel_fl, sample_id)
 #'
-#' my_plot_1 = fancy_qc_plot(these_sample_ids = kridel_fl,
-#'                           plot_data = "AverageBaseQuality",
-#'                           y_axis_lab = "Average Base Quality",
-#'                           plot_title = "Average Base Quality For FL_Kridel")
+#' fancy_qc_plot(these_sample_ids = kridel_fl_samples,
+#'               plot_data = "AverageBaseQuality",
+#'               y_axis_lab = "Average Base Quality",
+#'               plot_title = "Average Base Quality For FL_Kridel")
 #'
 #' #Example 2 - using already filtered metadata (these_samples_metadata)
-#' fl_metadata = get_gambl_metadata() %>%
-#'  dplyr::filter(pathology == "FL", cohort == "FL_Kridel")
-#'
-#' my_plot_2 = fancy_qc_plot(these_samples_metadata = fl_metadata,
-#'                           interactive = TRUE,
-#'                           labels = c("cohort", "pathology"),
-#'                           plot_data = "AverageBaseQuality",
-#'                           y_axis_lab = "Average Base Quality",
-#'                           plot_title = "Average Base Quality For FL_Kridel")
+#' fancy_qc_plot(these_samples_metadata = kridel_fl,
+#'               interactive = TRUE,
+#'               labels = c("cohort", "pathology"),
+#'               plot_data = "AverageBaseQuality",
+#'               y_axis_lab = "Average Base Quality",
+#'               plot_title = "Average Base Quality For FL_Kridel")
 #'
 #' #Example 3 - using in-house metadata filtering options
-#' my_plot_3 = fancy_qc_plot(keep_cohort = "FL_Kridel",
-#'                           keep_pathology = "FL",
-#'                           plot_data = "AverageBaseQuality",
-#'                           y_axis_lab = "Average Base Quality",
-#'                           plot_title = "Average Base Quality For FL_Kridel")
+#' fancy_qc_plot(keep_cohort = "FL_Kridel",
+#'               keep_pathology = "FL",
+#'               plot_data = "AverageBaseQuality",
+#'               y_axis_lab = "Average Base Quality",
+#'               plot_title = "Average Base Quality For FL_Kridel")
 #'
 fancy_qc_plot = function(these_sample_ids,
                          keep_cohort,
@@ -5633,21 +5841,19 @@ fancy_qc_plot = function(these_sample_ids,
 #' @examples
 #' #Example 1 - using these_sample_ids parameter
 #' #subset on FL cases with QC metrics available and plot
-#' kridel_fl = get_gambl_metadata() %>%
-#'  dplyr::filter(pathology == "FL", cohort == "FL_Kridel") %>%#
-#'  dplyr::select(sample_id) %>%
-#'  pull(sample_id)
+#' metadata = get_gambl_metadata()
+#' kridel_fl = dplyr::filter(metadata, pathology == "FL",
+#'                cohort == "FL_Kridel")
+#' kridel_fl_samples = dplyr::select(kridel_fl, sample_id)
 #'
-#' my_plot_1 = fancy_propcov_plot(these_sample_ids = kridel_fl)
+#' fancy_propcov_plot(these_sample_ids = kridel_fl_samples)
 #'
 #' #Example 2 - using already filtered metadata (these_samples_metadata)
-#' fl_metadata = get_gambl_metadata() %>%
-#'  dplyr::filter(pathology == "FL", cohort == "FL_Kridel")
+#' fancy_propcov_plot(these_samples_metadata = kridel_fl)
 #'
-#' my_plot_2 = fancy_propcov_plot(these_samples_metadata = fl_metadata)
-#'
-#' #Example 3 - using in-house metadata fitlering options
-#' my_plot_3 = fancy_propcov_plot(keep_cohort = "FL_Kridel", keep_pathology = "FL")
+#' #Example 3 - using in-house metadata filtering options
+#' fancy_propcov_plot(keep_cohort = "FL_Kridel",
+#'                    keep_pathology = "FL")
 #'
 fancy_propcov_plot = function(these_sample_ids,
                               metadata,
@@ -5751,8 +5957,8 @@ fancy_propcov_plot = function(these_sample_ids,
 #' @param these_sample_ids Data frame with sample IDs (to be plotted) in the first column.
 #' @param metadata Optional, user can provide a metadata df to subset sample IDs from.
 #' @param these_samples_metadata GAMBL metadata subset to the cases you want to process.
-#' @param keep_cohort Optional parameter to be used when these_sample is NULL. Calls get_gambl_metadata() and filters on the cohort supplied in this parameter.
-#' @param keep_pathology Optional parameter to be used when these_sample is NULL. Calls get_gambl_metadata() and filters on the pathology supplied in this parameter.
+#' @param keep_cohort Optional parameter to be used when these_sample is NULL. Calls [GAMBLR::get_gambl_metadata] and filters on the cohort supplied in this parameter.
+#' @param keep_pathology Optional parameter to be used when these_sample is NULL. Calls [GAMBLR::get_gambl_metadata] and filters on the pathology supplied in this parameter.
 #' @param seq_type Selected seq type for incoming QC metrics.
 #' @param plot_subtitle Plotting parameter, subtitle of generated plot.
 #'
@@ -5764,21 +5970,19 @@ fancy_propcov_plot = function(these_sample_ids,
 #' @examples
 #' #Example 1 - using these_sample_ids parameter
 #' #subset on FL cases with QC metrics available and plot
-#' kridel_fl = get_gambl_metadata() %>%
-#'  dplyr::filter(pathology == "FL", cohort == "FL_Kridel") %>%#
-#'  dplyr::select(sample_id) %>%
-#'  pull(sample_id)
+#' metadata = get_gambl_metadata() %>%
+#' kridel_fl = dplyr::filter(metadata, pathology == "FL",
+#'                cohort == "FL_Kridel")
+#' kridel_fl_samples = dplyr::select(kridel_fl, sample_id)
 #'
-#' my_plot_1 = fancy_proportions_plot(these_sample_ids = kridel_fl)
+#' fancy_proportions_plot(these_sample_ids = kridel_fl_samples)
 #'
 #' #Example 2 - using already filtered metadata (these_samples_metadata)
-#' fl_metadata = get_gambl_metadata() %>%
-#'  dplyr::filter(pathology == "FL", cohort == "FL_Kridel")
+#' fancy_proportions_plot(these_samples_metadata = kridel_fl)
 #'
-#' my_plot_2 = fancy_proportions_plot(these_samples_metadata = fl_metadata)
-#'
-#' #Example 3 - using in-house metadata fitlering options
-#' my_plot_3 = fancy_proportions_plot(keep_cohort = "FL_Kridel", keep_pathology = "FL")
+#' #Example 3 - using in-house metadata filtering options
+#' fancy_proportions_plot(keep_cohort = "FL_Kridel",
+#'                    keep_pathology = "FL")
 #'
 fancy_proportions_plot = function(these_sample_ids,
                                   metadata,
@@ -5797,31 +6001,25 @@ fancy_proportions_plot = function(these_sample_ids,
 
   if(!missing(these_samples_metadata)){
     these_sample_ids = dplyr::select(these_samples_metadata, sample_id) %>%
-      as.data.frame(strings.as.factors = FALSE) %>%
-      pull(sample_id)
+      as.data.frame(strings.as.factors = FALSE)
   }
-
 
   #filter metadata on selected cohort/pathology
   if(missing(these_sample_ids) && missing(these_samples_metadata)){
     if(!missing(keep_cohort) && missing(keep_pathology)){
-      these_sample_ids = dplyr::filter(this_meta, cohort == keep_cohort) %>%
-        pull(sample_id)
+      these_sample_ids = dplyr::filter(this_meta, cohort == keep_cohort)
     }
 
     if(!missing(keep_pathology) && missing(keep_cohort)){
-      these_sample_ids = dplyr::filter(this_meta, pathology == keep_pathology) %>%
-        pull(sample_id)
+      these_sample_ids = dplyr::filter(this_meta, pathology == keep_pathology)
     }
 
     if(!missing(keep_cohort) && !missing(keep_pathology)){
-      these_sample_ids = dplyr::filter(this_meta, pathology == keep_pathology, cohort == keep_cohort) %>%
-        pull(sample_id)
+      these_sample_ids = dplyr::filter(this_meta, pathology == keep_pathology, cohort == keep_cohort)
     }
 
     if(missing(keep_cohort) && missing(keep_pathology)){
-      these_sample_ids = dplyr::select(this_meta, sample_id) %>%
-        pull(sample_id)
+      these_sample_ids = dplyr::select(this_meta, sample_id)
     }
   }
 

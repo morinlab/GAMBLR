@@ -11,7 +11,7 @@ coding_class = c("Frame_Shift_Del", "Frame_Shift_Ins", "In_Frame_Del", "In_Frame
 #' for more information and examples, refer to the parameter descriptions as well as function examples.
 #'
 #' @param targ_df Optionally provide a data frame with all file details.
-#' @param tool_name The tool or pipeline that generated the files (should be the same for all).
+#' @param tool_name The tool or pipeline that generated the files (should be the same for all). Acceptable values are manta and gridss.
 #' @param unix_group The unix group (should be the same for all).
 #' @param filename_end_pattern Optionally specify a pattern to search for the files among a longer set of files in the outputs.
 #' @param update_db Set to TRUE to overwrite any existing rows in the table for this tool/unix_group combination.
@@ -21,7 +21,10 @@ coding_class = c("Frame_Shift_Del", "Frame_Shift_Ins", "In_Frame_Del", "In_Frame
 #' @export
 #'
 #' @examples
-#' ex_outs = find_expected_outputs(my_df, "slims_3", "gambl")
+#' #get paths to unmatched manta bedpe files
+#'ex_outs = find_expected_outputs(tool_name = "manta",
+#'                                unix_group = "gambl",
+#'                                filename_end_pattern = "unmatched.somaticSV.bedpe")
 #'
 find_expected_outputs = function(targ_df,
                                  tool_name,
@@ -115,8 +118,10 @@ find_expected_outputs = function(targ_df,
 #' @return Nothing.
 #'
 #' @examples
+#' \dontrun{
 #' results = populate_tool_results(tool_name = "slims_3")
-#'
+#' }
+#' 
 populate_tool_results = function(tool_name){
 
   #IMPORTANT TODO: This function should only ever work with samples that exist in the metadata
@@ -407,7 +412,7 @@ populate_each_tool_result = function(tool,
 
 #' @title Read Merge Manta With Liftover.
 #'
-#' @description Takes a path to bedpe and runs liftover (`liftover_bedpe`) based on the original genome build of the bedpe.
+#' @description Takes a path to bedpe and runs liftover ([GAMBLR::liftover_bedpe]) based on the original genome build of the bedpe.
 #'
 #' @details This is a helper function that is not meant to be used routinely.
 #'
@@ -416,10 +421,15 @@ populate_each_tool_result = function(tool,
 #' @param out_dir output directory
 #'
 #' @import dplyr readr
+#' 
+#' @noRd
 #'
 #' @examples
-#' manta_bedpe = read_merge_manta_with_liftover(bedpe_paths = "some_path.bedpe", out_dir = "../")
-#'
+#' \dontrun{
+#' manta_bedpe = read_merge_manta_with_liftover(bedpe_paths = "some_path.bedpe",
+#'                                              out_dir = "../")
+#' }
+#' 
 read_merge_manta_with_liftover = function(bedpe_paths = c(),
                                           pattern = "--matched",
                                           out_dir){
@@ -497,6 +507,8 @@ read_merge_manta_with_liftover = function(bedpe_paths = c(),
 #' @param projection_build The genome we want all results to be relative to (lifted if necessary).
 #'
 #' @import dplyr readr
+#' 
+#' @noRd
 #'
 process_all_manta_bedpe = function(file_df,
                                    out_dir,
@@ -640,7 +652,11 @@ process_all_manta_bedpe = function(file_df,
 #' @export
 #'
 #' @examples
-#' fetch_output_files(tool = "manta", unix_group = "genome")
+#'
+#' ex_outs = fetch_output_files(tool = "manta",
+#'                              base_path = "gambl/sequenza_current",
+#'                              seq_type = "capture",
+#'                              build = "hg38")
 #'
 fetch_output_files = function(tool,
                               unix_group,
@@ -742,7 +758,9 @@ fetch_output_files = function(tool,
 #' @export
 #'
 #' @examples
-#' file_details_manta = find_files_extract_wildcards(tool_name = "manta", genome_build = c("hg38", "grch37"), search_pattern = ".bed")
+#' file_details_manta = find_files_extract_wildcards(tool_name = "manta",
+#'                                                   genome_build = c("hg38", "grch37"),
+#'                                                   search_pattern = ".bed")
 #'
 find_files_extract_wildcards = function(tool_results_path,
                                         search_pattern,
@@ -766,7 +784,7 @@ find_files_extract_wildcards = function(tool_results_path,
     mutate(pairing_status = case_when(grepl("--unmatched", filename) ~ "unmatched", TRUE ~"matched")) %>%
     dplyr::mutate(sample_id = strsplit(filename, "--")) %>%
     unnest_wider(sample_id, names_sep = "-") %>%
-    dplyr::rename(tumour_sample_id = `sample_id - 1`, normal_sample_id = `sample_id - 2`) %>%
+    dplyr::rename(tumour_sample_id = `sample_id-1`, normal_sample_id = `sample_id-2`) %>%
     dplyr::mutate(tool_name = tool_name, seq_type = seq_type, unix_group = unix_group) %>%
     dplyr::select(tumour_sample_id, unix_group, tool_name, seq_type, genome_build, file_path, pairing_status, normal_sample_id)
 
@@ -793,6 +811,7 @@ find_files_extract_wildcards = function(tool_results_path,
 #' @export
 #'
 #' @examples
+#' \dontrun{
 #' #read a maf into R with all columns kept
 #' my_maf = fread_maf(maf_file_path = "some_directory/this_is_a.maf")
 #'
@@ -800,11 +819,13 @@ find_files_extract_wildcards = function(tool_results_path,
 #' maf_cols = fread_maf(return_cols = TRUE)
 #'
 #' #read maf with only a selection of columns
-#' my_maf = fread_maf(maf_file_path = "some_directory/this_is_a.maf", select_cols = c(Hugo_Symbol="character",
-#'                                                                                    Chromosome="character",
-#'                                                                                    Start_Position="integer",
-#'                                                                                    End_Position="integer",
-#'                                                                                    Variant_Type="character"))
+#' my_maf = fread_maf(maf_file_path = "some_directory/this_is_a.maf", 
+#'                    select_cols = c(Hugo_Symbol = "character",
+#'                                    Chromosome = "character",
+#'                                    Start_Position = "integer",
+#'                                    End_Position = "integer",
+#'                                    Variant_Type = "character"))
+#' }
 #'
 fread_maf = function(maf_file_path,
                      select_cols,
@@ -966,9 +987,11 @@ fread_maf = function(maf_file_path,
 #' @export
 #'
 #' @examples
+#' \dontrun{
 #' #return data frame with gene expression to R
 #' gene_expression = tidy_gene_expression(return_df = TRUE)
-#'
+#' }
+#' 
 tidy_gene_expression = function(return_df = FALSE){
 
   #read in the full matrix
@@ -1045,7 +1068,7 @@ tidy_gene_expression = function(return_df = FALSE){
 #' Lastly, specify the sample IDs with `these_sample_ids`.
 #' For more information on how to use the optional parameters, refer to the parameter descriptions.
 #'
-#' @param file_details_df Optionally supply the data frame directly instead (e.g. from find_files_extract_wildcards).
+#' @param file_details_df Optionally supply the data frame directly instead (e.g. from [GAMBLR::find_files_extract_wildcards]).
 #' @param file_paths A vector of full file paths, e.g. the output of dir.
 #' @param tool_name The tool or pipeline that generated the files (should be the same for all).
 #' @param unix_group The unix group (should be the same for all).
@@ -1059,8 +1082,14 @@ tidy_gene_expression = function(return_df = FALSE){
 #' @export
 #'
 #' @examples
-#' assemble_file_details(file_paths = c(one.maf, another.maf), tool_name = "manta", unix_group = "genome", output_type = "maf", these_sample_ids = c(one_sample, another_sample))
-#'
+#' \dontrun{
+#' assemble_file_details(file_paths = c(one.maf, another.maf), 
+#'                       tool_name = "manta",
+#'                       unix_group = "genome",
+#'                       output_type = "maf",
+#'                       these_sample_ids = c(one_sample, another_sample))
+#' }
+#' 
 assemble_file_details = function(file_details_df,
                                  file_paths,
                                  tool_name,
@@ -1108,8 +1137,11 @@ assemble_file_details = function(file_details_df,
 #' @export
 #'
 #' @examples
-#' hg19_sv = get_manta_sv() %>% head(100)
-#' hg38_sv = liftover_bedpe(bedpe_df = hg19_sv, target_build = "hg38")
+#' hg19_sv = get_manta_sv(verbose = FALSE)
+#' hg19_sv = head(hg19_sv, 100)
+#' 
+#' hg38_sv = liftover_bedpe(bedpe_df = hg19_sv, 
+#'                          target_build = "hg38")
 #'
 liftover_bedpe = function(bedpe_file,
                           bedpe_df,

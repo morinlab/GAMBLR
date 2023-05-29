@@ -35,6 +35,8 @@ common translocation regions (BCL2, BCL6, MYC, CCND1) were whitelisted (e.g. no 
 Therefore if you wish to post-filter the SVs we recommend doing so carefully after loading this data frame.
 Further, the input bedpe file is annotated with oncogenes and superenhancers from naive and germinal centre B-cells.
 You can subset to events affecting certain loci using the "oncogenes" argument.
+Is this function not what you are looking for? Try one of the following, similar, functions;
+\link{get_manta_sv}, \link{get_manta_sv_by_sample}, \link{get_manta_sv_by_samples}
 }
 \examples{
 get_combined_sv(oncogenes = c("MYC", "BCL2", "BCL6"))

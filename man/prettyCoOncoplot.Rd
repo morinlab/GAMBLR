@@ -33,12 +33,12 @@ prettyCoOncoplot(
 A ggplot object with 2 oncoplots side-by-side.
 }
 \description{
-\code{prettyCoOncoplot} returns ggplot-compatible figure of 2 prettyOncoplots side-by-side.
+\code{prettyCoOncoplot} returns ggplot-compatible figure of 2 \link{prettyOncoplot} side-by-side.
 }
 \details{
 This function will generate a graphic displaying 2 oncoplots side-by-side. Optionally user can
 annotate each oncoplot with it's own title that will be displayed at the top. All the arguments
-recognized by prettyOncoplot are supported and can be specified when calling this function.
+recognized by \link{prettyOncoplot} are supported and can be specified when calling this function.
 For both oncoplots the same specified parameters will be applied (e.g. genes to display, split columns,
 font size, top annotation etc). If the provided argument is not recognized by prettyOncoplot,
 it will be discarded. If you want a specific order of oncoplots on the left and right, please
@@ -47,21 +47,33 @@ you want to be plotted on the left side. For developers: new arguments added to 
 are expected to be out-of-the-box compatible with this function nd would not need code modifications.
 }
 \examples{
-ssm=get_coding_ssm(limit_cohort = c("BL_Adult", "BL_Pediatric"))
-ssm=maftools::read.maf(ssm)
-meta=get_gambl_metadata() \%>\% dplyr::filter(cohort \%in\% c("BL_Adult", "BL_Pediatric"))
-prettyCoOncoplot(maf=ssm,
-    metadata = meta,
-    comparison_column = "cohort",
-    include_noncoding = NULL,
-    minMutationPercent = 0,
-    genes=c("MYC", "TET2", "TP53", "DDX3X", "ID3"),
-    metadataColumns=c("pathology", "EBV_status_inf", "pairing_status", "cohort"),
-    splitColumnName="EBV_status_inf",
-    metadataBarHeight=10,
-    fontSizeGene=12,
-    metadataBarFontsize=10,
-    label1="Adult",
-    label2="Pediatric")
+#get data for plotting
+ssm = get_coding_ssm(limit_cohort = c("BL_Adult", "BL_Pediatric"), seq_type = "genome")
+ssm = maftools::read.maf(ssm)
+meta = get_gambl_metadata()
+meta = dplyr::filter(meta, cohort \%in\% c("BL_Adult", "BL_Pediatric"))
+
+#build plot
+prettyCoOncoplot(maf = ssm,
+                 metadata = meta,
+                 comparison_column = "cohort",
+                 include_noncoding = NULL,
+                 minMutationPercent = 0,
+                 genes = c("MYC",
+                           "TET2",
+                           "TP53",
+                           "DDX3X",
+                           "ID3"),
+                 metadataColumns = c("pathology",
+                                     "EBV_status_inf",
+                                     "pairing_status",
+                                     "cohort"),
+                 splitColumnName = "EBV_status_inf",
+                 metadataBarHeight = 10,
+                 fontSizeGene = 12,
+                 metadataBarFontsize = 10,
+                 legend_row = 2,
+                 label1 = "Adult",
+                 label2 = "Pediatric")
 
 }

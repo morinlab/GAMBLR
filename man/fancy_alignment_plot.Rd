@@ -60,19 +60,19 @@ mean values for all plotted metrics and corrected coverage. To enable these feat
 \examples{
 #Example 1 - using these_sample_ids parameter
 #subset on FL cases with QC metrics available and plot
-kridel_fl = get_gambl_metadata() \%>\%
- dplyr::filter(pathology == "FL", cohort == "FL_Kridel") \%>\%
- dplyr::select(sample_id)
+metadata = get_gambl_metadata()
+kridel_fl = dplyr::filter(metadata, pathology == "FL",
+               cohort == "FL_Kridel")
 
-my_plot_1 = fancy_alignment_plot(these_sample_ids = kridel_fl)
+kridel_fl_samples = dplyr::select(kridel_fl, sample_id)
+
+fancy_alignment_plot(these_sample_ids = kridel_fl_samples)
 
 #Example 2 - using already filtered metadata (these_samples_metadata)
-fl_metadata = get_gambl_metadata() \%>\%
- dplyr::filter(pathology == "FL", cohort == "FL_Kridel")
+fancy_alignment_plot(these_samples_metadata = kridel_fl)
 
-my_plot_2 = fancy_alignment_plot(these_samples_metadata = fl_metadata)
-
-#Example 3 - using in-house metadata fitlering options
-my_plot_3 = fancy_alignment_plot(keep_cohort = "FL_Kridel", keep_pathology = "FL")
+#Example 3 - using in-house metadata filtering options
+fancy_alignment_plot(keep_cohort = "FL_Kridel",
+                     keep_pathology = "FL")
 
 }

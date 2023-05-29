@@ -49,22 +49,31 @@ Lastly, \code{seq_type_filter} lets the user control what seq type results will 
 refer to function examples, vignettes and parameter descriptions.
 }
 \examples{
-#generate new cached results for all genome samples in gambl (Warning, is this what you really want to do?)
-genome_collated = collate_results(seq_type_filter = "genome", from_cache = FALSE, write_to_file = TRUE)
-
 #get collated results for all capture samples, using cached results
-capture_collated_everything = collate_results( seq_type_filter = "capture", from_cache = TRUE, write_to_file = FALSE)
+capture_collated_everything = collate_results(seq_type_filter = "capture",
+                                              from_cache = TRUE,
+                                              write_to_file = FALSE)
 
 #use an already subset metadata table for getting collated results (cached)
-metadata = get_gambl_metadata(seq_type_filter = "genome") \%>\% dplyr::filter(pathology == "FL")
-fl_collated = collate_results(seq_type_filter = "genome", join_with_full_metadata = TRUE, these_samples_metadata = metadata, write_to_file = FALSE, from_cache = TRUE)
+my_metadata = get_gambl_metadata()
+fl_metadata = dplyr::filter(my_metadata, pathology == "FL")
+
+fl_collated = collate_results(seq_type_filter = "genome",
+                              join_with_full_metadata = TRUE,
+                              these_samples_metadata = fl_metadata,
+                              write_to_file = FALSE,
+                              from_cache = TRUE)
 
 #get collated results for all genome samples and join with full metadata
-everything_collated = collate_results(seq_type_filter = "genome", from_cache = TRUE, join_with_full_metadata = TRUE)
+everything_collated = collate_results(seq_type_filter = "genome",
+                                      from_cache = TRUE,
+                                      join_with_full_metadata = TRUE)
 
 #another example demonstrating correct usage of the sample_table parameter.
-fl_samples = get_gambl_metadata(seq_type_filter = "genome") \%>\% dplyr::filter(pathology == "FL") \%>\% dplyr::select(sample_id, patient_id, biopsy_id)
-fl_collated = collate_results(sample_table = fl_samples, seq_type_filter = "genome", from_cache = TRUE)
+fl_samples = dplyr::select(fl_metadata, sample_id, patient_id, biopsy_id)
 
+fl_collated = collate_results(sample_table = fl_samples,
+                              seq_type_filter = "genome",
+                              from_cache = TRUE)
 
 }

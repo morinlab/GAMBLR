@@ -40,16 +40,19 @@ a ggplot2 plot. Print it using print() or save it using ggsave()
 }
 \description{
 Plot a rainfall plot for one sample. This function takes in the MAF data frame, or path to a custom MAF file.
-If non are specified, the SSM will be obtained through GAMBLR directly (with \code{get_ssm_by_region}).
+If non are specified, the SSM will be obtained through GAMBLR directly (with \link{get_ssm_by_region}).
 }
 \details{
 Create a sample-level rainfall plot visualizing single nucleotide substitutions mutations for selected chromosomes.
 }
 \examples{
-prettyRainfallPlot("Raji")
-prettyRainfallPlot("Raji", chromosome = c(3,9,"chr14",22,"X"))
-prettyRainfallPlot("Raji", chromosome = c(3,9), projection = "hg38", label_ashm_genes = FALSE)
-prettyRainfallPlot("Raji", zoom_in_region = "8:125252796-135253201", label_sv = TRUE)
-prettyRainfallPlot("Raji", chromosome = 6, label_sv = TRUE)
-prettyRainfallPlot( zoom_in_region = "chr3:5,221,286-5,269,723", seq_type="genome") #multi-sample rainfall plot for one gene region
+prettyRainfallPlot(this_sample_id = "Raji",
+                   seq_type = "genome",
+                   zoom_in_region = "8:125252796-135253201",
+                   label_sv = TRUE)
+
+#multi-sample rainfall plot for one gene region
+prettyRainfallPlot(zoom_in_region = "chr3:5,221,286-5,269,723",
+                   seq_type = "genome")
+
 }

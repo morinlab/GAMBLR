@@ -11,7 +11,8 @@ comp_report(
   seq_data,
   seq_path = NULL,
   maf_data,
-  maf_path = NULL
+  maf_path = NULL,
+  this_seq_type = "genome"
 )
 }
 \arguments{
@@ -28,6 +29,8 @@ comp_report(
 \item{maf_data}{Optional parameter with maf like df already loaded into R.}
 
 \item{maf_path}{Optional parameter with path to external maf like file.}
+
+\item{this_seq_type}{Seq type for returned CN segments. One of "genome" (default) or "capture".}
 }
 \value{
 Nothing.
@@ -43,7 +46,11 @@ This can be done by setting \code{export_individual_plots} to TRUE. It is also p
 file on disk with the \code{seq_path} and \code{maf_path} parameters.
 }
 \examples{
+\dontrun{
 #create a PDF report for one sample, as well as exporting all individual plots.
-comp_report(this_sample = "HTMCP-01-06-00422-01A-01D", out = "reports/", export_individual_plots = TRUE)
+comp_report(this_sample = "HTMCP-01-06-00422-01A-01D",
+            out = "reports/",
+            export_individual_plots = TRUE)
+}
 
 }

@@ -9,7 +9,7 @@
 #'   \item{start}{Start coordinate for the specified oncogene.}
 #'   \item{end}{End coordinate for the specified oncogene.}
 #'   \item{gene}{Lymphoma oncogene.}
-#'   \item{entrez}{ENTREZ ID for the dpecified oncogene.}
+#'   \item{entrez}{ENTREZ ID for the specified oncogene.}
 #' }
 "grch37_oncogene"
 
@@ -24,7 +24,7 @@
 #'   \item{start}{Start coordinate for the specified oncogene.}
 #'   \item{end}{End coordinate for the specified oncogene.}
 #'   \item{gene}{Lymphoma oncogene.}
-#'   \item{entrez}{ENTREZ ID for the dpecified oncogene.}
+#'   \item{entrez}{ENTREZ ID for the specified oncogene.}
 #' }
 "hg38_oncogene"
 
@@ -235,24 +235,6 @@
 "grch37_all_gene_coordinates"
 
 
-#' grch37 ASHM Regions.
-#'
-#' ASHM regions in respect to grch37.
-#'
-#' @format ## `grch37_ashm_regions`
-#' A data frame with 88 rows and 7 columns.
-#' \describe{
-#'   \item{chr_name}{The chromosome for which the region is residing on}
-#'   \item{hg19_start}{start coordinate for the region}
-#'   \item{hg19_end}{end coordinate for the region}
-#'   \item{gene}{Gene symbol (Hugo)}
-#'   \item{region}{Region name}
-#'   \item{regulatory_comment}{Regulatory element}
-#'   \item{name}{gene-region format}
-#' }
-"grch37_ashm_regions"
-
-
 #' grch37 Gene Coordinates.
 #'
 #' All gene coordinates in respect to grch37.
@@ -299,25 +281,6 @@
 #'   \item{entrez}{Entrez ID}
 #' }
 "grch37_partners"
-
-
-#' hg38 ASHM Regions.
-#'
-#' ASHM regions in respect to hg38.
-#'
-#' @format ## `hg38_ashm_regions`
-#' A data frame with 88 rows and 7 columns.
-#' \describe{
-#'   \item{chr_name}{The chromosome for which the region is residing on}
-#'   \item{hg19_start}{start coordinate for the region}
-#'   \item{hg19_end}{end coordinate for the region}
-#'   \item{gene}{Gene symbol (Hugo)}
-#'   \item{region}{Region name}
-#'   \item{regulatory_comment}{Regulatory element}
-#'   \item{name}{gene-region format}
-#' }
-"hg38_ashm_regions"
-
 
 #' hg38 Gene Coordinates.
 #'
@@ -413,29 +376,6 @@
 #'   \item{aSHM}{Boolean flag for annotating aSHM}
 #' }
 "lymphoma_genes_comprehensive"
-
-
-#' Lymphoma Genes
-#'
-#' A data frame with known lymphoma genes, genes are annotated by pathology, as well as literature support.
-#'
-#' @format ## `lymphoma_genes`
-#' A data frame with 196 rows and 12 columns.
-#' \describe{
-#'   \item{Gene}{Gene symbol}
-#'   \item{DLBCL}{Boolean flag annotating if the described genes are significant for the pathology (DLBCL)}
-#'   \item{FL}{Boolean flag annotating if the described genes are significant for the pathology (FL)}
-#'   \item{BL}{Boolean flag annotating if the described genes are significant for the pathology (BL)}
-#'   \item{MCL}{Boolean flag annotating if the described genes are significant for the pathology (MCL)}
-#'   \item{CLL}{Boolean flag annotating if the described genes are significant for the pathology (CLL)}
-#'   \item{ensembl_gene_id}{Ensembl gene ID}
-#'   \item{hgnc_symbol}{Gene symbol (Hugo)}
-#'   \item{LymphGen}{Boolean flag, TRUE if lymphGen}
-#'   \item{Reddy}{Boolean flag, TRUE if gene verified by the stated study (Reddy)}
-#'   \item{Chapuy}{Boolean flag, TRUE if gene verified by the stated study (Chapuy)}
-#'   \item{entrezgene_id}{Entrez ID for the described gene}
-#' }
-"lymphoma_genes"
 
 
 #' Reddy Genes.
