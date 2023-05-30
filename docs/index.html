@@ -169,7 +169,7 @@ git clone https://github.com/morinlab/GAMBLR</code></pre>
 <ol start="3" style="list-style-type: decimal"><li>Update the <strong>paths</strong> in your local <a href="https://github.com/morinlab/GAMBLR/blob/master/config.yml">config.yml</a> (GAMBLR-master) to point to the recently cloned, local <strong>gambl</strong> folder (repo_base). In your favorite text editor, edit the line shown below (under <em>remote</em>). Similarly, you will also need to edit the line above it to point to where you will eventually sync the GAMBL results.</li></ol>
 <pre><code><span><span class="va">remote</span><span class="op">:</span></span>
 <span>    <span class="va">project_base</span><span class="op">:</span> <span class="st">"/path/to/your/local/gambl_results_directory/"</span></span>
-<span>    <span class="va">repo_base</span><span class="op">:</span> <span class="st">"~/git_repos/gambl-master/"</span></span></code></pre>
+<span>    <span class="va">repo_base</span><span class="op">:</span> <span class="st">"/path/to/your/local/gambl_repo/"</span></span></code></pre>
 <ol start="4" style="list-style-type: decimal"><li>Set the <strong>working directory</strong> in Rstudio. Open Rstudio on your local machine and locate the repo you cloned previously.</li></ol>
 <pre><code><span><span class="fu"><a href="https://rdrr.io/r/base/getwd.html" class="external-link">setwd</a></span><span class="op">(</span><span class="st">"~/git_repos/GAMBLR-master"</span><span class="op">)</span></span></code></pre>
 <ol start="5" style="list-style-type: decimal"><li>Install GAMBLR in your local R studio.</li></ol>
