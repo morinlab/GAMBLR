@@ -102,12 +102,14 @@ git clone https://github.com/morinlab/GAMBLR
 mkdir ~/gambl_results/
 ```
 
-4. Update paths under `remote` in your **local** [config.yml](https://github.com/morinlab/GAMBLR/blob/master/config.yml) (GAMBLR) to point to the recently cloned, local **gambl** folder (*repo_base*) and recently created **gambl_results** (*project_base*) folder. For example:
+4. Update paths under `remote` in your **local** [config.yml](https://github.com/morinlab/GAMBLR/blob/master/config.yml) (GAMBLR) to point to the recently cloned, local **gambl** folder (*repo_base*) and recently created **gambl_results** (*project_base*) folder. Also, update the *host* field to contain your username (you can use any gphost here). For example:
 
 ```
 remote:
     project_base: "~/gambl_results/"
     repo_base: "~/git_repos/gambl-master/"
+    ...
+    host: "your_username@gphost01.bcgsc.ca"
 ```
 
 5. Copy the following files (from your recently cloned [GAMBLR](https://github.com/morinlab/GAMBLR) directory) into the folder from the previous step; `config.yml` and `get_gambl_results.smk`.
@@ -164,6 +166,12 @@ snakemake -s get_gambl_results.smk --cores 1
 
 ```
 Sys.setenv(R_CONFIG_ACTIVE = "remote")
+```
+
+Alternatively, you can add the content of ~/git_repos/GAMBLR/.Rprofile to your ~/.Rprofile file. In this way, you do not need to enter the command above every time you start your R session.
+
+```
+cat ~/git_repos/GAMBLR/.Rprofile >> ~/.Rprofile
 ```
 
 14. Check what files (if any) are currently missing.
