@@ -44,7 +44,7 @@ maf = get_coding_ssm(seq_type = "genome")
 #get gene symbols from MAF
 maf_genes = dplyr::filter(maf, Hugo_Symbol != "Unknown")
 maf_genes_chr1 = dplyr::filter(maf_genes, Chromosome == "1")
-my_genes = pull(maf_genes_chr1, Hugo_Symbol)
+my_genes = maf_genes_chr1$Hugo_Symbol
 
 #build wordcloud
 prettyGeneCloud(maf_df = maf, these_genes = my_genes)
