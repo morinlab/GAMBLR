@@ -45,7 +45,7 @@ git clone https://github.com/morinlab/GAMBLR
 ```
 remote:
     project_base: "/path/to/your/local/gambl_results_directory/"
-    repo_base: "~/git_repos/gambl-master/"
+    repo_base: "/path/to/your/local/gambl_repo/"
 ```
 
 4. Set the **working directory** in Rstudio. Open Rstudio on your local machine and locate the repo you cloned previously.
