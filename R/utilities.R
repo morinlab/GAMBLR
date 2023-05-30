@@ -3157,7 +3157,7 @@ get_bams = function(this_sample_id,
 #'
 #' @description Load bam(s) and view the context around a mutation
 #'
-#' @details 
+#' @details Load bam(s) and view the context around a mutation
 #'
 #' @param this_mutation Specify the mutation of interest in MAF format.
 #' @param igv_port Specify the port IGV is listening on.
@@ -3290,7 +3290,7 @@ socketWrite = function (sock, string) {
 #' @export
 #'
 #' @examples
-#' \dontrun{
+#' 
 #' #IMPORTANT: you must be running IGV on the host that is running R and you need to have it listening on a port
 #' # The simplest scenario is to run this command on a terminal (if using a Mac), assuming you are using R on gphost10 and you have a ssh config that routes gp10 to that host
 #' # ssh -X gp10
