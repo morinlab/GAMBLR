@@ -4,7 +4,6 @@ vignettes/onco_matrix.txt
 inst/doc
 Meta
 doc
-docs/reference/*.png
 docs/reference/onco_matrix.txt
 .Rhistory
 *.pdf

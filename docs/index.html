@@ -67,7 +67,7 @@
       <a href="https://morinlab.github.io/GAMBLR/#installation" class="external-link">Install</a>
     </li>
     <li>
-      <a href="https://morinlab.github.io/GAMBLR/#run-remote-on-a-local-machine" class="external-link">Run Remote On A Local Machine</a>
+      <a href="https://morinlab.github.io/GAMBLR/#running-gamblr-on-your-own-computer" class="external-link">Running GAMBLR On Your Own Computer</a>
     </li>
     <li>
       <a href="https://morinlab.github.io/GAMBLR/#contributing" class="external-link">Contribute</a>
@@ -141,18 +141,18 @@
 <p>If you have access to gphost, the easiest way to obtain and run GAMBLR is to do this via Rstudio on a gphost. If you do not have access to gphost, please refer to the <a href="#Run%20Remote%20On%20A%20Local%20Machine">Run Remote On A Local Machine</a> section. Assuming you are running Rstudio on gphost, clone the repo to your home directory (not your GAMBL working directory).</p>
 <pre><code>git clone git@github.com:morinlab/GAMBLR.git</code></pre>
 <p>In Rstudio (on a gphost), set your working directory to the place you just cloned the repo.</p>
-<pre><code><span><span class="fu"><a href="https://rdrr.io/r/base/getwd.html" class="external-link">setwd</a></span><span class="op">(</span><span class="st">"~/GAMBLR"</span><span class="op">)</span></span></code></pre>
+<pre><code><span><span class="fu"><a href="https://rdrr.io/r/base/getwd.html" class="external-link">setwd</a></span><span class="op">(</span><span class="st">"~/GAMBLR-master"</span><span class="op">)</span></span></code></pre>
 <p>Install the package in R by running the following command (requires the devtools package)</p>
 <pre><code><span><span class="fu">devtools</span><span class="fu">::</span><span class="fu"><a href="https://devtools.r-lib.org/reference/install.html" class="external-link">install</a></span><span class="op">(</span><span class="op">)</span></span></code></pre>
 </div>
 <div class="section level2">
-<h2 id="run-remote-on-a-local-machine">Run Remote On A Local Machine<a class="anchor" aria-label="anchor" href="#run-remote-on-a-local-machine"></a>
+<h2 id="running-gamblr-on-your-own-computer">Running GAMBLR On Your Own Computer<a class="anchor" aria-label="anchor" href="#running-gamblr-on-your-own-computer"></a>
 </h2>
-<p>If you don’t have access to gphost on GSC, no worries, you can still execute GAMBLR functions in another way. Remote support was developed for this purpose. This section explains how to run GAMBLR remote on a <em>local machine</em>. There are two different approaches to get this to work, both with its own advantages and limitations. We will be going over both in this next section.</p>
+<p>If you don’t have access to gphost on GSC, no worries, you can still execute GAMBLR functions in another way. Remote support was developed for this purpose. This section explains how to run GAMBLR remote on a <em>local machine</em> (i.e on your own computer). There are two different approaches to get this to work, both with its own advantages and limitations. We will be going over both in this next section.</p>
 <div class="section level3">
-<h3 id="approach-1---quick-start-ssh">Approach 1 - Quick Start (SSH)<a class="anchor" aria-label="anchor" href="#approach-1---quick-start-ssh"></a>
+<h3 id="approach-1---quick-start">Approach 1 - Quick Start<a class="anchor" aria-label="anchor" href="#approach-1---quick-start"></a>
 </h3>
-<p>This section details how to deploy GAMBLR with limited functionality, using ssh_session parameter. This approach requires either a working GSC VPN connection (or is directly accessible if connected to the GSC network).</p>
+<p>This section details how to deploy GAMBLR with limited functionality. This approach requires either a working GSC VPN connection (or is directly accessible if connected to the GSC network).</p>
 <div class="section level4">
 <h4 id="setup-vpn-connection">Setup VPN Connection<a class="anchor" aria-label="anchor" href="#setup-vpn-connection"></a>
 </h4>
@@ -166,31 +166,27 @@
 cd ~/git_repos #set as working directiory
 git clone https://github.com/morinlab/gambl
 git clone https://github.com/morinlab/GAMBLR</code></pre>
-<ol start="3" style="list-style-type: decimal"><li>Update the <strong>paths</strong> in your local <a href="https://github.com/morinlab/GAMBLR/blob/master/config.yml">config.yml</a> to point to the recently cloned, local <strong>gambl</strong> folder (repo_base). In your favorite text editor, edit the line shown below (under <em>remote</em>). Similarly, you will also need to edit the line above it to point to where you will eventually sync the GAMBL results.</li></ol>
+<ol start="3" style="list-style-type: decimal"><li>Update the <strong>paths</strong> in your local <a href="https://github.com/morinlab/GAMBLR/blob/master/config.yml">config.yml</a> (GAMBLR-master) to point to the recently cloned, local <strong>gambl</strong> folder (repo_base). In your favorite text editor, edit the line shown below (under <em>remote</em>). Similarly, you will also need to edit the line above it to point to where you will eventually sync the GAMBL results.</li></ol>
 <pre><code><span><span class="va">remote</span><span class="op">:</span></span>
 <span>    <span class="va">project_base</span><span class="op">:</span> <span class="st">"/path/to/your/local/gambl_results_directory/"</span></span>
 <span>    <span class="va">repo_base</span><span class="op">:</span> <span class="st">"/path/to/your/local/gambl_repo/"</span></span></code></pre>
 <ol start="4" style="list-style-type: decimal"><li>Set the <strong>working directory</strong> in Rstudio. Open Rstudio on your local machine and locate the repo you cloned previously.</li></ol>
 <pre><code><span><span class="fu"><a href="https://rdrr.io/r/base/getwd.html" class="external-link">setwd</a></span><span class="op">(</span><span class="st">"~/git_repos/GAMBLR-master"</span><span class="op">)</span></span></code></pre>
-<ol start="5" style="list-style-type: decimal"><li>Install R packages to you local R studio session.</li></ol>
-<pre><code><span><span class="fu">devtools</span><span class="fu">::</span><span class="fu"><a href="https://devtools.r-lib.org/reference/install.html" class="external-link">install</a></span><span class="op">(</span><span class="op">)</span></span>
-<span><span class="fu"><a href="https://rdrr.io/r/utils/install.packages.html" class="external-link">install.packages</a></span><span class="op">(</span><span class="st">"ssh"</span><span class="op">)</span></span></code></pre>
+<ol start="5" style="list-style-type: decimal"><li>Install GAMBLR in your local R studio.</li></ol>
+<pre><code><span><span class="fu">devtools</span><span class="fu">::</span><span class="fu"><a href="https://devtools.r-lib.org/reference/install.html" class="external-link">install</a></span><span class="op">(</span><span class="op">)</span></span></code></pre>
 <ol start="6" style="list-style-type: decimal"><li>Load packages.</li></ol>
-<pre><code><span><span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">library</a></span><span class="op">(</span><span class="va">GAMBLR</span><span class="op">)</span></span>
-<span><span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">library</a></span><span class="op">(</span><span class="va"><a href="https://docs.ropensci.org/ssh/" class="external-link">ssh</a></span><span class="op">)</span></span></code></pre>
+<pre><code><span><span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">library</a></span><span class="op">(</span><span class="va">GAMBLR</span><span class="op">)</span></span></code></pre>
 </div>
 <div class="section level4">
-<h4 id="setup-ssh-connection-in-rstudio">Setup SSH Connection in Rstudio<a class="anchor" aria-label="anchor" href="#setup-ssh-connection-in-rstudio"></a>
+<h4 id="set-config-to-remote">Set Config To Remote<a class="anchor" aria-label="anchor" href="#set-config-to-remote"></a>
 </h4>
-<ol start="7" style="list-style-type: decimal"><li>Specify your SSH connection in Rstudio. If your local machine username <strong>does not</strong> match your GSC username, you need to add <em>“your_username<!-- -->@gphost01.bcgsc.ca”</em> as the only argument to this function.</li></ol>
-<pre><code><span><span class="va">session</span> <span class="op">=</span> <span class="fu">GAMBLR</span><span class="fu">::</span><span class="fu"><a href="reference/get_ssh_session.html">get_ssh_session</a></span><span class="op">(</span><span class="op">)</span></span></code></pre>
-<ol start="8" style="list-style-type: decimal"><li>Execute the following in Rstudio console to make use of the updated paths in the <a href="https://github.com/morinlab/GAMBLR/blob/master/config.yml">config.yml</a> from step 3.</li></ol>
+<ol start="7" style="list-style-type: decimal"><li>Execute the following in Rstudio console to make use of the updated paths in the <a href="https://github.com/morinlab/GAMBLR/blob/master/config.yml">config.yml</a> from step 3.</li></ol>
 <pre><code><span><span class="fu"><a href="https://rdrr.io/r/base/Sys.setenv.html" class="external-link">Sys.setenv</a></span><span class="op">(</span>R_CONFIG_ACTIVE <span class="op">=</span> <span class="st">"remote"</span><span class="op">)</span></span></code></pre>
 </div>
 <div class="section level4">
 <h4 id="run-gamblr">Run GAMBLR<a class="anchor" aria-label="anchor" href="#run-gamblr"></a>
 </h4>
-<ol start="9" style="list-style-type: decimal"><li>Test if setup was successful (e.g call <code><a href="reference/get_gambl_metadata.html">get_gambl_metadata()</a></code> to retrieve meta data for all gambl samples).</li></ol>
+<ol start="8" style="list-style-type: decimal"><li>Test if setup was successful (e.g call <code><a href="reference/get_gambl_metadata.html">get_gambl_metadata()</a></code> to retrieve meta data for all gambl samples).</li></ol>
 <pre><code><span><span class="fu"><a href="reference/get_gambl_metadata.html">get_gambl_metadata</a></span><span class="op">(</span><span class="op">)</span> <span class="op">%&gt;%</span></span>
 <span>  <span class="fu"><a href="https://rdrr.io/r/utils/head.html" class="external-link">head</a></span><span class="op">(</span><span class="op">)</span></span></code></pre>
 </div>

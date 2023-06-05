@@ -2,7 +2,7 @@
 % Please edit documentation in R/database.R
 \name{get_sample_cn_segments}
 \alias{get_sample_cn_segments}
-\title{GetSample CN Segments.}
+\title{Get Sample CN Segments.}
 \usage{
 get_sample_cn_segments(
   this_sample_id,

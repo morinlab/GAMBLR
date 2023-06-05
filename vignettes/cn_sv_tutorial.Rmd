@@ -1,10 +1,8 @@
 ---
-title: "CN & SV Tutorial - GAMBLR"
-author: "Adam Mattsson"
-date: "December 8, 2022"
+title: "CN & SV Tutorial"
 output: rmarkdown::html_vignette
 vignette: >
-  %\VignetteIndexEntry{01: CN and SV Tutorial}
+  %\VignetteIndexEntry{CN & SV Tutorial}
   %\VignetteEngine{knitr::rmarkdown}
   %\VignetteEncoding{UTF-8}
 ---
@@ -62,7 +60,11 @@ myc_region = gene_to_region(gene_symbol = "MYC", genome_build = "grch37", return
 myc_region
 
 #subset first 15 rows from the lymphoma genes bed file
-some_lymphoma_genes = head(grch37_lymphoma_genes_bed, 15)
+some_lymphoma_genes = c("TNFRSF14","NOL9","KLHL21",
+                        "PIK3CD","MTOR","TNFRSF1B",
+                        "SPEN","ID3","ARID1A",
+                        "ZC3H12A","RRAGC","JAK1",
+                        "BCL10","NRAS","CD58") 
 ```
 
 ## CN
@@ -71,20 +73,20 @@ If we are interested in CN segments in specific genomic regions, the recommended
 ```{r get_cn_segments, message = FALSE, warning = FALSE}
 #using the region parameter
 my_segments_grch37 = get_cn_segments(region = "chr8:128,723,128-128,774,067", 
-                              projection = "grch37", 
-                              this_seq_type = "genome", 
-                              streamlined = FALSE, 
-                              from_flatfile = TRUE)
+                                     projection = "grch37", 
+                                     this_seq_type = "genome", 
+                                     streamlined = FALSE, 
+                                     from_flatfile = TRUE)
 
 #get cn segments for specified region, using chromosome, qstart and qend parameters.
 my_segments_hg38 = get_cn_segments(chromosome = "8", 
-                                qstart = 128723128, 
-                                qend = 128774067, 
-                                projection = "hg38", 
-                                this_seq_type = "genome", 
-                                with_chr_prefix = TRUE, 
-                                streamlined = TRUE, 
-                                from_flatfile = TRUE)
+                                   qstart = 128723128, 
+                                   qend = 128774067, 
+                                   projection = "hg38", 
+                                   this_seq_type = "genome", 
+                                   with_chr_prefix = TRUE, 
+                                   streamlined = TRUE, 
+                                   from_flatfile = TRUE)
 
 #get cn segments, using a previously defined region (from gene_to_region) and filtering out all copy number states equal to 2
 myc_cns = get_cn_segments(region = myc_region, 
@@ -139,15 +141,17 @@ For annotating mutations with CN information, we have `assign_cn_to_ssm` availab
 #annotate a MAF wigh compy number information.
 annotated_ssm = assign_cn_to_ssm(this_sample_id = this_sample_id)
 
-#use same sample for annotating SSM with CN restricted to commonly mutated lymphoma genes
-lymph_genes = lymphoma_genes %>%
+#use same sample for annotating SSM with CN restricted to a specific set of genes.
+lymph_genes = lymphoma_genes_comprehensive %>%
   pull(Gene)
 
 annotated_ssm_lymphgenes = assign_cn_to_ssm(this_sample_id = this_sample_id,
-                                          genes = lymph_genes)
+                                            genes = lymph_genes)
 
 #additional example, using more parameters!
-annotated_ssm_extended = assign_cn_to_ssm(this_sample_id = this_sample_id, coding_only = TRUE, include_silent = TRUE)
+annotated_ssm_extended = assign_cn_to_ssm(this_sample_id = this_sample_id,
+                                          coding_only = TRUE,
+                                          include_silent = TRUE)
 ```
 
 ## SV
@@ -158,7 +162,9 @@ IF you want to retrieve combined SV calls (manta and GRIDSS-derived) for one or 
 combined_svs = get_combined_sv(these_sample_ids = this_sample_id)
 
 #extended example, using additional parameters that are available. 
-combined_sv_extended = get_combined_sv(these_sample_ids = these_sample_list, projection = "hg38", oncogenes = c("MYC", "BCL2", "BCL6"))
+combined_sv_extended = get_combined_sv(these_sample_ids = these_sample_list,
+                                       projection = "hg38",
+                                       oncogenes = c("MYC", "BCL2", "BCL6"))
 ```
 
 ### Manta SVs
@@ -174,7 +180,8 @@ dim(all_svs)
 manta_svs = get_manta_sv(min_vaf = 0.1, 
                          min_score = 40, 
                          pass = TRUE, 
-                         region = "8:128723128-128774067")
+                         region = "8:128723128-128774067", 
+                         verbose = FALSE)
 ```
 
 ### SV Calls to UCSC Genome Browser Custom Track
@@ -217,12 +224,12 @@ Another useful plotting function for visualizing SV size distributions is with `
 ```{r sv_size, dpi = 150}
 #build plot
 fancy_sv_sizedens(this_sample_id = this_sample_id,
-                vaf_cutoff = 0,
-                size_cutoff = 50,
-                chr_select = paste0("chr", c(1:22)),
-                plot_title = "SV (>50bp) Size Distribution Example",
-                plot_subtitle = "grch37",
-                projection = "grch37")
+                  vaf_cutoff = 0,
+                  size_cutoff = 50,
+                  chr_select = paste0("chr", c(1:22)),
+                  plot_title = "SV (>50bp) Size Distribution Example",
+                  plot_subtitle = "grch37",
+                  projection = "grch37")
 ```
 
 ## Copy Number States Summaries.

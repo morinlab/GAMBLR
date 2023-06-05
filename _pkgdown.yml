@@ -33,19 +33,16 @@ reference:
   - gene_blacklist
   - grande_maf
   - grch37_all_gene_coordinates
-  - grch37_ashm_regions
   - grch37_gene_coordinates
   - grch37_lymphoma_genes_bed
   - grch37_oncogene
   - grch37_partners
-  - hg38_ashm_regions
   - hg38_gene_coordinates
   - hg38_lymphoma_genes_bed
   - hg38_oncogene
   - hg38_partners
   - hotspot_regions_grch37
   - hotspot_regions_hg38
-  - lymphoma_genes
   - lymphoma_genes_comprehensive
   - reddy_genes
   - target_regions_grch37
@@ -182,8 +179,8 @@ navbar:
       menu:
       -  text: Install
          href: https://morinlab.github.io/GAMBLR/#installation
-      -  text: Run Remote On A Local Machine
-         href: https://morinlab.github.io/GAMBLR/#run-remote-on-a-local-machine
+      -  text: Running GAMBLR On Your Own Computer
+         href: https://morinlab.github.io/GAMBLR/#running-gamblr-on-your-own-computer
       -  text: Contribute
          href: https://morinlab.github.io/GAMBLR/#contributing
     - icon: fa-light fa-person-chalkboard

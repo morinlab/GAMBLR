@@ -1,10 +1,8 @@
 ---
-title: "SSM Tutorial - GAMBLR"
-author: "Adam Mattsson"
-date: "November 10, 2022"
+title: "SSM Tutorial"
 output: rmarkdown::html_vignette
 vignette: >
-  %\VignetteIndexEntry{02: SSM Tutorial}
+  %\VignetteIndexEntry{SSM Tutorial}
   %\VignetteEngine{knitr::rmarkdown}
   %\VignetteEncoding{UTF-8}
 ---
@@ -14,6 +12,7 @@ knitr::opts_chunk$set(warning = FALSE, message = FALSE)
 
 ```{r load_packages, message = FALSE, warning = FALSE, echo = FALSE, results = 'hide'}
 library(GAMBLR)
+library(GAMBLR.data)
 library(tidyverse)
 library(rmarkdown)
 library(knitr)
@@ -106,11 +105,10 @@ myc_ssm = get_ssm_by_region(region = myc_region,
 For multiple regions, refer to `get_ssm_by_regions`. In this example we are returning SSMs for all ASHM regions (hyper mutated) across all samples. 
 ```{r get_sm_by_regions, message = FALSE, warning = FALSE}
 #convert regions to bed format
-ashm_regions_bed = grch37_ashm_regions %>% 
-  mutate(name = paste(gene, region, sep = "_"))
+my_bed = gene_to_region(gene_symbol = c("MYC", "CD58"), return_as = "bed")
 
 #get ssm for all ashm regions
-ashm_ssm = get_ssm_by_regions(regions_bed = ashm_regions_bed,
+bed_ssm = get_ssm_by_regions(regions_bed = my_bed,
                               projection = "grch37",
                               seq_type = "genome")
 ```
@@ -343,7 +341,7 @@ dlbcl_bl_meta = collate_results(join_with_full_metadata = TRUE,
   dplyr::filter(genetic_subgroup != "0")
 
 #get ashm regions (grch37) and filter out a set of genes.
-some_regions = grch37_ashm_regions %>% 
+some_regions = GAMBLR.data::somatic_hypermutation_locations_GRCh37_v_latest %>% 
   dplyr::filter(!gene %in% c("BCL11A", "CD44", "CD74", "IRF1", "IRF4", 
                              "PTPN1", "KLHL6", "ZCCHC7", "ITPKB", "IL4R", 
                              "NCOA3", "MYO1E", "ETV6", "FOXP1", "MEF2C", 
@@ -389,7 +387,7 @@ get_mutation_frequency_bin_matrix(these_samples_metadata = dlbcl_bl_meta,
 ```
 
 ### Oncoplots
-Commonly, we will want to generate visualizations that only show genes deemed relevant for a given malignancy (and above some frequency threshold). For this purpose we have `prettyOncoplot` available. In the example bellow, we are looking at all coding SSM (genome samples) and the relevant genes for two malignancies (BL and DLBCL). This plotting function has a large collection of parameters that are available for further customization and manipulation of the returned plot. Please refer to the documentation for a complete explenation of each parameter. 
+Commonly, we will want to generate visualizations that only show genes deemed relevant for a given malignancy (and above some frequency threshold). For this purpose we have `prettyOncoplot` available. In the example bellow, we are looking at all coding SSM (genome samples) and the relevant genes for two malignancies (BL and DLBCL). This plotting function has a large collection of parameters that are available for further customization and manipulation of the returned plot. Please refer to the documentation for a complete explanation of each parameter. 
 ```{r pretty_oncoplot_1, dpi = 150, fig.height = 12, fig.width = 18, warning = FALSE, message = FALSE}
 # Load the master merged MAF (coding only). It's usually more efficient to do this than to try to add filters to this query. Instead, just filter the data afterward
 maf_data = get_coding_ssm(seq_type = "genome")
