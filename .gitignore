@@ -1,4 +1,3 @@
-vignettes/onco_matrix.txt
 .RData
 .Rproj.user
 inst/doc
@@ -11,4 +10,3 @@ docs/reference/*.png
 data/ggsci_db.rda
 *.bed
 .DS_Store
-
