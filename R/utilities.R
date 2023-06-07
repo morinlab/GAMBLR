@@ -3276,15 +3276,24 @@ socketWrite = function (sock, string) {
 #' For more information and examples, refer to the function examples and parameter descriptions.
 #'
 #' @param these_sample_ids A vector of one or more sample_id (bams for these samples will be auto-loaded)
+#' @param this_seq_type TO DO: automatically obtain this for the user from the metadata
+#' @param genome_build String specifying the genome build for the bam files provided (TO DO: if it isn't already, it should be determined automatically if these_sample_ids was provided).
 #' @param bams Character vector containing the full path to one or more bam files (specify if not providing these_sample_ids)
-#' @param genome_build String specifying the genome build for the bam files provided (determined automatically if these_sample_ids was provided).
 #' @param region Optionally specify the region as a single string (e.g. "chr1:1234-1235").
 #' @param padding Optionally specify a positive value to broaden the region around the specified position. Default is 200.
 #' @param chrom Optionally specify the region by specifying the chromosome, start and end (see below).
 #' @param start Optionally specify the region by specifying the start.
 #' @param end Optionally specify the region by specifying the end.
 #' @param out_path Specify the output directory where the snapshot will be written.
-#' @param igv_port Specify the port IGV is listening on.
+#' @param igv_port Specify the port IGV is listening on. Default: 60506 (optional if using the default).
+#' @param socket Provide the socket variable obtained by running this function with no arguments 
+#' @param gene Optionally provide a gene name that will be incorporated into the output file name
+#' @param details Optionally provide any other text you want incorporated into the output file name
+#' @param clobber Force existing file to be clobbered?
+#' @param sort_by Specify whether and how to sort the reads (e.g. "base"; see IGV documentation)
+#' @param colour_by Specify how IGV should colour the reads (see IGV documentation)
+#' @param squish Force reads to be squished (see IGV documentation)
+#' @param viewaspairs Set to TRUE if you want the reads to be shown as pairs rather than independently (see IGV documentation)
 #'
 #' @return Path to file (.png).
 #'
