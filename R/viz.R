@@ -410,7 +410,7 @@ gene_mutation_tally = function(maf_df,these_samples_metadata,these_genes,groupin
 #' #get gene symbols from MAF
 #' maf_genes = dplyr::filter(maf, Hugo_Symbol != "Unknown")
 #' maf_genes_chr1 = dplyr::filter(maf_genes, Chromosome == "1")
-#' my_genes = pull(maf_genes_chr1, Hugo_Symbol)
+#' my_genes = maf_genes_chr1$Hugo_Symbol
 #'
 #' #build wordcloud
 #' prettyGeneCloud(maf_df = maf, these_genes = my_genes)
@@ -5048,10 +5048,8 @@ comp_report = function(this_sample_id,
 #' @examples
 #' \dontrun{
 #' #retrieve gene names for FL genes
-#' fl_genes = dplyr::filter(lymphoma_genes, FL == TRUE) %>%
-#' fl_genes = dplyr::filter(lymphoma_genes, FL == TRUE) %>%
-#'  dplyr::select(Gene) %>%
-#'  pull(Gene)
+#' fl_genes = dplyr::filter(GAMBLR.data::lymphoma_genes_lymphoma_genes_v0.0, FL == TRUE) %>%
+#'   pull(Gene)
 #'
 #' # get regions for selected genes
 #' fl_genes_list = gene_to_region(gene_symbol = fl_genes,

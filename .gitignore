@@ -3,7 +3,6 @@
 inst/doc
 Meta
 doc
-docs/reference/*.png
 *onco_matrix.txt
 .Rhistory
 *.pdf
