@@ -1681,6 +1681,7 @@ get_lymphgen = function(these_samples_metadata,
 #' @param this_seq_type Seq type for returned CN segments. One of "genome" (default) or "capture".
 #' @param all_cytobands Include all cytobands, default is set to FALSE. Currently only supports hg19.
 #' @param use_cytoband_name Use cytoband names instead of region names, e.g p36.33.
+#' @param missing_data_as_diploid Fill in any sample/region combinations with missing data as diploid (e.g., CN state like 2). Default is FALSE.
 #'
 #' @return Copy number matrix.
 #'
@@ -1715,7 +1716,8 @@ get_cn_states = function(regions_list,
                          these_samples_metadata,
                          this_seq_type = "genome",
                          all_cytobands = FALSE,
-                         use_cytoband_name = FALSE){
+                         use_cytoband_name = FALSE,
+                         missing_data_as_diploid = FALSE){
 
   if(missing(these_samples_metadata)){
     these_samples_metadata = get_gambl_metadata(seq_type_filter=this_seq_type)
@@ -1766,14 +1768,17 @@ get_cn_states = function(regions_list,
     dplyr::slice(1) %>%
     dplyr::rename("sample_id" = "ID")
 
-  #fill in any sample/region combinations with missing data as diploid
   meta_arranged = these_samples_metadata %>%
     dplyr::select(sample_id, pathology, lymphgen) %>%
     arrange(pathology, lymphgen)
 
   eg = expand_grid(sample_id = pull(meta_arranged, sample_id), region_name = as.character(unique(seg_df$region_name)))
-  all_cn = left_join(eg, seg_df, by = c("sample_id" = "sample_id", "region_name" = "region_name")) %>%
-    mutate(CN = replace_na(CN, 2))
+  all_cn = left_join(eg, seg_df, by = c("sample_id" = "sample_id", "region_name" = "region_name"))
+
+  #fill in any sample/region combinations with missing data as diploid
+  if(missing_data_as_diploid){
+    all_cn = mutate(all_cn, CN = replace_na(CN, 2))
+  }
 
   cn_matrix = pivot_wider(all_cn, id_cols = "sample_id", names_from = "region_name", values_from = "CN") %>%
     column_to_rownames("sample_id")
