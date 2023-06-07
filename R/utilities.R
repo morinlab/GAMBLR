@@ -3157,11 +3157,15 @@ get_bams = function(this_sample_id,
 #'
 #' @description Load bam(s) and view the context around a mutation
 #'
-#' @details Load bam(s) and view the context around a mutation
+#' @details Load bam(s) and view the context around a mutation. IMPORTANT: you must be running IGV on the host that is running R and you need to have it listening on a port. The simplest scenario is to run this command on a terminal (if using a Mac), assuming you are using R on gphost10 and you have a ssh config that routes gp10 to that host
+#' ssh -X gp10
+#' then launch IGV (e.e. from a conda installation):
+#' conda activate igv; igv &
+#' Then obtain a socket and run this function as per the example.
 #'
 #' @param this_mutation Specify the mutation of interest in MAF format.
-#' @param igv_port Specify the port IGV is listening on.
-#' @param socket 
+#' @param igv_port Specify the port IGV is listening on. Default: 60506 (optional if using the default).
+#' @param socket Provide the socket variable obtained by running this function with no arguments 
 #' @param sort_by base, quality, sample or readGroup
 #'
 #' @return Path to file (.png).
@@ -3170,14 +3174,12 @@ get_bams = function(this_sample_id,
 #' @export
 #'
 #' @examples
-#' #IMPORTANT: you must be running IGV on the host that is running R and you need to have it listening on a port
-#' # The simplest scenario is to run this command on a terminal (if using a Mac), assuming you are using R on gphost10 and you have a ssh config that routes gp10 to that host
-#' # ssh -X gp10
-#' # then launch IGV (e.e. from a conda installation):
-#' # conda activate igv; igv &
+#'  \dontrun{
 #' # socket = make_igv_snapshot() #run with no arguments to get the socket for a running IGV instance
 #' # this_mutation = get_coding_ssm(seq_type="capture") %>% head(1)
 #' # view_mutation_igv(this_mutation,socket=socket,this_seq_type="capture",colour_by="READ_STRAND",squish=TRUE,viewaspairs=TRUE)
+#' }
+
 view_mutation_igv = function(
                              this_mutation,
                              this_seq_type="genome",
@@ -3273,14 +3275,14 @@ socketWrite = function (sock, string) {
 #' or the user can directly supply the chromosome, start and end coordinates with the `chrom`, `start`, and `end` parameters.
 #' For more information and examples, refer to the function examples and parameter descriptions.
 #'
-#' @param bams Character vector containing the full path to one or more bam files.
-#' @param genome_build String specifying the genome build for the bam files provided.
+#' @param these_sample_ids A vector of one or more sample_id (bams for these samples will be auto-loaded)
+#' @param bams Character vector containing the full path to one or more bam files (specify if not providing these_sample_ids)
+#' @param genome_build String specifying the genome build for the bam files provided (determined automatically if these_sample_ids was provided).
 #' @param region Optionally specify the region as a single string (e.g. "chr1:1234-1235").
 #' @param padding Optionally specify a positive value to broaden the region around the specified position. Default is 200.
 #' @param chrom Optionally specify the region by specifying the chromosome, start and end (see below).
 #' @param start Optionally specify the region by specifying the start.
 #' @param end Optionally specify the region by specifying the end.
-#' @param this_sample_id Specify the sample_id or any other string you want embedded in the file name.
 #' @param out_path Specify the output directory where the snapshot will be written.
 #' @param igv_port Specify the port IGV is listening on.
 #'
@@ -3290,7 +3292,7 @@ socketWrite = function (sock, string) {
 #' @export
 #'
 #' @examples
-#' 
+#'  \dontrun{
 #' #IMPORTANT: you must be running IGV on the host that is running R and you need to have it listening on a port
 #' # The simplest scenario is to run this command on a terminal (if using a Mac), assuming you are using R on gphost10 and you have a ssh config that routes gp10 to that host
 #' # ssh -X gp10
@@ -3307,10 +3309,10 @@ socketWrite = function (sock, string) {
 #'       seq_type_filter="capture",chrom=x["chr"],start=x["start"],end=x["end"],
 #'       details=paste0(x["ref"],"-",x["alt"]),
 #'       gene=x["Hugo_Symbol"],socket=socket)})
-#'       
+#' }   
 
 make_igv_snapshot = function(bams,
-                             sample_ids,
+                             these_sample_ids,
                              this_seq_type="genome",
                              genome_build,
                              region,
@@ -3336,10 +3338,10 @@ make_igv_snapshot = function(bams,
     sock = IGVsocket(port = igv_port)
     return(sock)
   }
-  if(missing(sample_ids)){
+  if(missing(these_sample_ids)){
     #don't load a bam. Assume the bam is already loaded
   }else{
-    this_sample_id = paste0(sample_ids,collapse = ",")
+    this_sample_id = paste0(these_sample_ids,collapse = ",")
   }
   if(missing(region) && missing(chrom)){
     stop("provide a region or coordinate as chrom, start, end")
@@ -3361,8 +3363,8 @@ make_igv_snapshot = function(bams,
     }
   }
   sock = socket
-  if(missing(bams) & !missing(sample_ids)){
-    meta = get_gambl_metadata(seq_type_filter=this_seq_type) %>% dplyr::filter(sample_id %in% sample_ids)
+  if(missing(bams) & !missing(these_sample_ids)){
+    meta = get_gambl_metadata(seq_type_filter=this_seq_type) %>% dplyr::filter(sample_id %in% these_sample_ids)
     if(missing(genome_build)){
       genome_build = pull(meta,genome_build)
     }
@@ -3370,7 +3372,7 @@ make_igv_snapshot = function(bams,
     bams = mutate(meta,bam_path=glue::glue(bam_path_pattern)) %>% pull(bam_path)
     if(!length(bams)){
       
-      message(paste("no bams found for",sample_ids))
+      message(paste("no bams found for",these_sample_ids))
       return()
     }
   }
