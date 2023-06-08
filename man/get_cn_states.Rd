@@ -11,7 +11,8 @@ get_cn_states(
   these_samples_metadata,
   this_seq_type = "genome",
   all_cytobands = FALSE,
-  use_cytoband_name = FALSE
+  use_cytoband_name = FALSE,
+  missing_data_as_diploid = FALSE
 )
 }
 \arguments{
@@ -28,6 +29,8 @@ get_cn_states(
 \item{all_cytobands}{Include all cytobands, default is set to FALSE. Currently only supports hg19.}
 
 \item{use_cytoband_name}{Use cytoband names instead of region names, e.g p36.33.}
+
+\item{missing_data_as_diploid}{Fill in any sample/region combinations with missing data as diploid (e.g., CN counts like 2). Default is FALSE.}
 }
 \value{
 Copy number matrix.
