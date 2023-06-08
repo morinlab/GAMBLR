@@ -3157,7 +3157,10 @@ get_bams = function(this_sample_id,
 #'
 #' @description Load bam(s) and view the context around a mutation
 #'
-#' @details Load bam(s) and view the context around a mutation. IMPORTANT: you must be running IGV on the host that is running R and you need to have it listening on a port. The simplest scenario is to run this command on a terminal (if using a Mac), assuming you are using R on gphost10 and you have a ssh config that routes gp10 to that host
+#' @details Load bam(s) and view the context around a mutation. 
+#' IMPORTANT: you must be running IGV on the host that is running R and you need to have it listening on a port. 
+#' The simplest scenario is to run this command on a terminal (if using a Mac), 
+#' assuming you are using R on gphost10 and you have a ssh config that routes gp10 to that host
 #' 
 #' ```
 #' ssh -X gp10
@@ -3186,12 +3189,17 @@ get_bams = function(this_sample_id,
 #' @export
 #'
 #' @examples
-#'  \dontrun{
-#' # socket = make_igv_snapshot() #run with no arguments to get the socket for a running IGV instance
-#' # this_mutation = get_coding_ssm(seq_type="capture") %>% head(1)
-#' # view_mutation_igv(this_mutation,socket=socket,this_seq_type="capture",colour_by="READ_STRAND",squish=TRUE,viewaspairs=TRUE)
+#' \dontrun{
+#' socket = make_igv_snapshot() #run with no arguments to get the socket for a running IGV instance
+#' this_mutation = get_coding_ssm(seq_type="capture") %>% head(1)
+#' view_mutation_igv(this_mutation, 
+#'                   socket = socket,
+#'                   this_seq_type = "capture",
+#'                   colour_by = "READ_STRAND",
+#'                   squish = TRUE,
+#'                   viewaspairs = TRUE)
 #' }
-
+#' 
 view_mutation_igv = function(this_mutation,
                              this_seq_type = "genome",
                              igv_port = 60506,
@@ -3276,7 +3284,6 @@ socketWrite = function (sock, string) {
 }
 
 
-
 #' @title Make IGV Snapshot
 #'
 #' @description Load bams and generate an IGV screenshot for one or more regions.
@@ -3285,6 +3292,19 @@ socketWrite = function (sock, string) {
 #' The user can also specify regions of interest with either the `region` parameter (chr:start-end),
 #' or the user can directly supply the chromosome, start and end coordinates with the `chrom`, `start`, and `end` parameters.
 #' For more information and examples, refer to the function examples and parameter descriptions.
+#' IMPORTANT: you must be running IGV on the host that is running R and you need to have it listening on a port. 
+#' The simplest scenario is to run this command on a terminal (if using a Mac), 
+#' assuming you are using R on gphost10 and you have a ssh config that routes gp10 to that host
+#' 
+#' ```
+#' ssh -X gp10
+#' ```
+#' 
+#' then launch IGV (e.e. from a conda installation):
+#' 
+#' ```
+#' conda activate igv; igv &
+#' ```
 #'
 #' @param these_sample_ids A vector of one or more sample_id (bams for these samples will be auto-loaded)
 #' @param this_seq_type TO DO: automatically obtain this for the user from the metadata
@@ -3312,25 +3332,42 @@ socketWrite = function (sock, string) {
 #' @export
 #'
 #' @examples
-#'  \dontrun{
-#' #IMPORTANT: you must be running IGV on the host that is running R and you need to have it listening on a port
-#' # The simplest scenario is to run this command on a terminal (if using a Mac), assuming you are using R on gphost10 and you have a ssh config that routes gp10 to that host
-#' # ssh -X gp10
-#' # then launch IGV (e.e. from a conda installation):
-#' # conda activate igv; igv &
-#' # this_sv = annotated_sv %>% filter(gene=="ETV6")
-#' # tumour_bam = get_bams(sample=this_sv$tumour_sample_id) #you don't need to know the details for the bam file but you can supply it if you want
-#' # socket = make_igv_snapshot() #run with no arguments to get the socket for a running IGV instance
-#' # make_igv_snapshot(chrom=this_sv$chrom2, start=this_sv$start2, end=this_sv$end2, this_sample_id=this_sv$tumour_sample_id,out_path="~/IGV_snapshots/")
-#' # this_mutation = get_coding_ssm(seq_type="capture") %>% head(1)
-#' # make_igv_snapshot(socket=socket,sample_ids=this_mutation$Tumor_Sample_Barcode,this_seq_type="capture",colour_by="READ_STRAND")
-#' # run on a bunch of variants using apply:
-#' # apply(to_snapshot,1,function(x){make_igv_snapshot(sample_ids=x["sample_id"],
-#'       seq_type_filter="capture",chrom=x["chr"],start=x["start"],end=x["end"],
-#'       details=paste0(x["ref"],"-",x["alt"]),
-#'       gene=x["Hugo_Symbol"],socket=socket)})
+#' \dontrun{
+#' this_sv = annotated_sv %>% 
+#'  filter(gene=="ETV6")
+#' 
+#' #you don't need to know the details for the bam file but you can supply it if you want
+#' tumour_bam = get_bams(sample = this_sv$tumour_sample_id)
+#' 
+#' #run with no arguments to get the socket for a running IGV instance
+#' socket = make_igv_snapshot()
+#' 
+#' make_igv_snapshot(chrom = this_sv$chrom2,
+#'                   start = this_sv$start2,
+#'                   end = this_sv$end2,
+#'                   this_sample_id = this_sv$tumour_sample_id,
+#'                   out_path = "~/IGV_snapshots/")
+#' 
+#' this_mutation = get_coding_ssm(seq_type="capture") %>% 
+#'  head(1)
+#' 
+#' make_igv_snapshot(socket = socket,
+#'                   sample_ids = this_mutation$Tumor_Sample_Barcode,
+#'                   this_seq_type = "capture", 
+#'                   colour_by = "READ_STRAND")
+#' 
+#' #run on a bunch of variants using apply:
+#' apply(to_snapshot,1,function(x){
+#'  make_igv_snapshot(sample_ids = x["sample_id"],
+#'                    seq_type_filter = "capture",
+#'                    chrom = x["chr"],
+#'                    start = x["start"],
+#'                    end = x["end"],
+#'                    details = paste0(x["ref"],"-",x["alt"]),
+#'                    gene = x["Hugo_Symbol"],
+#'                    socket = socket)})
 #' }   
-
+#'
 make_igv_snapshot = function(bams,
                              these_sample_ids,
                              this_seq_type="genome",
