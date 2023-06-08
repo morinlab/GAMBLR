@@ -3158,15 +3158,27 @@ get_bams = function(this_sample_id,
 #' @description Load bam(s) and view the context around a mutation
 #'
 #' @details Load bam(s) and view the context around a mutation. IMPORTANT: you must be running IGV on the host that is running R and you need to have it listening on a port. The simplest scenario is to run this command on a terminal (if using a Mac), assuming you are using R on gphost10 and you have a ssh config that routes gp10 to that host
+#' 
+#' ```
 #' ssh -X gp10
+#' ```
+#' 
 #' then launch IGV (e.e. from a conda installation):
+#' 
+#' ```
 #' conda activate igv; igv &
+#' ```
+#' 
 #' Then obtain a socket and run this function as per the example.
 #'
 #' @param this_mutation Specify the mutation of interest in MAF format.
+#' @param this_seq_type Specify the seq type, default is genome.
 #' @param igv_port Specify the port IGV is listening on. Default: 60506 (optional if using the default).
-#' @param socket Provide the socket variable obtained by running this function with no arguments 
-#' @param sort_by base, quality, sample or readGroup
+#' @param socket Provide the socket variable obtained by running this function with no arguments.
+#' @param sort_by base, quality, sample or readGroup.
+#' @param colour_by Specify how IGV should colour the reads (see IGV documentation).
+#' @param squish Force reads to be squished (see IGV documentation). Default is FALSE.
+#' @param viewaspairs Set to TRUE if you want the reads to be shown as pairs rather than independently (see IGV documentation), default is FALSE.
 #'
 #' @return Path to file (.png).
 #'
@@ -3180,15 +3192,14 @@ get_bams = function(this_sample_id,
 #' # view_mutation_igv(this_mutation,socket=socket,this_seq_type="capture",colour_by="READ_STRAND",squish=TRUE,viewaspairs=TRUE)
 #' }
 
-view_mutation_igv = function(
-                             this_mutation,
-                             this_seq_type="genome",
+view_mutation_igv = function(this_mutation,
+                             this_seq_type = "genome",
                              igv_port = 60506,
                              socket,
-                             sort_by="base",
+                             sort_by = "base",
                              colour_by,
-                             squish=FALSE,
-                             viewaspairs=FALSE){
+                             squish = FALSE,
+                             viewaspairs = FALSE){
   if(missing(socket)){
     print("returning socket for future use")
     sock = IGVsocket(port = igv_port)
