@@ -40,7 +40,7 @@
       <a href="https://morinlab.github.io/GAMBLR/#installation" class="external-link">Install</a>
     </li>
     <li>
-      <a href="https://morinlab.github.io/GAMBLR/#run-remote-on-a-local-machine" class="external-link">Run Remote On A Local Machine</a>
+      <a href="https://morinlab.github.io/GAMBLR/#running-gamblr-on-your-own-computer" class="external-link">Running GAMBLR On Your Own Computer</a>
     </li>
     <li>
       <a href="https://morinlab.github.io/GAMBLR/#contributing" class="external-link">Contribute</a>
@@ -178,199 +178,21 @@ For more information on how to run this function with the parameters at hand, re
     <div class="sourceCode"><pre class="sourceCode r"><code><span class="r-in"><span><span class="co">#load a maf</span></span></span>
 <span class="r-in"><span><span class="va">this_maf</span> <span class="op">=</span> <span class="fu"><a href="get_ssm_by_sample.html">get_ssm_by_sample</a></span><span class="op">(</span>this_sample_id <span class="op">=</span> <span class="st">"HTMCP-01-06-00422-01A-01D"</span>,</span></span>
 <span class="r-in"><span>                             this_seq_type <span class="op">=</span> <span class="st">"genome"</span><span class="op">)</span></span></span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> [1] "missing:  /Users/rmorin/git/gambl/data/metadata/gambl_all_outcomes.tsv"</span>
+<span class="r-msg co"><span class="r-pr">#&gt;</span> Have you cloned the GAMBL repo and added the path to this directory under the local section of your config?</span>
+<span class="r-err co"><span class="r-pr">#&gt;</span> <span class="error">Error:</span> '/Users/rmorin/git/gambl/data/metadata/gambl_all_outcomes.tsv' does not exist.</span>
 <span class="r-in"><span></span></span>
 <span class="r-in"><span><span class="co">#estimate purity based on an already loaded maf object</span></span></span>
 <span class="r-in"><span><span class="fu">estimate_purity</span><span class="op">(</span>maf_df <span class="op">=</span> <span class="va">this_maf</span>,</span></span>
 <span class="r-in"><span>                show_plots <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span></span></span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> [1] "WARNING: A seg file was not provided! Annotating all mutation calls as copy neutral"</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> $VAF_plot</span>
-<span class="r-msg co"><span class="r-pr">#&gt;</span> `stat_bin()` using `bins = 30`. Pick better value with `binwidth`.</span>
-<span class="r-plt img"><img src="estimate_purity-1.png" alt="" width="700" height="433"></span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> $Purity_plot</span>
-<span class="r-msg co"><span class="r-pr">#&gt;</span> `stat_bin()` using `bins = 30`. Pick better value with `binwidth`.</span>
-<span class="r-plt img"><img src="estimate_purity-2.png" alt="" width="700" height="433"></span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> $sample_purity_estimation</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> [1] 0.4471171</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> $CN_final</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>       Hugo_Symbol   Chrom_pos Chromosome Start_Position End_Position</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>    1:      TTLL10   1:1114072          1        1114072      1114072</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>    2:       ACAP3   1:1228897          1        1228897      1228897</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>    3:      PRDM16   1:3152295          1        3152295      3152295</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>    4:     Unknown   1:4047201          1        4047201      4047201</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>    5:     Unknown   1:4413966          1        4413966      4413966</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>   ---                                                               </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 4608:     MIR2114 X:149391826          X      149391826    149391826</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 4609:     Unknown X:150719323          X      150719323    150719323</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 4610:       PASD1 X:150739245          X      150739245    150739245</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 4611:      ZNF275 X:152614366          X      152614366    152614366</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 4612:      ATP2B3 X:152792650          X      152792650    152792650</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>       t_ref_count t_alt_count CN       VAF Ploidy    Purity CCF_mutation</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>    1:          61          33  2 0.3510638      1 0.7021277    0.6820669</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>    2:          63          21  2 0.2500000      1 0.5000000    0.4857143</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>    3:          50          19  2 0.2753623      1 0.5507246    0.5349896</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>    4:          78          16  2 0.1702128      1 0.3404255    0.3306991</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>    5:          60          15  2 0.2000000      1 0.4000000    0.3885714</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>   ---                                                                   </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 4608:          35          21  2 0.3750000      1 0.7500000    0.7285714</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 4609:          37          17  2 0.3148148      1 0.6296296    0.6116402</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 4610:          40          21  2 0.3442623      1 0.6885246    0.6688525</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 4611:          38          19  2 0.3333333      1 0.6666667    0.6476190</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 4612:          33          35  2 0.5147059      1 1.0294118    1.0000000</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>       CCF_sample</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>    1:  1.5703442</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>    2:  1.1182754</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>    3:  1.2317236</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>    4:  0.7613790</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>    5:  0.8946203</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>   ---           </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 4608:  1.6774131</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 4609:  1.4081986</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 4610:  1.5399202</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 4611:  1.4910339</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 4612:  2.3023317</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> </span>
+<span class="r-err co"><span class="r-pr">#&gt;</span> <span class="error">Error in dplyr::mutate(., Chromosome = gsub("chr", "", Chromosome)):</span> object 'this_maf' not found</span>
 <span class="r-in"><span></span></span>
 <span class="r-in"><span><span class="co">#estimate purity based sole on a smaple ID + added seg data.</span></span></span>
 <span class="r-in"><span><span class="fu">estimate_purity</span><span class="op">(</span>this_sample_id <span class="op">=</span> <span class="st">"HTMCP-01-06-00422-01A-01D"</span>,</span></span>
 <span class="r-in"><span>                show_plots <span class="op">=</span> <span class="cn">TRUE</span>, coding_only <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span></span></span>
-<span class="r-msg co"><span class="r-pr">#&gt;</span> trying to find output from: battenberg</span>
-<span class="r-msg co"><span class="r-pr">#&gt;</span> looking for flatfile: /projects/nhl_meta_analysis_scratch/gambl/results_local/gambl/battenberg_current/99-outputs/seg/genome--projection/HTMCP-01-06-00422-01A-01D--HTMCP-01-06-00422-10A-01D--matched.battenberg.grch37.seg</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> $VAF_plot</span>
-<span class="r-msg co"><span class="r-pr">#&gt;</span> `stat_bin()` using `bins = 30`. Pick better value with `binwidth`.</span>
-<span class="r-plt img"><img src="estimate_purity-3.png" alt="" width="700" height="433"></span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> $Purity_plot</span>
-<span class="r-msg co"><span class="r-pr">#&gt;</span> `stat_bin()` using `bins = 30`. Pick better value with `binwidth`.</span>
-<span class="r-plt img"><img src="estimate_purity-4.png" alt="" width="700" height="433"></span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> $sample_purity_estimation</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> [1] 0.4483024</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> $CN_final</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>       Hugo_Symbol    Chrom_pos Chromosome Start_Position End_Position</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>  1:          BTG2  1:203274877          1      203274877    203274877</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>  2:          BTG2  1:203274883          1      203274883    203274883</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>  3:         DUSP2   2:96809892          2       96809892     96809892</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>  4:         USP38  4:144135996          4      144135996    144135996</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>  5:         DDX60  4:169195215          4      169195215    169195215</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>  6:           ZFR   5:32417803          5       32417803     32417803</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>  7:      HIST1H1E   6:26157109          6       26157109     26157109</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>  8:      HIST1H4H   6:26285627          6       26285627     26285627</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>  9:          PIM1   6:37138549          6       37138549     37138549</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 10:          MYO6   6:76602374          6       76602374     76602374</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 11:          ADGB  6:147090183          6      147090183    147090183</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 12:         MEOX2   7:15652211          7       15652211     15652211</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 13:        SAMD9L   7:92763210          7       92763210     92763210</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 14:         MUC12  7:100635711          7      100635711    100635711</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 15:      CYB561A3  11:61118471         11       61118471     61118471</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 16:      B4GALNT3    12:661271         12         661271       661272</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 17:         RERGL  12:18237497         12       18237497     18237497</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 18:       SLCO1A2  12:21453503         12       21453503     21453503</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 19:        HECTD4 12:112746674         12      112746674    112746674</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 20:     KIAA0226L  13:46961263         13       46961263     46961263</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 21:       ZFP36L1  14:69257090         14       69257090     69257090</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 22:       ZFP36L1  14:69259603         14       69259603     69259603</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 23:         IGHG2 14:106109960         14      106109960    106109960</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 24:         IGHG2 14:106110428         14      106110428    106110428</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 25:         IGHG2 14:106110883         14      106110883    106110883</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 26:         IGHG1 14:106208502         14      106208502    106208502</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 27:       IGHV1-8 14:106539389         14      106539389    106539389</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 28:        SCNN1G  16:23200859         16       23200859     23200859</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 29:          SNPH   20:1285578         20        1285578      1285578</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 30:         LZTS3   20:3147779         20        3147779      3147779</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 31:         TRPM1  15:31319180         15       31319180     31319180</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 32:      C17orf77  17:72588641         17       72588641     72588641</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 33: RP11-1055B8.7  17:79430805         17       79430805     79430805</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 34:          CLPP   19:6361633         19        6361633      6361633</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 35:         ACTR5  20:37378710         20       37378710     37378710</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 36:           RAX  18:56936659         18       56936659     56936659</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 37:           BOC  3:112993366          3      112993366    112993366</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 38:         USP13  3:179499554          3      179499554    179499554</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>       Hugo_Symbol    Chrom_pos Chromosome Start_Position End_Position</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>     t_ref_count t_alt_count CN       VAF Ploidy    Purity CCF_mutation</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>  1:          78          26  2 0.2500000      1 0.5000000    0.8020833</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>  2:          79          26  2 0.2476190      1 0.4952381    0.7944444</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>  3:          67          15  2 0.1829268      1 0.3658537    0.5868902</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>  4:          63          15  2 0.1923077      1 0.3846154    0.6169872</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>  5:          60          19  2 0.2405063      1 0.4810127    0.7716245</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>  6:          54          21  2 0.2800000      1 0.5600000    0.8983333</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>  7:          63          15  2 0.1923077      1 0.3846154    0.6169872</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>  8:          64          12  2 0.1578947      1 0.3157895    0.5065789</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>  9:          60          17  2 0.2207792      1 0.4415584    0.7083333</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 10:          67          15  2 0.1829268      1 0.3658537    0.5868902</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 11:          59          18  2 0.2337662      1 0.4675325    0.7500000</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 12:          51          19  2 0.2714286      1 0.5428571    0.8708333</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 13:          41          16  2 0.2807018      1 0.5614035    0.9005848</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 14:          71          19  2 0.2111111      1 0.4222222    0.6773148</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 15:          46          18  2 0.2812500      1 0.5625000    0.9023438</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 16:          59          17  2 0.2236842      1 0.4473684    0.7176535</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 17:          54          15  2 0.2173913      1 0.4347826    0.6974638</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 18:          55          16  2 0.2253521      1 0.4507042    0.7230047</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 19:          67          11  2 0.1410256      1 0.2820513    0.4524573</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 20:          53          20  2 0.2739726      1 0.5479452    0.8789954</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 21:          60          16  2 0.2105263      1 0.4210526    0.6754386</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 22:          71          17  2 0.1931818      1 0.3863636    0.6197917</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 23:          53          24  2 0.3116883      1 0.6233766    1.0000000</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 24:          62          21  2 0.2530120      1 0.5060241    0.8117470</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 25:          63          17  2 0.2125000      1 0.4250000    0.6817708</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 26:          61          15  2 0.1973684      1 0.3947368    0.6332237</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 27:          60          13  2 0.1780822      1 0.3561644    0.5713470</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 28:          68          18  2 0.2093023      1 0.4186047    0.6715116</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 29:          56          16  2 0.2222222      1 0.4444444    0.7129630</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 30:          65          24  2 0.2696629      1 0.5393258    0.8651685</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 31:          53          11  2 0.1718750      1 0.3437500    0.5514323</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 32:          72          19  2 0.2087912      1 0.4175824    0.6698718</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 33:          68          21  2 0.2359551      1 0.4719101    0.7570225</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 34:          80          29  2 0.2660550      1 0.5321101    0.8535933</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 35:          44          19  1 0.3015873      1 0.3015873    0.4837963</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 36:         104          31  4 0.2296296      2 0.4592593    0.7367284</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 37:          70          28  3 0.2857143      2 0.4285714    0.6875000</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 38:          71          16  3 0.1839080      1 0.5517241    0.8850575</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>     t_ref_count t_alt_count CN       VAF Ploidy    Purity CCF_mutation</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>     CCF_sample</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>  1:  1.1153186</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>  2:  1.1046965</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>  3:  0.8160867</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>  4:  0.8579373</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>  5:  1.0729647</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>  6:  1.2491568</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>  7:  0.8579373</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>  8:  0.7044117</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>  9:  0.9849566</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 10:  0.8160867</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 11:  1.0428953</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 12:  1.2109173</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 13:  1.2522875</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 14:  0.9418246</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 15:  1.2547334</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 16:  0.9979166</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 17:  0.9698422</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 18:  1.0053576</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 19:  0.6291541</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 20:  1.2222669</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 21:  0.9392156</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 22:  0.8618371</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 23:  1.3905270</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 24:  1.1287561</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 25:  0.9480208</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 26:  0.8805146</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 27:  0.7944735</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 28:  0.9337551</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 29:  0.9913943</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 30:  1.2030402</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 31:  0.7667815</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 32:  0.9314748</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 33:  1.0526602</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 34:  1.1869445</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 35:  0.6727318</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 36:  1.0244407</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 37:  0.9559873</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 38:  1.2306963</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>     CCF_sample</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> [1] "missing:  /Users/rmorin/git/gambl/data/metadata/gambl_all_outcomes.tsv"</span>
+<span class="r-msg co"><span class="r-pr">#&gt;</span> Have you cloned the GAMBL repo and added the path to this directory under the local section of your config?</span>
+<span class="r-err co"><span class="r-pr">#&gt;</span> <span class="error">Error:</span> '/Users/rmorin/git/gambl/data/metadata/gambl_all_outcomes.tsv' does not exist.</span>
 <span class="r-in"><span></span></span>
 </code></pre></div>
     </div>

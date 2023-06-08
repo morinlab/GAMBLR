@@ -170,6 +170,7 @@ reference:
   - supplement_maf
   - tidy_gene_expression
   - tidy_lymphgen
+  - view_mutation_igv
   - write_sample_set_hash
 navbar:
   type: inverse

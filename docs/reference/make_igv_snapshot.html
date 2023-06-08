@@ -40,7 +40,7 @@
       <a href="https://morinlab.github.io/GAMBLR/#installation" class="external-link">Install</a>
     </li>
     <li>
-      <a href="https://morinlab.github.io/GAMBLR/#run-remote-on-a-local-machine" class="external-link">Run Remote On A Local Machine</a>
+      <a href="https://morinlab.github.io/GAMBLR/#running-gamblr-on-your-own-computer" class="external-link">Running GAMBLR On Your Own Computer</a>
     </li>
     <li>
       <a href="https://morinlab.github.io/GAMBLR/#contributing" class="external-link">Contribute</a>
@@ -102,26 +102,43 @@
     <div id="ref-usage">
     <div class="sourceCode"><pre class="sourceCode r"><code><span><span class="fu">make_igv_snapshot</span><span class="op">(</span></span>
 <span>  <span class="va">bams</span>,</span>
+<span>  <span class="va">these_sample_ids</span>,</span>
+<span>  this_seq_type <span class="op">=</span> <span class="st">"genome"</span>,</span>
 <span>  <span class="va">genome_build</span>,</span>
 <span>  <span class="va">region</span>,</span>
 <span>  padding <span class="op">=</span> <span class="fl">200</span>,</span>
 <span>  <span class="va">chrom</span>,</span>
 <span>  <span class="va">start</span>,</span>
 <span>  <span class="va">end</span>,</span>
-<span>  <span class="va">this_sample_id</span>,</span>
 <span>  out_path <span class="op">=</span> <span class="st">"/tmp/"</span>,</span>
-<span>  igv_port <span class="op">=</span> <span class="fl">60506</span></span>
+<span>  igv_port <span class="op">=</span> <span class="fl">60506</span>,</span>
+<span>  <span class="va">socket</span>,</span>
+<span>  gene <span class="op">=</span> <span class="st">"NA"</span>,</span>
+<span>  details <span class="op">=</span> <span class="st">""</span>,</span>
+<span>  clobber <span class="op">=</span> <span class="cn">FALSE</span>,</span>
+<span>  sort_by <span class="op">=</span> <span class="st">"base"</span>,</span>
+<span>  <span class="va">colour_by</span>,</span>
+<span>  squish <span class="op">=</span> <span class="cn">FALSE</span>,</span>
+<span>  viewaspairs <span class="op">=</span> <span class="cn">FALSE</span></span>
 <span><span class="op">)</span></span></code></pre></div>
     </div>
 
     <div id="arguments">
     <h2>Arguments</h2>
     <dl><dt>bams</dt>
-<dd><p>Character vector containing the full path to one or more bam files.</p></dd>
+<dd><p>Character vector containing the full path to one or more bam files (specify if not providing these_sample_ids)</p></dd>
+
+
+<dt>these_sample_ids</dt>
+<dd><p>A vector of one or more sample_id (bams for these samples will be auto-loaded)</p></dd>
+
+
+<dt>this_seq_type</dt>
+<dd><p>TO DO: automatically obtain this for the user from the metadata</p></dd>
 
 
 <dt>genome_build</dt>
-<dd><p>String specifying the genome build for the bam files provided.</p></dd>
+<dd><p>String specifying the genome build for the bam files provided (TO DO: if it isn't already, it should be determined automatically if these_sample_ids was provided).</p></dd>
 
 
 <dt>region</dt>
@@ -144,16 +161,44 @@
 <dd><p>Optionally specify the region by specifying the end.</p></dd>
 
 
-<dt>this_sample_id</dt>
-<dd><p>Specify the sample_id or any other string you want embedded in the file name.</p></dd>
-
-
 <dt>out_path</dt>
 <dd><p>Specify the output directory where the snapshot will be written.</p></dd>
 
 
 <dt>igv_port</dt>
-<dd><p>Specify the port IGV is listening on.</p></dd>
+<dd><p>Specify the port IGV is listening on. Default: 60506 (optional if using the default).</p></dd>
+
+
+<dt>socket</dt>
+<dd><p>Provide the socket variable obtained by running this function with no arguments</p></dd>
+
+
+<dt>gene</dt>
+<dd><p>Optionally provide a gene name that will be incorporated into the output file name</p></dd>
+
+
+<dt>details</dt>
+<dd><p>Optionally provide any other text you want incorporated into the output file name</p></dd>
+
+
+<dt>clobber</dt>
+<dd><p>Force existing file to be clobbered?</p></dd>
+
+
+<dt>sort_by</dt>
+<dd><p>Specify whether and how to sort the reads (e.g. "base"; see IGV documentation)</p></dd>
+
+
+<dt>colour_by</dt>
+<dd><p>Specify how IGV should colour the reads (see IGV documentation)</p></dd>
+
+
+<dt>squish</dt>
+<dd><p>Force reads to be squished (see IGV documentation)</p></dd>
+
+
+<dt>viewaspairs</dt>
+<dd><p>Set to TRUE if you want the reads to be shown as pairs rather than independently (see IGV documentation)</p></dd>
 
 </dl></div>
     <div id="value">

@@ -40,7 +40,7 @@
       <a href="https://morinlab.github.io/GAMBLR/#installation" class="external-link">Install</a>
     </li>
     <li>
-      <a href="https://morinlab.github.io/GAMBLR/#run-remote-on-a-local-machine" class="external-link">Run Remote On A Local Machine</a>
+      <a href="https://morinlab.github.io/GAMBLR/#running-gamblr-on-your-own-computer" class="external-link">Running GAMBLR On Your Own Computer</a>
     </li>
     <li>
       <a href="https://morinlab.github.io/GAMBLR/#contributing" class="external-link">Contribute</a>
@@ -149,13 +149,17 @@ Refer to parameter descriptions for more information on how to use the available
     <h2>Examples</h2>
     <div class="sourceCode"><pre class="sourceCode r"><code><span class="r-in"><span><span class="co">#get all ssm in the MYC aSHM region</span></span></span>
 <span class="r-in"><span><span class="va">myc_ashm_maf</span> <span class="op">=</span> <span class="fu"><a href="get_ssm_by_region.html">get_ssm_by_region</a></span><span class="op">(</span>region <span class="op">=</span> <span class="st">"8:128748352-128749427"</span><span class="op">)</span></span></span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> [1] "missing: /Users/rmorin/gambl_results/all_the_things/slms_3-1.0_vcf2maf-1.3/genome--projection/deblacklisted/augmented_maf/all_slms-3--grch37.maf.bgz"</span>
+<span class="r-err co"><span class="r-pr">#&gt;</span> <span class="error">Error in get_ssm_by_region(region = "8:128748352-128749427"):</span> failed to find the file needed for this</span>
 <span class="r-in"><span></span></span>
 <span class="r-in"><span><span class="co">#get mutations with 100 bp padding (default)</span></span></span>
 <span class="r-in"><span><span class="va">maf</span> <span class="op">=</span> <span class="fu">genome_to_exome</span><span class="op">(</span>maf <span class="op">=</span> <span class="va">myc_ashm_maf</span><span class="op">)</span></span></span>
+<span class="r-err co"><span class="r-pr">#&gt;</span> <span class="error">Error in genome_to_exome(maf = myc_ashm_maf):</span> object 'myc_ashm_maf' not found</span>
 <span class="r-in"><span></span></span>
 <span class="r-in"><span><span class="co">#get mutations covered in WEX with no padding</span></span></span>
 <span class="r-in"><span><span class="va">maf</span> <span class="op">=</span> <span class="fu">genome_to_exome</span><span class="op">(</span>maf <span class="op">=</span> <span class="va">myc_ashm_maf</span>,</span></span>
 <span class="r-in"><span>                padding <span class="op">=</span> <span class="fl">0</span><span class="op">)</span></span></span>
+<span class="r-err co"><span class="r-pr">#&gt;</span> <span class="error">Error in genome_to_exome(maf = myc_ashm_maf, padding = 0):</span> object 'myc_ashm_maf' not found</span>
 <span class="r-in"><span></span></span>
 </code></pre></div>
     </div>
