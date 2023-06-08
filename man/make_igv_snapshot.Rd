@@ -31,7 +31,9 @@ make_igv_snapshot(
 
 \item{these_sample_ids}{A vector of one or more sample_id (bams for these samples will be auto-loaded)}
 
-\item{genome_build}{String specifying the genome build for the bam files provided (determined automatically if these_sample_ids was provided).}
+\item{this_seq_type}{TO DO: automatically obtain this for the user from the metadata}
+
+\item{genome_build}{String specifying the genome build for the bam files provided (TO DO: if it isn't already, it should be determined automatically if these_sample_ids was provided).}
 
 \item{region}{Optionally specify the region as a single string (e.g. "chr1:1234-1235").}
 
@@ -45,7 +47,23 @@ make_igv_snapshot(
 
 \item{out_path}{Specify the output directory where the snapshot will be written.}
 
-\item{igv_port}{Specify the port IGV is listening on.}
+\item{igv_port}{Specify the port IGV is listening on. Default: 60506 (optional if using the default).}
+
+\item{socket}{Provide the socket variable obtained by running this function with no arguments}
+
+\item{gene}{Optionally provide a gene name that will be incorporated into the output file name}
+
+\item{details}{Optionally provide any other text you want incorporated into the output file name}
+
+\item{clobber}{Force existing file to be clobbered?}
+
+\item{sort_by}{Specify whether and how to sort the reads (e.g. "base"; see IGV documentation)}
+
+\item{colour_by}{Specify how IGV should colour the reads (see IGV documentation)}
+
+\item{squish}{Force reads to be squished (see IGV documentation)}
+
+\item{viewaspairs}{Set to TRUE if you want the reads to be shown as pairs rather than independently (see IGV documentation)}
 }
 \value{
 Path to file (.png).
