@@ -212,12 +212,54 @@
     <p>Specify the path to one or more bam files as a character vector to the <code>bams</code> parameter.
 The user can also specify regions of interest with either the <code>region</code> parameter (chr:start-end),
 or the user can directly supply the chromosome, start and end coordinates with the <code>chrom</code>, <code>start</code>, and <code>end</code> parameters.
-For more information and examples, refer to the function examples and parameter descriptions.</p>
+For more information and examples, refer to the function examples and parameter descriptions.
+IMPORTANT: you must be running IGV on the host that is running R and you need to have it listening on a port.
+The simplest scenario is to run this command on a terminal (if using a Mac),
+assuming you are using R on gphost10 and you have a ssh config that routes gp10 to that host</p>
+<p></p><div class="sourceCode"><pre><code><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a>ssh <span class="sc">-</span>X gp10</span></code></pre><p></p></div>
+<p>then launch IGV (e.e. from a conda installation):</p>
+<p></p><div class="sourceCode"><pre><code><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a>conda activate igv; igv <span class="sc">&amp;</span></span></code></pre><p></p></div>
     </div>
 
     <div id="ref-examples">
     <h2>Examples</h2>
-    
+    <div class="sourceCode"><pre class="sourceCode r"><code><span class="r-in"><span><span class="kw">if</span> <span class="op">(</span><span class="cn">FALSE</span><span class="op">)</span> <span class="op">{</span></span></span>
+<span class="r-in"><span><span class="va">this_sv</span> <span class="op">=</span> <span class="va">annotated_sv</span> <span class="op">%&gt;%</span> </span></span>
+<span class="r-in"><span> <span class="fu"><a href="https://rdrr.io/r/stats/filter.html" class="external-link">filter</a></span><span class="op">(</span><span class="va">gene</span><span class="op">==</span><span class="st">"ETV6"</span><span class="op">)</span></span></span>
+<span class="r-in"><span></span></span>
+<span class="r-in"><span><span class="co">#you don't need to know the details for the bam file but you can supply it if you want</span></span></span>
+<span class="r-in"><span><span class="va">tumour_bam</span> <span class="op">=</span> <span class="fu"><a href="get_bams.html">get_bams</a></span><span class="op">(</span>sample <span class="op">=</span> <span class="va">this_sv</span><span class="op">$</span><span class="va">tumour_sample_id</span><span class="op">)</span></span></span>
+<span class="r-in"><span></span></span>
+<span class="r-in"><span><span class="co">#run with no arguments to get the socket for a running IGV instance</span></span></span>
+<span class="r-in"><span><span class="va">socket</span> <span class="op">=</span> <span class="fu">make_igv_snapshot</span><span class="op">(</span><span class="op">)</span></span></span>
+<span class="r-in"><span></span></span>
+<span class="r-in"><span><span class="fu">make_igv_snapshot</span><span class="op">(</span>chrom <span class="op">=</span> <span class="va">this_sv</span><span class="op">$</span><span class="va">chrom2</span>,</span></span>
+<span class="r-in"><span>                  start <span class="op">=</span> <span class="va">this_sv</span><span class="op">$</span><span class="va">start2</span>,</span></span>
+<span class="r-in"><span>                  end <span class="op">=</span> <span class="va">this_sv</span><span class="op">$</span><span class="va">end2</span>,</span></span>
+<span class="r-in"><span>                  this_sample_id <span class="op">=</span> <span class="va">this_sv</span><span class="op">$</span><span class="va">tumour_sample_id</span>,</span></span>
+<span class="r-in"><span>                  out_path <span class="op">=</span> <span class="st">"~/IGV_snapshots/"</span><span class="op">)</span></span></span>
+<span class="r-in"><span></span></span>
+<span class="r-in"><span><span class="va">this_mutation</span> <span class="op">=</span> <span class="fu"><a href="get_coding_ssm.html">get_coding_ssm</a></span><span class="op">(</span>seq_type<span class="op">=</span><span class="st">"capture"</span><span class="op">)</span> <span class="op">%&gt;%</span> </span></span>
+<span class="r-in"><span> <span class="fu"><a href="https://rdrr.io/r/utils/head.html" class="external-link">head</a></span><span class="op">(</span><span class="fl">1</span><span class="op">)</span></span></span>
+<span class="r-in"><span></span></span>
+<span class="r-in"><span><span class="fu">make_igv_snapshot</span><span class="op">(</span>socket <span class="op">=</span> <span class="va">socket</span>,</span></span>
+<span class="r-in"><span>                  sample_ids <span class="op">=</span> <span class="va">this_mutation</span><span class="op">$</span><span class="va">Tumor_Sample_Barcode</span>,</span></span>
+<span class="r-in"><span>                  this_seq_type <span class="op">=</span> <span class="st">"capture"</span>, </span></span>
+<span class="r-in"><span>                  colour_by <span class="op">=</span> <span class="st">"READ_STRAND"</span><span class="op">)</span></span></span>
+<span class="r-in"><span></span></span>
+<span class="r-in"><span><span class="co">#run on a bunch of variants using apply:</span></span></span>
+<span class="r-in"><span><span class="fu"><a href="https://rdrr.io/r/base/apply.html" class="external-link">apply</a></span><span class="op">(</span><span class="va">to_snapshot</span>,<span class="fl">1</span>,<span class="kw">function</span><span class="op">(</span><span class="va">x</span><span class="op">)</span><span class="op">{</span></span></span>
+<span class="r-in"><span> <span class="fu">make_igv_snapshot</span><span class="op">(</span>sample_ids <span class="op">=</span> <span class="va">x</span><span class="op">[</span><span class="st">"sample_id"</span><span class="op">]</span>,</span></span>
+<span class="r-in"><span>                   seq_type_filter <span class="op">=</span> <span class="st">"capture"</span>,</span></span>
+<span class="r-in"><span>                   chrom <span class="op">=</span> <span class="va">x</span><span class="op">[</span><span class="st">"chr"</span><span class="op">]</span>,</span></span>
+<span class="r-in"><span>                   start <span class="op">=</span> <span class="va">x</span><span class="op">[</span><span class="st">"start"</span><span class="op">]</span>,</span></span>
+<span class="r-in"><span>                   end <span class="op">=</span> <span class="va">x</span><span class="op">[</span><span class="st">"end"</span><span class="op">]</span>,</span></span>
+<span class="r-in"><span>                   details <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/paste.html" class="external-link">paste0</a></span><span class="op">(</span><span class="va">x</span><span class="op">[</span><span class="st">"ref"</span><span class="op">]</span>,<span class="st">"-"</span>,<span class="va">x</span><span class="op">[</span><span class="st">"alt"</span><span class="op">]</span><span class="op">)</span>,</span></span>
+<span class="r-in"><span>                   gene <span class="op">=</span> <span class="va">x</span><span class="op">[</span><span class="st">"Hugo_Symbol"</span><span class="op">]</span>,</span></span>
+<span class="r-in"><span>                   socket <span class="op">=</span> <span class="va">socket</span><span class="op">)</span><span class="op">}</span><span class="op">)</span></span></span>
+<span class="r-in"><span><span class="op">}</span>   </span></span>
+<span class="r-in"><span></span></span>
+</code></pre></div>
     </div>
   </div>
   <div class="col-md-3 hidden-xs hidden-sm" id="pkgdown-sidebar">

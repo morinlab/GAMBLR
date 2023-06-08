@@ -154,7 +154,10 @@
     </div>
     <div id="details">
     <h2>Details</h2>
-    <p>Load bam(s) and view the context around a mutation. IMPORTANT: you must be running IGV on the host that is running R and you need to have it listening on a port. The simplest scenario is to run this command on a terminal (if using a Mac), assuming you are using R on gphost10 and you have a ssh config that routes gp10 to that host</p>
+    <p>Load bam(s) and view the context around a mutation.
+IMPORTANT: you must be running IGV on the host that is running R and you need to have it listening on a port.
+The simplest scenario is to run this command on a terminal (if using a Mac),
+assuming you are using R on gphost10 and you have a ssh config that routes gp10 to that host</p>
 <p></p><div class="sourceCode"><pre><code><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a>ssh <span class="sc">-</span>X gp10</span></code></pre><p></p></div>
 <p>then launch IGV (e.e. from a conda installation):</p>
 <p></p><div class="sourceCode"><pre><code><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a>conda activate igv; igv <span class="sc">&amp;</span></span></code></pre><p></p></div>
@@ -163,11 +166,17 @@
 
     <div id="ref-examples">
     <h2>Examples</h2>
-    <div class="sourceCode"><pre class="sourceCode r"><code><span class="r-in"><span> <span class="kw">if</span> <span class="op">(</span><span class="cn">FALSE</span><span class="op">)</span> <span class="op">{</span></span></span>
-<span class="r-in"><span><span class="co"># socket = make_igv_snapshot() #run with no arguments to get the socket for a running IGV instance</span></span></span>
-<span class="r-in"><span><span class="co"># this_mutation = get_coding_ssm(seq_type="capture") %&gt;% head(1)</span></span></span>
-<span class="r-in"><span><span class="co"># view_mutation_igv(this_mutation,socket=socket,this_seq_type="capture",colour_by="READ_STRAND",squish=TRUE,viewaspairs=TRUE)</span></span></span>
+    <div class="sourceCode"><pre class="sourceCode r"><code><span class="r-in"><span><span class="kw">if</span> <span class="op">(</span><span class="cn">FALSE</span><span class="op">)</span> <span class="op">{</span></span></span>
+<span class="r-in"><span><span class="va">socket</span> <span class="op">=</span> <span class="fu"><a href="make_igv_snapshot.html">make_igv_snapshot</a></span><span class="op">(</span><span class="op">)</span> <span class="co">#run with no arguments to get the socket for a running IGV instance</span></span></span>
+<span class="r-in"><span><span class="va">this_mutation</span> <span class="op">=</span> <span class="fu"><a href="get_coding_ssm.html">get_coding_ssm</a></span><span class="op">(</span>seq_type<span class="op">=</span><span class="st">"capture"</span><span class="op">)</span> <span class="op">%&gt;%</span> <span class="fu"><a href="https://rdrr.io/r/utils/head.html" class="external-link">head</a></span><span class="op">(</span><span class="fl">1</span><span class="op">)</span></span></span>
+<span class="r-in"><span><span class="fu">view_mutation_igv</span><span class="op">(</span><span class="va">this_mutation</span>, </span></span>
+<span class="r-in"><span>                  socket <span class="op">=</span> <span class="va">socket</span>,</span></span>
+<span class="r-in"><span>                  this_seq_type <span class="op">=</span> <span class="st">"capture"</span>,</span></span>
+<span class="r-in"><span>                  colour_by <span class="op">=</span> <span class="st">"READ_STRAND"</span>,</span></span>
+<span class="r-in"><span>                  squish <span class="op">=</span> <span class="cn">TRUE</span>,</span></span>
+<span class="r-in"><span>                  viewaspairs <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span></span></span>
 <span class="r-in"><span><span class="op">}</span></span></span>
+<span class="r-in"><span></span></span>
 </code></pre></div>
     </div>
   </div>
