@@ -2,6 +2,8 @@
 ![](https://github.com/morinlab/GAMBLR/actions/workflows/build_check.yml/badge.svg)
 
 # GABMLR - an R package with convenience functions for working with GAMBL results.
+If you are viewing this page on Github, consider clicking [this link](https://morinlab.github.io/GAMBLR/) to go to the GAMBLR webpage and learn more about this package.
+
 ## Installation
 If you have access to gphost, the easiest way to obtain and run GAMBLR is to do this via Rstudio on a gphost. If you do not have access to gphost, please refer to the [Run Remote On A Local Machine](#Run Remote On A Local Machine) section. Assuming you are running Rstudio on gphost, clone the repo to your home directory (not your GAMBL working directory).
 

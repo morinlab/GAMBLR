@@ -40,7 +40,7 @@
       <a href="https://morinlab.github.io/GAMBLR/#installation" class="external-link">Install</a>
     </li>
     <li>
-      <a href="https://morinlab.github.io/GAMBLR/#run-remote-on-a-local-machine" class="external-link">Run Remote On A Local Machine</a>
+      <a href="https://morinlab.github.io/GAMBLR/#running-gamblr-on-your-own-computer" class="external-link">Running GAMBLR On Your Own Computer</a>
     </li>
     <li>
       <a href="https://morinlab.github.io/GAMBLR/#contributing" class="external-link">Contribute</a>
@@ -187,37 +187,20 @@ Is this function not what you are looking for? Try one of the following, similar
 <span class="r-in"><span>                                   this_seq_type <span class="op">=</span> <span class="st">"genome"</span>,</span></span>
 <span class="r-in"><span>                                   tool_name <span class="op">=</span> <span class="st">"slims-3"</span>,</span></span>
 <span class="r-in"><span>                                   projection <span class="op">=</span> <span class="st">"grch37"</span><span class="op">)</span></span></span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> [1] "missing:  /Users/rmorin/git/gambl/data/metadata/gambl_all_outcomes.tsv"</span>
+<span class="r-msg co"><span class="r-pr">#&gt;</span> Have you cloned the GAMBL repo and added the path to this directory under the local section of your config?</span>
+<span class="r-err co"><span class="r-pr">#&gt;</span> <span class="error">Error:</span> '/Users/rmorin/git/gambl/data/metadata/gambl_all_outcomes.tsv' does not exist.</span>
 <span class="r-in"><span></span></span>
 <span class="r-in"><span><span class="va">capture_meta</span> <span class="op">=</span> <span class="fu"><a href="get_gambl_metadata.html">get_gambl_metadata</a></span><span class="op">(</span>seq_type_filter <span class="op">=</span> <span class="st">"capture"</span><span class="op">)</span></span></span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> [1] "missing:  /Users/rmorin/git/gambl/data/metadata/gambl_all_outcomes.tsv"</span>
+<span class="r-msg co"><span class="r-pr">#&gt;</span> Have you cloned the GAMBL repo and added the path to this directory under the local section of your config?</span>
+<span class="r-err co"><span class="r-pr">#&gt;</span> <span class="error">Error:</span> '/Users/rmorin/git/gambl/data/metadata/gambl_all_outcomes.tsv' does not exist.</span>
 <span class="r-in"><span></span></span>
 <span class="r-in"><span><span class="va">ssm_sample</span> <span class="op">=</span> <span class="fu">get_ssm_by_sample</span><span class="op">(</span>this_sample_id <span class="op">=</span> <span class="st">"CASA0002_2015-03-10"</span>,</span></span>
 <span class="r-in"><span>                               projection <span class="op">=</span> <span class="st">"grch37"</span>,</span></span>
 <span class="r-in"><span>                               augmented <span class="op">=</span> <span class="cn">T</span>,</span></span>
 <span class="r-in"><span>                               these_samples_metadata <span class="op">=</span> <span class="va">capture_meta</span><span class="op">)</span></span></span>
-<span class="r-wrn co"><span class="r-pr">#&gt;</span> <span class="warning">Warning: </span>Column name 'GENE_PHENO' not found in column name header (case sensitive), skipping.</span>
-<span class="r-wrn co"><span class="r-pr">#&gt;</span> <span class="warning">Warning: </span>Column name 'FILTER' not found in column name header (case sensitive), skipping.</span>
-<span class="r-wrn co"><span class="r-pr">#&gt;</span> <span class="warning">Warning: </span>Column name 'flanking_bps' not found in column name header (case sensitive), skipping.</span>
-<span class="r-wrn co"><span class="r-pr">#&gt;</span> <span class="warning">Warning: </span>Column name 'vcf_id' not found in column name header (case sensitive), skipping.</span>
-<span class="r-wrn co"><span class="r-pr">#&gt;</span> <span class="warning">Warning: </span>Column name 'vcf_qual' not found in column name header (case sensitive), skipping.</span>
-<span class="r-wrn co"><span class="r-pr">#&gt;</span> <span class="warning">Warning: </span>Column name 'gnomAD_AF' not found in column name header (case sensitive), skipping.</span>
-<span class="r-wrn co"><span class="r-pr">#&gt;</span> <span class="warning">Warning: </span>Column name 'gnomAD_AFR_AF' not found in column name header (case sensitive), skipping.</span>
-<span class="r-wrn co"><span class="r-pr">#&gt;</span> <span class="warning">Warning: </span>Column name 'gnomAD_AMR_AF' not found in column name header (case sensitive), skipping.</span>
-<span class="r-wrn co"><span class="r-pr">#&gt;</span> <span class="warning">Warning: </span>Column name 'gnomAD_SAS_AF' not found in column name header (case sensitive), skipping.</span>
-<span class="r-wrn co"><span class="r-pr">#&gt;</span> <span class="warning">Warning: </span>Column name 'vcf_pos' not found in column name header (case sensitive), skipping.</span>
-<span class="r-wrn co"><span class="r-pr">#&gt;</span> <span class="warning">Warning: </span>Column name 'gnomADg_AF' not found in column name header (case sensitive), skipping.</span>
-<span class="r-wrn co"><span class="r-pr">#&gt;</span> <span class="warning">Warning: </span>Column name 'blacklist_count' not found in column name header (case sensitive), skipping.</span>
-<span class="r-wrn co"><span class="r-pr">#&gt;</span> <span class="warning">Warning: </span>Column name 'FILTER' (colClasses[[1]][67]) not found</span>
-<span class="r-wrn co"><span class="r-pr">#&gt;</span> <span class="warning">Warning: </span>Column name 'flanking_bps' (colClasses[[1]][68]) not found</span>
-<span class="r-wrn co"><span class="r-pr">#&gt;</span> <span class="warning">Warning: </span>Column name 'vcf_id' (colClasses[[1]][69]) not found</span>
-<span class="r-wrn co"><span class="r-pr">#&gt;</span> <span class="warning">Warning: </span>Column name 'vcf_qual' (colClasses[[1]][70]) not found</span>
-<span class="r-wrn co"><span class="r-pr">#&gt;</span> <span class="warning">Warning: </span>Column name 'gnomADg_AF' (colClasses[[1]][71]) not found</span>
-<span class="r-wrn co"><span class="r-pr">#&gt;</span> <span class="warning">Warning: </span>Column name 'vcf_pos' (colClasses[[2]][11]) not found</span>
-<span class="r-wrn co"><span class="r-pr">#&gt;</span> <span class="warning">Warning: </span>Column name 'gnomAD_AF' (colClasses[[3]][20]) not found</span>
-<span class="r-wrn co"><span class="r-pr">#&gt;</span> <span class="warning">Warning: </span>Column name 'gnomAD_AFR_AF' (colClasses[[3]][21]) not found</span>
-<span class="r-wrn co"><span class="r-pr">#&gt;</span> <span class="warning">Warning: </span>Column name 'gnomAD_AMR_AF' (colClasses[[3]][22]) not found</span>
-<span class="r-wrn co"><span class="r-pr">#&gt;</span> <span class="warning">Warning: </span>Column name 'gnomAD_SAS_AF' (colClasses[[3]][28]) not found</span>
-<span class="r-wrn co"><span class="r-pr">#&gt;</span> <span class="warning">Warning: </span>Column name 'GENE_PHENO' (colClasses[[4]][5]) not found</span>
-<span class="r-wrn co"><span class="r-pr">#&gt;</span> <span class="warning">Warning: </span>Column name 'blacklist_count' (colClasses[[4]][6]) not found</span>
+<span class="r-err co"><span class="r-pr">#&gt;</span> <span class="error">Error in dplyr::filter(these_samples_metadata, sample_id == this_sample_id):</span> object 'capture_meta' not found</span>
 <span class="r-in"><span></span></span>
 </code></pre></div>
     </div>

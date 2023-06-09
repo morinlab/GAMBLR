@@ -1,11 +1,11 @@
-vignettes/onco_matrix.txt
 .RData
 .Rproj.user
 inst/doc
 Meta
 doc
-docs/reference/onco_matrix.txt
+*onco_matrix.txt
 .Rhistory
 *.pdf
 data/ggsci_db.rda
 *.bed
+.DS_Store
