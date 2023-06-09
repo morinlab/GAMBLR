@@ -30,7 +30,7 @@ get_cn_states(
 
 \item{use_cytoband_name}{Use cytoband names instead of region names, e.g p36.33.}
 
-\item{missing_data_as_diploid}{Fill in any sample/region combinations with missing data as diploid (e.g., CN counts like 2). Default is FALSE.}
+\item{missing_data_as_diploid}{Fill in any sample/region combinations with missing data as diploid (e.g., CN state like 2). Default is FALSE.}
 }
 \value{
 Copy number matrix.
