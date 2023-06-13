@@ -8,6 +8,7 @@ vignette: >
 ---
 ```{r setup, include = FALSE}
 knitr::opts_chunk$set(warning = FALSE, message = FALSE)
+options(bitmapType='cairo')
 ```
 
 ```{r load_packages, message = FALSE, warning = FALSE, echo = FALSE, results = 'hide'}
@@ -130,6 +131,7 @@ adjust_ploidy(this_seg = sample_seg)
 #get CNV comparison data.
 kompare_out = cnvKompare(patient_id = "13-26835", 
                          projection = "hg38",
+                         show_x_labels = FALSE,
                          genes_of_interest = c("EZH2",
                                                "TP53",
                                                "MYC",
