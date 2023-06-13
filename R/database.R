@@ -1783,9 +1783,9 @@ get_cn_states = function(regions_list,
   cn_matrix = pivot_wider(all_cn, id_cols = "sample_id", names_from = "region_name", values_from = "CN") %>%
     column_to_rownames("sample_id")
 
-  names(cn_matrix) = region_names
-
   #order the regions the same way the user provided them for convenience
+  cn_matrix = cn_matrix[,region_names, drop=FALSE]
+
   return(cn_matrix)
 }
 
