@@ -4553,6 +4553,7 @@ subset_cnstates = function(cn_segments,
 #' @param exclude_sex Boolean argument specifying whether to exclude sex chromosomes from calculation. Default is FALSE.
 #' @param return_heatmap Boolean argument specifying whether to return a heatmap of cnvKompare scores. Default is TRUE.
 #' @param compare_pairwise Boolean argument specifying whether to perform pairwise comparisons if there are more than 2 time points in the group. Default is TRUE.
+#' @param show_x_labels Optional boolean parameter for hiding/showing x axis labels, default is TRUE.
 #'
 #' @return A list of overall and pairwise percent concordance, concordant and discordant cytobands, comparison heatmap of cnvKompare scores, and time series ggplot object.
 #'
@@ -4568,7 +4569,8 @@ subset_cnstates = function(cn_segments,
 #'                                  "MYC",
 #'                                  "CREBBP",
 #'                                  "GNA13"),
-#'            projection = "hg38")
+#'            projection = "hg38", 
+#'            show_x_labels = FALSE)
 #'
 cnvKompare = function(patient_id,
                       these_sample_ids,
@@ -4582,7 +4584,9 @@ cnvKompare = function(patient_id,
                       min_concordance = 90,
                       exclude_sex = FALSE,
                       return_heatmap = TRUE,
-                      compare_pairwise = TRUE) {
+                      compare_pairwise = TRUE,
+                      show_x_labels = TRUE){
+                        
   # initialize output list
   output = list()
 
@@ -4742,6 +4746,7 @@ cnvKompare = function(patient_id,
       t %>%
       ComplexHeatmap::Heatmap(
         .,
+        show_column_names = show_x_labels,
         cluster_columns = FALSE,
         cluster_rows = FALSE,
         heatmap_legend_param = hmap_legend_param
