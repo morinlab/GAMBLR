@@ -207,16 +207,30 @@ Is this function not what you are looking for? Try one of the following, similar
     <h2>Examples</h2>
     <div class="sourceCode"><pre class="sourceCode r"><code><span class="r-in"><span><span class="va">coding_tabulated_df</span> <span class="op">=</span> <span class="fu">get_coding_ssm_status</span><span class="op">(</span>maf_data <span class="op">=</span> <span class="va">grande_maf</span>,</span></span>
 <span class="r-in"><span>                                            gene_symbols <span class="op">=</span> <span class="st">"EGFR"</span><span class="op">)</span></span></span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> [1] "missing:  /Users/rmorin/git/gambl/data/metadata/gambl_all_outcomes.tsv"</span>
-<span class="r-msg co"><span class="r-pr">#&gt;</span> Have you cloned the GAMBL repo and added the path to this directory under the local section of your config?</span>
-<span class="r-err co"><span class="r-pr">#&gt;</span> <span class="error">Error:</span> '/Users/rmorin/git/gambl/data/metadata/gambl_all_outcomes.tsv' does not exist.</span>
+<span class="r-msg co"><span class="r-pr">#&gt;</span> Joining with `by = join_by(sample_id)`</span>
+<span class="r-msg co"><span class="r-pr">#&gt;</span> Adding missing grouping variables: `SYMBOL`</span>
+<span class="r-msg co"><span class="r-pr">#&gt;</span> Adding missing grouping variables: `SYMBOL`</span>
+<span class="r-msg co"><span class="r-pr">#&gt;</span> annotating hotspots</span>
+<span class="r-msg co"><span class="r-pr">#&gt;</span> Joining with `by = join_by(sample_id)`</span>
+<span class="r-msg co"><span class="r-pr">#&gt;</span> FOXO1HOTSPOT</span>
 <span class="r-in"><span></span></span>
 <span class="r-in"><span><span class="co">#all lymphoma genes from bundled NHL gene list</span></span></span>
 <span class="r-in"><span><span class="va">coding_tabulated_df</span> <span class="op">=</span> <span class="fu">get_coding_ssm_status</span><span class="op">(</span><span class="op">)</span></span></span>
 <span class="r-msg co"><span class="r-pr">#&gt;</span> defaulting to all lymphoma genes</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> [1] "missing:  /Users/rmorin/git/gambl/data/metadata/gambl_all_outcomes.tsv"</span>
-<span class="r-msg co"><span class="r-pr">#&gt;</span> Have you cloned the GAMBL repo and added the path to this directory under the local section of your config?</span>
-<span class="r-err co"><span class="r-pr">#&gt;</span> <span class="error">Error:</span> '/Users/rmorin/git/gambl/data/metadata/gambl_all_outcomes.tsv' does not exist.</span>
+<span class="r-msg co"><span class="r-pr">#&gt;</span> reading from: /projects/nhl_meta_analysis_scratch/gambl/results_local/all_the_things/slms_3-1.0_vcf2maf-1.3/genome--projection/deblacklisted/augmented_maf/all_slms-3--grch37.CDS.maf</span>
+<span class="r-msg co"><span class="r-pr">#&gt;</span> mutations from 1652 samples</span>
+<span class="r-msg co"><span class="r-pr">#&gt;</span> after linking with metadata, we have mutations from 1646 samples</span>
+<span class="r-msg co"><span class="r-pr">#&gt;</span> Joining with `by = join_by(sample_id)`</span>
+<span class="r-msg co"><span class="r-pr">#&gt;</span> Adding missing grouping variables: `SYMBOL`</span>
+<span class="r-msg co"><span class="r-pr">#&gt;</span> Adding missing grouping variables: `SYMBOL`</span>
+<span class="r-msg co"><span class="r-pr">#&gt;</span> annotating hotspots</span>
+<span class="r-msg co"><span class="r-pr">#&gt;</span> Joining with `by = join_by(sample_id)`</span>
+<span class="r-msg co"><span class="r-pr">#&gt;</span> FOXO1HOTSPOT</span>
+<span class="r-msg co"><span class="r-pr">#&gt;</span> OK</span>
+<span class="r-msg co"><span class="r-pr">#&gt;</span> CREBBPHOTSPOT</span>
+<span class="r-msg co"><span class="r-pr">#&gt;</span> OK</span>
+<span class="r-msg co"><span class="r-pr">#&gt;</span> MYD88HOTSPOT</span>
+<span class="r-msg co"><span class="r-pr">#&gt;</span> OK</span>
 <span class="r-in"><span></span></span>
 </code></pre></div>
     </div>

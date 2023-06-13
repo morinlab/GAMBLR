@@ -132,14 +132,29 @@ Expects at least to have columns "patient_id" to bind on, and "lymphgen" to supp
     <div id="ref-examples">
     <h2>Examples</h2>
     <div class="sourceCode"><pre class="sourceCode r"><code><span class="r-in"><span><span class="va">metadata</span> <span class="op">=</span> <span class="fu"><a href="get_gambl_metadata.html">get_gambl_metadata</a></span><span class="op">(</span><span class="op">)</span></span></span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> [1] "missing:  /Users/rmorin/git/gambl/data/metadata/gambl_all_outcomes.tsv"</span>
-<span class="r-msg co"><span class="r-pr">#&gt;</span> Have you cloned the GAMBL repo and added the path to this directory under the local section of your config?</span>
-<span class="r-err co"><span class="r-pr">#&gt;</span> <span class="error">Error:</span> '/Users/rmorin/git/gambl/data/metadata/gambl_all_outcomes.tsv' does not exist.</span>
 <span class="r-in"><span><span class="fu">consolidate_lymphgen</span><span class="op">(</span>sample_table <span class="op">=</span> <span class="va">metadata</span><span class="op">)</span></span></span>
-<span class="r-msg co"><span class="r-pr">#&gt;</span> No external data path was provided, using default path /Users/rmorin/gambl_results/icgc_dart/derived_and_curated_metadata/</span>
-<span class="r-msg co"><span class="r-pr">#&gt;</span> No file(s) with lymphgen information were found at the path</span>
-<span class="r-msg co"><span class="r-pr">#&gt;</span> If you expected the data to be present at the specified location, please ensure they follow naming convention *.lymphgen.txt</span>
-<span class="r-err co"><span class="r-pr">#&gt;</span> <span class="error">Error in consolidate_lymphgen(sample_table = metadata):</span> object 'metadata' not found</span>
+<span class="r-msg co"><span class="r-pr">#&gt;</span> No external data path was provided, using default path /projects/nhl_meta_analysis_scratch/gambl/results_local/icgc_dart/derived_and_curated_metadata/</span>
+<span class="r-msg co"><span class="r-pr">#&gt;</span> Found these file(s) with lymphgen information: METADATA_3_cohorts_lymphgen.txt</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #949494;"># A tibble: 1,671 × 110</span></span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>    compression bam_available patient_id sample_id       seq_type capture_space</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>    <span style="color: #949494; font-style: italic;">&lt;chr&gt;</span>       <span style="color: #949494; font-style: italic;">&lt;lgl&gt;</span>         <span style="color: #949494; font-style: italic;">&lt;chr&gt;</span>      <span style="color: #949494; font-style: italic;">&lt;chr&gt;</span>           <span style="color: #949494; font-style: italic;">&lt;chr&gt;</span>    <span style="color: #949494; font-style: italic;">&lt;chr&gt;</span>        </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;"> 1</span> bam         TRUE          00-14595   00-14595_tumorA genome   none         </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;"> 2</span> cram        TRUE          00-14595   00-14595_tumorB genome   none         </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;"> 3</span> cram        TRUE          00-14595   00-14595_tumorC genome   none         </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;"> 4</span> bam         TRUE          00-14595   00-14595_tumorD genome   none         </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;"> 5</span> cram        TRUE          00-15201   00-15201_tumorA genome   none         </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;"> 6</span> cram        TRUE          00-15201   00-15201_tumorB genome   none         </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;"> 7</span> bam         TRUE          00-16220   00-16220_tumorB genome   none         </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;"> 8</span> cram        TRUE          00-20702   00-20702T       genome   none         </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;"> 9</span> cram        TRUE          00-23442   00-23442_tumorA genome   none         </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;">10</span> cram        TRUE          00-23442   00-23442_tumorB genome   none         </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #949494;"># ℹ 1,661 more rows</span></span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #949494;"># ℹ 104 more variables: genome_build &lt;chr&gt;, tissue_status &lt;chr&gt;, cohort &lt;chr&gt;,</span></span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #949494;">#   library_id &lt;chr&gt;, pathology &lt;chr&gt;, time_point &lt;chr&gt;, protocol &lt;chr&gt;,</span></span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #949494;">#   ffpe_or_frozen &lt;chr&gt;, read_length &lt;dbl&gt;, strandedness &lt;chr&gt;,</span></span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #949494;">#   seq_source_type &lt;chr&gt;, EBV_status_inf &lt;chr&gt;, link_name &lt;chr&gt;,</span></span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #949494;">#   data_path &lt;chr&gt;, unix_group &lt;chr&gt;, biopsy_id &lt;chr&gt;, fastq_link_name &lt;chr&gt;,</span></span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #949494;">#   fastq_data_path &lt;chr&gt;, COO_consensus &lt;chr&gt;, DHITsig_consensus &lt;chr&gt;, …</span></span>
 <span class="r-in"><span></span></span>
 </code></pre></div>
     </div>

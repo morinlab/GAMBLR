@@ -4,9 +4,10 @@ pkgdown_sha: ~
 articles:
   cn_sv_tutorial: cn_sv_tutorial.html
   fancy_plots: fancy_plots.html
+  function_index: function_index.html
   ssm_tutorial: ssm_tutorial.html
   utilities_tutorial: utilities_tutorial.html
-last_built: 2023-06-08T17:16Z
+last_built: 2023-06-12T19:19Z
 urls:
   reference: https://github.com/morinlab/GAMBLR/reference
   article: https://github.com/morinlab/GAMBLR/articles
