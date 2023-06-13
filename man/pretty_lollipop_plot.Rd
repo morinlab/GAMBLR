@@ -4,7 +4,13 @@
 \alias{pretty_lollipop_plot}
 \title{Lollipop Plot}
 \usage{
-pretty_lollipop_plot(maf_df, gene, plot_title, plot_theme = "cbioportal")
+pretty_lollipop_plot(
+  maf_df,
+  gene,
+  plot_title,
+  plot_theme = "cbioportal",
+  out_name = paste0("my_lollipop_plot_", gene)
+)
 }
 \arguments{
 \item{maf_df}{A data frame containing the mutation data (from a MAF).}
@@ -14,6 +20,8 @@ pretty_lollipop_plot(maf_df, gene, plot_title, plot_theme = "cbioportal")
 \item{plot_title}{Optional (defaults to gene name).}
 
 \item{plot_theme}{Options: cbioportal(default), blue, simple, nature, nature2, ggplot2, and dark.}
+
+\item{out_name}{Optional, set the file name of the plot, if you export it to disk. Default name is my_lollipop_plot_{gene}.}
 }
 \value{
 Nothing.
