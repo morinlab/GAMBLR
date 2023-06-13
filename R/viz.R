@@ -564,6 +564,7 @@ focal_cn_plot = function(region,
 #' @param gene The gene symbol to plot.
 #' @param plot_title Optional (defaults to gene name).
 #' @param plot_theme Options: cbioportal(default), blue, simple, nature, nature2, ggplot2, and dark.
+#' @param out_name Optional, set the file name of the plot, if you export it to disk. Default name is my_lollipop_plot_{gene}.
 #'
 #' @return Nothing.
 #'
@@ -588,10 +589,16 @@ focal_cn_plot = function(region,
 pretty_lollipop_plot = function(maf_df,
                                 gene,
                                 plot_title,
-                                plot_theme = "cbioportal"){
+                                plot_theme = "cbioportal",
+                                out_name = paste0("my_lollipop_plot_", gene)){
+  if(missing(gene)){
+    stop("Plese provide a gene...")
+  }
+
   if(missing(plot_title)){
     plot_title = gene
   }
+
   maf_df = maf_df %>%
     dplyr::filter(Hugo_Symbol == gene)
 
@@ -601,7 +608,7 @@ pretty_lollipop_plot = function(maf_df,
   g3Lollipop(maf_df,
              gene.symbol = gene,
              plot.options = chart.options,
-             output.filename = "default_theme")
+             output.filename = out_name)
 }
 
 
@@ -2183,6 +2190,7 @@ prettyCoOncoplot = function(maf,
 #' @param custom_colours Provide named vector (or named list of vectors) containing custom annotation colours if you do not want to use standartized pallette.
 #' @param classification_column Optional. Override default column for assigning the labels used for colouring in the figure.
 #' @param maf_data An already loaded maf, if no provided, this function will call `get_ssm_by_region`, using the regions supplied into `regions_bed`.
+#' @param verbose Set to FALSE to rpevent printing the full regions bed file to the console. Default is TRUE.
 #'
 #' @return Nothing
 #'
@@ -2208,7 +2216,8 @@ ashm_multi_rainbow_plot = function(regions_bed,
                                    seq_type,
                                    custom_colours,
                                    classification_column = "lymphgen",
-                                   maf_data){
+                                   maf_data,
+                                   verbose = TRUE){
 
   table_name = check_config_value(config::get("results_tables")$ssm)
   db = check_config_value(config::get("database_name"))
@@ -2224,7 +2233,7 @@ ashm_multi_rainbow_plot = function(regions_bed,
     meta_arranged = dplyr::filter(meta_arranged, !get(classification_column) %in% exclude_classifications)
   }
   if(missing(regions_bed)){
-    regions_bed = grch37_ashm_regions
+    regions_bed = GAMBLR.data::somatic_hypermutation_locations_GRCh37_v_latest
     regions_bed = mutate(regions_bed, regions = paste0(chr_name, ":", hg19_start, "-", hg19_end))
     regions_bed = mutate(regions_bed, name = paste0(gene, "-", region))
   }else{
@@ -2235,7 +2244,11 @@ ashm_multi_rainbow_plot = function(regions_bed,
       regions_bed$name = regions_bed$regions
     }
   }
-  print(regions_bed)
+
+  if(verbose){
+    print(regions_bed)
+  }
+
   names = pull(regions_bed, name)
   names = c(names, "NFKBIZ-UTR", "MAF", "PAX5", "WHSC1", "CCND1",
                    "FOXP1-TSS1", "FOXP1-TSS2", "FOXP1-TSS3", "FOXP1-TSS4",
@@ -5055,17 +5068,16 @@ comp_report = function(this_sample_id,
 #' fl_genes_list = gene_to_region(gene_symbol = fl_genes,
 #'                                return_as = "bed")
 #'
-#' fancy_circos_plot_new(this_sample_id = "DOHH-2",
-#'                       ssm_calls = FALSE,
-#'                       gene_list = fl_genes_list,
-#'                       chr_select = c("chr8",
-#'                                      "chr14",
-#'                                      "chr18"),
-#'                       out = "../../plots/",
-#'                       plot_title = "DOHH-2 (SVs) Example Plot",
-#'                       pdf = FALSE,
-#'                       pdf = FALSE,
-#'                       file_name = "dohh2_example.png")
+#' fancy_circos_plot(this_sample_id = "DOHH-2",
+#'                   ssm_calls = FALSE,
+#'                   gene_list = fl_genes_list,
+#'                   chr_select = c("chr8",
+#'                                  "chr14",
+#'                                  "chr18"),
+#'                   out = "../../plots/",
+#'                   plot_title = "DOHH-2 (SVs) Example Plot",
+#'                   pdf = FALSE,
+#'                   file_name = "dohh2_example.png")
 #' }
 #'
 fancy_circos_plot = function(this_sample_id,
@@ -5191,7 +5203,7 @@ fancy_circos_plot = function(this_sample_id,
     ssm_ins = dplyr::filter(maf_tmp, Variant_Type == "INS") #subset on insertions
     ssm_snp = dplyr::filter(maf_tmp, Variant_Type == "SNP") #subset on single nucleotide polymorphism
     ssm_dnp = dplyr::filter(maf_tmp, Variant_Type == "DNP") #subset on dinucleotide polymorphism
-    message(paste0(nrow(ssm_del) + nrow(ssm_dnp) + nrow(ssm_ins) + nrow(ssm_snp)), " SSMs found for ", this_sample)
+    message(paste0(nrow(ssm_del) + nrow(ssm_dnp) + nrow(ssm_ins) + nrow(ssm_snp)), " SSMs found for ", this_sample_id)
   }
 
   #get SVs
