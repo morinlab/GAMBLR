@@ -645,7 +645,7 @@ pretty_lollipop_plot = function(maf_df,
 #'                                 these_samples_metadata = dlbcl_bl_meta)
 #'
 #' #get ashm regions
-#' some_regions = grch37_ashm_regions
+#' some_regions = GAMBLR.data::somatic_hypermutation_locations_GRCh37_v_latest
 #'
 #' mut_count_matrix <- get_mutation_frequency_bin_matrix(
 #'    these_samples_metadata = dlbcl_bl_meta,
@@ -678,6 +678,13 @@ get_mutation_frequency_bin_matrix <- function(
   )
   regions_df <- regions$regions_df
   regions <- regions$regions
+  
+  if (
+    (str_detect(regions_df$chrom[1], "chr") & projection == "grch37") |
+      (!str_detect(regions_df$chrom[1], "chr") & projection == "hg38")
+  ) {
+    stop("chr prefixing status of provided regions and specified projection don't match. ")
+  }
 
   # Check for provided metadata, else use GAMBL metadata
   if (missing(these_samples_metadata)) {
