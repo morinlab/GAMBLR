@@ -2,100 +2,67 @@
 % Please edit documentation in R/viz.R
 \name{get_mutation_frequency_bin_matrix}
 \alias{get_mutation_frequency_bin_matrix}
-\title{Mutation Frequency Heatmap}
+\title{Mutation counts across sliding windows for multiple regions.}
 \usage{
 get_mutation_frequency_bin_matrix(
-  regions,
-  regions_df,
+  regions = NULL,
+  regions_df = NULL,
   these_samples_metadata,
-  seq_type = "genome",
+  these_sample_ids,
+  maf = NULL,
+  projection = "grch37",
   region_padding = 1000,
-  metadataColumns = c("pathology"),
-  sortByColumns = c("pathology"),
-  expressionColumns = c(),
-  orientation = "sample_rows",
-  skip_regions = c("MYC", "BCL2", "IGLL5"),
-  customColour = NULL,
+  drop_unmutated = FALSE,
+  skip_regions = NULL,
+  only_regions = NULL,
   slide_by = 100,
   window_size = 500,
-  min_count_per_bin = 3,
-  min_bin_recurrence = 5,
-  min_bin_patient = 0,
-  region_fontsize = 8,
-  cluster_rows_heatmap = FALSE,
-  cluster_cols_heatmap = FALSE,
-  show_gene_colours = FALSE,
-  legend_row = 3,
-  legend_col = 3,
-  legend_direction = "horizontal",
-  legendFontSize = 10,
+  return_format = "wide",
   from_indexed_flatfile = TRUE,
   mode = "slms-3"
 )
 }
 \arguments{
-\item{regions}{Vector of regions in the format "chr:start-end".}
+\item{regions}{Named vector of regions in the format c(name1 = "chr:start-end", name2 = "chr:start-end"). If neither regions nor regions_df is specified, the function will use GAMBLR aSHM region information.}
 
-\item{regions_df}{Data frame of regions with four columns (chrom,start,end,gene_name).}
+\item{regions_df}{Data frame of regions with four columns (chrom, start, end, name).}
 
-\item{these_samples_metadata}{GAMBL metadata subset to the cases you want to process (or full metadata).}
+\item{these_samples_metadata}{Metadata with at least sample_id column. If not providing a maf data frame, seq_type is also required.}
 
-\item{seq_type}{The seq_type you want back, default is genome.}
+\item{these_sample_ids}{Vector of sample IDs. Metadata will be subset to sample IDs present in this vector.}
 
-\item{region_padding}{How many bases will be added on the left and right of the regions to ensure any small regions are sufficiently covered by bins. Default is  1000.}
+\item{maf}{Optional maf data frame. Will be subset to rows where Tumor_Sample_Barcode matches provided sample IDs or metadata table. If not provided, maf data will be obtained with get_ssm_by_regions().}
 
-\item{metadataColumns}{What metadata will be shown in the visualization.}
+\item{projection}{Genome build the function will operate in. Ensure this matches your provided regions and maf data for correct chr prefix handling.\link{grch37}}
 
-\item{sortByColumns}{Which of the metadata to sort on for the heatmap.}
+\item{region_padding}{Amount to pad the start and end coordinates by. \link{1000}}
 
-\item{expressionColumns}{Optional variable for retrieving expression values for a specific gene(s).}
+\item{drop_unmutated}{Whether to drop bins with 0 mutations. If returning a matrix format, this will only drop bins with no mutations in any samples.}
 
-\item{orientation}{Specify the sample orientation, default is sample_rows.}
+\item{skip_regions}{Optional character vector of genes to exclude from the default aSHM regions.}
 
-\item{skip_regions}{Regions to be filtered out from the regions data frame. Only applies if \code{regions_df} is not provided. Default is MYC, BCL2 and IGLL5.}
+\item{only_regions}{Optional character vector of genes to include from the default aSHM regions.}
 
-\item{customColour}{Optional named list of named vectors for specifying all colours for metadata. Can be generated with map_metadata_to_colours. Default is NULL.}
+\item{slide_by}{Slide size for sliding window. \link{100}}
 
-\item{slide_by}{How far to shift before starting the next window.}
+\item{window_size}{Size of sliding window.\link{500}}
 
-\item{window_size}{The width of your sliding window.}
-
-\item{min_count_per_bin}{Minimum counts per bin, default is 3.}
-
-\item{min_bin_recurrence}{How many samples a bin must be mutated in to retain in the visualization.}
-
-\item{min_bin_patient}{How many bins must a patient mutated in to retain in the visualization.}
-
-\item{region_fontsize}{Font size of regions in plot, default is 8ppt.}
-
-\item{cluster_rows_heatmap}{Optional parameter to enable/disable clustering of each dimension of the heatmap. Default is FALSE.}
-
-\item{cluster_cols_heatmap}{Optional parameter to enable/disable clustering of each dimension of the heatmap. Default is FALSE.}
-
-\item{show_gene_colours}{Optional logical argument indicating whether regions should have associated colours plotted as annotation track of heatmap.}
-
-\item{legend_row}{Fiddle with these to widen or narrow your legend.}
-
-\item{legend_col}{Fiddle with these to widen or narrow your legend.}
-
-\item{legend_direction}{Accepts one of "horizontal" (default) or "vertical" to indicate in which direction the legend will be drawn.}
-
-\item{legendFontSize}{Font size of legend in plot, default is 10ppt.}
+\item{return_format}{Return format of mutations. Accepted inputs are "long" and "wide". Long returns a data frame of one sample ID/window per row. Wide returns a matrix with one sample ID per row and one window per column. Using the "wide" format will retain all samples and windows regardless of the drop_unmutated or min_count_per_bin parameters. \link{wide}}
 
 \item{from_indexed_flatfile}{Set to TRUE to avoid using the database and instead rely on flat files (only works for streamlined data, not full MAF details).}
 
 \item{mode}{Only works with indexed flat files. Accepts 2 options of "slms-3" and "strelka2" to indicate which variant caller to use. Default is "slms-3".}
 }
 \value{
-Nothing
+A table of mutation counts for sliding windows across one or more regions. May be long or wide.
 }
 \description{
-Count hypermutated bins and generate heatmap/cluster the data.
+Obtain a long tidy or wide matrix of mutation counts across sliding windows for multiple regions.
 }
 \details{
-This function takes a metadata table with \code{these_samples_metadata} parameter and internally calls \link{calc_mutation_frequency_sliding_windows} (that internally calls \link{get_ssm_by_regions})
-to retrieve mutations for plotting. This plotting function has a variety of useful parameters, providing many customizable plotting options. For more details on how these parameters can be used,
-and extended usage examples, refer to the SSM tutorial vignette section 1.4.9.
+This function takes a metadata table with \code{these_samples_metadata} parameter and internally calls \link{calc_mutation_frequency_sliding_windows} (that internally calls \link{get_ssm_by_regions}).
+to retrieve mutation counts for sliding windows across one or more regions. May optionally provide any combination of a maf data frame, existing metadata, or a regions data frame or named vector.
+The heatmap plotting portion of this function has been moved to \link{heatmap_mutation_frequency_bin}.
 }
 \examples{
 #load metadata.
@@ -109,7 +76,9 @@ dlbcl_bl_meta = collate_results(join_with_full_metadata = TRUE,
 #get ashm regions
 some_regions = grch37_ashm_regions
 
-get_mutation_frequency_bin_matrix(these_samples_metadata = dlbcl_bl_meta,
-                                  regions_df = some_regions)
+mut_count_matrix <- get_mutation_frequency_bin_matrix(
+   these_samples_metadata = dlbcl_bl_meta,
+   regions_df = some_regions
+)
 
 }

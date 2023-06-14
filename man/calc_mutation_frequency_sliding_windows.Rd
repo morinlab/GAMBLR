@@ -9,23 +9,22 @@ calc_mutation_frequency_sliding_windows(
   chromosome,
   start_pos,
   end_pos,
-  metadata,
-  seq_type,
+  these_samples_metadata,
+  these_sample_ids,
+  maf = NULL,
+  projection = "grch37",
   slide_by = 100,
   window_size = 1000,
-  plot_type = "none",
-  sortByColumns = "pathology",
-  return_format = "long-simple",
-  min_count_per_bin = 3,
-  return_count = FALSE,
+  return_format = "long",
+  min_count_per_bin = 0,
+  return_count = TRUE,
   drop_unmutated = FALSE,
-  classification_column = "lymphgen",
-  from_indexed_flatfile = FALSE,
+  from_indexed_flatfile = TRUE,
   mode = "slms-3"
 )
 }
 \arguments{
-\item{this_region}{Genomic region in bed format.}
+\item{this_region}{A string describing a genomic region in the "chrom:start-end" format. The region must be specifed in this format OR as separate chromosome, start_pos, end_pos arguments.}
 
 \item{chromosome}{Chromosome name in region.}
 
@@ -33,44 +32,42 @@ calc_mutation_frequency_sliding_windows(
 
 \item{end_pos}{End coordinate of region.}
 
-\item{metadata}{Data frame containing sample ids and column with annotated data for the 2 groups of interest. All other columns are ignored. Currently, function exits if asked to compare more than 2 groups.}
+\item{these_samples_metadata}{Optional data frame containing a sample_id column. If not providing a maf file, seq_type is also a required column.}
 
-\item{seq_type}{The seq_type you want back, default is genome.}
+\item{these_sample_ids}{Optional vector of sample IDs. Output will be subset to IDs present in this vector.}
 
-\item{slide_by}{Slide size for sliding window, default is 100.}
+\item{maf}{Optional maf data frame. Will be subset to rows where Tumor_Sample_Barcode matches provided sample IDs or metadata table. If not provided, maf data will be obtained with get_ssm_by_regions().}
 
-\item{window_size}{Size of sliding window, default is 1000.}
+\item{slide_by}{Slide size for sliding window. \link{100}}
 
-\item{plot_type}{Set to TRUE for a plot of your bins. By default no plots are made.}
+\item{window_size}{Size of sliding window.\link{1000}}
 
-\item{sortByColumns}{Which of the metadata to sort on for the heatmap}
+\item{return_format}{Return format of mutations. Accepted inputs are "long" and "wide". Long returns a data frame of one sample ID/window per row. Wide returns a matrix with one sample ID per row and one window per column. Using the "wide" format will retain all samples and windows regardless of the drop_unmutated or min_count_per_bin parameters.}
 
-\item{return_format}{Return format of mutations. Accepted inputs are "long" and "long-simple". Default is "long-simple".}
+\item{min_count_per_bin}{Minimum counts per bin, default is 0. Setting this greater than 0 will drop unmutated windows only when return_format is long.}
 
-\item{min_count_per_bin}{Minimum counts per bin, default is 3.}
+\item{return_count}{Boolean statement to return mutation count per window (TRUE) or binary mutated/unmutated status (FALSE). Default is TRUE.}
 
-\item{return_count}{Boolean statement to return count. Default is FALSE.}
+\item{drop_unmutated}{Boolean for whether to drop windows with 0 mutations. Only effective with "long" return format.}
 
-\item{drop_unmutated}{This may not currently work properly. Default is FALSE.}
-
-\item{classification_column}{Only used for plotting, default is "lymphgen"}
-
-\item{from_indexed_flatfile}{Set to TRUE to avoid using the database and instead rely on flat-files (only works for streamlined data, not full MAF details). Default is FALSE.}
+\item{from_indexed_flatfile}{Set to TRUE to avoid using the database and instead rely on flat-files (only works for streamlined data, not full MAF details). Default is TRUE.}
 
 \item{mode}{Only works with indexed flat-files. Accepts 2 options of "slms-3" and "strelka2" to indicate which variant caller to use. Default is "slms-3".}
 }
 \value{
-Count matrix.
+Either a matrix or a long tidy table of counts per window.
 }
 \description{
 Count the number of mutations in a sliding window across a region for all samples.
 }
 \details{
-This function is called to return the mutation frequency for a given region, for all GAMBL samples. Regions are specified with the \code{this_region}parameter.
+This function is called to return the mutation frequency for a given region, either from a provided input maf data frame or from the GAMBL maf data.
+
+Regions are specified with the \code{this_region}parameter.
+
 Alternatively, the region of interest can also be specified by calling the function with \code{chromosome}, \code{start_pos}, and \code{end_pos} parameters.
-It is also possible to return a plot of the created bins. This is done with setting \code{plot_type = TRUE}.
-There are a collection of parameters available for further customizing the return, for more information, refer to the parameter descriptions and examples.
-This function is unlikely to be used directly in most cases. See \link{get_mutation_frequency_bin_matrix} instead.
+
+This function operates on a single region. To return a matrix of sliding window counts over multiple regions, see \link{get_mutation_frequency_bin_matrix}Use .
 }
 \examples{
 chr11_mut_freq = calc_mutation_frequency_sliding_windows(this_region = "chr11:69455000-69459900",
