@@ -700,7 +700,7 @@ get_mutation_frequency_bin_matrix <- function(
 
   # Obtain sliding window mutation frequencies for all regions
   dfs <- parallel::mclapply(names(regions), function(x) {
-    df <- calc_mut_freq_sliding_windows(
+    df <- calc_mutation_frequency_sliding_windows(
       this_region = regions[x],
       these_samples_metadata = metadata,
       maf = maf,
@@ -776,11 +776,11 @@ get_mutation_frequency_bin_matrix <- function(
 #' @param show_gene_colours Boolean. Whether to add heatmap annotation colours for each region. [FALSE]
 #' @param label_regions_by Specify which feature of the regions to label the heatmap with. Heatmap will be split according to this value, and ordered by factor levels if the specified column is a factor. [name]
 #' @param return_format Return format of mutations. Accepted inputs are "long" and "wide". Long returns a data frame of one sample ID/window per row. Wide returns a matrix with one sample ID per row and one window per column. Using the "wide" format will retain all samples and windows regardless of the drop_unmutated or min_count_per_bin parameters. [wide]
-#' @param legend_row Control arrangement of the heatmap legend. [3]
-#' @param legend_col Control arrangement of the heatmap legend. [3]
-#' @param legend_direction Control arrangement of the heatmap legend. [horizontal]
-#' @param legendFontSize Control arrangement of the heatmap legend. [10]
-#' @param legend_side Control arrangement of the heatmap legend. [bottom]
+#' @param legend_row Control aesthetics of the heatmap legend. [3]
+#' @param legend_col Control aesthetics of the heatmap legend. [3]
+#' @param legend_direction Control aesthetics of the heatmap legend. [horizontal]
+#' @param legendFontSize Control aesthetics of the heatmap legend. [10]
+#' @param legend_side Control aesthetics of the heatmap legend. [bottom]
 #' @param return_heatmap_obj Boolean. FALSE will plot the heatmap automatically. TRUE will return a heatmap object to allow further tweaking with the draw() function. [FALSE]
 #' @param from_indexed_flatfile Set to TRUE to avoid using the database and instead rely on flat files (only works for streamlined data, not full MAF details).
 #' @param mode Only works with indexed flat files. Accepts 2 options of "slms-3" and "strelka2" to indicate which variant caller to use. Default is "slms-3".
@@ -920,7 +920,7 @@ heatmap_mutation_frequency_bin <- function(
       slide_by = slide_by,
       window_size = window_size,
       drop_unmutated = drop_unmutated,
-      return_format = "matrix",
+      return_format = "wide",
       from_indexed_flatfile = from_indexed_flatfile,
       mode = mode
     )

@@ -836,10 +836,12 @@ process_regions <- function(regions = NULL,
     if (is.null(regions_df)) {
       message("Using default GAMBLR aSHM regions. ")
       if (projection == "grch37") {
-        regions_df <- grch37_ashm_regions %>%
-          dplyr::mutate(chr_name = str_remove(chr_name, "chr"))
+        regions_df <- GAMBLR.data::somatic_hypermutation_locations_GRCh37_v_latest %>%
+          dplyr::mutate(chr_name = str_remove(chr_name, "chr")) %>% 
+          dplyr::mutate(name = str_c(gene, region, sep = "_"))
       } else {
-        regions_df <- hg38_ashm_regions
+        regions_df <- GAMBLR.data::somatic_hypermutation_locations_GRCh38_v_latest %>%
+          dplyr::mutate(name = str_c(gene, region, sep = "_"))
       }
       # Fix column names
       regions_df <- regions_df %>%
@@ -1142,13 +1144,13 @@ calc_mutation_frequency_sliding_windows <- function(this_region,
     dplyr::arrange(sample_id) %>%
     dplyr::full_join(select(windows, window_start)) %>%
     dplyr::distinct() %>%
-    dplyr::pivot_wider(
+    tidyr::pivot_wider(
       names_from = window_start,
       values_from = n,
       values_fill = 0
     ) %>%
     dplyr::select(-matches("^NA$")) %>%
-    dplyr::pivot_longer(
+    tidyr::pivot_longer(
       -c(sample_id),
       names_to = "window_start",
       values_to = "n"
@@ -1195,7 +1197,7 @@ calc_mutation_frequency_sliding_windows <- function(this_region,
 
   if (return_format == "wide") {
     widened <- windows_tallied_final %>%
-      dplyr::pivot_wider(
+      tidyr::pivot_wider(
         names_from = bin,
         values_from = matches("mutat"),
         values_fill = 0
