@@ -610,13 +610,15 @@ pretty_lollipop_plot = function(maf_df,
 #' @description Obtain a long tidy or wide matrix of mutation counts across sliding windows for multiple regions.
 #'
 #' @details This function takes a metadata table with `these_samples_metadata` parameter and internally calls [GAMBLR::calc_mutation_frequency_sliding_windows] (that internally calls [GAMBLR::get_ssm_by_regions]).
-#' to retrieve mutation counts for sliding windows across one or more regions. The heatmap plotting portion of this function has been moved to [GAMBLR::heatmap_mutation_frequency_bin].
+#' to retrieve mutation counts for sliding windows across one or more regions. May optionally provide any combination of a maf data frame, existing metadata, or a regions data frame or named vector.
+#' The heatmap plotting portion of this function has been moved to [GAMBLR::heatmap_mutation_frequency_bin].
 #'
 #' @param regions Named vector of regions in the format c(name1 = "chr:start-end", name2 = "chr:start-end"). If neither regions nor regions_df is specified, the function will use GAMBLR aSHM region information.
 #' @param regions_df Data frame of regions with four columns (chrom, start, end, name).
 #' @param these_samples_metadata Metadata with at least sample_id column. If not providing a maf data frame, seq_type is also required.
 #' @param these_sample_ids Vector of sample IDs. Metadata will be subset to sample IDs present in this vector.
 #' @param maf Optional maf data frame. Will be subset to rows where Tumor_Sample_Barcode matches provided sample IDs or metadata table. If not provided, maf data will be obtained with get_ssm_by_regions().
+#' @param region_padding Amount to pad the start and end coordinates by. [1000]
 #' @param projection Genome build the function will operate in. Ensure this matches your provided regions and maf data for correct chr prefix handling.[grch37]
 #' @param drop_unmutated Whether to drop bins with 0 mutations. If returning a matrix format, this will only drop bins with no mutations in any samples.
 #' @param skip_regions Optional character vector of genes to exclude from the default aSHM regions.
@@ -659,8 +661,8 @@ get_mutation_frequency_bin_matrix <- function(
   projection = "grch37",
   region_padding = 1000,
   drop_unmutated = FALSE,
-  skip_regions,
-  only_regions,
+  skip_regions = NULL,
+  only_regions = NULL,
   slide_by = 100,
   window_size = 500,
   return_format = "wide",
@@ -670,7 +672,9 @@ get_mutation_frequency_bin_matrix <- function(
   regions <- process_regions(
     regions = regions,
     regions_df = regions_df,
-    region_padding = region_padding
+    region_padding = region_padding,
+    skip_regions = skip_regions,
+    only_regions = only_regions
   )
   regions_df <- regions$regions_df
   regions <- regions$regions
