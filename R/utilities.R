@@ -836,7 +836,8 @@ process_regions <- function(regions = NULL,
     if (is.null(regions_df)) {
       message("Using default GAMBLR aSHM regions. ")
       if (projection == "grch37") {
-        regions_df <- grch37_ashm_regions
+        regions_df <- grch37_ashm_regions %>%
+          dplyr::mutate(chr_name = str_remove(chr_name, "chr"))
       } else {
         regions_df <- hg38_ashm_regions
       }
@@ -845,7 +846,7 @@ process_regions <- function(regions = NULL,
         rename_with(
           ~ str_remove(.x, "^hg.*_")
         ) %>%
-        rename(chrom = chr_name)
+        dplyr::rename(chrom = chr_name)
       if (!is.null(skip_regions)) {
         # drop user-specified regions
         regions_df <- regions_df %>%
@@ -853,7 +854,7 @@ process_regions <- function(regions = NULL,
       }
       if (!is.null(only_regions)) {
         # keep only user-specified regions
-        regions_df <- grch37_ashm_regions %>%
+        regions_df <- regions_df %>%
           dplyr::filter(gene %in% only_regions)
       }
     }
@@ -1012,6 +1013,14 @@ calc_mutation_frequency_sliding_windows <- function(this_region,
     these_sample_ids <- metadata$sample_id
   }
 
+  if (
+    (str_detect(chromosome, "chr") & projection == "grch37") |
+      (!str_detect(chromosome, "chr") & projection == "hg38")
+  ) {
+    stop("chr prefixing status of region and specified projection don't match. ")
+  }
+
+
   # Check region size and compare to max region size
   # Is this really needed?
   max_region <- 5e+06
@@ -1070,8 +1079,6 @@ calc_mutation_frequency_sliding_windows <- function(this_region,
         ) %>%
         dplyr::mutate(mutated = 1, seq_type = st) %>%
         dplyr::filter(sample_id %in% these_sample_ids)
-
-      output[[st]] <- this_seq_type
 
       region_ssm[[st]] <- data.frame(metadata) %>%
         dplyr::select(sample_id, seq_type) %>%
