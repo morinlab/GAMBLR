@@ -479,3 +479,118 @@ annotate_sv = function(sv_data,
   }
   return(all.annotated)
 }
+
+#' @title Annotate mutations target AID motif
+#'
+#' @description Checks for the presence of mutations at a given AID motif
+#'
+#' @details In positions that reference allele  "C" has been mutated, two nucleotides before and one nucleotide after it 
+#' will be captured. In positions that reference allele  "G" has been mutated, one nucleotide before and two nucleotides after it 
+#' will be captured. The other mutations will have "NO" for the sequence. 
+#' Then, the forward orientation and reverse compliment of the motif will be generated and their presence in aquired reference
+#' allele "C" and reference allele "G" sequence will be checked, respectively. ("NO" for the rows that have different reference
+#' alleles) 
+#'
+#' @param mafPath: Should be the path to the MAF file (required columns: Reference_Allele, Chromosome, Start_Position, End_Position)
+#' @param fastaPath: Should be the path to the FASTA file
+#' @param motif: The motif sequence
+#' @param sequences: The output of getSequence() function
+#' @param motifPattern: The output of motifGenerator() function
+#'
+#' @return A data frame with two extra columns (seq and matched).
+#'
+#' @import Rsamtools readr dplyr
+#' @installation
+#' # Install Rsamtools
+# if (!require("BiocManager", quietly = TRUE))
+#   install.packages("BiocManager")
+# 
+# BiocManager::install("Rsamtools")
+#'
+#' @export
+#'
+#' @examples
+#' motifFind(getSequence("./*.maf","./*.fa"), motifGenerator("WRCY"))
+#' 
+
+
+
+# This function returns sequences
+getSequence = function(mafPath, fastaPath){
+  maf = read_tsv(file = mafPath)
+  fasta = Rsamtools::FaFile(file = fastaPath)
+  sequences = maf %>% mutate(seq = ifelse(Reference_Allele == "C",getSeq(fasta, GRanges(maf$Chromosome,IRanges(start = maf$Start_Position - 2, end =maf$End_Position + 1))),ifelse(Reference_Allele == "G",getSeq(fasta, GRanges(maf$Chromosome,IRanges(start = maf$Start_Position - 1, end =maf$End_Position + 2))),"NO")))
+  return(sequences)
+}
+# This function returns motif and its reverse complement 
+motifGenerator = function(motif){
+  compliment = c(
+    'A'= 'T',
+    'T'= 'A',
+    'C'= 'G',
+    'G'= 'C',
+    'U'= 'A',
+    'R'= 'Y',
+    'Y'= 'R',
+    'S'= 'S',
+    'W'= 'W',
+    'K'= 'M',
+    'M'= 'K',
+    'B'= 'V',
+    'D'= 'H',
+    'H'= 'D',
+    'V'= 'B',
+    'N'= 'N'
+  )
+  IUPACCodeDict = c(
+    'A'= 'A',  # Adenine
+    'C'= 'C',  # Cytosine
+    'G'= 'G',  # Guanine
+    'T'= 'T',  # Thymine
+    'R'= '[AG]',  # A or G
+    'Y'= '[CT]',  # C or T
+    'S'= '[GC]',  # G or C
+    'W'= '[AT]',  # A or T
+    'K'= '[GT]',  # G or T
+    'M'= '[AC]',  # A or C
+    'B'= '[CGT]',  # C or G or T
+    'D'= '[AGT]',  # A or G or T
+    'H'= '[ACT]',  # A or C or T
+    'V'= '[ACG]',  # A or C or G
+    'N'= '[ACGT]'  # any base
+  )
+  word = motif
+  splitWord = strsplit(word,"")[[1]]
+  splitWordLen = length(splitWord)
+  forMotif <- character(splitWordLen)
+  for (i in seq_along(splitWord)){
+    if (splitWord[i] %in% names(IUPACCodeDict)){
+      forMotif[i] = IUPACCodeDict[splitWord[i]]
+    }
+  }
+  strForMotif = paste(forMotif, collapse = "")
+  RevCompMotif = character(splitWordLen)
+  for (i in seq_along(splitWord)){
+    if (splitWord[i] %in% names(compliment)){
+      RevCompMotif[i] = compliment[splitWord[i]]
+    }
+  }
+  vecRevComp = rev(RevCompMotif)
+  IUPACRevCompMotif = character(splitWordLen)
+  for (i in seq_along(vecRevComp)){
+    if (vecRevComp[i] %in% names(IUPACCodeDict)){
+      IUPACRevCompMotif[i] = IUPACCodeDict[vecRevComp[i]]
+    } 
+  }
+  strRevComp = paste(IUPACRevCompMotif, collapse = "")
+  motifPattern = list(strForMotif, strRevComp)
+  
+  return(motifPattern)
+}
+#This function check that if the motif pattern is in the sequence
+motifFind = function(sequences, motifPattern){
+  finder = sequences %>% mutate(matched = ifelse(Reference_Allele == "C",str_detect(sequences$seq, motifPattern[[1]]),ifelse(Reference_Allele == "G",str_detect(sequences$seq, motifPattern[[2]]),"NO")))
+  return(finder)
+}
+
+
