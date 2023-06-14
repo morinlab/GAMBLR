@@ -789,7 +789,7 @@ get_mutation_frequency_bin_matrix <- function(
 #' @return A table of mutation counts for sliding windows across one or more regions. May be long or wide.
 #'
 #' @rawNamespace import(data.table, except = c("last", "first", "between", "transpose"))
-#' @import dplyr tidyr tibble
+#' @import dplyr tidyr tibble ComplexHeatmap circlize
 #' @export
 #'
 #' @examples
