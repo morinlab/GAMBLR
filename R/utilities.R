@@ -811,31 +811,31 @@ trim_scale_expression = function(x){
 #'
 #' @description Count the number of mutations in a sliding window across a region for all samples.
 #'
-#' @details This function is called to return the mutation frequency for a given region, either from a provided input maf data frame or from the GAMBL maf data. 
-#' Regions are specified with the `this_region`parameter.
-#' Alternatively, the region of interest can also be specified by calling the function with `chromosome`, `start_pos`, and `end_pos` parameters.
-#' This function is unlikely to be used directly in most cases. See [GAMBLR::get_mutation_frequency_bin_matrix] instead.
+#' @details This function is called to return the mutation frequency for a given region, either from a provided input maf data frame or from the GAMBL maf data.
+#' @details Regions are specified with the `this_region`parameter.
+#' @details Alternatively, the region of interest can also be specified by calling the function with `chromosome`, `start_pos`, and `end_pos` parameters.
+#' @details This function operates on a single region. To return a matrix of sliding window counts over multiple regions, see [GAMBLR::get_mutation_frequency_bin_matrix]Use .
 #'
-#' @param this_region A string describing a genomic region in the "chrom:start-end" format.
+#' @param this_region A string describing a genomic region in the "chrom:start-end" format. The region must be specifed in this format OR as separate chromosome, start_pos, end_pos arguments.
 #' @param chromosome Chromosome name in region.
 #' @param start_pos Start coordinate of region.
 #' @param end_pos End coordinate of region.
-#' @param these_samples_metadata Optional data frame containing sample IDs. If not providing a maf file, seq_type is also a required column.
-#' @param these_sample_ids Optional vector of sample IDs. Output will be subset to IDs present in this vector. 
-#' @param maf Optional maf data frame. Will be subset to rows where Tumor_Sample_Barcode matches provided sample IDs or metadata table. 
-#' @param slide_by Slide size for sliding window, default is 100.
-#' @param window_size Size of sliding window, default is 1000.
-#' @param return_format Return format of mutations. Accepted inputs are "long" and "wide". Long returns a data frame of one sample ID/window per row. Wide returns a matrix with one sample ID per row and one window per column. Using the "wide" format will retain all samples and windows regardless of the drop_unmutated or min_count_per_bin parameters. 
-#' @param min_count_per_bin Minimum counts per bin, default is 0. Setting this greater than 0 will drop unmutated windows when return_format is long. 
+#' @param these_samples_metadata Optional data frame containing a sample_id column. If not providing a maf file, seq_type is also a required column.
+#' @param these_sample_ids Optional vector of sample IDs. Output will be subset to IDs present in this vector.
+#' @param maf Optional maf data frame. Will be subset to rows where Tumor_Sample_Barcode matches provided sample IDs or metadata table. If not provided, maf data will be obtained with get_ssm_by_regions().
+#' @param slide_by Slide size for sliding window. [100]
+#' @param window_size Size of sliding window.[1000]
+#' @param return_format Return format of mutations. Accepted inputs are "long" and "wide". Long returns a data frame of one sample ID/window per row. Wide returns a matrix with one sample ID per row and one window per column. Using the "wide" format will retain all samples and windows regardless of the drop_unmutated or min_count_per_bin parameters.
+#' @param min_count_per_bin Minimum counts per bin, default is 0. Setting this greater than 0 will drop unmutated windows only when return_format is long.
 #' @param return_count Boolean statement to return mutation count per window (TRUE) or binary mutated/unmutated status (FALSE). Default is TRUE.
-#' @param drop_unmutated Boolean for how to handle windows with 0 mutations when returning "long" format. 
+#' @param drop_unmutated Boolean for whether to drop windows with 0 mutations. Only effective with "long" return format.
 #' @param from_indexed_flatfile Set to TRUE to avoid using the database and instead rely on flat-files (only works for streamlined data, not full MAF details). Default is TRUE.
 #' @param mode Only works with indexed flat-files. Accepts 2 options of "slms-3" and "strelka2" to indicate which variant caller to use. Default is "slms-3".
 #'
 #' @return Either a matrix or a long tidy table of counts per window.
 #'
 #' @rawNamespace import(data.table, except = c("last", "first", "between", "transpose"))
-#' @import dplyr tidyr cowplot ggplot2
+#' @import dplyr tidyr
 #' @export
 #'
 #' @examples
@@ -843,16 +843,18 @@ trim_scale_expression = function(x){
 #'                                                          slide_by = 10,
 #'                                                          window_size = 10000)
 #'
+
 calc_mutation_frequency_sliding_windows <- function(this_region,
                                           chromosome,
                                           start_pos,
                                           end_pos,
                                           these_samples_metadata,
                                           these_sample_ids,
-                                          maf,
+                                          maf = NULL,
+                                          projection = "grch37",
                                           slide_by = 100,
                                           window_size = 1000,
-                                          return_format = "long-simple",
+                                          return_format = "long",
                                           min_count_per_bin = 0,
                                           return_count = TRUE,
                                           drop_unmutated = FALSE,
@@ -864,7 +866,7 @@ calc_mutation_frequency_sliding_windows <- function(this_region,
   })
 
   if ((drop_unmutated | min_count_per_bin > 0) & return_format == "wide") {
-    message("To return a wide table, all samples and windows must be kept. Ignoring drop_unmutated and min_count_per_bin flags. ")
+    message("To return a wide table, all samples and windows must be kept. Ignoring drop_unmutated and min_count_per_bin arguments. ")
   }
 
   if (missing(this_region)) {
@@ -882,7 +884,8 @@ calc_mutation_frequency_sliding_windows <- function(this_region,
   # Check for provided metadata, else use GAMBL metadata
   if (missing(these_samples_metadata)) {
     metadata <- get_gambl_metadata(
-      seq_type_filter = c("capture", "genome")
+      seq_type_filter = c("capture", "genome"),
+      tissue_status_filter = "tumour"
     )
   } else {
     metadata <- these_samples_metadata
@@ -913,44 +916,62 @@ calc_mutation_frequency_sliding_windows <- function(this_region,
 
   # Split region into windows
   windows <- data.frame(
-    start = seq(start_pos, end_pos, by = slide_by)
+    chrom = chromosome,
+    window_start = seq(start_pos, end_pos, by = slide_by)
   ) %>%
-    mutate(end = start + window_size - 1)
-  windows.dt <- as.data.table(windows)
+    dplyr::mutate(window_end = window_start + window_size - 1) %>%
+    dplyr::select(chrom, window_start, window_end)
+
+  # Option to return full region count instead of sliding window
+  if (window_size == 0) {
+    windows <- data.frame(
+      chrom = chromosome,
+      window_start = start_pos,
+      window_end = end_pos
+    )
+  }
 
   # Obtain SSM coordinates from GAMBL if no maf was provided
-  if (missing(maf)) {
+  if (is.null(maf)) {
     try(
       if (!"seq_type" %in% colnames(metadata)) {
         stop("seq_type must be present in metdata for compatibility with get_ssm_by_sample")
       }
     )
+    message("Using GAMBLR::get_ssm_by_region...")
     region_ssm <- list()
     for (st in unique(metadata$seq_type)) {
       this_seq_type <- GAMBLR::get_ssm_by_region(
         region = this_region,
+        projection = projection,
         streamlined = FALSE,
         seq_type = st,
         from_indexed_flatfile = TRUE,
         mode = "slms-3"
       ) %>%
+        dplyr::mutate(end = Start_Position + 1) %>%
         dplyr::select(
+          chrom = Chromosome,
           start = Start_Position,
+          end,
           sample_id = Tumor_Sample_Barcode
         ) %>%
-        mutate(mutated = 1, seq_type = st) %>%
-        filter(sample_id %in% these_sample_ids)
+        dplyr::mutate(mutated = 1, seq_type = st) %>%
+        dplyr::filter(sample_id %in% these_sample_ids)
+
+      output[[st]] <- this_seq_type
 
       region_ssm[[st]] <- data.frame(metadata) %>%
-        select(sample_id, seq_type) %>%
-        filter(seq_type == st) %>%
-        left_join(this_seq_type) %>%
-        filter(!is.na(mutated)) %>%
-        select(-seq_type)
+        dplyr::select(sample_id, seq_type) %>%
+        dplyr::filter(seq_type == st) %>%
+        dplyr::left_join(this_seq_type) %>%
+        dplyr::filter(!is.na(mutated)) %>%
+        dplyr::select(-seq_type)
     }
-    region_ssm <- bind_rows(region_ssm)
+    region_ssm <- dplyr::bind_rows(region_ssm)
   } else {
     #  Subset provided maf to specified region
+    message("Using provided maf...")
     maf.dt <- data.table(maf)
     region_bed <- data.table(
       "Chromosome" = as.character(chromosome),
@@ -960,16 +981,19 @@ calc_mutation_frequency_sliding_windows <- function(this_region,
     setkey(region_bed)
     region_ssm <- foverlaps(maf.dt, region_bed) %>%
       dplyr::filter(!is.na(Start_Position)) %>%
+      dplyr::mutate(end = i.Start_Position - 1) %>%
       dplyr::select(
+        chrom = Chromosome,
         start = i.Start_Position,
+        end,
         sample_id = Tumor_Sample_Barcode
       ) %>%
       dplyr::mutate(mutated = 1)
 
     region_ssm <- data.frame(metadata) %>%
-      select(sample_id) %>%
-      left_join(region_ssm) %>%
-      filter(!is.na(mutated))
+      dplyr::select(sample_id) %>%
+      dplyr::left_join(region_ssm) %>%
+      dplyr::filter(!is.na(mutated))
   }
 
   # Check if the region is empty.
@@ -979,57 +1003,47 @@ calc_mutation_frequency_sliding_windows <- function(this_region,
     return(NULL)
   }
 
-  # Ensure SSM data are in data.table format
-  region.dt <- region_ssm %>%
-    dplyr::mutate(
-      start = as.numeric(as.character(start)),
-      end = start + 1, end = as.numeric(as.character(end))
-    ) %>%
-    dplyr::relocate(start, .before = end) %>%
-    as.data.table()
-
-  # Overlap SSM data with windows table
-  setkey(windows.dt, start, end)
-  setkey(region.dt, start, end)
-
   # Count mutations per window
-  windows_tallied <- foverlaps(windows.dt, region.dt) %>%
-    dplyr::filter(!is.na(start)) %>%
-    dplyr::rename(
-      window_start = "i.start",
-      mutation_position = "start"
+  windows_tallied <- dplyr::inner_join(
+    windows,
+    region_ssm,
+    by = "chrom"
+  ) %>%
+    dplyr::filter(
+      start >= window_start,
+      start <= window_end
     ) %>%
-    dplyr::select(-i.end, -end, -mutation_position) %>%
-    as.data.frame() %>%
-    group_by(
+    dplyr::group_by(
       sample_id,
       window_start
     ) %>%
-    tally() %>%
-    full_join(select(metadata, sample_id)) %>%
-    arrange(sample_id) %>%
-    full_join(windows.dt[, "start"], by = c("window_start" = "start")) %>%
-    pivot_wider(
+    dplyr::tally() %>%
+    dplyr::ungroup() %>%
+    dplyr::full_join(select(metadata, sample_id)) %>%
+    dplyr::arrange(sample_id) %>%
+    dplyr::full_join(select(windows, window_start)) %>%
+    dplyr::distinct() %>%
+    dplyr::pivot_wider(
       names_from = window_start,
       values_from = n,
       values_fill = 0
     ) %>%
-    select(-matches("^NA$")) %>%
-    pivot_longer(
+    dplyr::select(-matches("^NA$")) %>%
+    dplyr::pivot_longer(
       -c(sample_id),
       names_to = "window_start",
       values_to = "n"
     ) %>%
-    distinct() %>%
-    filter(!is.na(sample_id))
+    dplyr::distinct() %>%
+    dplyr::filter(!is.na(sample_id))
 
   # Remove unmutated windows if requested
   if (drop_unmutated | min_count_per_bin > 0) {
     windows_tallied <- windows_tallied %>%
-      filter(n >= min_count_per_bin)
+      dplyr::filter(n >= min_count_per_bin)
     if (drop_unmutated & min_count_per_bin == 0) {
       windows_tallied %>%
-        filter(n > 0)
+        dplyr::filter(n > 0)
     }
   }
 
@@ -1040,8 +1054,8 @@ calc_mutation_frequency_sliding_windows <- function(this_region,
       windows_tallied,
       bin = paste0(chromosome, "_", window_start)
     ) %>%
-      mutate(mutation_count = n) %>%
-      select(
+      dplyr::mutate(mutation_count = n) %>%
+      dplyr::select(
         sample_id,
         bin,
         mutation_count
@@ -1052,8 +1066,8 @@ calc_mutation_frequency_sliding_windows <- function(this_region,
       windows_tallied,
       bin = paste0(chromosome, "_", window_start)
     ) %>%
-      mutate(mutated = ifelse(n > 0, 1, 0)) %>%
-      select(
+      dplyr::mutate(mutated = ifelse(n > 0, 1, 0)) %>%
+      dplyr::select(
         sample_id,
         bin,
         mutated
@@ -1062,7 +1076,7 @@ calc_mutation_frequency_sliding_windows <- function(this_region,
 
   if (return_format == "wide") {
     widened <- windows_tallied_final %>%
-      pivot_wider(
+      dplyr::pivot_wider(
         names_from = bin,
         values_from = matches("mutat"),
         values_fill = 0
@@ -1072,7 +1086,6 @@ calc_mutation_frequency_sliding_windows <- function(this_region,
     return(windows_tallied_final)
   }
 }
-
 
 
 
