@@ -55,65 +55,63 @@ heatmap_mutation_frequency_bin(
 
 \item{mut_freq_matrix}{Optional matrix of binned mutation frequencies generated outside of this function, usually by \link{get_mutation_frequency_bin_matrix}.}
 
-\item{projection}{Genome build the function will operate in. Ensure this matches your provided regions and maf data for correct chr prefix handling.\link{grch37}}
+\item{projection}{Genome build the function will operate in. Ensure this matches your provided regions and maf data for correct chr prefix handling. Default grch37.}
 
-\item{region_padding}{Amount to pad the start and end coordinates by. \link{1000}}
+\item{region_padding}{Amount to pad the start and end coordinates by. Default 1000}
 
 \item{drop_unmutated}{Whether to drop bins with 0 mutations. If returning a matrix format, this will only drop bins with no mutations in any samples.}
 
-\item{metadataColumns}{Mandatory character vector of metadata columns to use in heatmap annotation. \link{pathology}}
+\item{metadataColumns}{Mandatory character vector of metadata columns to use in heatmap annotation. Default c("pathology").}
 
-\item{sortByColumns}{Mandatory character vector of metadata columns to order annotations by. Will be ordered by factor levels and sorted in the order specified. \link{pathology}}
+\item{sortByColumns}{Mandatory character vector of metadata columns to order annotations by. Will be ordered by factor levels and sorted in the order specified. Default c("pathology").}
 
-\item{expressionColumns}{Optional character vector of numeric metadata columns, usually gene expression, for heatmap annotation. \link{NULL}}
+\item{expressionColumns}{Optional character vector of numeric metadata columns, usually gene expression, for heatmap annotation.}
 
-\item{orientation}{Specify whether heatmap should have samples in rows ("sample_rows") or in columns ("sample_cols"). \link{sample_rows}}
+\item{orientation}{Specify whether heatmap should have samples in rows ("sample_rows") or in columns ("sample_cols"). Default sample_rows.}
 
 \item{skip_regions}{Optional character vector of genes to exclude from the default aSHM regions.}
 
 \item{only_regions}{Optional character vector of genes to include from the default aSHM regions.}
 
-\item{customColours}{Optional list of character vectors specifying colours for heatmap annotation with metadataColumns, e.g. list(pathology = c(DLBCL = "green", BL = "purple")). If left blank, the function will attempt to match heatmap annotations with existing colours from \link{get_gambl_colours}, or will default to the Blood colour palette. \link{NULL}}
+\item{customColours}{Optional list of character vectors specifying colours for heatmap annotation with metadataColumns, e.g. list(pathology = c(DLBCL = "green", BL = "purple")). If left blank, the function will attempt to match heatmap annotations with existing colours from \link{get_gambl_colours}, or will default to the Blood colour palette.}
 
-\item{backgroundColour}{Optionally specify the colour for heatmap bins with 0 mutations. \link{grey90}}
+\item{backgroundColour}{Optionally specify the colour for heatmap bins with 0 mutations. Default grey90.}
 
-\item{slide_by}{Slide size for sliding window. \link{100}}
+\item{slide_by}{Slide size for sliding window. Default 100.}
 
-\item{window_size}{Size of sliding window.\link{500}}
+\item{window_size}{Size of sliding window. Default 500.}
 
-\item{min_count_per_bin}{Specify the minimum number of mutations per bin to be included in the heatmap. Only bins with all samples falling below this threshold will be dropped. \link{0}}
+\item{min_count_per_bin}{Specify the minimum number of mutations per bin to be included in the heatmap. Only bins with all samples falling below this threshold will be dropped. Default 0.}
 
-\item{min_bin_recurrence}{Specify how many samples a bin must be mutated in to be displayed. \link{5}}
+\item{min_bin_recurrence}{Specify how many samples a bin must be mutated in to be displayed. Default 5.}
 
-\item{min_mut_tumour}{Specify how many bins a tumour must be mutated in to be displayed. \link{0}}
+\item{min_mut_tumour}{Specify how many bins a tumour must be mutated in to be displayed. Default 0.}
 
-\item{region_fontsize}{Fontsize of region labels on the heatmap. \link{8}}
+\item{region_fontsize}{Fontsize of region labels on the heatmap. Default 8.}
 
-\item{cluster_rows_heatmap}{Boolean. \link{FALSE}}
+\item{cluster_rows_heatmap}{Boolean. Default FALSE.}
 
-\item{cluster_cols_heatmap}{Boolean. \link{FALSE}}
+\item{cluster_cols_heatmap}{Boolean.  Default FALSE.}
 
-\item{show_gene_colours}{Boolean. Whether to add heatmap annotation colours for each region. \link{FALSE}}
+\item{show_gene_colours}{Boolean. Whether to add heatmap annotation colours for each region. Default FALSE.}
 
-\item{label_regions_by}{Specify which feature of the regions to label the heatmap with. Heatmap will be split according to this value, and ordered by factor levels if the specified column is a factor. \link{name}}
+\item{label_regions_by}{Specify which feature of the regions to label the heatmap with. Heatmap will be split according to this value, and ordered by factor levels if the specified column is a factor. Default name.}
 
-\item{legend_row}{Control aesthetics of the heatmap legend. \link{3}}
+\item{legend_row}{Control aesthetics of the heatmap legend. Default 3.}
 
-\item{legend_col}{Control aesthetics of the heatmap legend. \link{3}}
+\item{legend_col}{Control aesthetics of the heatmap legend. Default 3.}
 
-\item{legend_direction}{Control aesthetics of the heatmap legend. \link{horizontal}}
+\item{legend_direction}{Control aesthetics of the heatmap legend. Default "horizontal".}
 
-\item{legendFontSize}{Control aesthetics of the heatmap legend. \link{10}}
+\item{legendFontSize}{Control aesthetics of the heatmap legend. Default 10.}
 
-\item{legend_side}{Control aesthetics of the heatmap legend. \link{bottom}}
+\item{legend_side}{Control aesthetics of the heatmap legend. Default "bottom".}
 
-\item{return_heatmap_obj}{Boolean. FALSE will plot the heatmap automatically. TRUE will return a heatmap object to allow further tweaking with the draw() function. \link{FALSE}}
+\item{return_heatmap_obj}{Boolean. FALSE will plot the heatmap automatically. TRUE will return a heatmap object to allow further tweaking with the draw() function. Default FALSE.}
 
 \item{from_indexed_flatfile}{Set to TRUE to avoid using the database and instead rely on flat files (only works for streamlined data, not full MAF details).}
 
 \item{mode}{Only works with indexed flat files. Accepts 2 options of "slms-3" and "strelka2" to indicate which variant caller to use. Default is "slms-3".}
-
-\item{return_format}{Return format of mutations. Accepted inputs are "long" and "wide". Long returns a data frame of one sample ID/window per row. Wide returns a matrix with one sample ID per row and one window per column. Using the "wide" format will retain all samples and windows regardless of the drop_unmutated or min_count_per_bin parameters. \link{wide}}
 }
 \value{
 A table of mutation counts for sliding windows across one or more regions. May be long or wide.

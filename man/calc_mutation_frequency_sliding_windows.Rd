@@ -38,9 +38,11 @@ calc_mutation_frequency_sliding_windows(
 
 \item{maf}{Optional maf data frame. Will be subset to rows where Tumor_Sample_Barcode matches provided sample IDs or metadata table. If not provided, maf data will be obtained with get_ssm_by_regions().}
 
-\item{slide_by}{Slide size for sliding window. \link{100}}
+\item{projection}{Specify which genome build to use. Required.}
 
-\item{window_size}{Size of sliding window.\link{1000}}
+\item{slide_by}{Slide size for sliding window. Default 100.}
+
+\item{window_size}{Size of sliding window. Default 1000.}
 
 \item{return_format}{Return format of mutations. Accepted inputs are "long" and "wide". Long returns a data frame of one sample ID/window per row. Wide returns a matrix with one sample ID per row and one window per column. Using the "wide" format will retain all samples and windows regardless of the drop_unmutated or min_count_per_bin parameters.}
 

@@ -33,9 +33,9 @@ get_mutation_frequency_bin_matrix(
 
 \item{maf}{Optional maf data frame. Will be subset to rows where Tumor_Sample_Barcode matches provided sample IDs or metadata table. If not provided, maf data will be obtained with get_ssm_by_regions().}
 
-\item{projection}{Genome build the function will operate in. Ensure this matches your provided regions and maf data for correct chr prefix handling.\link{grch37}}
+\item{projection}{Genome build the function will operate in. Ensure this matches your provided regions and maf data for correct chr prefix handling. Default "grch37".}
 
-\item{region_padding}{Amount to pad the start and end coordinates by. \link{1000}}
+\item{region_padding}{Amount to pad the start and end coordinates by. Default 1000.}
 
 \item{drop_unmutated}{Whether to drop bins with 0 mutations. If returning a matrix format, this will only drop bins with no mutations in any samples.}
 
@@ -43,11 +43,11 @@ get_mutation_frequency_bin_matrix(
 
 \item{only_regions}{Optional character vector of genes to include from the default aSHM regions.}
 
-\item{slide_by}{Slide size for sliding window. \link{100}}
+\item{slide_by}{Slide size for sliding window. Default 100.}
 
-\item{window_size}{Size of sliding window.\link{500}}
+\item{window_size}{Size of sliding window. Default 500.}
 
-\item{return_format}{Return format of mutations. Accepted inputs are "long" and "wide". Long returns a data frame of one sample ID/window per row. Wide returns a matrix with one sample ID per row and one window per column. Using the "wide" format will retain all samples and windows regardless of the drop_unmutated or min_count_per_bin parameters. \link{wide}}
+\item{return_format}{Return format of mutations. Accepted inputs are "long" and "wide". Long returns a data frame of one sample ID/window per row. Wide returns a matrix with one sample ID per row and one window per column. Using the "wide" format will retain all samples and windows regardless of the drop_unmutated or min_count_per_bin parameters. Default wide.}
 
 \item{from_indexed_flatfile}{Set to TRUE to avoid using the database and instead rely on flat files (only works for streamlined data, not full MAF details).}
 
@@ -74,7 +74,7 @@ dlbcl_bl_meta = collate_results(join_with_full_metadata = TRUE,
                                 these_samples_metadata = dlbcl_bl_meta)
 
 #get ashm regions
-some_regions = grch37_ashm_regions
+some_regions = GAMBLR.data::somatic_hypermutation_locations_GRCh37_v_latest
 
 mut_count_matrix <- get_mutation_frequency_bin_matrix(
    these_samples_metadata = dlbcl_bl_meta,

@@ -938,8 +938,9 @@ process_regions <- function(regions = NULL,
 #' @param these_samples_metadata Optional data frame containing a sample_id column. If not providing a maf file, seq_type is also a required column.
 #' @param these_sample_ids Optional vector of sample IDs. Output will be subset to IDs present in this vector.
 #' @param maf Optional maf data frame. Will be subset to rows where Tumor_Sample_Barcode matches provided sample IDs or metadata table. If not provided, maf data will be obtained with get_ssm_by_regions().
-#' @param slide_by Slide size for sliding window. [100]
-#' @param window_size Size of sliding window.[1000]
+#' @param projection Specify which genome build to use. Required. 
+#' @param slide_by Slide size for sliding window. Default 100. 
+#' @param window_size Size of sliding window. Default 1000. 
 #' @param return_format Return format of mutations. Accepted inputs are "long" and "wide". Long returns a data frame of one sample ID/window per row. Wide returns a matrix with one sample ID per row and one window per column. Using the "wide" format will retain all samples and windows regardless of the drop_unmutated or min_count_per_bin parameters.
 #' @param min_count_per_bin Minimum counts per bin, default is 0. Setting this greater than 0 will drop unmutated windows only when return_format is long.
 #' @param return_count Boolean statement to return mutation count per window (TRUE) or binary mutated/unmutated status (FALSE). Default is TRUE.
