@@ -480,6 +480,7 @@ annotate_sv = function(sv_data,
   return(all.annotated)
 }
 
+
 #' @title Annotate mutations target AID motif
 #'
 #' @description Checks for the presence of mutations at a given AID motif
@@ -491,11 +492,9 @@ annotate_sv = function(sv_data,
 #' allele "C" and reference allele "G" sequence will be checked, respectively. ("NO" for the rows that have different reference
 #' alleles) 
 #'
-#' @param mafPath: Should be the path to the MAF file (required columns: Reference_Allele, Chromosome, Start_Position, End_Position)
+#' @param maf: MAF file (required columns: Reference_Allele, Chromosome, Start_Position, End_Position)
 #' @param fastaPath: Should be the path to the FASTA file
 #' @param motif: The motif sequence
-#' @param sequences: The output of getSequence() function
-#' @param motifPattern: The output of motifGenerator() function
 #'
 #' @return A data frame with two extra columns (seq and matched).
 #'
@@ -506,24 +505,20 @@ annotate_sv = function(sv_data,
 #   install.packages("BiocManager")
 # 
 # BiocManager::install("Rsamtools")
-#'
 #' @export
 #'
 #' @examples
-#' motifFind(getSequence("./*.maf","./*.fa"), motifGenerator("WRCY"))
+#' findMotif(maf, "./*.fa", "WRCY")
 #' 
 
 
-
-# This function returns sequences
-getSequence = function(mafPath, fastaPath){
-  maf = read_tsv(file = mafPath)
+#This function check that if the motif pattern is in the sequence
+findMotif = function(maf, fastaPath, motif){
   fasta = Rsamtools::FaFile(file = fastaPath)
+  # This section provides the sequence
   sequences = maf %>% mutate(seq = ifelse(Reference_Allele == "C",getSeq(fasta, GRanges(maf$Chromosome,IRanges(start = maf$Start_Position - 2, end =maf$End_Position + 1))),ifelse(Reference_Allele == "G",getSeq(fasta, GRanges(maf$Chromosome,IRanges(start = maf$Start_Position - 1, end =maf$End_Position + 2))),"NO")))
-  return(sequences)
-}
-# This function returns motif and its reverse complement 
-motifGenerator = function(motif){
+  
+  # This section provides motif and its reverse complement 
   compliment = c(
     'A'= 'T',
     'T'= 'A',
@@ -585,12 +580,7 @@ motifGenerator = function(motif){
   strRevComp = paste(IUPACRevCompMotif, collapse = "")
   motifPattern = list(strForMotif, strRevComp)
   
-  return(motifPattern)
-}
-#This function check that if the motif pattern is in the sequence
-motifFind = function(sequences, motifPattern){
-  finder = sequences %>% mutate(matched = ifelse(Reference_Allele == "C",str_detect(sequences$seq, motifPattern[[1]]),ifelse(Reference_Allele == "G",str_detect(sequences$seq, motifPattern[[2]]),"NO")))
+  #This section checks for the presence of the motif pattern in the sequence
+  finder = sequences %>% mutate(matched = ifelse(Reference_Allele == "C",str_detect(sequences$seq, strForMotif),ifelse(Reference_Allele == "G",str_detect(sequences$seq, strRevComp),"NO")))
   return(finder)
 }
-
-
