@@ -645,7 +645,7 @@ pretty_lollipop_plot = function(maf_df,
 #'                                 these_samples_metadata = dlbcl_bl_meta)
 #'
 #' #get ashm regions
-#' some_regions = GAMBLR.data::somatic_hypermutation_locations_GRCh37_v_latest
+#' some_regions = GAMBLR.data::grch37_ashm_regions
 #'
 #' mut_count_matrix <- get_mutation_frequency_bin_matrix(
 #'    these_samples_metadata = dlbcl_bl_meta,
@@ -795,7 +795,7 @@ get_mutation_frequency_bin_matrix <- function(
 #' @return A table of mutation counts for sliding windows across one or more regions. May be long or wide.
 #'
 #' @rawNamespace import(data.table, except = c("last", "first", "between", "transpose"))
-#' @import dplyr tidyr tibble ComplexHeatmap circlize
+#' @import dplyr tidyr tibble ComplexHeatmap circlize grid
 #' @export
 #'
 #' @examples

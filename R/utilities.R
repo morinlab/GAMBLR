@@ -817,6 +817,8 @@ trim_scale_expression = function(x){
 #' @param skip_regions Character vector of genes to drop from GAMBLR aSHM regions.
 #' @param only_regions Character vector of genes to include from GAMBLR aSHM regions.
 #' @param projection Specify which genome build to use. [grch37]
+#' 
+#' @import GAMBLR.data
 #'
 #' @return Numeric value.
 #'
@@ -836,11 +838,11 @@ process_regions <- function(regions = NULL,
     if (is.null(regions_df)) {
       message("Using default GAMBLR aSHM regions. ")
       if (projection == "grch37") {
-        regions_df <- GAMBLR.data::somatic_hypermutation_locations_GRCh37_v_latest %>%
+        regions_df <- grch37_ashm_regions %>%
           dplyr::mutate(chr_name = str_remove(chr_name, "chr")) %>% 
           dplyr::mutate(name = str_c(gene, region, sep = "_"))
       } else {
-        regions_df <- GAMBLR.data::somatic_hypermutation_locations_GRCh38_v_latest %>%
+        regions_df <- hg38_ashm_regions %>%
           dplyr::mutate(name = str_c(gene, region, sep = "_"))
       }
       # Fix column names

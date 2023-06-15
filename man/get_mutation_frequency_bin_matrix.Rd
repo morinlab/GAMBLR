@@ -74,7 +74,7 @@ dlbcl_bl_meta = collate_results(join_with_full_metadata = TRUE,
                                 these_samples_metadata = dlbcl_bl_meta)
 
 #get ashm regions
-some_regions = GAMBLR.data::somatic_hypermutation_locations_GRCh37_v_latest
+some_regions = GAMBLR.data::grch37_ashm_regions
 
 mut_count_matrix <- get_mutation_frequency_bin_matrix(
    these_samples_metadata = dlbcl_bl_meta,
