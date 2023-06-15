@@ -513,74 +513,91 @@ annotate_sv = function(sv_data,
 
 
 #This function check that if the motif pattern is in the sequence
-findMotif = function(maf, fastaPath, motif){
-  fasta = Rsamtools::FaFile(file = fastaPath)
-  # This section provides the sequence
-  sequences = maf %>% mutate(seq = ifelse(Reference_Allele == "C",getSeq(fasta, GRanges(maf$Chromosome,IRanges(start = maf$Start_Position - 2, end =maf$End_Position + 1))),ifelse(Reference_Allele == "G",getSeq(fasta, GRanges(maf$Chromosome,IRanges(start = maf$Start_Position - 1, end =maf$End_Position + 2))),"NO")))
+findMotif = function(maf,
+                     fastaPath,
+                     motif
+                     ){
+    fasta <- Rsamtools::FaFile(file = fastaPath)
+     # This section provides the sequence
+    sequences <- maf %>%
+        mutate(seq = ifelse(
+             Reference_Allele == "C",
+             getSeq(fasta, GRanges(maf$Chromosome,IRanges(start = maf$Start_Position - 2, end =maf$End_Position + 1))),
+             ifelse(
+                 Reference_Allele == "G",
+                 getSeq(fasta, GRanges(maf$Chromosome,IRanges(start = maf$Start_Position - 1, end =maf$End_Position + 2))),
+                 "NO")))
   
-  # This section provides motif and its reverse complement 
-  compliment = c(
-    'A'= 'T',
-    'T'= 'A',
-    'C'= 'G',
-    'G'= 'C',
-    'U'= 'A',
-    'R'= 'Y',
-    'Y'= 'R',
-    'S'= 'S',
-    'W'= 'W',
-    'K'= 'M',
-    'M'= 'K',
-    'B'= 'V',
-    'D'= 'H',
-    'H'= 'D',
-    'V'= 'B',
-    'N'= 'N'
-  )
-  IUPACCodeDict = c(
-    'A'= 'A',  # Adenine
-    'C'= 'C',  # Cytosine
-    'G'= 'G',  # Guanine
-    'T'= 'T',  # Thymine
-    'R'= '[AG]',  # A or G
-    'Y'= '[CT]',  # C or T
-    'S'= '[GC]',  # G or C
-    'W'= '[AT]',  # A or T
-    'K'= '[GT]',  # G or T
-    'M'= '[AC]',  # A or C
-    'B'= '[CGT]',  # C or G or T
-    'D'= '[AGT]',  # A or G or T
-    'H'= '[ACT]',  # A or C or T
-    'V'= '[ACG]',  # A or C or G
-    'N'= '[ACGT]'  # any base
-  )
-  word = motif
-  splitWord = strsplit(word,"")[[1]]
-  splitWordLen = length(splitWord)
-  forMotif <- character(splitWordLen)
-  for (i in seq_along(splitWord)){
-    if (splitWord[i] %in% names(IUPACCodeDict)){
-      forMotif[i] = IUPACCodeDict[splitWord[i]]
+     # This section provides motif and its reverse complement 
+    compliment <- c(
+        'A'= 'T',
+        'T'= 'A',
+        'C'= 'G',
+        'G'= 'C',
+        'U'= 'A',
+        'R'= 'Y',
+        'Y'= 'R',
+        'S'= 'S',
+        'W'= 'W',
+        'K'= 'M',
+        'M'= 'K',
+        'B'= 'V',
+        'D'= 'H',
+        'H'= 'D',
+        'V'= 'B',
+        'N'= 'N'
+    )
+    IUPACCodeDict <- c(
+        'A'= 'A',  # Adenine
+        'C'= 'C',  # Cytosine
+        'G'= 'G',  # Guanine
+        'T'= 'T',  # Thymine
+        'R'= '[AG]',  # A or G
+        'Y'= '[CT]',  # C or T
+        'S'= '[GC]',  # G or C
+        'W'= '[AT]',  # A or T
+        'K'= '[GT]',  # G or T
+        'M'= '[AC]',  # A or C
+        'B'= '[CGT]',  # C or G or T
+        'D'= '[AGT]',  # A or G or T
+        'H'= '[ACT]',  # A or C or T
+        'V'= '[ACG]',  # A or C or G
+        'N'= '[ACGT]'  # any base
+    )
+    word <- motif
+    splitWord = strsplit(word,"")[[1]]
+    splitWordLen = length(splitWord)
+    forMotif <- character(splitWordLen)
+    for (i in seq_along(splitWord)){
+        if (splitWord[i] %in% names(IUPACCodeDict)){
+          forMotif[i] = IUPACCodeDict[splitWord[i]]
+        }
     }
-  }
-  strForMotif = paste(forMotif, collapse = "")
-  RevCompMotif = character(splitWordLen)
-  for (i in seq_along(splitWord)){
-    if (splitWord[i] %in% names(compliment)){
-      RevCompMotif[i] = compliment[splitWord[i]]
+    strForMotif = paste(forMotif, collapse = "")
+    RevCompMotif = character(splitWordLen)
+    for (i in seq_along(splitWord)){
+        if (splitWord[i] %in% names(compliment)){
+          RevCompMotif[i] = compliment[splitWord[i]]
+        }
     }
-  }
-  vecRevComp = rev(RevCompMotif)
-  IUPACRevCompMotif = character(splitWordLen)
-  for (i in seq_along(vecRevComp)){
-    if (vecRevComp[i] %in% names(IUPACCodeDict)){
-      IUPACRevCompMotif[i] = IUPACCodeDict[vecRevComp[i]]
-    } 
-  }
-  strRevComp = paste(IUPACRevCompMotif, collapse = "")
-  motifPattern = list(strForMotif, strRevComp)
+    vecRevComp = rev(RevCompMotif)
+    IUPACRevCompMotif = character(splitWordLen)
+    for (i in seq_along(vecRevComp)){
+        if (vecRevComp[i] %in% names(IUPACCodeDict)){
+          IUPACRevCompMotif[i] = IUPACCodeDict[vecRevComp[i]]
+        } 
+    }
+    strRevComp = paste(IUPACRevCompMotif, collapse = "")
+    motifPattern <- list(strForMotif, strRevComp)
   
-  #This section checks for the presence of the motif pattern in the sequence
-  finder = sequences %>% mutate(matched = ifelse(Reference_Allele == "C",str_detect(sequences$seq, strForMotif),ifelse(Reference_Allele == "G",str_detect(sequences$seq, strRevComp),"NO")))
-  return(finder)
+  #This section checks for the presence of the motif in the sequence
+    finder <- sequences %>%
+        mutate(matched = ifelse(
+            Reference_Allele == "C",
+            str_detect(sequences$seq, strForMotif),
+            ifelse(
+                Reference_Allele == "G",
+                str_detect(sequences$seq, strRevComp),
+                "NO")))
+    return(finder)
 }
