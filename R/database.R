@@ -1305,16 +1305,13 @@ get_combined_sv = function(min_vaf = 0,
 #'
 #' @description Retrieve Manta SVs and filter.
 #'
-#' @details Return Manta SVs with aditional VCF information to allow for filtering of high-confidence variants.
+#' @details Return Manta SVs with additional VCF information to allow for filtering of high-confidence variants.
 #' To return SV calls for multiple samples, give `these_sample_ids` a vector of sample IDs, if only one sample is desired,
 #' give this parameter one sample ID, as a string (or a vector of characters). The user can also call the `these_samples_metadata`
 #' parameter to make use of an already subset metadata table. In this case, the returned calls will be restricted to the sample_ids
-#' within that data frame. This function relies on a set of specific functions to be successful in returning SV calls for any
-#' available sample in gambl. First, this function calls [GAMBLR::get_combined_sv] and performs an `anit_join` with the full metadata to
-#' identify what samples are currently missing from the return of [GAMBLR::get_combined_sv]. This function then calls [GAMBLR::get_manta_sv_by_samples]
-#' (wrapper function for [GAMBLR::get_manta_sv_by_sample]) on the subset of the missing samples. The merged calls are subject to any
-#' filtering that is specified within this function. This function can also restrict the returned calls to any genomic regions
-#' specified within `chromosome`, `qstart`, `qend`, or the complete region specified under `region` (in chr:start-end format).
+#' within that data frame. This function relies on a set of specific internal functions [GAMBLR::id_ease], [GAMBLR::get_manta_sv_by_samples].
+#' This function can also restrict the returned calls to any genomic regions specified within `chromosome`, `qstart`, `qend`, 
+#' or the complete region specified under `region` (in chr:start-end format).
 #' Useful filtering parameters are also available, use `min_vaf` to set the minimum tumour VAF for a SV to be returned and `min_score`
 #' to set the lowest Manta somatic score for a SV to be returned. `pair_status` can be used to only return variants that are
 #' annotated with PASS in the filtering column (VCF).
@@ -1334,40 +1331,23 @@ get_combined_sv = function(min_vaf = 0,
 #' @param pairing_status Use to restrict results (if desired) to matched or unmatched results (default is to return all).
 #' @param from_flatfile Set to TRUE by default, FALSE is no longer supported (database).
 #' @param verbose Set to FALSE to prevent the path of the requested bedpe file to be printed.
+#' @param from_cache Boolean variable for using cached results, default is TRUE. If `write_to_file = TRUE`, this parameter auto-defaults to FALSE.
+#' @param write_to_file Boolean statement that outputs bedpe file if TRUE, default is FALSE. Setting this to TRUE forces `from_cache = FALSE`.
 #'
 #' @return A data frame in a bedpe-like format with additional columns that allow filtering of high-confidence SVs.
 #'
-#' @import dplyr
+#' @import dplyr readr
 #' @export
 #'
 #' @examples
 #' #lazily get every SV in the table with default quality filters
-#' all_sv = get_manta_sv(verbose = FALSE)
+#' all_sv = get_manta_sv()
 #'
 #' #get all SVs for a single sample
 #' some_sv = get_manta_sv(these_sample_ids = "94-15772_tumorA")
 #'
 #' #get the SVs in a region around MYC
-#' myc_locus_sv = get_manta_sv(region = "8:128723128-128774067", verbose = FALSE)
-#'
-#' #get SVs for multiple samples, using these_samples_id
-#' my_metadata = get_gambl_metadata()
-#' these_samples = dplyr::select(my_metadata, sample_id)
-#' my_samples_df = head(these_samples, 10)
-#' my_samples = pull(my_samples_df, sample_id)
-#'
-#' my_svs_2 = get_manta_sv(these_sample_ids = my_samples,
-#'                         projection = "hg38",
-#'                         verbose = FALSE)
-#'
-#' #get SVs for multiple samples using a metadata table and with no VAF/score filtering
-#' my_metadata = get_gambl_metadata() %>%
-#' this_metadata = head(my_metadata, 10)
-#'
-#' my_svs = get_manta_sv(these_samples_metadata = this_metadata,
-#'                       verbose = FALSE,
-#'                       min_vaf = 0,
-#'                       min_score = 0)
+#' myc_locus_sv = get_manta_sv(region = "8:128723128-128774067")
 #'
 get_manta_sv = function(these_sample_ids,
                         these_samples_metadata,
@@ -1394,11 +1374,19 @@ get_manta_sv = function(these_sample_ids,
     qend = startend[2]
   }
   
-  #get paths
-  output_base = check_config_value(config::get("cmattsson")) #temporary config value for testing purposes
-  output_file = check_config_value(config::get("results_merged")$manta_sv) #temporary config value for testing purposes
+  #get paths and check for file permissions
+  output_base = check_config_value(config::get("project_base"))
+  output_file = check_config_value(config::get("results_merged")$manta_sv$icgc_dart)
   output_file = paste0(output_base, output_file)
   output_file = glue::glue(output_file)
+  
+  permissions = file.access(output_file, 4)
+  
+  if(permissions == - 1){
+    output_file = check_config_value(config::get("results_merged")$manta_sv$gambl)
+    output_file = paste0(output_base, output_file)
+    output_file = glue::glue(output_file)
+  }
   
   #get samples with the dedicated helper function
   this_meta = id_ease(these_samples_metadata = these_samples_metadata,
@@ -1414,6 +1402,7 @@ get_manta_sv = function(these_sample_ids,
   if(from_flatfile){
     if(from_cache){
       if(verbose){
+        message(paste0("\nThe cached results were last updated: ", file.info(output_file)$ctime))
         message("\nReading cached results...\n") 
       }
       
@@ -1426,19 +1415,23 @@ get_manta_sv = function(these_sample_ids,
         
       #read merged data
       manta_sv = suppressMessages(read_tsv(output_file)) %>% 
-                                    dplyr::filter(tumour_sample_id %in% this_meta$sample_id)
+                                    dplyr::filter(tumour_sample_id %in% this_meta$sample_id, 
+                                                  VAF_tumour >= min_vaf,
+                                                  SCORE >= min_score)
       
-      no_manta = setdiff(this_meta$sample_id, manta_sv$tumour_sample_id)
-      
-      if(length(no_manta) > 0){
-        message("No Manta results found for the following sample IDs:")
-        print(no_manta)
+      if(verbose){
+        no_manta = setdiff(this_meta$sample_id, manta_sv$tumour_sample_id)
+        
+        if(length(no_manta) > 0){
+          message(paste0("No Manta results found for ", length(no_manta), " samples..."))
+          print(no_manta)
+        } 
       }
       
     }else{
       if(write_to_file){
         #enforce all available samples to in the merge, if the user decides to overwrite the cached results
-        this_meta = get_gambl_metadata(seq_type_filter = "genome")
+        all_meta = get_gambl_metadata(seq_type_filter = "genome")
       }
         
       #compile the merge based on selected projection (with no filters)
@@ -1446,7 +1439,7 @@ get_manta_sv = function(these_sample_ids,
         message("\nFrom cache is set to FALSE, this function is now compiling a new merged results file for the selected projection...") 
       }
       
-      manta_sv = get_manta_sv_by_samples(these_samples_metadata = all_metadata, 
+      manta_sv = get_manta_sv_by_samples(these_samples_metadata = this_metadata, 
                                          verbose = verbose, 
                                          min_vaf = 0, 
                                          pass = FALSE, 
@@ -1489,10 +1482,6 @@ get_manta_sv = function(these_sample_ids,
     message(paste0("  Only keep variants passing the quality filter: ", pass))
   }
   
-  #VAF and somatic score filtering
-  manta_sv = manta_sv %>%
-    dplyr::filter(VAF_tumour >= min_vaf & SCORE >= min_score)
-  
   #PASS filter
   if(pass){
     manta_sv = manta_sv %>%
@@ -1502,7 +1491,7 @@ get_manta_sv = function(these_sample_ids,
   #pairing status filter
   if(!missing(pairing_status)){
     if(verbose){
-      message(paste0("  Pairing statuus: ", pairing_status)) 
+      message(paste0("  Pairing status: ", pairing_status)) 
     }
     manta_sv = manta_sv %>%
       dplyr::filter(pair_status == pairing_status)
