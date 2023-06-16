@@ -522,10 +522,12 @@ findMotif = function(maf,
     if (projection == "grch37") {
         maf$Chromosome = gsub("chr", "", maf$Chromosome)
     } else {
-      # if there is a mix of prefixed and non-prefixed options
+        # If there is a mix of prefixed and non-prefixed options
         maf$Chromosome = gsub("chr", "", maf$Chromosome) 
         maf$Chromosome = paste0("chr", maf$Chromosome)
     }
+    # If there is no fastaPath, it will read it from config key 
+    # Based on the projection the fasta file which will be loaded is different
     if (missing(fastaPath)){
         base = check_config_value(config::get("repo_base"))
         fastaPath = paste0(
@@ -535,16 +537,21 @@ findMotif = function(maf,
             "/genome_fasta/genome.fa"
         )
     }
+    # It checks for the presence of a local fastaPath
     if (!file.exists(fastaPath)) {
         stop("Failed to find the fasta file")
     }
+    # It checks that if the user considers "WRCY" as the motif
     if (!motif == "WRCY"){
         stop("It is only currently available for WRCY. ",
              "To use it for another motif, comment \"if\" code for the motif"
         )
     }
+    # Create a reference to an indexed fasta file.
     fasta <- Rsamtools::FaFile(file = fastaPath)
-     # This section provides the sequence
+    # This section provides the sequence
+    # If the reference allele is C, it will return the one nucleotide after it
+    # and 2 nucleotides before it
     sequences <- maf %>%
         dplyr::mutate(
             seq = ifelse(
@@ -559,6 +566,8 @@ findMotif = function(maf,
                             )
                         )
                     ),
+                     # If the reference allele is G, it will return 
+                     # 2 nucleotides after it and the one nucleotide before it
                      ifelse(
                          Reference_Allele == "G",
                          Rsamtools::getSeq(
@@ -571,12 +580,13 @@ findMotif = function(maf,
                                  )
                              )
                           ),
+                           # In other cases it returns "NO" for that mutation
                            "NO"
                      )
             )
         )
   
-     # This section provides motif and its reverse complement 
+    # This section provides motif and its reverse complement 
     compliment <- c(
         'A'= 'T',
         'T'= 'A',
@@ -613,21 +623,26 @@ findMotif = function(maf,
         'N'= '[ACGT]'  # any base
     )
     word <- motif
-    splitWord = strsplit(word,"")[[1]]
+    splitWord = strsplit(word,"")[[1]] # Split the word into its letters
     splitWordLen = length(splitWord)
-    forMotif <- character(splitWordLen)
+    forMotif <- character(splitWordLen) # forMotif, the same length as splitWord
     for (i in seq_along(splitWord)){
+        # Convert incomplete nuc specification into their different nucleotides
         if (splitWord[i] %in% names(IUPACCodeDict)){
             forMotif[i] = IUPACCodeDict[splitWord[i]]
         }
     }
+    # Collapsing all the letters of forward orientation and make it 
+    # into a single string
     strForMotif = paste(forMotif, collapse = "")
     RevCompMotif = character(splitWordLen)
     for (i in seq_along(splitWord)){
         if (splitWord[i] %in% names(compliment)){
+            # Provide the complement version of the motif
             RevCompMotif[i] = compliment[splitWord[i]]
         }
     }
+    # Provide the reverse version of RevCompMotif
     vecRevComp = rev(RevCompMotif)
     IUPACRevCompMotif = character(splitWordLen)
     for (i in seq_along(vecRevComp)){
@@ -635,9 +650,13 @@ findMotif = function(maf,
             IUPACRevCompMotif[i] = IUPACCodeDict[vecRevComp[i]]
         } 
     }
+    # Collapsing all the letters of reverse complement orientation and make it 
+    # into a single string
     strRevComp = paste(IUPACRevCompMotif, collapse = "")
   
-     #This section checks for the presence of the motif in the sequence
+    #This section checks for the presence of the motif in the sequence
+    # If the reference allele is C, it will check the forward orientation with
+    # its sequence
     finder <- sequences %>%
         dplyr::mutate(
             matched = ifelse(
@@ -645,11 +664,14 @@ findMotif = function(maf,
               stringr::str_detect(
                   sequences$seq, strForMotif
               ),
+              # If the reference allele is G, it will check the reverse-
+              # compliment orientation with its sequence
               ifelse(
                   Reference_Allele == "G",
                   stringr::str_detect(
                       sequences$seq, strRevComp
                   ),
+                   # For the rest of mutations it will return "NO"
                    "NO"
               )
             )
