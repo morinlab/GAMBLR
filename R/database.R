@@ -68,8 +68,6 @@ get_excluded_samples = function(tool_name = "slms-3"){
 #' @export
 #'
 #' @examples
-#' library(parallel)
-#'
 #' #example 1, using a vector of patient IDs.
 #' patients = c("00-14595", "00-15201", "01-12047")
 #' patients_maf = get_ssm_by_patients(these_patient_ids = patients,
@@ -172,8 +170,6 @@ get_ssm_by_patients = function(these_patient_ids,
 #' @export
 #'
 #' @examples
-#' library(parallel)
-#'
 #' #examples using the these_sample_ids parameter.
 #' sample_ssms = get_ssm_by_samples(these_sample_ids = c("HTMCP-01-06-00485-01A-01D",
 #'                                                       "14-35472_tumorA",
@@ -336,7 +332,7 @@ get_ssm_by_samples = function(these_sample_ids,
           maf_df_list[[this_sample]]=maf_df
         }
       }else{
-        maf_df_list = mclapply(these_sample_ids,function(x){get_ssm_by_sample(
+        maf_df_list = parallel::mclapply(these_sample_ids,function(x){get_ssm_by_sample(
         this_sample_id=x,
         these_samples_metadata = these_samples_metadata,
         tool_name = tool_name,
