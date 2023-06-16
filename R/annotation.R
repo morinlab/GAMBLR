@@ -492,9 +492,9 @@ annotate_sv = function(sv_data,
 #' allele "C" and reference allele "G" sequence will be checked, respectively. ("NO" for the rows that have different reference
 #' alleles) 
 #'
-#' @param maf: MAF file (required columns: Reference_Allele, Chromosome, Start_Position, End_Position)
-#' @param fastaPath: Should be the path to the FASTA file
+#' @param maf: MAF data frame (required columns: Reference_Allele, Chromosome, Start_Position, End_Position)
 #' @param motif: The motif sequence
+#' @param projection: The genome build projection for the variants you are working with 
 #'
 #' @return A data frame with two extra columns (seq and matched).
 #'
@@ -508,15 +508,23 @@ annotate_sv = function(sv_data,
 #' @export
 #'
 #' @examples
-#' findMotif(maf, "./*.fa", "WRCY")
+#' findMotif(maf, "WRCY", "hg38")
 #' 
 
 
 #This function check that if the motif pattern is in the sequence
 findMotif = function(maf,
-                     fastaPath,
-                     motif
+                     motif,
+                     projection
                      ){
+    if (projection == "grch37") {
+      maf$Chromosome = gsub("chr", "", maf$Chromosome)
+    } else {
+      maf$Chromosome = gsub("chr", "", maf$Chromosome) # if there is a mix of prefixed and non-prefixed options
+      maf$Chromosome = paste0("chr", maf$Chromosome)
+    }
+    base = check_config_value(config::get("lcr-modules_references"))
+    fastaPath = paste0(base,"genomes/",projection,"/genome_fasta/genome.fa")
     fasta <- Rsamtools::FaFile(file = fastaPath)
      # This section provides the sequence
     sequences <- maf %>%
@@ -588,9 +596,8 @@ findMotif = function(maf,
         } 
     }
     strRevComp = paste(IUPACRevCompMotif, collapse = "")
-    motifPattern <- list(strForMotif, strRevComp)
   
-  #This section checks for the presence of the motif in the sequence
+     #This section checks for the presence of the motif in the sequence
     finder <- sequences %>%
         mutate(matched = ifelse(
             Reference_Allele == "C",
