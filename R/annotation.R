@@ -517,7 +517,7 @@ annotate_sv = function(sv_data,
 findMotif = function(maf,
                      fastaPath,
                      motif,
-                     projection == "grch37"
+                     projection = "grch37"
                      ){
     if (projection == "grch37") {
       maf$Chromosome = gsub("chr", "", maf$Chromosome)
@@ -528,10 +528,9 @@ findMotif = function(maf,
     if (missing(fastaPath)){
         base = check_config_value(config::get("repo_base"))
         fastaPath = paste0(base,"ref/lcr-modules-references-STABLE/genomes/",projection,"/genome_fasta/genome.fa")
-    }else {
-        if (!file.exists(fastaPath)) {
-          stop("Failed to find the fasta file")
-        }
+    }
+    if (!file.exists(fastaPath)) {
+      stop("Failed to find the fasta file")
     }
     fasta <- Rsamtools::FaFile(file = fastaPath)
      # This section provides the sequence
