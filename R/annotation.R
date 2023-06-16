@@ -527,21 +527,48 @@ findMotif = function(maf,
     }
     if (missing(fastaPath)){
         base = check_config_value(config::get("repo_base"))
-        fastaPath = paste0(base,"ref/lcr-modules-references-STABLE/genomes/",projection,"/genome_fasta/genome.fa")
+        fastaPath = paste0(
+            base,
+            "ref/lcr-modules-references-STABLE/genomes/",
+            projection,
+            "/genome_fasta/genome.fa"
+        )
     }
     if (!file.exists(fastaPath)) {
-      stop("Failed to find the fasta file")
+        stop("Failed to find the fasta file")
     }
     fasta <- Rsamtools::FaFile(file = fastaPath)
      # This section provides the sequence
     sequences <- maf %>%
-        mutate(seq = ifelse(
-             Reference_Allele == "C",
-             getSeq(fasta, GRanges(maf$Chromosome,IRanges(start = maf$Start_Position - 2, end =maf$End_Position + 1))),
-             ifelse(
-                 Reference_Allele == "G",
-                 getSeq(fasta, GRanges(maf$Chromosome,IRanges(start = maf$Start_Position - 1, end =maf$End_Position + 2))),
-                 "NO")))
+        mutate(
+            seq = ifelse(
+                Reference_Allele == "C",
+                    getSeq(
+                        fasta,
+                        GRanges(
+                            maf$Chromosome,
+                            IRanges(
+                                start = maf$Start_Position - 2,
+                                end = maf$End_Position + 1
+                            )
+                        )
+                    ),
+                     ifelse(
+                         Reference_Allele == "G",
+                         getSeq(
+                             fasta,
+                             GRanges(
+                                 maf$Chromosome,
+                                 IRanges(
+                                     start = maf$Start_Position - 1,
+                                     end =maf$End_Position + 2
+                                 )
+                             )
+                          ),
+                           "NO"
+                     )
+            )
+        )
   
      # This section provides motif and its reverse complement 
     compliment <- c(
@@ -606,12 +633,20 @@ findMotif = function(maf,
   
      #This section checks for the presence of the motif in the sequence
     finder <- sequences %>%
-        mutate(matched = ifelse(
-            Reference_Allele == "C",
-            str_detect(sequences$seq, strForMotif),
-            ifelse(
-                Reference_Allele == "G",
-                str_detect(sequences$seq, strRevComp),
-                "NO")))
+        mutate(
+            matched = ifelse(
+              Reference_Allele == "C",
+              str_detect(
+                  sequences$seq, strForMotif
+              ),
+              ifelse(
+                  Reference_Allele == "G",
+                  str_detect(
+                      sequences$seq, strRevComp
+                  ),
+                   "NO"
+              )
+            )
+        )
     return(finder)
 }
