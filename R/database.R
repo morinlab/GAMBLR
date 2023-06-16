@@ -679,9 +679,9 @@ get_gambl_metadata = function(seq_type_filter = "genome",
     dplyr::select(-sex)
 
   #if only normals were requested, just return what we have because there is nothing else to join
-  #if(tissue_status_filter == "normal"){
-  #  return(sample_meta)
-  #}
+  if(tissue_status_filter == "normal"){
+    return(sample_meta)
+  }
 
   #if we only care about genomes, we can drop/filter anything that isn't a tumour genome
   #The key for joining this table to the mutation information is to use sample_id. Think of this as equivalent to a library_id. It will differ depending on what assay was done to the sample.
@@ -1381,8 +1381,10 @@ get_manta_sv = function(these_sample_ids,
                         pass = TRUE,
                         pairing_status,
                         from_flatfile = TRUE,
-                        verbose = TRUE){
-
+                        verbose = TRUE,
+                        from_cache = TRUE,
+                        write_to_file = FALSE){
+  
   if(!missing(region)){
     region = gsub(",", "", region)
     split_chunks = unlist(strsplit(region, ":"))
@@ -1391,92 +1393,131 @@ get_manta_sv = function(these_sample_ids,
     qstart = startend[1]
     qend = startend[2]
   }
-
+  
+  #get paths
+  output_base = check_config_value(config::get("cmattsson")) #temporary config value for testing purposes
+  output_file = check_config_value(config::get("results_merged")$manta_sv) #temporary config value for testing purposes
+  output_file = paste0(output_base, output_file)
+  output_file = glue::glue(output_file)
+  
+  #get samples with the dedicated helper function
+  this_meta = id_ease(these_samples_metadata = these_samples_metadata,
+                      these_sample_ids = these_sample_ids,
+                      verbose = verbose,
+                      this_seq_type = "genome", #only genome samples have manta results
+                      return_this = "metadata") #this is the expected format for this function, see the parameter description in id_ease for more info.
+  
+  if(write_to_file){
+    from_cache = FALSE #override default automatically for nonsense combination of options
+  }
+  
   if(from_flatfile){
-    all_sv = get_combined_sv(projection = projection)
-
-    #sample IDs are provided, metadata is not
-    if(!missing(these_sample_ids) && missing(these_samples_metadata)){
-      all_meta = get_gambl_metadata() %>%
-        dplyr::filter(sample_id %in% these_sample_ids)
-    }
-
-    #metadata is provided, sample IDs are not.
-    if(!missing(these_samples_metadata) && missing(these_sample_ids)){
-      all_meta = these_samples_metadata
-    }
-
-    #missing sample IDs and metadata
-    if(missing(these_sample_ids) && missing(these_samples_metadata)){
-      all_meta = get_gambl_metadata()
-    }
-
-    #both metadata and sample IDs are provided
-    if(!missing(these_samples_metadata) && !missing(these_sample_ids)){
-      #sanity check to see if the provided sample ID(s) are in the provided metadata
-        message("Warning, you have provided both sample ID(s) (with `these_sample_ids`) and metadata (with `these_samples_meetadata`)")
-        message("This function will now default to the sample IDs present in the metadata table...")
-        all_meta = these_samples_metadata
+    if(from_cache){
+      if(verbose){
+        message("\nReading cached results...\n") 
       }
-
-    #add pairing status to get_combined_sv return
-    sub_meta = all_meta %>%
-      dplyr::select(sample_id, pairing_status) %>%
-      rename(pair_status = pairing_status)
-
-    all_sv = left_join(all_sv, sub_meta, by = c("tumour_sample_id" = "sample_id"))
-
-    #get metadata for samples currently missing from the merged results
-    missing_samples = all_meta %>%
-      anti_join(all_sv, by = c("sample_id" = "tumour_sample_id"))
-
-    if(nrow(missing_samples) > 0){
-      #call get manta_sv_by_samples on samples missing from current merge
-      missing_sv = get_manta_sv_by_samples(these_samples_metadata = missing_samples,
-                                           projection = projection,
-                                           min_vaf = min_vaf,
-                                           min_score = min_score,
-                                           pass = pass,
-                                           verbose = verbose)
-
-    #combine current manta merged results with missing samples
-    all_sv = bind_rows(all_sv, missing_sv)
+      
+      #check for missingness of merged manta results
+      if(!file.exists(output_file)){
+        print(paste("missing: ", output_file))
+        message("Cannot find file locally. If working remotely, perhaps you forgot to load your config (see below) or sync your files?")
+        message('Sys.setenv(R_CONFIG_ACTIVE = "remote")')
+      }
+        
+      #read merged data
+      manta_sv = suppressMessages(read_tsv(output_file)) %>% 
+                                    dplyr::filter(tumour_sample_id %in% this_meta$sample_id)
+      
+      no_manta = setdiff(this_meta$sample_id, manta_sv$tumour_sample_id)
+      
+      if(length(no_manta) > 0){
+        message("No Manta results found for the following sample IDs:")
+        print(no_manta)
+      }
+      
+    }else{
+      if(write_to_file){
+        #enforce all available samples to in the merge, if the user decides to overwrite the cached results
+        this_meta = get_gambl_metadata(seq_type_filter = "genome")
+      }
+        
+      #compile the merge based on selected projection (with no filters)
+      if(verbose){
+        message("\nFrom cache is set to FALSE, this function is now compiling a new merged results file for the selected projection...") 
+      }
+      
+      manta_sv = get_manta_sv_by_samples(these_samples_metadata = all_metadata, 
+                                         verbose = verbose, 
+                                         min_vaf = 0, 
+                                         pass = FALSE, 
+                                         min_score = 0, 
+                                         projection = projection)
+      
+      #ensure only sample IDs in the full metadata table are kept (i.e if a sample is not in the metadata table, no manta results for any such sample will sneak its way into the merged results file)
+      manta_sv = manta_sv %>%
+        dplyr::filter(tumour_sample_id %in% this_meta$sample_id)
+      
+      if(write_to_file){
+        if(verbose){
+          message(paste0("\nWriting merged results to: ", output_file))
+        }
+        
+        write_tsv(manta_sv, 
+                  file = output_file, 
+                  append = FALSE)
+      }
     }
   }else{
-    stop("database usage is deprecated, please set from_flatfile to TRUE...")
+    stop("\nDatabase usage is deprecated, please set from_flatfile to TRUE...")
   }
-
+  
   if(!missing(region) || !missing(chromosome)){
     suppressWarnings({
-      if(grepl("chr",chromosome)){
+      if(grepl("chr", chromosome)){
         chromosome = gsub("chr", "", chromosome)
       }
     })
-
-    all_sv = all_sv %>%
+    
+    manta_sv = manta_sv %>%
       dplyr::filter((CHROM_A == chromosome & START_A >= qstart & START_A <= qend) | (CHROM_B == chromosome & START_B >= qstart & START_B <= qend))
   }
-
+  
+  if(verbose){
+    message("\nThe following VCF filters are applied;")
+    message(paste0("  Minimum VAF: ", min_vaf))
+    message(paste0("  Minimum Score: ", min_score))
+    message(paste0("  Only keep variants passing the quality filter: ", pass))
+  }
+  
   #VAF and somatic score filtering
-  all_sv = all_sv %>%
+  manta_sv = manta_sv %>%
     dplyr::filter(VAF_tumour >= min_vaf & SCORE >= min_score)
-
+  
   #PASS filter
   if(pass){
-    all_sv = all_sv %>%
+    manta_sv = manta_sv %>%
       dplyr::filter(FILTER == "PASS")
   }
-
+  
   #pairing status filter
   if(!missing(pairing_status)){
-    all_sv = all_sv %>%
+    if(verbose){
+      message(paste0("  Pairing statuus: ", pairing_status)) 
+    }
+    manta_sv = manta_sv %>%
       dplyr::filter(pair_status == pairing_status)
   }
-
-  #as data frame
-  all_sv = as.data.frame(all_sv)
-
-  return(all_sv)
+  
+  #convert to data frame and print some metrics
+  manta_sv = as.data.frame(manta_sv)
+  
+  if(verbose){
+    n_variants = nrow(manta_sv)
+    unique_samples = unique(manta_sv$tumour_sample_id)
+    message(paste0("\nReturning ", n_variants, " variants from ", length(unique_samples), " sample(s)"))
+    message("\nDone!") 
+  }
+  return(manta_sv)
 }
 
 
