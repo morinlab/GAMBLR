@@ -494,12 +494,12 @@ annotate_sv = function(sv_data,
 #'
 #' @param maf: MAF data frame (required columns: Reference_Allele, Chromosome, Start_Position, End_Position)
 #' @param fastaPath: Can be a path to a FASTA file
-#' @param motif: The motif sequence
+#' @param motif: The motif sequence (default is WRCY)
 #' @param projection: The genome build projection for the variants you are working with (default is grch37)
 #'
 #' @return A data frame with two extra columns (seq and matched).
 #'
-#' @import Rsamtools readr dplyr
+#' @import Rsamtools GenomicRanges IRanges readr dplyr
 #' @installation
 #' # Install Rsamtools
 # if (!require("BiocManager", quietly = TRUE))
@@ -516,14 +516,15 @@ annotate_sv = function(sv_data,
 #This function check that if the motif pattern is in the sequence
 findMotif = function(maf,
                      fastaPath,
-                     motif,
+                     motif = "WRCY",
                      projection = "grch37"
                      ){
     if (projection == "grch37") {
-      maf$Chromosome = gsub("chr", "", maf$Chromosome)
+        maf$Chromosome = gsub("chr", "", maf$Chromosome)
     } else {
-      maf$Chromosome = gsub("chr", "", maf$Chromosome) # if there is a mix of prefixed and non-prefixed options
-      maf$Chromosome = paste0("chr", maf$Chromosome)
+      # if there is a mix of prefixed and non-prefixed options
+        maf$Chromosome = gsub("chr", "", maf$Chromosome) 
+        maf$Chromosome = paste0("chr", maf$Chromosome)
     }
     if (missing(fastaPath)){
         base = check_config_value(config::get("repo_base"))
@@ -537,15 +538,20 @@ findMotif = function(maf,
     if (!file.exists(fastaPath)) {
         stop("Failed to find the fasta file")
     }
+    if (!motif == "WRCY"){
+        stop("It is only currently available for WRCY. ",
+             "To use it for another motif, comment \"if\" code for the motif"
+        )
+    }
     fasta <- Rsamtools::FaFile(file = fastaPath)
      # This section provides the sequence
     sequences <- maf %>%
-        mutate(
+        dplyr::mutate(
             seq = ifelse(
                 Reference_Allele == "C",
-                    getSeq(
+                    Rsamtools::getSeq(
                         fasta,
-                        GRanges(
+                        GenomicRanges::GRanges(
                             maf$Chromosome,
                             IRanges(
                                 start = maf$Start_Position - 2,
@@ -555,13 +561,13 @@ findMotif = function(maf,
                     ),
                      ifelse(
                          Reference_Allele == "G",
-                         getSeq(
+                         Rsamtools::getSeq(
                              fasta,
-                             GRanges(
+                             GenomicRanges::GRanges(
                                  maf$Chromosome,
                                  IRanges(
                                      start = maf$Start_Position - 1,
-                                     end =maf$End_Position + 2
+                                     end = maf$End_Position + 2
                                  )
                              )
                           ),
@@ -612,36 +618,36 @@ findMotif = function(maf,
     forMotif <- character(splitWordLen)
     for (i in seq_along(splitWord)){
         if (splitWord[i] %in% names(IUPACCodeDict)){
-          forMotif[i] = IUPACCodeDict[splitWord[i]]
+            forMotif[i] = IUPACCodeDict[splitWord[i]]
         }
     }
     strForMotif = paste(forMotif, collapse = "")
     RevCompMotif = character(splitWordLen)
     for (i in seq_along(splitWord)){
         if (splitWord[i] %in% names(compliment)){
-          RevCompMotif[i] = compliment[splitWord[i]]
+            RevCompMotif[i] = compliment[splitWord[i]]
         }
     }
     vecRevComp = rev(RevCompMotif)
     IUPACRevCompMotif = character(splitWordLen)
     for (i in seq_along(vecRevComp)){
         if (vecRevComp[i] %in% names(IUPACCodeDict)){
-          IUPACRevCompMotif[i] = IUPACCodeDict[vecRevComp[i]]
+            IUPACRevCompMotif[i] = IUPACCodeDict[vecRevComp[i]]
         } 
     }
     strRevComp = paste(IUPACRevCompMotif, collapse = "")
   
      #This section checks for the presence of the motif in the sequence
     finder <- sequences %>%
-        mutate(
+        dplyr::mutate(
             matched = ifelse(
               Reference_Allele == "C",
-              str_detect(
+              stringr::str_detect(
                   sequences$seq, strForMotif
               ),
               ifelse(
                   Reference_Allele == "G",
-                  str_detect(
+                  stringr::str_detect(
                       sequences$seq, strRevComp
                   ),
                    "NO"
