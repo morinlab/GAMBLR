@@ -11,7 +11,6 @@ default:
     archive: "/projects/rmorin/projects/gambl_results/"
     derived_and_curated: "icgc_dart/derived_and_curated_metadata/"
     database_name: "gambl_test"
-    lcr-modules_references: "/projects/rmorin/projects/gambl-repos/gambl-kdreval/ref/lcr-modules-references-STABLE/"
     results_staging:
         manta: "manta_current/level_3/01-gamblr_preprocess/"
     results_merged:

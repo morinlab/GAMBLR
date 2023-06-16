@@ -493,8 +493,9 @@ annotate_sv = function(sv_data,
 #' alleles) 
 #'
 #' @param maf: MAF data frame (required columns: Reference_Allele, Chromosome, Start_Position, End_Position)
+#' @param fastaPath: Can be a path to a FASTA file
 #' @param motif: The motif sequence
-#' @param projection: The genome build projection for the variants you are working with 
+#' @param projection: The genome build projection for the variants you are working with (default is grch37)
 #'
 #' @return A data frame with two extra columns (seq and matched).
 #'
@@ -514,8 +515,9 @@ annotate_sv = function(sv_data,
 
 #This function check that if the motif pattern is in the sequence
 findMotif = function(maf,
+                     fastaPath,
                      motif,
-                     projection
+                     projection == "grch37"
                      ){
     if (projection == "grch37") {
       maf$Chromosome = gsub("chr", "", maf$Chromosome)
@@ -523,8 +525,14 @@ findMotif = function(maf,
       maf$Chromosome = gsub("chr", "", maf$Chromosome) # if there is a mix of prefixed and non-prefixed options
       maf$Chromosome = paste0("chr", maf$Chromosome)
     }
-    base = check_config_value(config::get("lcr-modules_references"))
-    fastaPath = paste0(base,"genomes/",projection,"/genome_fasta/genome.fa")
+    if (missing(fastaPath)){
+        base = check_config_value(config::get("repo_base"))
+        fastaPath = paste0(base,"ref/lcr-modules-references-STABLE/genomes/",projection,"/genome_fasta/genome.fa")
+    }else {
+        if (!file.exists(fastaPath)) {
+          stop("Failed to find the fasta file")
+        }
+    }
     fasta <- Rsamtools::FaFile(file = fastaPath)
      # This section provides the sequence
     sequences <- maf %>%
