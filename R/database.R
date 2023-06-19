@@ -1472,7 +1472,7 @@ get_manta_sv = function(these_sample_ids,
             dplyr::filter(tumour_sample_id %in% gambl_samples$sample_id)
           
           #write merges to file
-          write_tsv(manta_sv, file = output_file, append = FALSE)
+          write_tsv(manta_sv, file = icgc_dart_file, append = FALSE)
           write_tsv(gambl_manta_sv, file = gambl_file, append = FALSE)
         }else{
           stop("You do not have the right permissions to write the manta merged files to disk... ")
