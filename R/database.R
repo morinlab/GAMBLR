@@ -1454,15 +1454,16 @@ get_manta_sv = function(these_sample_ids,
         #get paths and check for file permissions
         output_base = check_config_value(config::get("project_base"))
         icgc_dart_file = check_config_value(config::get("results_merged")$manta_sv$icgc_dart)
-        icgc_dart_file = paste0(output_base, output_file)
+        icgc_dart_file = paste0(output_base, icgc_dart_file)
         icgc_dart_file = glue::glue(icgc_dart_file)
+        icgc_dart_folder = gsub(paste0("manta.genome--", projection, ".bedpe"), "", icgc_dart_file)
         
-        icgc_permissions = file.access(icgc_dart_file, 2) #check write permission
-
+        icgc_permissions = file.access(icgc_dart_folder, 2) #check write permission
+        
         if(icgc_permissions == 0){ #check permissions on the icgc_dart file
           gambl_file = check_config_value(config::get("results_merged")$manta_sv$gambl)
-          gambl_file = paste0(output_base, output_file)
-          gambl_file = glue::glue(output_file)
+          gambl_file = paste0(output_base, gambl_file)
+          gambl_file = glue::glue(gambl_file)
           
           #subset icgc_dart to only gambl samples
           gambl_samples = this_meta %>% 
