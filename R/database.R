@@ -1383,6 +1383,7 @@ get_manta_sv = function(these_sample_ids,
   permissions = file.access(output_file, 4)
   
   if(permissions == - 1){
+    message("No permission for unix group icgc_dart found, resorting to samples belonging to unix group gambl...")
     output_file = check_config_value(config::get("results_merged")$manta_sv$gambl)
     output_file = paste0(output_base, output_file)
     output_file = glue::glue(output_file)
@@ -1412,12 +1413,12 @@ get_manta_sv = function(these_sample_ids,
         message("Cannot find file locally. If working remotely, perhaps you forgot to load your config (see below) or sync your files?")
         message('Sys.setenv(R_CONFIG_ACTIVE = "remote")')
       }
-        
+      
       #read merged data
       manta_sv = suppressMessages(read_tsv(output_file)) %>% 
-                                    dplyr::filter(tumour_sample_id %in% this_meta$sample_id, 
-                                                  VAF_tumour >= min_vaf,
-                                                  SCORE >= min_score)
+        dplyr::filter(tumour_sample_id %in% this_meta$sample_id, 
+                      VAF_tumour >= min_vaf,
+                      SCORE >= min_score)
       
       if(verbose){
         no_manta = setdiff(this_meta$sample_id, manta_sv$tumour_sample_id)
@@ -1431,15 +1432,15 @@ get_manta_sv = function(these_sample_ids,
     }else{
       if(write_to_file){
         #enforce all available samples to in the merge, if the user decides to overwrite the cached results
-        all_meta = get_gambl_metadata(seq_type_filter = "genome")
+        this_meta = get_gambl_metadata(seq_type_filter = "genome")
       }
-        
+
       #compile the merge based on selected projection (with no filters)
       if(verbose){
         message("\nFrom cache is set to FALSE, this function is now compiling a new merged results file for the selected projection...") 
       }
       
-      manta_sv = get_manta_sv_by_samples(these_samples_metadata = this_metadata, 
+      manta_sv = get_manta_sv_by_samples(these_samples_metadata = this_meta, 
                                          verbose = verbose, 
                                          min_vaf = 0, 
                                          pass = FALSE, 
@@ -1451,13 +1452,24 @@ get_manta_sv = function(these_sample_ids,
         dplyr::filter(tumour_sample_id %in% this_meta$sample_id)
       
       if(write_to_file){
-        if(verbose){
-          message(paste0("\nWriting merged results to: ", output_file))
+        if(permissions == 0){ #check permissions on the icgc_dart file
+          gambl_file = check_config_value(config::get("results_merged")$manta_sv$gambl)
+          gambl_file = paste0(output_base, output_file)
+          gambl_file = glue::glue(output_file)
+
+          #subset icgc_dart to only gambl samples
+          gambl_samples = this_meta %>% 
+            dplyr::filter(unix_group == "gambl")
+          
+          gambl_manta_sv = manta_sv %>% 
+            dplyr::filter(tumour_sample_id %in% gambl_samples$sample_id)
+          
+          #write merges to file
+          write_tsv(manta_sv, file = output_file, append = FALSE)
+          write_tsv(gambl_manta_sv, file = gambl_file, append = FALSE)
+        }else{
+          stop("You do not have the right permissions to write the manta merged files to disk... ")
         }
-        
-        write_tsv(manta_sv, 
-                  file = output_file, 
-                  append = FALSE)
       }
     }
   }else{
