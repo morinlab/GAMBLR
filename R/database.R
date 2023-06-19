@@ -1373,22 +1373,7 @@ get_manta_sv = function(these_sample_ids,
     qstart = startend[1]
     qend = startend[2]
   }
-  
-  #get paths and check for file permissions
-  output_base = check_config_value(config::get("project_base"))
-  output_file = check_config_value(config::get("results_merged")$manta_sv$icgc_dart)
-  output_file = paste0(output_base, output_file)
-  output_file = glue::glue(output_file)
-  
-  permissions = file.access(output_file, 4)
-  
-  if(permissions == - 1){
-    message("No permission for unix group icgc_dart found, resorting to samples belonging to unix group gambl...")
-    output_file = check_config_value(config::get("results_merged")$manta_sv$gambl)
-    output_file = paste0(output_base, output_file)
-    output_file = glue::glue(output_file)
-  }
-  
+
   #get samples with the dedicated helper function
   this_meta = id_ease(these_samples_metadata = these_samples_metadata,
                       these_sample_ids = these_sample_ids,
@@ -1402,6 +1387,20 @@ get_manta_sv = function(these_sample_ids,
   
   if(from_flatfile){
     if(from_cache){
+      #get paths and check for file permissions
+      output_base = check_config_value(config::get("project_base"))
+      output_file = check_config_value(config::get("results_merged")$manta_sv$icgc_dart)
+      output_file = paste0(output_base, output_file)
+      output_file = glue::glue(output_file)
+      
+      permissions = file.access(output_file, 4) #check read permissions
+      
+      if(permissions == -1){
+        message("No permission for unix group icgc_dart found, resorting to samples belonging to unix group gambl...")
+        output_file = check_config_value(config::get("results_merged")$manta_sv$gambl)
+        output_file = paste0(output_base, output_file)
+        output_file = glue::glue(output_file)
+      }
       if(verbose){
         message(paste0("\nThe cached results were last updated: ", file.info(output_file)$ctime))
         message("\nReading cached results...\n") 
@@ -1434,7 +1433,7 @@ get_manta_sv = function(these_sample_ids,
         #enforce all available samples to in the merge, if the user decides to overwrite the cached results
         this_meta = get_gambl_metadata(seq_type_filter = "genome")
       }
-
+      
       #compile the merge based on selected projection (with no filters)
       if(verbose){
         message("\nFrom cache is set to FALSE, this function is now compiling a new merged results file for the selected projection...") 
@@ -1452,11 +1451,19 @@ get_manta_sv = function(these_sample_ids,
         dplyr::filter(tumour_sample_id %in% this_meta$sample_id)
       
       if(write_to_file){
-        if(permissions == 0){ #check permissions on the icgc_dart file
+        #get paths and check for file permissions
+        output_base = check_config_value(config::get("project_base"))
+        icgc_dart_file = check_config_value(config::get("results_merged")$manta_sv$icgc_dart)
+        icgc_dart_file = paste0(output_base, output_file)
+        icgc_dart_file = glue::glue(icgc_dart_file)
+        
+        icgc_permissions = file.access(icgc_dart_file, 2) #check write permission
+
+        if(icgc_permissions == 0){ #check permissions on the icgc_dart file
           gambl_file = check_config_value(config::get("results_merged")$manta_sv$gambl)
           gambl_file = paste0(output_base, output_file)
           gambl_file = glue::glue(output_file)
-
+          
           #subset icgc_dart to only gambl samples
           gambl_samples = this_meta %>% 
             dplyr::filter(unix_group == "gambl")
