@@ -83,7 +83,7 @@ get_gambl_metadata() %>%
   head()
 ```
 
-### Approach 2 - The Full Instalation (Snakemake)
+### Approach 2 - The Full Installation (Snakemake)
 This section details how to obtain GAMBLR with **full** functionality, using a dedicated snake file to retrieve all necessary files and dependencies.
 
 #### Before You Get Started
@@ -104,12 +104,14 @@ git clone https://github.com/morinlab/GAMBLR
 mkdir ~/gambl_results/
 ```
 
-4. Update paths under `remote` in your **local** [config.yml](https://github.com/morinlab/GAMBLR/blob/master/config.yml) (GAMBLR) to point to the recently cloned, local **gambl** folder (*repo_base*) and recently created **gambl_results** (*project_base*) folder. For example:
+4. Update paths under `remote` in your **local** [config.yml](https://github.com/morinlab/GAMBLR/blob/master/config.yml) (GAMBLR) to point to the recently cloned, local **gambl** folder (*repo_base*) and recently created **gambl_results** (*project_base*) folder. Also, update the *host* field to contain your username (you can use any gphost here). For example:
 
 ```
 remote:
     project_base: "~/gambl_results/"
     repo_base: "~/git_repos/gambl-master/"
+    ...
+    host: "your_username@gphost01.bcgsc.ca"
 ```
 
 5. Copy the following files (from your recently cloned [GAMBLR](https://github.com/morinlab/GAMBLR) directory) into the folder from the previous step; `config.yml` and `get_gambl_results.smk`.
@@ -141,7 +143,7 @@ devtools::install()
 ```
 
 #### Create and Setup Snakemake Environment
-9. In the terminal on your local machine, create a new snakemake environment from the [get_gambl_results.yml](https://github.com/morinlab/GAMBLR/blob/master/get_gambl_results.yml) file. Note that you can name this new environment whatever you would like. In this example, the new environment is called **snakemake_gambl**.
+9. In the terminal on your local machine, create a new snakemake environment from the [get_gambl_results.yml](https://github.com/morinlab/GAMBLR/blob/master/get_gambl_results.yml) file ([get_gambl_results_linux.yml](https://github.com/morinlab/GAMBLR/blob/master/get_gambl_results_linux.yml) for Linux). Note that you can name this new environment whatever you would like. In this example, the new environment is called **snakemake_gambl**.
 
 ```
 cd ~/gambl_results
@@ -161,11 +163,17 @@ snakemake -s get_gambl_results.smk --cores 1
 ```
 
 #### Use GAMBLR Functions Locally
-12. In Rstudio (local), open [test_remote.R](https://github.com/morinlab/GAMBLR/blob/master/test_remote.R) in GAMBLR master folder.
-13. Execute the following in Rstudio console to make use of the updated paths in the [config.yml](https://github.com/morinlab/GAMBLR/blob/master/config.yml) from step 5 (line 5 in [test_remote.r](https://github.com/morinlab/GAMBLR/blob/master/test_remote.R))
+12. In Rstudio (local), open [test_remote.R](https://github.com/morinlab/GAMBLR/blob/master/resources/test_remote.R) in GAMBLR master folder.
+13. Execute the following in Rstudio console to make use of the updated paths in the [config.yml](https://github.com/morinlab/GAMBLR/blob/master/config.yml) from step 5 (line 5 in [test_remote.r](https://github.com/morinlab/GAMBLR/blob/master/resources/test_remote.R))
 
 ```
 Sys.setenv(R_CONFIG_ACTIVE = "remote")
+```
+
+Alternatively, you can add the content of ~/git_repos/GAMBLR/.Rprofile to your ~/.Rprofile file. In this way, you do not need to enter the command above every time you start your R session.
+
+```
+cat ~/git_repos/GAMBLR/.Rprofile >> ~/.Rprofile
 ```
 
 14. Check what files (if any) are currently missing.
@@ -174,7 +182,7 @@ Sys.setenv(R_CONFIG_ACTIVE = "remote")
 check_gamblr_config()
 ```
 
-15. You should now be all set to explore a collection of GAMBLR function remotely on your local machine. For example you could try the following test code to ensure your setup was successful. For a set of comprehensive examples and tutorials, please refer to the [test_remote.r](https://github.com/morinlab/GAMBLR/blob/master/test_remote.R) script.
+15. You should now be all set to explore a collection of GAMBLR function remotely on your local machine. For example you could try the following test code to ensure your setup was successful. For a set of comprehensive examples and tutorials, please refer to the [test_remote.r](https://github.com/morinlab/GAMBLR/blob/master/resources/test_remote.R) script.
 
 ```
 get_gambl_metadata() %>%
