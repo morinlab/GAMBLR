@@ -4964,12 +4964,10 @@ supplement_maf <- function(incoming_maf,
 #' @param return_this Let's the user control what they want back, i.e sample IDs as a vector of characters or a metadata object as a data frame.
 #' Default is "sample_id". The other acceptable value for this a parameter is "metadata". 
 #' The desired return might depend on the required input for any given GAMBLR function, further downstream (i.e some functions expect a vector of sample IDs, other a metadata table)
-#' @param all_samples
 #' @param verbose Set to FALSE to limit the information that gets printed to the console. Default is TRUE.
 #'
 #' @return A character of vectors with Sample IDs (default) or a data frame with metadata (see `id_ease`).
 #'
-#' @import
 #' @export
 #'
 #' @examples
