@@ -4,19 +4,19 @@
 \alias{findMotif}
 \title{Annotate mutations target AID motif}
 \usage{
-findMotif(maf, fastaPath, motif = "WRCY", projection = "grch37")
+findMotif(maf, motif = "WRCY", projection = "grch37", fastaPath)
 }
 \arguments{
 \item{maf:}{MAF data frame (required columns: Reference_Allele, Chromosome, Start_Position, End_Position)}
 
-\item{fastaPath:}{Can be a path to a FASTA file}
-
 \item{motif:}{The motif sequence (default is WRCY)}
 
 \item{projection:}{The genome build projection for the variants you are working with (default is grch37)}
+
+\item{fastaPath:}{Can be a path to a FASTA file}
 }
 \value{
-A data frame with two extra columns (seq and matched).
+A data frame with two extra columns (seq and motif).
 }
 \description{
 Checks for the presence of mutations at a given AID motif
@@ -30,6 +30,8 @@ allele "C" and reference allele "G" sequence will be checked, respectively. ("NO
 alleles)
 }
 \examples{
-findMotif(maf, "WRCY", "hg38")
-
+findMotif(maf = maf,
+          motif = "WRCY",
+          projection = "hg38"
+         )
 }
