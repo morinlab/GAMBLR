@@ -1309,28 +1309,31 @@ get_combined_sv = function(min_vaf = 0,
 #' To return SV calls for multiple samples, give `these_sample_ids` a vector of sample IDs, if only one sample is desired,
 #' give this parameter one sample ID, as a string (or a vector of characters). The user can also call the `these_samples_metadata`
 #' parameter to make use of an already subset metadata table. In this case, the returned calls will be restricted to the sample_ids
-#' within that data frame. This function relies on a set of specific internal functions [GAMBLR::id_ease], [GAMBLR::get_manta_sv_by_samples].
+#' within that data frame. This function relies on a set of specific internal functions [GAMBLR::id_ease] and [GAMBLR::get_manta_sv_by_samples] (if `from_cache = FALSE`).
 #' This function can also restrict the returned calls to any genomic regions specified within `chromosome`, `qstart`, `qend`, 
-#' or the complete region specified under `region` (in chr:start-end format).
+#' or the complete region specified under `region` (in chr:start-end format), note that chromosome can be either prefixed or not prefixed.
 #' Useful filtering parameters are also available, use `min_vaf` to set the minimum tumour VAF for a SV to be returned and `min_score`
-#' to set the lowest Manta somatic score for a SV to be returned. `pair_status` can be used to only return variants that are
-#' annotated with PASS in the filtering column (VCF).
+#' to set the lowest Manta somatic score for a SV to be returned. `pair_status` can be used to return variants from either matched or unmatched samples.
+#' In addition, the user can chose to return all variants, even the ones not passing the filter criteria. To do so, set `pass = FALSE` (default is TRUE).
+#' Is it adviseed to run this function with `from_cache = TRUE` (default) to read manta calls from a previous generated merge (cached result).
+#' If set to FALSE in combination with `write_to_file = TRUE`, the function will generate new merged manta calls, if the data access restriction allows it.
+#' Note, that if `write_to_file` is set to TRUE, the function autodefaults `from_cache = FALSE` to avoid nonsense parameter combinations.
 #' Is this function not what you are looking for? Try one of the following, similar, functions;
 #' [GAMBLR::get_combined_sv], [GAMBLR::get_manta_sv_by_sample], [GAMBLR::get_manta_sv_by_samples]
 #'
 #' @param these_sample_ids A vector of multiple sample_id (or a single sample ID as a string) that you want results for.
 #' @param these_samples_metadata A metadata table to auto-subset the data to samples in that table before returning.
-#' @param projection The projection genome build.
-#' @param chromosome Optional, the chromosome you are restricting to.
+#' @param projection The projection genome build. Default is grch37.
+#' @param chromosome Optional, the chromosome you are restricting to (can be prefixed or not prefixed).
 #' @param qstart Optional, query start coordinate of the range you are restricting to.
 #' @param qend Optional, query end coordinate of the range you are restricting to.
-#' @param region Optional, region formatted like chrX:1234-5678 instead of specifying chromosome, start and end separately.
+#' @param region Optional, region formatted like chrX:1234-5678 (chromosome can be prefixed or not prefixed) instead of specifying chromosome, start and end separately.
 #' @param min_vaf The minimum tumour VAF for a SV to be returned. Default is 0.1.
 #' @param min_score The lowest Manta somatic score for a SV to be returned. Default is 40.
-#' @param pass If set to TRUE, only return SVs that are annotated with PASS in the FILTER column. Set to FALSE to keep all variants, regardless if they PASS the filters. Default is TRUE.
-#' @param pairing_status Use to restrict results (if desired) to matched or unmatched results (default is to return all).
+#' @param pass If TRUE (default) only return SVs that are annotated with PASS in the FILTER column. Set to FALSE to keep all variants, regardless if they PASS the filters.
+#' @param pairing_status Use to restrict results (if desired) to matched or unmatched results (default is to return all). This parameter takes the filtering condition as a string ("matched" or "unmatched").
 #' @param from_flatfile Set to TRUE by default, FALSE is no longer supported (database).
-#' @param verbose Set to FALSE to prevent the path of the requested bedpe file to be printed.
+#' @param verbose Set to FALSE to minimize the output to console. Default is TRUE. This parameter also dictates the verbose-ness of any helper function internally called inside the main function.
 #' @param from_cache Boolean variable for using cached results, default is TRUE. If `write_to_file = TRUE`, this parameter auto-defaults to FALSE.
 #' @param write_to_file Boolean statement that outputs bedpe file if TRUE, default is FALSE. Setting this to TRUE forces `from_cache = FALSE`.
 #'
@@ -1430,7 +1433,7 @@ get_manta_sv = function(these_sample_ids,
       
     }else{
       if(write_to_file){
-        #enforce all available samples to in the merge, if the user decides to overwrite the cached results
+        #enforce all samples in the altest metadata to be in the merge, if the user decides to overwrite the cached results.
         this_meta = get_gambl_metadata(seq_type_filter = "genome")
       }
       
@@ -1458,9 +1461,9 @@ get_manta_sv = function(these_sample_ids,
         icgc_dart_file = glue::glue(icgc_dart_file)
         icgc_dart_folder = gsub(paste0("manta.genome--", projection, ".bedpe"), "", icgc_dart_file)
         
-        icgc_permissions = file.access(icgc_dart_folder, 2) #check write permission
+        icgc_permissions = file.access(icgc_dart_folder, 2) #get write permission for the icgc_dart merge (all samples).
         
-        if(icgc_permissions == 0){ #check permissions on the icgc_dart file
+        if(icgc_permissions == 0){ #get path to gambl samples only merge, if user has acces to the icgc_dart merge.
           gambl_file = check_config_value(config::get("results_merged")$manta_sv$gambl)
           gambl_file = paste0(output_base, gambl_file)
           gambl_file = glue::glue(gambl_file)
@@ -1484,12 +1487,17 @@ get_manta_sv = function(these_sample_ids,
     stop("\nDatabase usage is deprecated, please set from_flatfile to TRUE...")
   }
   
+  #deal with chr prefixes based on the selected projection (if return is to be subset to regions...)
   if(!missing(region) || !missing(chromosome)){
-    suppressWarnings({
+    if(projection == "grch37"){
       if(grepl("chr", chromosome)){
         chromosome = gsub("chr", "", chromosome)
       }
-    })
+    }else if(projection == "hg38"){
+      if(!grepl("chr", chromosome)){
+          chromosome = paste0("chr", chromosome)
+      }
+    }
     
     manta_sv = manta_sv %>%
       dplyr::filter((CHROM_A == chromosome & START_A >= qstart & START_A <= qend) | (CHROM_B == chromosome & START_B >= qstart & START_B <= qend))
