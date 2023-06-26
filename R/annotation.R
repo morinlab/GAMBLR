@@ -493,31 +493,27 @@ annotate_sv = function(sv_data,
 #' alleles) 
 #'
 #' @param maf: MAF data frame (required columns: Reference_Allele, Chromosome, Start_Position, End_Position)
-#' @param fastaPath: Can be a path to a FASTA file
 #' @param motif: The motif sequence (default is WRCY)
 #' @param projection: The genome build projection for the variants you are working with (default is grch37)
+#' @param fastaPath: Can be a path to a FASTA file
 #'
-#' @return A data frame with two extra columns (seq and matched).
+#' @return A data frame with two extra columns (seq and motif).
 #'
 #' @import Rsamtools GenomicRanges IRanges readr dplyr
-#' @installation
-#' # Install Rsamtools
-# if (!require("BiocManager", quietly = TRUE))
-#   install.packages("BiocManager")
-# 
-# BiocManager::install("Rsamtools")
 #' @export
 #'
 #' @examples
-#' findMotif(maf, "WRCY", "hg38")
-#' 
+#' findMotif(maf = maf,
+#'           motif = "WRCY",
+#'           projection = "hg38"
+#'          )
 
 
 #This function check that if the motif pattern is in the sequence
 findMotif = function(maf,
-                     fastaPath,
                      motif = "WRCY",
-                     projection = "grch37"
+                     projection = "grch37",
+                     fastaPath
                      ){
     if (projection == "grch37") {
         maf$Chromosome = gsub("chr", "", maf$Chromosome)
@@ -529,7 +525,7 @@ findMotif = function(maf,
     # If there is no fastaPath, it will read it from config key 
     # Based on the projection the fasta file which will be loaded is different
     if (missing(fastaPath)){
-        base = check_config_value(config::get("repo_base"))
+        base <- check_config_value(config::get("repo_base"))
         fastaPath = paste0(
             base,
             "ref/lcr-modules-references-STABLE/genomes/",
@@ -623,8 +619,8 @@ findMotif = function(maf,
         'N'= '[ACGT]'  # any base
     )
     word <- motif
-    splitWord = strsplit(word,"")[[1]] # Split the word into its letters
-    splitWordLen = length(splitWord)
+    splitWord <- strsplit(word,"")[[1]] # Split the word into its letters
+    splitWordLen <- length(splitWord)
     forMotif <- character(splitWordLen) # forMotif, the same length as splitWord
     for (i in seq_along(splitWord)){
         # Convert incomplete nuc specification into their different nucleotides
@@ -635,7 +631,7 @@ findMotif = function(maf,
     # Collapsing all the letters of forward orientation and make it 
     # into a single string
     strForMotif = paste(forMotif, collapse = "")
-    RevCompMotif = character(splitWordLen)
+    RevCompMotif <- character(splitWordLen)
     for (i in seq_along(splitWord)){
         if (splitWord[i] %in% names(compliment)){
             # Provide the complement version of the motif
@@ -643,8 +639,8 @@ findMotif = function(maf,
         }
     }
     # Provide the reverse version of RevCompMotif
-    vecRevComp = rev(RevCompMotif)
-    IUPACRevCompMotif = character(splitWordLen)
+    vecRevComp <- rev(RevCompMotif)
+    IUPACRevCompMotif <- character(splitWordLen)
     for (i in seq_along(vecRevComp)){
         if (vecRevComp[i] %in% names(IUPACCodeDict)){
             IUPACRevCompMotif[i] = IUPACCodeDict[vecRevComp[i]]
@@ -659,7 +655,7 @@ findMotif = function(maf,
     # its sequence
     finder <- sequences %>%
         dplyr::mutate(
-            matched = ifelse(
+            !!motif := ifelse(
               Reference_Allele == "C",
               stringr::str_detect(
                   sequences$seq, strForMotif
