@@ -499,7 +499,8 @@ annotate_sv = function(sv_data,
 #'
 #' @return A data frame with two extra columns (seq and motif).
 #'
-#' @import Rsamtools GenomicRanges IRanges readr dplyr
+#' @rawNamespace import(IRanges, except = c("merge", "shift", "collapse", "union", "slice", "intersect", "setdiff", "desc", "reduce"))
+#' @import Rsamtools GenomicRanges readr dplyr
 #' @export
 #'
 #' @examples
@@ -510,23 +511,23 @@ annotate_sv = function(sv_data,
 
 
 #This function check that if the motif pattern is in the sequence
-findMotif = function(maf,
+findMotif <- function(maf,
                      motif = "WRCY",
                      projection = "grch37",
                      fastaPath
                      ){
     if (projection == "grch37") {
-        maf$Chromosome = gsub("chr", "", maf$Chromosome)
+        maf$Chromosome <- gsub("chr", "", maf$Chromosome)
     } else {
         # If there is a mix of prefixed and non-prefixed options
-        maf$Chromosome = gsub("chr", "", maf$Chromosome) 
-        maf$Chromosome = paste0("chr", maf$Chromosome)
+        maf$Chromosome <- gsub("chr", "", maf$Chromosome) 
+        maf$Chromosome <- paste0("chr", maf$Chromosome)
     }
     # If there is no fastaPath, it will read it from config key 
     # Based on the projection the fasta file which will be loaded is different
     if (missing(fastaPath)){
         base <- check_config_value(config::get("repo_base"))
-        fastaPath = paste0(
+        fastaPath <- paste0(
             base,
             "ref/lcr-modules-references-STABLE/genomes/",
             projection,
@@ -630,7 +631,7 @@ findMotif = function(maf,
     }
     # Collapsing all the letters of forward orientation and make it 
     # into a single string
-    strForMotif = paste(forMotif, collapse = "")
+    strForMotif <- paste(forMotif, collapse = "")
     RevCompMotif <- character(splitWordLen)
     for (i in seq_along(splitWord)){
         if (splitWord[i] %in% names(compliment)){
@@ -648,7 +649,7 @@ findMotif = function(maf,
     }
     # Collapsing all the letters of reverse complement orientation and make it 
     # into a single string
-    strRevComp = paste(IUPACRevCompMotif, collapse = "")
+    strRevComp <- paste(IUPACRevCompMotif, collapse = "")
   
     #This section checks for the presence of the motif in the sequence
     # If the reference allele is C, it will check the forward orientation with
