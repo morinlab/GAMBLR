@@ -492,15 +492,16 @@ annotate_sv = function(sv_data,
 #' allele "C" and reference allele "G" sequence will be checked, respectively. ("NO" for the rows that have different reference
 #' alleles) 
 #'
-#' @param maf: MAF data frame (required columns: Reference_Allele, Chromosome, Start_Position, End_Position)
-#' @param motif: The motif sequence (default is WRCY)
-#' @param projection: The genome build projection for the variants you are working with (default is grch37)
-#' @param fastaPath: Can be a path to a FASTA file
+#' @param maf MAF data frame (required columns: Reference_Allele, Chromosome, Start_Position, End_Position)
+#' @param motif The motif sequence (default is WRCY)
+#' @param projection The genome build projection for the variants you are working with (default is grch37)
+#' @param fastaPath Can be a path to a FASTA file
 #'
 #' @return A data frame with two extra columns (seq and motif).
 #'
-#' @rawNamespace import(IRanges, except = c("merge", "shift", "collapse", "union", "slice", "intersect", "setdiff", "desc", "reduce"))
-#' @import Rsamtools GenomicRanges readr dplyr
+#' @rawNamespace import(IRanges, except = c("merge", "shift", "collapse", "union", "slice", "intersect", "setdiff", "desc", "reduce")) 
+#' @rawNamespace import(GenomicRanges, except = c("merge", "shift", "union", "intersect", "setdiff", "reduce"))
+#' @import Rsamtools readr dplyr
 #' @export
 #'
 #' @examples

@@ -7,13 +7,13 @@
 findMotif(maf, motif = "WRCY", projection = "grch37", fastaPath)
 }
 \arguments{
-\item{maf:}{MAF data frame (required columns: Reference_Allele, Chromosome, Start_Position, End_Position)}
+\item{maf}{MAF data frame (required columns: Reference_Allele, Chromosome, Start_Position, End_Position)}
 
-\item{motif:}{The motif sequence (default is WRCY)}
+\item{motif}{The motif sequence (default is WRCY)}
 
-\item{projection:}{The genome build projection for the variants you are working with (default is grch37)}
+\item{projection}{The genome build projection for the variants you are working with (default is grch37)}
 
-\item{fastaPath:}{Can be a path to a FASTA file}
+\item{fastaPath}{Can be a path to a FASTA file}
 }
 \value{
 A data frame with two extra columns (seq and motif).
