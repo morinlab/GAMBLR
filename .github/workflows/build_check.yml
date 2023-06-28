@@ -34,7 +34,7 @@ jobs:
 
     - name: Build package
       run:
-        Rscript -e "devtools::install_github('morinlab/GAMBLR@HoumanLM-maf_to_custom_track')"
+        Rscript -e "devtools::install()"
 
     - name: Check package
       run:
