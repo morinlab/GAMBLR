@@ -2414,19 +2414,35 @@ get_ssm_by_region = function(chromosome,
 
   #check remote connection
   remote_session = check_remote_configuration(auto_connect = TRUE)
-
-  if(streamlined){
-    maf_columns = names(maf_header)[c(6, 16, 42)]
-    maf_column_types = "ici"
-
-  }else if(basic_columns){ #get first 45 columns of the MAF
-    maf_columns = names(maf_header)[c(1:45)]
-    maf_column_types =  "ciccciiccccccclcccclllllllllllllllccccciiiiii"
-  }else{
-    maf_columns = names(maf_header) #return all MAF columns (116)
-    maf_column_types = "ciccciiccccccclcccclllllllllllllllccccciiiiiiccccccccccccinnccccccccccccccccccclcccccccccnclcncccclncccclllllllllicn"
+  
+  if(mode == "strelka2"){
+    message("Mode is set to strelka2. Streamlined = TRUE is hardcoded for this mode...")
+    streamlined = TRUE #force streamlined to TRUE, if strelka2 output is requested.
+    augmented = FALSE #force augmented to FALSE (since t_alt_count column is not available for the strelka2 bed file).
+    maf_columns = c("Chromosome", "Start_Position", "End_Position", "Tumor_Sample_Barcode")
+    maf_column_types = "iiic"
+    
+    #add some checks
+    if(projection == "hg38"){
+      stop("Strelka2 outputs are currently only available in respect to grch37...")
+    }
+    if(seq_type == "capture"){
+      stop("Genome is currently the only available seq_type for strelka2 outputs...")
+    }
+  }else if(mode == "slms-3"){
+    if(streamlined){
+      maf_columns = names(maf_header)[c(6, 16, 42)]
+      maf_column_types = "ici"
+      
+    }else if(basic_columns){ #get first 45 columns of the MAF
+      maf_columns = names(maf_header)[c(1:45)]
+      maf_column_types =  "ciccciiccccccclcccclllllllllllllllccccciiiiii"
+    }else{
+      maf_columns = names(maf_header) #return all MAF columns (116)
+      maf_column_types = "ciccciiccccccclcccclllllllllllllllccccciiiiiiccccccccccccinnccccccccccccccccccclcccccccccnclcncccclncccclllllllllicn"
+    }
   }
-
+  
   #check that maf_columns requested all exist in the header and get their indexes
   if(!all(maf_columns %in% names(maf_header))){
     stop("Cannot find one of the requested maf_columns in your MAF header")
@@ -2462,7 +2478,13 @@ get_ssm_by_region = function(chromosome,
     #use glue to get the absolute path
     maf_path = glue::glue(maf_partial_path)
     full_maf_path = paste0(base_path, maf_path)
-    full_maf_path_comp = paste0(base_path, maf_path, ".bgz")
+
+    if(mode == "slms-3"){
+      full_maf_path_comp = paste0(full_maf_path, ".bgz")
+    }else if(mode == "strelka2"){
+      full_maf_path_comp = gsub('.{3}$', 'bed', full_maf_path) #do we instead want to add the exact path to the file in the config, or is this acceptable?
+      full_maf_path_comp = paste0(full_maf_path_comp, ".gz")
+    }
 
     #check if file is existing or missing
     if(!file.exists(full_maf_path_comp)){
@@ -2525,9 +2547,12 @@ get_ssm_by_region = function(chromosome,
         #}else{
         message(paste("reading from:", full_maf_path_comp))
         #}
-
-        tabix_command = paste("/home/rmorin/miniconda3/bin/tabix", full_maf_path_comp, region, "| cut -f", paste(maf_indexes, collapse = ","))
-
+        if(mode == "slms-3"){
+          tabix_command = paste("/home/rmorin/miniconda3/bin/tabix", full_maf_path_comp, region, "| cut -f", paste(maf_indexes, collapse = ","))
+        }else if(mode == "strelka2"){
+          tabix_command = paste("/home/rmorin/miniconda3/bin/tabix", full_maf_path_comp, region)
+        }
+        
         if(verbose){
           print(tabix_command)
         }
@@ -2537,7 +2562,11 @@ get_ssm_by_region = function(chromosome,
 
       }else{ #(not remote)
         #get tabix command
-        tabix_command = paste(tabix_bin, full_maf_path_comp, region, "| cut -f", paste(maf_indexes, collapse = ","))
+        if(mode == "slms-3"){
+          tabix_command = paste(tabix_bin, full_maf_path_comp, region, "| cut -f", paste(maf_indexes, collapse = ","))
+        }else if(mode == "strelka2"){
+          tabix_command = paste(tabix_bin, full_maf_path_comp, region)
+        }
         if(verbose){
           print(tabix_command)
         }
