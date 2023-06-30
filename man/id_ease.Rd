@@ -11,7 +11,6 @@ id_ease(
   these_samples_metadata,
   these_sample_ids,
   this_seq_type = "genome",
-  return_this = "sample_id",
   verbose = TRUE
 )
 }
@@ -23,14 +22,10 @@ If not provided will retrieve GAMBL metadata for all available samples.}
 
 \item{this_seq_type}{The seq type of interest. Default is genome.}
 
-\item{return_this}{Let's the user control what they want back, i.e sample IDs as a vector of characters or a metadata object as a data frame.
-Default is "sample_id". The other acceptable value for this a parameter is "metadata".
-The desired return might depend on the required input for any given GAMBLR function, further downstream (i.e some functions expect a vector of sample IDs, other a metadata table)}
-
 \item{verbose}{Set to FALSE to limit the information that gets printed to the console. Default is TRUE.}
 }
 \value{
-A character of vectors with Sample IDs (default) or a data frame with metadata (see \code{id_ease}).
+A list with metadata (data frame) as the first element and sample IDs (vector of characters) as the second element.
 }
 \description{
 Convenience function that standardize the way GAMBLR functions deals with sample IDs (these_sample_ids)
@@ -38,7 +33,6 @@ and metadata (these_samples_metadata).
 }
 \details{
 This function can take sample IDs as a vector of characters, or a metadata table in data frame format.
-Based on what is given to \code{return_this}, the function can return either a vector of characters (sample ids) or a data frame (metadata).
 If no sample IDs are provided to the function, the function will operate on all gambl sample IDs available for the given seq type.
 It is highly recommended to run this function with \code{verbose = TRUE} (default).
 Since this will not only improve the overall logic on how the function operates.

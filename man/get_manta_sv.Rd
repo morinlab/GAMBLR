@@ -29,25 +29,25 @@ get_manta_sv(
 
 \item{projection}{The projection genome build. Default is grch37.}
 
-\item{chromosome}{Optional, the chromosome you are restricting to.}
+\item{chromosome}{Optional, the chromosome you are restricting to (can be prefixed or not prefixed).}
 
 \item{qstart}{Optional, query start coordinate of the range you are restricting to.}
 
 \item{qend}{Optional, query end coordinate of the range you are restricting to.}
 
-\item{region}{Optional, region formatted like chrX:1234-5678 instead of specifying chromosome, start and end separately.}
+\item{region}{Optional, region formatted like chrX:1234-5678 (chromosome can be prefixed or not prefixed) instead of specifying chromosome, start and end separately.}
 
 \item{min_vaf}{The minimum tumour VAF for a SV to be returned. Default is 0.1.}
 
 \item{min_score}{The lowest Manta somatic score for a SV to be returned. Default is 40.}
 
-\item{pass}{If set to TRUE, only return SVs that are annotated with PASS in the FILTER column. Set to FALSE to keep all variants, regardless if they PASS the filters. Default is TRUE.}
+\item{pass}{If TRUE (default) only return SVs that are annotated with PASS in the FILTER column. Set to FALSE to keep all variants, regardless if they PASS the filters.}
 
-\item{pairing_status}{Use to restrict results (if desired) to matched or unmatched results (default is to return all).}
+\item{pairing_status}{Use to restrict results (if desired) to matched or unmatched results (default is to return all). This parameter takes the filtering condition as a string ("matched" or "unmatched").}
 
 \item{from_flatfile}{Set to TRUE by default, FALSE is no longer supported (database).}
 
-\item{verbose}{Set to FALSE to minimize the output to console. Default is TRUE.}
+\item{verbose}{Set to FALSE to minimize the output to console. Default is TRUE. This parameter also dictates the verbose-ness of any helper function internally called inside the main function.}
 
 \item{from_cache}{Boolean variable for using cached results, default is TRUE. If \code{write_to_file = TRUE}, this parameter auto-defaults to FALSE.}
 
@@ -64,9 +64,9 @@ Return Manta SVs with additional VCF information to allow for filtering of high-
 To return SV calls for multiple samples, give \code{these_sample_ids} a vector of sample IDs, if only one sample is desired,
 give this parameter one sample ID, as a string (or a vector of characters). The user can also call the \code{these_samples_metadata}
 parameter to make use of an already subset metadata table. In this case, the returned calls will be restricted to the sample_ids
-within that data frame. This function relies on a set of specific internal functions \link{id_ease}, \link{get_manta_sv_by_samples}.
+within that data frame. This function relies on a set of specific internal functions \link{id_ease} and \link{get_manta_sv_by_samples} (if \code{from_cache = FALSE}).
 This function can also restrict the returned calls to any genomic regions specified within \code{chromosome}, \code{qstart}, \code{qend},
-or the complete region specified under \code{region} (in chr:start-end format).
+or the complete region specified under \code{region} (in chr:start-end format), note that chromosome can be either prefixed or not prefixed.
 Useful filtering parameters are also available, use \code{min_vaf} to set the minimum tumour VAF for a SV to be returned and \code{min_score}
 to set the lowest Manta somatic score for a SV to be returned. \code{pair_status} can be used to return variants from either matched or unmatched samples.
 In addition, the user can chose to return all variants, even the ones not passing the filter criteria. To do so, set \code{pass = FALSE} (default is TRUE).
