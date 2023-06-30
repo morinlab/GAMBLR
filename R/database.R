@@ -1378,11 +1378,12 @@ get_manta_sv = function(these_sample_ids,
   }
 
   #get samples with the dedicated helper function
-  this_meta = id_ease(these_samples_metadata = these_samples_metadata,
-                      these_sample_ids = these_sample_ids,
-                      verbose = verbose,
-                      this_seq_type = "genome", #only genome samples have manta results
-                      return_this = "metadata") #this is the expected format for this function, see the parameter description in id_ease for more info.
+  meta_ids = id_ease(these_samples_metadata = these_samples_metadata,
+                these_sample_ids = these_sample_ids,
+                verbose = verbose,
+                this_seq_type = "genome") #only genome samples have manta results
+
+  this_meta = meta_ids$this_metadata
   
   if(write_to_file){
     from_cache = FALSE #override default automatically for nonsense combination of options

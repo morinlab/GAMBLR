@@ -4949,7 +4949,6 @@ supplement_maf <- function(incoming_maf,
 #' and metadata (these_samples_metadata).
 #'
 #' @details This function can take sample IDs as a vector of characters, or a metadata table in data frame format.
-#' Based on what is given to `return_this`, the function can return either a vector of characters (sample ids) or a data frame (metadata). 
 #' If no sample IDs are provided to the function, the function will operate on all gambl sample IDs available for the given seq type.
 #' It is highly recommended to run this function with `verbose = TRUE` (default). 
 #' Since this will not only improve the overall logic on how the function operates.
@@ -4961,12 +4960,9 @@ supplement_maf <- function(incoming_maf,
 #' If not provided will retrieve GAMBL metadata for all available samples.
 #' @param these_sample_ids Sample IDs as a character of vectors.
 #' @param this_seq_type The seq type of interest. Default is genome.
-#' @param return_this Let's the user control what they want back, i.e sample IDs as a vector of characters or a metadata object as a data frame.
-#' Default is "sample_id". The other acceptable value for this a parameter is "metadata". 
-#' The desired return might depend on the required input for any given GAMBLR function, further downstream (i.e some functions expect a vector of sample IDs, other a metadata table)
 #' @param verbose Set to FALSE to limit the information that gets printed to the console. Default is TRUE.
 #'
-#' @return A character of vectors with Sample IDs (default) or a data frame with metadata (see `id_ease`).
+#' @return A list with metadata (data frame) as the first element and sample IDs (vector of characters) as the second element.
 #'
 #' @export
 #'
@@ -4990,7 +4986,6 @@ supplement_maf <- function(incoming_maf,
 id_ease = function(these_samples_metadata,
                    these_sample_ids,
                    this_seq_type = "genome",
-                   return_this = "sample_id",
                    verbose = TRUE){
  
   #check for provided metadata, else use GAMBL metadata
@@ -5016,6 +5011,9 @@ id_ease = function(these_samples_metadata,
     #check the existence of provided sample IDs in the metadata
     not_in_meta = setdiff(these_sample_ids, metadata$sample_id)
     
+    #assign the sample_ids variable
+    sample_ids = these_sample_ids
+    
     if(length(not_in_meta) > 0){
       message("id_ease: WARNING! The following sample IDs were not found in the metadata:")
       print(not_in_meta)
@@ -5027,24 +5025,15 @@ id_ease = function(these_samples_metadata,
     sample_ids = metadata$sample_id
   }
 
-  #return either the metadata or sample IDs
-  if(return_this == "sample_id"){
-    if(verbose){
-      unique_samples = unique(sample_ids)
-      message(paste0("id_ease: Returning ", length(unique_samples), " sample IDs.."))
-    }
-    
-    return(sample_ids)
-    
-  }else if(return_this == "metadata"){
-    if(verbose){
-      unique_samples = unique(metadata$sample_id)
-      message(paste0("id_ease: Returning metadata for ", length(unique_samples), " samples..." ))
-    }
-    
-    return(metadata)
-    
-  }else{
-    stop("id_ease: Please provide a valid return with `return_this` (acceptable values are 'sample_id' and 'metadata')")
+  #return a list with metadata (data frame) as the first element and sample IDs (vector of characters) as the second element
+  if(verbose){
+    unique_samples = unique(sample_ids)
+    message(paste0("id_ease: Returning ", length(unique_samples), " sample IDs.."))
+    message(paste0("id_ease: Returning metadata for ", length(unique_samples), " samples..." ))
   }
+
+  #bind the objects into a list for return
+  IDs = list(this_metadata = metadata, these_samples = sample_ids)
+  
+  return(IDs) 
 }
