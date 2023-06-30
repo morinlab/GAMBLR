@@ -17,7 +17,8 @@ cnvKompare(
   min_concordance = 90,
   exclude_sex = FALSE,
   return_heatmap = TRUE,
-  compare_pairwise = TRUE
+  compare_pairwise = TRUE,
+  show_x_labels = TRUE
 )
 }
 \arguments{
@@ -46,6 +47,8 @@ cnvKompare(
 \item{return_heatmap}{Boolean argument specifying whether to return a heatmap of cnvKompare scores. Default is TRUE.}
 
 \item{compare_pairwise}{Boolean argument specifying whether to perform pairwise comparisons if there are more than 2 time points in the group. Default is TRUE.}
+
+\item{show_x_labels}{Optional boolean parameter for hiding/showing x axis labels, default is TRUE.}
 }
 \value{
 A list of overall and pairwise percent concordance, concordant and discordant cytobands, comparison heatmap of cnvKompare scores, and time series ggplot object.
@@ -69,6 +72,7 @@ cnvKompare(patient_id = "13-26835",
                                  "MYC",
                                  "CREBBP",
                                  "GNA13"),
-           projection = "hg38")
+           projection = "hg38", 
+           show_x_labels = FALSE)
 
 }

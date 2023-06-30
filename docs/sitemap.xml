@@ -16,6 +16,9 @@
     <loc>https://github.com/morinlab/GAMBLR/articles/fancy_plots.html</loc>
   </url>
   <url>
+    <loc>https://github.com/morinlab/GAMBLR/articles/function_index.html</loc>
+  </url>
+  <url>
     <loc>https://github.com/morinlab/GAMBLR/articles/index.html</loc>
   </url>
   <url>
@@ -28,13 +31,13 @@
     <loc>https://github.com/morinlab/GAMBLR/authors.html</loc>
   </url>
   <url>
+    <loc>https://github.com/morinlab/GAMBLR/function_index.html</loc>
+  </url>
+  <url>
     <loc>https://github.com/morinlab/GAMBLR/index.html</loc>
   </url>
   <url>
     <loc>https://github.com/morinlab/GAMBLR/reference/FtestCNV.html</loc>
-  </url>
-  <url>
-    <loc>https://github.com/morinlab/GAMBLR/reference/add_icgc_metadata.html</loc>
   </url>
   <url>
     <loc>https://github.com/morinlab/GAMBLR/reference/adjust_ploidy.html</loc>
@@ -58,9 +61,6 @@
     <loc>https://github.com/morinlab/GAMBLR/reference/annotate_sv.html</loc>
   </url>
   <url>
-    <loc>https://github.com/morinlab/GAMBLR/reference/append_to_table.html</loc>
-  </url>
-  <url>
     <loc>https://github.com/morinlab/GAMBLR/reference/ashm_multi_rainbow_plot.html</loc>
   </url>
   <url>
@@ -80,9 +80,6 @@
   </url>
   <url>
     <loc>https://github.com/morinlab/GAMBLR/reference/cbioportal_create.html</loc>
-  </url>
-  <url>
-    <loc>https://github.com/morinlab/GAMBLR/reference/check_config_value.html</loc>
   </url>
   <url>
     <loc>https://github.com/morinlab/GAMBLR/reference/check_gambl_metadata.html</loc>
@@ -109,49 +106,13 @@
     <loc>https://github.com/morinlab/GAMBLR/reference/cnvKompare.html</loc>
   </url>
   <url>
-    <loc>https://github.com/morinlab/GAMBLR/reference/collate_ancestry.html</loc>
-  </url>
-  <url>
-    <loc>https://github.com/morinlab/GAMBLR/reference/collate_ashm_results.html</loc>
-  </url>
-  <url>
-    <loc>https://github.com/morinlab/GAMBLR/reference/collate_csr_results.html</loc>
-  </url>
-  <url>
-    <loc>https://github.com/morinlab/GAMBLR/reference/collate_curated_sv_results.html</loc>
-  </url>
-  <url>
-    <loc>https://github.com/morinlab/GAMBLR/reference/collate_derived_results.html</loc>
-  </url>
-  <url>
-    <loc>https://github.com/morinlab/GAMBLR/reference/collate_extra_metadata.html</loc>
-  </url>
-  <url>
     <loc>https://github.com/morinlab/GAMBLR/reference/collate_lymphgen.html</loc>
-  </url>
-  <url>
-    <loc>https://github.com/morinlab/GAMBLR/reference/collate_nfkbiz_results.html</loc>
-  </url>
-  <url>
-    <loc>https://github.com/morinlab/GAMBLR/reference/collate_qc_results.html</loc>
   </url>
   <url>
     <loc>https://github.com/morinlab/GAMBLR/reference/collate_results.html</loc>
   </url>
   <url>
-    <loc>https://github.com/morinlab/GAMBLR/reference/collate_sbs_results.html</loc>
-  </url>
-  <url>
-    <loc>https://github.com/morinlab/GAMBLR/reference/collate_ssm_results.html</loc>
-  </url>
-  <url>
-    <loc>https://github.com/morinlab/GAMBLR/reference/collate_sv_results.html</loc>
-  </url>
-  <url>
     <loc>https://github.com/morinlab/GAMBLR/reference/comp_report.html</loc>
-  </url>
-  <url>
-    <loc>https://github.com/morinlab/GAMBLR/reference/compare_mutation_flavour.html</loc>
   </url>
   <url>
     <loc>https://github.com/morinlab/GAMBLR/reference/consolidate_lymphgen.html</loc>
@@ -268,9 +229,6 @@
     <loc>https://github.com/morinlab/GAMBLR/reference/get_gambl_metadata.html</loc>
   </url>
   <url>
-    <loc>https://github.com/morinlab/GAMBLR/reference/get_gambl_outcomes.html</loc>
-  </url>
-  <url>
     <loc>https://github.com/morinlab/GAMBLR/reference/get_gene_cn_and_expression.html</loc>
   </url>
   <url>
@@ -328,9 +286,6 @@
     <loc>https://github.com/morinlab/GAMBLR/reference/grch37_all_gene_coordinates.html</loc>
   </url>
   <url>
-    <loc>https://github.com/morinlab/GAMBLR/reference/grch37_ashm_regions.html</loc>
-  </url>
-  <url>
     <loc>https://github.com/morinlab/GAMBLR/reference/grch37_gene_coordinates.html</loc>
   </url>
   <url>
@@ -341,9 +296,6 @@
   </url>
   <url>
     <loc>https://github.com/morinlab/GAMBLR/reference/grch37_partners.html</loc>
-  </url>
-  <url>
-    <loc>https://github.com/morinlab/GAMBLR/reference/hg38_ashm_regions.html</loc>
   </url>
   <url>
     <loc>https://github.com/morinlab/GAMBLR/reference/hg38_gene_coordinates.html</loc>
@@ -373,9 +325,6 @@
     <loc>https://github.com/morinlab/GAMBLR/reference/liftover_bedpe.html</loc>
   </url>
   <url>
-    <loc>https://github.com/morinlab/GAMBLR/reference/lymphoma_genes.html</loc>
-  </url>
-  <url>
     <loc>https://github.com/morinlab/GAMBLR/reference/lymphoma_genes_comprehensive.html</loc>
   </url>
   <url>
@@ -383,15 +332,6 @@
   </url>
   <url>
     <loc>https://github.com/morinlab/GAMBLR/reference/make_igv_snapshot.html</loc>
-  </url>
-  <url>
-    <loc>https://github.com/morinlab/GAMBLR/reference/map_metadata_to_colours.html</loc>
-  </url>
-  <url>
-    <loc>https://github.com/morinlab/GAMBLR/reference/plot_multi_timepoint.html</loc>
-  </url>
-  <url>
-    <loc>https://github.com/morinlab/GAMBLR/reference/plot_mutation_dynamics_heatmap.html</loc>
   </url>
   <url>
     <loc>https://github.com/morinlab/GAMBLR/reference/plot_sample_circos.html</loc>
@@ -424,25 +364,10 @@
     <loc>https://github.com/morinlab/GAMBLR/reference/pretty_lollipop_plot.html</loc>
   </url>
   <url>
-    <loc>https://github.com/morinlab/GAMBLR/reference/process_all_manta_bedpe.html</loc>
-  </url>
-  <url>
-    <loc>https://github.com/morinlab/GAMBLR/reference/read_merge_manta_with_liftover.html</loc>
-  </url>
-  <url>
     <loc>https://github.com/morinlab/GAMBLR/reference/reddy_genes.html</loc>
   </url>
   <url>
-    <loc>https://github.com/morinlab/GAMBLR/reference/referesh_metadata_tables.html</loc>
-  </url>
-  <url>
-    <loc>https://github.com/morinlab/GAMBLR/reference/refresh_full_table.html</loc>
-  </url>
-  <url>
     <loc>https://github.com/morinlab/GAMBLR/reference/region_to_bins.html</loc>
-  </url>
-  <url>
-    <loc>https://github.com/morinlab/GAMBLR/reference/region_to_chunks.html</loc>
   </url>
   <url>
     <loc>https://github.com/morinlab/GAMBLR/reference/region_to_gene.html</loc>
@@ -452,9 +377,6 @@
   </url>
   <url>
     <loc>https://github.com/morinlab/GAMBLR/reference/sanitize_maf_data.html</loc>
-  </url>
-  <url>
-    <loc>https://github.com/morinlab/GAMBLR/reference/sanity_check_metadata.html</loc>
   </url>
   <url>
     <loc>https://github.com/morinlab/GAMBLR/reference/setup_expreession_data.html</loc>
@@ -469,13 +391,7 @@
     <loc>https://github.com/morinlab/GAMBLR/reference/splendidHeatmap.html</loc>
   </url>
   <url>
-    <loc>https://github.com/morinlab/GAMBLR/reference/standardize_chr_prefix.html</loc>
-  </url>
-  <url>
     <loc>https://github.com/morinlab/GAMBLR/reference/study_check.html</loc>
-  </url>
-  <url>
-    <loc>https://github.com/morinlab/GAMBLR/reference/subset_cnstates.html</loc>
   </url>
   <url>
     <loc>https://github.com/morinlab/GAMBLR/reference/supplement_maf.html</loc>
@@ -502,10 +418,7 @@
     <loc>https://github.com/morinlab/GAMBLR/reference/tidy_lymphgen.html</loc>
   </url>
   <url>
-    <loc>https://github.com/morinlab/GAMBLR/reference/trim_scale_expression.html</loc>
-  </url>
-  <url>
-    <loc>https://github.com/morinlab/GAMBLR/reference/web_initialize_gambl_site.html</loc>
+    <loc>https://github.com/morinlab/GAMBLR/reference/view_mutation_igv.html</loc>
   </url>
   <url>
     <loc>https://github.com/morinlab/GAMBLR/reference/wright_genes_with_weights.html</loc>

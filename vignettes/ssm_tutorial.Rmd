@@ -294,6 +294,7 @@ ashm_multi_rainbow_plot(custom_colours = get_gambl_colours("pathology"),
                         metadata = fl_dlbcl_metadata,
                         classification_column = "pathology",
                         seq_type = "genome",
+                        verbose = FALSE,
                         regions_to_display = c("BCL2-TSS", "MYC-TSS"))
 ```
 

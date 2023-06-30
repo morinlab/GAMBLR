@@ -1165,11 +1165,17 @@ liftover_bedpe = function(bedpe_file,
   if(!standard_bed){
     colnames(original_bedpe)[1] = "CHROM_A"
     original_bedpe = as.data.frame(original_bedpe)
-
-    #print(head(original_bedpe))
     original_bedpe = original_bedpe %>%
       dplyr::mutate(CHROM_A = ifelse(!grepl("chr", CHROM_A), paste0("chr", CHROM_A), CHROM_A),
                     CHROM_B = ifelse(!grepl("chr", CHROM_B), paste0("chr", CHROM_B), CHROM_B))
+    #convert to strings manually to avoid caused by scientific notation in rare cases when R coerces to strings
+    #Error in scan(file = file, what = what, sep = sep, quote = quote, dec = dec, :
+    #scan() expected 'an integer', got '4.7e+07'
+    
+    original_bedpe = original_bedpe %>% mutate(START_A = format(START_A,scientific=F),
+                                               START_B = format(START_B,scientific=F),
+                                               END_A = format(END_A,scientific=F),
+                                               END_B = format(END_B,scientific=F))
 
     if(verbose){
       print(head(original_bedpe))

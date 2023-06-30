@@ -173,11 +173,6 @@ Is this function not what you are looking for? Try one of the following, similar
 <span class="r-in"><span><span class="va">segments_region_grch37</span> <span class="op">=</span> <span class="fu">get_cn_segments</span><span class="op">(</span>chromosome <span class="op">=</span> <span class="st">"chr8"</span>,</span></span>
 <span class="r-in"><span>                                         qstart <span class="op">=</span> <span class="fl">128723128</span>,</span></span>
 <span class="r-in"><span>                                         qend <span class="op">=</span> <span class="fl">128774067</span><span class="op">)</span></span></span>
-<span class="r-msg co"><span class="r-pr">#&gt;</span> restricting to non-ICGC data</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> [1] "missing:  /Users/rmorin/gambl_results/gambl/cnv_master-1.0/99-outputs/genome--projection/all--grch37.seg"</span>
-<span class="r-msg co"><span class="r-pr">#&gt;</span> Cannot find file locally. If working remotely, perhaps you forgot to load your config (see below) or sync your files?</span>
-<span class="r-msg co"><span class="r-pr">#&gt;</span> Sys.setenv(R_CONFIG_ACTIVE = "remote")</span>
-<span class="r-err co"><span class="r-pr">#&gt;</span> <span class="error">Error in h(simpleError(msg, call)):</span> error in evaluating the argument 'x' in selecting a method for function 'as.data.frame': '/Users/rmorin/gambl_results/gambl/cnv_master-1.0/99-outputs/genome--projection/all--grch37.seg' does not exist.</span>
 <span class="r-in"><span><span class="co"># Example for the capture samples:</span></span></span>
 <span class="r-in"><span><span class="va">capture_segments_region_grch37</span> <span class="op">=</span> <span class="fu">get_cn_segments</span><span class="op">(</span></span></span>
 <span class="r-in"><span> chromosome <span class="op">=</span> <span class="st">"chr8"</span>,</span></span>
@@ -185,21 +180,11 @@ Is this function not what you are looking for? Try one of the following, similar
 <span class="r-in"><span> qend <span class="op">=</span> <span class="fl">128774067</span>,</span></span>
 <span class="r-in"><span> this_seq_type <span class="op">=</span> <span class="st">"capture"</span></span></span>
 <span class="r-in"><span><span class="op">)</span></span></span>
-<span class="r-msg co"><span class="r-pr">#&gt;</span> restricting to non-ICGC data</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> [1] "missing:  /Users/rmorin/gambl_results/gambl/cnv_master-1.0/99-outputs/capture--projection/all--grch37.seg"</span>
-<span class="r-msg co"><span class="r-pr">#&gt;</span> Cannot find file locally. If working remotely, perhaps you forgot to load your config (see below) or sync your files?</span>
-<span class="r-msg co"><span class="r-pr">#&gt;</span> Sys.setenv(R_CONFIG_ACTIVE = "remote")</span>
-<span class="r-err co"><span class="r-pr">#&gt;</span> <span class="error">Error in h(simpleError(msg, call)):</span> error in evaluating the argument 'x' in selecting a method for function 'as.data.frame': '/Users/rmorin/gambl_results/gambl/cnv_master-1.0/99-outputs/capture--projection/all--grch37.seg' does not exist.</span>
 <span class="r-in"><span></span></span>
 <span class="r-in"><span><span class="co">#Example using the regions parameter:</span></span></span>
 <span class="r-in"><span><span class="va">segments_region_hg38</span> <span class="op">=</span> <span class="fu">get_cn_segments</span><span class="op">(</span>region <span class="op">=</span> <span class="st">"chr8:128,723,128-128,774,067"</span>,</span></span>
 <span class="r-in"><span>                                       projection <span class="op">=</span> <span class="st">"hg38"</span>,</span></span>
 <span class="r-in"><span>                                       with_chr_prefix <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span></span></span>
-<span class="r-msg co"><span class="r-pr">#&gt;</span> restricting to non-ICGC data</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> [1] "missing:  /Users/rmorin/gambl_results/gambl/cnv_master-1.0/99-outputs/genome--projection/all--hg38.seg"</span>
-<span class="r-msg co"><span class="r-pr">#&gt;</span> Cannot find file locally. If working remotely, perhaps you forgot to load your config (see below) or sync your files?</span>
-<span class="r-msg co"><span class="r-pr">#&gt;</span> Sys.setenv(R_CONFIG_ACTIVE = "remote")</span>
-<span class="r-err co"><span class="r-pr">#&gt;</span> <span class="error">Error in h(simpleError(msg, call)):</span> error in evaluating the argument 'x' in selecting a method for function 'as.data.frame': '/Users/rmorin/gambl_results/gambl/cnv_master-1.0/99-outputs/genome--projection/all--hg38.seg' does not exist.</span>
 <span class="r-in"><span></span></span>
 </code></pre></div>
     </div>

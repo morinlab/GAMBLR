@@ -167,32 +167,20 @@ Is this function not what you are looking for? Try one of the following, similar
 <span class="r-wrn co"><span class="r-pr">#&gt;</span> <span class="warning">Warning: </span>cannot open file '../samples-test.csv': No such file or directory</span>
 <span class="r-err co"><span class="r-pr">#&gt;</span> <span class="error">Error in file(con, "r"):</span> cannot open the connection</span>
 <span class="r-in"><span><span class="va">multiple_samples</span> <span class="op">=</span> <span class="fu">get_sample_cn_segments</span><span class="op">(</span>multiple_samples <span class="op">=</span> <span class="cn">TRUE</span>, sample_list <span class="op">=</span> <span class="va">sample_list</span><span class="op">)</span></span></span>
-<span class="r-msg co"><span class="r-pr">#&gt;</span> restricting to non-ICGC data</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> [1] "missing:  /Users/rmorin/gambl_results/gambl/cnv_master-1.0/99-outputs/genome--projection/all--grch37.seg"</span>
-<span class="r-msg co"><span class="r-pr">#&gt;</span> Cannot find file locally. If working remotely, perhaps you forgot to load your config (see below) or sync your files?</span>
-<span class="r-msg co"><span class="r-pr">#&gt;</span> Sys.setenv(R_CONFIG_ACTIVE = "remote")</span>
-<span class="r-err co"><span class="r-pr">#&gt;</span> <span class="error">Error:</span> '/Users/rmorin/gambl_results/gambl/cnv_master-1.0/99-outputs/genome--projection/all--grch37.seg' does not exist.</span>
+<span class="r-err co"><span class="r-pr">#&gt;</span> <span class="error">Error in dplyr::filter(all_segs, ID %in% sample_list):</span> <span style="color: #00BBBB;">ℹ</span> In argument: `ID %in% sample_list`.</span>
+<span class="r-err co"><span class="r-pr">#&gt;</span> <span style="font-weight: bold;">Caused by error in `h()`:</span></span>
+<span class="r-err co"><span class="r-pr">#&gt;</span> <span style="color: #BBBB00;">!</span> error in evaluating the argument 'table' in selecting a method for function '%in%': object 'sample_list' not found</span>
 <span class="r-in"><span><span class="co">#Return cn segments for multiple samples (provided as vector of sample IDs):</span></span></span>
 <span class="r-in"><span><span class="va">these_sample_list</span> <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"00-15201_tumorA"</span>, <span class="st">"00-15201_tumorB"</span><span class="op">)</span></span></span>
 <span class="r-in"><span></span></span>
 <span class="r-in"><span><span class="va">samples</span> <span class="op">=</span> <span class="fu">get_sample_cn_segments</span><span class="op">(</span>multiple_samples <span class="op">=</span> <span class="cn">TRUE</span>,</span></span>
 <span class="r-in"><span>                                 sample_list <span class="op">=</span> <span class="va">these_sample_list</span><span class="op">)</span></span></span>
-<span class="r-msg co"><span class="r-pr">#&gt;</span> restricting to non-ICGC data</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> [1] "missing:  /Users/rmorin/gambl_results/gambl/cnv_master-1.0/99-outputs/genome--projection/all--grch37.seg"</span>
-<span class="r-msg co"><span class="r-pr">#&gt;</span> Cannot find file locally. If working remotely, perhaps you forgot to load your config (see below) or sync your files?</span>
-<span class="r-msg co"><span class="r-pr">#&gt;</span> Sys.setenv(R_CONFIG_ACTIVE = "remote")</span>
-<span class="r-err co"><span class="r-pr">#&gt;</span> <span class="error">Error:</span> '/Users/rmorin/gambl_results/gambl/cnv_master-1.0/99-outputs/genome--projection/all--grch37.seg' does not exist.</span>
 <span class="r-in"><span><span class="co"># For capture</span></span></span>
 <span class="r-in"><span><span class="va">samples</span> <span class="op">=</span> <span class="fu">get_sample_cn_segments</span><span class="op">(</span></span></span>
 <span class="r-in"><span> multiple_samples <span class="op">=</span> <span class="cn">TRUE</span>,</span></span>
 <span class="r-in"><span> sample_list <span class="op">=</span> <span class="va">these_sample_list</span>,</span></span>
 <span class="r-in"><span> this_seq_type <span class="op">=</span> <span class="st">"capture"</span></span></span>
 <span class="r-in"><span><span class="op">)</span></span></span>
-<span class="r-msg co"><span class="r-pr">#&gt;</span> restricting to non-ICGC data</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> [1] "missing:  /Users/rmorin/gambl_results/gambl/cnv_master-1.0/99-outputs/capture--projection/all--grch37.seg"</span>
-<span class="r-msg co"><span class="r-pr">#&gt;</span> Cannot find file locally. If working remotely, perhaps you forgot to load your config (see below) or sync your files?</span>
-<span class="r-msg co"><span class="r-pr">#&gt;</span> Sys.setenv(R_CONFIG_ACTIVE = "remote")</span>
-<span class="r-err co"><span class="r-pr">#&gt;</span> <span class="error">Error:</span> '/Users/rmorin/gambl_results/gambl/cnv_master-1.0/99-outputs/capture--projection/all--grch37.seg' does not exist.</span>
 <span class="r-in"><span></span></span>
 </code></pre></div>
     </div>

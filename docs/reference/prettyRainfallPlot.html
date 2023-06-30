@@ -171,9 +171,40 @@ If non are specified, the SSM will be obtained through GAMBLR directly (with <a 
 <span class="r-in"><span>                   zoom_in_region <span class="op">=</span> <span class="st">"8:125252796-135253201"</span>,</span></span>
 <span class="r-in"><span>                   label_sv <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span></span></span>
 <span class="r-msg co"><span class="r-pr">#&gt;</span> MAF df or path to custom MAF file was not provided, getting SSM using GAMBLR ...</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> [1] "missing:  /Users/rmorin/git/gambl/data/metadata/gambl_all_outcomes.tsv"</span>
-<span class="r-msg co"><span class="r-pr">#&gt;</span> Have you cloned the GAMBL repo and added the path to this directory under the local section of your config?</span>
-<span class="r-err co"><span class="r-pr">#&gt;</span> <span class="error">Error:</span> '/Users/rmorin/git/gambl/data/metadata/gambl_all_outcomes.tsv' does not exist.</span>
+<span class="r-wrn co"><span class="r-pr">#&gt;</span> <span class="warning">Warning: </span>Column name 'GENE_PHENO' not found in column name header (case sensitive), skipping.</span>
+<span class="r-wrn co"><span class="r-pr">#&gt;</span> <span class="warning">Warning: </span>Column name 'FILTER' not found in column name header (case sensitive), skipping.</span>
+<span class="r-wrn co"><span class="r-pr">#&gt;</span> <span class="warning">Warning: </span>Column name 'flanking_bps' not found in column name header (case sensitive), skipping.</span>
+<span class="r-wrn co"><span class="r-pr">#&gt;</span> <span class="warning">Warning: </span>Column name 'vcf_id' not found in column name header (case sensitive), skipping.</span>
+<span class="r-wrn co"><span class="r-pr">#&gt;</span> <span class="warning">Warning: </span>Column name 'vcf_qual' not found in column name header (case sensitive), skipping.</span>
+<span class="r-wrn co"><span class="r-pr">#&gt;</span> <span class="warning">Warning: </span>Column name 'gnomAD_AF' not found in column name header (case sensitive), skipping.</span>
+<span class="r-wrn co"><span class="r-pr">#&gt;</span> <span class="warning">Warning: </span>Column name 'gnomAD_AFR_AF' not found in column name header (case sensitive), skipping.</span>
+<span class="r-wrn co"><span class="r-pr">#&gt;</span> <span class="warning">Warning: </span>Column name 'gnomAD_AMR_AF' not found in column name header (case sensitive), skipping.</span>
+<span class="r-wrn co"><span class="r-pr">#&gt;</span> <span class="warning">Warning: </span>Column name 'gnomAD_SAS_AF' not found in column name header (case sensitive), skipping.</span>
+<span class="r-wrn co"><span class="r-pr">#&gt;</span> <span class="warning">Warning: </span>Column name 'vcf_pos' not found in column name header (case sensitive), skipping.</span>
+<span class="r-wrn co"><span class="r-pr">#&gt;</span> <span class="warning">Warning: </span>Column name 'gnomADg_AF' not found in column name header (case sensitive), skipping.</span>
+<span class="r-wrn co"><span class="r-pr">#&gt;</span> <span class="warning">Warning: </span>Column name 'blacklist_count' not found in column name header (case sensitive), skipping.</span>
+<span class="r-wrn co"><span class="r-pr">#&gt;</span> <span class="warning">Warning: </span>Column name 'FILTER' (colClasses[[1]][67]) not found</span>
+<span class="r-wrn co"><span class="r-pr">#&gt;</span> <span class="warning">Warning: </span>Column name 'flanking_bps' (colClasses[[1]][68]) not found</span>
+<span class="r-wrn co"><span class="r-pr">#&gt;</span> <span class="warning">Warning: </span>Column name 'vcf_id' (colClasses[[1]][69]) not found</span>
+<span class="r-wrn co"><span class="r-pr">#&gt;</span> <span class="warning">Warning: </span>Column name 'vcf_qual' (colClasses[[1]][70]) not found</span>
+<span class="r-wrn co"><span class="r-pr">#&gt;</span> <span class="warning">Warning: </span>Column name 'gnomADg_AF' (colClasses[[1]][71]) not found</span>
+<span class="r-wrn co"><span class="r-pr">#&gt;</span> <span class="warning">Warning: </span>Column name 'vcf_pos' (colClasses[[2]][11]) not found</span>
+<span class="r-wrn co"><span class="r-pr">#&gt;</span> <span class="warning">Warning: </span>Column name 'gnomAD_AF' (colClasses[[3]][20]) not found</span>
+<span class="r-wrn co"><span class="r-pr">#&gt;</span> <span class="warning">Warning: </span>Column name 'gnomAD_AFR_AF' (colClasses[[3]][21]) not found</span>
+<span class="r-wrn co"><span class="r-pr">#&gt;</span> <span class="warning">Warning: </span>Column name 'gnomAD_AMR_AF' (colClasses[[3]][22]) not found</span>
+<span class="r-wrn co"><span class="r-pr">#&gt;</span> <span class="warning">Warning: </span>Column name 'gnomAD_SAS_AF' (colClasses[[3]][28]) not found</span>
+<span class="r-wrn co"><span class="r-pr">#&gt;</span> <span class="warning">Warning: </span>Column name 'GENE_PHENO' (colClasses[[4]][5]) not found</span>
+<span class="r-wrn co"><span class="r-pr">#&gt;</span> <span class="warning">Warning: </span>Column name 'blacklist_count' (colClasses[[4]][6]) not found</span>
+<span class="r-wrn co"><span class="r-pr">#&gt;</span> <span class="warning">Warning: </span>Attempt to override column 92 &lt;&lt;MOTIF_SCORE_CHANGE&gt;&gt; of inherent type 'float64' down to 'bool8' ignored. Only overrides to a higher type are currently supported. If this was intended, please coerce to the lower type afterwards.</span>
+<span class="r-msg co"><span class="r-pr">#&gt;</span> Getting combined manta + GRIDSS SVs using GAMBLR ...</span>
+<span class="r-wrn co"><span class="r-pr">#&gt;</span> <span class="warning">Warning: </span>There were 4 warnings in `dplyr::filter()`.</span>
+<span class="r-wrn co"><span class="r-pr">#&gt;</span> The first warning was:</span>
+<span class="r-wrn co"><span class="r-pr">#&gt;</span> <span style="color: #00BBBB;">ℹ</span> In argument: `if (...) NULL`.</span>
+<span class="r-wrn co"><span class="r-pr">#&gt;</span> <span style="color: #00BBBB;">ℹ</span> In group 1: `fusion = "IGH-MYC"`, `chromosomeN = chrom2`.</span>
+<span class="r-wrn co"><span class="r-pr">#&gt;</span> Caused by warning in `if (grepl("1", chromosomeN)) ...`:</span>
+<span class="r-wrn co"><span class="r-pr">#&gt;</span> <span style="color: #BBBB00;">!</span> the condition has length &gt; 1 and only the first element will be used</span>
+<span class="r-wrn co"><span class="r-pr">#&gt;</span> <span style="color: #00BBBB;">ℹ</span> Run `dplyr::last_dplyr_warnings()` to see the 3 remaining warnings.</span>
+<span class="r-plt img"><img src="prettyRainfallPlot-1.png" alt="" width="700" height="433"></span>
 <span class="r-in"><span></span></span>
 <span class="r-in"><span><span class="co">#multi-sample rainfall plot for one gene region</span></span></span>
 <span class="r-in"><span><span class="fu">prettyRainfallPlot</span><span class="op">(</span>zoom_in_region <span class="op">=</span> <span class="st">"chr3:5,221,286-5,269,723"</span>,</span></span>
@@ -181,8 +212,7 @@ If non are specified, the SSM will be obtained through GAMBLR directly (with <a 
 <span class="r-wrn co"><span class="r-pr">#&gt;</span> <span class="warning">Warning: </span>No sample_id was provided. Using all mutations in the MAF within your region!</span>
 <span class="r-msg co"><span class="r-pr">#&gt;</span> Warning: after subsetting to a regions you requested to plot, there are no aSHM features to overlap on the final graph.</span>
 <span class="r-msg co"><span class="r-pr">#&gt;</span> Will use all mutations for genome in this region: 3Will use all mutations for genome in this region: 5221286Will use all mutations for genome in this region: 5269723</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> [1] "missing: /Users/rmorin/gambl_results/all_the_things/slms_3-1.0_vcf2maf-1.3/genome--projection/deblacklisted/augmented_maf/all_slms-3--grch37.maf.bgz"</span>
-<span class="r-err co"><span class="r-pr">#&gt;</span> <span class="error">Error in get_ssm_by_region(region = region, seq_type = seq_type, projection = projection):</span> failed to find the file needed for this</span>
+<span class="r-plt img"><img src="prettyRainfallPlot-2.png" alt="" width="700" height="433"></span>
 <span class="r-in"><span></span></span>
 </code></pre></div>
     </div>

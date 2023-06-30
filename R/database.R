@@ -675,9 +675,9 @@ get_gambl_metadata = function(seq_type_filter = "genome",
     dplyr::select(-sex)
 
   #if only normals were requested, just return what we have because there is nothing else to join
-  #if(tissue_status_filter == "normal"){
-  #  return(sample_meta)
-  #}
+  if(tissue_status_filter == "normal"){
+    return(sample_meta)
+  }
 
   #if we only care about genomes, we can drop/filter anything that isn't a tumour genome
   #The key for joining this table to the mutation information is to use sample_id. Think of this as equivalent to a library_id. It will differ depending on what assay was done to the sample.
@@ -1301,69 +1301,52 @@ get_combined_sv = function(min_vaf = 0,
 #'
 #' @description Retrieve Manta SVs and filter.
 #'
-#' @details Return Manta SVs with aditional VCF information to allow for filtering of high-confidence variants.
+#' @details Return Manta SVs with additional VCF information to allow for filtering of high-confidence variants.
 #' To return SV calls for multiple samples, give `these_sample_ids` a vector of sample IDs, if only one sample is desired,
 #' give this parameter one sample ID, as a string (or a vector of characters). The user can also call the `these_samples_metadata`
 #' parameter to make use of an already subset metadata table. In this case, the returned calls will be restricted to the sample_ids
-#' within that data frame. This function relies on a set of specific functions to be successful in returning SV calls for any
-#' available sample in gambl. First, this function calls [GAMBLR::get_combined_sv] and performs an `anit_join` with the full metadata to
-#' identify what samples are currently missing from the return of [GAMBLR::get_combined_sv]. This function then calls [GAMBLR::get_manta_sv_by_samples]
-#' (wrapper function for [GAMBLR::get_manta_sv_by_sample]) on the subset of the missing samples. The merged calls are subject to any
-#' filtering that is specified within this function. This function can also restrict the returned calls to any genomic regions
-#' specified within `chromosome`, `qstart`, `qend`, or the complete region specified under `region` (in chr:start-end format).
+#' within that data frame. This function relies on a set of specific internal functions [GAMBLR::id_ease] and [GAMBLR::get_manta_sv_by_samples] (if `from_cache = FALSE`).
+#' This function can also restrict the returned calls to any genomic regions specified within `chromosome`, `qstart`, `qend`, 
+#' or the complete region specified under `region` (in chr:start-end format), note that chromosome can be either prefixed or not prefixed.
 #' Useful filtering parameters are also available, use `min_vaf` to set the minimum tumour VAF for a SV to be returned and `min_score`
-#' to set the lowest Manta somatic score for a SV to be returned. `pair_status` can be used to only return variants that are
-#' annotated with PASS in the filtering column (VCF).
+#' to set the lowest Manta somatic score for a SV to be returned. `pair_status` can be used to return variants from either matched or unmatched samples.
+#' In addition, the user can chose to return all variants, even the ones not passing the filter criteria. To do so, set `pass = FALSE` (default is TRUE).
+#' Is it adviseed to run this function with `from_cache = TRUE` (default) to read manta calls from a previous generated merge (cached result).
+#' If set to FALSE in combination with `write_to_file = TRUE`, the function will generate new merged manta calls, if the data access restriction allows it.
+#' Note, that if `write_to_file` is set to TRUE, the function autodefaults `from_cache = FALSE` to avoid nonsense parameter combinations.
 #' Is this function not what you are looking for? Try one of the following, similar, functions;
 #' [GAMBLR::get_combined_sv], [GAMBLR::get_manta_sv_by_sample], [GAMBLR::get_manta_sv_by_samples]
 #'
 #' @param these_sample_ids A vector of multiple sample_id (or a single sample ID as a string) that you want results for.
 #' @param these_samples_metadata A metadata table to auto-subset the data to samples in that table before returning.
-#' @param projection The projection genome build.
-#' @param chromosome Optional, the chromosome you are restricting to.
+#' @param projection The projection genome build. Default is grch37.
+#' @param chromosome Optional, the chromosome you are restricting to (can be prefixed or not prefixed).
 #' @param qstart Optional, query start coordinate of the range you are restricting to.
 #' @param qend Optional, query end coordinate of the range you are restricting to.
-#' @param region Optional, region formatted like chrX:1234-5678 instead of specifying chromosome, start and end separately.
+#' @param region Optional, region formatted like chrX:1234-5678 (chromosome can be prefixed or not prefixed) instead of specifying chromosome, start and end separately.
 #' @param min_vaf The minimum tumour VAF for a SV to be returned. Default is 0.1.
 #' @param min_score The lowest Manta somatic score for a SV to be returned. Default is 40.
-#' @param pass If set to TRUE, only return SVs that are annotated with PASS in the FILTER column. Set to FALSE to keep all variants, regardless if they PASS the filters. Default is TRUE.
-#' @param pairing_status Use to restrict results (if desired) to matched or unmatched results (default is to return all).
+#' @param pass If TRUE (default) only return SVs that are annotated with PASS in the FILTER column. Set to FALSE to keep all variants, regardless if they PASS the filters.
+#' @param pairing_status Use to restrict results (if desired) to matched or unmatched results (default is to return all). This parameter takes the filtering condition as a string ("matched" or "unmatched").
 #' @param from_flatfile Set to TRUE by default, FALSE is no longer supported (database).
-#' @param verbose Set to FALSE to prevent the path of the requested bedpe file to be printed.
+#' @param verbose Set to FALSE to minimize the output to console. Default is TRUE. This parameter also dictates the verbose-ness of any helper function internally called inside the main function.
+#' @param from_cache Boolean variable for using cached results, default is TRUE. If `write_to_file = TRUE`, this parameter auto-defaults to FALSE.
+#' @param write_to_file Boolean statement that outputs bedpe file if TRUE, default is FALSE. Setting this to TRUE forces `from_cache = FALSE`.
 #'
 #' @return A data frame in a bedpe-like format with additional columns that allow filtering of high-confidence SVs.
 #'
-#' @import dplyr
+#' @import dplyr readr
 #' @export
 #'
 #' @examples
 #' #lazily get every SV in the table with default quality filters
-#' all_sv = get_manta_sv(verbose = FALSE)
+#' all_sv = get_manta_sv()
 #'
 #' #get all SVs for a single sample
 #' some_sv = get_manta_sv(these_sample_ids = "94-15772_tumorA")
 #'
 #' #get the SVs in a region around MYC
-#' myc_locus_sv = get_manta_sv(region = "8:128723128-128774067", verbose = FALSE)
-#'
-#' #get SVs for multiple samples, using these_samples_id
-#' my_metadata = get_gambl_metadata()
-#' these_samples = dplyr::select(my_metadata, sample_id)
-#' my_samples_df = head(these_samples, 10)
-#' my_samples = pull(my_samples_df, sample_id)
-#'
-#' my_svs_2 = get_manta_sv(these_sample_ids = my_samples,
-#'                         projection = "hg38",
-#'                         verbose = FALSE)
-#'
-#' #get SVs for multiple samples using a metadata table and with no VAF/score filtering
-#' my_metadata = get_gambl_metadata() %>%
-#' this_metadata = head(my_metadata, 10)
-#'
-#' my_svs = get_manta_sv(these_samples_metadata = this_metadata,
-#'                       verbose = FALSE,
-#'                       min_vaf = 0,
-#'                       min_score = 0)
+#' myc_locus_sv = get_manta_sv(region = "8:128723128-128774067")
 #'
 get_manta_sv = function(these_sample_ids,
                         these_samples_metadata,
@@ -1377,8 +1360,10 @@ get_manta_sv = function(these_sample_ids,
                         pass = TRUE,
                         pairing_status,
                         from_flatfile = TRUE,
-                        verbose = TRUE){
-
+                        verbose = TRUE,
+                        from_cache = TRUE,
+                        write_to_file = FALSE){
+  
   if(!missing(region)){
     region = gsub(",", "", region)
     split_chunks = unlist(strsplit(region, ":"))
@@ -1388,91 +1373,165 @@ get_manta_sv = function(these_sample_ids,
     qend = startend[2]
   }
 
+  #get samples with the dedicated helper function
+  meta_ids = id_ease(these_samples_metadata = these_samples_metadata,
+                these_sample_ids = these_sample_ids,
+                verbose = verbose,
+                this_seq_type = "genome") #only genome samples have manta results
+
+  this_meta = meta_ids$this_metadata
+  
+  if(write_to_file){
+    from_cache = FALSE #override default automatically for nonsense combination of options
+  }
+  
   if(from_flatfile){
-    all_sv = get_combined_sv(projection = projection)
-
-    #sample IDs are provided, metadata is not
-    if(!missing(these_sample_ids) && missing(these_samples_metadata)){
-      all_meta = get_gambl_metadata() %>%
-        dplyr::filter(sample_id %in% these_sample_ids)
-    }
-
-    #metadata is provided, sample IDs are not.
-    if(!missing(these_samples_metadata) && missing(these_sample_ids)){
-      all_meta = these_samples_metadata
-    }
-
-    #missing sample IDs and metadata
-    if(missing(these_sample_ids) && missing(these_samples_metadata)){
-      all_meta = get_gambl_metadata()
-    }
-
-    #both metadata and sample IDs are provided
-    if(!missing(these_samples_metadata) && !missing(these_sample_ids)){
-      #sanity check to see if the provided sample ID(s) are in the provided metadata
-        message("Warning, you have provided both sample ID(s) (with `these_sample_ids`) and metadata (with `these_samples_meetadata`)")
-        message("This function will now default to the sample IDs present in the metadata table...")
-        all_meta = these_samples_metadata
+    if(from_cache){
+      #get paths and check for file permissions
+      output_base = check_config_value(config::get("project_base"))
+      output_file = check_config_value(config::get("results_merged")$manta_sv$icgc_dart)
+      output_file = paste0(output_base, output_file)
+      output_file = glue::glue(output_file)
+      
+      permissions = file.access(output_file, 4) #check read permissions
+      
+      if(permissions == -1){
+        message("No permission for unix group icgc_dart found, resorting to samples belonging to unix group gambl...")
+        output_file = check_config_value(config::get("results_merged")$manta_sv$gambl)
+        output_file = paste0(output_base, output_file)
+        output_file = glue::glue(output_file)
       }
-
-    #add pairing status to get_combined_sv return
-    sub_meta = all_meta %>%
-      dplyr::select(sample_id, pairing_status) %>%
-      rename(pair_status = pairing_status)
-
-    all_sv = left_join(all_sv, sub_meta, by = c("tumour_sample_id" = "sample_id"))
-
-    #get metadata for samples currently missing from the merged results
-    missing_samples = all_meta %>%
-      anti_join(all_sv, by = c("sample_id" = "tumour_sample_id"))
-
-    if(nrow(missing_samples) > 0){
-      #call get manta_sv_by_samples on samples missing from current merge
-      missing_sv = get_manta_sv_by_samples(these_samples_metadata = missing_samples,
-                                           projection = projection,
-                                           min_vaf = min_vaf,
-                                           min_score = min_score,
-                                           pass = pass,
-                                           verbose = verbose)
-
-    #combine current manta merged results with missing samples
-    all_sv = bind_rows(all_sv, missing_sv)
+      if(verbose){
+        message(paste0("\nThe cached results were last updated: ", file.info(output_file)$ctime))
+        message("\nReading cached results...\n") 
+      }
+      
+      #check for missingness of merged manta results
+      if(!file.exists(output_file)){
+        print(paste("missing: ", output_file))
+        message("Cannot find file locally. If working remotely, perhaps you forgot to load your config (see below) or sync your files?")
+        message('Sys.setenv(R_CONFIG_ACTIVE = "remote")')
+      }
+      
+      #read merged data
+      manta_sv = suppressMessages(read_tsv(output_file)) %>% 
+        dplyr::filter(tumour_sample_id %in% this_meta$sample_id, 
+                      VAF_tumour >= min_vaf,
+                      SCORE >= min_score)
+      
+      if(verbose){
+        no_manta = setdiff(this_meta$sample_id, manta_sv$tumour_sample_id)
+        
+        if(length(no_manta) > 0){
+          message(paste0("No Manta results found for ", length(no_manta), " samples..."))
+          print(no_manta)
+        } 
+      }
+      
+    }else{
+      if(write_to_file){
+        #enforce all samples in the altest metadata to be in the merge, if the user decides to overwrite the cached results.
+        this_meta = get_gambl_metadata(seq_type_filter = "genome")
+      }
+      
+      #compile the merge based on selected projection (with no filters)
+      if(verbose){
+        message("\nFrom cache is set to FALSE, this function is now compiling a new merged results file for the selected projection...") 
+      }
+      
+      manta_sv = get_manta_sv_by_samples(these_samples_metadata = this_meta, 
+                                         verbose = verbose, 
+                                         min_vaf = 0, 
+                                         pass = FALSE, 
+                                         min_score = 0, 
+                                         projection = projection)
+      
+      #ensure only sample IDs in the full metadata table are kept (i.e if a sample is not in the metadata table, no manta results for any such sample will sneak its way into the merged results file)
+      manta_sv = manta_sv %>%
+        dplyr::filter(tumour_sample_id %in% this_meta$sample_id)
+      
+      if(write_to_file){
+        #get paths and check for file permissions
+        output_base = check_config_value(config::get("project_base"))
+        icgc_dart_file = check_config_value(config::get("results_merged")$manta_sv$icgc_dart)
+        icgc_dart_file = paste0(output_base, icgc_dart_file)
+        icgc_dart_file = glue::glue(icgc_dart_file)
+        icgc_dart_folder = gsub(paste0("manta.genome--", projection, ".bedpe"), "", icgc_dart_file)
+        
+        icgc_permissions = file.access(icgc_dart_folder, 2) #get write permission for the icgc_dart merge (all samples).
+        
+        if(icgc_permissions == 0){ #get path to gambl samples only merge, if user has acces to the icgc_dart merge.
+          gambl_file = check_config_value(config::get("results_merged")$manta_sv$gambl)
+          gambl_file = paste0(output_base, gambl_file)
+          gambl_file = glue::glue(gambl_file)
+          
+          #subset icgc_dart to only gambl samples
+          gambl_samples = this_meta %>% 
+            dplyr::filter(unix_group == "gambl")
+          
+          gambl_manta_sv = manta_sv %>% 
+            dplyr::filter(tumour_sample_id %in% gambl_samples$sample_id)
+          
+          #write merges to file
+          write_tsv(manta_sv, file = icgc_dart_file, append = FALSE)
+          write_tsv(gambl_manta_sv, file = gambl_file, append = FALSE)
+        }else{
+          stop("You do not have the right permissions to write the manta merged files to disk... ")
+        }
+      }
     }
   }else{
-    stop("database usage is deprecated, please set from_flatfile to TRUE...")
+    stop("\nDatabase usage is deprecated, please set from_flatfile to TRUE...")
   }
-
+  
+  #deal with chr prefixes based on the selected projection (if return is to be subset to regions...)
   if(!missing(region) || !missing(chromosome)){
-    suppressWarnings({
-      if(grepl("chr",chromosome)){
+    if(projection == "grch37"){
+      if(grepl("chr", chromosome)){
         chromosome = gsub("chr", "", chromosome)
       }
-    })
-
-    all_sv = all_sv %>%
+    }else if(projection == "hg38"){
+      if(!grepl("chr", chromosome)){
+          chromosome = paste0("chr", chromosome)
+      }
+    }
+    
+    manta_sv = manta_sv %>%
       dplyr::filter((CHROM_A == chromosome & START_A >= qstart & START_A <= qend) | (CHROM_B == chromosome & START_B >= qstart & START_B <= qend))
   }
-
-  #VAF and somatic score filtering
-  all_sv = all_sv %>%
-    dplyr::filter(VAF_tumour >= min_vaf & SCORE >= min_score)
-
+  
+  if(verbose){
+    message("\nThe following VCF filters are applied;")
+    message(paste0("  Minimum VAF: ", min_vaf))
+    message(paste0("  Minimum Score: ", min_score))
+    message(paste0("  Only keep variants passing the quality filter: ", pass))
+  }
+  
   #PASS filter
   if(pass){
-    all_sv = all_sv %>%
+    manta_sv = manta_sv %>%
       dplyr::filter(FILTER == "PASS")
   }
-
+  
   #pairing status filter
   if(!missing(pairing_status)){
-    all_sv = all_sv %>%
+    if(verbose){
+      message(paste0("  Pairing status: ", pairing_status)) 
+    }
+    manta_sv = manta_sv %>%
       dplyr::filter(pair_status == pairing_status)
   }
-
-  #as data frame
-  all_sv = as.data.frame(all_sv)
-
-  return(all_sv)
+  
+  #convert to data frame and print some metrics
+  manta_sv = as.data.frame(manta_sv)
+  
+  if(verbose){
+    n_variants = nrow(manta_sv)
+    unique_samples = unique(manta_sv$tumour_sample_id)
+    message(paste0("\nReturning ", n_variants, " variants from ", length(unique_samples), " sample(s)"))
+    message("\nDone!") 
+  }
+  return(manta_sv)
 }
 
 
@@ -2357,19 +2416,35 @@ get_ssm_by_region = function(chromosome,
 
   #check remote connection
   remote_session = check_remote_configuration(auto_connect = TRUE)
-
-  if(streamlined){
-    maf_columns = names(maf_header)[c(6, 16, 42)]
-    maf_column_types = "ici"
-
-  }else if(basic_columns){ #get first 45 columns of the MAF
-    maf_columns = names(maf_header)[c(1:45)]
-    maf_column_types =  "ciccciiccccccclcccclllllllllllllllccccciiiiii"
-  }else{
-    maf_columns = names(maf_header) #return all MAF columns (116)
-    maf_column_types = "ciccciiccccccclcccclllllllllllllllccccciiiiiiccccccccccccinnccccccccccccccccccclcccccccccnclcncccclncccclllllllllicn"
+  
+  if(mode == "strelka2"){
+    message("Mode is set to strelka2. Streamlined = TRUE is hardcoded for this mode...")
+    streamlined = TRUE #force streamlined to TRUE, if strelka2 output is requested.
+    augmented = FALSE #force augmented to FALSE (since t_alt_count column is not available for the strelka2 bed file).
+    maf_columns = c("Chromosome", "Start_Position", "End_Position", "Tumor_Sample_Barcode")
+    maf_column_types = "iiic"
+    
+    #add some checks
+    if(projection == "hg38"){
+      stop("Strelka2 outputs are currently only available in respect to grch37...")
+    }
+    if(seq_type == "capture"){
+      stop("Genome is currently the only available seq_type for strelka2 outputs...")
+    }
+  }else if(mode == "slms-3"){
+    if(streamlined){
+      maf_columns = names(maf_header)[c(6, 16, 42)]
+      maf_column_types = "ici"
+      
+    }else if(basic_columns){ #get first 45 columns of the MAF
+      maf_columns = names(maf_header)[c(1:45)]
+      maf_column_types =  "ciccciiccccccclcccclllllllllllllllccccciiiiii"
+    }else{
+      maf_columns = names(maf_header) #return all MAF columns (116)
+      maf_column_types = "ciccciiccccccclcccclllllllllllllllccccciiiiiiccccccccccccinnccccccccccccccccccclcccccccccnclcncccclncccclllllllllicn"
+    }
   }
-
+  
   #check that maf_columns requested all exist in the header and get their indexes
   if(!all(maf_columns %in% names(maf_header))){
     stop("Cannot find one of the requested maf_columns in your MAF header")
@@ -2405,7 +2480,13 @@ get_ssm_by_region = function(chromosome,
     #use glue to get the absolute path
     maf_path = glue::glue(maf_partial_path)
     full_maf_path = paste0(base_path, maf_path)
-    full_maf_path_comp = paste0(base_path, maf_path, ".bgz")
+
+    if(mode == "slms-3"){
+      full_maf_path_comp = paste0(full_maf_path, ".bgz")
+    }else if(mode == "strelka2"){
+      full_maf_path_comp = gsub('.{3}$', 'bed', full_maf_path) #do we instead want to add the exact path to the file in the config, or is this acceptable?
+      full_maf_path_comp = paste0(full_maf_path_comp, ".gz")
+    }
 
     #check if file is existing or missing
     if(!file.exists(full_maf_path_comp)){
@@ -2468,9 +2549,12 @@ get_ssm_by_region = function(chromosome,
         #}else{
         message(paste("reading from:", full_maf_path_comp))
         #}
-
-        tabix_command = paste("/home/rmorin/miniconda3/bin/tabix", full_maf_path_comp, region, "| cut -f", paste(maf_indexes, collapse = ","))
-
+        if(mode == "slms-3"){
+          tabix_command = paste("/home/rmorin/miniconda3/bin/tabix", full_maf_path_comp, region, "| cut -f", paste(maf_indexes, collapse = ","))
+        }else if(mode == "strelka2"){
+          tabix_command = paste("/home/rmorin/miniconda3/bin/tabix", full_maf_path_comp, region)
+        }
+        
         if(verbose){
           print(tabix_command)
         }
@@ -2480,7 +2564,11 @@ get_ssm_by_region = function(chromosome,
 
       }else{ #(not remote)
         #get tabix command
-        tabix_command = paste(tabix_bin, full_maf_path_comp, region, "| cut -f", paste(maf_indexes, collapse = ","))
+        if(mode == "slms-3"){
+          tabix_command = paste(tabix_bin, full_maf_path_comp, region, "| cut -f", paste(maf_indexes, collapse = ","))
+        }else if(mode == "strelka2"){
+          tabix_command = paste(tabix_bin, full_maf_path_comp, region)
+        }
         if(verbose){
           print(tabix_command)
         }

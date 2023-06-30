@@ -346,15 +346,19 @@ sample_id, pathology</p>
 <span class="r-in"><span></span></span>
 <span class="r-in"><span><span class="co">#get some data</span></span></span>
 <span class="r-in"><span><span class="va">maf_data</span> <span class="op">=</span> <span class="fu"><a href="get_coding_ssm.html">get_coding_ssm</a></span><span class="op">(</span>seq_type <span class="op">=</span> <span class="st">"genome"</span><span class="op">)</span></span></span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> [1] "missing:  /Users/rmorin/git/gambl/data/metadata/gambl_all_outcomes.tsv"</span>
-<span class="r-msg co"><span class="r-pr">#&gt;</span> Have you cloned the GAMBL repo and added the path to this directory under the local section of your config?</span>
-<span class="r-err co"><span class="r-pr">#&gt;</span> <span class="error">Error:</span> '/Users/rmorin/git/gambl/data/metadata/gambl_all_outcomes.tsv' does not exist.</span>
+<span class="r-msg co"><span class="r-pr">#&gt;</span> reading from: /projects/nhl_meta_analysis_scratch/gambl/results_local/all_the_things/slms_3-1.0_vcf2maf-1.3/genome--projection/deblacklisted/augmented_maf/all_slms-3--grch37.CDS.maf</span>
+<span class="r-msg co"><span class="r-pr">#&gt;</span> mutations from 1652 samples</span>
+<span class="r-msg co"><span class="r-pr">#&gt;</span> after linking with metadata, we have mutations from 1646 samples</span>
 <span class="r-in"><span><span class="va">maf_metadata</span> <span class="op">=</span> <span class="fu"><a href="get_gambl_metadata.html">get_gambl_metadata</a></span><span class="op">(</span><span class="op">)</span></span></span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> [1] "missing:  /Users/rmorin/git/gambl/data/metadata/gambl_all_outcomes.tsv"</span>
-<span class="r-msg co"><span class="r-pr">#&gt;</span> Have you cloned the GAMBL repo and added the path to this directory under the local section of your config?</span>
-<span class="r-err co"><span class="r-pr">#&gt;</span> <span class="error">Error:</span> '/Users/rmorin/git/gambl/data/metadata/gambl_all_outcomes.tsv' does not exist.</span>
 <span class="r-in"><span><span class="va">maf</span> <span class="op">=</span> <span class="fu">maftools</span><span class="fu">::</span><span class="fu"><a href="https://rdrr.io/pkg/maftools/man/read.maf.html" class="external-link">read.maf</a></span><span class="op">(</span><span class="va">maf_data</span>, clinicalData <span class="op">=</span> <span class="va">maf_metadata</span><span class="op">)</span></span></span>
-<span class="r-err co"><span class="r-pr">#&gt;</span> <span class="error">Error in is.data.frame(x = maf):</span> object 'maf_data' not found</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> -Validating</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> --Removed 1078 duplicated variants</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> -Silent variants: 65357 </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> -Summarizing</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> --Possible FLAGS among top ten genes:</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   TTN</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> -Processing clinical data</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> -Finished in 34.4s elapsed (00:01:04 cpu) </span>
 <span class="r-in"><span></span></span>
 <span class="r-in"><span><span class="co">#define some genes of interest</span></span></span>
 <span class="r-in"><span><span class="va">bl_genes</span> <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"NFKBIZ"</span>, <span class="st">"ID3"</span>, <span class="st">"TP53"</span>, <span class="st">"ARID1A"</span>, <span class="st">"FBXO11"</span>,</span></span>
@@ -371,11 +375,9 @@ sample_id, pathology</p>
 <span class="r-in"><span></span></span>
 <span class="r-in"><span><span class="co">#filter metadata</span></span></span>
 <span class="r-in"><span><span class="va">maf_metadata</span> <span class="op">=</span> <span class="fu">dplyr</span><span class="fu">::</span><span class="fu"><a href="https://dplyr.tidyverse.org/reference/filter.html" class="external-link">filter</a></span><span class="op">(</span><span class="va">maf_metadata</span>,<span class="op">!</span><span class="va">lymphgen</span> <span class="op"><a href="https://rdrr.io/r/base/match.html" class="external-link">%in%</a></span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"COMPOSITE"</span><span class="op">)</span><span class="op">)</span></span></span>
-<span class="r-err co"><span class="r-pr">#&gt;</span> <span class="error">Error in dplyr::filter(maf_metadata, !lymphgen %in% c("COMPOSITE")):</span> object 'maf_metadata' not found</span>
 <span class="r-in"><span></span></span>
 <span class="r-in"><span><span class="co">#convert metadata column into factor</span></span></span>
 <span class="r-in"><span><span class="va">maf_metadata</span><span class="op">$</span><span class="va">pathology</span> <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/factor.html" class="external-link">as.factor</a></span><span class="op">(</span><span class="va">maf_metadata</span><span class="op">$</span><span class="va">pathology</span><span class="op">)</span></span></span>
-<span class="r-err co"><span class="r-pr">#&gt;</span> <span class="error">Error in is.factor(x):</span> object 'maf_metadata' not found</span>
 <span class="r-in"><span></span></span>
 <span class="r-in"><span><span class="co">#define order of factors for selected metadata column</span></span></span>
 <span class="r-in"><span><span class="va">maf_metadata</span><span class="op">$</span><span class="va">pathology</span> <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/factor.html" class="external-link">factor</a></span><span class="op">(</span><span class="va">maf_metadata</span><span class="op">$</span><span class="va">pathology</span>,</span></span>
@@ -385,10 +387,8 @@ sample_id, pathology</p>
 <span class="r-in"><span>                                           <span class="st">"FL"</span>, <span class="st">"HGBL"</span>,</span></span>
 <span class="r-in"><span>                                           <span class="st">"MCL"</span>, <span class="st">"PBL"</span>,</span></span>
 <span class="r-in"><span>                                           <span class="st">"SCBC"</span>, <span class="st">"UNSPECIFIED"</span><span class="op">)</span><span class="op">)</span></span></span>
-<span class="r-err co"><span class="r-pr">#&gt;</span> <span class="error">Error in factor(maf_metadata$pathology, levels = c("DLBCL", "BL", "B-ALL",     "CLL", "COMFL", "DLBCL-BL-like", "FL", "HGBL", "MCL", "PBL",     "SCBC", "UNSPECIFIED")):</span> object 'maf_metadata' not found</span>
 <span class="r-in"><span></span></span>
 <span class="r-in"><span><span class="va">maf_metadata</span> <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/with.html" class="external-link">with</a></span><span class="op">(</span><span class="va">maf_metadata</span>, <span class="va">maf_metadata</span><span class="op">[</span><span class="fu"><a href="https://rdrr.io/r/base/order.html" class="external-link">order</a></span><span class="op">(</span><span class="va">pathology</span><span class="op">)</span>,<span class="op">]</span><span class="op">)</span></span></span>
-<span class="r-err co"><span class="r-pr">#&gt;</span> <span class="error">Error in with(maf_metadata, maf_metadata[order(pathology), ]):</span> object 'maf_metadata' not found</span>
 <span class="r-in"><span></span></span>
 <span class="r-in"><span><span class="co">#create prettyOncoplot</span></span></span>
 <span class="r-in"><span><span class="fu">prettyOncoplot</span><span class="op">(</span>maftools_obj <span class="op">=</span> <span class="va">maf</span>,</span></span>
@@ -403,7 +403,20 @@ sample_id, pathology</p>
 <span class="r-in"><span>               fontSizeGene <span class="op">=</span> <span class="fl">11</span>,</span></span>
 <span class="r-in"><span>               metadataColumns <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"pathology"</span>, <span class="st">"lymphgen"</span>, <span class="st">"sex"</span>, <span class="st">"EBV_status_inf"</span>, <span class="st">"cohort"</span><span class="op">)</span>,</span></span>
 <span class="r-in"><span>               sortByColumns <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"pathology"</span>, <span class="st">"lymphgen"</span>, <span class="st">"sex"</span>, <span class="st">"EBV_status_inf"</span>, <span class="st">"cohort"</span><span class="op">)</span><span class="op">)</span></span></span>
-<span class="r-err co"><span class="r-pr">#&gt;</span> <span class="error">Error in pull(these_samples_metadata, sample_id):</span> object 'maf_metadata' not found</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> [1] "numcases: 1646"</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> [1] "numgenes: 18"</span>
+<span class="r-msg co"><span class="r-pr">#&gt;</span> All mutation types: Frame_Shift_Del, Missense_Mutation, Multi_Hit,</span>
+<span class="r-msg co"><span class="r-pr">#&gt;</span> Splice_Site, Nonsense_Mutation, Frame_Shift_Ins, In_Frame_Del,</span>
+<span class="r-msg co"><span class="r-pr">#&gt;</span> Translation_Start_Site, Nonstop_Mutation, In_Frame_Ins.</span>
+<span class="r-msg co"><span class="r-pr">#&gt;</span> `alter_fun` is assumed vectorizable. If it does not generate correct</span>
+<span class="r-msg co"><span class="r-pr">#&gt;</span> plot, please set `alter_fun_is_vectorized = FALSE` in `oncoPrint()`.</span>
+<span class="r-msg co"><span class="r-pr">#&gt;</span> Following `at` are removed: RNA, 3'UTR, Splice_Region, Silent,</span>
+<span class="r-msg co"><span class="r-pr">#&gt;</span> hot_spot, because no color was defined for them.</span>
+<span class="r-msg co"><span class="r-pr">#&gt;</span> Following `at` are removed: RNA, 3'UTR, Splice_Region, Silent,</span>
+<span class="r-msg co"><span class="r-pr">#&gt;</span> hot_spot, because no color was defined for them.</span>
+<span class="r-msg co"><span class="r-pr">#&gt;</span> Following `at` are removed: RNA, 3'UTR, Splice_Region, Silent,</span>
+<span class="r-msg co"><span class="r-pr">#&gt;</span> hot_spot, because no color was defined for them.</span>
+<span class="r-plt img"><img src="prettyOncoplot-1.png" alt="" width="700" height="433"></span>
 <span class="r-in"><span></span></span>
 </code></pre></div>
     </div>
