@@ -128,14 +128,11 @@ The most useful columns that are added are mechanism (one of CSR, AID, VDJ) and 
     <div id="ref-examples">
     <h2>Examples</h2>
     <div class="sourceCode"><pre class="sourceCode r"><code><span class="r-in"><span><span class="va">manta_sv</span> <span class="op">=</span> <span class="fu"><a href="get_manta_sv.html">get_manta_sv</a></span><span class="op">(</span>verbose <span class="op">=</span> <span class="cn">FALSE</span><span class="op">)</span></span></span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> [1] "missing:  /Users/rmorin/gambl_results/gambl/svar_master-1.0/merges/gridss_manta.genome--grch37.bedpe"</span>
-<span class="r-msg co"><span class="r-pr">#&gt;</span> Cannot find file locally. If working remotely, perhaps you forgot to load your config (see below) or sync your files?</span>
-<span class="r-msg co"><span class="r-pr">#&gt;</span> Sys.setenv(R_CONFIG_ACTIVE = "remote")</span>
-<span class="r-err co"><span class="r-pr">#&gt;</span> <span class="error">Error:</span> '/Users/rmorin/gambl_results/gambl/svar_master-1.0/merges/gridss_manta.genome--grch37.bedpe' does not exist.</span>
+<span class="r-msg co"><span class="r-pr">#&gt;</span> WARNING! No SV calls found in flat-file for: 171116-PL02</span>
+<span class="r-msg co"><span class="r-pr">#&gt;</span> WARNING! No SV calls found in flat-file for: 171447-PL01</span>
+<span class="r-msg co"><span class="r-pr">#&gt;</span> WARNING! No SV calls found in flat-file for: 171451-PL01</span>
 <span class="r-in"><span><span class="va">all_annotated</span> <span class="op">=</span> <span class="fu"><a href="annotate_sv.html">annotate_sv</a></span><span class="op">(</span>sv_data <span class="op">=</span> <span class="va">manta_sv</span><span class="op">)</span></span></span>
-<span class="r-err co"><span class="r-pr">#&gt;</span> <span class="error">Error in dplyr::select(., "CHROM_A", "START_A", "END_A", "tumour_sample_id",     ends_with("SCORE"), "STRAND_A"):</span> object 'manta_sv' not found</span>
 <span class="r-in"><span><span class="va">ig_annotated</span> <span class="op">=</span> <span class="fu">annotate_igh_breakpoints</span><span class="op">(</span><span class="va">all_annotated</span><span class="op">)</span></span></span>
-<span class="r-err co"><span class="r-pr">#&gt;</span> <span class="error">Error in dplyr::filter(annotated_df, partner == "IGH"):</span> object 'all_annotated' not found</span>
 <span class="r-in"><span></span></span>
 </code></pre></div>
     </div>

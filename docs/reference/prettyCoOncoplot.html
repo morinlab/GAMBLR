@@ -164,17 +164,18 @@ are expected to be out-of-the-box compatible with this function nd would not nee
     <h2>Examples</h2>
     <div class="sourceCode"><pre class="sourceCode r"><code><span class="r-in"><span><span class="co">#get data for plotting</span></span></span>
 <span class="r-in"><span><span class="va">ssm</span> <span class="op">=</span> <span class="fu"><a href="get_coding_ssm.html">get_coding_ssm</a></span><span class="op">(</span>limit_cohort <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"BL_Adult"</span>, <span class="st">"BL_Pediatric"</span><span class="op">)</span>, seq_type <span class="op">=</span> <span class="st">"genome"</span><span class="op">)</span></span></span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> [1] "missing:  /Users/rmorin/git/gambl/data/metadata/gambl_all_outcomes.tsv"</span>
-<span class="r-msg co"><span class="r-pr">#&gt;</span> Have you cloned the GAMBL repo and added the path to this directory under the local section of your config?</span>
-<span class="r-err co"><span class="r-pr">#&gt;</span> <span class="error">Error:</span> '/Users/rmorin/git/gambl/data/metadata/gambl_all_outcomes.tsv' does not exist.</span>
+<span class="r-msg co"><span class="r-pr">#&gt;</span> reading from: /projects/nhl_meta_analysis_scratch/gambl/results_local/all_the_things/slms_3-1.0_vcf2maf-1.3/genome--projection/deblacklisted/augmented_maf/all_slms-3--grch37.CDS.maf</span>
+<span class="r-msg co"><span class="r-pr">#&gt;</span> mutations from 1652 samples</span>
+<span class="r-msg co"><span class="r-pr">#&gt;</span> after linking with metadata, we have mutations from 219 samples</span>
 <span class="r-in"><span><span class="va">ssm</span> <span class="op">=</span> <span class="fu">maftools</span><span class="fu">::</span><span class="fu"><a href="https://rdrr.io/pkg/maftools/man/read.maf.html" class="external-link">read.maf</a></span><span class="op">(</span><span class="va">ssm</span><span class="op">)</span></span></span>
-<span class="r-err co"><span class="r-pr">#&gt;</span> <span class="error">Error in is.data.frame(x = maf):</span> object 'ssm' not found</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> -Validating</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> -Silent variants: 10604 </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> -Summarizing</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> -Processing clinical data</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> --Missing clinical data</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> -Finished in 3.529s elapsed (9.005s cpu) </span>
 <span class="r-in"><span><span class="va">meta</span> <span class="op">=</span> <span class="fu"><a href="get_gambl_metadata.html">get_gambl_metadata</a></span><span class="op">(</span><span class="op">)</span></span></span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> [1] "missing:  /Users/rmorin/git/gambl/data/metadata/gambl_all_outcomes.tsv"</span>
-<span class="r-msg co"><span class="r-pr">#&gt;</span> Have you cloned the GAMBL repo and added the path to this directory under the local section of your config?</span>
-<span class="r-err co"><span class="r-pr">#&gt;</span> <span class="error">Error:</span> '/Users/rmorin/git/gambl/data/metadata/gambl_all_outcomes.tsv' does not exist.</span>
 <span class="r-in"><span><span class="va">meta</span> <span class="op">=</span> <span class="fu">dplyr</span><span class="fu">::</span><span class="fu"><a href="https://dplyr.tidyverse.org/reference/filter.html" class="external-link">filter</a></span><span class="op">(</span><span class="va">meta</span>, <span class="va">cohort</span> <span class="op"><a href="https://rdrr.io/r/base/match.html" class="external-link">%in%</a></span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"BL_Adult"</span>, <span class="st">"BL_Pediatric"</span><span class="op">)</span><span class="op">)</span></span></span>
-<span class="r-err co"><span class="r-pr">#&gt;</span> <span class="error">Error in dplyr::filter(meta, cohort %in% c("BL_Adult", "BL_Pediatric")):</span> object 'meta' not found</span>
 <span class="r-in"><span></span></span>
 <span class="r-in"><span><span class="co">#build plot</span></span></span>
 <span class="r-in"><span><span class="fu">prettyCoOncoplot</span><span class="op">(</span>maf <span class="op">=</span> <span class="va">ssm</span>,</span></span>
@@ -198,7 +199,13 @@ are expected to be out-of-the-box compatible with this function nd would not nee
 <span class="r-in"><span>                 legend_row <span class="op">=</span> <span class="fl">2</span>,</span></span>
 <span class="r-in"><span>                 label1 <span class="op">=</span> <span class="st">"Adult"</span>,</span></span>
 <span class="r-in"><span>                 label2 <span class="op">=</span> <span class="st">"Pediatric"</span><span class="op">)</span></span></span>
-<span class="r-err co"><span class="r-pr">#&gt;</span> <span class="error">Error in prettyCoOncoplot(maf = ssm, metadata = meta, comparison_column = "cohort",     include_noncoding = NULL, minMutationPercent = 0, genes = c("MYC",         "TET2", "TP53", "DDX3X", "ID3"), metadataColumns = c("pathology",         "EBV_status_inf", "pairing_status", "cohort"), splitColumnName = "EBV_status_inf",     metadataBarHeight = 10, fontSizeGene = 12, metadataBarFontsize = 10,     legend_row = 2, label1 = "Adult", label2 = "Pediatric"):</span> object 'meta' not found</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> -Processing clinical data</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> --Possible FLAGS among top ten genes:</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   TTN</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> -Processing clinical data</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> [1] "numcases: 124"</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> [1] "numgenes: 5"</span>
+<span class="r-err co"><span class="r-pr">#&gt;</span> <span class="error">Error in gpar(fontsize = legendFontSize):</span> could not find function "gpar"</span>
 <span class="r-in"><span></span></span>
 </code></pre></div>
     </div>

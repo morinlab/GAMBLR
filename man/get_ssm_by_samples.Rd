@@ -64,8 +64,6 @@ Is this function not what you are looking for? Try one of the following, similar
 \link{get_coding_ssm_status}, \link{get_ssm_by_patients}, \link{get_ssm_by_sample}, \link{get_ssm_by_region}, \link{get_ssm_by_regions}
 }
 \examples{
-library(parallel)
-
 #examples using the these_sample_ids parameter.
 sample_ssms = get_ssm_by_samples(these_sample_ids = c("HTMCP-01-06-00485-01A-01D",
                                                       "14-35472_tumorA",

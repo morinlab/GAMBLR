@@ -132,9 +132,7 @@ It's also possible to specify more than one gene.</p>
     <div id="ref-examples">
     <h2>Examples</h2>
     <div class="sourceCode"><pre class="sourceCode r"><code><span class="r-in"><span><span class="va">MYC_cn_expression</span> <span class="op">=</span> <span class="fu">get_gene_cn_and_expression</span><span class="op">(</span><span class="st">"MYC"</span><span class="op">)</span></span></span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> [1] "missing:  /Users/rmorin/git/gambl/data/metadata/gambl_all_outcomes.tsv"</span>
-<span class="r-msg co"><span class="r-pr">#&gt;</span> Have you cloned the GAMBL repo and added the path to this directory under the local section of your config?</span>
-<span class="r-err co"><span class="r-pr">#&gt;</span> <span class="error">Error in h(simpleError(msg, call)):</span> error in evaluating the argument 'x' in selecting a method for function 'as.data.frame': '/Users/rmorin/git/gambl/data/metadata/gambl_all_outcomes.tsv' does not exist.</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> [1] "grep -w -F -e Hugo_Symbol -e MYC /projects/nhl_meta_analysis_scratch/gambl/results_local/icgc_dart/DESeq2-0.0_salmon-1.0/mrna--gambl-icgc-all/vst-matrix-Hugo_Symbol_tidy.tsv"</span>
 <span class="r-in"><span></span></span>
 </code></pre></div>
     </div>

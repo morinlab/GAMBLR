@@ -135,11 +135,24 @@ The function then checks for duplicate sample IDs, colours for all values in all
     <div id="ref-examples">
     <h2>Examples</h2>
     <div class="sourceCode"><pre class="sourceCode r"><code><span class="r-in"><span><span class="va">this_metadata</span> <span class="op">=</span> <span class="fu"><a href="get_gambl_metadata.html">get_gambl_metadata</a></span><span class="op">(</span><span class="op">)</span></span></span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> [1] "missing:  /Users/rmorin/git/gambl/data/metadata/gambl_all_outcomes.tsv"</span>
-<span class="r-msg co"><span class="r-pr">#&gt;</span> Have you cloned the GAMBL repo and added the path to this directory under the local section of your config?</span>
-<span class="r-err co"><span class="r-pr">#&gt;</span> <span class="error">Error:</span> '/Users/rmorin/git/gambl/data/metadata/gambl_all_outcomes.tsv' does not exist.</span>
 <span class="r-in"><span><span class="fu">check_gambl_metadata</span><span class="op">(</span>metadata_df <span class="op">=</span> <span class="va">this_metadata</span><span class="op">)</span></span></span>
-<span class="r-err co"><span class="r-pr">#&gt;</span> <span class="error">Error in h(simpleError(msg, call)):</span> error in evaluating the argument 'table' in selecting a method for function '%in%': error in evaluating the argument 'x' in selecting a method for function 'colnames': object 'this_metadata' not found</span>
+<span class="r-msg co"><span class="r-pr">#&gt;</span> PASSED uniqueness test for sample_id</span>
+<span class="r-msg co"><span class="r-pr">#&gt;</span> COO_consensus OK</span>
+<span class="r-msg co"><span class="r-pr">#&gt;</span> DHITsig_consensus OK</span>
+<span class="r-msg co"><span class="r-pr">#&gt;</span> possible problem!</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> [1] "0.299 % of values not assigned to an available colour."</span>
+<span class="r-msg co"><span class="r-pr">#&gt;</span> possible problem!</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> [1] "7.899 % of values not assigned to an available colour."</span>
+<span class="r-msg co"><span class="r-pr">#&gt;</span> possible problem!</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> [1] "11.67 % of values not assigned to an available colour."</span>
+<span class="r-msg co"><span class="r-pr">#&gt;</span> possible problem!</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> [1] "71.813 % of values not assigned to an available colour."</span>
+<span class="r-msg co"><span class="r-pr">#&gt;</span> possible problem!</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> [1] "66.308 % of values not assigned to an available colour."</span>
+<span class="r-msg co"><span class="r-pr">#&gt;</span> possible problem!</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> [1] "70.796 % of values not assigned to an available colour."</span>
+<span class="r-msg co"><span class="r-pr">#&gt;</span> possible problem!</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> [1] "100 % of values not assigned to an available colour."</span>
 <span class="r-in"><span></span></span>
 </code></pre></div>
     </div>

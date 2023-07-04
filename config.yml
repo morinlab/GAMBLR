@@ -22,6 +22,9 @@ default:
         augmented: "all_the_things/slms_3-1.0_vcf2maf-1.3/{seq_type}--projection/deblacklisted/augmented_maf/all_slms-3--{projection}.CDS.maf"
         cnv: "all_the_things/cnv_master-1.0/merges/{seq_type}--{projection}.seg"
         sv: "all_the_things/svar_master-1.0/merges/gridss_manta.genome--{projection}.bedpe"
+        manta_sv: 
+            gambl: "gambl/manta-2.3/merges/manta.genome--{projection}.bedpe"
+            icgc_dart: "all_the_things/manta-2.3/merges/manta.genome--{projection}.bedpe"
     results_merged_wildcards:
         lymphgen_template: "no_cnvs.no_sv.with_A53,no_cnvs.no_sv.no_A53,no_cnvs.with_sv.with_A53,with_cnvs.no_sv.no_A53,no_cnvs.with_sv.no_A53,with_cnvs.no_sv.with_A53,with_cnvs.with_sv.no_A53,with_cnvs.with_sv.with_A53"
     results_versioned:

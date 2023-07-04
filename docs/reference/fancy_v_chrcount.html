@@ -219,9 +219,10 @@ e.g <code>plot_title</code>, <code>y_interval</code>, <code>hide_legend</code>, 
     <div class="sourceCode"><pre class="sourceCode r"><code><span class="r-in"><span><span class="co">#plot ssm</span></span></span>
 <span class="r-in"><span><span class="fu">fancy_v_chrcount</span><span class="op">(</span>this_sample_id <span class="op">=</span> <span class="st">"HTMCP-01-06-00422-01A-01D"</span>,</span></span>
 <span class="r-in"><span>                 ssm <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span></span></span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> [1] "missing:  /Users/rmorin/git/gambl/data/metadata/gambl_all_outcomes.tsv"</span>
-<span class="r-msg co"><span class="r-pr">#&gt;</span> Have you cloned the GAMBL repo and added the path to this directory under the local section of your config?</span>
-<span class="r-err co"><span class="r-pr">#&gt;</span> <span class="error">Error:</span> '/Users/rmorin/git/gambl/data/metadata/gambl_all_outcomes.tsv' does not exist.</span>
+<span class="r-msg co"><span class="r-pr">#&gt;</span> trying to find output from: battenberg</span>
+<span class="r-msg co"><span class="r-pr">#&gt;</span> looking for flatfile: /projects/nhl_meta_analysis_scratch/gambl/results_local/gambl/battenberg_current/99-outputs/seg/genome--projection/HTMCP-01-06-00422-01A-01D--HTMCP-01-06-00422-10A-01D--matched.battenberg.grch37.seg</span>
+<span class="r-wrn co"><span class="r-pr">#&gt;</span> <span class="warning">Warning: </span>Removed 2 rows containing missing values (`position_stack()`).</span>
+<span class="r-plt img"><img src="fancy_v_chrcount-1.png" alt="" width="700" height="433"></span>
 <span class="r-in"><span></span></span>
 <span class="r-in"><span><span class="co">#plot SVs for chr 1-5</span></span></span>
 <span class="r-in"><span><span class="fu">fancy_v_chrcount</span><span class="op">(</span>this_sample_id <span class="op">=</span> <span class="st">"HTMCP-01-06-00422-01A-01D"</span>,</span></span>
@@ -230,10 +231,9 @@ e.g <code>plot_title</code>, <code>y_interval</code>, <code>hide_legend</code>, 
 <span class="r-in"><span>                 projection <span class="op">=</span> <span class="st">"grch37"</span>,</span></span>
 <span class="r-in"><span>                 chr_select <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/paste.html" class="external-link">paste0</a></span><span class="op">(</span><span class="st">"chr"</span>, <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">1</span><span class="op">:</span><span class="fl">5</span><span class="op">)</span><span class="op">)</span>,</span></span>
 <span class="r-in"><span>                 plot_subtitle <span class="op">=</span> <span class="st">"SV Count Distribution (chr1-5)"</span><span class="op">)</span></span></span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> [1] "missing:  /Users/rmorin/gambl_results/gambl/svar_master-1.0/merges/gridss_manta.genome--grch37.bedpe"</span>
-<span class="r-msg co"><span class="r-pr">#&gt;</span> Cannot find file locally. If working remotely, perhaps you forgot to load your config (see below) or sync your files?</span>
-<span class="r-msg co"><span class="r-pr">#&gt;</span> Sys.setenv(R_CONFIG_ACTIVE = "remote")</span>
-<span class="r-err co"><span class="r-pr">#&gt;</span> <span class="error">Error:</span> '/Users/rmorin/gambl_results/gambl/svar_master-1.0/merges/gridss_manta.genome--grch37.bedpe' does not exist.</span>
+<span class="r-wrn co"><span class="r-pr">#&gt;</span> <span class="warning">Warning: </span>number of columns of result is not a multiple of vector length (arg 3)</span>
+<span class="r-wrn co"><span class="r-pr">#&gt;</span> <span class="warning">Warning: </span>Removed 18 rows containing missing values (`position_stack()`).</span>
+<span class="r-plt img"><img src="fancy_v_chrcount-2.png" alt="" width="700" height="433"></span>
 <span class="r-in"><span></span></span>
 </code></pre></div>
     </div>
