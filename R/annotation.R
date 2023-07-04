@@ -505,14 +505,14 @@ annotate_sv = function(sv_data,
 #' @export
 #'
 #' @examples
-#' findMotif(maf = maf,
+#' annotate_ssm_motif_context (maf = maf,
 #'           motif = "WRCY",
 #'           projection = "hg38"
 #'          )
 
 
 #This function check that if the motif pattern is in the sequence
-findMotif <- function(maf,
+annotate_ssm_motif_context <- function(maf,
                      motif = "WRCY",
                      projection = "grch37",
                      fastaPath
