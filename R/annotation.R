@@ -676,3 +676,99 @@ annotate_ssm_motif_context <- function(maf,
         )
     return(finder)
 }
+
+
+#' @title Annotate MAF with triplet context
+#'
+#' @description Give triple sequence of mutated base with its adjacent bases (-1 and +1)
+#'
+#' @details It gives the reference and alternative alleles and filters the rows of the data frame based on these values for + strand genes and their 
+#' complement alleles rows for - strand genes, then it can look for the adjacent bases in that mutation position. 
+#'
+#' @param maf: MAF file (required columns: Reference_Allele, Tumor_Seq_Allele2, Transcript_Strand)
+#' @param ref: Reference allele
+#' @param alt: Alternative allele
+#' @param projection The genome build projection for the variants you are working with (default is grch37)
+#' @param fastaPath Can be a path to a FASTA file
+#'
+#' @return A data frame with an extra column for triple sequence
+#'
+#' @import Rsamtools dplyr
+#' @export
+#'
+#' @examples
+#' annotate_maf_triplet(maf, "C", "T")
+#' 
+
+#This function gives triple sequence of provided mutated base
+annotate_maf_triplet = function(maf,
+                                ref,
+                                alt,
+                                projection = "grch37",
+                                fastaPath){
+  
+  if (projection == "grch37") {
+    maf$Chromosome <- gsub("chr", "", maf$Chromosome)
+  } else {
+    # If there is a mix of prefixed and non-prefixed options
+    maf$Chromosome <- gsub("chr", "", maf$Chromosome) 
+    maf$Chromosome <- paste0("chr", maf$Chromosome)
+  }
+  # If there is no fastaPath, it will read it from config key 
+  # Based on the projection the fasta file which will be loaded is different
+  if (missing(fastaPath)){
+    base <- check_config_value(config::get("repo_base"))
+    fastaPath <- paste0(
+      base,
+      "ref/lcr-modules-references-STABLE/genomes/",
+      projection,
+      "/genome_fasta/genome.fa"
+    )
+  }
+  # It checks for the presence of a local fastaPath
+  if (!file.exists(fastaPath)) {
+    stop("Failed to find the fasta file")
+  }
+  # Create a reference to an indexed fasta file.
+  fasta = Rsamtools::FaFile(file = fastaPath)
+  # Store the complement of ref and alt alleles
+  complement <- c(
+    'A'= 'T',
+    'T'= 'A',
+    'C'= 'G',
+    'G'= 'C'
+  )  
+  CompRef = complement[ref]
+  CompAlt = complement[alt]
+  # Keep mutations on + strand with chosen ref and alt alleles
+  # Keep mutations on - strand with complement ref and alt alleles
+  maf = maf %>%
+    dplyr::filter(
+      (maf$Transcript_Strand == "+" &
+         maf$Reference_Allele == ref &
+         maf$Tumor_Seq_Allele2 == alt
+      )|(
+        maf$Transcript_Strand == "-" &
+          maf$Reference_Allele == CompRef &
+          maf$Tumor_Seq_Allele2 == CompAlt
+      )
+    )
+  # Provide triple sequence of + strand and reverse complement of - strand 
+  sequences <- maf %>%
+    dplyr::mutate(
+      seq = as.character(
+        Rsamtools::getSeq(
+          fasta,
+          GenomicRanges::GRanges(
+            maf$Chromosome,
+            IRanges(
+              start = maf$Start_Position - 1,
+              end = maf$End_Position + 1
+            )
+          )
+        )
+      )
+    )
+  
+  return(sequences)
+}
