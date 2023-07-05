@@ -707,68 +707,68 @@ annotate_maf_triplet = function(maf,
                                 projection = "grch37",
                                 fastaPath){
   
-  if (projection == "grch37") {
-    maf$Chromosome <- gsub("chr", "", maf$Chromosome)
-  } else {
-    # If there is a mix of prefixed and non-prefixed options
-    maf$Chromosome <- gsub("chr", "", maf$Chromosome) 
-    maf$Chromosome <- paste0("chr", maf$Chromosome)
-  }
-  # If there is no fastaPath, it will read it from config key 
-  # Based on the projection the fasta file which will be loaded is different
-  if (missing(fastaPath)){
-    base <- check_config_value(config::get("repo_base"))
-    fastaPath <- paste0(
-      base,
-      "ref/lcr-modules-references-STABLE/genomes/",
-      projection,
-      "/genome_fasta/genome.fa"
-    )
-  }
-  # It checks for the presence of a local fastaPath
-  if (!file.exists(fastaPath)) {
-    stop("Failed to find the fasta file")
-  }
-  # Create a reference to an indexed fasta file.
-  fasta = Rsamtools::FaFile(file = fastaPath)
-  # Store the complement of ref and alt alleles
-  complement <- c(
-    'A'= 'T',
-    'T'= 'A',
-    'C'= 'G',
-    'G'= 'C'
-  )  
-  CompRef = complement[ref]
-  CompAlt = complement[alt]
-  # Keep mutations on + strand with chosen ref and alt alleles
-  # Keep mutations on - strand with complement ref and alt alleles
-  maf = maf %>%
-    dplyr::filter(
-      (maf$Transcript_Strand == "+" &
-         maf$Reference_Allele == ref &
-         maf$Tumor_Seq_Allele2 == alt
-      )|(
-        maf$Transcript_Strand == "-" &
-          maf$Reference_Allele == CompRef &
-          maf$Tumor_Seq_Allele2 == CompAlt
-      )
-    )
-  # Provide triple sequence of + strand and reverse complement of - strand 
-  sequences <- maf %>%
-    dplyr::mutate(
-      seq = as.character(
-        Rsamtools::getSeq(
-          fasta,
-          GenomicRanges::GRanges(
-            maf$Chromosome,
-            IRanges(
-              start = maf$Start_Position - 1,
-              end = maf$End_Position + 1
-            )
-          )
+    if (projection == "grch37") {
+        maf$Chromosome <- gsub("chr", "", maf$Chromosome)
+    } else {
+        # If there is a mix of prefixed and non-prefixed options
+        maf$Chromosome <- gsub("chr", "", maf$Chromosome) 
+        maf$Chromosome <- paste0("chr", maf$Chromosome)
+    }
+    # If there is no fastaPath, it will read it from config key 
+    # Based on the projection the fasta file which will be loaded is different
+    if (missing(fastaPath)){
+        base <- check_config_value(config::get("repo_base"))
+        fastaPath <- paste0(
+            base,
+            "ref/lcr-modules-references-STABLE/genomes/",
+            projection,
+            "/genome_fasta/genome.fa"
         )
-      )
-    )
+    }
+    # It checks for the presence of a local fastaPath
+    if (!file.exists(fastaPath)) {
+        stop("Failed to find the fasta file")
+    }
+    # Create a reference to an indexed fasta file.
+    fasta = Rsamtools::FaFile(file = fastaPath)
+    # Store the complement of ref and alt alleles
+    complement <- c(
+        'A'= 'T',
+        'T'= 'A',
+        'C'= 'G',
+        'G'= 'C'
+    )  
+    CompRef = complement[ref]
+    CompAlt = complement[alt]
+    # Keep mutations on + strand with chosen ref and alt alleles
+    # Keep mutations on - strand with complement ref and alt alleles
+    maf = maf %>%
+        dplyr::filter(
+            (maf$Transcript_Strand == "+" &
+             maf$Reference_Allele == ref &
+             maf$Tumor_Seq_Allele2 == alt
+            )|(
+                  maf$Transcript_Strand == "-" &
+                  maf$Reference_Allele == CompRef &
+                  maf$Tumor_Seq_Allele2 == CompAlt
+              )
+        )
+    # Provide triple sequence of + strand and reverse complement of - strand 
+    sequences <- maf %>%
+        dplyr::mutate(
+            seq = as.character(
+                Rsamtools::getSeq(
+                    fasta,
+                    GenomicRanges::GRanges(
+                        maf$Chromosome,
+                        IRanges(
+                            start = maf$Start_Position - 1,
+                            end = maf$End_Position + 1
+                        )
+                    )
+                )
+            )
+        )
   
-  return(sequences)
+    return(sequences)
 }
