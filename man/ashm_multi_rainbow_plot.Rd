@@ -12,7 +12,8 @@ ashm_multi_rainbow_plot(
   seq_type,
   custom_colours,
   classification_column = "lymphgen",
-  maf_data
+  maf_data,
+  verbose = TRUE
 )
 }
 \arguments{
@@ -31,6 +32,8 @@ ashm_multi_rainbow_plot(
 \item{classification_column}{Optional. Override default column for assigning the labels used for colouring in the figure.}
 
 \item{maf_data}{An already loaded maf, if no provided, this function will call \code{get_ssm_by_region}, using the regions supplied into \code{regions_bed}.}
+
+\item{verbose}{Set to FALSE to rpevent printing the full regions bed file to the console. Default is TRUE.}
 }
 \value{
 Nothing

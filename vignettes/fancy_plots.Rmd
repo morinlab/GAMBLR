@@ -1,15 +1,14 @@
 ---
-title: "GAMBLR: Fancy Plotting Functions"
-author: "Adam Mattsson"
-date: "July 07, 2022"
+title: "Fancy Plots Tutorial"
 output: rmarkdown::html_vignette
 vignette: >
-  %\VignetteIndexEntry{04: Fancy Plots}
+  %\VignetteIndexEntry{Fancy Plots Tutorial}
   %\VignetteEngine{knitr::rmarkdown}
   %\VignetteEncoding{UTF-8}
 ---
 ```{r setup, include = FALSE}
 knitr::opts_chunk$set(warning = FALSE, message = FALSE)
+options(bitmapType='cairo')
 ```
 # Plotting Parameters, Global Variables and Packages.
 Define global plotting parameters, load packages etc.

@@ -3011,294 +3011,6 @@ collate_sv_results = function(sample_table,
 }
 
 
-#' @title Get GAMBL Colours.
-#'
-#' @description Get GAMBL colour schemes for annotating figures.
-#'
-#' @details This function was designed to retrieve specified GAMBL colour palettes.
-#' By default, this function returns all the colours currently available.
-#' The user can easily specify what classification to return colors for with the `classification` parameter.
-#' It is also possible to return any given colour in different formats.
-#' To do so, refer to the Boolean arguments; `as_list` and `as_dataframe`.
-#' For more information regarding the available colours, refer to the utilities vignette.
-#'
-#' @param classification Optionally request only colours for pathology, lymphgen, mutation or copy_number.
-#' @param alpha Alpha of plotted colours.
-#' @param as_list Boolean parameter controlling the format of the return. Default is FALSE.
-#' @param as_dataframe Boolean parameter controlling the format of the return. Default is FALSE.
-#' @param return_available Set to TRUE for returning all available colours. Default is FALSE.
-#' @param verbose Default is FALSE
-#'
-#' @return A named vector of colour codes for lymphgen classes and pathology.
-#'
-#' @import dplyr ggsci stringr tidyr
-#' @export
-#'
-#' @examples
-#' lymphgen_cols = get_gambl_colours("lymphgen")
-#'
-#' \dontrun{
-#' #be sure to install ggsci from https://github.com/morinlab/ggsci
-#' #install_github("morinlab/ggsci")
-#' }
-#'
-get_gambl_colours = function(classification = "all",
-                             alpha = 1,
-                             as_list = FALSE,
-                             as_dataframe = FALSE,
-                             return_available = FALSE,
-                             verbose = FALSE){
-
-  all_colours = list()
-  everything = c()
-  blood_cols = ggsci::get_ash("blood")
-
-  all_colours[["seq_type"]] = c("mrna" = "#E41A1C",
-                                "genome" = "#377EB8",
-                                "capture" = "#4DAF4A")
-
-  all_colours[["type"]] = c("gain" = "blue",
-                            "loss" = "red")
-
-  all_colours[["hmrn"]] = c("BCL2-MYC" = "#52000F",
-                            "BCL2" = "#721F0F",
-                            "SOCS1/SGK1" = "#D66B1F",
-                            "TET2/SGK1" = "#C41230",
-                            "MYD88" = "#3B5FAC",
-                            "NOTCH2" = "#7F3293",
-                            "NOTCH1" = "#55B55E",
-                            "Other" = "#ACADAF")
-
-  all_colours[["EBV"]] =  c("EBV-positive" = "#7F055F",
-                            "EBV-negative" = "#E5A4CB",
-                            "POS" = "#7F055F",
-                            "NEG" = "#E5A4CB")
-
-  all_colours[["BL"]] = c("Q53-BL" = "#A6CEE3",
-                          "M53-BL" = "#A6CEE3", #added because genetic subgroup still refers to it this way
-                          "DLBCL-A" = "#721F0F",
-                          "IC-BL" = "#45425A",
-                          "DGG-BL" = "#E90C8B",
-                          "DLBCL-B" = "#FB9A99",
-                          "DLBCL-C" = "#C41230")
-
-  all_colours[["FL"]] = c(dFL = "#99C1B9", cFL = "#D16666", DLBCL = "#479450")
-
-  all_colours[["lymphgenerator"]] = c("MP3"="#5B8565",
-                                      "EGB" = "#98622A",
-                                      "ETB"="#813F3D",
-                                      "aSCI"="#D66B1F",
-                                      "aSEL"="#6A0D18",
-                                      "MCaP"="#5F8CFF",
-                                      "BNZ"="#8870B6",
-                                      "EZB"="#721F0F",
-                                      "ST2"="#C41230",
-                                      "UNCLASS"="#05631E"
-                                      )
-
-  all_colours[["chapuy_classifier"]] = c(
-    C0 = "#bebebe",
-    C1 = "#803D99",
-    C2 ="#00A2D2",
-    C3 = "#F39123",
-    C4 = "#50BFAD",
-    C5 = "#DE292A"
-  )
-
-  all_colours[["lacy_classifier"]] = all_colours[["hmrn"]]
-
-  all_colours[["lymphgen"]] = c("EZB-MYC" = "#52000F",
-                                "EZB" = "#721F0F",
-                                "EZB-COMP" = "#C7371A",
-                                "ST2" = "#C41230",
-                                "ST2-COMP" = "#EC3251",
-                                "MCD" = "#3B5FAC",
-                                "MCD-COMP" = "#6787CB",
-                                "BN2" =  "#7F3293",
-                                "BN2-COMP" = "#A949C1",
-                                "N1" = "#55B55E",
-                                "N1-COMP" = "#7FC787",
-                                "A53" = "#5b6d8a",
-                                "Other" = "#ACADAF",
-                                "COMPOSITE" = "#ACADAF")
-
-  #all_colours[["coding_class"]] = c("Frame_Shift_Del","Frame_Shift_Ins",
-  #                 "In_Frame_Del","In_Frame_Ins",
-  #                 "Missense_Mutation","Nonsense_Mutation",
-  #                 "Nonstop_Mutation","Splice_Region","Splice_Site",
-  #                 "Targeted_Region","Translation_Start_Site")
-  all_colours[["mutation"]]=
-    c(
-        "Nonsense_Mutation"=unname(blood_cols["Red"]),
-        "Missense_Mutation"=unname(blood_cols["Green"]),
-        "Multi_Hit"=unname(blood_cols["Steel Blue"]),
-        "Frame_Shift_Ins" = unname(blood_cols["Magenta"]),
-        "Frame_Shift_Del" = unname(blood_cols["Magenta"]),
-        "In_Frame_Ins" = unname(blood_cols["Brown"]),
-        "In_Frame_Del" = unname(blood_cols["Brown"]),
-        "Nonstop_Mutation" = unname(blood_cols["Light Blue"]),
-        "Translation_Start_Site" = unname(blood_cols["Lavendar"]),
-        "Splice_Site" = unname(blood_cols["Orange"]),
-        "Splice_Region" = unname(blood_cols["Orange"]),
-        "3'UTR" = unname(blood_cols["Yellow"]),
-        "Silent" = "#A020F0")
-
-  all_colours[["rainfall"]] =
-    c(
-      "C>A" = "#2196F3FF",
-      "C>G" = "#3F51B5FF",
-      "C>T" = "#F44336FF",
-      "InDel" = "purple",
-      "T>A" = "#4CAF50FF",
-      "T>C" = "#FFC107FF",
-      "T>G" = "#FF9800FF"
-    )
-
-  all_colours[["pos_neg"]]=c(
-    "POS"="#c41230",
-    "NEG"="#E88873",
-    "PARTIAL"="#E88873",
-    "yes"="#c41230",
-    "no"="#E88873",
-    "YES"="#c41230",
-    "NO"="#E88873",
-    "FAIL"="#bdbdc1",
-    "positive"="#c41230",
-    "negative"="#E88873",
-    "fail"="#bdbdc1")
-
-  all_colours[["copy_number"]]=c(
-    "nLOH"="#E026D7",
-    "14"="#380015",
-    "15"="#380015",
-    "13"="#380015",
-    "12"="#380015",
-    "11"="#380015",
-    "10"="#380015",
-    "9"="#380015",
-    "8"="#380015",
-    "7"="#380015",
-    "6"="#380015",
-    "5"="#67001F",
-    "4"="#B2182B",
-    "3"="#D6604D",
-    "2"="#ede4c7",
-    "1"="#92C5DE",
-    "0"="#4393C3"
-  )
-  all_colours[["blood"]] = c(
-      "Red" = "#c41230", "Blue"="#115284","Green" = "#39b54b",
-      "Purple" = "#5c266c", "Orange"="#fe9003","Green" = "#046852",
-      "Lavendar" = "#8781bd", "Steel Blue"= "#455564",
-      "Light Blue" = "#2cace3", "Magenta" = "#e90c8b", "Mustard" = "#b76d29",
-      "LimeGreen" = "#a4bb87", "Brown" = "#5f3a17", "Gray" = "#bdbdc1",
-      "Yellow" = "#f9bd1f"
-  )
-  all_colours[["sex"]]=c(
-    "M"="#118AB2",
-    "Male"="#118AB2",
-    "male"="#118AB2",
-    "F"="#EF476F",
-    "Female"="#EF476F",
-    "female"="#EF476F")
-  all_colours[["clinical"]]=ggsci::get_ash("clinical")
-  all_colours[["pathology"]] = c(
-      "B-ALL"="#C1C64B",
-      "CLL"="#889BE5",
-      "MCL"="#F37A20",
-      "BL"="#926CAD",
-      "mBL"="#34C7F4",
-      "tFL"="#FF8595",
-      "DLBCL-BL-like"="#34C7F4",
-      "pre-HT"="#754F5B",
-      "PMBL"= "#227C9D",
-      "PMBCL"="#227C9D",
-      "FL"="#EA8368",
-      "no-HT"="#EA8368",
-      "COMFL"="#8BBC98",
-      "COM"="#8BBC98",
-      "post-HT"="#479450",
-      "DLBCL"="#479450",
-      "denovo-DLBCL"="#479450",
-      "HGBL-NOS"="#294936",
-      "HGBL"="#294936",
-      "HGBL-DH/TH"="#7A1616",
-      "PBL" = "#E058C0",
-      "Plasmablastic" = "#E058C0",
-      "CNS" = "#E2EF60",
-      "THRLBCL" = "#A5F2B3",
-      "MM"="#CC9A42",
-      "SCBC"="#8c9c90",
-      "UNSPECIFIED"="#cfba7c",
-      "OTHER"="#cfba7c",
-      "MZL"="#065A7F",
-      "SMZL"="#065A7F",
-      "Prolymphocytic" = "#7842f5"
-  )
-  all_colours[["coo"]] = c(
-    "ABC" = "#05ACEF",
-    "UNCLASS" = "#05631E",
-    "Unclass" = "#05631E",
-    "U" = "#05631E",
-    "UNC" = "#05631E",
-    "GCB"= "#F58F20",
-    "DHITsig-"= "#F58F20",
-    "DHITsigNeg"= "#F58F20",
-    "DHITsig-IND" = "#003049",
-    "DHITsig+" = "#D62828",
-    "DHITsigPos" = "#D62828",
-    "NA" = "#ACADAF"
-  )
-  all_colours[["cohort"]] = c("Chapuy"="#8B0000","Chapuy, 2018"="#8B0000",
-                  "Arthur"= "#8845A8","Arthur, 2018"= "#8845A8",
-                  "Schmitz"= "#2C72B2","Schmitz, 2018"= "#2C72B2",
-                  "Reddy" = "#E561C3","Reddy, 2017" = "#E561C3",
-                  "Morin"= "#8DB753", "Morin, 2013"= "#8DB753",
-                  "Kridel"= "#4686B7", "Kridel, 2016"= "#4686B7",
-                  "ICGC"="#E09C3B","ICGC, 2018"="#E09C3B",
-                  "Grande"="#e90c8b", "Grande, 2019"="#e90c8b")
-
-  all_colours[["indels"]] = c("DEL" = "#53B1FC", "INS" = "#FC9C6D")
-  all_colours[["svs"]] = c("DEL" = "#53B1FC", "DUP" = "#FC9C6D")
-  all_colours[["genetic_subgroup"]] = c(all_colours[["lymphgen"]],all_colours[["BL"]],all_colours[["FL"]])
-  #print(all_colours)
-  if(alpha <1){
-    for(colslot in names(all_colours)){
-      raw_cols = all_colours[[colslot]]
-      raw_cols_rgb = col2rgb(raw_cols)
-      alpha_cols = rgb(raw_cols_rgb[1L, ], raw_cols_rgb[2L, ], raw_cols_rgb[3L, ], alpha = alpha * 255L, names = names(raw_cols), maxColorValue = 255L)
-      names(alpha_cols) = names(raw_cols)
-      all_colours[[colslot]] = alpha_cols
-    }
-  }
-  for(this_group in names(all_colours)){
-    everything = c(everything, all_colours[[this_group]])
-  }
-  #return matching value from lowercase version of the argument if it exists
-  lc_class = stringr::str_to_lower(classification)
-  if(return_available){
-    return(names(all_colours))
-  }
-  if(classification %in% names(all_colours)){
-    if(as_dataframe){
-      some_col=all_colours[[classification]]
-      df_ugly = data.frame(name=names(some_col),colour=unname(some_col))
-      df_tidy = mutate(df_ugly,group=classification)
-      return(df_tidy)
-    }
-    return(all_colours[[classification]])
-  }else if(lc_class %in% names(all_colours)){
-    return(all_colours[[lc_class]])
-  }else if(as_list){
-    return(all_colours)
-  }else if(as_dataframe){
-    df_ugly = data.frame(name = names(unlist(all_colours, use.names = T)), colour = unlist(all_colours, use.names = T))
-    df_tidy = separate(df_ugly,name,into=c("group","name"),sep="\\.")
-    return(df_tidy)
-  }else{
-    return(everything)
-  }
-}
 
 
 #' @title Get BAMs.
@@ -3327,7 +3039,8 @@ get_gambl_colours = function(classification = "all",
 get_bams = function(this_sample_id,
                     this_patient_id){
 
-  meta = get_gambl_metadata(tissue_status_filter = c("tumour", "normal"), seq_type_filter = "genome")
+  meta = get_gambl_metadata(tissue_status_filter = c("tumour", "normal"), seq_type_filter = seq_type_filter)
+  meta_tumour = get_gambl_metadata(tissue_status_filter = c("tumour"), seq_type_filter = seq_type_filter)
   meta_mrna = get_gambl_metadata(seq_type_filter = "mrna")
   #get all samples for this patient
   if(missing(this_patient_id)){
@@ -3336,6 +3049,7 @@ get_bams = function(this_sample_id,
       dplyr::pull(patient_id)
   }
   meta_patient = meta %>%
+
     dplyr::filter(patient_id == this_patient_id)
 
   meta_mrna_patient = meta_mrna %>%
@@ -3348,35 +3062,170 @@ get_bams = function(this_sample_id,
   }else{
     igv_build = build
   }
-  tumour_genome_bams = dplyr::filter(meta_patient, seq_type == "genome" & tissue_status == "tumour") %>%
-    dplyr::pull(data_path)
+  bam_path_pattern = "/projects/rmorin/projects/gambl-repos/gambl-rmorin/data/{seq_type}_bams/{sample_id}.{genome_build}.bam"
 
+  #tumour_genome_bams = dplyr::filter(meta_patient, seq_type == seq_type_filter & tissue_status == "tumour") %>%
+  #  dplyr::pull(data_path)
+  tumour_genome_bams = mutate(meta_patient,bam_path=glue::glue(bam_path_pattern)) %>% pull(bam_path)
+  
   bam_details = list(igv_build = igv_build, genome_build = build, tumour_bams = tumour_genome_bams)
-  normal_genome_bams = dplyr::filter(meta_patient, seq_type == "genome" & tissue_status == "normal") %>%
+  normal_genome_bams = dplyr::filter(meta_patient, seq_type == seq_type_filter & tissue_status == "normal") %>%
     dplyr::pull(data_path)
 
-  unix_group = dplyr::filter(meta_patient, seq_type == "genome" & tissue_status == "tumour") %>%
-    dplyr::pull(unix_group) %>%
-    unique()
+  unix_group = dplyr::filter(meta_patient, seq_type == seq_type_filter & tissue_status == "tumour") %>% slice_head() %>%
+    dplyr::pull(unix_group) 
+  
+
 
   bam_details$pairing_status = get_gambl_metadata(seq_type_filter = "genome") %>%
     dplyr::filter(tissue_status == "tumour", patient_id == this_patient_id) %>%
     dplyr::pull(pairing_status) %>%
     unique()
 
+
   bam_details$unix_group = unix_group
   if(length(normal_genome_bams)){
     bam_details$normal_genome_bams = normal_genome_bams
+  }else{
+    print("No Normal")
   }
-  if(length(normal_genome_bams)){
-    bam_details$normal_genome_bams = normal_genome_bams
-  }
+  
   rnaseq_bams = dplyr::filter(meta_mrna_patient, seq_type == "mrna") %>%
     dplyr::pull(data_path)
   if(length(rnaseq_bams)){
     bam_details$rnaseq_bams = rnaseq_bams
   }
   return(bam_details)
+}
+
+#' @title View a variant in IGV
+#'
+#' @description Load bam(s) and view the context around a mutation
+#'
+#' @details Load bam(s) and view the context around a mutation. 
+#' IMPORTANT: you must be running IGV on the host that is running R and you need to have it listening on a port. 
+#' The simplest scenario is to run this command on a terminal (if using a Mac), 
+#' assuming you are using R on gphost10 and you have a ssh config that routes gp10 to that host
+#' 
+#' ```
+#' ssh -X gp10
+#' ```
+#' 
+#' then launch IGV (e.e. from a conda installation):
+#' 
+#' ```
+#' conda activate igv; igv &
+#' ```
+#' 
+#' Then obtain a socket and run this function as per the example.
+#'
+#' @param this_mutation Specify the mutation of interest in MAF format.
+#' @param this_seq_type Specify the seq type, default is genome.
+#' @param igv_port Specify the port IGV is listening on. Default: 60506 (optional if using the default).
+#' @param socket Provide the socket variable obtained by running this function with no arguments.
+#' @param sort_by base, quality, sample or readGroup.
+#' @param colour_by Specify how IGV should colour the reads (see IGV documentation).
+#' @param squish Force reads to be squished (see IGV documentation). Default is FALSE.
+#' @param viewaspairs Set to TRUE if you want the reads to be shown as pairs rather than independently (see IGV documentation), default is FALSE.
+#'
+#' @return Path to file (.png).
+#'
+#' @import SRAdb
+#' @export
+#'
+#' @examples
+#' \dontrun{
+#' socket = make_igv_snapshot() #run with no arguments to get the socket for a running IGV instance
+#' this_mutation = get_coding_ssm(seq_type="capture") %>% head(1)
+#' view_mutation_igv(this_mutation, 
+#'                   socket = socket,
+#'                   this_seq_type = "capture",
+#'                   colour_by = "READ_STRAND",
+#'                   squish = TRUE,
+#'                   viewaspairs = TRUE)
+#' }
+#' 
+view_mutation_igv = function(this_mutation,
+                             this_seq_type = "genome",
+                             igv_port = 60506,
+                             socket,
+                             sort_by = "base",
+                             colour_by,
+                             squish = FALSE,
+                             viewaspairs = FALSE){
+  if(missing(socket)){
+    print("returning socket for future use")
+    sock = IGVsocket(port = igv_port)
+    if(exists("currently_loaded_bam")){
+      currently_loaded_bam <<- "" #avoid the function mistakenly thinking IGV still has a bam loaded
+    }
+    return(sock)
+  }
+  this_sample_id = unique(this_mutation$Tumor_Sample_Barcode)
+  if(length(this_sample_id)>1){
+    stop("provide a MAF with only one sample_id")
+  }
+  
+  start = pull(this_mutation,Start_Position)
+  end = start
+  chrom = pull(this_mutation,Chromosome)
+  region = paste0(chrom,":",start-50,"-",end+50)
+  sock = socket
+  
+    meta = get_gambl_metadata(seq_type_filter=this_seq_type) %>% 
+      dplyr::filter(sample_id %in% this_sample_id)
+    
+      genome_build = pull(meta,genome_build)
+    
+    bam_path_pattern = "/projects/rmorin/projects/gambl-repos/gambl-rmorin/data/{seq_type}_bams/{sample_id}.{genome_build}.bam"
+    bams = mutate(meta,bam_path=glue::glue(bam_path_pattern)) %>% pull(bam_path)
+    if(!length(bams)){
+      message(paste("no bams found for",sample_ids))
+      return()
+    }
+  
+  
+  if(grepl("19",genome_build)||grepl("37",genome_build)){
+    genome_build="hg19"
+  }else{
+    genome_build="hg38"
+  }
+  if(exists("currently_loaded_bam") && currently_loaded_bam[1] == bams[1]){
+      #skip loading
+      print(paste("no need to load",bams))
+  }
+  else{
+    IGVclear(sock)
+    IGVgenome(sock, genome = genome_build)
+    for(bam_file in bams){
+      IGVload(sock, bam_file)
+    }
+    currently_loaded_bam <<- bams
+  }
+  IGVgoto(sock, region)
+  
+  IGVsort(sock,sort_by)
+  if(!missing(colour_by)){
+    allowed = c("READ_STRAND","READ_GROUP","PAIR_ORIENTATION")
+    if(colour_by %in% allowed){
+      socketWrite(sock,paste("colorBy",colour_by, "\n"))
+    }else{
+      message(paste(colour_by,"must be one of",allowed))
+    }
+  }
+  if(squish){
+    socketWrite(sock,paste("squish", "\n"))
+  }
+  if(viewaspairs){
+    socketWrite(sock,paste("viewaspairs", "\n"))
+  }
+}
+
+socketWrite = function (sock, string) {
+  print(string)
+  write.socket(sock, string)
+  response <- read.socket(sock)
+  return(response)
 }
 
 
@@ -3388,17 +3237,39 @@ get_bams = function(this_sample_id,
 #' The user can also specify regions of interest with either the `region` parameter (chr:start-end),
 #' or the user can directly supply the chromosome, start and end coordinates with the `chrom`, `start`, and `end` parameters.
 #' For more information and examples, refer to the function examples and parameter descriptions.
+#' IMPORTANT: you must be running IGV on the host that is running R and you need to have it listening on a port. 
+#' The simplest scenario is to run this command on a terminal (if using a Mac), 
+#' assuming you are using R on gphost10 and you have a ssh config that routes gp10 to that host
+#' 
+#' ```
+#' ssh -X gp10
+#' ```
+#' 
+#' then launch IGV (e.e. from a conda installation):
+#' 
+#' ```
+#' conda activate igv; igv &
+#' ```
 #'
-#' @param bams Character vector containing the full path to one or more bam files.
-#' @param genome_build String specifying the genome build for the bam files provided.
+#' @param these_sample_ids A vector of one or more sample_id (bams for these samples will be auto-loaded)
+#' @param this_seq_type TO DO: automatically obtain this for the user from the metadata
+#' @param genome_build String specifying the genome build for the bam files provided (TO DO: if it isn't already, it should be determined automatically if these_sample_ids was provided).
+#' @param bams Character vector containing the full path to one or more bam files (specify if not providing these_sample_ids)
 #' @param region Optionally specify the region as a single string (e.g. "chr1:1234-1235").
 #' @param padding Optionally specify a positive value to broaden the region around the specified position. Default is 200.
 #' @param chrom Optionally specify the region by specifying the chromosome, start and end (see below).
 #' @param start Optionally specify the region by specifying the start.
 #' @param end Optionally specify the region by specifying the end.
-#' @param this_sample_id Specify the sample_id or any other string you want embedded in the file name.
 #' @param out_path Specify the output directory where the snapshot will be written.
-#' @param igv_port Specify the port IGV is listening on.
+#' @param igv_port Specify the port IGV is listening on. Default: 60506 (optional if using the default).
+#' @param socket Provide the socket variable obtained by running this function with no arguments 
+#' @param gene Optionally provide a gene name that will be incorporated into the output file name
+#' @param details Optionally provide any other text you want incorporated into the output file name
+#' @param clobber Force existing file to be clobbered?
+#' @param sort_by Specify whether and how to sort the reads (e.g. "base"; see IGV documentation)
+#' @param colour_by Specify how IGV should colour the reads (see IGV documentation)
+#' @param squish Force reads to be squished (see IGV documentation)
+#' @param viewaspairs Set to TRUE if you want the reads to be shown as pairs rather than independently (see IGV documentation)
 #'
 #' @return Path to file (.png).
 #'
@@ -3407,46 +3278,144 @@ get_bams = function(this_sample_id,
 #'
 #' @examples
 #' \dontrun{
-#' #IMPORTANT: you must be running IGV on the host that is running R and you need to have it
-#' #listening on a port. The simplest scenario is to run this command on a terminal (if using a Mac),
-#' #assuming you are using R on gphost10 and you have a ssh config that routes gp10 to that host
-#'
-#' ssh -X gp10
-#'
-#' #then launch IGV (e.e. from a conda installation):
-#' #conda activate igv; igv &
-#' this_sv = annotated_sv %>%
+#' this_sv = annotated_sv %>% 
 #'  filter(gene=="ETV6")
-#'
-#' tumour_bam = get_bams(this_sample_id = this_sv$tumour_sample_id)
-#'
+#' 
+#' #you don't need to know the details for the bam file but you can supply it if you want
+#' tumour_bam = get_bams(sample = this_sv$tumour_sample_id)
+#' 
+#' #run with no arguments to get the socket for a running IGV instance
+#' socket = make_igv_snapshot()
+#' 
 #' make_igv_snapshot(chrom = this_sv$chrom2,
 #'                   start = this_sv$start2,
 #'                   end = this_sv$end2,
 #'                   this_sample_id = this_sv$tumour_sample_id,
 #'                   out_path = "~/IGV_snapshots/")
-#' }
+#' 
+#' this_mutation = get_coding_ssm(seq_type="capture") %>% 
+#'  head(1)
+#' 
+#' make_igv_snapshot(socket = socket,
+#'                   sample_ids = this_mutation$Tumor_Sample_Barcode,
+#'                   this_seq_type = "capture", 
+#'                   colour_by = "READ_STRAND")
+#' 
+#' #run on a bunch of variants using apply:
+#' apply(to_snapshot,1,function(x){
+#'  make_igv_snapshot(sample_ids = x["sample_id"],
+#'                    seq_type_filter = "capture",
+#'                    chrom = x["chr"],
+#'                    start = x["start"],
+#'                    end = x["end"],
+#'                    details = paste0(x["ref"],"-",x["alt"]),
+#'                    gene = x["Hugo_Symbol"],
+#'                    socket = socket)})
+#' }   
 #'
 make_igv_snapshot = function(bams,
+                             these_sample_ids,
+                             this_seq_type="genome",
                              genome_build,
                              region,
                              padding = 200,
                              chrom,
                              start,
                              end,
-                             this_sample_id,
                              out_path = "/tmp/",
-                             igv_port = 60506){
-
-  sock = IGVsocket(port = igv_port)
-  IGVclear(sock)
-  if(missing(region)){
-    region = paste0(chrom, ":", start-padding, "-", end + padding)
+                             igv_port = 60506,
+                             socket,
+                             gene="NA",
+                             details="",
+                             clobber=FALSE,
+                             sort_by="base",
+                             colour_by,
+                             squish=FALSE,
+                             viewaspairs=FALSE){
+  if(missing(socket)){
+    print("returning socket for future use")
+    if(exists("currently_loaded_bam")){
+      currently_loaded_bam = "" #avoid the function thinking iGV still has that loaded
+    }
+    sock = IGVsocket(port = igv_port)
+    return(sock)
   }
-  IGVgenome(sock, genome = genome_build)
+  if(missing(these_sample_ids)){
+    #don't load a bam. Assume the bam is already loaded
+  }else{
+    this_sample_id = paste0(these_sample_ids,collapse = ",")
+  }
+  if(missing(region) && missing(chrom)){
+    stop("provide a region or coordinate as chrom, start, end")
+  }
+  
+  if(missing(region)){
+    if(missing(end)){
+      end = as.numeric(start)+1
+    }
+    region = paste0(chrom, ":", as.numeric(start)-padding, "-", as.numeric(end) + padding)
+  }
+  filename = paste(region, gene, this_sample_id, details, "snapshot.png", sep = "--")
+  if(!clobber){
+    outfile = paste0(out_path,filename)
+    #check if file exists already
+    if(file.exists(outfile)){
+      message(paste("file exists:",outfile,"skipping"))
+      return()
+    }
+  }
+  sock = socket
+  if(missing(bams) & !missing(these_sample_ids)){
+    meta = get_gambl_metadata(seq_type_filter=this_seq_type) %>% dplyr::filter(sample_id %in% these_sample_ids)
+    if(missing(genome_build)){
+      genome_build = pull(meta,genome_build)
+    }
+    bam_path_pattern = "/projects/rmorin/projects/gambl-repos/gambl-rmorin/data/{seq_type}_bams/{sample_id}.{genome_build}.bam"
+    bams = mutate(meta,bam_path=glue::glue(bam_path_pattern)) %>% pull(bam_path)
+    if(!length(bams)){
+      
+      message(paste("no bams found for",these_sample_ids))
+      return()
+    }
+  }
+
+  if(grepl("19",genome_build)||grepl("37",genome_build)){
+    genome_build="hg19"
+  }else{
+    genome_build="hg38"
+  }
+  if(!missing(sample_ids)){
+    if(exists("currently_loaded_bam") && currently_loaded_bam[1] == bams[1]){
+        #skip loading
+        print(paste("no need to load",bams))
+      }
+      else{
+        IGVclear(sock)
+        IGVgenome(sock, genome = genome_build)
+        for(bam_file in bams){
+          IGVload(sock, bam_file)
+        }
+        currently_loaded_bam <<- bams
+    }
+
+  }
   IGVgoto(sock, region)
-  for(bam_file in bams){
-    IGVload(sock, bam_file)
+  IGVsort(sock,sort_by)
+  if(!missing(colour_by)){
+    allowed = c("READ_STRAND","READ_GROUP","PAIR_ORIENTATION")
+    if(colour_by %in% allowed){
+      socketWrite(sock,paste("colorBy",colour_by, "\n"))
+    }else{
+      message(paste(colour_by,"must be one of",allowed))
+    }
+  }
+  if(squish){
+    socketWrite(sock,paste("squish", "\n"))
+  }else{
+    socketWrite(sock,paste("expand", "\n"))
+  }
+  if(viewaspairs){
+    socketWrite(sock,paste("viewaspairs", "\n"))
   }
   filename = paste(this_sample_id, region, "snapshot.png", sep = "_")
   IGVsnapshot(sock, fname = filename, dirname = out_path)
@@ -4529,6 +4498,7 @@ subset_cnstates = function(cn_segments,
 #' @param exclude_sex Boolean argument specifying whether to exclude sex chromosomes from calculation. Default is FALSE.
 #' @param return_heatmap Boolean argument specifying whether to return a heatmap of cnvKompare scores. Default is TRUE.
 #' @param compare_pairwise Boolean argument specifying whether to perform pairwise comparisons if there are more than 2 time points in the group. Default is TRUE.
+#' @param show_x_labels Optional boolean parameter for hiding/showing x axis labels, default is TRUE.
 #'
 #' @return A list of overall and pairwise percent concordance, concordant and discordant cytobands, comparison heatmap of cnvKompare scores, and time series ggplot object.
 #'
@@ -4544,7 +4514,8 @@ subset_cnstates = function(cn_segments,
 #'                                  "MYC",
 #'                                  "CREBBP",
 #'                                  "GNA13"),
-#'            projection = "hg38")
+#'            projection = "hg38", 
+#'            show_x_labels = FALSE)
 #'
 cnvKompare = function(patient_id,
                       these_sample_ids,
@@ -4558,7 +4529,9 @@ cnvKompare = function(patient_id,
                       min_concordance = 90,
                       exclude_sex = FALSE,
                       return_heatmap = TRUE,
-                      compare_pairwise = TRUE) {
+                      compare_pairwise = TRUE,
+                      show_x_labels = TRUE){
+                        
   # initialize output list
   output = list()
 
@@ -4718,6 +4691,7 @@ cnvKompare = function(patient_id,
       t %>%
       ComplexHeatmap::Heatmap(
         .,
+        show_column_names = show_x_labels,
         cluster_columns = FALSE,
         cluster_rows = FALSE,
         heatmap_legend_param = hmap_legend_param
@@ -4909,4 +4883,102 @@ supplement_maf <- function(incoming_maf,
 
   full_maf = rbind(incoming_maf, missing_sample_maf)
   return(full_maf)
+}
+
+
+#' @title ID Ease
+#'
+#' @aliases id_ease, id ease
+#'
+#' @description Convenience function that standardize the way GAMBLR functions deals with sample IDs (these_sample_ids)
+#' and metadata (these_samples_metadata).
+#'
+#' @details This function can take sample IDs as a vector of characters, or a metadata table in data frame format.
+#' If no sample IDs are provided to the function, the function will operate on all gambl sample IDs available for the given seq type.
+#' It is highly recommended to run this function with `verbose = TRUE` (default). 
+#' Since this will not only improve the overall logic on how the function operates.
+#' But also might help with debugging functions that are internally calling this function.
+#' The function also performs sanity checks and notifies the user if any of the requested sample IDs are not found in the metadata.
+#' In addition, the function also notifies the dimensions of the returned object, providing further insight to what is returned. 
+#' 
+#' @param these_samples_metadata A data frame with metadata, subset to sample IDs of interest.
+#' If not provided will retrieve GAMBL metadata for all available samples.
+#' @param these_sample_ids Sample IDs as a character of vectors.
+#' @param this_seq_type The seq type of interest. Default is genome.
+#' @param verbose Set to FALSE to limit the information that gets printed to the console. Default is TRUE.
+#'
+#' @return A list with metadata (data frame) as the first element and sample IDs (vector of characters) as the second element.
+#'
+#' @export
+#'
+#' @examples
+#' #give the function nothing (i.e return all sample IDs in the metadata for the default seq type)
+#' this_is_wrong = id_ease()
+#'
+#' #return metadata for all samples in the default seq type
+#' all_meta = id_ease(return_this = "metadata")
+#'
+#' #return metadata based on a sample ID
+#' sample_meta = id_ease(these_sample_ids = "94-15772_tumorA", 
+#'                       return_this = "metadata")
+#'
+#' #return sample IDs based on an already filtered metadata
+#' this_metadata = get_gambl_metadata(seq_type_filter = "genome") %>% 
+#'   head(5)
+#'
+#' thes_ids = id_ease(these_samples_metadata = this_metadata)
+#'
+id_ease = function(these_samples_metadata,
+                   these_sample_ids,
+                   this_seq_type = "genome",
+                   verbose = TRUE){
+ 
+  #check for provided metadata, else use GAMBL metadata
+  if(missing(these_samples_metadata)){
+    if(verbose){
+      message("id_ease: No metadata provided, the helper function will fetch metadata for all gambl samples in the selected seq type...") 
+    }
+    metadata = get_gambl_metadata(seq_type_filter = this_seq_type) #useful to add other get_gambl_metadata parameters?
+  }else{
+    if(verbose){
+      message("id_ease: Metadata is provided...") 
+    }
+    metadata = these_samples_metadata
+  }
+
+  #ensure metadata is subset to specified sample IDs
+  if(!missing(these_sample_ids)){
+    if(verbose){
+      message("id_ease: Sample IDs are provided, filtering the metadata for selected sample IDs...") 
+    }
+    metadata = dplyr::filter(metadata, sample_id %in% these_sample_ids)
+    
+    #check the existence of provided sample IDs in the metadata
+    not_in_meta = setdiff(these_sample_ids, metadata$sample_id)
+    
+    #assign the sample_ids variable
+    sample_ids = these_sample_ids
+    
+    if(length(not_in_meta) > 0){
+      message("id_ease: WARNING! The following sample IDs were not found in the metadata:")
+      print(not_in_meta)
+    }
+  }else{
+    if(verbose){
+      message("id_ease: No sample IDs provided, defaulting to all IDs in the metadata...")
+    }
+    sample_ids = metadata$sample_id
+  }
+
+  #return a list with metadata (data frame) as the first element and sample IDs (vector of characters) as the second element
+  if(verbose){
+    unique_samples = unique(sample_ids)
+    message(paste0("id_ease: Returning ", length(unique_samples), " sample IDs.."))
+    message(paste0("id_ease: Returning metadata for ", length(unique_samples), " samples..." ))
+  }
+
+  #bind the objects into a list for return
+  IDs = list(this_metadata = metadata, these_samples = sample_ids)
+  
+  return(IDs) 
 }

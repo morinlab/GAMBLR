@@ -5,14 +5,21 @@
 <meta charset="utf-8">
 <meta http-equiv="X-UA-Compatible" content="IE=edge">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Utilities Tutorial - GAMBLR • GAMBLR</title>
+<title>Utilities Tutorial • GAMBLR</title>
+<!-- favicons --><link rel="icon" type="image/png" sizes="16x16" href="../favicon-16x16.png">
+<link rel="icon" type="image/png" sizes="32x32" href="../favicon-32x32.png">
+<link rel="apple-touch-icon" type="image/png" sizes="180x180" href="../apple-touch-icon.png">
+<link rel="apple-touch-icon" type="image/png" sizes="120x120" href="../apple-touch-icon-120x120.png">
+<link rel="apple-touch-icon" type="image/png" sizes="76x76" href="../apple-touch-icon-76x76.png">
+<link rel="apple-touch-icon" type="image/png" sizes="60x60" href="../apple-touch-icon-60x60.png">
 <!-- jquery --><script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.4.1/jquery.min.js" integrity="sha256-CSXorXvZcTkaix6Yvo6HppcZGetbYMGWSFlBw8HfCJo=" crossorigin="anonymous"></script><!-- Bootstrap --><link href="https://cdnjs.cloudflare.com/ajax/libs/bootswatch/3.4.0/flatly/bootstrap.min.css" rel="stylesheet" crossorigin="anonymous">
 <script src="https://cdnjs.cloudflare.com/ajax/libs/twitter-bootstrap/3.4.1/js/bootstrap.min.js" integrity="sha256-nuL8/2cJ5NDSSwnKD8VqreErSWHtnEP9E7AySL+1ev4=" crossorigin="anonymous"></script><!-- bootstrap-toc --><link rel="stylesheet" href="../bootstrap-toc.css">
 <script src="../bootstrap-toc.js"></script><!-- Font Awesome icons --><link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.12.1/css/all.min.css" integrity="sha256-mmgLkCYLUQbXn0B1SRqzHar6dCnv9oZFPEC1g1cwlkk=" crossorigin="anonymous">
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.12.1/css/v4-shims.min.css" integrity="sha256-wZjR52fzng1pJHwx4aV2AO3yyTOXrcDW7jBpJtTwVxw=" crossorigin="anonymous">
 <!-- clipboard.js --><script src="https://cdnjs.cloudflare.com/ajax/libs/clipboard.js/2.0.6/clipboard.min.js" integrity="sha256-inc5kl9MA1hkeYUt+EC3BhlIgyp/2jDIyBLS6k3UxPI=" crossorigin="anonymous"></script><!-- headroom.js --><script src="https://cdnjs.cloudflare.com/ajax/libs/headroom/0.11.0/headroom.min.js" integrity="sha256-AsUX4SJE1+yuDu5+mAVzJbuYNPHj/WroHuZ8Ir/CkE0=" crossorigin="anonymous"></script><script src="https://cdnjs.cloudflare.com/ajax/libs/headroom/0.11.0/jQuery.headroom.min.js" integrity="sha256-ZX/yNShbjqsohH1k95liqY9Gd8uOiE1S4vZc+9KQ1K4=" crossorigin="anonymous"></script><!-- pkgdown --><link href="../pkgdown.css" rel="stylesheet">
-<script src="../pkgdown.js"></script><meta property="og:title" content="Utilities Tutorial - GAMBLR">
+<script src="../pkgdown.js"></script><meta property="og:title" content="Utilities Tutorial">
 <meta property="og:description" content="GAMBLR">
+<meta property="og:image" content="https://github.com/morinlab/GAMBLR/logo.png">
 <!-- mathjax --><script src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.5/MathJax.js" integrity="sha256-nvJJv9wWKEm88qvoQl9ekL2J+k/RWIsaSScxxlsrv8k=" crossorigin="anonymous"></script><script src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.5/config/TeX-AMS-MML_HTMLorMML.js" integrity="sha256-84DKXVJXs0/F8OTMzX4UR909+jtl4G7SPypPavF+GfA=" crossorigin="anonymous"></script><!--[if lt IE 9]>
 <script src="https://oss.maxcdn.com/html5shiv/3.7.3/html5shiv.min.js"></script>
 <script src="https://oss.maxcdn.com/respond/1.4.2/respond.min.js"></script>
@@ -55,13 +62,13 @@
   </a>
   <ul class="dropdown-menu" role="menu">
 <li>
-      <a href="../path_once_integrated_on_github">Install</a>
+      <a href="https://morinlab.github.io/GAMBLR/#installation" class="external-link">Install</a>
     </li>
     <li>
-      <a href="../path_once_integrated_on_github">Run Remote On A Local Machine</a>
+      <a href="https://morinlab.github.io/GAMBLR/#running-gamblr-on-your-own-computer" class="external-link">Running GAMBLR On Your Own Computer</a>
     </li>
     <li>
-      <a href="../path_once_integrated_on_github">Contribute</a>
+      <a href="https://morinlab.github.io/GAMBLR/#contributing" class="external-link">Contribute</a>
     </li>
   </ul>
 </li>
@@ -84,7 +91,7 @@
       <a href="../articles/fancy_plots.html">Fancy Plots</a>
     </li>
     <li>
-      <a href="../articles/utiliteis_tutorial.html">Utilities</a>
+      <a href="../articles/utilities_tutorial.html">Utilities</a>
     </li>
   </ul>
 </li>
@@ -117,10 +124,8 @@
       </header><div class="row">
   <div class="col-md-9 contents">
     <div class="page-header toc-ignore">
-      <h1 data-toc-skip>Utilities Tutorial - GAMBLR</h1>
-                        <h4 data-toc-skip class="author">Adam Mattsson</h4>
+      <h1 data-toc-skip>Utilities Tutorial</h1>
             
-            <h4 data-toc-skip class="date">December 30, 2022</h4>
       
       
       <div class="hidden name"><code>utilities_tutorial.Rmd</code></div>
@@ -160,7 +165,7 @@
 <div class="sourceCode" id="cb5"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="co">#gene to region, for multiple genes specified in an already subset list of gene names, return format is data frame</span></span>
 <span><span class="co">#subset FL genes</span></span>
-<span><span class="va">fl_genes</span> <span class="op">=</span> <span class="fu">dplyr</span><span class="fu">::</span><span class="fu"><a href="https://dplyr.tidyverse.org/reference/filter.html" class="external-link">filter</a></span><span class="op">(</span><span class="va">lymphoma_genes</span>, <span class="va">FL</span> <span class="op">==</span> <span class="cn">TRUE</span><span class="op">)</span> <span class="op">%&gt;%</span> <span class="fu">pull</span><span class="op">(</span><span class="va">Gene</span><span class="op">)</span></span>
+<span><span class="va">fl_genes</span> <span class="op">=</span> <span class="fu">dplyr</span><span class="fu">::</span><span class="fu"><a href="https://dplyr.tidyverse.org/reference/filter.html" class="external-link">filter</a></span><span class="op">(</span><span class="va">lymphoma_genes_lymphoma_genes_v0.0</span>, <span class="va">FL</span> <span class="op">==</span> <span class="cn">TRUE</span><span class="op">)</span> <span class="op"><a href="https://magrittr.tidyverse.org/reference/pipe.html" class="external-link">%&gt;%</a></span> <span class="fu"><a href="https://dplyr.tidyverse.org/reference/pull.html" class="external-link">pull</a></span><span class="op">(</span><span class="va">Gene</span><span class="op">)</span></span>
 <span></span>
 <span><span class="co">#get regions for Fl genes</span></span>
 <span><span class="va">fl_genes_df</span> <span class="op">=</span> <span class="fu"><a href="../reference/gene_to_region.html">gene_to_region</a></span><span class="op">(</span>gene_symbol <span class="op">=</span> <span class="va">fl_genes</span>, genome_build <span class="op">=</span> <span class="st">"grch37"</span>, return_as <span class="op">=</span> <span class="st">"df"</span><span class="op">)</span></span></code></pre></div>
@@ -198,7 +203,7 @@
 <span><span class="va">my_region</span> <span class="op">=</span> <span class="fu"><a href="../reference/gene_to_region.html">gene_to_region</a></span><span class="op">(</span>gene_symbol <span class="op">=</span> <span class="st">"MYC"</span>, return_as <span class="op">=</span> <span class="st">"region"</span><span class="op">)</span></span>
 <span></span>
 <span><span class="co">#subset metadata.</span></span>
-<span><span class="va">my_metadata</span> <span class="op">=</span> <span class="fu"><a href="../reference/get_gambl_metadata.html">get_gambl_metadata</a></span><span class="op">(</span><span class="op">)</span> <span class="op">%&gt;%</span></span>
+<span><span class="va">my_metadata</span> <span class="op">=</span> <span class="fu"><a href="../reference/get_gambl_metadata.html">get_gambl_metadata</a></span><span class="op">(</span><span class="op">)</span> <span class="op"><a href="https://magrittr.tidyverse.org/reference/pipe.html" class="external-link">%&gt;%</a></span></span>
 <span>  <span class="fu">dplyr</span><span class="fu">::</span><span class="fu"><a href="https://dplyr.tidyverse.org/reference/filter.html" class="external-link">filter</a></span><span class="op">(</span><span class="va">pathology</span> <span class="op">==</span> <span class="st">"FL"</span><span class="op">)</span></span>
 <span></span>
 <span><span class="co">#count SSMs for the selected sample subset and defined region.</span></span>
@@ -222,13 +227,13 @@
 <p>Interested to see the percentage of a genome altered by CNVs for specific sample, or sample subsets? For this purpose <code>calcualte_pga</code> was developed. This function takes into account the total length of sample’s CNV and relates it to the total genome length to return the proportion affected by CNV. The function can work with either individual or multi-sample seg files. The telomeres are always excluded from calculation, and centromeres/sex chromosomes can be optionally included or excluded.</p>
 <div class="sourceCode" id="cb13"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="co">#get CN segments for a specific sample.</span></span>
-<span><span class="va">sample_seg</span> <span class="op">=</span> <span class="fu"><a href="../reference/get_sample_cn_segments.html">get_sample_cn_segments</a></span><span class="op">(</span>this_sample_id <span class="op">=</span> <span class="st">"14-36022T"</span><span class="op">)</span> <span class="op">%&gt;%</span> </span>
+<span><span class="va">sample_seg</span> <span class="op">=</span> <span class="fu"><a href="../reference/get_sample_cn_segments.html">get_sample_cn_segments</a></span><span class="op">(</span>this_sample_id <span class="op">=</span> <span class="st">"14-36022T"</span><span class="op">)</span> <span class="op"><a href="https://magrittr.tidyverse.org/reference/pipe.html" class="external-link">%&gt;%</a></span> </span>
 <span>  <span class="fu">dplyr</span><span class="fu">::</span><span class="fu"><a href="https://dplyr.tidyverse.org/reference/rename.html" class="external-link">rename</a></span><span class="op">(</span><span class="st">"sample"</span> <span class="op">=</span> <span class="st">"ID"</span><span class="op">)</span></span>
 <span></span>
 <span><span class="co">#calculate PGA for the same sample.</span></span>
 <span><span class="fu"><a href="../reference/calculate_pga.html">calculate_pga</a></span><span class="op">(</span>this_seg <span class="op">=</span> <span class="va">sample_seg</span><span class="op">)</span></span></code></pre></div>
-<pre><code><span><span class="co">##   sample_id       PGA</span></span>
-<span><span class="co">## 1 14-36022T 0.8705917</span></span></code></pre>
+<pre><code><span><span class="co">##   sample_id   PGA</span></span>
+<span><span class="co">## 1 14-36022T 0.871</span></span></code></pre>
 </div>
 <div class="section level4">
 <h4 id="adjust-ploidy">Adjust Ploidy<a class="anchor" aria-label="anchor" href="#adjust-ploidy"></a>
@@ -250,7 +255,7 @@
 <span><span class="co">## <span style="color: #BCBCBC;"> 8</span> 14-36022T 2         <span style="text-decoration: underline;">11</span>320  90<span style="text-decoration: underline;">500</span>000        0         0</span></span>
 <span><span class="co">## <span style="color: #BCBCBC;"> 9</span> 14-36022T 2      96<span style="text-decoration: underline;">800</span>000 186<span style="text-decoration: underline;">704</span>965        0         0</span></span>
 <span><span class="co">## <span style="color: #BCBCBC;">10</span> 14-36022T 2     186<span style="text-decoration: underline;">704</span>966 186<span style="text-decoration: underline;">712</span>276        0         0</span></span>
-<span><span class="co">## <span style="color: #949494;"># … with 177 more rows</span></span></span></code></pre>
+<span><span class="co">## <span style="color: #949494;"># ℹ 177 more rows</span></span></span></code></pre>
 </div>
 <div class="section level4">
 <h4 id="compare-cnvs-for-multiple-samples">Compare CNVs For Multiple Samples<a class="anchor" aria-label="anchor" href="#compare-cnvs-for-multiple-samples"></a>
@@ -260,6 +265,7 @@
 <code class="sourceCode R"><span><span class="co">#get CNV comparison data.</span></span>
 <span><span class="va">kompare_out</span> <span class="op">=</span> <span class="fu"><a href="../reference/cnvKompare.html">cnvKompare</a></span><span class="op">(</span>patient_id <span class="op">=</span> <span class="st">"13-26835"</span>, </span>
 <span>                         projection <span class="op">=</span> <span class="st">"hg38"</span>,</span>
+<span>                         show_x_labels <span class="op">=</span> <span class="cn">FALSE</span>,</span>
 <span>                         genes_of_interest <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"EZH2"</span>,</span>
 <span>                                               <span class="st">"TP53"</span>,</span>
 <span>                                               <span class="st">"MYC"</span>,</span>
@@ -294,19 +300,19 @@
 <div class="section level4">
 <h4 id="collate-results">Collate Results<a class="anchor" aria-label="anchor" href="#collate-results"></a>
 </h4>
-<p>Another useful function for collecting all derived sample-level results from a variety of GAMBL pipelines is to call <code>collate_results</code>. This function takes a variety of parameters that will be explained here. First, <strong>sample_table</strong> which is a data frame with sample IDs in the first column. This parameter is used to control for what samples you are retrieving collated results for. Another option for controlling the same variable is to use <strong>these_samples_metadata</strong>. This parameter takes a metadata table (ideally subset to the sample IDs of interest). If this parameter is called, it overwrites the <code>get_gambl_metadata</code> statement for when the user wants to join with metadata. Meaning if this parameter is set to <code>TRUE</code> and no <strong>these_sample_metadata</strong> is provided, it will link the collated results with all samples in the unfiltered meta data table. Other parameters include <code>write_to_file</code>, this parameter is Boolean parameter and if set to TRUE, it writes the results to disk (default is <code>FALSE</code>). Another parameter that is good to be aware of is <code>from_cache</code>, which controls how the function gets the results. Default is <code>TRUE</code>. In most user-cases, these two parameters should be run with their respective default values. Let’s have a look at a few examples using this function.</p>
+<p>Collate Results is used to retrieve a vast collection of sample-level results and summary data, generated by individual GAMBL pipelines. All in all, this function returns 89 variables (columns) for each sample ID (or more if you link it with metadata information!). This includes, but is not limited to the following information; various quality control (QC) metrics, mean VAF scores, total SSM/coding SSM, EBV information, mutation partners, and exposure to mutational signatures. Thus, this function can be a handy tool for retrieving and comparing sample-level results between different samples, cohorts, pathologies etc. The returned data is standardized in a way that also allows for straight forward plotting of the returned data. This function takes a variety of parameters that will be explained here. First, <strong>sample_table</strong> which is a data frame with sample IDs in the first column. This parameter is used to control for what samples you are retrieving collated results for. Another option for controlling the same variable is to use <strong>these_samples_metadata</strong>. This parameter takes a metadata table (ideally subset to the sample IDs of interest). If this parameter is called, it overwrites the <code>get_gambl_metadata</code> statement for when the user wants to join with metadata. Meaning if this parameter is set to <code>TRUE</code> and no <strong>these_sample_metadata</strong> is provided, it will link the collated results with all samples in the unfiltered meta data table. Other parameters include <code>write_to_file</code>, this parameter is Boolean parameter and if set to TRUE, it writes the results to disk (default is <code>FALSE</code>). Another parameter that is good to be aware of is <code>from_cache</code>, which controls how the function gets the results. Default is <code>TRUE</code>. In most user-cases, these two parameters should be run with their respective default values. Let’s have a look at a few examples using this function.</p>
 <pre class="collate_results"><code><span><span class="co">#collate all genome samples, using cached results</span></span>
 <span><span class="va">genome_collated</span> <span class="op">=</span> <span class="fu"><a href="../reference/collate_results.html">collate_results</a></span><span class="op">(</span>seq_type_filter <span class="op">=</span> <span class="st">"genome"</span>, from_cache <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span></span>
 <span></span>
 <span><span class="co">#use an already subset metadata table for getting collated results (cached)</span></span>
-<span><span class="va">fl_metadata</span> <span class="op">=</span> <span class="fu"><a href="../reference/get_gambl_metadata.html">get_gambl_metadata</a></span><span class="op">(</span>seq_type_filter <span class="op">=</span> <span class="st">"genome"</span><span class="op">)</span> <span class="op">%&gt;%</span> <span class="fu">dplyr</span><span class="fu">::</span><span class="fu"><a href="https://dplyr.tidyverse.org/reference/filter.html" class="external-link">filter</a></span><span class="op">(</span><span class="va">pathology</span> <span class="op">==</span> <span class="st">"FL"</span><span class="op">)</span></span>
+<span><span class="va">fl_metadata</span> <span class="op">=</span> <span class="fu"><a href="../reference/get_gambl_metadata.html">get_gambl_metadata</a></span><span class="op">(</span>seq_type_filter <span class="op">=</span> <span class="st">"genome"</span><span class="op">)</span> <span class="op"><a href="https://magrittr.tidyverse.org/reference/pipe.html" class="external-link">%&gt;%</a></span> <span class="fu">dplyr</span><span class="fu">::</span><span class="fu"><a href="https://dplyr.tidyverse.org/reference/filter.html" class="external-link">filter</a></span><span class="op">(</span><span class="va">pathology</span> <span class="op">==</span> <span class="st">"FL"</span><span class="op">)</span></span>
 <span><span class="va">fl_collated</span> <span class="op">=</span> <span class="fu"><a href="../reference/collate_results.html">collate_results</a></span><span class="op">(</span>seq_type_filter <span class="op">=</span> <span class="st">"genome"</span>, join_with_full_metadata <span class="op">=</span> <span class="cn">TRUE</span>, these_samples_metadata <span class="op">=</span> <span class="va">fl_metadata</span>, from_cache <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span></span>
 <span></span>
 <span><span class="co">#get collated results (cached) for all genome samples and join with full metadata</span></span>
 <span><span class="va">everything_collated</span> <span class="op">=</span> <span class="fu"><a href="../reference/collate_results.html">collate_results</a></span><span class="op">(</span>seq_type_filter <span class="op">=</span> <span class="st">"genome"</span>, from_cache <span class="op">=</span> <span class="cn">TRUE</span>, join_with_full_metadata <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span></span>
 <span></span>
 <span><span class="co">#another example demonstrating correct usage of the sample_table parameter.</span></span>
-<span><span class="va">fl_samples</span> <span class="op">=</span> <span class="fu"><a href="../reference/get_gambl_metadata.html">get_gambl_metadata</a></span><span class="op">(</span>seq_type_filter <span class="op">=</span> <span class="st">"genome"</span><span class="op">)</span> <span class="op">%&gt;%</span> <span class="fu">dplyr</span><span class="fu">::</span><span class="fu"><a href="https://dplyr.tidyverse.org/reference/filter.html" class="external-link">filter</a></span><span class="op">(</span><span class="va">pathology</span> <span class="op">==</span> <span class="st">"FL"</span><span class="op">)</span> <span class="op">%&gt;%</span> <span class="fu">dplyr</span><span class="fu">::</span><span class="fu"><a href="https://dplyr.tidyverse.org/reference/select.html" class="external-link">select</a></span><span class="op">(</span><span class="va">sample_id</span>, <span class="va">patient_id</span>, <span class="va">biopsy_id</span><span class="op">)</span></span>
+<span><span class="va">fl_samples</span> <span class="op">=</span> <span class="fu"><a href="../reference/get_gambl_metadata.html">get_gambl_metadata</a></span><span class="op">(</span>seq_type_filter <span class="op">=</span> <span class="st">"genome"</span><span class="op">)</span> <span class="op"><a href="https://magrittr.tidyverse.org/reference/pipe.html" class="external-link">%&gt;%</a></span> <span class="fu">dplyr</span><span class="fu">::</span><span class="fu"><a href="https://dplyr.tidyverse.org/reference/filter.html" class="external-link">filter</a></span><span class="op">(</span><span class="va">pathology</span> <span class="op">==</span> <span class="st">"FL"</span><span class="op">)</span> <span class="op"><a href="https://magrittr.tidyverse.org/reference/pipe.html" class="external-link">%&gt;%</a></span> <span class="fu">dplyr</span><span class="fu">::</span><span class="fu"><a href="https://dplyr.tidyverse.org/reference/select.html" class="external-link">select</a></span><span class="op">(</span><span class="va">sample_id</span>, <span class="va">patient_id</span>, <span class="va">biopsy_id</span><span class="op">)</span></span>
 <span><span class="va">fl_collated</span> <span class="op">=</span> <span class="fu"><a href="../reference/collate_results.html">collate_results</a></span><span class="op">(</span>sample_table <span class="op">=</span> <span class="va">fl_samples</span>, seq_type_filter <span class="op">=</span> <span class="st">"genome"</span>, from_cache <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span></span></code></pre>
 </div>
 </div>
@@ -402,20 +408,20 @@
 <code class="sourceCode R"><span><span class="co">#print selected palettes to a ggplot object</span></span>
 <span><span class="co">#get all gambl colours in a data frame format</span></span>
 <span><span class="va">all_gambl_colours</span> <span class="op">=</span> <span class="fu"><a href="../reference/get_gambl_colours.html">get_gambl_colours</a></span><span class="op">(</span>as_dataframe <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span></span>
-<span><span class="va">classes</span> <span class="op">=</span> <span class="va">all_gambl_colours</span><span class="op">$</span><span class="va">group</span> <span class="op">%&gt;%</span></span>
+<span><span class="va">classes</span> <span class="op">=</span> <span class="va">all_gambl_colours</span><span class="op">$</span><span class="va">group</span> <span class="op"><a href="https://magrittr.tidyverse.org/reference/pipe.html" class="external-link">%&gt;%</a></span></span>
 <span>  <span class="fu"><a href="https://rdrr.io/r/base/unique.html" class="external-link">unique</a></span><span class="op">(</span><span class="op">)</span></span>
 <span></span>
 <span><span class="co">#create a function for building the plots</span></span>
 <span><span class="va">plot_this_colour</span> <span class="op">=</span> <span class="kw">function</span><span class="op">(</span><span class="va">this_group</span><span class="op">)</span><span class="op">{</span></span>
 <span>  </span>
-<span>  <span class="va">p</span> <span class="op">=</span> <span class="fu">ggplot</span><span class="op">(</span><span class="fu">dplyr</span><span class="fu">::</span><span class="fu"><a href="https://dplyr.tidyverse.org/reference/filter.html" class="external-link">filter</a></span><span class="op">(</span><span class="va">all_gambl_colours</span>, <span class="va">group</span> <span class="op">==</span> <span class="va">this_group</span><span class="op">)</span>, <span class="fu">aes</span><span class="op">(</span>x <span class="op">=</span> <span class="va">name</span>, y <span class="op">=</span> <span class="fl">0</span>, fill <span class="op">=</span> <span class="va">colour</span>, label <span class="op">=</span> <span class="va">name</span><span class="op">)</span><span class="op">)</span> <span class="op">+</span></span>
-<span>        <span class="fu">geom_tile</span><span class="op">(</span>width <span class="op">=</span> <span class="fl">0.9</span>, height <span class="op">=</span> <span class="fl">1</span><span class="op">)</span> <span class="op">+</span></span>
-<span>        <span class="fu">geom_text</span><span class="op">(</span>color <span class="op">=</span> <span class="st">"white"</span>, fontface <span class="op">=</span> <span class="st">"bold"</span><span class="op">)</span> <span class="op">+</span></span>
-<span>        <span class="fu">scale_fill_identity</span><span class="op">(</span>guide <span class="op">=</span> <span class="st">"none"</span><span class="op">)</span> <span class="op">+</span></span>
-<span>        <span class="fu">coord_flip</span><span class="op">(</span><span class="op">)</span> <span class="op">+</span></span>
-<span>        <span class="fu">theme_void</span><span class="op">(</span><span class="op">)</span> <span class="op">+</span></span>
-<span>        <span class="fu">labs</span><span class="op">(</span>title <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/paste.html" class="external-link">paste0</a></span><span class="op">(</span><span class="va">this_group</span><span class="op">)</span><span class="op">)</span> <span class="op">+</span></span>
-<span>        <span class="fu">theme</span><span class="op">(</span>plot.title <span class="op">=</span> <span class="fu">element_text</span><span class="op">(</span>lineheight <span class="op">=</span> <span class="fl">0.9</span>, hjust <span class="op">=</span> <span class="fl">0.5</span>, face <span class="op">=</span> <span class="st">"bold"</span><span class="op">)</span><span class="op">)</span></span>
+<span>  <span class="va">p</span> <span class="op">=</span> <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/ggplot.html" class="external-link">ggplot</a></span><span class="op">(</span><span class="fu">dplyr</span><span class="fu">::</span><span class="fu"><a href="https://dplyr.tidyverse.org/reference/filter.html" class="external-link">filter</a></span><span class="op">(</span><span class="va">all_gambl_colours</span>, <span class="va">group</span> <span class="op">==</span> <span class="va">this_group</span><span class="op">)</span>, <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/aes.html" class="external-link">aes</a></span><span class="op">(</span>x <span class="op">=</span> <span class="va">name</span>, y <span class="op">=</span> <span class="fl">0</span>, fill <span class="op">=</span> <span class="va">colour</span>, label <span class="op">=</span> <span class="va">name</span><span class="op">)</span><span class="op">)</span> <span class="op">+</span></span>
+<span>        <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/geom_tile.html" class="external-link">geom_tile</a></span><span class="op">(</span>width <span class="op">=</span> <span class="fl">0.9</span>, height <span class="op">=</span> <span class="fl">1</span><span class="op">)</span> <span class="op">+</span></span>
+<span>        <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/geom_text.html" class="external-link">geom_text</a></span><span class="op">(</span>color <span class="op">=</span> <span class="st">"white"</span>, fontface <span class="op">=</span> <span class="st">"bold"</span><span class="op">)</span> <span class="op">+</span></span>
+<span>        <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/scale_identity.html" class="external-link">scale_fill_identity</a></span><span class="op">(</span>guide <span class="op">=</span> <span class="st">"none"</span><span class="op">)</span> <span class="op">+</span></span>
+<span>        <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/coord_flip.html" class="external-link">coord_flip</a></span><span class="op">(</span><span class="op">)</span> <span class="op">+</span></span>
+<span>        <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/ggtheme.html" class="external-link">theme_void</a></span><span class="op">(</span><span class="op">)</span> <span class="op">+</span></span>
+<span>        <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/labs.html" class="external-link">labs</a></span><span class="op">(</span>title <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/paste.html" class="external-link">paste0</a></span><span class="op">(</span><span class="va">this_group</span><span class="op">)</span><span class="op">)</span> <span class="op">+</span></span>
+<span>        <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/theme.html" class="external-link">theme</a></span><span class="op">(</span>plot.title <span class="op">=</span> <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/element.html" class="external-link">element_text</a></span><span class="op">(</span>lineheight <span class="op">=</span> <span class="fl">0.9</span>, hjust <span class="op">=</span> <span class="fl">0.5</span>, face <span class="op">=</span> <span class="st">"bold"</span><span class="op">)</span><span class="op">)</span></span>
 <span>  </span>
 <span>  <span class="va">p</span></span>
 <span><span class="op">}</span></span>
@@ -500,9 +506,9 @@
 <span><span class="va">maf</span> <span class="op">=</span> <span class="fu"><a href="../reference/get_coding_ssm.html">get_coding_ssm</a></span><span class="op">(</span>seq_type <span class="op">=</span> <span class="st">"genome"</span><span class="op">)</span></span>
 <span></span>
 <span><span class="co">#get gene symbols from MAF and subset to chr1</span></span>
-<span><span class="va">maf_genes</span> <span class="op">=</span> <span class="fu">dplyr</span><span class="fu">::</span><span class="fu"><a href="https://dplyr.tidyverse.org/reference/filter.html" class="external-link">filter</a></span><span class="op">(</span><span class="va">maf</span>, <span class="va">Hugo_Symbol</span> <span class="op">!=</span> <span class="st">"Unknown"</span><span class="op">)</span> <span class="op">%&gt;%</span></span>
-<span>  <span class="fu">dplyr</span><span class="fu">::</span><span class="fu"><a href="https://dplyr.tidyverse.org/reference/filter.html" class="external-link">filter</a></span><span class="op">(</span><span class="va">Chromosome</span> <span class="op">==</span> <span class="st">"1"</span><span class="op">)</span> <span class="op">%&gt;%</span></span>
-<span>  <span class="fu">pull</span><span class="op">(</span><span class="va">Hugo_Symbol</span><span class="op">)</span></span>
+<span><span class="va">maf_genes</span> <span class="op">=</span> <span class="fu">dplyr</span><span class="fu">::</span><span class="fu"><a href="https://dplyr.tidyverse.org/reference/filter.html" class="external-link">filter</a></span><span class="op">(</span><span class="va">maf</span>, <span class="va">Hugo_Symbol</span> <span class="op">!=</span> <span class="st">"Unknown"</span><span class="op">)</span> <span class="op"><a href="https://magrittr.tidyverse.org/reference/pipe.html" class="external-link">%&gt;%</a></span></span>
+<span>  <span class="fu">dplyr</span><span class="fu">::</span><span class="fu"><a href="https://dplyr.tidyverse.org/reference/filter.html" class="external-link">filter</a></span><span class="op">(</span><span class="va">Chromosome</span> <span class="op">==</span> <span class="st">"1"</span><span class="op">)</span> <span class="op"><a href="https://magrittr.tidyverse.org/reference/pipe.html" class="external-link">%&gt;%</a></span></span>
+<span>  <span class="fu"><a href="https://dplyr.tidyverse.org/reference/pull.html" class="external-link">pull</a></span><span class="op">(</span><span class="va">Hugo_Symbol</span><span class="op">)</span></span>
 <span></span>
 <span><span class="co">#build wordcloud</span></span>
 <span><span class="fu"><a href="../reference/prettyGeneCloud.html">prettyGeneCloud</a></span><span class="op">(</span>maf_df <span class="op">=</span> <span class="va">maf</span>, these_genes <span class="op">=</span> <span class="va">maf_genes</span><span class="op">)</span></span></code></pre></div>
@@ -532,7 +538,7 @@
 <span><span class="co">## 23      ADAMTS4  5</span></span>
 <span><span class="co">## 24     ADAMTSL4 22</span></span>
 <span><span class="co">## 25 ADAMTSL4-AS1  6</span></span></code></pre>
-<p><img src="utilities_tutorial_files/figure-html/unnamed-chunk-2-1.png" width="700"></p>
+<p><img src="utilities_tutorial_files/figure-html/gene_cloud-1.png" width="700"></p>
 <pre><code><span><span class="co">## <span style="color: #949494;"># A tibble: 2,006 × 2</span></span></span>
 <span><span class="co">##    Hugo_Symbol     n</span></span>
 <span><span class="co">##    <span style="color: #949494; font-style: italic;">&lt;fct&gt;</span>       <span style="color: #949494; font-style: italic;">&lt;int&gt;</span></span></span>
@@ -546,7 +552,7 @@
 <span><span class="co">## <span style="color: #BCBCBC;"> 8</span> AL136115.1      1</span></span>
 <span><span class="co">## <span style="color: #BCBCBC;"> 9</span> AL138847.1      1</span></span>
 <span><span class="co">## <span style="color: #BCBCBC;">10</span> AL139147.1      1</span></span>
-<span><span class="co">## <span style="color: #949494;"># … with 1,996 more rows</span></span></span></code></pre>
+<span><span class="co">## <span style="color: #949494;"># ℹ 1,996 more rows</span></span></span></code></pre>
 </div>
 </div>
 </div>

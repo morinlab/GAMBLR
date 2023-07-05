@@ -14,8 +14,6 @@ This can be checked and addressed by running `check_functions.pl` and responding
 
 - [ ] I generated the documentation and checked for errors relating to the new function (e.g. `devtools::document()`) and added `NAMESPACE` and all other modified files in the root directory and under `man`. 
 
-- [ ] I have rebuilt the site with `pkgdown::build_site(lazy = TRUE)` to reflect any updated package documentation.
-
 ### Optional but preferred with PRs
 
 - [ ] I updated and/or successfully knitted a vignette that relies on the modified code (which ones?)
@@ -24,9 +22,11 @@ This can be checked and addressed by running `check_functions.pl` and responding
 
 ### Required
 
-- [ ] I documented my function using [ROxygen style](https://jozef.io/r102-addin-roxytags/#:~:text=Inserting%20a%20skeleton%20%2D%20Do%20this,Shift%2BAlt%2BR%20).)
+- [ ] I documented my function using [Roxygen style](https://jozef.io/r102-addin-roxytags/#:~:text=Inserting%20a%20skeleton%20%2D%20Do%20this,Shift%2BAlt%2BR%20).)
 
 - [ ] Adequate function documentation (see [new-function documentation template](https://github.com/morinlab/GAMBLR#title) for more info)
+
+- [ ] I have ran `devtools::document()` to add the newly created function to NAMESPACE (do not manually add anything to this file!).
 
 Example:
 ```

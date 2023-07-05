@@ -71,26 +71,23 @@ Lastly, this plot can also highlight genes of interest. To do so, provide a data
 \examples{
 \dontrun{
 #retrieve gene names for FL genes
-fl_genes = dplyr::filter(lymphoma_genes, FL == TRUE) \%>\%
-fl_genes = dplyr::filter(lymphoma_genes, FL == TRUE) \%>\%
- dplyr::select(Gene) \%>\%
- pull(Gene)
+fl_genes = dplyr::filter(GAMBLR.data::lymphoma_genes_lymphoma_genes_v0.0, FL == TRUE) \%>\%
+  pull(Gene)
 
 # get regions for selected genes
 fl_genes_list = gene_to_region(gene_symbol = fl_genes,
                                return_as = "bed")
 
-fancy_circos_plot_new(this_sample_id = "DOHH-2",
-                      ssm_calls = FALSE,
-                      gene_list = fl_genes_list,
-                      chr_select = c("chr8",
-                                     "chr14",
-                                     "chr18"),
-                      out = "../../plots/",
-                      plot_title = "DOHH-2 (SVs) Example Plot",
-                      pdf = FALSE,
-                      pdf = FALSE,
-                      file_name = "dohh2_example.png")
+fancy_circos_plot(this_sample_id = "DOHH-2",
+                  ssm_calls = FALSE,
+                  gene_list = fl_genes_list,
+                  chr_select = c("chr8",
+                                 "chr14",
+                                 "chr18"),
+                  out = "../../plots/",
+                  plot_title = "DOHH-2 (SVs) Example Plot",
+                  pdf = FALSE,
+                  file_name = "dohh2_example.png")
 }
 
 }

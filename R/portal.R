@@ -896,7 +896,7 @@ setup_expreession_data = function(project_name = "gambl_genome",
   
   #write expression matrix to file
   data_expression_full = paste0(out_dir, "data_expressions.txt")
-  write_tsv(df3, data_expression_full)
+  write_tsv(expression_matrix, data_expression_full)
   
   #create case list for expression data
   caselist_expression = paste0(out_dir, "case_lists/cases_expression.txt")
