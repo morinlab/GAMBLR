@@ -731,6 +731,9 @@ annotate_maf_triplet = function(maf,
     if (!file.exists(fastaPath)) {
         stop("Failed to find the fasta file")
     }
+    if !("STRAND_VEP" %in% colnames(maf)){
+        stop("STRAND_VEP column is not in the MAF")
+    }
     # Create a reference to an indexed fasta file.
     fasta = Rsamtools::FaFile(file = fastaPath)
     # Store the complement of ref and alt alleles
