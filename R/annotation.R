@@ -745,43 +745,57 @@ annotate_maf_triplet = function(maf,
     )  
     CompRef = complement[ref]
     CompAlt = complement[alt]
+    # Provide triple sequence for all the SNVs
     if (all_SNVs == "TRUE"){
-        maf = maf %>% 
-            dplyr::filter(
-                nchar(maf$Reference_Allele) == 1 &
-                nchar(maf$Tumor_Seq_Allele2) == 1
-            )
-    }else{
-    # Keep mutations on + strand with chosen ref and alt alleles
-    # Keep mutations on - strand with complement ref and alt alleles
-    maf = maf %>%
-        dplyr::filter(
-            (maf$STRAND_VEP == "1" &
-             maf$Reference_Allele == ref &
-             maf$Tumor_Seq_Allele2 == alt
-            )|(
-                  maf$STRAND_VEP == "-1" &
-                  maf$Reference_Allele == CompRef &
-                  maf$Tumor_Seq_Allele2 == CompAlt
-              )
-        )
-    }
-    # Provide triple sequence of + strand and reverse complement of - strand 
-    sequences <- maf %>%
-        dplyr::mutate(
-            seq = as.character(
-                Rsamtools::getSeq(
-                    fasta,
-                    GenomicRanges::GRanges(
-                        maf$Chromosome,
-                        IRanges(
-                            start = maf$Start_Position - 1,
-                            end = maf$Start_Position + 1
+        sequences <- maf %>%
+            dplyr::mutate(
+                seq = ifelse(
+                    (nchar(maf$Reference_Allele) == 1 &
+                     nchar(maf$Tumor_Seq_Allele2) == 1
+                    ),
+                    Rsamtools::getSeq(
+                        fasta,
+                        GenomicRanges::GRanges(
+                            maf$Chromosome,
+                            IRanges(
+                                start = maf$Start_Position - 1,
+                                end = maf$Start_Position + 1
+                            )
                         )
-                    )
+                    ),
+                     "NA"
                 )
             )
-        )
-  
+      
+    }else{
+      # Provide triple sequence of + strand and reverse complement of - strand   
+      # Mutations on + strand with chosen ref and alt alleles
+      # Mutations on - strand with complement ref and alt alleles
+      sequences <- maf %>%
+          dplyr::mutate(
+              seq = ifelse(
+                  (maf$STRAND_VEP == "1" &
+                   maf$Reference_Allele == ref &
+                   maf$Tumor_Seq_Allele2 == alt
+                  )|(
+                    maf$STRAND_VEP == "-1" &
+                    maf$Reference_Allele == CompRef &
+                    maf$Tumor_Seq_Allele2 == CompAlt
+                  ),
+                  Rsamtools::getSeq(
+                      fasta,
+                      GenomicRanges::GRanges(
+                          maf$Chromosome,
+                          IRanges(
+                              start = maf$Start_Position - 1,
+                              end = maf$Start_Position + 1
+                          )
+                      )
+                 ),
+                  "NA"
+              )
+          )  
+      
+    }
     return(sequences)
 }
