@@ -67,7 +67,7 @@ annotate_maf_triplet = function(maf,
   CompRef = complement[ref]
   CompAlt = complement[alt]
   # Provide triple sequence for all the SNVs
-  if (all_SNVs == "TRUE"){
+  if (all_SNVs == TRUE){
     sequences <- maf %>%
       dplyr::mutate(
         seq = ifelse(
