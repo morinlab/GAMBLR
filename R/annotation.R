@@ -680,16 +680,17 @@ annotate_ssm_motif_context <- function(maf,
 
 #' @title Annotate MAF with triplet context
 #'
-#' @description Give triple sequence of mutated base with its adjacent bases (-1 and +1)
+#' @description Give triple sequence of mutated base with its adjacent bases (-1 and +1) based on the STRAND_VEP column of MAF 
 #'
 #' @details It gives the reference and alternative alleles and filters the rows of the data frame based on these values for + strand genes and their 
 #' complement alleles rows for - strand genes, then it can look for the adjacent bases in that mutation position. 
 #'
-#' @param maf: MAF file (required columns: Reference_Allele, Tumor_Seq_Allele2, Transcript_Strand)
-#' @param ref: Reference allele
-#' @param alt: Alternative allele
-#' @param projection The genome build projection for the variants you are working with (default is grch37)
-#' @param fastaPath Can be a path to a FASTA file
+#' @param maf :MAF file (required columns: Reference_Allele, Tumor_Seq_Allele2, STRAND_VEP)
+#' @param all_SNVs :To give us all the triplet sequences of SNVs and not specifying any specific ref and alt alleles (default is TRUE)
+#' @param ref :Reference allele
+#' @param alt :Alternative allele
+#' @param projection :The genome build projection for the variants you are working with (default is grch37)
+#' @param fastaPath :Can be a path to a FASTA file
 #'
 #' @return A data frame with an extra column for triple sequence
 #'
@@ -697,7 +698,7 @@ annotate_ssm_motif_context <- function(maf,
 #' @export
 #'
 #' @examples
-#' annotate_maf_triplet(maf, "C", "T")
+#' annotate_maf_triplet(maf, all_SNVs = "FALSE", "C", "T")
 #' 
 
 #This function gives triple sequence of provided mutated base
@@ -752,11 +753,11 @@ annotate_maf_triplet = function(maf,
     # Keep mutations on - strand with complement ref and alt alleles
     maf = maf %>%
         dplyr::filter(
-            (maf$Transcript_Strand == "+" &
+            (maf$STRAND_VEP == "+" &
              maf$Reference_Allele == ref &
              maf$Tumor_Seq_Allele2 == alt
             )|(
-                  maf$Transcript_Strand == "-" &
+                  maf$STRAND_VEP == "-" &
                   maf$Reference_Allele == CompRef &
                   maf$Tumor_Seq_Allele2 == CompAlt
               )
