@@ -702,6 +702,7 @@ annotate_ssm_motif_context <- function(maf,
 
 #This function gives triple sequence of provided mutated base
 annotate_maf_triplet = function(maf,
+                                all_SNVs = "TRUE",
                                 ref,
                                 alt,
                                 projection = "grch37",
@@ -740,6 +741,13 @@ annotate_maf_triplet = function(maf,
     )  
     CompRef = complement[ref]
     CompAlt = complement[alt]
+    if (all_SNVs == "TRUE"){
+        maf = maf %>% 
+            dplyr::filter(
+                nchar(maf$Reference_Allele) == 1 &
+                nchar(maf$Tumor_Seq_Allele2) == 1
+            )
+    }else{
     # Keep mutations on + strand with chosen ref and alt alleles
     # Keep mutations on - strand with complement ref and alt alleles
     maf = maf %>%
@@ -753,6 +761,7 @@ annotate_maf_triplet = function(maf,
                   maf$Tumor_Seq_Allele2 == CompAlt
               )
         )
+    }
     # Provide triple sequence of + strand and reverse complement of - strand 
     sequences <- maf %>%
         dplyr::mutate(
@@ -763,7 +772,7 @@ annotate_maf_triplet = function(maf,
                         maf$Chromosome,
                         IRanges(
                             start = maf$Start_Position - 1,
-                            end = maf$End_Position + 1
+                            end = maf$Start_Position + 1
                         )
                     )
                 )
