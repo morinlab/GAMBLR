@@ -753,11 +753,11 @@ annotate_maf_triplet = function(maf,
     # Keep mutations on - strand with complement ref and alt alleles
     maf = maf %>%
         dplyr::filter(
-            (maf$STRAND_VEP == "+" &
+            (maf$STRAND_VEP == "1" &
              maf$Reference_Allele == ref &
              maf$Tumor_Seq_Allele2 == alt
             )|(
-                  maf$STRAND_VEP == "-" &
+                  maf$STRAND_VEP == "-1" &
                   maf$Reference_Allele == CompRef &
                   maf$Tumor_Seq_Allele2 == CompAlt
               )
