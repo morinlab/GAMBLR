@@ -22,16 +22,6 @@ library(maftools)
 library(ssh)
 ```
 
-```{r remote, include = FALSE, warning = FALSE, message = FALSE}
-#check if remote session
-if(check_host()){
- R_CONFIG_ACTIVE = "remote" 
-}
-
-session = get_ssh_session()
-remote_session = check_remote_configuration(auto_connect = TRUE)
-```
-
 # Copy Number & Structural Variants
 This vignette demonstrates how to return Copy Number (CN) and Structural Variant (SV) data in a variety of different ways. The method of choice might be different for any given application or planned downstream analysis, as well as what information you, as a researcher, have at hand. This vignette also highlights how to visualize CN data, using established GAMBLR functions. 
 
