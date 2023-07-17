@@ -781,30 +781,6 @@ get_coding_ssm_status = function(gene_symbols,
   return(all_tabulated)
 }
 
-
-#' @title Trim Scale Expressions.
-#'
-#' @description INTERNAL FUNCTION called by prettyOncoplot, not meant for out-of-package usage.
-#'
-#' @details INTERNAL FUNCTION called by prettyOncoplot, not meant for out-of-package usage.
-#'
-#' @param x Numeric value (of expression) to be trimmed.
-#'
-#' @return Numeric value.
-#'
-#' @noRd
-#'
-#' @examples
-#' trimmed = trim_scale_expression(2)
-#'
-trim_scale_expression = function(x){
-  quants = unname(quantile(x, probs = c(0.05, 0.95), na.rm = TRUE))
-  x = ifelse(x < quants[1], quants[1], x)
-  x = ifelse(x > quants[2], quants[2], x)
-  x = (x - quants[1]) / (quants[2] - quants[1])
-  return(x)
-}
-
 #' @title Process Regions objects.
 #'
 #' @description INTERNAL FUNCTION to harmonize genomic regions specified as character vectors or data frames.
