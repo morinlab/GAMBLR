@@ -23,16 +23,6 @@ library(ssh)
 library(parallel)
 ```
 
-```{r remote, include = FALSE, warning = FALSE, message = FALSE}
-#check if remote session
-if(check_host()){
- R_CONFIG_ACTIVE = "remote" 
-}
-
-session = get_ssh_session()
-remote_session = check_remote_configuration(auto_connect = TRUE)
-```
-
 # Simple Somatic Mutations
 This vignette demonstrates how to work with Simple Somatic Mutations (SSM) results within GAMBLR, all the way from obtaining results (in various ways), linking with metadata, performing data analysis and annotations to producing publication ready figures.
 

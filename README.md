@@ -14,7 +14,7 @@ git clone git@github.com:morinlab/GAMBLR.git
 In Rstudio (on a gphost), set your working directory to the place you just cloned the repo.
 
 ```
-setwd("~/GAMBLR-master")
+setwd("~/GAMBLR")
 ```
 
 Install the package in R by running the following command (requires the devtools package)
@@ -42,7 +42,7 @@ git clone https://github.com/morinlab/gambl
 git clone https://github.com/morinlab/GAMBLR
 ```
 
-3. Update the **paths** in your local [config.yml](https://github.com/morinlab/GAMBLR/blob/master/config.yml) (GAMBLR-master) to point to the recently cloned, local **gambl** folder (repo_base). In your favorite text editor, edit the line shown below (under *remote*). Similarly, you will also need to edit the line above it to point to where you will eventually sync the GAMBL results.
+3. Update the **paths** in your local [config.yml](https://github.com/morinlab/GAMBLR/blob/master/config.yml) (GAMBLR) to point to the recently cloned, local **gambl** folder (repo_base). In your favorite text editor, edit the line shown below (under *remote*). Similarly, you will also need to edit the line above it to point to where you will eventually sync the GAMBL results.
 
 ```
 remote:
@@ -53,7 +53,7 @@ remote:
 4. Set the **working directory** in Rstudio. Open Rstudio on your local machine and locate the repo you cloned previously.
 
 ```
-setwd("~/git_repos/GAMBLR-master")
+setwd("~/git_repos/GAMBLR")
 ```
 
 5. Install GAMBLR in your local R studio.
@@ -73,6 +73,11 @@ library(GAMBLR)
 
 ```
 Sys.setenv(R_CONFIG_ACTIVE = "remote")
+```
+
+Alternatively, you can add the content of [~/git_repos/GAMBLR/.Rprofile](https://github.com/morinlab/GAMBLR/blob/master/.Rprofile) to your `~/.Rprofile` file. In this way, you do not need to enter the command above every time you start your R session (recommended).
+```
+cat ~/git_repos/GAMBLR/.Rprofile >> ~/.Rprofile
 ```
 
 #### Run GAMBLR
@@ -104,12 +109,13 @@ git clone https://github.com/morinlab/GAMBLR
 mkdir ~/gambl_results/
 ```
 
-4. Update paths under `remote` in your **local** [config.yml](https://github.com/morinlab/GAMBLR/blob/master/config.yml) (GAMBLR) to point to the recently cloned, local **gambl** folder (*repo_base*) and recently created **gambl_results** (*project_base*) folder. Also, update the *host* field to contain your username (you can use any gphost here). For example:
+4. In the [config.yml](https://github.com/morinlab/GAMBLR/blob/master/config.yml) file of your local **GAMBLR** folder, update paths under the `remote` field to point to the recently cloned local **gambl** folder (*repo_base*) and recently created **gambl_results** folder (*project_base*). Also, update the *host* field to contain your username (you can use any gphost here). For example:
+
 
 ```
 remote:
     project_base: "~/gambl_results/"
-    repo_base: "~/git_repos/gambl-master/"
+    repo_base: "~/git_repos/gambl/"
     ...
     host: "your_username@gphost01.bcgsc.ca"
 ```
@@ -117,8 +123,8 @@ remote:
 5. Copy the following files (from your recently cloned [GAMBLR](https://github.com/morinlab/GAMBLR) directory) into the folder from the previous step; `config.yml` and `get_gambl_results.smk`.
 
 ```
-cp ~/git_repos/GAMBLR-master/config.yml ~/gambl_results/
-cp ~/git_repos/GAMBLR-master/get_gambl_results.smk ~/gambl_results/
+cp ~/git_repos/GAMBLR/config.yml ~/gambl_results/
+cp ~/git_repos/GAMBLR/get_gambl_results.smk ~/gambl_results/
 ```
 
 6. Add ENVVARS bash/zsh environment variables to your bashrc/zsh or some other way that will ensure they're in your session (e.g. you can set them manually each time if you want, just make sure they are set). For example in your local terminal run the following commands (with updated values...).
@@ -133,7 +139,7 @@ export GSC_PASSPHRASE="passpharase_from_step_1"
 7. Open **Rstudio** (locally) and set the working directory to the folder you downloaded in step 2 (in the Rstudio console) and install GAMBLR.
 
 ```
-setwd("~/git_repos/GAMBLR-master")
+setwd("~/git_repos/GAMBLR")
 ```
 
 8. Install and load GAMBLR into your local R session.
@@ -147,7 +153,7 @@ devtools::install()
 
 ```
 cd ~/gambl_results
-conda env create --name snakemake_gambl --file ~/git_repos/GAMBLR-master/get_gambl_results.yml
+conda env create --name snakemake_gambl --file ~/git_repos/GAMBLR/get_gambl_results.yml
 ```
 
 10. Activate this newly created snakemake environment with:
@@ -164,13 +170,13 @@ snakemake -s get_gambl_results.smk --cores 1
 
 #### Use GAMBLR Functions Locally
 12. In Rstudio (local), open [test_remote.R](https://github.com/morinlab/GAMBLR/blob/master/resources/test_remote.R) in GAMBLR master folder.
-13. Execute the following in Rstudio console to make use of the updated paths in the [config.yml](https://github.com/morinlab/GAMBLR/blob/master/config.yml) from step 5 (line 5 in [test_remote.r](https://github.com/morinlab/GAMBLR/blob/master/resources/test_remote.R))
+13. Execute the following in Rstudio console to make use of the updated paths in the [config.yml](https://github.com/morinlab/GAMBLR/blob/master/config.yml) from step 5.
 
 ```
 Sys.setenv(R_CONFIG_ACTIVE = "remote")
 ```
 
-Alternatively, you can add the content of ~/git_repos/GAMBLR/.Rprofile to your ~/.Rprofile file. In this way, you do not need to enter the command above every time you start your R session.
+Alternatively, you can add the content of [~/git_repos/GAMBLR/.Rprofile](https://github.com/morinlab/GAMBLR/blob/master/.Rprofile) to your `~/.Rprofile` file. In this way, you do not need to enter the command above every time you start your R session (recommended).
 
 ```
 cat ~/git_repos/GAMBLR/.Rprofile >> ~/.Rprofile
@@ -182,14 +188,14 @@ cat ~/git_repos/GAMBLR/.Rprofile >> ~/.Rprofile
 check_gamblr_config()
 ```
 
-15. You should now be all set to explore a collection of GAMBLR function remotely on your local machine. For example you could try the following test code to ensure your setup was successful. For a set of comprehensive examples and tutorials, please refer to the [test_remote.r](https://github.com/morinlab/GAMBLR/blob/master/resources/test_remote.R) script.
+15. You should now be all set to explore a collection of GAMBLR function remotely on your local machine. For example you could try the following test code to ensure your setup was successful. For a set of comprehensive examples and tutorials, please refer to the [test_remote.R](https://github.com/morinlab/GAMBLR/blob/master/resources/test_remote.R) script.
 
 ```
 get_gambl_metadata() %>%
   head()
 ```
 
-**Note**, if your seeing the following message when trying to use GAMBLR, please ensure that the config/gambl repo is set up properly (step **5** and **13**) and/or remember to load the *remote* one (i.e `Sys.setenv(R_CONFIG_ACTIVE = "remote")`).
+**Note**, if your seeing the following message when trying to use GAMBLR, please ensure that the config/gambl repo is set up properly (step **5**) and that you are using the *remote* mode (step **13**).
 
 ```
 get_gambl_metadata(seq_type_filter = "capture") %>%

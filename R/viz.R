@@ -5911,6 +5911,7 @@ fancy_alignment_plot = function(these_sample_ids,
 
   #subset alignment metrics
   melt_align = dplyr::select(qc_metrics, c(sample_id, TotalReads, TotalUniquelyMapped, TotalDuplicatedreads)) %>%
+    as.data.table() %>% 
     melt(id.var = "sample_id") %>%
     arrange(sample_id)
 
@@ -5922,6 +5923,7 @@ fancy_alignment_plot = function(these_sample_ids,
   if(!missing(comparison_group)){
     comp_data = collate_results(sample_table = comparison_group, seq_type_filter = seq_type) %>%
       dplyr::select(sample_id, TotalReads, TotalUniquelyMapped, TotalDuplicatedreads) %>%
+      as.data.table() %>% 
       melt(id.var = "sample_id") %>%
       arrange(sample_id)
 
@@ -5933,6 +5935,7 @@ fancy_alignment_plot = function(these_sample_ids,
 
   #corrected mean coverage
   melt_cov = dplyr::select(qc_metrics, c(sample_id, MeanCorrectedCoverage)) %>%
+    as.data.table() %>% 
     melt(id.var = "sample_id") %>%
     arrange(sample_id)
 
