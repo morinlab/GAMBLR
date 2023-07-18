@@ -14,6 +14,7 @@
 #' @param end_pos End coordinate of region.
 #' @param these_samples_metadata Optional data frame containing a sample_id column. If not providing a maf file, seq_type is also a required column.
 #' @param these_sample_ids Optional vector of sample IDs. Output will be subset to IDs present in this vector.
+#' @param this_seq_type Optional vector of seq_types to include in heatmap. Default c("genome", "capture"). Uses default seq_type priority for samples with >1 seq_type. 
 #' @param maf_data Optional maf data frame. Will be subset to rows where Tumor_Sample_Barcode matches provided sample IDs or metadata table. If not provided, maf data will be obtained with get_ssm_by_regions().
 #' @param projection Specify which genome build to use. Required. 
 #' @param slide_by Slide size for sliding window. Default 100. 

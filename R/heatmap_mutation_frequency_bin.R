@@ -10,8 +10,9 @@
 #' @param regions_bed Data frame of regions with four columns (chrom, start, end, name).
 #' @param these_samples_metadata Metadata with at least sample_id column. If not providing a maf data frame, seq_type is also required.
 #' @param these_sample_ids Vector of sample IDs. Metadata will be subset to sample IDs present in this vector.
+#' @param this_seq_type Optional vector of seq_types to include in heatmap. Default c("genome", "capture"). Uses default seq_type priority for samples with >1 seq_type. 
 #' @param maf_data Optional maf data frame. Will be subset to rows where Tumor_Sample_Barcode matches provided sample IDs or metadata table. If not provided, maf data will be obtained with get_ssm_by_regions().
-#' @param mut_freq_matrix Optional matrix of binned mutation frequencies generated outside of this function, usually by [GAMBLR::calc_mutation_frequency_by_regions].
+#' @param mut_freq_matrix Optional matrix of binned mutation frequencies generated outside of this function, usually by [GAMBLR::calc_mutation_frequency_bin_regions].
 #' @param projection Genome build the function will operate in. Ensure this matches your provided regions and maf data for correct chr prefix handling. Default grch37. 
 #' @param region_padding Amount to pad the start and end coordinates by. Default 1000
 #' @param drop_unmutated Whether to drop bins with 0 mutations. If returning a matrix format, this will only drop bins with no mutations in any samples.
