@@ -1688,7 +1688,6 @@ get_lymphgen = function(these_samples_metadata,
     feat_n1 = mutate(feat_n1_genes,Class="N1")
 
     all_genes = c(all_n1_genes,all_ezb_genes,all_st2_genes,all_bn2_genes,all_mcd_genes)
-    print(table(all_genes))
     feat_all = bind_rows(feat_n1,feat_st2,feat_mcd,feat_ezb,feat_bn2)
 
   if(return_feature_annotation){
