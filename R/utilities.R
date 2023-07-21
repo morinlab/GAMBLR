@@ -4725,3 +4725,60 @@ id_ease = function(these_samples_metadata,
   
   return(IDs) 
 }
+
+
+#' @title Fuzzy match mafs
+#'
+#' @description Compare two MAFs and identify pairs of rows as likely matches using approximate positions (mostly for indels)
+#'
+#' @details Specify the two mafs to compare as `maf1` and `maf2`
+#' 
+#'
+#' @param maf1 The index maf (akin to the first argument in a left_join)
+#' @param maf2 The maf you will search for potential matches to rows in maf1 (akin to the second argument in a left_join)
+#' @param padding Number of nucleotides of padding to add around Start_Position and End_Position for fuzzy match
+#' @param matching_only Set to TRUE if you only want the rows of maf1 that were successfully matched to maf2
+#' @param invert Set to TRUE if you ony want the rows of maf1 that could not be matched to maf2
+#'
+#' @return data frame derived from maf1 with two new columns (maf1_ID and maf2_ID). Values in maf1_ID are derived from the maf1. 
+#' The values in maf2_ID are derived from maf2 and are NA for any rows that could not be matched to maf2
+#'
+#' @export
+#'
+#' @examples
+#' 
+#' maf_matching = fuzzy_match_mafs(this_maf,other_maf,matching_only=TRUE)
+#'
+fuzzy_match_mafs <- function(maf1,
+                               maf2,
+                               padding = 0,
+                               matching_only=FALSE,
+                               invert=FALSE){
+
+  maf1_dt = maf1 %>% as.data.table()
+  maf2_dt = maf2 %>% dplyr::select(Tumor_Sample_Barcode,Chromosome,Start_Position,End_Position,Reference_Allele,Tumor_Seq_Allele2) %>% 
+    mutate(Start_Position = Start_Position - padding,End_Position = End_Position + padding) %>% 
+    as.data.table()
+  
+  maf1_dt = mutate(maf1_dt,maf1_ID=paste(Tumor_Sample_Barcode,Chromosome,Start_Position,End_Position,Reference_Allele,Tumor_Seq_Allele2,sep="_"))
+  maf2_dt = mutate(maf2_dt,maf2_ID=paste(Tumor_Sample_Barcode,Chromosome,Start_Position,End_Position,Reference_Allele,Tumor_Seq_Allele2,sep="_"))
+  #naive matching: overlap within Start_Position - End_Position
+  setkey(maf1_dt,Chromosome,Tumor_Sample_Barcode,Start_Position,End_Position)
+  setkey(maf2_dt,Chromosome,Tumor_Sample_Barcode,Start_Position,End_Position)
+  matched_dt = 
+    foverlaps(maf1_dt,maf2_dt,type="any")  %>% 
+    unique()
+  matched_df = as.data.frame(matched_dt)
+  if(matching_only){
+    matched_df = dplyr::filter(matched_df,!is.na(maf2_ID))
+  }else if(invert){
+    matched_df = dplyr::filter(matched_df,is.na(maf2_ID))
+  }
+  matched_df = dplyr::select(matched_df,-Start_Position,-End_Position,-Reference_Allele,-Tumor_Seq_Allele2) %>%
+    dplyr::rename(c("Start_Position"="i.Start_Position",
+                    "Tumor_Seq_Allele2"="i.Tumor_Seq_Allele2",
+                    "Reference_Allele"="i.Reference_Allele",
+                    "End_Position"="i.End_Position"))
+  
+  return(matched_df)
+}
