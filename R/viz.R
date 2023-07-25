@@ -6396,3 +6396,131 @@ get_gambl_colours = function(classification = "all",
   }
 }
 
+#' Make a heatmap showing the frequency of LymphGen features across some samples
+#'
+#' @return
+#' @export
+#'
+#' @examples
+pretty_lymphgen_feature_plot = function(
+    these_samples_metadata,
+    flavour="with_cnvs.with_sv.with_A53",
+    lymphgen_file,
+    with_A53=TRUE,
+    show_side_annotation=FALSE){
+  if(missing(lymphgen_file)){
+    lymphgen_all = get_lymphgen(flavour = flavour,these_samples_metadata=these_samples_metadata,keep_original_columns = T,return_feature_matrix = T)
+  }else{
+    lymphgen_all = get_lymphgen(lymphgen_file=lymphgen_file,these_samples_metadata=these_samples_metadata,keep_original_columns = T,return_feature_matrix = T)
+  }
+  
+  lymphgen_sample_anno = lymphgen_all$sample_annotation
+  if(with_A53){
+    class_ord = c("EZB","ST2","MCD","BN2","N1","A53")
+    full_class_ord = c("EZB","ST2","MCD","BN2","N1","A53","EZB-COMP","ST2-COMP","MCD-COMP","BN2-COMP","N1-COMP")
+  }else{
+    class_ord = c("EZB","ST2","MCD","BN2","N1")
+    full_class_ord = c("EZB","ST2","MCD","BN2","N1","EZB-COMP","ST2-COMP","MCD-COMP","BN2-COMP","N1-COMP")
+  }
+  
+  lymphgen_all$feature_annotation$Class = factor(lymphgen_all$feature_annotation$Class,levels=class_ord)
+  lymphgen_all$lymphgen$LymphGen = factor(lymphgen_all$lymphgen$LymphGen,levels=full_class_ord)
+  lymphgen_feature_anno = lymphgen_all$feature_annotation %>% 
+    arrange(Class,desc(prevalence))
+  lymphgen_feature_matrix= lymphgen_all$features %>% 
+    column_to_rownames("Sample.Name")
+  lymphgen_classes = dplyr::select(lymphgen_all$lymphgen,sample_id,LymphGen,Model) %>% 
+    arrange(LymphGen)
+  
+  #order the columns (features) based on which class(es) they relate to
+  feature_order = unique(lymphgen_feature_anno$Feature)
+  
+  #class_ord = unique(lymphgen_feature_anno$Class)
+  
+  #order the rows (samples) based on which class they were assigned to
+  sample_ord = lymphgen_classes$sample_id
+  
+
+  
+  lg_cols = get_gambl_colours("lymphgen")
+  
+  lymphgen_feature_matrix= lymphgen_feature_matrix[sample_ord,feature_order]
+  lymphgen_feature_matrix_char = lymphgen_feature_matrix
+  lymphgen_feature_matrix_char[] = ""
+  #colour each feature per the class it is associated with
+  for(feature_row in c(1:nrow(lymphgen_feature_anno))){
+    feature=lymphgen_feature_anno[feature_row,"Feature"] %>% pull()
+    this_class = lymphgen_feature_anno[feature_row,"Class"] %>% pull()
+    for(sample_id in rownames(lymphgen_feature_matrix)){
+      if(lymphgen_feature_matrix[sample_id,feature]==1 && lymphgen_feature_matrix_char[sample_id,feature]==""){
+        lymphgen_feature_matrix_char[sample_id,feature]=as.character(this_class)
+      }
+    }
+  }
+  if(show_side_annotation){
+    col_fun_EZB = colorRamp2(c(0, 8), 
+                         c("white", lg_cols["EZB"]))
+    col_fun_ST2 = colorRamp2(c(0, 8), 
+                             c("white", lg_cols["ST2"]))
+    
+    col_fun_MCD = colorRamp2(c(0, 10), 
+                             c("white", lg_cols["MCD"]))
+    
+    col_fun_BN2 = colorRamp2(c(0, 8), 
+                             c("white", lg_cols["BN2"]))
+    col_fun_N1 = colorRamp2(c(0, 2), 
+                             c("white", lg_cols["N1"]))
+    col_fun_A53 = colorRamp2(c(0, 8), 
+                             c("white", lg_cols["A53"]))
+    colnames(lymphgen_sample_anno)[1]="sample_id"
+    
+    lymphgen_sample_anno = left_join(lymphgen_classes,lymphgen_sample_anno)
+    print(head(lymphgen_sample_anno))
+    #order the rows(samples) based on feature count for each class
+    if(with_A53){
+      sample_annotation = arrange(lymphgen_sample_anno,LymphGen,EZB,ST2,MCD,BN2,N1,A53) %>% column_to_rownames("sample_id")
+      #sample_annotation = arrange(lymphgen_sample_anno,Model,LymphGen,EZB,ST2,MCD,BN2,N1,A53) %>% column_to_rownames("sample_id")
+    }else{
+      sample_annotation = arrange(lymphgen_sample_anno,LymphGen,EZB,ST2,MCD,BN2,N1) %>% column_to_rownames("sample_id")
+      #sample_annotation = arrange(lymphgen_sample_anno,Model,LymphGen,EZB,ST2,MCD,BN2,N1) %>% column_to_rownames("sample_id")
+    }
+    sample_ord = rownames(sample_annotation)
+    #sample_annotation = sample_annotation[sample_ord,c("Model","LymphGen",class_ord)]
+    sample_annotation = sample_annotation[sample_ord,c("Model","LymphGen",class_ord)]
+    row_anno = HeatmapAnnotation(df = sample_annotation,
+                                 which = "row",
+                                 col = list(LymphGen=lg_cols,
+                                            EZB=col_fun_EZB,
+                                            ST2=col_fun_ST2,
+                                            MCD=col_fun_MCD,
+                                            BN2=col_fun_BN2,
+                                            N1=col_fun_N1,
+                                            A53=col_fun_A53),show_legend = T)
+    feature_annotation = group_by(lymphgen_feature_anno,Feature) %>% 
+      slice_head(n=1) %>% ungroup() %>%
+      column_to_rownames("Feature") 
+    feature_annotation = feature_annotation[feature_order,c("Class","prevalence")]
+    column_anno = HeatmapAnnotation(df = feature_annotation,
+                                    which = "column",
+                                    col = list(Class=lg_cols))
+    #lg_cols = c(lg_cols,c("nothing"="white"))
+    #lymphgen_feature_matrix_char[lymphgen_feature_matrix_char==""] = "nothing"
+    hm = Heatmap(lymphgen_feature_matrix_char[sample_ord,],
+            cluster_columns  =F,cluster_rows=F,
+            col = lg_cols,
+            column_names_gp = gpar(fontsize=5),
+            #row_names_gp = gpar(fontsize=3),
+            left_annotation = row_anno,
+            bottom_annotation = column_anno,
+            na_col = "white",
+            show_row_names = F ,show_heatmap_legend = F
+            )
+    draw(hm)
+    return(hm)
+  }
+  hm= Heatmap(lymphgen_feature_matrix_char,
+          cluster_columns  =F,cluster_rows=F,
+          col = lg_cols,column_names_gp = gpar(fontsize=5),row_names_gp = gpar(fontsize=3))
+}
+
+
