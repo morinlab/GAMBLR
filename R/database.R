@@ -1669,7 +1669,7 @@ get_lymphgen = function(these_samples_metadata,
       pivot_longer(starts_with("Feature_"),values_to = "MCD") %>% dplyr::filter(!is.na(MCD)) %>% pull(MCD) %>% unique()
     all_n1_genes = str_remove(all_n1,"_.*") %>% unique()
 
-    #all_n1_df = expand.grid(Sample.Name=unique(lg_tidy$Sample.Name),Feature=all_n1)
+
     all_n1_df = expand.grid(Sample.Name=unique(lg_tidy$Sample.Name),Feature=all_n1_genes)
     feat_n1 = suppressWarnings(separate(lg_tidy,col="N1.Features",into=c(paste0("Feature_MCD_",seq(1:15))),sep=",")) %>%
       pivot_longer(starts_with("Feature_"),values_to = "Feature") %>% dplyr::filter(!is.na(Feature)) %>%
@@ -1680,16 +1680,58 @@ get_lymphgen = function(these_samples_metadata,
       dplyr::filter(!is.na(Feature)) %>% select(Sample.Name,Feature) %>% mutate(present=1) %>%
       mutate(Feature=str_remove(Feature,"_.*")) %>% group_by(Sample.Name,Feature) %>% slice_head()
 
-    #n1_mat = left_join(all_n1_df,feat_n1) %>% mutate(present=replace_na(present,0)) %>%
-    #  pivot_wider(names_from="Feature",values_from="present")
-
     n1_mat = left_join(all_n1_df,feat_n1_genes) %>% mutate(present=replace_na(present,0)) %>%
       pivot_wider(names_from="Feature",values_from="present")
     feat_n1 = mutate(feat_n1_genes,Class="N1")
 
-    all_genes = c(all_n1_genes,all_ezb_genes,all_st2_genes,all_bn2_genes,all_mcd_genes)
-    feat_all = bind_rows(feat_n1,feat_st2,feat_mcd,feat_ezb,feat_bn2)
-
+    if("A53.Features" %in% colnames(lg_tidy)){
+      all_a53 = suppressWarnings(separate(lg_tidy,col="A53.Features",into=c(paste0("Feature_MCD_",seq(1:15))),sep=",")) %>%
+        pivot_longer(starts_with("Feature_"),values_to = "MCD") %>% dplyr::filter(!is.na(MCD)) %>% pull(MCD) %>% unique()
+      
+      all_a53_genes = str_remove(all_a53,"_.*") %>% unique()
+      
+      all_a53_df = expand.grid(Sample.Name=unique(lg_tidy$Sample.Name),Feature=all_a53_genes)
+      
+      feat_a53 = suppressWarnings(separate(lg_tidy,col="A53.Features",into=c(paste0("Feature_MCD_",seq(1:15))),sep=",")) %>%
+        pivot_longer(starts_with("Feature_"),values_to = "Feature") %>% dplyr::filter(!is.na(Feature)) %>%
+        select(Sample.Name,Feature) %>% mutate(present=1)
+      
+      feat_a53_genes = suppressWarnings(separate(lg_tidy,col="A53.Features",into=c(paste0("Feature_MCD_",seq(1:15))),sep=",")) %>%
+        pivot_longer(starts_with("Feature_"),values_to = "Feature") %>%
+        dplyr::filter(!is.na(Feature)) %>% select(Sample.Name,Feature) %>% mutate(present=1) %>%
+        mutate(Feature=str_remove(Feature,"_.*")) %>% group_by(Sample.Name,Feature) %>% slice_head()
+      
+      a53_mat = left_join(all_a53_df,feat_a53_genes) %>% mutate(present=replace_na(present,0)) %>%
+        pivot_wider(names_from="Feature",values_from="present")
+      feat_a53 = mutate(feat_a53_genes,Class="A53")
+      all_genes = c(all_a53_genes,
+                    all_n1_genes,
+                    all_ezb_genes,
+                    all_st2_genes,
+                    all_bn2_genes,
+                    all_mcd_genes)
+      
+      feat_all = bind_rows(feat_a53,feat_n1,feat_st2,feat_mcd,feat_ezb,feat_bn2)
+      genes_class = c(rep("A53",length(all_a53_genes)),
+                      rep("N1",length(all_n1_genes)),
+                      rep("EZB",length(all_ezb_genes)),
+                      rep("ST2",length(all_st2_genes)),
+                      rep("BN2",length(all_bn2_genes)),
+                      rep("MCD",length(all_mcd_genes)))
+    }else{
+      all_genes = c(all_n1_genes,
+                  all_ezb_genes,
+                  all_st2_genes,
+                  all_bn2_genes,
+                  all_mcd_genes)
+    
+      feat_all = bind_rows(feat_n1,feat_st2,feat_mcd,feat_ezb,feat_bn2)
+      genes_class = c(rep("N1",length(all_n1_genes)),
+                    rep("EZB",length(all_ezb_genes)),
+                    rep("ST2",length(all_st2_genes)),
+                    rep("BN2",length(all_bn2_genes)),
+                    rep("MCD",length(all_mcd_genes)))
+    }
   if(return_feature_annotation){
     #just give the user the association between each feature and its class along with some summary stats
     feat_count = group_by(feat_all,Feature,Class) %>% count()
@@ -1700,6 +1742,9 @@ get_lymphgen = function(these_samples_metadata,
   all_mat = left_join(all_mat,bn2_mat)
   all_mat = left_join(all_mat,n1_mat)
   all_mat = left_join(all_mat,st2_mat)
+  if("A53.Features" %in% colnames(lg_tidy)){
+    all_mat = left_join(all_mat,a53_mat)
+  }
   if(!keep_all_rows){
     all_mat = dplyr::filter(all_mat,Sample.Name %in% these_samples_metadata$sample_id)
   }
