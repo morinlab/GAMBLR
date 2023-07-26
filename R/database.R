@@ -2924,6 +2924,12 @@ get_gene_expression = function(metadata,
                                expression_data,
                                from_flatfile = TRUE){
 
+  if(!missing(hugo_symbols)){
+    hugo_symbols <- as.character(hugo_symbols)
+  }else if(!missing(ensembl_gene_ids)){
+    ensembl_gene_ids <- as.character(ensembl_gene_ids)
+  }
+
   database_name = check_config_value(config::get("database_name"))
   if(missing(metadata)){
     if(join_with == "mrna"){
