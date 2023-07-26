@@ -13,8 +13,8 @@ fancy_cnbar(
   end_col = 4,
   cn_col = 7,
   plot_title = paste0(this_sample_id),
-  plot_subtitle =
-    "n CNV Segments (barplots, left y-axis), n Affected bases for each CN state",
+ 
+    plot_subtitle = "n CNV Segments (barplots, left y-axis), n Affected bases for each CN state",
   chr_select = paste0("chr", c(1:22)),
   cutoff = 15,
   include_cn2 = TRUE,

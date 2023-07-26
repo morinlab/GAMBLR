@@ -8,6 +8,7 @@ get_gene_expression(
   metadata,
   hugo_symbols,
   ensembl_gene_ids,
+  engine = "read_tsv",
   join_with = "mrna",
   all_genes = FALSE,
   expression_data,
@@ -20,6 +21,8 @@ get_gene_expression(
 \item{hugo_symbols}{One or more gene symbols. Should match the values in a maf file.}
 
 \item{ensembl_gene_ids}{One or more ensembl gene IDs. Only one of hugo_symbols or ensembl_gene_ids may be used.}
+
+\item{engine}{Specific way to import the data into R. Defaults to "read_tsv" (approximately 40\% faster) or can be used through grep to conserve RAM usage.}
 
 \item{join_with}{How to restrict cases for the join. Can be one of genome, mrna or "any".}
 
