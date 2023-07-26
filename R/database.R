@@ -2889,6 +2889,7 @@ get_gene_cn_and_expression = function(gene_symbol,
 #' @param metadata GAMBL metadata.
 #' @param hugo_symbols One or more gene symbols. Should match the values in a maf file.
 #' @param ensembl_gene_ids One or more ensembl gene IDs. Only one of hugo_symbols or ensembl_gene_ids may be used.
+#' @param engine Specific way to import the data into R. Defaults to "read_tsv" (approximately 40% faster) or can be used through grep to conserve RAM usage.
 #' @param join_with How to restrict cases for the join. Can be one of genome, mrna or "any".
 #' @param all_genes Set to TRUE to return the full expression data frame without any subsetting. Avoid this if you don't want to use tons of RAM.
 #' @param expression_data Optional argument to use an already loaded expression data frame (prevent function to re-load full df from flat file or database).
@@ -2897,7 +2898,7 @@ get_gene_cn_and_expression = function(gene_symbol,
 #' @return A data frame with gene expression.
 #'
 #' @rawNamespace import(data.table, except = c("last", "first", "between", "transpose"))
-#' @import dplyr readr tidyr
+#' @import dplyr readr tidyr GAMBLR.data
 #' @export
 #'
 #' @examples
@@ -2917,6 +2918,7 @@ get_gene_cn_and_expression = function(gene_symbol,
 get_gene_expression = function(metadata,
                                hugo_symbols,
                                ensembl_gene_ids,
+                               engine = "read_tsv",
                                join_with = "mrna",
                                all_genes = FALSE,
                                expression_data,
@@ -3000,12 +3002,16 @@ get_gene_expression = function(metadata,
         pivot_wider(names_from = ensembl_gene_id, values_from = expression)
     }else{
       if(!missing(hugo_symbols)){
-        #lazily filter on the fly to conserve RAM (use grep without regex)
-        genes_regex=paste(c("-e Hugo_Symbol",hugo_symbols),collapse = " -e ");
-        grep_cmd = paste0("grep -w -F ",genes_regex," ",tidy_expression_file)
-        print(grep_cmd)
-        wide_expression_data = fread(cmd=grep_cmd) %>%
-        #wide_expression_data = read_tsv(tidy_expression_file,lazy=TRUE) %>%
+        if(engine == "read_tsv"){
+            wide_expression_data = read_tsv(tidy_expression_file,lazy=TRUE)
+        }else{
+            #lazily filter on the fly to conserve RAM (use grep without regex)
+            genes_regex=paste(c("-e Hugo_Symbol",hugo_symbols),collapse = " -e ");
+            grep_cmd = paste0("grep -w -F ",genes_regex," ",tidy_expression_file)
+            print(grep_cmd)
+            wide_expression_data = fread(cmd=grep_cmd)
+        }
+        wide_expression_data = wide_expression_data %>%
           dplyr::select(-ensembl_gene_id) %>%
           dplyr::filter(Hugo_Symbol %in% hugo_symbols) %>%
           group_by(mrna_sample_id,Hugo_Symbol) %>% #deal with non 1:1 mapping of Hugo to Ensembl
