@@ -4997,6 +4997,7 @@ get_cnv_and_ssm_status = function(genes_and_cn_threshs,
   }else{
     ssm_status
   }
+}
 
 #' @title Fuzzy match mafs
 #'
@@ -5053,3 +5054,4 @@ fuzzy_match_mafs <- function(maf1,
   
   return(matched_df)
 }
+
