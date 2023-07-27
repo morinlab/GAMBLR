@@ -6410,7 +6410,7 @@ get_gambl_colours = function(classification = "all",
 #' @return A ComplexHeatmap object
 #' @export
 #'
-#' @import dplyr ggsci stringr tidyr ComplexHeatmap
+#' @import dplyr ggsci stringr tidyr ComplexHeatmap grid
 #'
 #' @examples 
 #' meta_df = get_gambl_metadata(seq_type_filter=c("genome","capture")) %>% dplyr::filter(pathology=="DLBCL")
@@ -6506,8 +6506,8 @@ pretty_lymphoplot = function(
     sample_ord = rownames(sample_annotation)
     #sample_annotation = sample_annotation[sample_ord,c("Model","LymphGen",class_ord)]
     #sample_annotation = sample_annotation[sample_ord,c("Model","LymphGen",class_ord)]
-    sample_annotation = sample_annotation[sample_ord,c(class_ord)]
-    
+    sample_annotation = sample_annotation[sample_ord,c("LymphGen",class_ord)]
+    #sample_annotation = sample_annotation[sample_ord,c(class_ord)]
     row_anno = HeatmapAnnotation(df = sample_annotation,
                                  which = "row",
                                  col = list(LymphGen=lg_cols,
@@ -6521,8 +6521,8 @@ pretty_lymphoplot = function(
       slice_head(n=1) %>% ungroup() %>%
       column_to_rownames("Feature") 
     
-    feature_annotation = feature_annotation[feature_order,c("Class","prevalence","proportion_in")]
-    colnames(feature_annotation) = c("Class","incidence","specificity")
+    feature_annotation = feature_annotation[feature_order,c("prevalence","proportion_in")]
+    colnames(feature_annotation) = c("incidence","specificity")
     column_anno = HeatmapAnnotation(df = feature_annotation,
                                     which = "column",
                                     col = list(Class=lg_cols),show_legend = F)
@@ -6531,7 +6531,7 @@ pretty_lymphoplot = function(
     hm = Heatmap(lymphgen_feature_matrix_char[sample_ord,],
             cluster_columns  =F,cluster_rows=F,
             col = lg_cols,
-            column_names_gp = gpar(fontsize=5),
+            column_names_gp = grid::gpar(fontsize=5),
             #row_names_gp = gpar(fontsize=3),
             left_annotation = row_anno,
             bottom_annotation = column_anno,
@@ -6544,7 +6544,7 @@ pretty_lymphoplot = function(
   }
   hm= Heatmap(lymphgen_feature_matrix_char,
           cluster_columns  =F,cluster_rows=F,na_col = "white",
-          col = lg_cols,column_names_gp = gpar(fontsize=5),
+          col = lg_cols,column_names_gp = grid::gpar(fontsize=5),
           show_row_names = F)
   draw(hm)
   return(hm)
