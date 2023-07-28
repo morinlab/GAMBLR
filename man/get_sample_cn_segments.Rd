@@ -5,9 +5,8 @@
 \title{Get Sample CN Segments.}
 \usage{
 get_sample_cn_segments(
-  this_sample_id,
-  multiple_samples = FALSE,
-  sample_list,
+  these_sample_ids,
+  these_samples_metadata,
   from_flatfile = TRUE,
   projection = "grch37",
   this_seq_type = "genome",
@@ -16,11 +15,9 @@ get_sample_cn_segments(
 )
 }
 \arguments{
-\item{this_sample_id}{Optional argument, single sample_id for the sample to retrieve segments for.}
+\item{these_sample_ids}{Optional argument, sample_id (vector of characters) for the sample(s) to retrieve segments for. If not provided, the function will return CN segments for all available sample IDs present in the current metadata.}
 
-\item{multiple_samples}{Set to TRUE to return cn segments for multiple samples specified in \code{samples_list} parameter. Default is FALSE.}
-
-\item{sample_list}{Optional vector of type character with one sample per row, required if multiple_samples is set to TRUE.}
+\item{these_samples_metadata}{Optional, provide a metadata (data frame) subset to the sample IDs of interest.}
 
 \item{from_flatfile}{Set to TRUE by default.}
 
@@ -40,24 +37,36 @@ Get all segments for a single (or multiple) sample_id(s).
 }
 \details{
 This function returns CN segments for samples. This works for single sample or multiple samples.
-For multiple samples, remember to set the Boolean parameter \code{multiple_samples = TRUE} and give the \code{sample_lsit} a vector of characters with one sample ID per row.
-For more information on how this function can be run in different ways, refer to the parameter descriptions, examples and vignettes.
+Specify the sample IDs you are interested in with \code{these_sample_ids} (as a vector of characters),
+Or call this function with \code{these_samples_metadata} if you already ahve a metadata table subset to the sample IDs of interest.
+If none off the above parameters are specified, the function will return CN segments for available samples.
+Note, this. function internally calls \link{id_ease} for dealing with sample IDs and metadata tables.
 Is this function not what you are looking for? Try one of the following, similar, functions; \link{assign_cn_to_ssm}, \link{get_cn_segments}, \link{get_cn_states},
 }
 \examples{
-# Return cn segments for multiple samples (read csv with one sample per line):
-sample_list = readLines("../samples-test.csv")
-multiple_samples = get_sample_cn_segments(multiple_samples = TRUE, sample_list = sample_list)
-#Return cn segments for multiple samples (provided as vector of sample IDs):
-these_sample_list = c("00-15201_tumorA", "00-15201_tumorB")
+#return everything (default: genome, grch37)
+all_segs = get_sample_cn_segments()
 
-samples = get_sample_cn_segments(multiple_samples = TRUE,
-                                 sample_list = these_sample_list)
-# For capture
-samples = get_sample_cn_segments(
- multiple_samples = TRUE,
- sample_list = these_sample_list,
- this_seq_type = "capture"
-)
+#using sample ID parameter
+one_sample = get_sample_cn_segments(these_sample_ids = "00-22011_tumorB", 
+                                    this_seq_type = "capture")
+
+two_samples = get_sample_cn_segments(these_sample_ids = c("00-14595_tumorA",
+                                                          "00-16220_tumorB"), 
+                                     projection = "hg38")
+
+#get some metadata
+this_meta = get_gambl_metadata() \%>\% 
+ dplyr::filter(sample_id \%in\% c("BLGSP-71-23-00440-01A-01E", 
+                                "FL1014T2",
+                                "HTMCP-01-06-00563-01A-01D"))
+
+capture_meta = get_gambl_metadata(seq_type_filter = "capture")
+
+#return sample segments by using the metadata parameter
+segs_meta = get_sample_cn_segments(these_samples_metadata = this_meta)
+
+all_segs_cap = get_sample_cn_segments(these_samples_metadata = capture_meta, 
+                                      projection = "hg38")
 
 }

@@ -22,7 +22,7 @@ This function takes a data frame with CNVs (\code{seq_df}) and annotates recurre
 }
 \examples{
 \dontrun{
-my_segs = get_sample_cn_segments(this_sample_id = "HTMCP-01-06-00422-01A-01D")
+my_segs = get_sample_cn_segments(these_sample_ids = "HTMCP-01-06-00422-01A-01D")
 annotated = annotate_recurrent_cnv(seg_df = my_segs)
 }
 
