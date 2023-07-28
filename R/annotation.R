@@ -173,7 +173,7 @@ annotate_ssm_blacklist = function(mutations_df,
 #'
 #' @examples
 #' \dontrun{
-#' my_segs = get_sample_cn_segments(this_sample_id = "HTMCP-01-06-00422-01A-01D")
+#' my_segs = get_sample_cn_segments(these_sample_ids = "HTMCP-01-06-00422-01A-01D")
 #' annotated = annotate_recurrent_cnv(seg_df = my_segs)
 #' }
 #' 
@@ -291,7 +291,7 @@ annotate_driver_ssm = function(maf_df,
 
   #get the gene list if missing
   if(missing(driver_genes)){
-    driver_genes = lymphoma_genes[which(lymphoma_genes[[lymphoma_type]] == TRUE),] %>%
+    driver_genes = GAMBLR.data::lymphoma_genes_lymphoma_genes_v0.0[which(GAMBLR.data::lymphoma_genes_lymphoma_genes_v0.0[[lymphoma_type]] == TRUE),] %>%
       pull(Gene)
 
     ngene = length(driver_genes)

@@ -2127,7 +2127,7 @@ assign_cn_to_ssm = function(this_sample_id,
     data.table::setkey(seg_sample, Chromosome, Start_Position, End_Position)
     a = data.table::as.data.table(maf_sample)
   }else{
-    seg_sample = get_sample_cn_segments(this_sample_id = this_sample_id, this_seq_type = this_seq_type) %>%
+    seg_sample = get_sample_cn_segments(these_sample_ids = this_sample_id, this_seq_type = this_seq_type) %>%
       dplyr::mutate(size = end - start) %>%
       dplyr::filter(size > 100) %>%
       dplyr::mutate(chrom = gsub("chr", "", chrom)) %>%
@@ -3867,8 +3867,7 @@ collate_pga <- function(
 
     # Get the CN segments
     multi_sample_seg <- get_sample_cn_segments(
-        sample_list = these_samples_metadata$sample_id,
-        multiple_samples = TRUE,
+        these_samples_metadata = these_samples_metadata$sample_id,
         this_seq_type = this_seq_type
     ) %>%
     dplyr::rename("sample" = "ID")
@@ -3942,7 +3941,7 @@ standardize_chr_prefix = function(incoming_vector,
 #' @export
 #'
 #' @examples
-#' sample_seg = get_sample_cn_segments(this_sample_id = "14-36022T")
+#' sample_seg = get_sample_cn_segments(these_sample_ids = "14-36022T")
 #' sample_seg = dplyr::rename(sample_seg, "sample" = "ID")
 #'
 #' calculate_pga(this_seg = sample_seg)
@@ -3950,10 +3949,10 @@ standardize_chr_prefix = function(incoming_vector,
 #' calculate_pga(this_seg = sample_seg,
 #'               exclude_sex = FALSE)
 #'
-#' one_sample = get_sample_cn_segments(this_sample_id = "14-36022T")
+#' one_sample = get_sample_cn_segments(these_sample_ids = "14-36022T")
 #' one_sample = dplyr::rename(one_sample, "sample" = "ID")
 #'
-#' another_sample = get_sample_cn_segments(this_sample_id = "BLGSP-71-21-00243-01A-11E")
+#' another_sample = get_sample_cn_segments(these_sample_ids = "BLGSP-71-21-00243-01A-11E")
 #' another_sample = dplyr::rename(another_sample, "sample" = "ID")
 #'
 #' multi_sample_seg = rbind(one_sample, another_sample)
@@ -4099,15 +4098,15 @@ calculate_pga = function(this_seg,
 #' @export
 #'
 #' @examples
-#' sample_seg = get_sample_cn_segments(this_sample_id = "14-36022T")
+#' sample_seg = get_sample_cn_segments(these_sample_ids = "14-36022T")
 #' sample_seg = dplyr::rename(sample_seg, "sample" = "ID")
 #'
 #' adjust_ploidy(this_seg = sample_seg)
 #'
-#' one_sample = get_sample_cn_segments(this_sample_id = "14-36022T")
+#' one_sample = get_sample_cn_segments(these_sample_ids = "14-36022T")
 #' one_sample = dplyr::rename(one_sample, "sample" = "ID")
 #'
-#' another_sample = get_sample_cn_segments(this_sample_id = "BLGSP-71-21-00243-01A-11E")
+#' another_sample = get_sample_cn_segments(these_sample_ids = "BLGSP-71-21-00243-01A-11E")
 #' another_sample = dplyr::rename(another_sample, "sample" = "ID")
 #'
 #' multi_sample_seg = rbind(one_sample, another_sample)
@@ -4225,9 +4224,8 @@ adjust_ploidy = function(this_seg,
 #' @noRd
 #'
 #' @examples
-#' cn_states = get_sample_cn_segments(multiple_samples = TRUE,
-#'                                    sample_list = c("00-15201_tumorA",
-#'                                                    "HTMCP-01-06-00422-01A-01D"),
+#' cn_states = get_sample_cn_segments(these_sample_ids = c("00-15201_tumorA",
+#'                                                         "HTMCP-01-06-00422-01A-01D"),
 #'                                    streamlined = FALSE)
 #'
 #' subset_cnstates(cn_segments = cn_states,
@@ -4370,8 +4368,7 @@ cnvKompare = function(patient_id,
       dplyr::mutate(CN = (2 * 2 ^ log.ratio))
   } else {
     message("Retreiving the CNV data using GAMBLR ...")
-    these_samples_seg = get_sample_cn_segments(multiple_samples = TRUE,
-                                               sample_list = these_sample_ids,
+    these_samples_seg = get_sample_cn_segments(these_sample_ids = these_sample_ids,
                                                from_flatfile = TRUE,
                                                projection = projection,
                                                with_chr_prefix = TRUE,

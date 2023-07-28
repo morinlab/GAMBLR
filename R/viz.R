@@ -1241,7 +1241,7 @@ plot_sample_circos = function(this_sample_id,
   }
   if(missing(cnv_df)){
     cnv_df = get_sample_cn_segments(
-      this_sample_id = this_sample_id,
+      these_sample_ids = this_sample_id,
       with_chr_prefix = TRUE,
       this_seq_type = this_seq_type
     )
@@ -4035,8 +4035,7 @@ fancy_cnbar = function(this_sample_id,
   #get maf data for a specific sample.
   if(missing(seq_data) && is.null(seq_path)){
     seq = get_sample_cn_segments(
-      this_sample_id = this_sample_id,
-      multiple_samples = FALSE,
+      these_sample_ids = this_sample_id,
       streamlined = FALSE,
       from_flatfile = TRUE,
       this_seq_type = this_seq_type
@@ -4393,8 +4392,7 @@ fancy_ideogram = function(this_sample_id,
   #get maf data for a specific sample.
   if(missing(seq_data) && is.null(seq_path)){
     cn_states = get_sample_cn_segments(
-      this_sample_id = this_sample_id,
-      multiple_samples = FALSE,
+      these_sample_ids = this_sample_id,
       with_chr_prefix = FALSE,
       streamlined = FALSE,
       this_seq_type = this_seq_type
@@ -4727,8 +4725,7 @@ fancy_multisamp_ideogram = function(these_sample_ids,
   }else{
     #load CN data
     cn_states = get_sample_cn_segments(
-      multiple_samples = TRUE,
-      sample_list = these_sample_ids,
+      these_sample_ids = these_sample_ids,
       streamlined = FALSE,
       this_seq_type = this_seq_type
     )
@@ -4981,8 +4978,7 @@ comp_report = function(this_sample_id,
 
   if(missing(seq_data) && is.null(seq_path)){
     seq = get_sample_cn_segments(
-      this_sample_id = this_sample_id,
-      multiple_samples = FALSE,
+      these_sample_ids = this_sample_id,
       streamlined = FALSE,
       from_flatfile = TRUE,
       this_seq_type = this_seq_type

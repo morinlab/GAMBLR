@@ -675,7 +675,7 @@ get_gambl_metadata = function(seq_type_filter = "genome",
     dplyr::select(-sex)
 
   #if only normals were requested, just return what we have because there is nothing else to join
-  if(tissue_status_filter == "normal"){
+  if(length(tissue_status_filter) == 1 && tissue_status_filter == "normal"){
     return(sample_meta)
   }
 
@@ -1849,13 +1849,14 @@ get_cn_states = function(regions_list,
 #' @description Get all segments for a single (or multiple) sample_id(s).
 #'
 #' @details This function returns CN segments for samples. This works for single sample or multiple samples.
-#' For multiple samples, remember to set the Boolean parameter `multiple_samples = TRUE` and give the `sample_lsit` a vector of characters with one sample ID per row.
-#' For more information on how this function can be run in different ways, refer to the parameter descriptions, examples and vignettes.
+#' Specify the sample IDs you are interested in with `these_sample_ids` (as a vector of characters),
+#' Or call this function with `these_samples_metadata` if you already ahve a metadata table subset to the sample IDs of interest.
+#' If none off the above parameters are specified, the function will return CN segments for available samples.
+#' Note, this. function internally calls [GAMBLR::id_ease] for dealing with sample IDs and metadata tables. 
 #' Is this function not what you are looking for? Try one of the following, similar, functions; [GAMBLR::assign_cn_to_ssm], [GAMBLR::get_cn_segments], [GAMBLR::get_cn_states],
 #'
-#' @param this_sample_id Optional argument, single sample_id for the sample to retrieve segments for.
-#' @param multiple_samples Set to TRUE to return cn segments for multiple samples specified in `samples_list` parameter. Default is FALSE.
-#' @param sample_list Optional vector of type character with one sample per row, required if multiple_samples is set to TRUE.
+#' @param these_sample_ids Optional argument, sample_id (vector of characters) for the sample(s) to retrieve segments for. If not provided, the function will return CN segments for all available sample IDs present in the current metadata.
+#' @param these_samples_metadata Optional, provide a metadata (data frame) subset to the sample IDs of interest.
 #' @param from_flatfile Set to TRUE by default.
 #' @param projection Selected genome projection for returned CN segments. Default is "grch37".
 #' @param this_seq_type Seq type for returned CN segments. One of "genome" (default) or "capture".
@@ -1868,29 +1869,46 @@ get_cn_states = function(regions_list,
 #' @export
 #'
 #' @examples
-#' # Return cn segments for multiple samples (read csv with one sample per line):
-#' sample_list = readLines("../samples-test.csv")
-#' multiple_samples = get_sample_cn_segments(multiple_samples = TRUE, sample_list = sample_list)
-#' #Return cn segments for multiple samples (provided as vector of sample IDs):
-#' these_sample_list = c("00-15201_tumorA", "00-15201_tumorB")
+#' #return everything (default: genome, grch37)
+#' all_segs = get_sample_cn_segments()
 #'
-#' samples = get_sample_cn_segments(multiple_samples = TRUE,
-#'                                  sample_list = these_sample_list)
-#' # For capture
-#' samples = get_sample_cn_segments(
-#'  multiple_samples = TRUE,
-#'  sample_list = these_sample_list,
-#'  this_seq_type = "capture"
-#' )
+#' #using sample ID parameter
+#' one_sample = get_sample_cn_segments(these_sample_ids = "00-22011_tumorB", 
+#'                                     this_seq_type = "capture")
+#' 
+#' two_samples = get_sample_cn_segments(these_sample_ids = c("00-14595_tumorA",
+#'                                                           "00-16220_tumorB"), 
+#'                                      projection = "hg38")
 #'
-get_sample_cn_segments = function(this_sample_id,
-                                  multiple_samples = FALSE,
-                                  sample_list,
+#' #get some metadata
+#' this_meta = get_gambl_metadata() %>% 
+#'  dplyr::filter(sample_id %in% c("BLGSP-71-23-00440-01A-01E", 
+#'                                 "FL1014T2",
+#'                                 "HTMCP-01-06-00563-01A-01D"))
+#' 
+#' capture_meta = get_gambl_metadata(seq_type_filter = "capture")
+#'
+#' #return sample segments by using the metadata parameter
+#' segs_meta = get_sample_cn_segments(these_samples_metadata = this_meta)
+#' 
+#' all_segs_cap = get_sample_cn_segments(these_samples_metadata = capture_meta, 
+#'                                       projection = "hg38")
+#'
+get_sample_cn_segments = function(these_sample_ids,
+                                  these_samples_metadata,
                                   from_flatfile = TRUE,
                                   projection = "grch37",
                                   this_seq_type = "genome",
                                   with_chr_prefix = FALSE,
                                   streamlined = FALSE){
+  #get sample IDs
+  meta_ids = id_ease(these_sample_ids = these_sample_ids, 
+                     these_samples_metadata = these_samples_metadata, 
+                     this_seq_type = this_seq_type)
+  
+  #subset returned list to sample IDs
+  these_samples = meta_ids$these_samples
+  
   if(from_flatfile){
     seq_type = this_seq_type
     cnv_flatfile_template = check_config_value(config::get("results_flatfiles")$cnv_combined$icgc_dart)
@@ -1903,80 +1921,46 @@ get_sample_cn_segments = function(this_sample_id,
     }
     # check permissions to ICGC data
     permissions = file.access(full_cnv_path, 4)
-    if (permissions == -1) {
+    if(permissions == -1){
       message("restricting to non-ICGC data")
       cnv_flatfile_template = check_config_value(config::get("results_flatfiles")$cnv_combined$gambl)
       cnv_path =  glue::glue(cnv_flatfile_template)
       full_cnv_path =  paste0(check_config_value(config::get("project_base")), cnv_path)
     }
-
+    
     #check for missingness
     if(!file.exists(full_cnv_path)){
       print(paste("missing: ", full_cnv_path))
       message("Cannot find file locally. If working remotely, perhaps you forgot to load your config (see below) or sync your files?")
       message('Sys.setenv(R_CONFIG_ACTIVE = "remote")')
     }
-
+    
+    #read seg file and subset to sample IDs of interest
     all_segs = suppressMessages(read_tsv(full_cnv_path))
-    if (!missing(this_sample_id) & !multiple_samples) {
-      all_segs = dplyr::filter(all_segs, ID %in% this_sample_id)
-    } else if (!missing(sample_list)) {
-      all_segs = dplyr::filter(all_segs, ID %in% sample_list)
-    }
-
-  } else {
-
-    if(!missing(this_sample_id) & !multiple_samples){
-      sample_status = get_gambl_metadata() %>%
-        dplyr::filter(sample_id == this_sample_id) %>%
-        pull(pairing_status)
-
-      db = check_config_value(config::get("database_name"))
-      table_name = check_config_value(config::get("results_tables")$copy_number)
-      table_name_unmatched = check_config_value(config::get("results_tables")$copy_number_unmatched)
-      con = DBI::dbConnect(RMariaDB::MariaDB(), dbname = db)
-
-      all_segs_matched = dplyr::tbl(con, table_name) %>%
-        dplyr::filter(ID == this_sample_id) %>%
-        as.data.frame() %>%
-        dplyr::mutate(method = "battenberg")
-
-      all_segs_unmatched = dplyr::tbl(con, table_name_unmatched) %>%
-        dplyr::filter(ID == this_sample_id) %>%
-        as.data.frame() %>%
-        dplyr::filter(! ID %in% all_segs_matched$ID) %>%
-        dplyr::mutate(method = "controlfreec")
-    }
-
-    if(multiple_samples & missing(this_sample_id)){
-      sample_status = get_gambl_metadata() %>%
-        dplyr::filter(sample_id %in% sample_list) %>%
-        pull(pairing_status)
-
-      db = check_config_value(config::get("database_name"))
-      table_name = check_config_value(config::get("results_tables")$copy_number)
-      table_name_unmatched = check_config_value(config::get("results_tables")$copy_number_unmatched)
-      con = DBI::dbConnect(RMariaDB::MariaDB(), dbname = db)
-
-      all_segs_matched = dplyr::tbl(con, table_name) %>%
-        dplyr::filter(ID %in% sample_list) %>%
-        as.data.frame() %>%
-        dplyr::mutate(method = "battenberg")
-
-      all_segs_unmatched = dplyr::tbl(con, table_name_unmatched) %>%
-        dplyr::filter(ID %in% sample_list) %>%
-        as.data.frame() %>%
-        dplyr::filter(! ID %in% all_segs_matched$ID) %>%
-        dplyr::mutate(method = "controlfreec")
-    }
+    all_segs = dplyr::filter(all_segs, ID %in% these_samples)
+    
+  }else{     
+    db = check_config_value(config::get("database_name"))
+    table_name = check_config_value(config::get("results_tables")$copy_number)
+    table_name_unmatched = check_config_value(config::get("results_tables")$copy_number_unmatched)
+    con = DBI::dbConnect(RMariaDB::MariaDB(), dbname = db)
+      
+    all_segs_matched = dplyr::tbl(con, table_name) %>%
+      dplyr::filter(ID == these_samples) %>%
+      as.data.frame() %>%
+      dplyr::mutate(method = "battenberg")
+      
+    all_segs_unmatched = dplyr::tbl(con, table_name_unmatched) %>%
+      dplyr::filter(ID == these_samples) %>%
+      as.data.frame() %>%
+      dplyr::filter(! ID %in% all_segs_matched$ID) %>%
+      dplyr::mutate(method = "controlfreec")
 
     all_segs = rbind(all_segs_matched, all_segs_unmatched)
-
   }
 
-
   all_segs = dplyr::mutate(all_segs, CN = round(2*2^log.ratio))
-
+  
   #deal with chr prefixes
   if(!with_chr_prefix){
     all_segs = all_segs %>%
@@ -1984,11 +1968,11 @@ get_sample_cn_segments = function(this_sample_id,
   }else{
     if(!grepl("chr", all_segs$chrom[1])){
       all_segs$chrom = paste0("chr", all_segs$chrom)
-      }
+    }
   }
-
+  
   if(streamlined){all_segs = dplyr::select(all_segs, ID, CN)}
-
+  
   return(all_segs)
 }
 
