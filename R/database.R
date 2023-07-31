@@ -2886,7 +2886,7 @@ get_gene_cn_and_expression = function(gene_symbol,
 #' to prevent the user from having to load the full expression matrix if this function needs to be run in an interactive session.
 #' For examples and more info, refer to the parameter descriptions as wella s vignette examples.
 #' The function has argument `engine`, which accepts string "read_tsv", "grep", "vroom", and "fread". This will determine the way
-#' the data is imported into R. When testing on GSC, the grep was the fastest but with a lot of variation in the run time [4-10 min].
+#' the data is imported into R. When testing on GSC, the grep was the fastest but with a lot of variation in the run time (anywhere between 4-10 min).
 #' Other engines produced similar run times (~ 7 min) on GSC, with vroom engine being the most consistent one. However, on other
 #' systems (especially with fast hard drives and MacBooks for remote users) the read_tsv engine was significantly faster than the grep.
 #'
@@ -2902,7 +2902,8 @@ get_gene_cn_and_expression = function(gene_symbol,
 #' @return A data frame with gene expression.
 #'
 #' @rawNamespace import(data.table, except = c("last", "first", "between", "transpose"))
-#' @import dplyr readr tidyr GAMBLR.data vroom
+#' @rawNamespace import(vroom, except = c("col_skip", "fwf_positions", "default_locale", "date_names_lang", "cols_only", "output_column", "col_character", "col_guess", "spec", "as.col_spec", "fwf_cols", "cols", "col_date", "col_datetime", "locale", "col_time", "cols_condense", "col_logical", "col_number", "col_integer", "col_factor", "fwf_widths", "date_names_langs", "problems", "date_names", "col_double", "fwf_empty"))
+#' @import dplyr readr tidyr GAMBLR.data
 #' @export
 #'
 #' @examples

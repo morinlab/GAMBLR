@@ -22,7 +22,7 @@ get_gene_expression(
 
 \item{ensembl_gene_ids}{One or more ensembl gene IDs. Only one of hugo_symbols or ensembl_gene_ids may be used.}
 
-\item{engine}{Specific way to import the data into R. Defaults to "read_tsv" (approximately 40\% faster) or can be used through grep to conserve RAM usage.}
+\item{engine}{Specific way to import the data into R. Defaults to "read_tsv". Other acceptable options are "grep", "vroom", and "fread".}
 
 \item{join_with}{How to restrict cases for the join. Can be one of genome, mrna or "any".}
 
@@ -43,6 +43,10 @@ Effectively get gene expression for one or multiple genes for al GAMBL samples.
 This function can also take an already loaded expression matrix (\code{expression_data})
 to prevent the user from having to load the full expression matrix if this function needs to be run in an interactive session.
 For examples and more info, refer to the parameter descriptions as wella s vignette examples.
+The function has argument \code{engine}, which accepts string "read_tsv", "grep", "vroom", and "fread". This will determine the way
+the data is imported into R. When testing on GSC, the grep was the fastest but with a lot of variation in the run time (anywhere between 4-10 min).
+Other engines produced similar run times (~ 7 min) on GSC, with vroom engine being the most consistent one. However, on other
+systems (especially with fast hard drives and MacBooks for remote users) the read_tsv engine was significantly faster than the grep.
 }
 \examples{
 MYC_expr = get_gene_expression(hugo_symbols = c("MYC"), join_with = "mrna")
