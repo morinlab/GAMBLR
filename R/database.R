@@ -2885,11 +2885,15 @@ get_gene_cn_and_expression = function(gene_symbol,
 #' This function can also take an already loaded expression matrix (`expression_data`)
 #' to prevent the user from having to load the full expression matrix if this function needs to be run in an interactive session.
 #' For examples and more info, refer to the parameter descriptions as wella s vignette examples.
+#' The function has argument `engine`, which accepts string "read_tsv", "grep", "vroom", and "fread". This will determine the way
+#' the data is imported into R. When testing on GSC, the grep was the fastest but with a lot of variation in the run time [4-10 min].
+#' Other engines produced similar run times (~ 7 min) on GSC, with vroom engine being the most consistent one. However, on other
+#' systems (especially with fast hard drives and MacBooks for remote users) the read_tsv engine was significantly faster than the grep.
 #'
 #' @param metadata GAMBL metadata.
 #' @param hugo_symbols One or more gene symbols. Should match the values in a maf file.
 #' @param ensembl_gene_ids One or more ensembl gene IDs. Only one of hugo_symbols or ensembl_gene_ids may be used.
-#' @param engine Specific way to import the data into R. Defaults to "read_tsv" (approximately 40% faster) or can be used through grep to conserve RAM usage.
+#' @param engine Specific way to import the data into R. Defaults to "read_tsv". Other acceptable options are "grep", "vroom", and "fread".
 #' @param join_with How to restrict cases for the join. Can be one of genome, mrna or "any".
 #' @param all_genes Set to TRUE to return the full expression data frame without any subsetting. Avoid this if you don't want to use tons of RAM.
 #' @param expression_data Optional argument to use an already loaded expression data frame (prevent function to re-load full df from flat file or database).
@@ -2898,7 +2902,7 @@ get_gene_cn_and_expression = function(gene_symbol,
 #' @return A data frame with gene expression.
 #'
 #' @rawNamespace import(data.table, except = c("last", "first", "between", "transpose"))
-#' @import dplyr readr tidyr GAMBLR.data
+#' @import dplyr readr tidyr GAMBLR.data vroom
 #' @export
 #'
 #' @examples
@@ -3009,17 +3013,30 @@ get_gene_expression = function(metadata,
     }else{
       if(!missing(hugo_symbols)){
         if(engine == "read_tsv"){
-            wide_expression_data = read_tsv(tidy_expression_file,lazy=TRUE)
-        }else{
+			message("Will read the data using read_tsv")
+            wide_expression_data = read_tsv(tidy_expression_file,lazy=TRUE) %>%
+                dplyr::filter(Hugo_Symbol %in% hugo_symbols)
+        } else if(engine == "vroom"){
+            message("Will read the data using vroom")
+            wide_expression_data = vroom::vroom(tidy_expression_file) %>%
+                dplyr::filter(Hugo_Symbol %in% hugo_symbols)
+        } else if(engine == "fread"){
+            message("Will read the data using fread")
+            wide_expression_data = data.table::fread(tidy_expression_file, ) %>%
+                dplyr::filter(Hugo_Symbol %in% hugo_symbols)
+        } else if(engine == "grep"){
+			message("Will read the data using grep")
             #lazily filter on the fly to conserve RAM (use grep without regex)
             genes_regex=paste(c("-e Hugo_Symbol",hugo_symbols),collapse = " -e ");
             grep_cmd = paste0("grep -w -F ",genes_regex," ",tidy_expression_file)
             print(grep_cmd)
-            wide_expression_data = fread(cmd=grep_cmd)
-        }
+            wide_expression_data = fread(cmd=grep_cmd) %>%
+                dplyr::filter(Hugo_Symbol %in% hugo_symbols)
+        } else {
+			stop("You did not specify valid engine. Please use one of read_tsv, grep, vroom, or fread")
+		}
         wide_expression_data = wide_expression_data %>%
           dplyr::select(-ensembl_gene_id) %>%
-          dplyr::filter(Hugo_Symbol %in% hugo_symbols) %>%
           group_by(mrna_sample_id,Hugo_Symbol) %>% #deal with non 1:1 mapping of Hugo to Ensembl
           slice_head() %>%
           as.data.frame() %>%
