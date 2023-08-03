@@ -35,6 +35,7 @@ wildcards = config["default"]["results_merged_wildcards"]
 
 expression = merged["tidy_expression_path"]
 collated = merged["collated"]
+manta = merged["manta_sv"]["icgc_dart"]
 
 #here we specify which files are included from the GAMBLR config
 db_maf = flatfiles["ssm"]["template"]["cds"]["deblacklisted"]
@@ -61,9 +62,18 @@ rule all:
         expression = expression,
         collated = expand(collated,seq_type_filter=['genome','capture']),
         indexed_maf = expand(full_db_maf,seq_type=['genome','capture'],projection=projections),
-        indexed_aug_maf = expand(full_aug_maf,seq_type=['genome','capture'],projection=projections)
+        indexed_aug_maf = expand(full_aug_maf,seq_type=['genome','capture'],projection=projections),
+        manta_sv = expand(manta,projection=projections)
 
 #Use the relative directory for local file names (outputs) and full path for remote file names (inputs)
+
+rule get_manta_sv:
+	input:
+		manta_bedpe = SFTP.remote(hostname + project_base + manta)
+	output:
+		manta_bedpe = manta
+	run:
+		shell("cp {input.manta_bedpe} {output.manta_bedpe}")
 
 rule get_collated:
     input:
