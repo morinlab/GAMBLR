@@ -136,7 +136,7 @@ dlbcl_bl_meta = collate_results(join_with_full_metadata = TRUE,
                                 these_samples_metadata = dlbcl_bl_meta)
 
 #get ashm regions
-some_regions = grch37_ashm_regions
+some_regions = GAMBLR.data::grch37_ashm_regions
 
 mut_count_matrix <- calc_mutation_frequency_bin_by_regions(
    these_samples_metadata = dlbcl_bl_meta,

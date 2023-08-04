@@ -1745,7 +1745,7 @@ get_lymphgen = function(these_samples_metadata,
 #'
 #' @examples
 #' #basic usage, generic lymphoma gene list
-#' cn_matrix = get_cn_states(regions_bed=grch37_lymphoma_genes_bed)
+#' cn_matrix = get_cn_states(regions_bed=GAMBLR.data::grch37_lymphoma_genes_bed)
 #'
 #' myc_region <- gene_to_region(
 #'  gene_symbol = "MYC",
@@ -2214,7 +2214,7 @@ get_ashm_count_matrix = function(regions_bed,
     seq_type = head(these_samples_metadata) %>% pull(seq_type)
   }
   if(missing(regions_bed)){
-    regions_bed = grch37_ashm_regions
+    regions_bed = GAMBLR.data::grch37_ashm_regions
   }
   ashm_maf = get_ssm_by_regions(regions_bed = regions_bed,
                                 streamlined = TRUE,
@@ -2277,7 +2277,7 @@ get_ashm_count_matrix = function(regions_bed,
 #'
 #' @examples
 #' #basic usage, adding custom names from bundled ashm data frame
-#' regions_bed = dplyr::mutate(grch37_ashm_regions, name = paste(gene, region, sep = "_"))
+#' regions_bed = dplyr::mutate(GAMBLR.data::grch37_ashm_regions, name = paste(gene, region, sep = "_"))
 #'
 #' ashm_basic_details = get_ssm_by_regions(regions_bed = regions_bed)
 #'
@@ -2845,7 +2845,7 @@ get_gene_cn_and_expression = function(gene_symbol,
                                       this_seq_type = "genome"){
 
     if(!missing(gene_symbol)){
-      this_row = grch37_gene_coordinates %>%
+      this_row = GAMBLR.data::grch37_gene_coordinates %>%
         dplyr::filter(hugo_symbol == gene_symbol)
 
       this_region = paste0(this_row$chromosome, ":", this_row$start, "-", this_row$end)
@@ -2853,7 +2853,7 @@ get_gene_cn_and_expression = function(gene_symbol,
       }
 
     else{
-      this_row = grch37_gene_coordinates %>%
+      this_row = GAMBLR.data::grch37_gene_coordinates %>%
         dplyr::filter(ensembl_gene_id == ensembl_id)
 
       this_region = paste0(this_row$chromosome, ":", this_row$start, "-",this_row$end)
