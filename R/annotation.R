@@ -509,8 +509,7 @@ annotate_sv = function(sv_data,
 #'           motif = "WRCY",
 #'           projection = "hg38"
 #'          )
-
-
+#'
 #This function check that if the motif pattern is in the sequence
 annotate_ssm_motif_context <- function(maf,
                      motif = "WRCY",

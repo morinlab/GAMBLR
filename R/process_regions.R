@@ -26,7 +26,6 @@
 #' )
 #' regions_bed <- these_regions$regions_bed
 #' regions_vec <- these_regions$regions
-
 process_regions <- function(regions_list = NULL,
                             regions_bed = NULL,
                             region_padding = 0,

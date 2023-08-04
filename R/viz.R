@@ -372,7 +372,7 @@ gene_mutation_tally = function(maf_df,these_samples_metadata,these_genes,groupin
     dplyr::filter(Variant_Classification !="Silent")
   meta_anno = left_join(maf_filt,meta,by=c("Tumor_Sample_Barcode"="sample_id")) %>%
     group_by(Hugo_Symbol,Tumor_Sample_Barcode) %>%
-    slice_head() %>%
+    slice_head()
   meta_anno = left_join(maf_filt,meta,by=c("Tumor_Sample_Barcode"="sample_id")) %>%
     group_by(Hugo_Symbol,Tumor_Sample_Barcode) %>%
     slice_head() %>%

@@ -67,8 +67,6 @@
 #'    regions_bed = some_regions
 #' )
 #'
-
-
 heatmap_mutation_frequency_bin <- function(
   regions_list = NULL,
   regions_bed = NULL,

@@ -1,7 +1,8 @@
-#global environment
 coding_class = c("Frame_Shift_Del", "Frame_Shift_Ins", "In_Frame_Del", "In_Frame_Ins", "Missense_Mutation", "Nonsense_Mutation", "Nonstop_Mutation", "Silent", "Splice_Region", "Splice_Site", "Targeted_Region", "Translation_Start_Site")
+
 rainfall_conv = c("T>C", "T>C", "C>T", "C>T", "T>A", "T>A", "T>G", "T>G", "C>A", "C>A", "C>G", "C>G", "InDel")
 names(rainfall_conv) = c('A>G', 'T>C', 'C>T', 'G>A', 'A>T', 'T>A', 'A>C', 'T>G', 'C>A', 'G>T', 'C>G', 'G>C', 'InDel')
+
 ssh_session <<- NULL
 
 
@@ -2831,7 +2832,7 @@ view_mutation_igv = function(this_mutation,
   }
 }
 
-socketWrite = function (sock, string) {
+socketWrite = function(sock, string){
   print(string)
   write.socket(sock, string)
   response <- read.socket(sock)
