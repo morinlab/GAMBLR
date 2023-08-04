@@ -22,7 +22,7 @@ myc_region = gene_to_region(gene_symbol = "MYC", genome_build = "grch37", return
 genes_bed = gene_to_region(gene_symbol = c("MYC", "BCL2"), genome_build = "hg38", return_as = "bed")
 
 #gene to region, for multiple genes specified in an already subseted list of gene names, return format is data frame
-fl_genes = dplyr::filter(lymphoma_genes, FL == TRUE) %>% pull(Gene)
+fl_genes = dplyr::filter(GAMBLR.data::lymphoma_genes, FL == TRUE) %>% pull(Gene)
 fl_genes_df = gene_to_region(gene_symbol = fl_genes, genome_build = "grch37", return_as = "df")
 
 #region to gene, simple example using a previously defined region (myc)
@@ -98,14 +98,14 @@ my_mutations = get_ssm_by_region(chromosome = "8", qstart = 128723128, qend = 12
 bcl2_all_details = get_ssm_by_region(region = "chr18:60796500-60988073", basic_columns = TRUE)
 
 #get ssm by region, this will get you the bare minimum basic 3-column information for mutated positions with non-MAF column naming
-regions_bed = grch37_ashm_regions %>% mutate(name = paste(gene, region, sep = "_")) %>% head(20)
+regions_bed = GAMBLR.data::grch37_ashm_regions %>% mutate(name = paste(gene, region, sep = "_")) %>% head(20)
 ashm_basic = get_ssm_by_regions(regions_bed = regions_bed)
 
 #get ssm byr region, you can get all the normal MAF columns and header this way:
 full_details_maf = get_ssm_by_regions(regions_bed = regions_bed, basic_columns = TRUE)
 
 #get ashm count matrix, functions that use this to do fun stuff:
-regions_bed = grch37_ashm_regions %>% mutate(name = paste(gene, region, sep = "_"))
+regions_bed = GAMBLR.data::grch37_ashm_regions %>% mutate(name = paste(gene, region, sep = "_"))
 matrix = get_ashm_count_matrix(regions_bed = head(regions_bed, 15), seq_type = "genome", these_samples_metadata = get_gambl_metadata() %>% dplyr::filter(pathology == "DLBCL"))
 
 #count ssm by region, example using minimal parameter as well as previously defined myc region
@@ -148,7 +148,7 @@ my_segments_2 = get_cn_segments(chromosome = "8", qstart = 128723128, qend = 128
 myc_cns = get_cn_segments(region = myc_region, projection = "grch37", this_seq_type = "genome", streamlined = FALSE, from_flatfile = TRUE, with_chr_prefix = FALSE) %>% dplyr::filter(CN != 2)
 
 #get cn states, this example uses the bundled bed file of regions containing lymphoma genes, warning: This is pretty slow with the full bed file
-cn_matrix = get_cn_states(regions_bed = head(grch37_lymphoma_genes_bed, 15))
+cn_matrix = get_cn_states(regions_bed = head(GAMBLR.data::grch37_lymphoma_genes_bed, 15))
 
 #get cn states, this will just get the matrix for FL cases
 cn_matrix = get_cn_states(these_samples_metadata = get_gambl_metadata() %>% dplyr::filter(pathology == "FL"), all_cytobands = TRUE, use_cytoband_name = TRUE)
