@@ -5,10 +5,10 @@
 \title{Heatmap of mutation counts across sliding windows for multiple regions.}
 \usage{
 heatmap_mutation_frequency_bin(
-  regions = NULL,
+  regions_list = NULL,
   regions_bed = NULL,
   these_samples_metadata = NULL,
-  these_sample_id = NULL,
+  these_sample_ids = NULL,
   this_seq_type = c("genome", "capture"),
   maf_data,
   mut_freq_matrix,
@@ -44,15 +44,19 @@ heatmap_mutation_frequency_bin(
 )
 }
 \arguments{
-\item{regions}{Named vector of regions in the format c(name1 = "chr:start-end", name2 = "chr:start-end"). If neither regions nor regions_bed is specified, the function will use GAMBLR aSHM region information.}
+\item{regions_list}{Named vector of regions in the format c(name1 = "chr:start-end", name2 = "chr:start-end"). If neither regions nor regions_bed is specified, the function will use GAMBLR aSHM region information.}
 
 \item{regions_bed}{Data frame of regions with four columns (chrom, start, end, name).}
 
 \item{these_samples_metadata}{Metadata with at least sample_id column. If not providing a maf data frame, seq_type is also required.}
 
+\item{these_sample_ids}{Vector of sample IDs. Metadata will be subset to sample IDs present in this vector.}
+
+\item{this_seq_type}{Optional vector of seq_types to include in heatmap. Default c("genome", "capture"). Uses default seq_type priority for samples with >1 seq_type.}
+
 \item{maf_data}{Optional maf data frame. Will be subset to rows where Tumor_Sample_Barcode matches provided sample IDs or metadata table. If not provided, maf data will be obtained with get_ssm_by_regions().}
 
-\item{mut_freq_matrix}{Optional matrix of binned mutation frequencies generated outside of this function, usually by \link{calc_mutation_frequency_by_regions}.}
+\item{mut_freq_matrix}{Optional matrix of binned mutation frequencies generated outside of this function, usually by \link{calc_mutation_frequency_bin_regions}.}
 
 \item{projection}{Genome build the function will operate in. Ensure this matches your provided regions and maf data for correct chr prefix handling. Default grch37.}
 
@@ -111,8 +115,6 @@ heatmap_mutation_frequency_bin(
 \item{from_indexed_flatfile}{Set to TRUE to avoid using the database and instead rely on flat files (only works for streamlined data, not full MAF details).}
 
 \item{mode}{Only works with indexed flat files. Accepts 2 options of "slms-3" and "strelka2" to indicate which variant caller to use. Default is "slms-3".}
-
-\item{these_sample_ids}{Vector of sample IDs. Metadata will be subset to sample IDs present in this vector.}
 }
 \value{
 A table of mutation counts for sliding windows across one or more regions. May be long or wide.
