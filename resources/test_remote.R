@@ -93,7 +93,7 @@ session = GAMBLR::get_ssh_session() # If your local machine username doesn't
 # match your GSC username, you need to add "<your_username>@gphost01.bcgsc.ca"
 # as the only argument to this function.
 test_ssm = get_ssm_by_samples(these_sample_ids = c("14-24534_tumorA","14-24534_tumorB"),
-                              ssh_session = session,subset_from_merge = T)
+                              subset_from_merge = T)
 
 table(test_ssm$Tumor_Sample_Barcode)
 
@@ -101,7 +101,7 @@ table(test_ssm$Tumor_Sample_Barcode)
 #11097           12904 
 
 test_ssm1 = get_ssm_by_patients(these_patient_ids =  c("14-24534"),
-                                ssh_session = session,subset_from_merge = F)
+                                subset_from_merge = F)
 
 table(test_ssm1$Tumor_Sample_Barcode) #should be the same
 
@@ -114,10 +114,10 @@ table(test_ssm1$Tumor_Sample_Barcode) #should be the same
 cn_seg = get_sample_cn_segments("14-24534_tumorB",from_flatfile = T)
 
 #should automagically get the single seg file and MAF for the sample
-cn_ssm = assign_cn_to_ssm("14-24534_tumorB",seg_file_source = "battenberg",ssh_session = session)
+cn_ssm = assign_cn_to_ssm("14-24534_tumorB", seg_file_source = "battenberg")
 
 
-pursteenah = estimate_purity(this_sample_id = "14-24534_tumorB",seg_file_source = "battenberg",ssh_session=session)
+pursteenah = estimate_purity(this_sample_id = "14-24534_tumorB", seg_file_source = "battenberg")
 
 pursteenah$sample_purity_estimation
 
@@ -176,8 +176,8 @@ fusion_samples = setup_fusions(human_friendly_name = "GAMBL genomes 2022 edition
               out_dir=cbio_path)
   
 all_samples = unique(c(samples_included,fusion_samples))
-finalize_study(seq_type_filter="genome",short_name="GAMBL_genome_2022",sample_ids=all_samples,
+finalize_study(seq_type_filter="genome", short_name="GAMBL_genome_2022", these_sample_ids=all_samples,
                human_friendly_name = "GAMBL genomes 2022 edition",
                project_name="gambl_genome_2022",
-               description = "GAMBL genome data",out_dir = cbio_path,overwrite = TRUE)
+               description = "GAMBL genome data", out_dir = cbio_path, overwrite = TRUE)
 
