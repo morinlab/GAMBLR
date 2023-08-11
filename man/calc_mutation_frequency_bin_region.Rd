@@ -37,6 +37,8 @@ calc_mutation_frequency_bin_region(
 
 \item{these_sample_ids}{Optional vector of sample IDs. Output will be subset to IDs present in this vector.}
 
+\item{this_seq_type}{Optional vector of seq_types to include in heatmap. Default c("genome", "capture"). Uses default seq_type priority for samples with >1 seq_type.}
+
 \item{maf_data}{Optional maf data frame. Will be subset to rows where Tumor_Sample_Barcode matches provided sample IDs or metadata table. If not provided, maf data will be obtained with get_ssm_by_regions().}
 
 \item{projection}{Specify which genome build to use. Required.}

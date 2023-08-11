@@ -37,7 +37,6 @@
 #'                                                          slide_by = 10,
 #'                                                          window_size = 10000)
 #'
-
 calc_mutation_frequency_bin_region <- function(region,
                                           chromosome,
                                           start_pos,

@@ -74,13 +74,13 @@ prettyRainfallPlot = function(this_sample_id,
 
   if (label_ashm_genes) {
     if (projection == "grch37") {
-      ashm_regions = grch37_ashm_regions %>%
+      ashm_regions = GAMBLR.data::grch37_ashm_regions %>%
         dplyr::rename("start" = "hg19_start",
                       "end" = "hg19_end",
                       "Chromosome" = "chr_name") %>%
         dplyr::mutate(Chromosome = str_remove(Chromosome, pattern = "chr"))
     } else if (projection == "hg38") {
-      ashm_regions = hg38_ashm_regions %>%
+      ashm_regions = GAMBLR.data::hg38_ashm_regions %>%
         rename("start" = "hg38_start",
                "end" = "hg38_end",
                "Chromosome" = "chr_name")
@@ -372,7 +372,7 @@ gene_mutation_tally = function(maf_df,these_samples_metadata,these_genes,groupin
     dplyr::filter(Variant_Classification !="Silent")
   meta_anno = left_join(maf_filt,meta,by=c("Tumor_Sample_Barcode"="sample_id")) %>%
     group_by(Hugo_Symbol,Tumor_Sample_Barcode) %>%
-    slice_head() %>%
+    slice_head()
   meta_anno = left_join(maf_filt,meta,by=c("Tumor_Sample_Barcode"="sample_id")) %>%
     group_by(Hugo_Symbol,Tumor_Sample_Barcode) %>%
     slice_head() %>%
@@ -422,7 +422,7 @@ prettyGeneCloud = function(maf_df,
                            other_genes_colour="#bc42f5",
                            colour_index){
   if(missing(these_genes)){
-    these_genes = pull(lymphoma_genes, Gene)
+    these_genes = pull(GAMBLR.data::lymphoma_genes, Gene)
   }
   #drop genes not in the list then tally only coding variants (by default).
   # TODO: eventually allow an option to collapse samples from the same patient
@@ -1024,7 +1024,7 @@ plot_sample_circos = function(this_sample_id,
    chrom_list = paste0("chr", c(1:22,"X"))
   }
   if(!missing(label_genes)){
-    gene_bed = grch37_gene_coordinates %>%
+    gene_bed = GAMBLR.data::grch37_gene_coordinates %>%
       dplyr::filter(gene_name %in% label_genes) %>%
       dplyr::select(chromosome, start, end, gene_name) %>%
       dplyr::mutate(chromosome = paste0("chr", chromosome))
@@ -1069,11 +1069,11 @@ plot_sample_circos = function(this_sample_id,
     colnames(anno_bed1) = c("chrom", "start", "end", "sample_id")
     colnames(anno_bed2) = c("chrom", "start", "end", "sample_id")
 
-    bed_mut_partner = grch37_partners %>%
+    bed_mut_partner = GAMBLR.data::grch37_partners %>%
       dplyr::filter(gene %in% these_partners) %>%
       mutate(chrom = paste0("chr", chrom))
 
-    bed_mut_onco = grch37_oncogene %>%
+    bed_mut_onco = GAMBLR.data::grch37_oncogene %>%
       dplyr::filter(gene %in% these_oncogenes) %>%
       mutate(chrom = paste0("chr", chrom))
 
@@ -2547,7 +2547,7 @@ prettyChromoplot = function(scores,
 
   #if no file is provided, annotate with oncogenes in GAMBLR package
   if(missing(genes_to_label)){
-    genes_to_label = GAMBLR::grch37_oncogene %>%
+    genes_to_label = GAMBLR.data::grch37_oncogene %>%
       dplyr::mutate(across(c(chrom, start, end), as.integer)) %>%
       data.table::as.data.table()
   }else{
@@ -4120,9 +4120,9 @@ fancy_ideogram = function(this_sample_id,
   }
 
   #grch37 coordinates
-  grch37_end = GAMBLR::chromosome_arms_grch37[c(2,4,6,8,10,12,14,16,18,20,22,24,26,28,30,32,34,36,38,40,42,44),3]
-  grch37_cent_start = GAMBLR::chromosome_arms_grch37[c(1,3,5,7,9,11,13,15,17,19,21,23,25,27,29,31,33,35,37,39,41,43),3]
-  grch37_cent_end = GAMBLR::chromosome_arms_grch37[c(2,4,6,8,10,12,14,16,18,20,22,24,26,28,30,32,34,36,38,40,42,44),2]
+  grch37_end = GAMBLR.data::chromosome_arms_grch37[c(2,4,6,8,10,12,14,16,18,20,22,24,26,28,30,32,34,36,38,40,42,44),3]
+  grch37_cent_start = GAMBLR.data::chromosome_arms_grch37[c(1,3,5,7,9,11,13,15,17,19,21,23,25,27,29,31,33,35,37,39,41,43),3]
+  grch37_cent_end = GAMBLR.data::chromosome_arms_grch37[c(2,4,6,8,10,12,14,16,18,20,22,24,26,28,30,32,34,36,38,40,42,44),2]
 
   #additional regions to plot
   if(!missing(gene_annotation)){
@@ -4454,9 +4454,9 @@ fancy_multisamp_ideogram = function(these_sample_ids,
     seg_dist = 0.12}
 
   #chr segment coordinates
-  grch37_end = GAMBLR::chromosome_arms_grch37[c(2,4,6,8,10,12,14,16,18,20,22,24,26,28,30,32,34,36,38,40,42,44),3]
-  grch37_cent_start = GAMBLR::chromosome_arms_grch37[c(1,3,5,7,9,11,13,15,17,19,21,23,25,27,29,31,33,35,37,39,41,43),3]
-  grch37_cent_end = GAMBLR::chromosome_arms_grch37[c(2,4,6,8,10,12,14,16,18,20,22,24,26,28,30,32,34,36,38,40,42,44),2]
+  grch37_end = GAMBLR.data::chromosome_arms_grch37[c(2,4,6,8,10,12,14,16,18,20,22,24,26,28,30,32,34,36,38,40,42,44),3]
+  grch37_cent_start = GAMBLR.data::chromosome_arms_grch37[c(1,3,5,7,9,11,13,15,17,19,21,23,25,27,29,31,33,35,37,39,41,43),3]
+  grch37_cent_end = GAMBLR.data::chromosome_arms_grch37[c(2,4,6,8,10,12,14,16,18,20,22,24,26,28,30,32,34,36,38,40,42,44),2]
 
   #build chr table for segment plotting
   chr = paste0("chr", c(1:22))

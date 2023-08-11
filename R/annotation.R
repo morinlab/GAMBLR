@@ -291,7 +291,7 @@ annotate_driver_ssm = function(maf_df,
 
   #get the gene list if missing
   if(missing(driver_genes)){
-    driver_genes = lymphoma_genes[which(lymphoma_genes[[lymphoma_type]] == TRUE),] %>%
+    driver_genes = GAMBLR.data::lymphoma_genes[which(GAMBLR.data::lymphoma_genes[[lymphoma_type]] == TRUE),] %>%
       pull(Gene)
 
     ngene = length(driver_genes)
@@ -380,9 +380,9 @@ annotate_sv = function(sv_data,
   })
   if(missing(partner_bed)){
     if(genome_build == "hg38"){
-      ig_regions = hg38_partners
+      ig_regions = GAMBLR.data::hg38_partners
     }else{
-      ig_regions = grch37_partners
+      ig_regions = GAMBLR.data::grch37_partners
     }
   }else{
     ig_regions = partner_bed
@@ -391,9 +391,9 @@ annotate_sv = function(sv_data,
     }
   }
   if(genome_build == "hg38"){
-    oncogene_regions = hg38_oncogene
+    oncogene_regions = GAMBLR.data::hg38_oncogene
   }else{
-    oncogene_regions = grch37_oncogene
+    oncogene_regions = GAMBLR.data::grch37_oncogene
   }
   y = data.table::as.data.table(oncogene_regions)
   data.table::setkey(y, chrom, start, end)
@@ -509,8 +509,7 @@ annotate_sv = function(sv_data,
 #'           motif = "WRCY",
 #'           projection = "hg38"
 #'          )
-
-
+#'
 #This function check that if the motif pattern is in the sequence
 annotate_ssm_motif_context <- function(maf,
                      motif = "WRCY",

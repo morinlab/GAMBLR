@@ -1,7 +1,8 @@
-#global environment
 coding_class = c("Frame_Shift_Del", "Frame_Shift_Ins", "In_Frame_Del", "In_Frame_Ins", "Missense_Mutation", "Nonsense_Mutation", "Nonstop_Mutation", "Silent", "Splice_Region", "Splice_Site", "Targeted_Region", "Translation_Start_Site")
+
 rainfall_conv = c("T>C", "T>C", "C>T", "C>T", "T>A", "T>A", "T>G", "T>G", "C>A", "C>A", "C>G", "C>G", "InDel")
 names(rainfall_conv) = c('A>G', 'T>C', 'C>T', 'G>A', 'A>T', 'T>A', 'A>C', 'T>G', 'C>A', 'G>T', 'C>G', 'G>C', 'InDel')
+
 ssh_session <<- NULL
 
 
@@ -371,10 +372,10 @@ gene_to_region = function(gene_symbol,
   
   #set mart based on selected genome projection
   if(genome_build == "grch37"){
-    gene_coordinates = grch37_gene_coordinates
+    gene_coordinates = GAMBLR.data::grch37_gene_coordinates
     chr_select = paste0(c(c(1:22),"X","Y"))
   }else{
-    gene_coordinates = hg38_gene_coordinates
+    gene_coordinates = GAMBLR.data::hg38_gene_coordinates
     chr_select = paste0("chr", c(c(1:22),"X","Y"))
   }
   
@@ -494,9 +495,9 @@ region_to_gene = function(region,
 
   #set mart based on selected genome projection
   if(genome_build == "grch37"){
-    gene_list = grch37_gene_coordinates
+    gene_list = GAMBLR.data::grch37_gene_coordinates
   }else if(genome_build == "hg38"){
-    gene_list = hg38_gene_coordinates
+    gene_list = GAMBLR.data::hg38_gene_coordinates
   }
 
   #rename columns to match downstream formats
@@ -690,7 +691,7 @@ get_coding_ssm_status = function(gene_symbols,
 
   if(missing(gene_symbols)){
     message("defaulting to all lymphoma genes")
-    gene_symbols = pull(lymphoma_genes, Gene)
+    gene_symbols = pull(GAMBLR.data::lymphoma_genes, Gene)
   }
 
   if(missing(these_samples_metadata)){
@@ -1089,9 +1090,9 @@ review_hotspots = function(annotated_maf,
   # check genome build because CREBBP coordinates are hg19-based or hg38-based
 
   if (genome_build %in% c("hg19", "grch37", "hs37d5", "GRCh37")){
-    coordinates = GAMBLR::hotspot_regions_grch37
+    coordinates = GAMBLR.data::hotspot_regions_grch37
   }else if(genome_build %in% c("hg38", "grch38", "GRCh38")){
-    coordinates = GAMBLR::hotspot_regions_hg38
+    coordinates = GAMBLR.data::hotspot_regions_hg38
   }else{
     stop("The genome build specified is not currently supported. Please provide MAF file in one of the following cordinates: hg19, grch37, hs37d5, GRCh37, hg38, grch38, or GRCh38")
   }
@@ -2831,7 +2832,7 @@ view_mutation_igv = function(this_mutation,
   }
 }
 
-socketWrite = function (sock, string) {
+socketWrite = function(sock, string){
   print(string)
   write.socket(sock, string)
   response <- read.socket(sock)
@@ -3284,9 +3285,9 @@ genome_to_exome = function(maf,
       if(! genome_build %in% c("hg19", "grch37", "hs37d5", "GRCh37", "hg38", "GRCh38", "grch38")){
         stop("The genome build specified is not currently supported. Please refer to genome build in one of the following cordinates: hg19, grch37, hs37d5, GRCh37, hg38, grch38, or GRCh38.")
       }else if(genome_build %in% c("hg19", "grch37", "hs37d5", "GRCh37")){
-        this_genome_coordinates = target_regions_grch37 # if the genome build is a flavour of hg19, get its exome space
+        this_genome_coordinates = GAMBLR.data::target_regions_grch37 # if the genome build is a flavour of hg19, get its exome space
       }else if(genome_build %in% c("hg38", "GRCh38", "grch38")){
-        this_genome_coordinates = target_regions_hg38 # exome space for the variations of hg38
+        this_genome_coordinates = GAMBLR.data::target_regions_hg38 # exome space for the variations of hg38
       }
   }else{
       this_genome_coordinates = fread(custom_bed)
@@ -3799,9 +3800,9 @@ calculate_pga = function(this_seg,
 
   # ensure the specified projection is correct and define chromosome coordinates
   if (projection == "grch37") {
-    chr_coordinates = chromosome_arms_grch37
+    chr_coordinates = GAMBLR.data::chromosome_arms_grch37
   } else if (projection == "hg38") {
-    chr_coordinates = chromosome_arms_hg38
+    chr_coordinates = GAMBLR.data::chromosome_arms_hg38
   } else {
     stop(
       "You specified projection that is currently not supported. Please provide seg files in either hg38 or grch37."
@@ -4312,10 +4313,10 @@ cnvKompare = function(patient_id,
   # VAF-like plot
   # genes
   if (projection %in% c("hg19", "grch37")) {
-    for_plot_lg = grch37_lymphoma_genes_bed %>%
+    for_plot_lg = GAMBLR.data::grch37_lymphoma_genes_bed %>%
       as.data.table()
   } else if (projection %in% c("hg38", "grch38")) {
-    for_plot_lg = hg38_lymphoma_genes_bed %>%
+    for_plot_lg = GAMBLR.data::hg38_lymphoma_genes_bed %>%
       as.data.table()
   }
   # did user specify particular genes of interest to display on the plot?
