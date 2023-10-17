@@ -1,6 +1,7 @@
-#global variables
 coding_class = c("Frame_Shift_Del", "Frame_Shift_Ins", "In_Frame_Del", "In_Frame_Ins", "Missense_Mutation", "Nonsense_Mutation", "Nonstop_Mutation", "Silent", "Splice_Region", "Splice_Site", "Targeted_Region", "Translation_Start_Site")
+
 cnames = c("CHROM_A", "START_A", "END_A", "CHROM_B", "START_B", "END_B", "NAME", "SOMATIC_SCORE", "STRAND_A", "STRAND_B", "TYPE", "FILTER", "VAF_tumour", "VAF_normal", "DP_tumour", "DP_normal", "tumour_sample_id", "normal_sample_id", "pair_status")
+
 maf_header = c("Hugo_Symbol"=1,"Entrez_Gene_Id"=2,"Center"=3,"NCBI_Build"=4,"Chromosome"=5,"Start_Position"=6,"End_Position"=7,"Strand"=8,"Variant_Classification"=9,"Variant_Type"=10,"Reference_Allele"=11,"Tumor_Seq_Allele1"=12,"Tumor_Seq_Allele2"=13,"dbSNP_RS"=14,"dbSNP_Val_Status"=15,"Tumor_Sample_Barcode"=16,"Matched_Norm_Sample_Barcode"=17,"Match_Norm_Seq_Allele1"=18,"Match_Norm_Seq_Allele2"=19,"Tumor_Validation_Allele1"=20,"Tumor_Validation_Allele2"=21,"Match_Norm_Validation_Allele1"=22,"Match_Norm_Validation_Allele2"=23,"Verification_Status"=24,"Validation_Status"=25,"Mutation_Status"=26,"Sequencing_Phase"=27,"Sequence_Source"=28,"Validation_Method"=29,"Score"=30,"BAM_File"=31,"Sequencer"=32,"Tumor_Sample_UUID"=33,"Matched_Norm_Sample_UUID"=34,"HGVSc"=35,"HGVSp"=36,"HGVSp_Short"=37,"Transcript_ID"=38,"Exon_Number"=39,"t_depth"=40,"t_ref_count"=41,"t_alt_count"=42,"n_depth"=43,"n_ref_count"=44,"n_alt_count"=45,"all_effects"=46,"Allele"=47,"Gene"=48,"Feature"=49,"Feature_type"=50,"Consequence"=51,"cDNA_position"=52,"CDS_position"=53,"Protein_position"=54,"Amino_acids"=55,"Codons"=56,"Existing_variation"=57,"ALLELE_NUM"=58,"DISTANCE"=59,"STRAND_VEP"=60,"SYMBOL"=61,"SYMBOL_SOURCE"=62,"HGNC_ID"=63,"BIOTYPE"=64,"CANONICAL"=65,"CCDS"=66,"ENSP"=67,"SWISSPROT"=68,"TREMBL"=69,"UNIPARC"=70,"RefSeq"=71,"SIFT"=72,"PolyPhen"=73,"EXON"=74,"INTRON"=75,"DOMAINS"=76,"AF"=77,"AFR_AF"=78,"AMR_AF"=79,"ASN_AF"=80,"EAS_AF"=81,"EUR_AF"=82,"SAS_AF"=83,"AA_AF"=84,"EA_AF"=85,"CLIN_SIG"=86,"SOMATIC"=87,"PUBMED"=88,"MOTIF_NAME"=89,"MOTIF_POS"=90,"HIGH_INF_POS"=91,"MOTIF_SCORE_CHANGE"=92,"IMPACT"=93,"PICK"=94,"VARIANT_CLASS"=95,"TSL"=96,"HGVS_OFFSET"=97,"PHENO"=98,"MINIMISED"=99,"GENE_PHENO"=100,"FILTER"=101,"flanking_bps"=102,"vcf_id"=103,"vcf_qual"=104,"gnomAD_AF"=105,"gnomAD_AFR_AF"=106,"gnomAD_AMR_AF"=107,"gnomAD_ASJ_AF"=108,"gnomAD_EAS_AF"=109,"gnomAD_FIN_AF"=110,"gnomAD_NFE_AF"=111,"gnomAD_OTH_AF"=112,"gnomAD_SAS_AF"=113,"vcf_pos"=114,"gnomADg_AF"=115,"blacklist_count"=116)
 
 
@@ -1306,7 +1307,7 @@ get_combined_sv = function(min_vaf = 0,
 #' give this parameter one sample ID, as a string (or a vector of characters). The user can also call the `these_samples_metadata`
 #' parameter to make use of an already subset metadata table. In this case, the returned calls will be restricted to the sample_ids
 #' within that data frame. This function relies on a set of specific internal functions [GAMBLR::id_ease] and [GAMBLR::get_manta_sv_by_samples] (if `from_cache = FALSE`).
-#' This function can also restrict the returned calls to any genomic regions specified within `chromosome`, `qstart`, `qend`, 
+#' This function can also restrict the returned calls to any genomic regions specified within `chromosome`, `qstart`, `qend`,
 #' or the complete region specified under `region` (in chr:start-end format), note that chromosome can be either prefixed or not prefixed.
 #' Useful filtering parameters are also available, use `min_vaf` to set the minimum tumour VAF for a SV to be returned and `min_score`
 #' to set the lowest Manta somatic score for a SV to be returned. `pair_status` can be used to return variants from either matched or unmatched samples.
@@ -1363,7 +1364,7 @@ get_manta_sv = function(these_sample_ids,
                         verbose = TRUE,
                         from_cache = TRUE,
                         write_to_file = FALSE){
-  
+
   if(!missing(region)){
     region = gsub(",", "", region)
     split_chunks = unlist(strsplit(region, ":"))
@@ -1380,11 +1381,11 @@ get_manta_sv = function(these_sample_ids,
                 this_seq_type = "genome") #only genome samples have manta results
 
   this_meta = meta_ids$this_metadata
-  
+
   if(write_to_file){
     from_cache = FALSE #override default automatically for nonsense combination of options
   }
-  
+
   if(from_flatfile){
     if(from_cache){
       #get paths and check for file permissions
@@ -1392,9 +1393,9 @@ get_manta_sv = function(these_sample_ids,
       output_file = check_config_value(config::get("results_merged")$manta_sv$icgc_dart)
       output_file = paste0(output_base, output_file)
       output_file = glue::glue(output_file)
-      
+
       permissions = file.access(output_file, 4) #check read permissions
-      
+
       if(permissions == -1){
         message("No permission for unix group icgc_dart found, resorting to samples belonging to unix group gambl...")
         output_file = check_config_value(config::get("results_merged")$manta_sv$gambl)
@@ -1403,53 +1404,53 @@ get_manta_sv = function(these_sample_ids,
       }
       if(verbose){
         message(paste0("\nThe cached results were last updated: ", file.info(output_file)$ctime))
-        message("\nReading cached results...\n") 
+        message("\nReading cached results...\n")
       }
-      
+
       #check for missingness of merged manta results
       if(!file.exists(output_file)){
         print(paste("missing: ", output_file))
         message("Cannot find file locally. If working remotely, perhaps you forgot to load your config (see below) or sync your files?")
         message('Sys.setenv(R_CONFIG_ACTIVE = "remote")')
       }
-      
+
       #read merged data
-      manta_sv = suppressMessages(read_tsv(output_file)) %>% 
-        dplyr::filter(tumour_sample_id %in% this_meta$sample_id, 
+      manta_sv = suppressMessages(read_tsv(output_file)) %>%
+        dplyr::filter(tumour_sample_id %in% this_meta$sample_id,
                       VAF_tumour >= min_vaf,
                       SCORE >= min_score)
-      
+
       if(verbose){
         no_manta = setdiff(this_meta$sample_id, manta_sv$tumour_sample_id)
-        
+
         if(length(no_manta) > 0){
           message(paste0("No Manta results found for ", length(no_manta), " samples..."))
           print(no_manta)
-        } 
+        }
       }
-      
+
     }else{
       if(write_to_file){
         #enforce all samples in the altest metadata to be in the merge, if the user decides to overwrite the cached results.
         this_meta = get_gambl_metadata(seq_type_filter = "genome")
       }
-      
+
       #compile the merge based on selected projection (with no filters)
       if(verbose){
-        message("\nFrom cache is set to FALSE, this function is now compiling a new merged results file for the selected projection...") 
+        message("\nFrom cache is set to FALSE, this function is now compiling a new merged results file for the selected projection...")
       }
-      
-      manta_sv = get_manta_sv_by_samples(these_samples_metadata = this_meta, 
-                                         verbose = verbose, 
-                                         min_vaf = 0, 
-                                         pass = FALSE, 
-                                         min_score = 0, 
+
+      manta_sv = get_manta_sv_by_samples(these_samples_metadata = this_meta,
+                                         verbose = verbose,
+                                         min_vaf = 0,
+                                         pass = FALSE,
+                                         min_score = 0,
                                          projection = projection)
-      
+
       #ensure only sample IDs in the full metadata table are kept (i.e if a sample is not in the metadata table, no manta results for any such sample will sneak its way into the merged results file)
       manta_sv = manta_sv %>%
         dplyr::filter(tumour_sample_id %in% this_meta$sample_id)
-      
+
       if(write_to_file){
         #get paths and check for file permissions
         output_base = check_config_value(config::get("project_base"))
@@ -1457,21 +1458,21 @@ get_manta_sv = function(these_sample_ids,
         icgc_dart_file = paste0(output_base, icgc_dart_file)
         icgc_dart_file = glue::glue(icgc_dart_file)
         icgc_dart_folder = gsub(paste0("manta.genome--", projection, ".bedpe"), "", icgc_dart_file)
-        
+
         icgc_permissions = file.access(icgc_dart_folder, 2) #get write permission for the icgc_dart merge (all samples).
-        
+
         if(icgc_permissions == 0){ #get path to gambl samples only merge, if user has acces to the icgc_dart merge.
           gambl_file = check_config_value(config::get("results_merged")$manta_sv$gambl)
           gambl_file = paste0(output_base, gambl_file)
           gambl_file = glue::glue(gambl_file)
-          
+
           #subset icgc_dart to only gambl samples
-          gambl_samples = this_meta %>% 
+          gambl_samples = this_meta %>%
             dplyr::filter(unix_group == "gambl")
-          
-          gambl_manta_sv = manta_sv %>% 
+
+          gambl_manta_sv = manta_sv %>%
             dplyr::filter(tumour_sample_id %in% gambl_samples$sample_id)
-          
+
           #write merges to file
           write_tsv(manta_sv, file = icgc_dart_file, append = FALSE)
           write_tsv(gambl_manta_sv, file = gambl_file, append = FALSE)
@@ -1483,7 +1484,7 @@ get_manta_sv = function(these_sample_ids,
   }else{
     stop("\nDatabase usage is deprecated, please set from_flatfile to TRUE...")
   }
-  
+
   #deal with chr prefixes based on the selected projection (if return is to be subset to regions...)
   if(!missing(region) || !missing(chromosome)){
     if(projection == "grch37"){
@@ -1495,41 +1496,41 @@ get_manta_sv = function(these_sample_ids,
           chromosome = paste0("chr", chromosome)
       }
     }
-    
+
     manta_sv = manta_sv %>%
       dplyr::filter((CHROM_A == chromosome & START_A >= qstart & START_A <= qend) | (CHROM_B == chromosome & START_B >= qstart & START_B <= qend))
   }
-  
+
   if(verbose){
     message("\nThe following VCF filters are applied;")
     message(paste0("  Minimum VAF: ", min_vaf))
     message(paste0("  Minimum Score: ", min_score))
     message(paste0("  Only keep variants passing the quality filter: ", pass))
   }
-  
+
   #PASS filter
   if(pass){
     manta_sv = manta_sv %>%
       dplyr::filter(FILTER == "PASS")
   }
-  
+
   #pairing status filter
   if(!missing(pairing_status)){
     if(verbose){
-      message(paste0("  Pairing status: ", pairing_status)) 
+      message(paste0("  Pairing status: ", pairing_status))
     }
     manta_sv = manta_sv %>%
       dplyr::filter(pair_status == pairing_status)
   }
-  
+
   #convert to data frame and print some metrics
   manta_sv = as.data.frame(manta_sv)
-  
+
   if(verbose){
     n_variants = nrow(manta_sv)
     unique_samples = unique(manta_sv$tumour_sample_id)
     message(paste0("\nReturning ", n_variants, " variants from ", length(unique_samples), " sample(s)"))
-    message("\nDone!") 
+    message("\nDone!")
   }
   return(manta_sv)
 }
@@ -1582,7 +1583,7 @@ get_lymphgen = function(these_samples_metadata,
       return(NULL)
     }
   }else{
-    lg_path = paste0(check_config_value(config::get("project_base")), check_config_value(config::get("results_merged")$lymphgen_template))
+    lg_path = paste0(check_config_value(config::get("repo_base")), check_config_value(config::get("results_versioned")$lymphgen_template$default))
     lg_path = glue::glue(lg_path)
   }
 
@@ -1591,15 +1592,15 @@ get_lymphgen = function(these_samples_metadata,
   if(return_feature_matrix | return_feature_annotation){
     lg_ord = select(lg_tidy,Sample.Name,LymphGen) %>% arrange(LymphGen) %>% pull(Sample.Name)
     lg_levels = select(lg_tidy,Sample.Name,LymphGen) %>% arrange(LymphGen) %>% pull(LymphGen)
-    all_mcd = separate(lg_tidy,col="MCD.Features",into=c(paste0("Feature_MCD_",seq(1:15))),sep=",") %>%
+    all_mcd = suppressWarnings(separate(lg_tidy,col="MCD.Features",into=c(paste0("Feature_MCD_",seq(1:15))),sep=",")) %>%
       pivot_longer(starts_with("Feature_"),values_to = "MCD") %>% dplyr::filter(!is.na(MCD)) %>%
       pull(MCD) %>% unique()
     all_mcd_genes = str_remove(all_mcd,"_.*")%>% unique()
     all_mcd_df = expand.grid(Sample.Name=unique(lg_tidy$Sample.Name),Feature=all_mcd_genes)
-    feat_mcd = separate(lg_tidy,col="MCD.Features",into=c(paste0("Feature_MCD_",seq(1:15))),sep=",") %>%
+    feat_mcd = suppressWarnings(separate(lg_tidy,col="MCD.Features",into=c(paste0("Feature_MCD_",seq(1:15))),sep=",")) %>%
       pivot_longer(starts_with("Feature_"),values_to = "Feature") %>% dplyr::filter(!is.na(Feature)) %>% select(Sample.Name,Feature) %>% mutate(present=1)
 
-    feat_mcd_genes = separate(lg_tidy,col="MCD.Features",into=c(paste0("Feature_MCD_",seq(1:15))),sep=",") %>%
+    feat_mcd_genes = suppressWarnings(separate(lg_tidy,col="MCD.Features",into=c(paste0("Feature_MCD_",seq(1:15))),sep=",")) %>%
       pivot_longer(starts_with("Feature_"),values_to = "Feature") %>%
       dplyr::filter(!is.na(Feature)) %>% select(Sample.Name,Feature) %>% mutate(present=1) %>%
       mutate(Feature=str_remove(Feature,"_.*")) %>% group_by(Sample.Name,Feature) %>% slice_head()
@@ -1609,33 +1610,33 @@ get_lymphgen = function(these_samples_metadata,
       pivot_wider(names_from="Feature",values_from="present")
     feat_mcd = mutate(feat_mcd_genes,Class="MCD")
 
-    all_ezb = separate(lg_tidy,col="EZB.Features",into=c(paste0("Feature_MCD_",seq(1:15))),sep=",") %>%
+    all_ezb = suppressWarnings(separate(lg_tidy,col="EZB.Features",into=c(paste0("Feature_MCD_",seq(1:15))),sep=",")) %>%
       pivot_longer(starts_with("Feature_"),values_to = "MCD") %>% dplyr::filter(!is.na(MCD)) %>% pull(MCD) %>% unique()
     all_ezb_genes = str_remove(all_ezb,"_.*")%>% unique()
 
-    feat_ezb_genes = separate(lg_tidy,col="EZB.Features",into=c(paste0("Feature_MCD_",seq(1:15))),sep=",") %>%
+    feat_ezb_genes = suppressWarnings(separate(lg_tidy,col="EZB.Features",into=c(paste0("Feature_MCD_",seq(1:15))),sep=",")) %>%
       pivot_longer(starts_with("Feature_"),values_to = "Feature") %>%
       dplyr::filter(!is.na(Feature)) %>% select(Sample.Name,Feature) %>% mutate(present=1) %>%
       mutate(Feature=str_remove(Feature,"_.*")) %>% group_by(Sample.Name,Feature) %>% slice_head()
 
     all_ezb_df = expand.grid(Sample.Name=unique(lg_tidy$Sample.Name),Feature=all_ezb_genes)
-    feat_ezb = separate(lg_tidy,col="EZB.Features",into=c(paste0("Feature_MCD_",seq(1:15))),sep=",") %>%
+    feat_ezb = suppressWarnings(separate(lg_tidy,col="EZB.Features",into=c(paste0("Feature_MCD_",seq(1:15))),sep=",")) %>%
       pivot_longer(starts_with("Feature_"),values_to = "Feature") %>% dplyr::filter(!is.na(Feature)) %>% select(Sample.Name,Feature) %>% mutate(present=1)
 
     ezb_mat = left_join(all_ezb_df,feat_ezb_genes) %>% mutate(present=replace_na(present,0)) %>%
       pivot_wider(names_from="Feature",values_from="present")
     feat_ezb = mutate(feat_ezb_genes,Class="EZB")
 
-    all_bn2 = separate(lg_tidy,col="BN2.Features",into=c(paste0("Feature_MCD_",seq(1:15))),sep=",") %>%
+    all_bn2 = suppressWarnings(separate(lg_tidy,col="BN2.Features",into=c(paste0("Feature_MCD_",seq(1:15))),sep=",")) %>%
       pivot_longer(starts_with("Feature_"),values_to = "MCD") %>% dplyr::filter(!is.na(MCD)) %>% pull(MCD) %>% unique()
     all_bn2_genes = str_remove(all_bn2,"_.*")%>% unique()
     all_bn2_df = expand.grid(Sample.Name=unique(lg_tidy$Sample.Name),Feature=all_bn2_genes)
 
-    feat_bn2 = separate(lg_tidy,col="BN2.Features",into=c(paste0("Feature_MCD_",seq(1:15))),sep=",") %>%
+    feat_bn2 = suppressWarnings(separate(lg_tidy,col="BN2.Features",into=c(paste0("Feature_MCD_",seq(1:15))),sep=",")) %>%
       pivot_longer(starts_with("Feature_"),values_to = "Feature") %>% dplyr::filter(!is.na(Feature)) %>%
       select(Sample.Name,Feature) %>% mutate(present=1)
 
-    feat_bn2_genes = separate(lg_tidy,col="BN2.Features",into=c(paste0("Feature_MCD_",seq(1:15))),sep=",") %>%
+    feat_bn2_genes = suppressWarnings(separate(lg_tidy,col="BN2.Features",into=c(paste0("Feature_MCD_",seq(1:15))),sep=",")) %>%
       pivot_longer(starts_with("Feature_"),values_to = "Feature") %>%
       dplyr::filter(!is.na(Feature)) %>% select(Sample.Name,Feature) %>% mutate(present=1) %>%
       mutate(Feature=str_remove(Feature,"_.*")) %>% group_by(Sample.Name,Feature) %>% slice_head()
@@ -1645,17 +1646,17 @@ get_lymphgen = function(these_samples_metadata,
       pivot_wider(names_from="Feature",values_from="present")
     feat_bn2 = mutate(feat_bn2_genes,Class="BN2")
 
-    all_st2 = separate(lg_tidy,col="ST2.Features",into=c(paste0("Feature_MCD_",seq(1:15))),sep=",") %>%
+    all_st2 = suppressWarnings(separate(lg_tidy,col="ST2.Features",into=c(paste0("Feature_MCD_",seq(1:15))),sep=",")) %>%
       pivot_longer(starts_with("Feature_"),values_to = "MCD") %>% dplyr::filter(!is.na(MCD)) %>%
       pull(MCD) %>% unique()
     all_st2_genes = str_remove(all_st2,"_.*") %>% unique()
     all_st2_df = expand.grid(Sample.Name=unique(lg_tidy$Sample.Name),Feature=all_st2_genes)
 
-    feat_st2 = separate(lg_tidy,col="ST2.Features",into=c(paste0("Feature_MCD_",seq(1:15))),sep=",") %>%
+    feat_st2 = suppressWarnings(separate(lg_tidy,col="ST2.Features",into=c(paste0("Feature_MCD_",seq(1:15))),sep=",")) %>%
       pivot_longer(starts_with("Feature_"),values_to = "Feature") %>% dplyr::filter(!is.na(Feature)) %>%
       select(Sample.Name,Feature) %>% mutate(present=1)
 
-    feat_st2_genes = separate(lg_tidy,col="ST2.Features",into=c(paste0("Feature_MCD_",seq(1:15))),sep=",") %>%
+    feat_st2_genes = suppressWarnings(separate(lg_tidy,col="ST2.Features",into=c(paste0("Feature_MCD_",seq(1:15))),sep=",")) %>%
       pivot_longer(starts_with("Feature_"),values_to = "Feature") %>%
       dplyr::filter(!is.na(Feature)) %>% select(Sample.Name,Feature) %>% mutate(present=1) %>%
       mutate(Feature=str_remove(Feature,"_.*")) %>% group_by(Sample.Name,Feature) %>% slice_head()
@@ -1665,17 +1666,17 @@ get_lymphgen = function(these_samples_metadata,
       pivot_wider(names_from="Feature",values_from="present")
     feat_st2 = mutate(feat_st2_genes,Class="ST2")
 
-    all_n1 = separate(lg_tidy,col="N1.Features",into=c(paste0("Feature_MCD_",seq(1:15))),sep=",") %>%
+    all_n1 = suppressWarnings(separate(lg_tidy,col="N1.Features",into=c(paste0("Feature_MCD_",seq(1:15))),sep=",")) %>%
       pivot_longer(starts_with("Feature_"),values_to = "MCD") %>% dplyr::filter(!is.na(MCD)) %>% pull(MCD) %>% unique()
     all_n1_genes = str_remove(all_n1,"_.*") %>% unique()
 
     #all_n1_df = expand.grid(Sample.Name=unique(lg_tidy$Sample.Name),Feature=all_n1)
     all_n1_df = expand.grid(Sample.Name=unique(lg_tidy$Sample.Name),Feature=all_n1_genes)
-    feat_n1 = separate(lg_tidy,col="N1.Features",into=c(paste0("Feature_MCD_",seq(1:15))),sep=",") %>%
+    feat_n1 = suppressWarnings(separate(lg_tidy,col="N1.Features",into=c(paste0("Feature_MCD_",seq(1:15))),sep=",")) %>%
       pivot_longer(starts_with("Feature_"),values_to = "Feature") %>% dplyr::filter(!is.na(Feature)) %>%
       select(Sample.Name,Feature) %>% mutate(present=1)
 
-    feat_n1_genes = separate(lg_tidy,col="N1.Features",into=c(paste0("Feature_MCD_",seq(1:15))),sep=",") %>%
+    feat_n1_genes = suppressWarnings(separate(lg_tidy,col="N1.Features",into=c(paste0("Feature_MCD_",seq(1:15))),sep=",")) %>%
       pivot_longer(starts_with("Feature_"),values_to = "Feature") %>%
       dplyr::filter(!is.na(Feature)) %>% select(Sample.Name,Feature) %>% mutate(present=1) %>%
       mutate(Feature=str_remove(Feature,"_.*")) %>% group_by(Sample.Name,Feature) %>% slice_head()
@@ -1688,7 +1689,6 @@ get_lymphgen = function(these_samples_metadata,
     feat_n1 = mutate(feat_n1_genes,Class="N1")
 
     all_genes = c(all_n1_genes,all_ezb_genes,all_st2_genes,all_bn2_genes,all_mcd_genes)
-    print(table(all_genes))
     feat_all = bind_rows(feat_n1,feat_st2,feat_mcd,feat_ezb,feat_bn2)
 
   if(return_feature_annotation){
@@ -1745,7 +1745,7 @@ get_lymphgen = function(these_samples_metadata,
 #'
 #' @examples
 #' #basic usage, generic lymphoma gene list
-#' cn_matrix = get_cn_states(regions_bed=grch37_lymphoma_genes_bed)
+#' cn_matrix = get_cn_states(regions_bed=GAMBLR.data::grch37_lymphoma_genes_bed)
 #'
 #' myc_region <- gene_to_region(
 #'  gene_symbol = "MYC",
@@ -2214,7 +2214,7 @@ get_ashm_count_matrix = function(regions_bed,
     seq_type = head(these_samples_metadata) %>% pull(seq_type)
   }
   if(missing(regions_bed)){
-    regions_bed = grch37_ashm_regions
+    regions_bed = GAMBLR.data::grch37_ashm_regions
   }
   ashm_maf = get_ssm_by_regions(regions_bed = regions_bed,
                                 streamlined = TRUE,
@@ -2277,7 +2277,7 @@ get_ashm_count_matrix = function(regions_bed,
 #'
 #' @examples
 #' #basic usage, adding custom names from bundled ashm data frame
-#' regions_bed = dplyr::mutate(grch37_ashm_regions, name = paste(gene, region, sep = "_"))
+#' regions_bed = dplyr::mutate(GAMBLR.data::grch37_ashm_regions, name = paste(gene, region, sep = "_"))
 #'
 #' ashm_basic_details = get_ssm_by_regions(regions_bed = regions_bed)
 #'
@@ -2416,14 +2416,14 @@ get_ssm_by_region = function(chromosome,
 
   #check remote connection
   remote_session = check_remote_configuration(auto_connect = TRUE)
-  
+
   if(mode == "strelka2"){
     message("Mode is set to strelka2. Streamlined = TRUE is hardcoded for this mode...")
     streamlined = TRUE #force streamlined to TRUE, if strelka2 output is requested.
     augmented = FALSE #force augmented to FALSE (since t_alt_count column is not available for the strelka2 bed file).
     maf_columns = c("Chromosome", "Start_Position", "End_Position", "Tumor_Sample_Barcode")
     maf_column_types = "iiic"
-    
+
     #add some checks
     if(projection == "hg38"){
       stop("Strelka2 outputs are currently only available in respect to grch37...")
@@ -2435,7 +2435,7 @@ get_ssm_by_region = function(chromosome,
     if(streamlined){
       maf_columns = names(maf_header)[c(6, 16, 42)]
       maf_column_types = "ici"
-      
+
     }else if(basic_columns){ #get first 45 columns of the MAF
       maf_columns = names(maf_header)[c(1:45)]
       maf_column_types =  "ciccciiccccccclcccclllllllllllllllccccciiiiii"
@@ -2444,7 +2444,7 @@ get_ssm_by_region = function(chromosome,
       maf_column_types = "ciccciiccccccclcccclllllllllllllllccccciiiiiiccccccccccccinnccccccccccccccccccclcccccccccnclcncccclncccclllllllllicn"
     }
   }
-  
+
   #check that maf_columns requested all exist in the header and get their indexes
   if(!all(maf_columns %in% names(maf_header))){
     stop("Cannot find one of the requested maf_columns in your MAF header")
@@ -2554,7 +2554,7 @@ get_ssm_by_region = function(chromosome,
         }else if(mode == "strelka2"){
           tabix_command = paste("/home/rmorin/miniconda3/bin/tabix", full_maf_path_comp, region)
         }
-        
+
         if(verbose){
           print(tabix_command)
         }
@@ -2833,7 +2833,7 @@ get_coding_ssm = function(limit_cohort,
 #' @param this_seq_type Seq type for returned CN segments. One of "genome" (default) or "capture".
 #'
 #' @return A data frame with copy number information and gene expressions.
-
+#'
 #' @import dplyr tibble
 #' @export
 #'
@@ -2845,7 +2845,7 @@ get_gene_cn_and_expression = function(gene_symbol,
                                       this_seq_type = "genome"){
 
     if(!missing(gene_symbol)){
-      this_row = grch37_gene_coordinates %>%
+      this_row = GAMBLR.data::grch37_gene_coordinates %>%
         dplyr::filter(hugo_symbol == gene_symbol)
 
       this_region = paste0(this_row$chromosome, ":", this_row$start, "-", this_row$end)
@@ -2853,7 +2853,7 @@ get_gene_cn_and_expression = function(gene_symbol,
       }
 
     else{
-      this_row = grch37_gene_coordinates %>%
+      this_row = GAMBLR.data::grch37_gene_coordinates %>%
         dplyr::filter(ensembl_gene_id == ensembl_id)
 
       this_region = paste0(this_row$chromosome, ":", this_row$start, "-",this_row$end)

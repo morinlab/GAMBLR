@@ -39,4 +39,5 @@ annotate_ssm_motif_context (maf = maf,
           motif = "WRCY",
           projection = "hg38"
          )
+
 }

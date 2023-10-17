@@ -7,4 +7,4 @@ cat("Loading custom .Rprofile for GAMBLR remote\n")
 
 R_HISTSIZE=100000
 #R_CONFIG_ACTIVE="remote"
-Sys.setenv(R_CONFIG_ACTIVE= "remote")
+Sys.setenv(R_CONFIG_ACTIVE= "default")

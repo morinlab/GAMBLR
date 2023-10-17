@@ -1,7 +1,8 @@
-#global environment
 coding_class = c("Frame_Shift_Del", "Frame_Shift_Ins", "In_Frame_Del", "In_Frame_Ins", "Missense_Mutation", "Nonsense_Mutation", "Nonstop_Mutation", "Silent", "Splice_Region", "Splice_Site", "Targeted_Region", "Translation_Start_Site")
+
 rainfall_conv = c("T>C", "T>C", "C>T", "C>T", "T>A", "T>A", "T>G", "T>G", "C>A", "C>A", "C>G", "C>G", "InDel")
 names(rainfall_conv) = c('A>G', 'T>C', 'C>T', 'G>A', 'A>T', 'T>A', 'A>C', 'T>G', 'C>A', 'G>T', 'C>G', 'G>C', 'InDel')
+
 ssh_session <<- NULL
 
 
@@ -343,8 +344,9 @@ get_ssh_session = function(host="gphost01.bcgsc.ca"){
 #'
 #' @param gene_symbol A vector of one or more gene symbols.
 #' @param ensembl_id A vector of one or more Ensembl IDs.
-#' @param genome_build Reference genome build, default is grch37.
-#' @param return_as Specify the type of return. Default is region (chr:start-end), other acceptable arguments are "bed" and "df".
+#' @param genome_build Reference genome build. Possible values are "grch37" (default) or "hg38".
+#' @param return_as Specify the type of return. Default is "region" (chr:start-end), other acceptable arguments are "bed" and "df".
+#' @param sort_regions A boolean parameter (TRUE is the default) indicating whether regions should be sorted by chomosome and start location.
 #'
 #' @return A data frame, or a string with region(s) for the provided gene(s).
 #'
@@ -361,60 +363,100 @@ get_ssh_session = function(host="gphost01.bcgsc.ca"){
 gene_to_region = function(gene_symbol,
                           ensembl_id,
                           genome_build = "grch37",
-                          return_as = "region"){
-
+                          return_as = "region",
+                          sort_regions = TRUE){
+  
+  stopifnot('`genome_build` parameter must be "grch37" or "hg38"' = genome_build %in% c("grch37", "hg38"))
+  stopifnot('`return_as` parameter must be "region", "bed" or "df"' = return_as %in% c("region", "bed", "df"))
+  stopifnot('One and only one of the `gene_symbol` and `ensembl_id` parameters must be given to this function' = sum(missing(gene_symbol), missing(ensembl_id)) == 1)
+  
   #set mart based on selected genome projection
   if(genome_build == "grch37"){
-    gene_coordinates = grch37_gene_coordinates
+    gene_coordinates = GAMBLR.data::grch37_gene_coordinates
     chr_select = paste0(c(c(1:22),"X","Y"))
-  }else if(genome_build == "hg38"){
-    gene_coordinates = hg38_gene_coordinates
+  }else{
+    gene_coordinates = GAMBLR.data::hg38_gene_coordinates
     chr_select = paste0("chr", c(c(1:22),"X","Y"))
   }
-
+  
   #filter on gene_symbol/ensembl_id
   if(!missing(gene_symbol) && missing(ensembl_id)){
     gene_coordinates = dplyr::filter(gene_coordinates, hugo_symbol %in% gene_symbol)
+    genes_not_vailable = gene_symbol[! gene_symbol %in% gene_coordinates$hugo_symbol]
   }
-
   if(missing(gene_symbol) && !missing(ensembl_id)){
     gene_coordinates = dplyr::filter(gene_coordinates, ensembl_gene_id %in% ensembl_id)
+    genes_not_vailable = ensembl_id[! ensembl_id %in% gene_coordinates$ensembl_gene_id]
   }
-
+  
+  #print list of genes that have no region info available
+  if(length(genes_not_vailable) > 0){
+    paste(genes_not_vailable, collapse = ", ") %>%
+      gettextf("Some input gene(s) have no region info available. They are:\n%s.", .) %>%
+      message
+  }
+  
   region = dplyr::select(gene_coordinates, chromosome, start, end, gene_name, hugo_symbol, ensembl_gene_id) %>%
-    as.data.frame() %>%
-    dplyr::arrange(chromosome, start) %>%
+    as.data.frame() %>% 
     dplyr::filter(chromosome %in% chr_select)
+  
+  if(sort_regions){
+    if(genome_build == "grch37"){
+      chrm_num = region$chromosome
+    }else{
+      chrm_num = sub("chr", "", region$chromosome)
+    }
+    chrm_num = factor(chrm_num, levels = c(1:22, "X", "Y"), ordered = TRUE)
+    region = dplyr::arrange(region, chrm_num, start)
+  }else{
+    #make the output gene order the same as the input
+    if(!missing(gene_symbol) && missing(ensembl_id)){
+      region = arrange(region, match(hugo_symbol, gene_symbol))
+    }
+    if(missing(gene_symbol) && !missing(ensembl_id)){
+      region = arrange(region, match(hugo_symbol, ensembl_id))
+    }
+  }
+  
   region[region == ""] = NA
   region = distinct(region, .keep_all = TRUE)
-
+  
   if(return_as == "bed"){
     #return one-row data frame with first 4 standard BED columns. TODO: Ideally also include strand if we have access to it in the initial data frame
     region = dplyr::select(region, chromosome, start, end, hugo_symbol)
-
+    
   }else if(return_as == "df"){
     region = region
-
+    
   }else{
     #default: return in chr:start-end format
-    region = paste0(region$chromosome, ":", region$start, "-", region$end)
+    if(!missing(gene_symbol) && missing(ensembl_id)){
+      ids = dplyr::pull(region, hugo_symbol)
+    }
+    if(missing(gene_symbol) && !missing(ensembl_id)){
+      ids = dplyr::pull(region, ensembl_gene_id)
+    }
+    region = setNames(
+      paste0(region$chromosome, ":", region$start, "-", region$end, recycle0 = TRUE),
+      ids
+    )
   }
-
+  
   if(return_as %in% c("bed", "df")){
     if(!missing(gene_symbol)){
-      message(paste0(nrow(region), " region(s) returned for ", length(gene_symbol), " gene(s)"))
+      message(paste0(nrow(region[!is.na(region$chromosome),]), " region(s) returned for ", length(gene_symbol), " gene(s)"))
     }
-
+    
     if(!missing(ensembl_id)){
-      message(paste0(nrow(region), " region(s) returned for ", length(ensembl_id), " gene(s)"))
+      message(paste0(nrow(region[!is.na(region$chromosome),]), " region(s) returned for ", length(ensembl_id), " gene(s)"))
     }
   }else{
     if(!missing(gene_symbol)){
-      message(paste0(length(region), " region(s) returned for ", length(gene_symbol), " gene(s)"))
+      message(paste0(length(region[!is.na(region)]), " region(s) returned for ", length(gene_symbol), " gene(s)"))
     }
-
+    
     if(!missing(ensembl_id)){
-      message(paste0(length(region), " region(s) returned for ", length(ensembl_id), " gene(s)"))
+      message(paste0(length(region[!is.na(region)]), " region(s) returned for ", length(ensembl_id), " gene(s)"))
     }
   }
   return(region)
@@ -453,9 +495,9 @@ region_to_gene = function(region,
 
   #set mart based on selected genome projection
   if(genome_build == "grch37"){
-    gene_list = grch37_gene_coordinates
+    gene_list = GAMBLR.data::grch37_gene_coordinates
   }else if(genome_build == "hg38"){
-    gene_list = hg38_gene_coordinates
+    gene_list = GAMBLR.data::hg38_gene_coordinates
   }
 
   #rename columns to match downstream formats
@@ -649,7 +691,7 @@ get_coding_ssm_status = function(gene_symbols,
 
   if(missing(gene_symbols)){
     message("defaulting to all lymphoma genes")
-    gene_symbols = pull(lymphoma_genes, Gene)
+    gene_symbols = pull(GAMBLR.data::lymphoma_genes, Gene)
   }
 
   if(missing(these_samples_metadata)){
@@ -782,180 +824,6 @@ get_coding_ssm_status = function(gene_symbols,
 }
 
 
-
-#' @title Calculate Mutation Frequency By Sliding Window.
-#'
-#' @description Count the number of mutations in a sliding window across a region for all samples.
-#'
-#' @details This function is called to return the mutation frequency for a given region, for all GAMBL samples. Regions are specified with the `this_region`parameter.
-#' Alternatively, the region of interest can also be specified by calling the function with `chromosome`, `start_pos`, and `end_pos` parameters.
-#' It is also possible to return a plot of the created bins. This is done with setting `plot_type = TRUE`.
-#' There are a collection of parameters available for further customizing the return, for more information, refer to the parameter descriptions and examples.
-#' This function is unlikely to be used directly in most cases. See [GAMBLR::get_mutation_frequency_bin_matrix] instead.
-#'
-#' @param this_region Genomic region in bed format.
-#' @param chromosome Chromosome name in region.
-#' @param start_pos Start coordinate of region.
-#' @param end_pos End coordinate of region.
-#' @param metadata Data frame containing sample ids and column with annotated data for the 2 groups of interest. All other columns are ignored. Currently, function exits if asked to compare more than 2 groups.
-#' @param seq_type The seq_type you want back, default is genome.
-#' @param slide_by Slide size for sliding window, default is 100.
-#' @param window_size Size of sliding window, default is 1000.
-#' @param plot_type Set to TRUE for a plot of your bins. By default no plots are made.
-#' @param sortByColumns Which of the metadata to sort on for the heatmap
-#' @param return_format Return format of mutations. Accepted inputs are "long" and "long-simple". Default is "long-simple".
-#' @param min_count_per_bin Minimum counts per bin, default is 3.
-#' @param return_count Boolean statement to return count. Default is FALSE.
-#' @param drop_unmutated This may not currently work properly. Default is FALSE.
-#' @param classification_column Only used for plotting, default is "lymphgen"
-#' @param from_indexed_flatfile Set to TRUE to avoid using the database and instead rely on flat-files (only works for streamlined data, not full MAF details). Default is FALSE.
-#' @param mode Only works with indexed flat-files. Accepts 2 options of "slms-3" and "strelka2" to indicate which variant caller to use. Default is "slms-3".
-#'
-#' @return Count matrix.
-#'
-#' @rawNamespace import(data.table, except = c("last", "first", "between", "transpose"))
-#' @import dplyr tidyr cowplot ggplot2
-#' @export
-#'
-#' @examples
-#' chr11_mut_freq = calc_mutation_frequency_sliding_windows(this_region = "chr11:69455000-69459900",
-#'                                                          slide_by = 10,
-#'                                                          window_size = 10000)
-#'
-calc_mutation_frequency_sliding_windows = function(this_region,
-                                                   chromosome,
-                                                   start_pos,
-                                                   end_pos,
-                                                   metadata,
-                                                   seq_type,
-                                                   slide_by = 100,
-                                                   window_size = 1000,
-                                                   plot_type = "none",
-                                                   sortByColumns = "pathology",
-                                                   return_format = "long-simple",
-                                                   min_count_per_bin = 3,
-                                                   return_count = FALSE,
-                                                   drop_unmutated = FALSE,
-                                                   classification_column = "lymphgen",
-                                                   from_indexed_flatfile = FALSE,
-                                                   mode = "slms-3"){
-
-  max_region = 1000000
-  if(missing(metadata)){
-    metadata = get_gambl_metadata()
-  }
-  if(missing(this_region)){
-    this_region = paste0(chromosome, ":", start_pos, "-", end_pos)
-  }else{
-    chunks = region_to_chunks(this_region)
-    chromosome = chunks$chromosome
-    start_pos = as.numeric(chunks$start)
-    end_pos = as.numeric(chunks$end)
-  }
-  region_size = end_pos - start_pos
-  if(region_size < max_region){
-    message(paste("processing bins of size", window_size, "across", region_size, "bp region"))
-  }else{
-    message(paste("CAUTION!\n", region_size, "exceeds maximum size recommended by this function."))
-  }
-  windows = data.frame(start = seq(start_pos, end_pos, by = slide_by)) %>%
-    mutate(end = start + window_size - 1)
-  #use foverlaps to assign mutations to bins
-  windows.dt = as.data.table(windows)
-  region_ssm = GAMBLR::get_ssm_by_region(region = this_region, streamlined = FALSE, seq_type=seq_type, from_indexed_flatfile = from_indexed_flatfile, mode = mode) %>%
-    dplyr::rename(c("start" = "Start_Position", "sample_id" = "Tumor_Sample_Barcode")) %>%
-    mutate(mutated = 1)
-
-  region.dt = region_ssm %>%
-    dplyr::mutate(start = as.numeric(as.character(start)), end = start + 1, end = as.numeric(as.character(end))) %>%
-    dplyr::relocate(start, .before=end) %>%
-    as.data.table()
-
-  setkey(windows.dt, start, end)
-  setkey(region.dt, start, end)
-  windows_overlap = foverlaps(windows.dt, region.dt) %>%
-    dplyr::filter(!is.na(start)) %>%
-    dplyr::rename(c("window_start" = "i.start", "mutation_position" = "start")) %>%
-    dplyr::select(-i.end, -end, -mutation_position) %>%
-    as.data.frame()
-
-  windows_tallied_full = windows_overlap %>%
-    group_by(sample_id, window_start) %>%
-    tally() %>%
-    dplyr::filter(n >= min_count_per_bin) %>%
-    arrange(sample_id) %>%
-    as.data.frame()
-  windows_tallied = windows_tallied_full
-
-  all_samples = pull(metadata, sample_id) %>%
-    unique()
-
-  num_samples = length(all_samples)
-  lg_cols = get_gambl_colours("lymphgen")
-  path_cols = get_gambl_colours("pathology")
-  annos = data.frame(window_start = rep(start_pos,num_samples), sample_id = factor(all_samples))
-  annos = left_join(annos, metadata, by = "sample_id")
-  windows_tallied = left_join(metadata, windows_tallied, by = "sample_id")
-  windows_tallied = arrange(windows_tallied, lymphgen)
-  windows_tallied$classification = factor(windows_tallied[,classification_column], levels = unique(windows_tallied[,classification_column]))
-  if(drop_unmutated){
-    windows_tallied = windows_tallied %>%
-      dplyr::filter(!is.na(n))
-  }
-  if(classification_column == "lymphgen"){
-    windows_tallied = arrange(windows_tallied, pathology, lymphgen)
-    annos = arrange(annos, pathology, lymphgen)
-  }else{
-    windows_tallied = arrange(windows_tallied, classification)
-    annos = arrange(annos, classification)
-  }
-  annos$sample_id = factor(annos$sample_id, levels = unique(annos$sample_id))
-  windows_tallied$sample_id = factor(windows_tallied$sample_id, levels = unique(windows_tallied$sample_id))
-  if(plot_type %in% c("points", "point")){
-    #add a bin at position 1 for pathology
-    windows_tallied = dplyr::filter(windows_tallied, !is.na(window_start))
-    p = ggplot2::ggplot() +
-                 geom_point(data = annos, aes(x = window_start, y = sample_id, colour = pathology)) +
-                 geom_point(data = windows_tallied, aes(x = window_start, y = sample_id, colour = classification)) +
-                 theme(axis.text = element_text(size = 4)) +
-                 theme(axis.text.y = element_blank()) +
-                 scale_colour_manual(values = c(lg_cols, path_cols))
-  }else if(plot_type %in% c("tile", "tiled")){
-    print(annos)
-    p = ggplot() +
-        geom_point(data = annos, aes(x = window_start, y = sample_id, colour = lymphgen)) +
-        geom_tile(data = windows_tallied, aes(x = window_start, y = sample_id, fill = n)) +
-        scale_fill_gradient(low = "orange", high = "red", na.value = NA) +
-        theme_cowplot() +
-        scale_colour_manual(values = c(lg_cols, path_cols)) +
-        theme(axis.text.y = element_blank())
-  }
-  if(plot_type != "none"){
-    print(p)
-  }
-  if(return_count){
-    windows_tallied = mutate(windows_tallied, bin = paste0(window_start, "_", chromosome)) %>%
-      mutate(mutated = n)
-  }else{
-    #binary mutated or not
-    windows_tallied = mutate(windows_tallied, bin = paste0(window_start, "_", chromosome)) %>%
-    mutate(mutated = 1)
-  }
-  a = dplyr::select(windows_tallied, sample_id, bin, mutated)
-  completed = complete(a, sample_id, bin, fill = list(mutated = 0))
-  widened = pivot_wider(completed, names_from = sample_id, values_from = mutated)
-  if(return_format == "long"){
-    return(windows_tallied)
-  }else if(return_format == "long-simple"){
-    #just return the columns needed for completing and making a wide matrix for many regions
-    windows_simple = dplyr::select(windows_tallied, sample_id, bin, mutated)
-    return(windows_simple)
-  }else{
-    return(widened)
-  }
-}
-
-
 #' @title SV To BED File.
 #'
 #' @description Write bedpe format data frame to a file that will work with IGV and UCSC genome browser.
@@ -1004,7 +872,7 @@ sv_to_bedpe_file = function(sv_df,
 #'
 #' @description Parse a region string into; chromosome, start and end.
 #'
-#' @details INTERNAL FUNCTION called by [GAMBLR::calc_mutation_frequency_sliding_windows], not meant for out-of-package usage.
+#' @details INTERNAL FUNCTION called by [GAMBLR::calc_mutation_frequency_bin_region], not meant for out-of-package usage.
 #'
 #' @param region A region string e.g. "chrX:12345-678910".
 #'
@@ -1222,9 +1090,9 @@ review_hotspots = function(annotated_maf,
   # check genome build because CREBBP coordinates are hg19-based or hg38-based
 
   if (genome_build %in% c("hg19", "grch37", "hs37d5", "GRCh37")){
-    coordinates = GAMBLR::hotspot_regions_grch37
+    coordinates = GAMBLR.data::hotspot_regions_grch37
   }else if(genome_build %in% c("hg38", "grch38", "GRCh38")){
-    coordinates = GAMBLR::hotspot_regions_hg38
+    coordinates = GAMBLR.data::hotspot_regions_hg38
   }else{
     stop("The genome build specified is not currently supported. Please provide MAF file in one of the following cordinates: hg19, grch37, hs37d5, GRCh37, hg38, grch38, or GRCh38")
   }
@@ -2964,7 +2832,7 @@ view_mutation_igv = function(this_mutation,
   }
 }
 
-socketWrite = function (sock, string) {
+socketWrite = function(sock, string){
   print(string)
   write.socket(sock, string)
   response <- read.socket(sock)
@@ -3417,9 +3285,9 @@ genome_to_exome = function(maf,
       if(! genome_build %in% c("hg19", "grch37", "hs37d5", "GRCh37", "hg38", "GRCh38", "grch38")){
         stop("The genome build specified is not currently supported. Please refer to genome build in one of the following cordinates: hg19, grch37, hs37d5, GRCh37, hg38, grch38, or GRCh38.")
       }else if(genome_build %in% c("hg19", "grch37", "hs37d5", "GRCh37")){
-        this_genome_coordinates = target_regions_grch37 # if the genome build is a flavour of hg19, get its exome space
+        this_genome_coordinates = GAMBLR.data::target_regions_grch37 # if the genome build is a flavour of hg19, get its exome space
       }else if(genome_build %in% c("hg38", "GRCh38", "grch38")){
-        this_genome_coordinates = target_regions_hg38 # exome space for the variations of hg38
+        this_genome_coordinates = GAMBLR.data::target_regions_hg38 # exome space for the variations of hg38
       }
   }else{
       this_genome_coordinates = fread(custom_bed)
@@ -3932,9 +3800,9 @@ calculate_pga = function(this_seg,
 
   # ensure the specified projection is correct and define chromosome coordinates
   if (projection == "grch37") {
-    chr_coordinates = chromosome_arms_grch37
+    chr_coordinates = GAMBLR.data::chromosome_arms_grch37
   } else if (projection == "hg38") {
-    chr_coordinates = chromosome_arms_hg38
+    chr_coordinates = GAMBLR.data::chromosome_arms_hg38
   } else {
     stop(
       "You specified projection that is currently not supported. Please provide seg files in either hg38 or grch37."
@@ -4445,10 +4313,10 @@ cnvKompare = function(patient_id,
   # VAF-like plot
   # genes
   if (projection %in% c("hg19", "grch37")) {
-    for_plot_lg = grch37_lymphoma_genes_bed %>%
+    for_plot_lg = GAMBLR.data::grch37_lymphoma_genes_bed %>%
       as.data.table()
   } else if (projection %in% c("hg38", "grch38")) {
-    for_plot_lg = hg38_lymphoma_genes_bed %>%
+    for_plot_lg = GAMBLR.data::hg38_lymphoma_genes_bed %>%
       as.data.table()
   }
   # did user specify particular genes of interest to display on the plot?
@@ -4629,99 +4497,233 @@ supplement_maf <- function(incoming_maf,
 }
 
 
-#' @title ID Ease
-#'
-#' @aliases id_ease, id ease
-#'
-#' @description Convenience function that standardize the way GAMBLR functions deals with sample IDs (these_sample_ids)
-#' and metadata (these_samples_metadata).
-#'
-#' @details This function can take sample IDs as a vector of characters, or a metadata table in data frame format.
-#' If no sample IDs are provided to the function, the function will operate on all gambl sample IDs available for the given seq type.
-#' It is highly recommended to run this function with `verbose = TRUE` (default). 
-#' Since this will not only improve the overall logic on how the function operates.
-#' But also might help with debugging functions that are internally calling this function.
-#' The function also performs sanity checks and notifies the user if any of the requested sample IDs are not found in the metadata.
-#' In addition, the function also notifies the dimensions of the returned object, providing further insight to what is returned. 
+#' @title Get CNV and coding SSM combined status
 #' 
-#' @param these_samples_metadata A data frame with metadata, subset to sample IDs of interest.
-#' If not provided will retrieve GAMBL metadata for all available samples.
-#' @param these_sample_ids Sample IDs as a character of vectors.
-#' @param this_seq_type The seq type of interest. Default is genome.
-#' @param verbose Set to FALSE to limit the information that gets printed to the console. Default is TRUE.
+#' @description For each specified chromosome region (gene name), return status 1 if the copy number (CN) 
+#'   state is non-neutral, *i.e.* different from 2, or if the region contains any coding simple somatic mutation (SSM).
+#' 
+#' @details The user can choose from which regions are intended to return only copy number variation (CNV) status, 
+#'   only coding SSM status, or at least the presence of one of them. This behavior is controlled by the arguments 
+#'   `genes_and_cn_threshs` (column `cn_thresh`) and `only_cnv`.
+#'   
+#'   This function internally calls the `get_cn_states`, `get_ssm_by_samples` and `get_coding_ssm_status`functions. 
+#'   Therefore, many of its arguments are assigned to these functions. If needed, see the documentation of these 
+#'   functions for more information. 
+#'   
+#'   In the case of returning NA values, this is because the `get_cn_segments` function can not internally return 
+#'   any copy number segments from a given chromosome region. 
+#' 
+#' @param genes_and_cn_threshs A data frame with columns "gene_id" and "cn_thresh". The "gene_id" column stores 
+#'   gene symbols (characters) which determine the regions to return CNV and/or coding SSM status. The "cn_thresh" 
+#'   column stores integers that mean the maximum or minimum CN states to return status 1 (contains CNV) for 
+#'   its respective gene. If this integer is below 2 (neutral CN state for diploids), it is taken as the maximum 
+#'   (gene consider as tumor suppressor); if above 2, it is the minimum (oncogene); if equal to 2, do not consider
+#'   CNV to return status.
+#' @param these_samples_metadata The metadata for samples of interest to be included in the returned matrix.
+#'   Can be created with `get_gambl_metadata` function.
+#' @param seq_type The seq type to get results for. Possible values are "genome" (default) or "capture".
+#' @param only_cnv A vector of gene names indicating the genes for which only CNV status should be considered, 
+#'   ignoring SSM status. Set this argument to "all" or "none" (default) to apply this behavior to all or none 
+#'   of the genes, respectively.
+#' @param genome_build Reference genome build. Possible values are "grch37" (default) or "grch38".
+#' @param from_flatfile Logical parameter indicating whether to use flat file to retrieve mutations. Set to FALSE 
+#' to use database instead. Default is TRUE.
+#' @param include_hotspots Logical parameter indicating whether hotspots object should also be tabulated. Default is TRUE.
+#' @param review_hotspots Logical parameter indicating whether hotspots object should be reviewed to include 
+#'   functionally relevant mutations or rare lymphoma-related genes. Default is TRUE.
+#' @param subset_from_merge Argument to internally pass to `get_ssm_by_samples` function. If set to TRUE, 
+#'   the data will be subset from a pre-merged MAF of samples with the specified seq_type, Instead of merging 
+#'   individual MAFs. Default is FALSE.
+#' @param augmented Argument to internally pass to the functions `get_ssm_by_samples` and `get_coding_ssm_status`. 
+#'   A logical parameter (default: TRUE). Set to FALSE to use multi-sample patients, instead of the original MAF 
+#'   from each sample.
+#' @param min_read_support_ssm Only consider SSMs with at least this many reads in t_alt_count (for cleaning 
+#'   up augmented MAFs).
 #'
-#' @return A list with metadata (data frame) as the first element and sample IDs (vector of characters) as the second element.
-#'
+#' @return A data frame with CNV and SSM combined status.
+#' 
+#' @import dplyr
 #' @export
 #'
 #' @examples
-#' #give the function nothing (i.e return all sample IDs in the metadata for the default seq type)
-#' this_is_wrong = id_ease()
-#'
-#' #return metadata for all samples in the default seq type
-#' all_meta = id_ease(return_this = "metadata")
-#'
-#' #return metadata based on a sample ID
-#' sample_meta = id_ease(these_sample_ids = "94-15772_tumorA", 
-#'                       return_this = "metadata")
-#'
-#' #return sample IDs based on an already filtered metadata
-#' this_metadata = get_gambl_metadata(seq_type_filter = "genome") %>% 
-#'   head(5)
-#'
-#' thes_ids = id_ease(these_samples_metadata = this_metadata)
-#'
-id_ease = function(these_samples_metadata,
-                   these_sample_ids,
-                   this_seq_type = "genome",
-                   verbose = TRUE){
- 
-  #check for provided metadata, else use GAMBL metadata
-  if(missing(these_samples_metadata)){
-    if(verbose){
-      message("id_ease: No metadata provided, the helper function will fetch metadata for all gambl samples in the selected seq type...") 
-    }
-    metadata = get_gambl_metadata(seq_type_filter = this_seq_type) #useful to add other get_gambl_metadata parameters?
-  }else{
-    if(verbose){
-      message("id_ease: Metadata is provided...") 
-    }
-    metadata = these_samples_metadata
-  }
-
-  #ensure metadata is subset to specified sample IDs
-  if(!missing(these_sample_ids)){
-    if(verbose){
-      message("id_ease: Sample IDs are provided, filtering the metadata for selected sample IDs...") 
-    }
-    metadata = dplyr::filter(metadata, sample_id %in% these_sample_ids)
-    
-    #check the existence of provided sample IDs in the metadata
-    not_in_meta = setdiff(these_sample_ids, metadata$sample_id)
-    
-    #assign the sample_ids variable
-    sample_ids = these_sample_ids
-    
-    if(length(not_in_meta) > 0){
-      message("id_ease: WARNING! The following sample IDs were not found in the metadata:")
-      print(not_in_meta)
-    }
-  }else{
-    if(verbose){
-      message("id_ease: No sample IDs provided, defaulting to all IDs in the metadata...")
-    }
-    sample_ids = metadata$sample_id
-  }
-
-  #return a list with metadata (data frame) as the first element and sample IDs (vector of characters) as the second element
-  if(verbose){
-    unique_samples = unique(sample_ids)
-    message(paste0("id_ease: Returning ", length(unique_samples), " sample IDs.."))
-    message(paste0("id_ease: Returning metadata for ", length(unique_samples), " samples..." ))
-  }
-
-  #bind the objects into a list for return
-  IDs = list(this_metadata = metadata, these_samples = sample_ids)
+#' # Define samples
+#' these_sample_ids = c(
+#'   "BLGSP-71-06-00160-01A-03D",
+#'   "BLGSP-71-06-00252-01A-01D",
+#'   "BLGSP-71-19-00122-09A.1-01D",
+#'   "BLGSP-71-19-00523-09A-01D",
+#'   "BLGSP-71-21-00187-01A-01E",
+#'   "BLGSP-71-21-00188-01A-04E"
+#' )
+#' 
+#' # Get sample meta data
+#' this_meta = get_gambl_metadata()
+#' this_meta = dplyr::filter(this_meta, sample_id %in% these_sample_ids)
+#' 
+#' # For MYC and SYNCRIP, return CNV and SSM combined status; for MIR17HG, 
+#' # return only CNV status; for CCND3 return only SSM status
+#' genes_and_cn_threshs = data.frame(
+#'   gene_id=c("MYC", "MIR17HG", "CCND3", "SYNCRIP"),
+#'   cn_thresh=c(3, 3, 2, 1)
+#' )
+#' get_cnv_and_ssm_status(
+#'   genes_and_cn_threshs,
+#'   this_meta,
+#'   only_cnv = "MIR17HG",
+#' )
+#' 
+#' # For all genes, return only CNV status
+#' genes_and_cn_threshs = data.frame(
+#'   gene_id=c("MYC", "MIR17HG", "SYNCRIP"),
+#'   cn_thresh=c(3, 3, 1)
+#' )
+#' get_cnv_and_ssm_status(
+#'   genes_and_cn_threshs,
+#'   this_meta,
+#'   only_cnv = "all",
+#' )
+#' 
+get_cnv_and_ssm_status = function(genes_and_cn_threshs,
+                                  these_samples_metadata,
+                                  seq_type = "genome",
+                                  only_cnv = "none",
+                                  genome_build = "grch37",
+                                  from_flatfile = TRUE,
+                                  include_hotspots = TRUE,
+                                  review_hotspots = TRUE,
+                                  subset_from_merge = FALSE,
+                                  augmented = TRUE,
+                                  min_read_support_ssm = 3){
   
-  return(IDs) 
+  # check parameters
+  stopifnot('`genes_and_cn_threshs` argument is missing.' = !missing(genes_and_cn_threshs))
+  
+  stopifnot('`genes_and_cn_threshs` argument must be a data frame with columns "gene_id" (characters) and "cn_thresh" (integers).' = {
+    k = class(genes_and_cn_threshs) == "data.frame" &
+      all( c("gene_id", "cn_thresh") %in% names(genes_and_cn_threshs) )
+    if(k){
+      is.character(genes_and_cn_threshs$gene_id) &
+        is.numeric(genes_and_cn_threshs$cn_thresh) &
+        identical(genes_and_cn_threshs$cn_thresh, trunc(genes_and_cn_threshs$cn_thresh))
+    }
+  })
+  
+  stopifnot('`genome_build` argument must be "grch37" or "hg38."' = genome_build %in% c("grch37", "hg38"))
+  
+  stopifnot('`seq_type` argument must be "genome" or "capture."' = seq_type %in% c("genome", "capture"))
+  
+  stopifnot('`only_cnv` argument must be "none", "all", or a subset of `genes_and_cn_threshs$gene_id`' = {
+    only_cnv == "none" |
+      only_cnv == "all" |
+      all(only_cnv %in% genes_and_cn_threshs$gene_id)
+  })
+  
+  # define variables
+  if(missing(these_samples_metadata)){
+    these_samples_metadata = get_gambl_metadata(seq_type_filter=seq_type)
+  }else{
+    these_samples_metadata = dplyr::filter(these_samples_metadata, seq_type==seq_type)
+  }
+  
+  # get gene regions
+  my_regions = gene_to_region(gene_symbol = genes_and_cn_threshs$gene_id,
+                              genome_build = genome_build,
+                              sort_regions = FALSE)
+  
+  if(length(my_regions) < nrow(genes_and_cn_threshs)){
+    genes_and_cn_threshs = dplyr::filter(genes_and_cn_threshs, gene_id %in% names(my_regions))
+  }
+  
+  ### cnv
+  thresh_2 = genes_and_cn_threshs$cn_thresh == 2
+  genes_and_cn_threshs_non_neutral = genes_and_cn_threshs[!thresh_2,]
+  check_cnv = nrow(genes_and_cn_threshs_non_neutral) > 0
+  
+  if(check_cnv){
+    # get cn states
+    cn_matrix = get_cn_states(
+      regions_list = my_regions[genes_and_cn_threshs_non_neutral$gene_id],
+      region_names = genes_and_cn_threshs_non_neutral$gene_id,
+      these_samples_metadata = these_samples_metadata,
+      this_seq_type = seq_type
+    )
+    cn_matrix = cn_matrix[these_samples_metadata$sample_id,, drop=FALSE]
+    
+    # get cnv status
+    cnv_status = mapply(function(cnstate, thresh){
+      if(thresh < 2){
+        cnstate <= thresh
+      }else if(thresh == 2){
+        cnstate != thresh
+      }else if(thresh > 2){
+        cnstate >= thresh
+      }
+    }, cn_matrix, genes_and_cn_threshs_non_neutral$cn_thresh, USE.NAMES = TRUE, SIMPLIFY = FALSE) %>% 
+      as.data.frame %>% 
+      {. * 1}
+    rownames(cnv_status) = rownames(cn_matrix)
+    
+    # if only CNV statuses are desired, output them
+    if(only_cnv == "all"){
+      return(cnv_status)
+    }
+    
+    # add cnv status as zero to genes whose cn threshold is 2
+    if(any(thresh_2)){
+      cnv_status = genes_and_cn_threshs$gene_id[thresh_2] %>% 
+        { matrix(0, nrow = nrow(cnv_status), ncol = length(.), dimnames = list(NULL, .)) } %>% 
+        cbind(cnv_status)
+    }
+    cnv_status = dplyr::select(cnv_status, genes_and_cn_threshs$gene_id)
+  }
+  
+  ### ssm
+  # genes to get ssm status
+  if(only_cnv == "nome"){
+    genes_to_check_ssm = genes_and_cn_threshs$gene_id
+  }else{
+    genes_to_check_ssm = genes_and_cn_threshs$gene_id [ !(genes_and_cn_threshs$gene_id %in% only_cnv) ]
+  }
+  
+  # get maf data
+  my_maf = get_ssm_by_samples(
+    these_samples_metadata = these_samples_metadata,
+    projection = genome_build,
+    seq_type = seq_type,
+    min_read_support = min_read_support_ssm,
+    these_genes = genes_to_check_ssm,
+    subset_from_merge = subset_from_merge,
+    augmented = augmented
+  )
+  
+  # get ssm status
+  ssm_status = get_coding_ssm_status(
+    gene_symbols = genes_to_check_ssm,
+    these_samples_metadata = these_samples_metadata,
+    maf_data = my_maf,
+    projection = genome_build,
+    genome_build = genome_build,
+    min_read_support = min_read_support_ssm,
+    from_flatfile = from_flatfile,
+    include_hotspots = include_hotspots,
+    include_silent = FALSE,
+    augmented = augmented
+  ) %>% column_to_rownames("sample_id")
+  
+  # add missing regions to ssm_status as zero statuses
+  missing_regions = !(genes_and_cn_threshs$gene_id %in% names(ssm_status))
+  if(any(missing_regions)){
+    ssm_status = genes_and_cn_threshs$gene_id[missing_regions] %>% 
+      { matrix(0, nrow(ssm_status), length(.), dimnames = list(NULL, .)) } %>% 
+      cbind(ssm_status) 
+  }
+  ssm_status = dplyr::select(ssm_status, genes_and_cn_threshs$gene_id)
+  ssm_status = ssm_status[these_samples_metadata$sample_id,, drop=FALSE]
+  
+  # combine cnv and ssm status
+  if(check_cnv){
+    (cnv_status | ssm_status) * 1
+  }else{
+    ssm_status
+  }
 }

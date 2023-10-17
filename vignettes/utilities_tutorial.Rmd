@@ -24,16 +24,6 @@ library(gridExtra)
 library(ssh)
 ```
 
-```{r remote, include = FALSE, warning = FALSE, message = FALSE}
-#check if remote session
-if(check_host()){
- R_CONFIG_ACTIVE = "remote" 
-}
-
-session = get_ssh_session()
-remote_session = check_remote_configuration(auto_connect = TRUE)
-```
-
 # Utilities
 In this vignette we are exploring functions that fall under the category, utilities. This is a collection of functions that can be used for a variety of applications, such as retrieving gene coordinates from regions (and the other way around), cleaning and sanitizing data, creating custom tracks for the UCSC Genome Browser, getting collated results, accessing the GAMBLR colour paletter, etc.
 

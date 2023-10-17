@@ -8,7 +8,8 @@ gene_to_region(
   gene_symbol,
   ensembl_id,
   genome_build = "grch37",
-  return_as = "region"
+  return_as = "region",
+  sort_regions = TRUE
 )
 }
 \arguments{
@@ -16,9 +17,11 @@ gene_to_region(
 
 \item{ensembl_id}{A vector of one or more Ensembl IDs.}
 
-\item{genome_build}{Reference genome build, default is grch37.}
+\item{genome_build}{Reference genome build. Possible values are "grch37" (default) or "hg38".}
 
-\item{return_as}{Specify the type of return. Default is region (chr:start-end), other acceptable arguments are "bed" and "df".}
+\item{return_as}{Specify the type of return. Default is "region" (chr:start-end), other acceptable arguments are "bed" and "df".}
+
+\item{sort_regions}{A boolean parameter (TRUE is the default) indicating whether regions should be sorted by chomosome and start location.}
 }
 \value{
 A data frame, or a string with region(s) for the provided gene(s).

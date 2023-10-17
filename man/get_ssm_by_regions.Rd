@@ -59,7 +59,7 @@ Is this function not what you are looking for? Try one of the following, similar
 }
 \examples{
 #basic usage, adding custom names from bundled ashm data frame
-regions_bed = dplyr::mutate(grch37_ashm_regions, name = paste(gene, region, sep = "_"))
+regions_bed = dplyr::mutate(GAMBLR.data::grch37_ashm_regions, name = paste(gene, region, sep = "_"))
 
 ashm_basic_details = get_ssm_by_regions(regions_bed = regions_bed)
 

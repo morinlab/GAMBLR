@@ -23,16 +23,6 @@ library(ssh)
 library(parallel)
 ```
 
-```{r remote, include = FALSE, warning = FALSE, message = FALSE}
-#check if remote session
-if(check_host()){
- R_CONFIG_ACTIVE = "remote" 
-}
-
-session = get_ssh_session()
-remote_session = check_remote_configuration(auto_connect = TRUE)
-```
-
 # Simple Somatic Mutations
 This vignette demonstrates how to work with Simple Somatic Mutations (SSM) results within GAMBLR, all the way from obtaining results (in various ways), linking with metadata, performing data analysis and annotations to producing publication ready figures.
 
@@ -359,6 +349,11 @@ some_regions$gene = factor(some_regions$gene,
                                       "PIM1", "PIM2", "S1PR2", "SERPINA9",
                                       "TMSB4X", "ZFP36L1", "RHOH", "MEF2B",
                                       "GRHPR", "LPP", "SGK1", "IGLL5"))
+                                    
+                                      
+colnames(some_regions) <- c("chrom", "start", "end", "name")
+some_regions <- dplyr::filter(some_regions, !is.na(name))
+some_regions$chrom <- str_remove(some_regions$chrom, "chr")
 
 #reorder factor levels of genetic subgroups.
 dlbcl_bl_meta$genetic_subgroup = factor(dlbcl_bl_meta$genetic_subgroup, 
@@ -371,7 +366,7 @@ dlbcl_bl_meta$genetic_subgroup = factor(dlbcl_bl_meta$genetic_subgroup,
                                                    "MCD-COMP", "N1-COMP", 
                                                    "N1", "Other"))
 
-get_mutation_frequency_bin_matrix(these_samples_metadata = dlbcl_bl_meta,
+heatmap_mutation_frequency_bin(these_samples_metadata = dlbcl_bl_meta,
                                   regions_df = some_regions,
                                   min_bin_recurrence = 5,
                                   region_fontsize = 12,

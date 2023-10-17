@@ -852,7 +852,7 @@ setup_expreession_data = function(project_name = "gambl_genome",
   
   #default to all lymphoma genes if no specific genes are supplied for getting expression values.
   if(missing(these_genes)){
-    these_genes = lymphoma_genes %>% pull(Gene)
+    these_genes = GAMBLR.data::lymphoma_genes %>% pull(Gene)
   }
   
   if(missing(expression_df)){
