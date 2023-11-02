@@ -18,62 +18,10 @@ License: MIT + file LICENSE
 Depends:
     R (>= 3.5.0)
 Imports:
-    broom,
-    circlize,
-    ComplexHeatmap,
-    config,
-    cowplot,
-    data.table,
-    DBI,
-    dbplyr,
-    digest,
-    dplyr,
-    forcats,
-    g3viz,
-    GAMBLR.data (>= 0.1),
-    GenomicRanges,
-    ggbeeswarm,
-    ggplot2,
-    ggpubr,
-    ggrepel,
-    ggsci,
-    ggthemes,
-    glue,
-    gridExtra,
-    IRanges,
-    lubridate,
-    maftools,
-    metaviz,
-    nloptr,
-    plotly,
-    plyr,
-    purrr,
-    RCircos,
-    RColorBrewer,
-    readr (>= 2.1),
-    RMariaDB,
-    Rsamtools,
-    rtracklayer,
-    S4Vectors,
-    SRAdb,
-    ssh,
-    stringi,
-    stringr,
-    tibble,
-    tidyr,
-    vroom,
-    wordcloud,
-    workflowr
-Suggests:
-    knitr,
-    rmarkdown,
-    testthat
+    GAMBLR.data (>= 0.1)
 VignetteBuilder:
     knitr
 Remotes:
-    cBioPortal/cgdsr,
-    morinlab/g3viz,
-    morinlab/ggsci,
     morinlab/GAMBLR.data
 biocViews:
 Encoding: UTF-8
