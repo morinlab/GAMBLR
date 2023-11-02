@@ -18,11 +18,20 @@ License: MIT + file LICENSE
 Depends:
     R (>= 3.5.0)
 Imports:
-    GAMBLR.data (>= 0.1)
+    cli (>= 3.6.1),
+    GAMBLR.data (>= 0.1),
+    GAMBLR.helpers (>= 0.1),
+    GAMBLR.utils (>= 0.1),
+    GAMBLR.viz (>= 0.1),
+    GAMBLR.results (>= 0.1)
 VignetteBuilder:
     knitr
 Remotes:
-    morinlab/GAMBLR.data
+    morinlab/GAMBLR.data,
+    morinlab/GAMBLR.helpers,
+    morinlab/GAMBLR.utils,
+    morinlab/GAMBLR.viz,
+    morinlab/GAMBLR.results
 biocViews:
 Encoding: UTF-8
 LazyData: true
