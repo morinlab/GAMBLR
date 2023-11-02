@@ -23,7 +23,8 @@ Imports:
     GAMBLR.helpers (>= 0.1),
     GAMBLR.utils (>= 0.1),
     GAMBLR.viz (>= 0.1),
-    GAMBLR.results (>= 0.1)
+    GAMBLR.results (>= 0.1),
+    rlang (>= 1.1.0)
 Suggests:
     knitr
 VignetteBuilder:
