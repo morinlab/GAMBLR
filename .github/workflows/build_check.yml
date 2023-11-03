@@ -34,7 +34,7 @@ jobs:
 
     - name: Build package
       run:
-        Rscript -e "devtools::install_github('morinlab/GAMBLR@kdreval-gamblr-verse', repos = BiocManager::repositories())"
+        Rscript -e "devtools::install(repos = BiocManager::repositories())"
 
     - name: Check package
       run:
