@@ -104,6 +104,7 @@ dependencies:
   - r-bslib=0.4.2
   - r-cachem=1.0.7
   - r-callr=3.7.3
+  - r-car=3.0.13
   - r-cellranger=1.1.0
   - r-cli=3.6.0
   - r-clipr=0.8.0
