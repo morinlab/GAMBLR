@@ -1884,6 +1884,7 @@ get_lymphgen = function(these_samples_metadata,
     #features_annotated= ungroup(features_counted) %>% 
     
     return(list(lymphgen = lg_tidy,
+                full_lymphgen = lg,
                 features=all_mat,
                 feature_annotation=features_annotated,
                 features_long=feat_all,
