@@ -323,6 +323,72 @@ annotate_driver_ssm = function(maf_df,
   return(kept_ssm)
 }
 
+#'
+#' @description Annotate the intrachromosomal events in a data frame of SV breakpoints.
+#'
+#' @details Specify a data frame with SVs (preferably the output from [GAMBLR::get_manta_sv]) to the `sv_df` parameter and get back the same data frame with SV annotations.
+#'
+#' @param sv_data A data frame of SVs. This should be the output of get_manta_sv.
+#' Only the columns for both chromosomes, coordinates and strand plus SOMATIC_SCORE and tumour_sample_id are absolutely required.
+#'  CHROM_A  START_A    END_A CHROM_B  START_B    END_B NAME SOMATIC_SCORE STRAND_A STRAND_B TYPE FILTER VAF_tumour VAF_normal DP_tumour DP_normal tumour_sample_id normal_sample_id pair_status
+#'   1  1556541  1556547       1  1556664  1556670    .            40        -        -  BND   PASS      0.145          0        55        73  00-14595_tumorA  00-14595_normal     matched
+#' @param with_chr_prefix Set to TRUE to ensure chromosome names start with "chr" in the output
+#' @param return_as Stated format for returned output, default is "bedpe". Other accepted output formats are "bed" and "bedpe_entrez" (to keep entrez_ids for compatibility with portal.R and cBioPortal).
+#' @param genome_build Reference genome build parameter, default is grch37.
+#'
+#' @return A data frame with annotated SVs (gene symbol and entrez ID).
+#' 
+#' @rawNamespace import(data.table, except = c("last", "first", "between", "transpose"))
+#' @import tidyr dplyr stringr
+#' @export
+#'
+#' @examples
+#' sv_df = get_manta_sv(verbose = FALSE)
+#' annotated_entrez = annotate_sv(sv_data = sv_df,
+#'                                with_chr_prefix = FALSE,
+#'                                return_as = "bedpe_entrez", 
+#'                                genome_build = "grch37")
+#'
+annotate_intrachromosomal_sv = function(sv_data,
+                       return_as = "bedpe",
+                       genome_build = "grch37",
+                       types=c("DEL", "DUP", "INS", "INV"),
+                       max_size = 100000,
+                       keep_genes = "all"){
+  #get the genes in each region
+  intra_sv = sv_data %>% mutate(size = END_B - START_A) %>%
+    dplyr::filter(CHROM_A==CHROM_B,type %in% types,size <= max_size)
+  get_affected_genes = function(region,genome_build){
+    if("all" %in% keep_genes){
+      genes = region_to_gene(region=region,genome_build=genome_build) %>% 
+      filter(hugo_symbol != "NA") %>%
+      pull(hugo_symbol) %>% 
+      unique()
+    }else{
+      genes = region_to_gene(region=region,genome_build=genome_build) %>% 
+        filter(hugo_symbol %in% keep_genes) %>%
+        pull(hugo_symbol) %>% 
+        unique()
+    }
+    return(paste(genes,collapse = ","))
+  }
+  intra_sv$genes = NA
+  for(i in c(1:nrow(intra_sv))){
+    region=paste0(intra_sv[i,"CHROM_A"],":",intra_sv[i,"START_A"],"-",intra_sv[i,"END_B"])
+    print(region)
+    g = tryCatch({get_affected_genes(region = region,genome_build=genome_build)},
+                 error=function(cond) {
+                   
+                   message("Here's the original error message:")
+                   message(cond)
+                   # Choose a return value in case of error
+                   return(NA)
+                 })
+    intra_sv[i,"genes"] = g    
+  }
+  #TODO: implement return_as feature for eventual planned cBioPortal functionality
+  return(intra_sv)
+}
 
 #' @title Annotate SVs.
 #'
