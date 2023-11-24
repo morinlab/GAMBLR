@@ -15,7 +15,7 @@
 #'
 #' @return A data frame with an extra column for triple sequence
 #'
-#' @import Rsamtools dplyr
+#' @import Rsamtools dplyr BSgenome
 #' @export
 #'
 #' @examples
@@ -28,8 +28,11 @@ annotate_maf_triplet = function(maf,
                                 ref,
                                 alt,
                                 projection = "grch37",
-                                fastaPath){
-  
+                                fastaPath,
+                                bsgenome_name,
+                                pyrimidine_collapse = FALSE){
+  genome = ""
+  bsgenome_loaded = FALSE
   if (projection == "grch37") {
     maf$Chromosome <- gsub("chr", "", maf$Chromosome)
   } else {
@@ -40,6 +43,8 @@ annotate_maf_triplet = function(maf,
   # If there is no fastaPath, it will read it from config key 
   # Based on the projection the fasta file which will be loaded is different
   if (missing(fastaPath)){
+    
+    
     base <- check_config_value(config::get("repo_base"))
     fastaPath <- paste0(
       base,
@@ -47,16 +52,30 @@ annotate_maf_triplet = function(maf,
       projection,
       "/genome_fasta/genome.fa"
     )
+    if(!file.exists(fastaPath)){
+      #try BSgenome
+      installed = installed.genomes()
+      if(!missing(bsgenome_name)){
+        if(bsgenome_name %in% installed){
+          genome = getBSgenome(bsgenome_name)
+          
+          bsgenome_loaded = TRUE
+        }
+      }else{
+        print(installed)
+        stop("Local Fasta file cannot be found. Supply a path to it with fastaPath or use one of the installed BSGenome options using the bsgenome_name parameter")
+      }
+    }
   }
   # It checks for the presence of a local fastaPath
-  if (!file.exists(fastaPath)) {
-    stop("Failed to find the fasta file")
+  if(!bsgenome_loaded){
+    # Create a reference to an indexed fasta file.
+    if (!file.exists(fastaPath)) {
+      stop("Failed to find the fasta file")
+    }
+    fasta = Rsamtools::FaFile(file = fastaPath)
   }
-  if (!"STRAND_VEP" %in% colnames(maf)){
-    stop("STRAND_VEP column is not in the MAF")
-  }
-  # Create a reference to an indexed fasta file.
-  fasta = Rsamtools::FaFile(file = fastaPath)
+
   # Store the complement of ref and alt alleles
   complement <- c(
     'A'= 'T',
@@ -64,34 +83,69 @@ annotate_maf_triplet = function(maf,
     'C'= 'G',
     'G'= 'C'
   )  
+  if(pyrimidine_collapse){
+    maf = mutate(maf,mutation_strand=ifelse(Reference_Allele %in% c("A","G"),"-","+")) %>%
+      mutate(mutation = ifelse(Reference_Allele %in% c("A","G"),
+                               paste0(complement[Reference_Allele],">",complement[Tumor_Seq_Allele2]),
+             paste0(Reference_Allele,">",Tumor_Seq_Allele2)))
+  }else{
+    maf = mutate(maf,mutation_strand="+")
+  }
+  
   CompRef = complement[ref]
   CompAlt = complement[alt]
   # Provide triple sequence for all the SNVs
   if (all_SNVs == TRUE){
-    sequences <- maf %>%
-      dplyr::mutate(
-        seq = ifelse(
-          (nchar(maf$Reference_Allele) == 1 &
-             nchar(maf$Tumor_Seq_Allele2) == 1
-          ),
-          Rsamtools::getSeq(
-            fasta,
-            GenomicRanges::GRanges(
+    if(bsgenome_loaded){
+      sequences <- maf %>%
+        dplyr::mutate(
+          seq = ifelse(
+            (nchar(maf$Reference_Allele) == 1 &
+               nchar(maf$Tumor_Seq_Allele2) == 1
+            ),
+            as.character(getSeq(
+              genome,
               maf$Chromosome,
-              IRanges(
-                start = maf$Start_Position - 1,
-                end = maf$Start_Position + 1
-              )
-            )
-          ),
-          "NA"
+              start = maf$Start_Position-1,
+              end = maf$Start_Position + 1,
+              strand = mutation_strand
+              )),
+            "NA"
+          )
         )
-      )
+      
+    }else{
+
+      #TODO: if we want this to work with a local fasta we need to ensure the - strand is returned. I couldn't test it on my Laptop
+      sequences <- maf %>%
+        dplyr::mutate(
+          seq = ifelse(
+            (nchar(maf$Reference_Allele) == 1 &
+               nchar(maf$Tumor_Seq_Allele2) == 1
+            ),
+            Rsamtools::getSeq(
+              fasta,
+              GenomicRanges::GRanges(
+                maf$Chromosome,
+                IRanges(
+                  start = maf$Start_Position - 1,
+                  end = maf$Start_Position + 1
+                )
+              )
+            ),
+            "NA"
+          )
+        )
+      
+    }
     
   }else{
     # Provide triple sequence of + strand and reverse complement of - strand   
     # Mutations on + strand with chosen ref and alt alleles
     # Mutations on - strand with complement ref and alt alleles
+    if (!"STRAND_VEP" %in% colnames(maf)){
+      stop("STRAND_VEP column is not in the MAF")
+    }
     sequences <- maf %>%
       dplyr::mutate(
         seq = ifelse(
