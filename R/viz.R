@@ -115,7 +115,7 @@ prettyRainfallPlot = function(this_sample_id,
       ))
     ashm_regions = ashm_regions %>%
       mutate(Chromosome_f = factor(Chromosome, levels = unique(ashm_regions$Chromosome)))
-  }
+  
   
   # if user is subsetting by chromosome or zooming in to a specific region, it is possible there are no aSHM features to show
   # handle this case separately
@@ -125,7 +125,8 @@ prettyRainfallPlot = function(this_sample_id,
     )
     label_ashm_genes = FALSE
   }
-  
+  }
+
   # get ssm for the requested sample
   if (!missing(this_maf)) {
     if(missing(this_sample_id)){
@@ -223,14 +224,6 @@ prettyRainfallPlot = function(this_sample_id,
   } else if (label_sv) {
     sv_chromosome = 1:22
   }
-  
-  # if(annotate_sv){
-  #   sv_df <- annotate_sv(sv_df) # this will generate output which is the same to what the function takes in currently
-  # } else {
-  #   sv_df <- sv_df %>%
-  #     dplyr::mutate() # whatever new columns need to be introduced for the raw sv to enable labelling
-  # }
-  
   
   if (label_sv) {
     message("Getting combined manta + GRIDSS SVs using GAMBLR ...")
@@ -375,11 +368,14 @@ prettyRainfallPlot = function(this_sample_id,
       ) 
   }
   
-  if(annotate_sv) {
+   if(annotate_sv) {
+    max_val = max(rainfall_points$IMD)
     p = p +
       geom_text(data = sv_to_label,
-                aes(End_Position, 15, label = fusion, color = "lightgreen"))
-  }  
+                aes(End_Position, max_val+1, label = fusion, color = "lightgreen"),
+                show.legend = FALSE)
+  }
+  
   # show x-axis coordinates if zooming in to a specific region, but not if looking chromosome/genome-wide
   if (missing(zoom_in_region)) {
     p = p + guides(x = "none")
