@@ -3713,6 +3713,69 @@ collate_pga <- function(
 
 }
 
+#' @title Collate PGA results per chromosome for samples with CN data.
+#'
+#' @description Expand a metadata table horizontally with PGA_chr metrics.
+#'
+#' @details Helper function called by `collate_results`, not meant for out-of-package usage.
+#'
+#' @param these_samples_metadata The metadata to be expanded with sample_id column.
+#' @param this_seq_type Seq type for returned CN segments. One of "genome" (default) or "capture".
+#'
+#' @noRd
+#'
+#' @return data frame
+#' @import dplyr
+#'
+#' @examples
+#' # For genomes
+#' meta <- get_gambl_metadata()
+#' pga_metrics <- collate_pga_chr(these_samples_metadata = meta)
+#' # For exomes
+#' meta_capture <- get_gambl_metadata(seq_type_filter = "capture")
+#' pga_metrics_capture <- collate_pga_chr(these_samples_metadata = meta_capture)
+#'
+collate_pga_chr <- function(
+  these_samples_metadata,
+  this_seq_type = "genome"
+) {
+  
+  message(
+    "Collating the PGA results per chromosome..."
+  )
+  # Currently only works for genomes
+  if(! this_seq_type %in% c("genome", "capture")) {
+    stop("Please provide a valid seq_type (\"genome\" or \"capture\").")
+  }
+  
+  # Default to all samples if sample table is missing
+  if (missing(these_samples_metadata)) {
+    message("No sample table was provided. Defaulting to all metadata ...")
+    these_samples_metadata <- get_gambl_metadata(
+      seq_type_filter = this_seq_type
+    )
+  }
+  
+  # Get the CN segments
+  multi_sample_seg <- get_sample_cn_segments(
+    sample_list = these_samples_metadata$sample_id,
+    multiple_samples = TRUE,
+    this_seq_type = this_seq_type
+  ) %>%
+    dplyr::rename("sample" = "ID")
+  
+  these_samples_pga <- calculate_pga_chr(
+    this_seg = multi_sample_seg
+  )
+  
+  these_samples_metadata <- left_join(
+    these_samples_metadata,
+    these_samples_pga
+  )
+  
+  return(these_samples_metadata)
+  
+}
 
 #' @title Standardize Chromosome Prefix.
 #'
@@ -3899,6 +3962,173 @@ calculate_pga = function(this_seg,
 
   return(affected_regions)
 
+}
+
+
+
+#' @title Calculate proportion of each chromosome altered by CNV.
+#'
+#' @description `calculate_pga_chr` returns a data.frame with estimated proportion of each chromosome altered for each sample.
+#'
+#' @details This function calculates the percent of genome altered (PGA) by CNV. It takes into account the total length of
+#' sample's CNV and relates it to the total chromosome length to return the proportion affected by CNV. The input is expected to be a seg file.
+#' The path to a local SEG file can be provided instead. If The custom seg file is provided, the minimum required columns are
+#' sample, chrom, start, end, and log.ratio. The function can work with either individual or multi-sample seg files. The telomeres are always
+#' excluded from calculation, and centromeres/sex chromosomes can be optionally included or excluded.
+#'
+#' @param this_seg Input data frame of seg file.
+#' @param seg_path Optionally, specify the path to a local seg file.
+#' @param projection Argument specifying the projection of seg file, which will determine chr prefix, chromosome coordinates, and genome size. Default is grch37, but hg38 is also accepted.
+#' @param cutoff The minimum log.ratio for the segment to be considered as CNV. Default is 0.56, which is 1 copy. This value is expected to be a positive float of log.ratio for both deletions and amplifications.
+#' @param exclude_sex Boolean argument specifying whether to exclude sex chromosomes from calculation. Default is TRUE.
+#' @param exclude_centromeres Boolean argument specifying whether to exclude centromeres from calculation. Default is TRUE.
+#'
+#' @return data frame
+#'
+#' @import dplyr readr tidyr
+#' @export
+#'
+#' @examples
+#' sample_seg = get_sample_cn_segments(this_sample_id = "14-36022T")
+#' sample_seg = dplyr::rename(sample_seg, "sample" = "ID")
+#'
+#' calculate_pga_chr(this_seg = sample_seg)
+#'
+#' calculate_pga_chr(this_seg = sample_seg,
+#'               exclude_sex = FALSE)
+#'
+#' one_sample = get_sample_cn_segments(this_sample_id = "14-36022T")
+#' one_sample = dplyr::rename(one_sample, "sample" = "ID")
+#'
+#' another_sample = get_sample_cn_segments(this_sample_id = "BLGSP-71-21-00243-01A-11E")
+#' another_sample = dplyr::rename(another_sample, "sample" = "ID")
+#'
+#' multi_sample_seg = rbind(one_sample, another_sample)
+#'
+#' calculate_pga_chr(this_seg = multi_sample_seg)
+#'
+calculate_pga_chr = function(this_seg,
+                         seg_path,
+                         projection = "grch37",
+                         cutoff = 0.56,
+                         exclude_sex = TRUE,
+                         exclude_centromeres = TRUE) {
+  # check for required argument
+  if (missing(this_seg) & missing (seg_path)) {
+    stop("Please provide the data frame of seg file or path to the local seg.")
+  }
+  
+  # ensure the specified projection is correct and define chromosome coordinates
+  if (projection == "grch37") {
+    chr_coordinates = chromosome_arms_grch37
+  } else if (projection == "hg38") {
+    chr_coordinates = chromosome_arms_hg38
+  } else {
+    stop(
+      "You specified projection that is currently not supported. Please provide seg files in either hg38 or grch37."
+    )
+  }
+  
+  all_chr <- c(1:22,"X","Y") %>% matrix() %>% 
+    as.data.frame(row.names = NULL) %>% 
+    as_tibble() %>% 
+    rename("chrom" = "V1")
+  
+  # exclude sex chromosomes
+  if (exclude_sex) {
+    chr_coordinates = chr_coordinates %>%
+      dplyr::filter(!grepl("X|Y", chromosome))
+    all_chr = all_chr %>%
+      dplyr::filter(!grepl("X|Y", chrom))
+  }
+  
+  # does the user's seg file contain centromeres?
+  if (exclude_centromeres) {
+    chr_coordinates = chr_coordinates %>%
+      group_by(chromosome) %>%
+      mutate(start = min(start),
+             end = max(end)) %>%
+      ungroup %>%
+      distinct(chromosome, start, end)
+  }
+  
+  # prepare for the overlaps
+  chr_coordinates = chr_coordinates  %>%
+    rename("arm_start" = "start",
+           "arm_end" = "end",
+           "chrom" = "chromosome") %>%
+    mutate(
+      chr_len = arm_start + arm_end
+    )
+  
+  # work out the seg file
+  if (!missing(seg_path)) {
+    message(paste0("Reading the seg file from ", seg_path))
+    this_seg = suppressMessages(read_tsv(seg_path))
+  }
+  
+  # preserve the sample ids to account later for those with 0 PGA
+  sample_set = this_seg %>% distinct(sample)
+  
+  this_seg = this_seg %>%
+    dplyr::filter(abs(log.ratio) >= cutoff) %>%
+    dplyr::relocate(sample, .after = last_col())
+  
+  # ensure consistent chromosome prefixing
+  if (projection == "grch37") {
+    this_seg$chrom = gsub("chr", "", this_seg$chrom)
+  } else {
+    this_seg$chrom = gsub("chr", "", this_seg$chrom) # if there is a mish-mash of prefixes, strip them all
+    this_seg$chrom = paste0("chr", this_seg$chrom)
+  }
+  
+  # exclude sex chromosomes
+  if (exclude_sex) {
+    this_seg = this_seg %>%
+      dplyr::filter(!grepl("X|Y", chrom))
+  }
+  
+  # prepare for the overlaps
+  this_seg = inner_join(
+    this_seg,
+    chr_coordinates,
+    by = "chrom",
+    relationship = "many-to-many"
+  )
+  
+  # what are the segments that overlap?
+  this_seg = this_seg %>%
+    dplyr::filter(start <= arm_end & arm_start <= end) %>%
+    arrange(sample, chrom, start)
+  
+  # calculate total length of CNV per chr
+  affected_regions = this_seg %>%
+    dplyr::mutate(size = end - start) %>%
+    group_by(sample, chrom) %>%
+    summarise(total = sum(size), 
+              chrom_len = unique(chr.len))
+  
+  affected_regions$PGA.chr = affected_regions$total / affected_regions$chrom_len
+  
+  # add chr with 0
+  affected_regions = affected_regions %>% select(!all_of(c("total", "chrom_len"))) %>% 
+    dplyr::mutate(PGA.chr = round(PGA.chr, 3)) %>%
+    pivot_wider(names_from = chrom, values_from = PGA.chr)
+  
+  
+  # now add any samples that can have 0 PGA
+  affected_regions = base::merge(sample_set,
+                                 affected_regions,
+                                 all.x = TRUE)
+  
+  affected_regions[is.na(affected_regions)] <- 0
+  
+  affected_regions = affected_regions %>%
+    rename("sample_id" = "sample")
+  colnames(affected_regions)[2:ncol(affected_regions)] <- paste0("chr",colnames(affected_regions)[2:ncol(affected_regions)],"_pga")
+
+  return(affected_regions)
+  
 }
 
 

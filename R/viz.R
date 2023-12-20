@@ -22,7 +22,8 @@ colour_aliases = list("COO_consensus" = "coo", "COO" = "coo", "DHITsig_consensus
 #' @param this_maf Specify custom MAF data frame of mutations.
 #' @param maf_path Specify path to MAF file if it is not already loaded into data frame.
 #' @param zoom_in_region Provide a specific region in the format "chromosome:start-end" to zoom in to a specific region.
-#' @param label_sv Boolean argument to specify whether label SVs or not. Only supported if a specific chromosome or zoom in region are specified.
+#' @param label_sv Boolean argument to specify whether label SVs or not with green line on rainfall plot. 
+#' @param annotate_sv Boolean argument to specify whether to restrict SVs to those annotated with the annotate_sv function (i.e. relevant oncogenes). 
 #' @param seq_type Specify one of "genome" or "capture" when relying on the function to obtain mutations from a region (i.e. if you haven't provided a MAF or single sample_id)
 #'
 #' @return a ggplot2 plot. Print it using print() or save it using ggsave()
@@ -42,26 +43,27 @@ colour_aliases = list("COO_consensus" = "coo", "COO" = "coo", "DHITsig_consensus
 #'                    seq_type = "genome")
 #'
 prettyRainfallPlot = function(this_sample_id,
-                              label_ashm_genes = TRUE,
-                              projection = "grch37",
-                              chromosome,
-                              this_maf,
-                              maf_path,
-                              zoom_in_region,
-                              seq_type,
-                              label_sv = FALSE) {
+                               label_ashm_genes = TRUE,
+                               projection = "grch37",
+                               chromosome,
+                               this_maf,
+                               maf_path,
+                               zoom_in_region,
+                               seq_type,
+                               label_sv = FALSE,
+                               annotate_sv = TRUE) {
   if (missing(this_sample_id)) {
     warning("No sample_id was provided. Using all mutations in the MAF within your region!")
     if(missing(zoom_in_region)){
       stop("Must provide a zoom_in_region to plot when showing data from more than one patient")
     }
   }
-
+  
   # allow user to specify chromosome prefix inconsistent with chromosome names
   if (!missing(chromosome)) {
     chromosome = standardize_chr_prefix(incoming_vector = chromosome, projection = projection)
   }
-
+  
   # allow to zoom in to a specific region
   if (!missing(zoom_in_region)) {
     region = zoom_in_region
@@ -71,7 +73,7 @@ prettyRainfallPlot = function(this_sample_id,
     zoom_in_region$start = as.numeric(zoom_in_region$start)
     zoom_in_region$end = as.numeric(zoom_in_region$end)
   }
-
+  
   if (label_ashm_genes) {
     if (projection == "grch37") {
       ashm_regions = GAMBLR.data::grch37_ashm_regions %>%
@@ -104,7 +106,7 @@ prettyRainfallPlot = function(this_sample_id,
       group_by(gene) %>%
       slice_head() %>%
       ungroup()
-
+    
     # this will be needed for consistent labeling with rainfall plots
     ashm_regions = ashm_regions %>%
       arrange(match(
@@ -113,8 +115,8 @@ prettyRainfallPlot = function(this_sample_id,
       ))
     ashm_regions = ashm_regions %>%
       mutate(Chromosome_f = factor(Chromosome, levels = unique(ashm_regions$Chromosome)))
-  }
-
+  
+  
   # if user is subsetting by chromosome or zooming in to a specific region, it is possible there are no aSHM features to show
   # handle this case separately
   if (nrow(ashm_regions) == 0) {
@@ -122,6 +124,7 @@ prettyRainfallPlot = function(this_sample_id,
       "Warning: after subsetting to a regions you requested to plot, there are no aSHM features to overlap on the final graph."
     )
     label_ashm_genes = FALSE
+  }
   }
 
   # get ssm for the requested sample
@@ -136,7 +139,7 @@ prettyRainfallPlot = function(this_sample_id,
     }
   } else if (!missing (maf_path)) {
     message ("Path to custom MAF file was provided, reading SSM using the custom path ...")
-
+    
     this_maf = suppressMessages(read_tsv(maf_path))
     if(!missing(this_sample_id)){
       this_maf = this_maf %>% dplyr::filter(Tumor_Sample_Barcode %in% this_sample_id)
@@ -154,7 +157,7 @@ prettyRainfallPlot = function(this_sample_id,
     message(paste("Will use all mutations for",seq_type, "in this region:",zoom_in_region))
     these_ssm = get_ssm_by_region(region = region,seq_type = seq_type,projection=projection)
   }
-
+  
   # do rainfall calculation using lag
   rainfall_points = dplyr::select(
     these_ssm,
@@ -179,13 +182,13 @@ prettyRainfallPlot = function(this_sample_id,
       "InDel"
       )
     ) %>%
-    dplyr::mutate(IMD = log(IMD)) %>%
+    dplyr::mutate(IMD = log10(IMD)) %>%
     ungroup() %>%
     drop_na(IMD) # for the first point of each chromosome, NAs are produced generating a warning message
-
+  
   # collapse substitutions into classes
   rainfall_points$Substitution = rainfall_conv[as.character(rainfall_points$Substitution)]
-
+  
   # ensure order of grids in the plot is sorted
   rainfall_points = rainfall_points %>%
     arrange(match(
@@ -207,23 +210,21 @@ prettyRainfallPlot = function(this_sample_id,
       )
     )
   }
-
+  
   # if user is subsetting by chromosome or zooming in to a specific region, are there any SSM left to plot?
   if (nrow(rainfall_points) == 0) {
     stop("After subsetting to a regions you requested to plot, there are no SSM to display.")
   }
-
+  
   # label SVs if user wants to overlap this data
   if (!missing(chromosome) & label_sv) {
     sv_chromosome = chromosome
   } else if (!missing(zoom_in_region) & label_sv) {
     sv_chromosome = zoom_in_region$chromosome
   } else if (label_sv) {
-    stop(
-      "Labeling SV is only supported when a particular chromosome or zoomed region is plotted."
-    )
+    sv_chromosome = 1:22
   }
-
+  
   if (label_sv) {
     message("Getting combined manta + GRIDSS SVs using GAMBLR ...")
     these_sv = get_combined_sv(these_sample_ids  = this_sample_id)
@@ -232,11 +233,23 @@ prettyRainfallPlot = function(this_sample_id,
         rename("SOMATIC_SCORE" = "SCORE")
     }
     # annotate SV
-    these_sv = annotate_sv(these_sv)
-
+    if (annotate_sv){
+      these_sv = annotate_sv(these_sv, genome_build = projection)
+    } else {
+      these_sv = these_sv %>%
+        dplyr::rename(chrom1 = "CHROM_A",
+                      start1 = "START_A",
+                      end1 = "END_A",
+                      chrom2 = "CHROM_B",
+                      start2 = "START_B",
+                      end2 = "END_B") %>%
+        mutate(gene = 1:nrow(these_sv),
+               partner = letters[gene],
+               fusion = paste(gene, partner, sep="-"))
+    }
     # make SVs a long df with 1 record per SV corresponding to the strand
     sv_to_label =
-      melt(
+      reshape2::melt(
         these_sv %>% select(
           chrom1,
           start1,
@@ -263,12 +276,12 @@ prettyRainfallPlot = function(this_sample_id,
         value.name = "Chromosome"
       ) %>%
       dplyr::filter(Chromosome %in% sv_chromosome)
-
+    
     # are there any SVs on this chromosome/region?
     if (nrow(sv_to_label) > 0) {
       sv_to_label =
         sv_to_label %>%
-        melt(
+        reshape2::melt(
           .,
           id.vars = c(
             "tumour_sample_id",
@@ -296,7 +309,7 @@ prettyRainfallPlot = function(this_sample_id,
       )
       label_sv = FALSE
     }
-
+    
     # when we are plotting region and not whole chromosome, ensure SV is within that region
     if (!missing(zoom_in_region) & label_sv) {
       sv_to_label = dplyr::filter(
@@ -314,20 +327,25 @@ prettyRainfallPlot = function(this_sample_id,
         label_sv = FALSE
       }
     }
-
+    
     sv_to_label = sv_to_label %>%
       mutate(Chromosome_f = factor(Chromosome))
   }
-
-  p = ggplot(rainfall_points) +
-    geom_point(aes(x = Start_Position, y = IMD, color = Substitution)) +
+  
+   p = ggplot(rainfall_points, aes(x = Start_Position, y = IMD)) +
     scale_color_manual(values = get_gambl_colours("rainfall")) +
-    ylab("log(IMD)") +
+    ylab(expression(log[10](IMD))) +
     theme_Morons() +
-    facet_wrap( ~ Chromosome_f, scales = "free_x") +
+    facet_grid(. ~ Chromosome_f, scales = "free_x",  space = "free_x", switch="x") +
     ggtitle(this_sample_id) +
-    theme(plot.title = element_text(hjust = 0)) # left-align title plot
-
+    theme(plot.title = element_text(hjust = 0),  # left-align title plot
+          axis.title.x = element_blank(), axis.text.x = element_blank(), axis.text.y = element_text(size = 16, colour = "black"),
+          axis.ticks.x = element_blank(), axis.ticks.y = element_line(colour = "black"),
+          panel.spacing.x = unit(0.1, "lines"), panel.border = element_blank(), text = element_text(size = 16, colour = "black", family="sans"),
+          strip.background = element_blank(), 
+          strip.placement = "outside",
+          panel.grid = element_blank())
+  
   if (label_ashm_genes) {
     p = p +
       ggrepel::geom_text_repel(
@@ -344,7 +362,7 @@ prettyRainfallPlot = function(this_sample_id,
         segment.angle = 25
       )
   }
-
+  
   if (label_sv) {
     p = p +
       geom_vline(
@@ -352,19 +370,21 @@ prettyRainfallPlot = function(this_sample_id,
         aes(xintercept = Start_Position),
         color = "lightgreen",
         alpha = .7
-      ) +
+      ) 
+  }
+  
+  if(annotate_sv) {
+    max_val = max(rainfall_points$IMD)
+    p = p +
       geom_text(data = sv_to_label,
-                aes(End_Position, 15, label = fusion, color = "lightgreen"))
-  }
+                aes(End_Position, max_val+1, label = fusion, color = "lightgreen"),
+                show.legend = FALSE)
+  }  
 
-  # show x-axis coordinates if zooming in to a specific region, but not if looking chromosome/genome-wide
-  if (missing(zoom_in_region)) {
-    p = p + guides(x = "none")
-  }
-
+  p = p + geom_point(inherit.aes=TRUE, aes(color = Substitution))
+  
   return(p)
 }
-
 
 gene_mutation_tally = function(maf_df,these_samples_metadata,these_genes,grouping_variable="cohort"){
   meta = dplyr::select(these_samples_metadata,sample_id,{{grouping_variable}})
