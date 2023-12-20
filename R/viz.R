@@ -332,14 +332,19 @@ prettyRainfallPlot = function(this_sample_id,
       mutate(Chromosome_f = factor(Chromosome))
   }
   
-  p = ggplot(rainfall_points) +
-    geom_point(aes(x = Start_Position, y = IMD, color = Substitution)) +
+   p = ggplot(rainfall_points, aes(x = Start_Position, y = IMD)) +
     scale_color_manual(values = get_gambl_colours("rainfall")) +
     ylab(expression(log[10](IMD))) +
     theme_Morons() +
-    facet_wrap( ~ Chromosome_f, scales = "free_x") +
+    facet_grid(. ~ Chromosome_f, scales = "free_x",  space = "free_x", switch="x") +
     ggtitle(this_sample_id) +
-    theme(plot.title = element_text(hjust = 0)) # left-align title plot
+    theme(plot.title = element_text(hjust = 0),  # left-align title plot
+          axis.title.x = element_blank(), axis.text.x = element_blank(), axis.text.y = element_text(size = 16, colour = "black"),
+          axis.ticks.x = element_blank(), axis.ticks.y = element_line(colour = "black"),
+          panel.spacing.x = unit(0.1, "lines"), panel.border = element_blank(), text = element_text(size = 16, colour = "black", family="sans"),
+          strip.background = element_blank(), 
+          strip.placement = "outside",
+          panel.grid = element_blank())
   
   if (label_ashm_genes) {
     p = p +
@@ -368,18 +373,15 @@ prettyRainfallPlot = function(this_sample_id,
       ) 
   }
   
-   if(annotate_sv) {
+  if(annotate_sv) {
     max_val = max(rainfall_points$IMD)
     p = p +
       geom_text(data = sv_to_label,
                 aes(End_Position, max_val+1, label = fusion, color = "lightgreen"),
                 show.legend = FALSE)
-  }
-  
-  # show x-axis coordinates if zooming in to a specific region, but not if looking chromosome/genome-wide
-  if (missing(zoom_in_region)) {
-    p = p + guides(x = "none")
-  }
+  }  
+
+  p = p + geom_point(inherit.aes=TRUE, aes(color = Substitution))
   
   return(p)
 }
