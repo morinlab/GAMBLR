@@ -12,7 +12,7 @@ GAMBLR is an open-source package. It can be easily installed directly from GitHu
 devtools::install_github("morinlab/GAMBLR", repos = BiocManager::repositories())
 ```
 
-This will install the full set of GAMBLR-verse children packages (GAMBLR.data, GAMBLR.helpers, GAMBLR.utils, GAMBLR.viz, GAMBLR.results) with all necessary dependencies. The latter child package (GAMBLR.results) requires access to the GSC resources and is not intended to be used outside of GSC. If you are interested in standalone functionality, please refer to the documentation of the GAMBLR.data package or any other individual child package.
+This will install the full set of GAMBLR-verse children packages ([GAMBLR.data](https://github.com/morinlab/GAMBLR.data), [GAMBLR.helpers](https://github.com/morinlab/GAMBLR.results), [GAMBLR.utils](https://github.com/morinlab/GAMBLR.utils), [GAMBLR.viz](https://github.com/morinlab/GAMBLR.viz), [GAMBLR.results](https://github.com/morinlab/GAMBLR.results)) with all necessary dependencies. The latter child package ([GAMBLR.results](https://github.com/morinlab/GAMBLR.results)) requires access to the GSC resources and is not intended to be used outside of GSC. If you are interested in standalone functionality, please refer to the documentation of the [GAMBLR.data](https://github.com/morinlab/GAMBLR.data) package or any other individual child package.
 
 ## Contributing
 
