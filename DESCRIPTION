@@ -1,6 +1,6 @@
 Package: GAMBLR
 Title: GAMBLR
-Version: 0.0.0.9500
+Version: 1.1
 Authors@R: c(
     person("Ryan", "Morin", , "rdmorin@sfu.ca", role = c("aut", "cre"),
            comment = c(ORCID = "0000-0003-2932-7800")),
@@ -18,63 +18,23 @@ License: MIT + file LICENSE
 Depends:
     R (>= 3.5.0)
 Imports:
-    broom,
-    circlize,
-    ComplexHeatmap,
-    config,
-    cowplot,
-    data.table,
-    DBI,
-    dbplyr,
-    digest,
-    dplyr,
-    forcats,
-    g3viz,
+    cli (>= 3.6.1),
     GAMBLR.data (>= 0.1),
-    GenomicRanges,
-    ggbeeswarm,
-    ggplot2,
-    ggpubr,
-    ggrepel,
-    ggsci,
-    ggthemes,
-    glue,
-    gridExtra,
-    IRanges,
-    lubridate,
-    maftools,
-    metaviz,
-    nloptr,
-    plotly,
-    plyr,
-    purrr,
-    RCircos,
-    RColorBrewer,
-    readr (>= 2.1),
-    RMariaDB,
-    Rsamtools,
-    rtracklayer,
-    S4Vectors,
-    SRAdb,
-    ssh,
-    stringi,
-    stringr,
-    tibble,
-    tidyr,
-    vroom,
-    wordcloud,
-    workflowr
+    GAMBLR.helpers (>= 0.1),
+    GAMBLR.utils (>= 0.1),
+    GAMBLR.viz (>= 0.1),
+    GAMBLR.results (>= 0.1),
+    rlang (>= 1.1.0)
 Suggests:
-    knitr,
-    rmarkdown,
-    testthat
+    knitr
 VignetteBuilder:
     knitr
 Remotes:
-    cBioPortal/cgdsr,
-    morinlab/g3viz,
-    morinlab/ggsci,
-    morinlab/GAMBLR.data
+    morinlab/GAMBLR.data,
+    morinlab/GAMBLR.helpers,
+    morinlab/GAMBLR.utils,
+    morinlab/GAMBLR.viz,
+    morinlab/GAMBLR.results
 biocViews:
 Encoding: UTF-8
 LazyData: true
