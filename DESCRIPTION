@@ -33,7 +33,7 @@ Remotes:
     morinlab/GAMBLR.data@v1.1.1b,
     morinlab/GAMBLR.helpers@v1.1.1c,
     morinlab/GAMBLR.utils@v1.1.1a,
-    morinlab/GAMBLR.viz@v1.1.1a,
+    morinlab/GAMBLR.viz@v1.1.1b,
     morinlab/GAMBLR.results@v1.1.1a
 biocViews:
 Encoding: UTF-8
