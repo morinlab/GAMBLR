@@ -15,7 +15,8 @@ default:
         manta: "manta_current/level_3/01-gamblr_preprocess/"
     results_merged:
         collated: "shared/gambl_{seq_type_filter}_results.tsv"
-        tidy_expression_path: "icgc_dart/DESeq2-0.0_salmon-1.0/mrna--gambl-icgc-all/vst-matrix-Hugo_Symbol_tidy.tsv.gz"
+        tidy_expression_path: "icgc_dart/DESeq2-0.0_salmon-1.0/mrna--gambl-icgc-all/vst-matrix-Hugo_Symbol_tidy.tsv"
+        tidy_expression_metadata: "icgc_dart/DESeq2-0.0_salmon-1.0/mrna--gambl-icgc-all/sample_metadata.tsv"
         tidy_expression_path_gambl: "gambl/DESeq2-0.0_salmon-1.0/mrna/vst-matrix-Hugo_Symbol_tidy.tsv"
         ex_matrix_file: "/projects/rmorin/projects/gambl-repos/gambl-rmorin/results/icgc_dart/DESeq2-0.0_salmon-1.0/mrna--gambl-icgc-all/vst-matrix.tsv"
         deblacklisted: "all_the_things/slms_3-1.0_vcf2maf-1.3/{seq_type}--projection/deblacklisted/maf/all_slms-3--{projection}.CDS.maf"
@@ -48,6 +49,7 @@ default:
 
     dependencies:
         tabix: "/home/rmorin/miniconda3/bin/tabix"
+        bedToBigBed: "/projects/rmorin_scratch/conda_environments/ucsc_utils/bin/bedToBigBed"
 #results from every combination of each of these will be included in the database
     unix_groups: "gambl,icgc_dart"
     genome_builds: "grch37,hg38,hs37d5"
