@@ -25,7 +25,7 @@ GAMBLR_attach_message <- function(to_load) {
     if (length(to_load) == 0) {
         return(NULL)
     }
-
+    
     header <- cli::rule(
         left = cli::style_bold("Welcome fellow GAMBLer! Attaching core GAMBLR packages"),
         right = paste0("GAMBLR ", package_version_h("GAMBLR"))
@@ -77,5 +77,19 @@ inform_startup <- function(msg, ...) {
     attached <- GAMBLR_attach()
 
     inform_startup(GAMBLR_attach_message(attached))
+    logo_lines = paste(c(
+      "",
+      r"{  /$$$$$$     /$$$$$$    /$$      /$$   /$$$$$$$    /$$        .:::::::    }" ,
+      r"{ /$$__  $$   /$$__  $$  | $$$    /$$$  | $$__  $$  | $$        .::    .::  }" ,
+      r"{| $$  \__/  | $$  \ $$  | $$$$  /$$$$  | $$  \ $$  | $$        .::    .::  }" ,
+      r"{| $$ /$$$$  | $$$$$$$$  | $$ $$/$$ $$  | $$$$$$$   | $$        .: .::      }" ,
+      r"{| $$|_  $$  | $$__  $$  | $$  $$$| $$  | $$__  $$  | $$        .::  .::    }" ,
+      r"{| $$  \ $$  | $$  | $$  | $$\  $ | $$  | $$  \ $$  | $$        .::    .::  }" ,
+      r"{|  $$$$$$/  | $$  | $$  | $$ \/  | $$  | $$$$$$$/  | $$$$$$$$  .::      .::}" ,
+      r"{ \______/   |__/  |__/  |__/     |__/  |_______/   |________/}",
+      r"{ ~GENOMIC~~~~~~~~~~~~~OF~~~~~~~~~~~~~~~~~B-CELL~~~~~~~~~~~~~~~~~~IN~~~~~~}",
+      r"{ ~~~~~~~~~~~~ANALYSIS~~~~~~MATURE~~~~~~~~~~~~~~~~~~~LYMPHOMAS~~~~~~~~~~R~}",
+      ""),collpse="\n")
+    packageStartupMessage(logo_lines)
 
 }
