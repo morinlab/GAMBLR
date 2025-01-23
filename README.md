@@ -19,6 +19,8 @@ This will install the full set of GAMBLR-verse children packages ([GAMBLR.data](
 
 
 <details>
+
+
 <summary>Using GAMBLR<summary>
 
 Once installed, the correct packages in correct order can be loaded with a regular `library` command:
