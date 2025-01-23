@@ -2,7 +2,7 @@
 
 ![](https://github.com/morinlab/GAMBLR/actions/workflows/build_check.yml/badge.svg)
 
-# GABMLR - an R package with convenience functions for working with GAMBL results.
+# GAMBLR - an R package with convenience functions for working with GAMBL results.
 
 ## Installation
 
@@ -14,7 +14,17 @@ devtools::install_github("morinlab/GAMBLR", repos = BiocManager::repositories())
 
 This will install the full set of GAMBLR-verse children packages ([GAMBLR.data](https://github.com/morinlab/GAMBLR.data), [GAMBLR.helpers](https://github.com/morinlab/GAMBLR.results), [GAMBLR.utils](https://github.com/morinlab/GAMBLR.utils), [GAMBLR.viz](https://github.com/morinlab/GAMBLR.viz), [GAMBLR.results](https://github.com/morinlab/GAMBLR.results)) with all necessary dependencies. The latter child package ([GAMBLR.results](https://github.com/morinlab/GAMBLR.results)) requires access to the GSC resources and is not intended to be used outside of GSC. If you are interested in standalone functionality, please refer to the documentation of the [GAMBLR.data](https://github.com/morinlab/GAMBLR.data) package or any other individual child package.
 
-## Contributing
+## Using GAMBLR
+
+Once installed, the correct packages in correct order can be loaded with a regular `library` command:
+```
+library(GAMBLR)
+```
+This achieves sevaral goals at the same time: (i) the packages are loaded in correct order so there are no conflicts between functions existing in data and results packages; (ii) GAMBL-consortium users (Morin Lab members) have access to both public and restricted data; (iii) all children packages are loaded in one-liner instead of importing each child separately.
+
+<details>
+
+<summary>Contributing</summary>
 
 If you have access to gphost, the easiest way to obtain and contribute to GAMBLR is to do this via cloning the repository
 
@@ -124,3 +134,5 @@ function_name = function(a_parameter,
                          another_parameter){
                          }
 ```
+
+</details>
