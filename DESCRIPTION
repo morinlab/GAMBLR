@@ -30,11 +30,11 @@ Suggests:
 VignetteBuilder:
     knitr
 Remotes:
-    morinlab/GAMBLR.data@v1.1.1b,
-    morinlab/GAMBLR.helpers@v1.1.1c,
-    morinlab/GAMBLR.utils@v1.1.1a,
-    morinlab/GAMBLR.viz@v1.1.1b,
-    morinlab/GAMBLR.results@v1.1.1a
+    morinlab/GAMBLR.data@v1.2,
+    morinlab/GAMBLR.helpers@v1.2,
+    morinlab/GAMBLR.utils@v1.2,
+    morinlab/GAMBLR.viz@v1.2,
+    morinlab/GAMBLR.results@v1.2
 biocViews:
 Encoding: UTF-8
 LazyData: true
