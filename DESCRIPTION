@@ -9,9 +9,7 @@ Authors@R: c(
     person("Laura", "Hilton", role = "ctb",
            comment = c(ORCID = "0000-0002-6413-6586")),
     person("Adam", "Mattsson", , "cmattsson@bcgsc.ca", role = "aut",
-           comment = c(ORCID = "0000-0002-6318-7912")),
-    person("Haya", "Shaalan", role = "ctb"),
-    person("Kristena", "Daley", role = "ctb")
+           comment = c(ORCID = "0000-0002-6318-7912"))
   )
 Description: Database, mining, manipulation and convenience functions for working with GAMBL results.
 License: MIT + file LICENSE
@@ -19,11 +17,11 @@ Depends:
     R (>= 3.5.0)
 Imports:
     cli (>= 3.6.1),
-    GAMBLR.data (>= 1.1.1),
-    GAMBLR.helpers (>= 1.1.1),
-    GAMBLR.utils (>= 1.1.1),
-    GAMBLR.viz (>= 1.1.1),
-    GAMBLR.results (>= 1.1.1),
+    GAMBLR.data (>= 1.2),
+    GAMBLR.helpers (>= 1.2),
+    GAMBLR.utils (>= 1.2),
+    GAMBLR.viz (>= 1.2),
+    GAMBLR.results (>= 1.2),
     rlang (>= 1.1.0)
 Suggests:
     knitr
