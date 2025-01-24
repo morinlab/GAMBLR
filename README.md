@@ -6,6 +6,16 @@
 
 <details>
 
+<summary>Which GAMBLR shoud I use?</summary>
+
+If you are memeber of the GAMBL consortium (Morin Lab or BC Cancer/CLC with approved access to restricted data), you came to the right place - please follow the instructions in the next section Installation.
+
+If you are not member of the GAMBL consortium, or waiting for your access to the restricted data, but want to take advantage of the powerful setup offered by GAMBL, please proceed to the non-restricted functionality of GAMBLR available through the [GAMBLR.open](https://github.com/morinlab/GAMBLR.open) repository. GAMBLR.open offers exact functionality of GAMBLR but with access to only published subset of data.
+
+</details>
+
+<details>
+
 <summary>Installation</summary>
 
 GAMBLR is an open-source package. It can be easily installed directly from GitHub:
