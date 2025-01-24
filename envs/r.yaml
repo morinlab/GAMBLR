@@ -1,6 +1,7 @@
 name: deps
 channels:
   - conda-forge
+  - bioconda
   - nodefaults
 dependencies:
   - _libgcc_mutex=0.1
@@ -11,7 +12,7 @@ dependencies:
   - bwidget=1.9.14
   - bzip2=1.0.8
   - c-ares=1.28.1
-  - ca-certificates=2024.7.4
+  - ca-certificates=2024.12.14
   - cairo=1.16.0
   - cmake=3.30.0
   - curl=8.8.0
@@ -50,10 +51,12 @@ dependencies:
   - libev=4.33
   - libexpat=2.6.2
   - libffi=3.4.2
+  - libgcc=14.1.0
   - libgcc-devel_linux-64=13.2.0
   - libgcc-ng=14.1.0
   - libgettextpo=0.22.5
   - libgettextpo-devel=0.22.5
+  - libgfortran=14.1.0
   - libgfortran-ng=14.1.0
   - libgfortran5=14.1.0
   - libgit2=1.5.1
@@ -68,7 +71,9 @@ dependencies:
   - libpng=1.6.43
   - libsanitizer=13.2.0
   - libsqlite=3.46.0
+  - libssh=0.11.1
   - libssh2=1.11.0
+  - libstdcxx=14.1.0
   - libstdcxx-devel_linux-64=13.2.0
   - libstdcxx-ng=14.1.0
   - libtiff=4.5.1
@@ -83,28 +88,33 @@ dependencies:
   - mysql-common=8.3.0
   - mysql-connector-c=6.1.11
   - mysql-libs=8.3.0
-  - mysqlclient=2.2.4
   - ncurses=6.5
-  - openssl=3.3.1
+  - nlopt=2.7.1
+  - openssl=3.4.0
   - pandoc=2.19.2
   - pango=1.50.14
   - pcre2=10.40
   - pip=24.0
   - pixman=0.43.2
   - pthread-stubs=0.4
+  - python=3.12.5
+  - python_abi=3.12
   - r-askpass=1.1
   - r-assertthat=0.2.1
   - r-backports=1.4.1
   - r-base=4.1.3
   - r-base64enc=0.1_3
   - r-biocmanager=1.30.21
+  - r-boot=1.3_28.1
   - r-brew=1.0_8
   - r-brio=1.1.3
+  - r-broom=1.0.5
   - r-bslib=0.5.0
   - r-cachem=1.0.8
   - r-callr=3.7.3
   - r-cli=3.6.1
   - r-clipr=0.8.0
+  - r-colorspace=2.1_0
   - r-commonmark=1.9.0
   - r-cpp11=0.4.7
   - r-crayon=1.5.2
@@ -116,17 +126,22 @@ dependencies:
   - r-diffobj=0.3.5
   - r-digest=0.6.31
   - r-downlit=0.4.2
+  - r-dplyr=1.1.2
   - r-ellipsis=0.3.2
   - r-evaluate=0.21
   - r-fansi=1.0.4
+  - r-farver=2.1.1
   - r-fastmap=1.1.1
   - r-fontawesome=0.5.1
   - r-fs=1.6.2
+  - r-generics=0.1.3
   - r-gert=1.9.2
+  - r-ggplot2=3.4.2
   - r-gh=1.4.0
   - r-git2r=0.31.0
   - r-gitcreds=0.1.2
   - r-glue=1.6.2
+  - r-gtable=0.3.3
   - r-highr=0.10
   - r-htmltools=0.5.5
   - r-htmlwidgets=1.6.2
@@ -134,22 +149,31 @@ dependencies:
   - r-httr=1.4.6
   - r-httr2=0.2.3
   - r-ini=0.3.1
+  - r-isoband=0.2.7
   - r-jquerylib=0.1.4
   - r-jsonlite=1.8.5
   - r-knitr=1.43
+  - r-labeling=0.4.2
   - r-later=1.3.1
   - r-lattice=0.21_8
   - r-lifecycle=1.0.3
+  - r-lme4=1.1_33
   - r-magrittr=2.0.3
   - r-mass=7.3_58.3
   - r-matrix=1.5_4.1
   - r-matrixmodels=0.5_0
   - r-memoise=2.0.1
+  - r-mgcv=1.8_42
   - r-mime=0.12
   - r-miniui=0.1.1.1
+  - r-minqa=1.2.5
+  - r-munsell=0.5.0
+  - r-nlme=3.1_162
+  - r-nloptr=2.0.3
+  - r-numderiv=2016.8_1.1
   - r-openssl=2.0.6
-  - r-pillar=1.9.0
   - r-pbkrtest=0.5.2
+  - r-pillar=1.9.0
   - r-pkgbuild=1.4.0
   - r-pkgconfig=2.0.3
   - r-pkgdown=2.0.7
@@ -165,7 +189,9 @@ dependencies:
   - r-ragg=1.2.5
   - r-rappdirs=0.3.3
   - r-rcmdcheck=1.4.0
+  - r-rcolorbrewer=1.1_3
   - r-rcpp=1.0.10
+  - r-rcppeigen=0.3.3.9.3
   - r-rematch2=2.1.2
   - r-remotes=2.4.2
   - r-rlang=1.1.1
@@ -176,9 +202,11 @@ dependencies:
   - r-rstudioapi=0.14
   - r-rversions=2.1.2
   - r-sass=0.4.6
+  - r-scales=1.2.1
   - r-sessioninfo=1.2.2
   - r-shiny=1.7.4
   - r-sourcetools=0.1.7_1
+  - r-statmod=1.5.0
   - r-stringi=1.7.12
   - r-stringr=1.5.0
   - r-sys=3.4.2
@@ -186,11 +214,14 @@ dependencies:
   - r-testthat=3.1.8
   - r-textshaping=0.3.6
   - r-tibble=3.2.1
+  - r-tidyr=1.3.0
+  - r-tidyselect=1.2.0
   - r-tinytex=0.45
   - r-urlchecker=1.0.1
   - r-usethis=2.2.0
   - r-utf8=1.2.3
   - r-vctrs=0.6.2
+  - r-viridislite=0.4.1
   - r-waldo=0.5.1
   - r-whisker=0.4.1
   - r-withr=2.5.0
@@ -224,3 +255,6 @@ dependencies:
   - xz=5.2.6
   - zlib=1.3.1
   - zstd=1.5.6
+  - pip:
+    - mysqlclient==2.2.4
+    - numpy==2.2.2
