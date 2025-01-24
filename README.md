@@ -8,7 +8,7 @@
 
 <summary>Which GAMBLR shoud I use?</summary>
 
-If you are a memeber of the GAMBL consortium (Morin Lab or BC Cancer/CLC with approved access to restricted data), you came to the right place - please follow the instructions in the next section Installation.
+If you are a member of the GAMBL consortium (Morin Lab or BC Cancer/CLC with approved access to restricted data), you came to the right place - please follow the instructions in the next section Installation.
 
 If you are not a member of the GAMBL consortium (or waiting for your access to the restricted data) but want to take advantage of the powerful setup offered by GAMBL, please proceed to the non-restricted functionality of GAMBLR available through the [GAMBLR.open](https://github.com/morinlab/GAMBLR.open) repository. GAMBLR.open offers exact functionality of GAMBLR but with access to only published subset of data.
 
@@ -24,7 +24,7 @@ GAMBLR is an open-source package. It can be easily installed directly from GitHu
 devtools::install_github("morinlab/GAMBLR", repos = BiocManager::repositories())
 ```
 
-This will install the full set of GAMBLR-verse children packages ([GAMBLR.data](https://github.com/morinlab/GAMBLR.data), [GAMBLR.helpers](https://github.com/morinlab/GAMBLR.results), [GAMBLR.utils](https://github.com/morinlab/GAMBLR.utils), [GAMBLR.viz](https://github.com/morinlab/GAMBLR.viz), [GAMBLR.results](https://github.com/morinlab/GAMBLR.results)) with all necessary dependencies. The latter child package ([GAMBLR.results](https://github.com/morinlab/GAMBLR.results)) requires access to the GSC resources and is not intended to be used outside of GSC. If you are interested in standalone functionality, please refer to the documentation of the [GAMBLR.data](https://github.com/morinlab/GAMBLR.data) package or any other individual child package.
+This will install the full set of GAMBLR-verse children packages ([GAMBLR.data](https://github.com/morinlab/GAMBLR.data), [GAMBLR.helpers](https://github.com/morinlab/GAMBLR.results), [GAMBLR.utils](https://github.com/morinlab/GAMBLR.utils), [GAMBLR.viz](https://github.com/morinlab/GAMBLR.viz), [GAMBLR.results](https://github.com/morinlab/GAMBLR.results)) with all necessary dependencies. The latter child package ([GAMBLR.results](https://github.com/morinlab/GAMBLR.results)) requires access to the GSC resources and is not intended to be used outside of GSC. If you are interested in standalone functionality, please refer to the documentation of the [GAMBLR.open](https://github.com/morinlab/GAMBLR.open) package or any other individual child package.
 </details>
 
 
