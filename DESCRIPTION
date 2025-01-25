@@ -17,11 +17,11 @@ Depends:
     R (>= 3.5.0)
 Imports:
     cli (>= 3.6.1),
-    GAMBLR.data (> 1.1),
-    GAMBLR.helpers (> 1.1),
-    GAMBLR.utils (> 1.1),
-    GAMBLR.viz (> 1.1),
-    GAMBLR.results (> 1.1),
+    GAMBLR.data (>= 1.2),
+    GAMBLR.helpers (>= 1.2),
+    GAMBLR.utils (>= 1.2),
+    GAMBLR.viz (>= 1.2),
+    GAMBLR.results (>= 1.2),
     rlang (>= 1.1.0)
 Suggests:
     knitr
