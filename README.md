@@ -1,6 +1,6 @@
 # <img src="img/figures/logo.png" align="right" alt="" width="120" />
 
-![](https://github.com/morinlab/GAMBLR/actions/workflows/build_check.yml/badge.svg)
+![](https://github.com/morinlab/GAMBLR/actions/workflows/build_check.yaml/badge.svg)
 
 # GAMBLR - an R package with convenience functions for working with GAMBL results.
 
