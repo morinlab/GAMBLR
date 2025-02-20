@@ -70,8 +70,8 @@ website:
       title: "Resources"
       style: "docked"
       collapse-level: 2
-      # contents:
-      #   - auto: resources/*.qmd
+      contents:
+        - auto: resources/*.qmd
 
 format:
   html:

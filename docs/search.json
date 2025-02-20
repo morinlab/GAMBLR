@@ -1,5 +1,15 @@
 [
   {
+    "objectID": "resources/developer-guidelines.html",
+    "href": "resources/developer-guidelines.html",
+    "title": "GAMBLR developer guidelines",
+    "section": "",
+    "text": "To ensure consistency throughout all of the packages in the GAMBLR-verse, please follow these developer guidelines. If you have any questions, please feel free to contact us or submit an issue in the corresponding repository.\n\nInstallation for developers\nThe easiest way to obtain and contribute to GAMBLR is to do this via cloning the repository. Here is an example using GAMBLR repo, but any other repo should be cloned in the same way (just substitute the GAMBLR with GAMBLR.{package}, where {package} is one of data, helpers, utils, viz, or results).\ncd\ngit clone git@github.com:morinlab/GAMBLR.git\nIn your R editor of choice (which is hopefully VS Code), set your working directory to the directory you just cloned the repo into.\n\n\n\n\n\n\nHow do I setup VS Code as R editor?\n\n\n\n\n\nPlease refer to the tutorial.\n\n\n\nsetwd(\"~/GAMBLR\")\nInstall the package in R by running the following command (requires the devtools package):\ndevtools::install()\nAfter applying your modifications to the code, use the following command to quickly test your changes without directly installing the package (requires the devtools dependency):\ndevtools::load_all()\nThe Master branch of all GAMBLR-verse repos is protected. We welcome contributions (pull request, bug report, feature request, PR review) from all levels of users. All commits must be submitted via pull request on a branch. Please refer to the GitHub documentation for details on how to do pull request, or ask for help in the #git-help Slack channel.\n\n\n\n\n Back to top",
+    "crumbs": [
+      "GAMBLR developer guidelines"
+    ]
+  },
+  {
     "objectID": "index.html",
     "href": "index.html",
     "title": "GAMBLR",

@@ -1,0 +1,44 @@
+---
+title: "GAMBLR developer guidelines"
+---
+
+To ensure consistency throughout all of the packages in the GAMBLR-verse, please follow these developer guidelines. If you have any questions, please feel free to contact us or submit an issue in the corresponding repository.
+
+# Installation for developers
+
+The easiest way to obtain and contribute to GAMBLR is to do this via cloning the repository. Here is an example using GAMBLR repo, but any other repo should be cloned in the same way (just substitute the `GAMBLR` with `GAMBLR.{package}`, where `{package}` is one of `data`, `helpers`, `utils`, `viz`, or `results`).
+
+```bash
+cd
+git clone git@github.com:morinlab/GAMBLR.git
+```
+
+In your R editor of choice (which is __**hopefully**__ [VS Code](https://code.visualstudio.com/)), set your working directory to the directory you just cloned the repo into.
+
+::: {.callout-note title="How do I setup VS Code as R editor?" collapse="true"}
+
+Please refer to the [tutorial](https://github.com/morinlab/whereis/blob/master/tutorials/vscode-R/VScode_R_IDE.md).
+
+:::
+
+```bash
+setwd("~/GAMBLR")
+```
+
+Install the package in R by running the following command (requires the
+`devtools` package):
+
+```r
+devtools::install()
+```
+
+After applying your modifications to the code, use the following command to
+quickly test your changes without directly installing the package (requires the
+`devtools` dependency):
+
+```r
+devtools::load_all()
+```
+
+The Master branch of all GAMBLR-verse repos is protected. We welcome contributions (pull request, bug report, feature request, PR review) from all levels of users. All commits must be submitted via pull request on a branch. Please refer to the GitHub [documentation](https://docs.github.com/en/pull-requests/collaborating-with-pull-requests/proposing-changes-to-your-work-with-pull-requests/creating-a-pull-request) for details on how to do pull request, or ask for help in the `#git-help` Slack channel.
+
