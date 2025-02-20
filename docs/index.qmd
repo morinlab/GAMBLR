@@ -1,7 +1,7 @@
 ---
 title: "GAMBLR"
 subtitle: "To be used only by Morin Lab and GAMBL consortium members"
-description: "Collection of genomic data and functionality for analysis of Mature B-cell neoplasms"
+description: "Please refer to [GAMBLR.open](https://morinlab.github.io/GAMBLR.open/) for the open access published version of this package"
 repo-actions: false
 code-annotations: hover
 format:
@@ -12,7 +12,7 @@ about:
   template: jolla
   image: GAMBLR.png
   image-shape: rectangle
-  image-width: 30em
+  image-width: 15em
   links:
     - icon: info-circle
       text: Why use GAMBLR?
@@ -46,7 +46,7 @@ The GAMBLR-verse is a database, mining, manipulation and collection of a conveni
 
 
 ::: {.callout-tip title="Who should use this package?"}
-This package is for the members of Morin Lab and GAMBL consortium with approved access to the restricted access data.
+This package is for the members of Morin Lab and GAMBL consortium with approved access to the restricted access data. Please refer to [GAMBLR.open](https://morinlab.github.io/GAMBLR.open/) for the open access published version of this package.
 :::
 
 
@@ -62,7 +62,11 @@ devtools::install_github(
 ```
 
 ::: {.callout-note title="Got permission error at this step?" collapse="true"}
-This is because both `GAMBLR.results` and `GAMBLR` packages are private and have restricted access. Please contact Kostia or Ryan through Slack to be added to the list of approved users. Be sure your GitHub ID is added to your Slack profile.
+
+Please refer to [GAMBLR.open](https://morinlab.github.io/GAMBLR.open/) for the open access published version of this package.
+
+This error is because `GAMBLR.results` package is private and have restricted access. If you are the Moring Lab member or member of the GAMBL consortium, please contact Kostia or Ryan through Slack regarding this error. Be sure your GitHub ID is added to your Slack profile. 
+
 :::
 
 ###
