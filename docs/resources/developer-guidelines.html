@@ -4869,8 +4869,7 @@ overflow-x: auto;
   <li><a href="#creating-or-updating-functions" id="toc-creating-or-updating-functions" class="nav-link" data-scroll-target="#creating-or-updating-functions">Creating or updating functions</a>
   <ul class="collapse">
   <li><a href="#name" id="toc-name" class="nav-link" data-scroll-target="#name">Name</a></li>
-  <li><a href="#title" id="toc-title" class="nav-link" data-scroll-target="#title">Title</a>
-  <ul class="collapse">
+  <li><a href="#title" id="toc-title" class="nav-link" data-scroll-target="#title">Title</a></li>
   <li><a href="#description" id="toc-description" class="nav-link" data-scroll-target="#description">Description</a></li>
   <li><a href="#details" id="toc-details" class="nav-link" data-scroll-target="#details">Details</a></li>
   <li><a href="#arguments" id="toc-arguments" class="nav-link" data-scroll-target="#arguments">Arguments</a></li>
@@ -4878,12 +4877,14 @@ overflow-x: auto;
   <li><a href="#import-specifying-dependencies" id="toc-import-specifying-dependencies" class="nav-link" data-scroll-target="#import-specifying-dependencies">Import (specifying dependencies)</a></li>
   <li><a href="#export" id="toc-export" class="nav-link" data-scroll-target="#export">Export</a></li>
   <li><a href="#examples" id="toc-examples" class="nav-link" data-scroll-target="#examples">Examples</a></li>
-  <li><a href="#testing-new-functions" id="toc-testing-new-functions" class="nav-link" data-scroll-target="#testing-new-functions">Testing New Functions</a></li>
+  <li><a href="#testing-new-functions" id="toc-testing-new-functions" class="nav-link" data-scroll-target="#testing-new-functions">Testing New Functions</a>
+  <ul class="collapse">
   <li><a href="#option-1" id="toc-option-1" class="nav-link" data-scroll-target="#option-1">Option 1</a></li>
   <li><a href="#option-2" id="toc-option-2" class="nav-link" data-scroll-target="#option-2">Option 2</a></li>
   </ul></li>
   <li><a href="#function-documentation-template" id="toc-function-documentation-template" class="nav-link" data-scroll-target="#function-documentation-template">Function Documentation Template</a></li>
   </ul></li>
+  <li><a href="#updating-gamblr-web-site" id="toc-updating-gamblr-web-site" class="nav-link" data-scroll-target="#updating-gamblr-web-site">Updating GAMBLR web-site</a></li>
   </ul>
 <div class="toc-actions"><ul><li><a href="https://github.com/morinlab/GAMBLR/edit/website/docs/resources/developer-guidelines.qmd" class="toc-action"><i class="bi bi-github"></i>Edit this page</a></li><li><a href="https://github.com/morinlab/GAMBLR/issues/new" class="toc-action"><i class="bi empty"></i>Report an issue</a></li></ul></div></nav>
     </div>
@@ -4956,16 +4957,17 @@ How do I setup VS Code as R editor?
 <section id="title" class="level2">
 <h2 class="anchored" data-anchor-id="title">Title</h2>
 <p>The title displayed in the documentation is taken from the first sentence. It should be written in sentence case, not end in a full stop, and be followed by a blank line. The title is shown in various function indexes (e.g. help(package = “some_package”)) and is what the user will usually see when browsing multiple functions.</p>
-<section id="description" class="level3">
-<h3 class="anchored" data-anchor-id="description">Description</h3>
+</section>
+<section id="description" class="level2">
+<h2 class="anchored" data-anchor-id="description">Description</h2>
 <p>The description displayed in the documentation is taken from the next paragraph. It’s shown at the top of documentation and should briefly describe the most important features of the function.</p>
 </section>
-<section id="details" class="level3">
-<h3 class="anchored" data-anchor-id="details">Details</h3>
+<section id="details" class="level2">
+<h2 class="anchored" data-anchor-id="details">Details</h2>
 <p>Additional details are anything after the description. Details are optional, but can be any length so are useful if you want to dig deep into some important aspect of the function. Note that, even though the details come right after the description in the introduction, they appear much later in rendered documentation. If you want to add code to the details, this is also the sections to do so. For example, the new function relies on some bash code in order to utilize the GAMBLR code. You can detail such code here by simply adding a code block as you would in a regular markdown file.</p>
 </section>
-<section id="arguments" class="level3">
-<h3 class="anchored" data-anchor-id="arguments">Arguments</h3>
+<section id="arguments" class="level2">
+<h2 class="anchored" data-anchor-id="arguments">Arguments</h2>
 <p>Detailed argument descriptions should be included for all functions. Remember to state the required data types, default values, if the argument is required or optional, etc.</p>
 <p>There are several key concepts underlying the logic behind the naming of the arguments in the GAMBLR-verse. The main terms are:</p>
 <ul>
@@ -4974,12 +4976,12 @@ How do I setup VS Code as R editor?
 <li><p><strong>maf:</strong> This is a data frame in a standard maf format defining the simple somatic mutations. <strong>The argument that defines the maf should always be called <code>maf_data</code>.</strong> Typically the output of the <code>get_ssm*</code> is provided to this argument, but you can expect that the standard maf columns will be present, including <code>Tumor_Sample_Barcode</code>, <code>Chromosome</code>, <code>Start_Position</code>, <code>End_Position</code>, <code>Variant_Classification</code>, <code>Hugo_Symbol</code>, etc. <strong>When handling the maf, you should always refer to the column <code>Tumor_Sample_Barcode</code> for the unique sample identifiers.</strong></p></li>
 </ul>
 </section>
-<section id="return" class="level3">
-<h3 class="anchored" data-anchor-id="return">Return</h3>
+<section id="return" class="level2">
+<h2 class="anchored" data-anchor-id="return">Return</h2>
 <p>Specify the returned object, is it a data frame, a list, a vector or characters, etc.</p>
 </section>
-<section id="import-specifying-dependencies" class="level3">
-<h3 class="anchored" data-anchor-id="import-specifying-dependencies">Import (specifying dependencies)</h3>
+<section id="import-specifying-dependencies" class="level2">
+<h2 class="anchored" data-anchor-id="import-specifying-dependencies">Import (specifying dependencies)</h2>
 <p>Always import all the packages from which you are calling any functions outside of base R and R <a href="https://cran.r-project.org/doc/FAQ/R-FAQ.html#R-Add_002dOn-Packages">packages</a> that must be loaded in order for your function to execute.</p>
 <div class="callout callout-style-default callout-note callout-titled">
 <div class="callout-header d-flex align-content-center">
@@ -5008,21 +5010,20 @@ Important
 </div>
 </div>
 </section>
-<section id="export" class="level3">
-<h3 class="anchored" data-anchor-id="export">Export</h3>
+<section id="export" class="level2">
+<h2 class="anchored" data-anchor-id="export">Export</h2>
 <p>Should this function be exported to NAMESPACE (i.e make it directly accessible for anyone who loads GAMBLR), or is the function considered to be an internal/helper function? In order to have the function populate NAMESPACE, the developer has to run <code>devtools::document()</code> while in the working directory of the package. All functions that have the <code>@export</code> line in its documentation will be documented and added to NAMESPACE.</p>
 </section>
-<section id="examples" class="level3">
-<h3 class="anchored" data-anchor-id="examples">Examples</h3>
+<section id="examples" class="level2">
+<h2 class="anchored" data-anchor-id="examples">Examples</h2>
 <p>Please provide fully reproducible examples for the function. Ideally, the example should demonstrate basic usage, as well as more advanced usage with different parameter combinations. Note that examples can not extend over 100 characters per line, since this will cause the lines to be truncated in the rendered PDF manual. It is advised to write your example in such a way that loading external packages are avoided as much as possible. Instead, prioritize base R as much as possible. In some cases, it is undesirable to have a function run its examples. This applies to functions that are writing files and helper functions, or functions that rely on GSC server access. To avoid any such examples to run, simply wrap the example in:</p>
 <pre><code>\dontrun{
 do_not_run = some_function()
 }</code></pre>
 </section>
-<section id="testing-new-functions" class="level3">
-<h3 class="anchored" data-anchor-id="testing-new-functions">Testing New Functions</h3>
+<section id="testing-new-functions" class="level2">
+<h2 class="anchored" data-anchor-id="testing-new-functions">Testing New Functions</h2>
 <p>So you have added a new function (carefully following the steps in the previous section!) and you are obviously extremely proud and eager to test it out (and let others test it). There are two different approaches to do so.</p>
-</section>
 <section id="option-1" class="level3">
 <h3 class="anchored" data-anchor-id="option-1">Option 1</h3>
 <p>Your first option, and likely the preferred route to take, is to make sure that the working directory in R studio is set to the GAMBLR folder with your updated code and then run <code>devtools::load_all()</code> to load all the functions available in the <code>R/</code> folder of thee same repo. This should make all such functions available to call.</p>
@@ -5069,9 +5070,12 @@ Note
 function_name = function(a_parameter,
                          another_parameter){
                          }</code></pre>
-
-
 </section>
+</section>
+<section id="updating-gamblr-web-site" class="level1">
+<h1>Updating GAMBLR web-site</h1>
+
+
 </section>
 
 <a onclick="window.scrollTo(0, 0); return false;" role="button" id="quarto-back-to-top"><i class="bi bi-arrow-up"></i> Back to top</a></main> <!-- /main -->

@@ -62,15 +62,15 @@ The new functions should follow the GAMBLR-verse convention implemented and expe
 
 The title displayed in the documentation is taken from the first sentence. It should be written in sentence case, not end in a full stop, and be followed by a blank line. The title is shown in various function indexes (e.g. help(package = "some_package")) and is what the user will usually see when browsing multiple functions.
 
-### Description
+## Description
 
 The description displayed in the documentation is taken from the next paragraph. It’s shown at the top of documentation and should briefly describe the most important features of the function.
 
-### Details
+## Details
 
 Additional details are anything after the description. Details are optional, but can be any length so are useful if you want to dig deep into some important aspect of the function. Note that, even though the details come right after the description in the introduction, they appear much later in rendered documentation. If you want to add code to the details, this is also the sections to do so. For example, the new function relies on some bash code in order to utilize the GAMBLR code. You can detail such code here by simply adding a code block as you would in a regular markdown file.
 
-### Arguments
+## Arguments
 
 Detailed argument descriptions should be included for all functions. Remember to state the required data types, default values, if the argument is required or optional, etc.
 
@@ -82,11 +82,11 @@ There are several key concepts underlying the logic behind the naming of the arg
 
 * **maf:** This is a data frame in a standard maf format defining the simple somatic mutations. **The argument that defines the maf should always be called `maf_data`.** Typically the output of the `get_ssm*` is provided to this argument, but you can expect that the standard maf columns will be present, including `Tumor_Sample_Barcode`, `Chromosome`, `Start_Position`, `End_Position`, `Variant_Classification`, `Hugo_Symbol`, etc. **When handling the maf, you should always refer to the column `Tumor_Sample_Barcode` for the unique sample identifiers.**
 
-### Return
+## Return
 
 Specify the returned object, is it a data frame, a list, a vector or characters, etc.
 
-### Import (specifying dependencies)
+## Import (specifying dependencies)
 
 Always import all the packages from which you are calling any functions outside of base R and R [packages](https://cran.r-project.org/doc/FAQ/R-FAQ.html#R-Add_002dOn-Packages) that must be loaded in order for your function to execute.
 
@@ -103,11 +103,11 @@ Overall, the GAMBLR already depends on many different packages that has been alr
 :::
 
 
-### Export
+## Export
 
 Should this function be exported to NAMESPACE (i.e make it directly accessible for anyone who loads GAMBLR), or is the function considered to be an internal/helper function? In order to have the function populate NAMESPACE, the developer has to run `devtools::document()` while in the working directory of the package. All functions that have the `@export` line in its documentation will be documented and added to NAMESPACE.
 
-### Examples
+## Examples
 
 Please provide fully reproducible examples for the function. Ideally, the example should demonstrate basic usage, as well as more advanced usage with different parameter combinations. Note that examples can not extend over 100 characters per line, since this will cause the lines to  be truncated in the rendered PDF manual. It is advised to write your example in such a way that loading external packages are avoided as much as possible. Instead, prioritize base R as much as possible. In some cases, it is undesirable to have a function run its examples. This applies to functions that are writing files and helper functions, or functions that rely on GSC server access. To avoid any such examples to run, simply wrap the example in:
 
@@ -117,7 +117,7 @@ do_not_run = some_function()
 }
 ```
 
-### Testing New Functions
+## Testing New Functions
 
 So you have added a new function (carefully following the steps in the previous section!) and you are obviously extremely proud and eager to test it out (and let others test it). There are two different approaches to do so.
 
@@ -162,3 +162,5 @@ function_name = function(a_parameter,
                          another_parameter){
                          }
 ```
+# Updating GAMBLR web-site
+

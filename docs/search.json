@@ -24,7 +24,87 @@
     "href": "resources/developer-guidelines.html#title",
     "title": "GAMBLR developer guidelines",
     "section": "Title",
-    "text": "Title\nThe title displayed in the documentation is taken from the first sentence. It should be written in sentence case, not end in a full stop, and be followed by a blank line. The title is shown in various function indexes (e.g. help(package = “some_package”)) and is what the user will usually see when browsing multiple functions.\n\nDescription\nThe description displayed in the documentation is taken from the next paragraph. It’s shown at the top of documentation and should briefly describe the most important features of the function.\n\n\nDetails\nAdditional details are anything after the description. Details are optional, but can be any length so are useful if you want to dig deep into some important aspect of the function. Note that, even though the details come right after the description in the introduction, they appear much later in rendered documentation. If you want to add code to the details, this is also the sections to do so. For example, the new function relies on some bash code in order to utilize the GAMBLR code. You can detail such code here by simply adding a code block as you would in a regular markdown file.\n\n\nArguments\nDetailed argument descriptions should be included for all functions. Remember to state the required data types, default values, if the argument is required or optional, etc.\nThere are several key concepts underlying the logic behind the naming of the arguments in the GAMBLR-verse. The main terms are:\n\nprojection: This is a coordinate system defining the relationship with genome build and chromosome prefixing. The argument that defines the projection should always be called projection. The main projections that are expected to be supported throughout GAMBLR-verse are grch37 and hg38. The grch37 projection contains the same coordinate system as genome build hg19, but never has the “chr” prefix on chromosome names. In contrast, the hg38 projection is always chr-prefixed and is in the same coordinate system as the hg38 genome build. As GAMBL itself and the data bundled and available or retreived through this package represents a large collection of samples sequenced both locally and externally, there is always a difficulty associated with proper handling of prefixes, different custom contigs and their lengths in the fasta reference, coordinates, and other distinctions complicating the direct comparison between data and comprehensive data analysis. These difficulties are expected to be handled internally by the function. This is done by making data always available in both projections, regardless of initial genome build to which the sample was aligned.\nmetadata: This is a data frame with a set of minimal columns defining the biological or clinical characteristics of a sample or a cohort. The argument that defines the metadata should always be called these_samples_metadata. Typically the output of the get_gambl_metadata() is provided to this argument, but you can expect that the following required columns will be present: patient_id, Tumor_Sample_Barcode, sample_id, seq_type, sex, cohort, and pathology. The main purpose of this data frame is to provide a structure for the metadata that is always expected to be available and provides linkage between unique sample identifiers and associated basic metadata values. The columns Tumor_Sample_Barcode and sample_id are expected to share the same values, but are required to be present for direct operation on the outputs of different upstream tools. When handling the metadata, you should always refer to the column sample_id for the unique sample identifiers.\nmaf: This is a data frame in a standard maf format defining the simple somatic mutations. The argument that defines the maf should always be called maf_data. Typically the output of the get_ssm* is provided to this argument, but you can expect that the standard maf columns will be present, including Tumor_Sample_Barcode, Chromosome, Start_Position, End_Position, Variant_Classification, Hugo_Symbol, etc. When handling the maf, you should always refer to the column Tumor_Sample_Barcode for the unique sample identifiers.\n\n\n\nReturn\nSpecify the returned object, is it a data frame, a list, a vector or characters, etc.\n\n\nImport (specifying dependencies)\nAlways import all the packages from which you are calling any functions outside of base R and R packages that must be loaded in order for your function to execute.\n\n\n\n\n\n\nNote\n\n\n\nRemember to not import tidyverse - rather, import the individual packages from tidyverse that the function is depending on (dplyr, readr, ggplot2 etc).\n\n\n\n\n\n\n\n\nImportant\n\n\n\nOverall, the GAMBLR already depends on many different packages that has been already added as dependencies. This results in very long installation time, frequent errors in installation and version conflicts between sub-dependencies, function name clashes, and other issues. For these and other additional reasons, addition on new dependencies is higly discouraged and is strongly adviced against! DO NOT add any new dependency that is not already a dependency of one of GAMBLR packages.\n\n\n\n\nExport\nShould this function be exported to NAMESPACE (i.e make it directly accessible for anyone who loads GAMBLR), or is the function considered to be an internal/helper function? In order to have the function populate NAMESPACE, the developer has to run devtools::document() while in the working directory of the package. All functions that have the @export line in its documentation will be documented and added to NAMESPACE.\n\n\nExamples\nPlease provide fully reproducible examples for the function. Ideally, the example should demonstrate basic usage, as well as more advanced usage with different parameter combinations. Note that examples can not extend over 100 characters per line, since this will cause the lines to be truncated in the rendered PDF manual. It is advised to write your example in such a way that loading external packages are avoided as much as possible. Instead, prioritize base R as much as possible. In some cases, it is undesirable to have a function run its examples. This applies to functions that are writing files and helper functions, or functions that rely on GSC server access. To avoid any such examples to run, simply wrap the example in:\n\\dontrun{\ndo_not_run = some_function()\n}\n\n\nTesting New Functions\nSo you have added a new function (carefully following the steps in the previous section!) and you are obviously extremely proud and eager to test it out (and let others test it). There are two different approaches to do so.\n\n\nOption 1\nYour first option, and likely the preferred route to take, is to make sure that the working directory in R studio is set to the GAMBLR folder with your updated code and then run devtools::load_all() to load all the functions available in the R/ folder of thee same repo. This should make all such functions available to call.\n\n\nOption 2\nAs an alternative, you can also run devtools::install() from the updated GAMBLR directory. As the name implies, this will install the complete package complete with dependencies, remotes, etc. Note, if you run with the second option, make sure to restart your R session with .rs.restartR() after installing the package and then load GAMBLR with library(GAMBLR). Now you have installed the updated branch of GAMBLR and are free to call any functions available in the R/\n\n\n\n\n\n\nNote\n\n\n\nThe behaviour of the load_all() and install() is different - make sure you understand what you are doing or please ask for help.",
+    "text": "Title\nThe title displayed in the documentation is taken from the first sentence. It should be written in sentence case, not end in a full stop, and be followed by a blank line. The title is shown in various function indexes (e.g. help(package = “some_package”)) and is what the user will usually see when browsing multiple functions.",
+    "crumbs": [
+      "GAMBLR developer guidelines"
+    ]
+  },
+  {
+    "objectID": "resources/developer-guidelines.html#description",
+    "href": "resources/developer-guidelines.html#description",
+    "title": "GAMBLR developer guidelines",
+    "section": "Description",
+    "text": "Description\nThe description displayed in the documentation is taken from the next paragraph. It’s shown at the top of documentation and should briefly describe the most important features of the function.",
+    "crumbs": [
+      "GAMBLR developer guidelines"
+    ]
+  },
+  {
+    "objectID": "resources/developer-guidelines.html#details",
+    "href": "resources/developer-guidelines.html#details",
+    "title": "GAMBLR developer guidelines",
+    "section": "Details",
+    "text": "Details\nAdditional details are anything after the description. Details are optional, but can be any length so are useful if you want to dig deep into some important aspect of the function. Note that, even though the details come right after the description in the introduction, they appear much later in rendered documentation. If you want to add code to the details, this is also the sections to do so. For example, the new function relies on some bash code in order to utilize the GAMBLR code. You can detail such code here by simply adding a code block as you would in a regular markdown file.",
+    "crumbs": [
+      "GAMBLR developer guidelines"
+    ]
+  },
+  {
+    "objectID": "resources/developer-guidelines.html#arguments",
+    "href": "resources/developer-guidelines.html#arguments",
+    "title": "GAMBLR developer guidelines",
+    "section": "Arguments",
+    "text": "Arguments\nDetailed argument descriptions should be included for all functions. Remember to state the required data types, default values, if the argument is required or optional, etc.\nThere are several key concepts underlying the logic behind the naming of the arguments in the GAMBLR-verse. The main terms are:\n\nprojection: This is a coordinate system defining the relationship with genome build and chromosome prefixing. The argument that defines the projection should always be called projection. The main projections that are expected to be supported throughout GAMBLR-verse are grch37 and hg38. The grch37 projection contains the same coordinate system as genome build hg19, but never has the “chr” prefix on chromosome names. In contrast, the hg38 projection is always chr-prefixed and is in the same coordinate system as the hg38 genome build. As GAMBL itself and the data bundled and available or retreived through this package represents a large collection of samples sequenced both locally and externally, there is always a difficulty associated with proper handling of prefixes, different custom contigs and their lengths in the fasta reference, coordinates, and other distinctions complicating the direct comparison between data and comprehensive data analysis. These difficulties are expected to be handled internally by the function. This is done by making data always available in both projections, regardless of initial genome build to which the sample was aligned.\nmetadata: This is a data frame with a set of minimal columns defining the biological or clinical characteristics of a sample or a cohort. The argument that defines the metadata should always be called these_samples_metadata. Typically the output of the get_gambl_metadata() is provided to this argument, but you can expect that the following required columns will be present: patient_id, Tumor_Sample_Barcode, sample_id, seq_type, sex, cohort, and pathology. The main purpose of this data frame is to provide a structure for the metadata that is always expected to be available and provides linkage between unique sample identifiers and associated basic metadata values. The columns Tumor_Sample_Barcode and sample_id are expected to share the same values, but are required to be present for direct operation on the outputs of different upstream tools. When handling the metadata, you should always refer to the column sample_id for the unique sample identifiers.\nmaf: This is a data frame in a standard maf format defining the simple somatic mutations. The argument that defines the maf should always be called maf_data. Typically the output of the get_ssm* is provided to this argument, but you can expect that the standard maf columns will be present, including Tumor_Sample_Barcode, Chromosome, Start_Position, End_Position, Variant_Classification, Hugo_Symbol, etc. When handling the maf, you should always refer to the column Tumor_Sample_Barcode for the unique sample identifiers.",
+    "crumbs": [
+      "GAMBLR developer guidelines"
+    ]
+  },
+  {
+    "objectID": "resources/developer-guidelines.html#return",
+    "href": "resources/developer-guidelines.html#return",
+    "title": "GAMBLR developer guidelines",
+    "section": "Return",
+    "text": "Return\nSpecify the returned object, is it a data frame, a list, a vector or characters, etc.",
+    "crumbs": [
+      "GAMBLR developer guidelines"
+    ]
+  },
+  {
+    "objectID": "resources/developer-guidelines.html#import-specifying-dependencies",
+    "href": "resources/developer-guidelines.html#import-specifying-dependencies",
+    "title": "GAMBLR developer guidelines",
+    "section": "Import (specifying dependencies)",
+    "text": "Import (specifying dependencies)\nAlways import all the packages from which you are calling any functions outside of base R and R packages that must be loaded in order for your function to execute.\n\n\n\n\n\n\nNote\n\n\n\nRemember to not import tidyverse - rather, import the individual packages from tidyverse that the function is depending on (dplyr, readr, ggplot2 etc).\n\n\n\n\n\n\n\n\nImportant\n\n\n\nOverall, the GAMBLR already depends on many different packages that has been already added as dependencies. This results in very long installation time, frequent errors in installation and version conflicts between sub-dependencies, function name clashes, and other issues. For these and other additional reasons, addition on new dependencies is higly discouraged and is strongly adviced against! DO NOT add any new dependency that is not already a dependency of one of GAMBLR packages.",
+    "crumbs": [
+      "GAMBLR developer guidelines"
+    ]
+  },
+  {
+    "objectID": "resources/developer-guidelines.html#export",
+    "href": "resources/developer-guidelines.html#export",
+    "title": "GAMBLR developer guidelines",
+    "section": "Export",
+    "text": "Export\nShould this function be exported to NAMESPACE (i.e make it directly accessible for anyone who loads GAMBLR), or is the function considered to be an internal/helper function? In order to have the function populate NAMESPACE, the developer has to run devtools::document() while in the working directory of the package. All functions that have the @export line in its documentation will be documented and added to NAMESPACE.",
+    "crumbs": [
+      "GAMBLR developer guidelines"
+    ]
+  },
+  {
+    "objectID": "resources/developer-guidelines.html#examples",
+    "href": "resources/developer-guidelines.html#examples",
+    "title": "GAMBLR developer guidelines",
+    "section": "Examples",
+    "text": "Examples\nPlease provide fully reproducible examples for the function. Ideally, the example should demonstrate basic usage, as well as more advanced usage with different parameter combinations. Note that examples can not extend over 100 characters per line, since this will cause the lines to be truncated in the rendered PDF manual. It is advised to write your example in such a way that loading external packages are avoided as much as possible. Instead, prioritize base R as much as possible. In some cases, it is undesirable to have a function run its examples. This applies to functions that are writing files and helper functions, or functions that rely on GSC server access. To avoid any such examples to run, simply wrap the example in:\n\\dontrun{\ndo_not_run = some_function()\n}",
+    "crumbs": [
+      "GAMBLR developer guidelines"
+    ]
+  },
+  {
+    "objectID": "resources/developer-guidelines.html#testing-new-functions",
+    "href": "resources/developer-guidelines.html#testing-new-functions",
+    "title": "GAMBLR developer guidelines",
+    "section": "Testing New Functions",
+    "text": "Testing New Functions\nSo you have added a new function (carefully following the steps in the previous section!) and you are obviously extremely proud and eager to test it out (and let others test it). There are two different approaches to do so.\n\nOption 1\nYour first option, and likely the preferred route to take, is to make sure that the working directory in R studio is set to the GAMBLR folder with your updated code and then run devtools::load_all() to load all the functions available in the R/ folder of thee same repo. This should make all such functions available to call.\n\n\nOption 2\nAs an alternative, you can also run devtools::install() from the updated GAMBLR directory. As the name implies, this will install the complete package complete with dependencies, remotes, etc. Note, if you run with the second option, make sure to restart your R session with .rs.restartR() after installing the package and then load GAMBLR with library(GAMBLR). Now you have installed the updated branch of GAMBLR and are free to call any functions available in the R/\n\n\n\n\n\n\nNote\n\n\n\nThe behaviour of the load_all() and install() is different - make sure you understand what you are doing or please ask for help.",
     "crumbs": [
       "GAMBLR developer guidelines"
     ]
