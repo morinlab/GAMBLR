@@ -80,6 +80,8 @@ There are several key concepts underlying the logic behind the naming of the arg
 
 * **metadata:** This is a data frame with a set of minimal columns defining the biological or clinical characteristics of a sample or a cohort. **The argument that defines the metadata should always be called `these_samples_metadata`.** Typically the output of the `get_gambl_metadata()` is provided to this argument, but you can expect that the following required columns will be present: `patient_id`, `Tumor_Sample_Barcode`, `sample_id`, `seq_type`, `sex`, `cohort`, and `pathology`. The main purpose of this data frame is to provide a structure for the metadata that is always expected to be available and provides linkage between unique sample identifiers and associated basic metadata values. The columns `Tumor_Sample_Barcode` and `sample_id` are expected to share the same values, but are required to be present for direct operation on the outputs of different upstream tools. **When handling the metadata, you should always refer to the column `sample_id` for the unique sample identifiers.**
 
+* **maf:** This is a data frame in a standard maf format defining the simple somatic mutations. **The argument that defines the maf should always be called `maf_data`.** Typically the output of the `get_ssm*` is provided to this argument, but you can expect that the standard maf columns will be present, including `Tumor_Sample_Barcode`, `Chromosome`, `Start_Position`, `End_Position`, `Variant_Classification`, `Hugo_Symbol`, etc. **When handling the maf, you should always refer to the column `Tumor_Sample_Barcode` for the unique sample identifiers.**
+
 ### Return
 
 Specify the returned object, is it a data frame, a list, a vector or characters, etc.
