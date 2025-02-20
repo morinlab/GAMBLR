@@ -1,0 +1,90 @@
+project:
+  type: website
+  output-dir: .
+
+
+website:
+  title: "GAMBLR"
+  description: "Database, mining, manipulation and convenience functions for working with genomic data of mature B-cell lymphomas."
+  favicon: GAMBLR.png
+  open-graph:
+    image: GAMBLR.png
+
+  # search
+  search:
+    location: navbar
+    type: overlay
+
+  # options
+  reader-mode: false
+  back-to-top-navigation: true
+  repo-url: https://github.com/morinlab/GAMBLR
+  repo-actions: [edit, issue]
+  repo-branch: website
+  repo-subdir: docs
+  issue-url: https://github.com/morinlab/GAMBLR/issues/new
+
+  # footer
+  page-footer:
+    border: false
+    left: ""
+    right:
+      - icon: github
+        href: https://github.com/morinlab
+
+  navbar:
+    tools:
+      - icon: github
+        menu:
+          - text: Source code
+            url: https://github.com/morinlab/GAMBLR
+          - text: Report a bug
+            url: https://github.com/morinlab/GAMBLR/issues/new
+          - text: Report a documentation issue
+            url: https://github.com/morinlab/GAMBLR/issues/new
+          - text: Submit a feature request
+            url: https://github.com/morinlab/GAMBLR/issues/new
+    left:
+      - sidebar:getting-started
+      - sidebar:concepts
+      - sidebar:bundled-data
+
+  sidebar:
+    - id: ""
+    - id: getting-started
+      title: "Getting started"
+      style: "docked"
+      collapse-level: 2
+      # contents:
+      #   - install.qmd
+      #   - auto: tutorials/*.qmd
+      #   - faq.qmd
+    - id: concepts
+      title: "Concepts"
+      style: "docked"
+      collapse-level: 4
+      # contents:
+      #   - why.qmd
+      #   - auto: concepts/*.qmd
+    - id: bundled-data
+      title: "Resources"
+      style: "docked"
+      collapse-level: 2
+      # contents:
+      #   - auto: resources/*.qmd
+
+format:
+  html:
+    theme:
+      light: [flatly, theme-light.scss]
+      dark: [darkly, theme-dark.scss]
+    toc: true
+    css: styles.css
+    embed-resources: true
+
+highlight-style: ayu
+code-annotations: hover
+
+execute:
+  warning: false
+  error: false
