@@ -4884,7 +4884,7 @@ overflow-x: auto;
   </ul></li>
   <li><a href="#function-documentation-template" id="toc-function-documentation-template" class="nav-link" data-scroll-target="#function-documentation-template">Function Documentation Template</a></li>
   </ul></li>
-  <li><a href="#updating-gamblr-web-site" id="toc-updating-gamblr-web-site" class="nav-link" data-scroll-target="#updating-gamblr-web-site">Updating GAMBLR web-site</a></li>
+  <li><a href="#updating-gamblr-website" id="toc-updating-gamblr-website" class="nav-link" data-scroll-target="#updating-gamblr-website">Updating GAMBLR website</a></li>
   </ul>
 <div class="toc-actions"><ul><li><a href="https://github.com/morinlab/GAMBLR/edit/website/docs/resources/developer-guidelines.qmd" class="toc-action"><i class="bi bi-github"></i>Edit this page</a></li><li><a href="https://github.com/morinlab/GAMBLR/issues/new" class="toc-action"><i class="bi empty"></i>Report an issue</a></li></ul></div></nav>
     </div>
@@ -5049,31 +5049,93 @@ Note
 <section id="function-documentation-template" class="level2">
 <h2 class="anchored" data-anchor-id="function-documentation-template">Function Documentation Template</h2>
 <p>For your convenience, here is a documentation template for GAMBLR functions.</p>
-<pre><code>#&#39; @title
-#&#39;
-#&#39; @description
-#&#39;
-#&#39; @details
-#&#39;
-#&#39; @param a_parameter
-#&#39; @param another_parameter
-#&#39;
-#&#39; @return
-#&#39;
-#&#39; @import
-#&#39; @export
-#&#39;
-#&#39; @examples
-#&#39; #this is an example
-#&#39; ###For your reference, this line is exactly 100 characters. Do not exceed 100 characters per line
-#&#39;
-function_name = function(a_parameter,
-                         another_parameter){
-                         }</code></pre>
+<div class="sourceCode" id="cb6"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb6-1"><a href="#cb6-1" aria-hidden="true" tabindex="-1"></a><span class="co">#&#39; @title</span></span>
+<span id="cb6-2"><a href="#cb6-2" aria-hidden="true" tabindex="-1"></a><span class="co">#&#39;</span></span>
+<span id="cb6-3"><a href="#cb6-3" aria-hidden="true" tabindex="-1"></a><span class="co">#&#39; @description</span></span>
+<span id="cb6-4"><a href="#cb6-4" aria-hidden="true" tabindex="-1"></a><span class="co">#&#39;</span></span>
+<span id="cb6-5"><a href="#cb6-5" aria-hidden="true" tabindex="-1"></a><span class="co">#&#39; @details</span></span>
+<span id="cb6-6"><a href="#cb6-6" aria-hidden="true" tabindex="-1"></a><span class="co">#&#39;</span></span>
+<span id="cb6-7"><a href="#cb6-7" aria-hidden="true" tabindex="-1"></a><span class="co">#&#39; @param a_parameter</span></span>
+<span id="cb6-8"><a href="#cb6-8" aria-hidden="true" tabindex="-1"></a><span class="co">#&#39; @param another_parameter</span></span>
+<span id="cb6-9"><a href="#cb6-9" aria-hidden="true" tabindex="-1"></a><span class="co">#&#39;</span></span>
+<span id="cb6-10"><a href="#cb6-10" aria-hidden="true" tabindex="-1"></a><span class="co">#&#39; @return</span></span>
+<span id="cb6-11"><a href="#cb6-11" aria-hidden="true" tabindex="-1"></a><span class="co">#&#39;</span></span>
+<span id="cb6-12"><a href="#cb6-12" aria-hidden="true" tabindex="-1"></a><span class="co">#&#39; @import</span></span>
+<span id="cb6-13"><a href="#cb6-13" aria-hidden="true" tabindex="-1"></a><span class="co">#&#39; @export</span></span>
+<span id="cb6-14"><a href="#cb6-14" aria-hidden="true" tabindex="-1"></a><span class="co">#&#39;</span></span>
+<span id="cb6-15"><a href="#cb6-15" aria-hidden="true" tabindex="-1"></a><span class="co">#&#39; @examples</span></span>
+<span id="cb6-16"><a href="#cb6-16" aria-hidden="true" tabindex="-1"></a><span class="co">#&#39; #this is an example</span></span>
+<span id="cb6-17"><a href="#cb6-17" aria-hidden="true" tabindex="-1"></a><span class="co">#&#39; ###For your reference, this line is exactly 100 characters. Do not exceed 100 characters per line</span></span>
+<span id="cb6-18"><a href="#cb6-18" aria-hidden="true" tabindex="-1"></a><span class="co">#&#39;</span></span>
+<span id="cb6-19"><a href="#cb6-19" aria-hidden="true" tabindex="-1"></a>function_name <span class="ot">=</span> <span class="cf">function</span>(a_parameter,</span>
+<span id="cb6-20"><a href="#cb6-20" aria-hidden="true" tabindex="-1"></a>                         another_parameter){</span>
+<span id="cb6-21"><a href="#cb6-21" aria-hidden="true" tabindex="-1"></a>                         }</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </section>
 </section>
-<section id="updating-gamblr-web-site" class="level1">
-<h1>Updating GAMBLR web-site</h1>
+<section id="updating-gamblr-website" class="level1">
+<h1>Updating GAMBLR website</h1>
+<p>Most of the GAMBLR-verse repos have their own, dedicated website with the documentation, tutorials, and other information. Regardless of the repo, they all have consistent and straight-forward approach to update the website. Please follow these steps:</p>
+<ul>
+<li>Checkout the <code>master</code> branch of the corresponding repo</li>
+</ul>
+<div class="sourceCode" id="cb7"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb7-1"><a href="#cb7-1" aria-hidden="true" tabindex="-1"></a><span class="fu">git</span> checkout master</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<ul>
+<li>Pull the most recent version to your local version of the repo</li>
+</ul>
+<div class="sourceCode" id="cb8"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb8-1"><a href="#cb8-1" aria-hidden="true" tabindex="-1"></a><span class="fu">git</span> pull <span class="at">--ff-only</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<ul>
+<li>Each repo has a dedicated <code>website</code> branch that contains all of the required files to run the website. Checkout this branch and merge the master version of the repo:</li>
+</ul>
+<div class="sourceCode" id="cb9"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb9-1"><a href="#cb9-1" aria-hidden="true" tabindex="-1"></a><span class="fu">git</span> checkout website</span>
+<span id="cb9-2"><a href="#cb9-2" aria-hidden="true" tabindex="-1"></a><span class="fu">git</span> merge master</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<ul>
+<li>All of the necessary files related to website are collected in the folder <code>docs</code>. After updating the branch to the most recent master, we will change now our working directory:</li>
+</ul>
+<div class="sourceCode" id="cb10"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb10-1"><a href="#cb10-1" aria-hidden="true" tabindex="-1"></a><span class="bu">cd</span> docs</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<ul>
+<li><p>In the <code>docs</code> folder, there is <code>index.qmd</code> file that renders the landing page for each website. There are also other folders, like <code>resources</code> and <code>tutorials</code>, containing the pages from drop-down menus of the website.</p>
+<ul>
+<li>If you want to edit an existing page, you can edit any existing <code>.qmd</code> file.</li>
+<li>If you want to add a new page, you can use any of the esixting <code>.qmd</code> files as template for your new page. The pages in the subfolders (<code>concepts</code>, <code>resources</code>, <code>tutorials</code> etc) are rendered by default and you don’t need to do anything in order for them to show up on the website. If you are creating new page at the top level (in the <code>docs</code> folder), you would also need to update the <code>_quarto.yml</code> file in order for your new page to show up. Please add your page to the <code>sidebar</code> key under <code>contents</code>.</li>
+</ul></li>
+<li><p>After applying your modification, the website can be rebuild by rendering all project files at once.</p></li>
+</ul>
+<div class="callout callout-style-default callout-note callout-titled">
+<div class="callout-header d-flex align-content-center">
+<div class="callout-icon-container">
+<i class="callout-icon"></i>
+</div>
+<div class="callout-title-container flex-fill">
+Note
+</div>
+</div>
+<div class="callout-body-container callout-body">
+<p>Since we did not change our working directory, you should still be in the website’s top-level <code>docs</code>. If you swicthed somewhere else, please make sure you are still on the <code>website</code> branch and <code>docs</code> is your working directory.</p>
+</div>
+</div>
+<div class="sourceCode" id="cb11"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb11-1"><a href="#cb11-1" aria-hidden="true" tabindex="-1"></a><span class="ex">quarto</span> render</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<ul>
+<li>This will render the updated version of the website and we can now add-commit-push our changes as we normally do:</li>
+</ul>
+<div class="sourceCode" id="cb12"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb12-1"><a href="#cb12-1" aria-hidden="true" tabindex="-1"></a><span class="fu">git</span> add <span class="at">--all</span></span>
+<span id="cb12-2"><a href="#cb12-2" aria-hidden="true" tabindex="-1"></a><span class="fu">git</span> commit <span class="at">-m</span> <span class="st">&quot;website update&quot;</span> <span class="co"># or add your other informative message</span></span>
+<span id="cb12-3"><a href="#cb12-3" aria-hidden="true" tabindex="-1"></a><span class="fu">git</span> push</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<ul>
+<li>The push to the <code>website</code> branch will automatically trigger GitHub actions, which normally completes in about 60-90 seconds. Once actions are completed, you can refresh the website and should be able to see your changes.</li>
+</ul>
+<div class="callout callout-style-default callout-note callout-titled">
+<div class="callout-header d-flex align-content-center">
+<div class="callout-icon-container">
+<i class="callout-icon"></i>
+</div>
+<div class="callout-title-container flex-fill">
+Note
+</div>
+</div>
+<div class="callout-body-container callout-body">
+<p>For multiple reasons, we do not merge the changes for the website to master branch. <em>Once your changes are pushed, there is no need to create a PR.</em></p>
+</div>
+</div>
 
 
 </section>

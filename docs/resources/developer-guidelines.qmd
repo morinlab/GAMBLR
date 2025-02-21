@@ -92,7 +92,7 @@ Always import all the packages from which you are calling any functions outside 
 
 ::: {.callout-note}
 
-Remember to not import `tidyverse` - rather, import the individual packages from `tidyverse` that the function is depending on (`dplyr`, `readr`, `ggplot2` etc). 
+Remember to not import `tidyverse` - rather, import the individual packages from `tidyverse` that the function is depending on (`dplyr`, `readr`, `ggplot2` etc).
 
 :::
 
@@ -139,7 +139,7 @@ The behaviour of the `load_all()` and `install()` is different - make sure you u
 
 For your convenience, here is a documentation template for GAMBLR functions.
 
-```
+```r
 #' @title
 #'
 #' @description
@@ -162,5 +162,65 @@ function_name = function(a_parameter,
                          another_parameter){
                          }
 ```
-# Updating GAMBLR web-site
 
+# Updating GAMBLR website
+
+Most of the GAMBLR-verse repos have their own, dedicated website with the documentation, tutorials, and other information. Regardless of the repo, they all have consistent and straight-forward approach to update the website. Please follow these steps:
+
+- Checkout the `master` branch of the corresponding repo
+
+```bash
+git checkout master
+```
+
+- Pull the most recent version to your local version of the repo
+
+```bash
+git pull --ff-only
+```
+
+- Each repo has a dedicated `website` branch that contains all of the required files to run the website. Checkout this branch and merge the master version of the repo:
+
+```bash
+git checkout website
+git merge master
+```
+
+- All of the necessary files related to website are collected in the folder `docs`. After updating the branch to the most recent master, we will change now our working directory:
+
+```bash
+cd docs
+```
+
+- In the `docs` folder, there is `index.qmd` file that renders the landing page for each website. There are also other folders, like `resources` and `tutorials`, containing the pages from drop-down menus of the website.
+
+    + If you want to edit an existing page, you can edit any existing `.qmd` file.
+    + If you want to add a new page, you can use any of the esixting `.qmd` files as template for your new page. The pages in the subfolders (`concepts`, `resources`, `tutorials` etc) are rendered by default and you don't need to do anything in order for them to show up on the website. If you are creating new page at the top level (in the `docs` folder), you would also need to update the `_quarto.yml` file in order for your new page to show up. Please add your page to the `sidebar` key under `contents`.
+
+- After applying your modification, the website can be rebuild by rendering all project files at once.
+
+::: {.callout-note}
+
+Since we did not change our working directory, you should still be in the website's top-level `docs`. If you swicthed somewhere else, please make sure you are still on the `website` branch and `docs` is your working directory.
+
+:::
+
+```bash
+quarto render
+```
+
+- This will render the updated version of the website and we can now add-commit-push our changes as we normally do:
+
+```bash
+git add --all
+git commit -m "website update" # or add your other informative message
+git push
+```
+
+- The push to the `website` branch will automatically trigger GitHub actions, which normally completes in about 60-90 seconds. Once actions are completed, you can refresh the website and should be able to see your changes.
+
+::: {.callout-note}
+
+For multiple reasons, we do not merge the changes for the website to master branch. _Once your changes are pushed, there is no need to create a PR._
+
+:::
