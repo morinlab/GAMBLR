@@ -5060,15 +5060,45 @@ Important
 <div id="GSCsetup" class="collapse multi-collapse">
 <section id="where-to-clone-gamblr-repos" class="level2">
 <h2 class="anchored" data-anchor-id="where-to-clone-gamblr-repos">Where to clone GAMBLR repos?</h2>
+<p>You would only ever need to clone the repo if you want to contribute. There is no need to clone it in order to install or load it in the session. Therefore, there is no hard rules with respect to where the repo should be cloned. Any location that you would normally clone any other repo also applies in this case.</p>
 </section>
 <section id="where-should-i-run-gamblr" class="level2">
 <h2 class="anchored" data-anchor-id="where-should-i-run-gamblr">Where should I run GAMBLR?</h2>
-</section>
-<section id="what-is-config" class="level2">
-<h2 class="anchored" data-anchor-id="what-is-config">What is config?</h2>
+<p>You are not required to set the current working directory of the session to any specific path. Use your regular setup just like with any other R package.</p>
 </section>
 <section id="checkout-branch-to-run-pr-review-tests" class="level2">
 <h2 class="anchored" data-anchor-id="checkout-branch-to-run-pr-review-tests">Checkout branch to run PR review tests</h2>
+<p>There can be scenarios where you would want to test the changes implemented in a particular PR. If this is the case, you would need the local copy of the repository. There are different ways to approach the testing but the resommended one is the following:</p>
+<ul>
+<li>Change the directory to the path where you have the local copy ot the repo</li>
+<li>Checkout the branch with PR</li>
+</ul>
+<div class="sourceCode" id="cb7"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb7-1"><a href="#cb7-1" aria-hidden="true" tabindex="-1"></a><span class="fu">git</span> checkout <span class="op">&lt;</span>name_of_the_branch<span class="op">&gt;</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="callout callout-style-default callout-note callout-titled">
+<div class="callout-header d-flex align-content-center">
+<div class="callout-icon-container">
+<i class="callout-icon"></i>
+</div>
+<div class="callout-title-container flex-fill">
+Note
+</div>
+</div>
+<div class="callout-body-container callout-body">
+<p>Depending on whether or not you have checked that branch in your local copy of the repo before, it might need a call to <code>git pull --ff-only</code> to pull the version from remote. Usually GitHub will tell you if your local copy is not up to date and the pull is required, so make sure you read the message after checking out the branch.</p>
+</div>
+</div>
+<ul>
+<li>Start the new R session and load the top-level package</li>
+</ul>
+<div class="sourceCode" id="cb8"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb8-1"><a href="#cb8-1" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(GAMBLR)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<ul>
+<li>Set the working directory to the path where your local copy of the repo is located</li>
+<li>Use devtools to load the version of the package in PR</li>
+</ul>
+<div class="sourceCode" id="cb9"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb9-1"><a href="#cb9-1" aria-hidden="true" tabindex="-1"></a>devtools<span class="sc">::</span><span class="fu">load_all</span>()</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<ul>
+<li>Run whichever commands you want to test!</li>
+</ul>
 </section>
 </div>
 

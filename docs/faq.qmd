@@ -172,10 +172,40 @@ Since the top-level package `GAMBLR` is just a wrapper to load all packages at o
 
 ## Where to clone GAMBLR repos?
 
+You would only ever need to clone the repo if you want to contribute. There is no need to clone it in order to install or load it in the session. Therefore, there is no hard rules with respect to where the repo should be cloned. Any location that you would normally clone any other repo also applies in this case.
+
 ## Where should I run GAMBLR?
 
-## What is config?
+You are not required to set the current working directory of the session to any specific path. Use your regular setup just like with any other R package.
 
 ## Checkout branch to run PR review tests
+
+There can be scenarios where you would want to test the changes implemented in a particular PR. If this is the case, you would need the local copy of the repository. There are different ways to approach the testing but the resommended one is the following:
+
+- Change the directory to the path where you have the local copy ot the repo
+- Checkout the branch with PR
+
+```bash
+git checkout <name_of_the_branch>
+```
+::: {.callout-note}
+
+Depending on whether or not you have checked that branch in your local copy of the repo before, it might need a call to `git pull --ff-only` to pull the version from remote. Usually GitHub will tell you if your local copy is not up to date and the pull is required, so make sure you read the message after checking out the branch.
+
+:::
+
+- Start the new R session and load the top-level package
+
+```r
+library(GAMBLR)
+```
+
+- Set the working directory to the path where your local copy of the repo is located
+- Use devtools to load the version of the package in PR
+
+```r
+devtools::load_all()
+```
+- Run whichever commands you want to test!
 
 :::

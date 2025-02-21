@@ -14,7 +14,7 @@
     "href": "resources/developer-guidelines.html#name",
     "title": "GAMBLR developer guidelines",
     "section": "Name",
-    "text": "Name\nThe new functions should follow the GAMBLR-verse convention implemented and expected throughout the packaged to ensure consistency and user expectations. The maing naming conventions are:\n\nUse get_ when the function is supposed to retreive some sort of data\nUse pretty when the function is supposed to generate a plot or a multi-panel figure\nUse collate_ when the function is supposed to grow the metadata horizontally by appending new columns\nUse annotate_ when the function is supposed to annotate the data input with some additional information",
+    "text": "Name\nThe new functions should follow the GAMBLR-verse convention implemented and expected throughout the packaged to ensure consistency and user expectations. The maing naming conventions are:\n\nUse get_ when the function is supposed to retreive some sort of data\nUse pretty when the function is supposed to generate a plot or a multi-panel figure\nUse collate_ when the function generates sample-level summary values from another result, which will be added as one or more new column to existing metadata\nUse annotate_ when the function is supposed to annotate the data input with some additional information",
     "crumbs": [
       "GAMBLR developer guidelines"
     ]
@@ -24,7 +24,7 @@
     "href": "resources/developer-guidelines.html#title",
     "title": "GAMBLR developer guidelines",
     "section": "Title",
-    "text": "Title\nThe title displayed in the documentation is taken from the first sentence. It should be written in sentence case, not end in a full stop, and be followed by a blank line. The title is shown in various function indexes (e.g. help(package = “some_package”)) and is what the user will usually see when browsing multiple functions.",
+    "text": "Title\nThe title displayed in the documentation is taken from the first sentence. It should be written in sentence case, not end in a full stop, and be followed by a blank line. For example:\n\nThis is a good title\nThis Is Not A Proper Title.\n\nThe title is shown in various function indexes (e.g. help(package = “some_package”)) and is what the user will usually see when browsing multiple functions.",
     "crumbs": [
       "GAMBLR developer guidelines"
     ]
@@ -54,7 +54,7 @@
     "href": "resources/developer-guidelines.html#arguments",
     "title": "GAMBLR developer guidelines",
     "section": "Arguments",
-    "text": "Arguments\nDetailed argument descriptions should be included for all functions. Remember to state the required data types, default values, if the argument is required or optional, etc.\nThere are several key concepts underlying the logic behind the naming of the arguments in the GAMBLR-verse. The main terms are:\n\nprojection: This is a coordinate system defining the relationship with genome build and chromosome prefixing. The argument that defines the projection should always be called projection. The main projections that are expected to be supported throughout GAMBLR-verse are grch37 and hg38. The grch37 projection contains the same coordinate system as genome build hg19, but never has the “chr” prefix on chromosome names. In contrast, the hg38 projection is always chr-prefixed and is in the same coordinate system as the hg38 genome build. As GAMBL itself and the data bundled and available or retreived through this package represents a large collection of samples sequenced both locally and externally, there is always a difficulty associated with proper handling of prefixes, different custom contigs and their lengths in the fasta reference, coordinates, and other distinctions complicating the direct comparison between data and comprehensive data analysis. These difficulties are expected to be handled internally by the function. This is done by making data always available in both projections, regardless of initial genome build to which the sample was aligned.\nmetadata: This is a data frame with a set of minimal columns defining the biological or clinical characteristics of a sample or a cohort. The argument that defines the metadata should always be called these_samples_metadata. Typically the output of the get_gambl_metadata() is provided to this argument, but you can expect that the following required columns will be present: patient_id, Tumor_Sample_Barcode, sample_id, seq_type, sex, cohort, and pathology. The main purpose of this data frame is to provide a structure for the metadata that is always expected to be available and provides linkage between unique sample identifiers and associated basic metadata values. The columns Tumor_Sample_Barcode and sample_id are expected to share the same values, but are required to be present for direct operation on the outputs of different upstream tools. When handling the metadata, you should always refer to the column sample_id for the unique sample identifiers.\nmaf: This is a data frame in a standard maf format defining the simple somatic mutations. The argument that defines the maf should always be called maf_data. Typically the output of the get_ssm* is provided to this argument, but you can expect that the standard maf columns will be present, including Tumor_Sample_Barcode, Chromosome, Start_Position, End_Position, Variant_Classification, Hugo_Symbol, etc. When handling the maf, you should always refer to the column Tumor_Sample_Barcode for the unique sample identifiers.",
+    "text": "Arguments\nDetailed argument descriptions should be included for all functions. Remember to state the required data types, default values, if the argument is required or optional, etc.\nThere are several key concepts underlying the logic behind the naming of the arguments in the GAMBLR-verse. The main terms are:\n\nprojection: This is a coordinate system defining the relationship with genome build and chromosome prefixing. The main projections that are expected to be supported throughout GAMBLR-verse are grch37 and hg38. The grch37 projection contains the same coordinate system as genome build hg19, but never has the “chr” prefix on chromosome names. In contrast, the hg38 projection is always chr-prefixed and is in the same coordinate system as the hg38 genome build. The projection and genome_build are essentially synonymous in their meaning but projection is meant to reflect the intent of the user wishing to retrieve data relative to a specific genome build (for example, with one of get_ functions) whereas genome_build is used to tell other functions what projection they should be anticipating for their input (for example, annotate_ functions). Any function that accepts bed_data, seg_data or maf_data should theoretically be able to infer genome_build directly using get_genome_build and developers should strive to use this feature to avoid potential user error.\nmetadata: This is a data frame with a set of minimal columns defining the biological or clinical characteristics of a sample or a cohort. The argument that defines the metadata should always be called these_samples_metadata. Typically the output of the get_gambl_metadata() is provided to this argument, but you can expect that the following required columns will be present: patient_id, Tumor_Sample_Barcode, sample_id, seq_type, sex, cohort, and pathology. The main purpose of this data frame is to provide a structure for the metadata that is always expected to be available and provides linkage between unique sample identifiers and associated basic metadata values. The columns Tumor_Sample_Barcode and sample_id are expected to share the same values, but are required to be present for direct operation on the outputs of different upstream tools. When handling the metadata, you should always refer to the column sample_id for the unique sample identifiers.\nmaf: This is a data frame in a standard maf format defining the simple somatic mutations. The argument that defines the maf should always be called maf_data. Typically the output of the get_ssm* is provided to this argument, but you can expect that the standard maf columns will be present, including Tumor_Sample_Barcode, Chromosome, Start_Position, End_Position, Variant_Classification, Hugo_Symbol, etc. When handling the maf, you should always refer to the column Tumor_Sample_Barcode for the unique sample identifiers.",
     "crumbs": [
       "GAMBLR developer guidelines"
     ]
@@ -209,7 +209,7 @@
     "href": "faq.html#where-to-clone-gamblr-repos",
     "title": "Frequently Asked Questions",
     "section": "Where to clone GAMBLR repos?",
-    "text": "Where to clone GAMBLR repos?",
+    "text": "Where to clone GAMBLR repos?\nYou would only ever need to clone the repo if you want to contribute. There is no need to clone it in order to install or load it in the session. Therefore, there is no hard rules with respect to where the repo should be cloned. Any location that you would normally clone any other repo also applies in this case.",
     "crumbs": [
       "Frequently Asked Questions"
     ]
@@ -219,17 +219,7 @@
     "href": "faq.html#where-should-i-run-gamblr",
     "title": "Frequently Asked Questions",
     "section": "Where should I run GAMBLR?",
-    "text": "Where should I run GAMBLR?",
-    "crumbs": [
-      "Frequently Asked Questions"
-    ]
-  },
-  {
-    "objectID": "faq.html#what-is-config",
-    "href": "faq.html#what-is-config",
-    "title": "Frequently Asked Questions",
-    "section": "What is config?",
-    "text": "What is config?",
+    "text": "Where should I run GAMBLR?\nYou are not required to set the current working directory of the session to any specific path. Use your regular setup just like with any other R package.",
     "crumbs": [
       "Frequently Asked Questions"
     ]
@@ -239,7 +229,7 @@
     "href": "faq.html#checkout-branch-to-run-pr-review-tests",
     "title": "Frequently Asked Questions",
     "section": "Checkout branch to run PR review tests",
-    "text": "Checkout branch to run PR review tests",
+    "text": "Checkout branch to run PR review tests\nThere can be scenarios where you would want to test the changes implemented in a particular PR. If this is the case, you would need the local copy of the repository. There are different ways to approach the testing but the resommended one is the following:\n\nChange the directory to the path where you have the local copy ot the repo\nCheckout the branch with PR\n\ngit checkout &lt;name_of_the_branch&gt;\n\n\n\n\n\n\nNote\n\n\n\nDepending on whether or not you have checked that branch in your local copy of the repo before, it might need a call to git pull --ff-only to pull the version from remote. Usually GitHub will tell you if your local copy is not up to date and the pull is required, so make sure you read the message after checking out the branch.\n\n\n\nStart the new R session and load the top-level package\n\nlibrary(GAMBLR)\n\nSet the working directory to the path where your local copy of the repo is located\nUse devtools to load the version of the package in PR\n\ndevtools::load_all()\n\nRun whichever commands you want to test!",
     "crumbs": [
       "Frequently Asked Questions"
     ]

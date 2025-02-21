@@ -44,9 +44,9 @@ The Master branch of all GAMBLR-verse repos is protected. We welcome contributio
 
 # Creating or updating functions
 
-Please always ensure that the new function goes into the corresponding child package according to it's intended use. If you are not sure to which package the new function belongs to, please check the [Frequently Asked Question](./faq.html).
+Please always ensure that the new function goes into the corresponding child package according to it's intended use. If you are not sure to which package the new function belongs to, please check the [Frequently Asked Question](../faq.html).
 
-When designing new functions or updatint the existing ones, please refer to guidelines and best practices of R package development detailed [here](https://r-pkgs.org/). Ensure to always provide the required documentation for any new functions. See [this](https://r-pkgs.org/man.html#title-description-details) section for more details on best practices for documenting R functions. Unsure what information goes where in a function documentation? For more information, see [this](https://r-pkgs.org/man.html#title).
+When designing new functions or updating the existing ones, please refer to guidelines and best practices of R package development detailed [here](https://r-pkgs.org/). Ensure to always provide the required documentation for any new functions. See [this](https://r-pkgs.org/man.html#title-description-details) section for more details on best practices for documenting R functions. Unsure what information goes where in a function documentation? For more information, see [this](https://r-pkgs.org/man.html#title).
 
 ## Name
 
@@ -54,13 +54,18 @@ The new functions should follow the GAMBLR-verse convention implemented and expe
 
 - Use `get_` when the function is supposed to retreive some sort of data
 - Use `pretty` when the function is supposed to generate a plot or a multi-panel figure
-- Use `collate_` when the function is supposed to grow the metadata horizontally by appending new columns
+- Use collate_ when the function generates sample-level summary values from another result, which will be added as one or more new column to existing metadata
 - Use `annotate_` when the function is supposed to annotate the data input with some additional information
 
 
 ## Title
 
-The title displayed in the documentation is taken from the first sentence. It should be written in sentence case, not end in a full stop, and be followed by a blank line. The title is shown in various function indexes (e.g. help(package = "some_package")) and is what the user will usually see when browsing multiple functions.
+The title displayed in the documentation is taken from the first sentence. It should be written in sentence case, not end in a full stop, and be followed by a blank line. For example:
+
+- This is a good title
+- This Is Not A Proper Title.
+
+The title is shown in various function indexes (e.g. help(package = "some_package")) and is what the user will usually see when browsing multiple functions.
 
 ## Description
 
@@ -76,7 +81,7 @@ Detailed argument descriptions should be included for all functions. Remember to
 
 There are several key concepts underlying the logic behind the naming of the arguments in the GAMBLR-verse. The main terms are:
 
-* **projection:** This is a coordinate system defining the relationship with genome build and chromosome prefixing. **The argument that defines the projection should always be called `projection`.** The main projections that are expected to be supported throughout GAMBLR-verse are `grch37` and `hg38`. The `grch37` projection contains the same coordinate system as genome build hg19, but never has the "chr" prefix on chromosome names. In contrast, the `hg38` projection is always chr-prefixed and is in the same coordinate system as the hg38 genome build. As GAMBL itself and the data bundled and available or retreived through this package represents a large collection of samples sequenced both locally and externally, there is always a difficulty associated with proper handling of prefixes, different custom contigs and their lengths in the fasta reference, coordinates, and other distinctions complicating the direct comparison between data and comprehensive data analysis. These difficulties are expected to be handled internally by the function. This is done by making data always available in both projections, regardless of initial genome build to which the sample was aligned.
+* **projection:** This is a coordinate system defining the relationship with genome build and chromosome prefixing. The main projections that are expected to be supported throughout GAMBLR-verse are `grch37` and `hg38`. The `grch37` projection contains the same coordinate system as genome build hg19, but never has the "chr" prefix on chromosome names. In contrast, the `hg38` projection is always chr-prefixed and is in the same coordinate system as the hg38 genome build. The **projection** and **genome_build** are essentially synonymous in their meaning but projection is meant to reflect the intent of the user wishing to retrieve data relative to a specific genome build (for example, with one of `get_` functions) whereas genome_build is used to tell other functions what projection they should be anticipating for their input (for example, `annotate_` functions). Any function that accepts _bed_data_, _seg_data_ or _maf_data_ should theoretically be able to infer **genome_build** directly using `get_genome_build` and developers should strive to use this feature to avoid potential user error.
 
 * **metadata:** This is a data frame with a set of minimal columns defining the biological or clinical characteristics of a sample or a cohort. **The argument that defines the metadata should always be called `these_samples_metadata`.** Typically the output of the `get_gambl_metadata()` is provided to this argument, but you can expect that the following required columns will be present: `patient_id`, `Tumor_Sample_Barcode`, `sample_id`, `seq_type`, `sex`, `cohort`, and `pathology`. The main purpose of this data frame is to provide a structure for the metadata that is always expected to be available and provides linkage between unique sample identifiers and associated basic metadata values. The columns `Tumor_Sample_Barcode` and `sample_id` are expected to share the same values, but are required to be present for direct operation on the outputs of different upstream tools. **When handling the metadata, you should always refer to the column `sample_id` for the unique sample identifiers.**
 
