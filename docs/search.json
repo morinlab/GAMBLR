@@ -153,5 +153,95 @@
     "title": "GAMBLR",
     "section": "Installation for developers",
     "text": "Installation for developers\nThe easiest way to obtain and contribute to GAMBLR is to do this via cloning the repository\ncd\ngit clone git@github.com:morinlab/GAMBLR.git\nIn your R editor of choice (which is hopefully VS Code), set your working directory to the directory you just cloned the repo into.\nsetwd(\"~/GAMBLR\")\nInstall the package in R by running the following command (requires the devtools package):\ndevtools::install()\nAfter applying your modifications to the code, use the following command to quickly test your changes without directly installing the package (requires the devtools dependency):\ndevtools::load_all()\nThe Master branch of the GAMBLR repo is protected. We welcome contributions (pull request, bug report, feature request, PR review) from all levels of users. All commits must be submitted via pull request on a branch. Please refer to the GitHub documentation for details on how to do pull request, or ask for help in the #git-help Slack channel."
+  },
+  {
+    "objectID": "faq.html",
+    "href": "faq.html",
+    "title": "Frequently Asked Questions",
+    "section": "",
+    "text": "This section will cover most of the questions you may have about GAMBLR. If there is something that is not covered, please feel free to reach out to us via GitHub by reporting an issue and we will be happy to add it to this page.",
+    "crumbs": [
+      "Frequently Asked Questions"
+    ]
+  },
+  {
+    "objectID": "faq.html#how-to-install-gamblr",
+    "href": "faq.html#how-to-install-gamblr",
+    "title": "Frequently Asked Questions",
+    "section": "How to install GAMBLR?",
+    "text": "How to install GAMBLR?\nThe top-level members of GAMBLR family already have all GAMBLR packages setup for you as dependencies, and installing the top-level package will automatically install for you all other repositories available to you.\n\nNot in Morin Lab/GAMBL consortiumMorin Lab member\n\n\nJust run:\n# Verify devtools is installed\nif (!require(\"devtools\")) install.packages(\"devtools\")\n\n# Install GAMBLR.open\ndevtools::install_github(\n    \"morinlab/GAMBLR.open\",\n    repos = BiocManager::repositories()\n)\n\n# Load the package\nlibrary(GAMBLR.open)\nFor more information, please refer to the detailed desctiption of GAMBLR.open.\n\n\nJust run:\n# Verify devtools is installed\nif (!require(\"devtools\")) install.packages(\"devtools\")\n\n# Install GAMBLR.open\ndevtools::install_github(\n    \"morinlab/GAMBLR\",\n    repos = BiocManager::repositories()\n)\n\n# Load the package\nlibrary(GAMBLR)\n\n\n\n\n\n\nGot permission error at this step?\n\n\n\n\n\nPlease refer to GAMBLR.open for the open access published version of this package.\nThis error is because GAMBLR.results package is private and have restricted access. If you are the Moring Lab member or member of the GAMBL consortium, please contact Kostia or Ryan through Slack regarding this error. Be sure your GitHub ID is added to your Slack profile.\n\n\n\nThis will load all functionality of GAMBLR-verse and point to the data on GSC side for easy access.",
+    "crumbs": [
+      "Frequently Asked Questions"
+    ]
+  },
+  {
+    "objectID": "faq.html#there-are-so-many-gamblr-packages-why",
+    "href": "faq.html#there-are-so-many-gamblr-packages-why",
+    "title": "Frequently Asked Questions",
+    "section": "There are so many GAMBLR packages! Why?",
+    "text": "There are so many GAMBLR packages! Why?\nOriginally, GAMBLR started as a single package GAMBLR. Since the time of it’s inception, it has signficantly grown. This resulted in the fact where scripts were 10k-long files at some points, and this in turn made it very difficult to maintain, fix bugs, implement new functionality, make improvements etc. As a side effect, it also created scenarios where users that need one specific function or data from GAMBLR had to install tons of dependencies that were actually not needed for that specific implementation, waiting hours for the resolution and installation of package dependencies and sub-dependencies. Since it mainly relied on the data available only on GSC, after hours of installation users were not able to use most of GAMBLR anyways, since they did not have access to the data and functions retreiving that data.\nFor that and other reasons, the GAMBLR was separated into specific children repositories, each serving it’s own specific purpose:\n\nNot in Morin Lab/GAMBL consortiumMorin Lab member\n\n\n\nGAMBLR.data - a “storage unit” with different types of bundled data.\nGAMBLR.helpers - a set of low-level functions for data operation.\nGAMBLR.utils - higher level set of functions to operate on genomic data.\nGAMBLR.viz - set of functions used mostly for visualizations.\nGAMBLR.predict - a collection of machine learning algorithms and functions to pre-format inputs for these models. Contains classifiers of Burkitt and Follicular lymphomas originally published, as well as reproduced of DLBCL classification by the groupings of Chapuy et al, Lacy et al, and Runge et al.\nGAMBLR.open - open-source package recommended for the community interested in lymphoma genomics research and are not members of the GAMBL consortium, or if you are waiting for your access approval but want to get started.\n\n\n\n\nGAMBLR.data - a “storage unit” with different types of bundled data.\nGAMBLR.helpers - a set of low-level functions for data operation.\nGAMBLR.utils - higher level set of functions to operate on genomic data.\nGAMBLR.viz - set of functions used mostly for visualizations.\nGAMBLR.results - set of functions used to effectively querry the outputs of different workflows and use all of the available datasets, generated both internally and externally.\nGAMBLR - an umbrella package only existing for the sole purpose of reducing the number of keystrokes and allowing you to install and use all packages listed above with single line. This package does not contain any data or functions.",
+    "crumbs": [
+      "Frequently Asked Questions"
+    ]
+  },
+  {
+    "objectID": "faq.html#how-to-load-gamblr-to-my-session",
+    "href": "faq.html#how-to-load-gamblr-to-my-session",
+    "title": "Frequently Asked Questions",
+    "section": "How to load GAMBLR to my session?",
+    "text": "How to load GAMBLR to my session?\nAfter installation, you would load and use GAMBLR just like any other R package - using the library() call. Since the top-level GAMBLR-verse loads all of the child repos for you, there is no need to load each package separately - you can use GAMBLR with just one statement.\n\nNot in Morin Lab/GAMBL consortiumMorin Lab member\n\n\nJust run:\nlibrary(GAMBLR.open)\nThis will load all the bundled data and packages of the GAMBLR-verse available to you.\n\n\nJust run:\nlibrary(GAMBLR)\nThis will load all functionality of GAMBLR-verse and point to the data on GSC side for easy access.",
+    "crumbs": [
+      "Frequently Asked Questions"
+    ]
+  },
+  {
+    "objectID": "faq.html#how-do-i-update-a-package-or-packages",
+    "href": "faq.html#how-do-i-update-a-package-or-packages",
+    "title": "Frequently Asked Questions",
+    "section": "How do I update a package (or packages)?",
+    "text": "How do I update a package (or packages)?\nWhile installing the top-level package is sufficient to install members of the GAMBLR-verse available to you, when the individual repo is updated, it is best to update it by installing it directly from GitHub. Since all members of the GAMBLR-verse have the same naming convention, just specify specific package you want to update after the dot. For example, to update the GAMBLR.viz to the latest version, run\n# Install GAMBLR.viz\ndevtools::install_github(\n    \"morinlab/GAMBLR.viz\",\n    repos = BiocManager::repositories()\n)\nTo install, for example, the most recent version of GAMBLR.helpers, run:\n# Install GAMBLR.helpers\ndevtools::install_github(\n    \"morinlab/GAMBLR.helpers\",\n    repos = BiocManager::repositories()\n)\n\n\n\n\n\n\nNote\n\n\n\nAfter updating the specific package in this way, it is sufficient to just load the top-level package (library(GAMBLR.open) or library(GAMBLR), depends on your access permissions) to start using the version of the GAMBLR-verse version that was just installed.\n\n\n\n\n\n\n\n\nImportant\n\n\n\nSince the top-level package GAMBLR is just a wrapper to load all packages at once, you do not need to install or update it unless otherwise specified. It will automatically load the latest installed version, so updating the individual member is sufficient.",
+    "crumbs": [
+      "Frequently Asked Questions"
+    ]
+  },
+  {
+    "objectID": "faq.html#where-to-clone-gamblr-repos",
+    "href": "faq.html#where-to-clone-gamblr-repos",
+    "title": "Frequently Asked Questions",
+    "section": "Where to clone GAMBLR repos?",
+    "text": "Where to clone GAMBLR repos?",
+    "crumbs": [
+      "Frequently Asked Questions"
+    ]
+  },
+  {
+    "objectID": "faq.html#where-should-i-run-gamblr",
+    "href": "faq.html#where-should-i-run-gamblr",
+    "title": "Frequently Asked Questions",
+    "section": "Where should I run GAMBLR?",
+    "text": "Where should I run GAMBLR?",
+    "crumbs": [
+      "Frequently Asked Questions"
+    ]
+  },
+  {
+    "objectID": "faq.html#what-is-config",
+    "href": "faq.html#what-is-config",
+    "title": "Frequently Asked Questions",
+    "section": "What is config?",
+    "text": "What is config?",
+    "crumbs": [
+      "Frequently Asked Questions"
+    ]
+  },
+  {
+    "objectID": "faq.html#checkout-branch-to-run-pr-review-tests",
+    "href": "faq.html#checkout-branch-to-run-pr-review-tests",
+    "title": "Frequently Asked Questions",
+    "section": "Checkout branch to run PR review tests",
+    "text": "Checkout branch to run PR review tests",
+    "crumbs": [
+      "Frequently Asked Questions"
+    ]
   }
 ]

@@ -55,10 +55,10 @@ website:
       title: "Getting started"
       style: "docked"
       collapse-level: 2
-      # contents:
+      contents:
       #   - install.qmd
       #   - auto: tutorials/*.qmd
-      #   - faq.qmd
+        - faq.qmd
     - id: concepts
       title: "Concepts"
       style: "docked"

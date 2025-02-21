@@ -1,0 +1,181 @@
+---
+title: "Frequently Asked Questions"
+echo: false
+---
+
+This section will cover most of the questions you may have about GAMBLR. If there is something that is not covered, please feel free to reach out to us via GitHub by reporting an [issue](https://github.com/morinlab/GAMBLR/issues/new) and we will be happy to add it to this page.
+
+###
+
+
+<div class="d-grid gap-2"><a class="btn btn-lg btn-primary" data-bs-toggle="collapse" href="#General" role="button" aria-expanded="false" aria-controls="General">General questions</a></div>
+
+::: {#General .collapse .multi-collapse}
+
+## How to install GAMBLR?
+
+The top-level members of GAMBLR family already have all GAMBLR packages setup for you as dependencies, and installing the top-level package will automatically install for you all other repositories available to you.
+
+:::{.panel-tabset}
+
+### **Not** in Morin Lab/GAMBL consortium
+
+Just run:
+
+```r
+# Verify devtools is installed
+if (!require("devtools")) install.packages("devtools")
+
+# Install GAMBLR.open
+devtools::install_github(
+    "morinlab/GAMBLR.open",
+    repos = BiocManager::repositories()
+)
+
+# Load the package
+library(GAMBLR.open)
+```
+
+For more information, please refer to the detailed desctiption of [GAMBLR.open](https://morinlab.github.io/GAMBLR.open/).
+
+### Morin Lab member
+
+Just run:
+
+```r
+# Verify devtools is installed
+if (!require("devtools")) install.packages("devtools")
+
+# Install GAMBLR.open
+devtools::install_github(
+    "morinlab/GAMBLR",
+    repos = BiocManager::repositories()
+)
+
+# Load the package
+library(GAMBLR)
+```
+
+::: {.callout-note title="Got permission error at this step?" collapse="true"}
+
+Please refer to [GAMBLR.open](https://morinlab.github.io/GAMBLR.open/) for the open access published version of this package.
+
+This error is because `GAMBLR.results` package is private and have restricted access. If you are the Moring Lab member or member of the GAMBL consortium, please contact Kostia or Ryan through Slack regarding this error. Be sure your GitHub ID is added to your Slack profile.
+
+:::
+
+This will load all functionality of GAMBLR-verse and point to the data on GSC side for easy access.
+
+:::
+
+## There are so many GAMBLR packages! Why?
+
+Originally, GAMBLR started as a single package `GAMBLR`. Since the time of it's inception, it has signficantly grown. This resulted in the fact where scripts were 10k-long files at some points, and this in turn made it very difficult to maintain, fix bugs, implement new functionality, make improvements etc. As a side effect, it also created scenarios where users that need one specific function or data from GAMBLR had to install tons of dependencies that were actually not needed for that specific implementation, waiting hours for the resolution and installation of package dependencies and sub-dependencies. Since it mainly relied on the data available only on GSC, after hours of installation users were not able to use most of GAMBLR anyways, since they did not have access to the data and functions retreiving that data.
+
+For that and other reasons, the `GAMBLR` was separated into specific children repositories, each serving it's own specific purpose:
+
+:::{.panel-tabset}
+
+### **Not** in Morin Lab/GAMBL consortium
+
+* [GAMBLR.data](https://github.com/morinlab/GAMBLR.data) - a "storage unit" with [different types](https://morinlab.github.io/GAMBLR.data/resources/bundled_data.html) of bundled data.
+* [GAMBLR.helpers](https://github.com/morinlab/GAMBLR.helpers) - a set of low-level functions for data operation.
+* [GAMBLR.utils](https://github.com/morinlab/GAMBLR.utils) - higher level set of functions to operate on genomic data.
+* [GAMBLR.viz](https://github.com/morinlab/GAMBLR.viz) - set of functions used mostly for visualizations.
+* [GAMBLR.predict](https://github.com/morinlab/GAMBLR.predict) - a collection of machine learning algorithms and functions to pre-format inputs for these models. Contains classifiers of [Burkitt](https://doi.org/10.1182/blood.2022016534) and [Follicular](https://doi.org/10.1182/blood.2022018719) lymphomas originally published, as well as reproduced of DLBCL classification by the groupings of [Chapuy et al](https://doi.org/10.1038/s41591-018-0016-8), [Lacy et al](https://doi.org/10.1182/blood.2019003535), and [Runge et al](https://doi.org/10.1111/bjh.17132).
+* [GAMBLR.open](https://github.com/morinlab/GAMBLR.open) - open-source package recommended for the community interested in lymphoma genomics research and are not members of the GAMBL consortium, or if you are waiting for your access approval but want to get started.
+
+### Morin Lab member
+
+* [GAMBLR.data](https://github.com/morinlab/GAMBLR.data) - a "storage unit" with [different types](https://morinlab.github.io/GAMBLR.data/resources/bundled_data.html) of bundled data.
+* [GAMBLR.helpers](https://github.com/morinlab/GAMBLR.helpers) - a set of low-level functions for data operation.
+* [GAMBLR.utils](https://github.com/morinlab/GAMBLR.utils) - higher level set of functions to operate on genomic data.
+* [GAMBLR.viz](https://github.com/morinlab/GAMBLR.viz) - set of functions used mostly for visualizations.
+* [GAMBLR.results](https://github.com/morinlab/GAMBLR.results) - set of functions used to effectively querry the outputs of different workflows and use all of the available datasets, generated both internally and externally.
+* [GAMBLR](https://github.com/morinlab/GAMBLR) - an umbrella package only existing for the sole purpose of reducing the number of keystrokes and allowing you to install and use all packages listed above with single line. This package does not contain any data or functions.
+
+:::
+
+## How to load GAMBLR to my session?
+
+After installation, you would load and use GAMBLR just like any other R package - using the `library()` call. Since the top-level GAMBLR-verse loads all of the child repos for you, there is no need to load each package separately - you can use GAMBLR with just one statement.
+
+:::{.panel-tabset}
+
+### **Not** in Morin Lab/GAMBL consortium
+
+Just run:
+
+```r
+library(GAMBLR.open)
+```
+
+This will load all the bundled data and packages of the GAMBLR-verse available to you.
+
+### Morin Lab member
+
+Just run:
+
+```r
+library(GAMBLR)
+```
+
+This will load all functionality of GAMBLR-verse and point to the data on GSC side for easy access.
+
+:::
+
+
+## How do I update a package (or packages)?
+
+While installing the top-level package is sufficient to install members of the GAMBLR-verse available to you, when the individual repo is updated, it is best to update it by installing it directly from GitHub. Since all members of the GAMBLR-verse have the same naming convention, just specify specific package you want to update after the dot. For example, to update the `GAMBLR.viz` to the latest version, run
+
+```r
+# Install GAMBLR.viz
+devtools::install_github(
+    "morinlab/GAMBLR.viz",
+    repos = BiocManager::repositories()
+)
+```
+
+To install, for example, the most recent version of `GAMBLR.helpers`, run:
+
+```r
+# Install GAMBLR.helpers
+devtools::install_github(
+    "morinlab/GAMBLR.helpers",
+    repos = BiocManager::repositories()
+)
+```
+
+::: {.callout-note}
+
+After updating the specific package in this way, it is sufficient to just load the top-level package (`library(GAMBLR.open)` or `library(GAMBLR)`, depends on your access permissions) to start using the version of the GAMBLR-verse version that was just installed.
+
+:::
+
+
+::: {.callout-important}
+
+Since the top-level package `GAMBLR` is just a wrapper to load all packages at once, you do not need to install or update it unless otherwise specified. It will automatically load the latest installed version, so updating the individual member is sufficient.
+
+:::
+
+
+:::
+
+###
+
+<div class="d-grid gap-2"><a class="btn btn-lg btn-primary" data-bs-toggle="collapse" href="#GSCsetup" role="button" aria-expanded="false" aria-controls="GSCsetup">GSC-specific setup</a></div>
+
+
+::: {#GSCsetup .collapse .multi-collapse}
+
+## Where to clone GAMBLR repos?
+
+## Where should I run GAMBLR?
+
+## What is config?
+
+## Checkout branch to run PR review tests
+
+:::
