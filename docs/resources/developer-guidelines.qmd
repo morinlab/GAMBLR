@@ -42,6 +42,80 @@ devtools::load_all()
 
 The Master branch of all GAMBLR-verse repos is protected. We welcome contributions (pull request, bug report, feature request, PR review) from all levels of users. All commits must be submitted via pull request on a branch. Please refer to the GitHub [documentation](https://docs.github.com/en/pull-requests/collaborating-with-pull-requests/proposing-changes-to-your-work-with-pull-requests/creating-a-pull-request) for details on how to do pull request, or ask for help in the `#git-help` Slack channel.
 
+## Installing via renv
+Using `renv` is similar to the instructions above, with a few extra steps. First set up a directory to hold the clones of GAMBLR repos as well as the `renv` related files. E.g.
+
+```bash
+GAMBLR-dev/
+    GAMBLR/
+    GAMBLR.data/
+    GAMBLR.helpers/
+    GAMBLR.results/
+    GAMBLR.utils/
+    GAMBLR.viz/
+```
+
+Copy your `.Rprofile` into this `GAMBLR-dev` directory. If you are copying it from an existing renv set up, remove the `source("renv/activate.R")` line at the top.
+
+Start an R session in this directory, i.e. `getwd()` should return the path to your `GAMBLR-dev` dir. Do `renv::init()`. When that is successful, close the R session. 
+
+Remove the `renv.lock` that was created by the init. Copy an `renv.lock` file from someone that has set up their renv already. This ensures that the dependencies will be set correctly.
+
+```bash
+cp /projects/rmorin_scratch/sgillis_temp/GAMBLR-dev/renv.lock .
+```
+
+Make a symbolic link to `GAMBLR/config.yml` in this directory as well.
+
+```bash
+ln -s GAMBLR/config.yml config.yml
+```
+
+Start an R session. Make sure it shows in the start-up preamble that renv is loaded. Then use the following command to install the child packages. 
+
+::: {.callout-important}
+Each time you want to install a child package from it's local repo, you must list **all** of the local repos in this install command in order for it to install them correctly. Otherwise it will install the lastest tagged version from github for the child repos not specified.
+:::
+
+```r
+renv::install(c("./GAMBLR", "./GAMBLR.data", "./GAMBLR.results", "./GAMBLR.viz", "./GAMBLR.utils", "./GAMBLR.helpers"), verbose = TRUE)
+```
+
+Your `GAMBLR-dev` contents will look like this
+
+```
+GAMBLR-dev/
+    config.yml ->  GAMBLR/config.yml
+    GAMBLR/
+    GAMBLR.data/
+    GAMBLR.helpers/
+    GAMBLR.results/
+    GAMBLR.utils/
+    GAMBLR.viz/
+    renv/
+    renv.lock
+    .Rprofile
+```
+
+After applying your modifications to the code, launch a R session from `GAMBLR-dev` to make sure it is loading the renv. Set the working directory to the repo where you made modifications, and then you can use the same command as in the above instructions to quickly test your changes without directly installing the package
+
+```r
+setwd("GAMBLR.results")
+devtools::load_all()
+```
+
+If you changed more than one repo, you will need to do this for each. E.g.
+
+```r
+setwd("GAMBLR.results")
+devtools::load_all()
+setwd("../GAMBLR.helpers")
+devtools::load_all()
+setwd("../") # sets it back to GAMBLR-dev
+```
+
+Each time your child repos are updated by pulling from master/main, you should re-install the packages to update the environment using the `renv::install` command above.
+
 # Creating or updating functions
 
 Please always ensure that the new function goes into the corresponding child package according to it's intended use. If you are not sure to which package the new function belongs to, please check the [Frequently Asked Question](../faq.html).
@@ -54,7 +128,7 @@ The new functions should follow the GAMBLR-verse convention implemented and expe
 
 - Use `get_` when the function is supposed to retreive some sort of data
 - Use `pretty` when the function is supposed to generate a plot or a multi-panel figure
-- Use collate_ when the function generates sample-level summary values from another result, which will be added as one or more new column to existing metadata
+- Use `collate_` when the function generates sample-level summary values from another result, which will be added as one or more new column to existing metadata
 - Use `annotate_` when the function is supposed to annotate the data input with some additional information
 
 
@@ -128,7 +202,7 @@ So you have added a new function (carefully following the steps in the previous 
 
 ### Option 1
 
-Your first option, and likely the preferred route to take, is to make sure that the working directory in R studio is set to the GAMBLR folder with your updated code and then run `devtools::load_all()` to load all the functions available in the `R/` folder of thee same repo. This should make all such functions available to call.
+Your first option, and likely the preferred route to take, is to make sure that the working directory in your VScode R session (or R studio) is set to the GAMBLR folder with your updated code and then run `devtools::load_all()` to load all the functions available in the `R/` folder of thee same repo. This should make all such functions available to call.
 
 ### Option 2
 
@@ -137,6 +211,12 @@ As an alternative, you can also run `devtools::install()` from the updated GAMBL
 ::: {.callout-note}
 
 The behaviour of the `load_all()` and `install()` is different - make sure you understand what you are doing or please ask for help.
+
+:::
+
+::: {.callout-note}
+
+If you are using `renv` and Option 2, **do not** use devtools, instead use `renv::install()`. Remember that the command to install your local repos must specify all of them. `renv::install(c("./GAMBLR", "./GAMBLR.data", "./GAMBLR.results", "./GAMBLR.viz", "./GAMBLR.utils", "./GAMBLR.helpers"), verbose = TRUE)`
 
 :::
 
