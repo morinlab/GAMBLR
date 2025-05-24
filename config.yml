@@ -26,7 +26,7 @@ default:
         augmented: "all_the_things/slms_3-1.0_vcf2maf-1.3/{seq_type}--projection/deblacklisted/augmented_maf/all_slms-3--{projection}.CDS.maf"
         cnv: "all_the_things/cnv_master-1.0/merges/{seq_type}--{projection}.seg"
         sv: "all_the_things/svar_master-1.0/merges/gridss_manta.genome--{projection}.bedpe"
-        manta_sv: 
+        manta_sv:
             gambl: "gambl/manta-2.3/merges/manta.genome--{projection}.bedpe"
             icgc_dart: "all_the_things/manta-2.3/merges/manta.genome--{projection}.bedpe"
     results_merged_wildcards:
@@ -82,7 +82,7 @@ default:
 
     results_flatfiles:
         expression:
-            salmon: 
+            salmon:
                 counts: "all_the_things/salmon-1.0/counts_files/"
         cnv:
             gambl:
@@ -168,6 +168,7 @@ default:
                 grch37: "14-11247N"  # Note this does not work, since this sample isn't in the ICGC group
                 hg38: "SP59382"
                 hs37d5: "SP193960"
+                hg19-reddy: "H040_N_WGS"
             capture:
                 hg19-reddy: "04-24937N-Reddy"
                 hs37d5: "BNHL_26N"
