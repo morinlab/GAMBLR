@@ -386,7 +386,7 @@
         "tibble",
         "tidyr"
       ],
-      "Hash": "91ff7d253d85e17c51d799079d903833"
+      "Hash": "74b5995f6b5efe1c2414b0a9dfb86c20"
     },
     "GAMBLR.predict": {
       "Package": "GAMBLR.predict",
@@ -859,7 +859,7 @@
     },
     "Rdpack": {
       "Package": "Rdpack",
-      "Version": "2.6.4",
+      "Version": "2.6.2",
       "Source": "Repository",
       "Repository": "CRAN",
       "Requirements": [
@@ -869,7 +869,7 @@
         "tools",
         "utils"
       ],
-      "Hash": "1b2ca1972e3b00cd0bb5a98e16403028"
+      "Hash": "a9e2118c664c2cd694f03de074e8d4b3"
     },
     "Rhtslib": {
       "Package": "Rhtslib",
@@ -3099,7 +3099,7 @@
     },
     "reformulas": {
       "Package": "reformulas",
-      "Version": "0.4.1",
+      "Version": "0.4.0",
       "Source": "Repository",
       "Repository": "CRAN",
       "Requirements": [
@@ -3108,7 +3108,7 @@
         "methods",
         "stats"
       ],
-      "Hash": "697a42ea989da568a0251101f36a7632"
+      "Hash": "d23beb08dca526d22ff47ce399260ba4"
     },
     "rematch": {
       "Package": "rematch",
