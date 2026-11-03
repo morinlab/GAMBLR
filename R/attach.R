@@ -56,6 +56,12 @@ use_gamblr_config <- function(path = ".", overwrite = FALSE) {
     invisible(dest)
 }
 
+# R CMD INSTALL and R CMD check load the package to test it, from a directory
+# with no config.yml, so skip the config checks there
+GAMBLR_installing_or_checking <- function() {
+    nzchar(Sys.getenv("R_INSTALL_PKG")) || nzchar(Sys.getenv("_R_CHECK_PACKAGE_NAME_"))
+}
+
 GAMBLR_check_config_exists <- function() {
     config_file <- GAMBLR_config_file()
     if (file.exists(config_file)) {
@@ -161,7 +167,10 @@ inform_startup <- function(msg, ...) {
 }
 
 .onAttach <- function(...) {
-    GAMBLR_check_config_exists()
+    check_config <- !GAMBLR_installing_or_checking()
+    if (check_config) {
+        GAMBLR_check_config_exists()
+    }
     attached <- GAMBLR_attach()
 
     inform_startup(GAMBLR_attach_message(attached))
@@ -180,5 +189,7 @@ inform_startup <- function(msg, ...) {
       ""),collpse="\n")
     packageStartupMessage(logo_lines)
 
-    GAMBLR_check_config_keys()
+    if (check_config) {
+        GAMBLR_check_config_keys()
+    }
 }
