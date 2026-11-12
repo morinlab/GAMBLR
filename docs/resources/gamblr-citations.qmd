@@ -1,0 +1,14 @@
+---
+title: "GAMBLR Citations"
+---
+
+# Understanding GAMBL
+
+The Morin laboratory is performing a meta-analysis of whole genome sequencing (WGS) and gene expression (RNA-seq) data from B-cell lymphomas using in-house and published data sets. 
+
+
+# Publications with GAMBL
+
+- [Novel Genetic Subgroups Inform on Shared Pathobiology within Adult and Pediatric Burkitt Lymphoma](https://doi.org/10.1182/blood-2021-147916)
+- [Constrained FL: A Genetically Distinct Subgroup of Follicular Lymphoma with Low Rates of Somatic Hypermutation and a Reduced Propensity for Histologic Transformation](https://doi.org/10.1182/blood-2021-153445)
+- [Complex Structural Variation Associated with Enhancer Hijacking and Loss of Tumor Suppressors in Mantle Cell Lymphoma](https://doi.org/10.1182/blood-2021-153162)
